@@ -9,10 +9,10 @@
             de trabajar, en concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT) aprobado
             por Resolución Legislativa Nº 27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº 038-2001-RE,
             publicado el 31 de mayo de 2001.</p>
-        <p style="text-align:justify;margin-bottom: 5px;"><span class="PETComponent1 subrayado"></span></p>
+        <p style="text-align:justify;margin-bottom: 5px;"><span class="PETComponent1 subrayado">{{ datos.detallePET || '...'}}</span></p>
         <div id="ubicacionTable">
             <p style="text-align: center;font-weight: 700;">Cuadro N° 3. 7</p>
-            <p style="text-align: center;font-weight: 700;">PET de la {{ datos.distritoSeleccionado }} (2017)</p>
+            <p style="text-align: center;font-weight: 700;">PET de la {{ datos.grupoAISD }} (2017)</p>
             <table
                 style="width: 100%;margin-top: 10px;border-spacing: 0;margin-bottom: 10px;border-collapse: collapse;">
                 <thead>
@@ -31,28 +31,28 @@
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
                             datos.datosobtenidosAPI2.pet?.de15a29 }}</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de15a29Porcentaje }}</td>
+                            datos.datosobtenidosAPI2.pet?.de15a29Porcentaje }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">30 a 44 años</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de30a44 }}</td>
+                            datos.datosobtenidosAPI2.pet?.de30a44 }}</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de30a44Porcentaje }}</td>
+                            datos.datosobtenidosAPI2.pet?.de30a44Porcentaje }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">45 a 64 años</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de45a64 }}</td>
+                            datos.datosobtenidosAPI2.pet?.de45a64 }}</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de44a64Porcentaje }}</td>
+                            datos.datosobtenidosAPI2.pet?.de45a64Porcentaje }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">65 años a más</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de65amas }}</td>
+                            datos.datosobtenidosAPI2.pet?.de65amas }}</td>
                         <td style="padding: 7px 0px;border: solid 1px black;border-spacing: 0px">{{
-                            datos.datosobtenidosAPI2.pet.de65amasPorcentaje }}</td>
+                            datos.datosobtenidosAPI2.pet?.de65amasPorcentaje }}</td>
                     </tr>
                 </tbody>
                 <thead>
@@ -60,7 +60,7 @@
                         <th style="background: #e6e6e6;padding: 7px 0px;border: solid 1px black;border-spacing: 0px">
                             Total</th>
                         <th style="background: #e6e6e6;padding: 7px 0px;border: solid 1px black;border-spacing: 0px">
-                            <span class="petTotal">{{ datos.datosobtenidosAPI2.pet.totalPet }}</span>
+                            <span class="petTotal">{{ datos.datosobtenidosAPI2.pet?.totalPet }}</span>
                         </th>
                         <th style="background: #e6e6e6;padding: 7px 0px;border: solid 1px black;border-spacing: 0px">
                             100.00%</th>
@@ -68,14 +68,14 @@
                 </thead>
             </table>
         </div>
-        <p style="text-align:justify;margin-bottom: 5px;"><span class="PETComponent2 subrayado"></span></p>
+        <p style="text-align:justify;margin-bottom: 5px;"><span class="PETComponent2 subrayado">{{ datos.detallePetDistrital || '...' }}</span></p>
         <p style="text-align:justify;margin-bottom: 5px;"><span style="margin-right: 20px;">b.</span>Población
             Económicamente Activa (PEA)</p>
-        <p style="text-align:justify;margin-bottom: 5px;"><span class="PEAComponent1 subrayado"></span></p>
+        <p style="text-align:justify;margin-bottom: 5px;"><span class="PEAComponent1 subrayado">{{ datos.detallePeaDistrital || '...' }}</span></p>
         <div id="ubicacionTable">
             <p style="text-align: center;font-weight: 700;">Cuadro N° 3. 8</p>
             <p style="text-align: center;font-weight: 700;">Conformación de la PEA y No PEA del distrito {{
-                datos.distritoSeleccionado }} (2017)
+                datos.grupoAISD }} (2017)
             </p>
             <table
                 style="width: 100%;margin-top: 10px;border-spacing: 0;margin-bottom: 10px;border-collapse: collapse;">
@@ -131,11 +131,11 @@
                 Definitivos de la Población Económicamente Activa 2017– INEI 2018</span> </p>
         <p style="text-align:justify;margin-bottom: 5px;font-weight: 700;"><span
                 style="margin-right: 20px;">b.1.</span>Situación del empleo (dependiente o independiente)</p>
-        <p style="text-align:justify;margin-bottom: 5px;"><span class="PEAEmpleoComponent1 subrayado"></span></p>
+        <p style="text-align:justify;margin-bottom: 5px;"><span class="PEAEmpleoComponent1 subrayado">{{ datos.detallePeaEmpleo1 || '...' }}</span></p>
         <p style="text-align:justify;margin-bottom: 5px;"><span class="PEAEmpleoComponent2 subrayado"></span></p>
-        <div id="ubicacionTable">
+        <div *ngIf="datos.cantidadEncuestas > 0" id="ubicacionTable">
             <p style="text-align: center;font-weight: 700;">Cuadro N° 3. 9</p>
-            <p style="text-align: center;font-weight: 700;">Tipo de Empleo en {{ datos.distritoSeleccionado }} -
+            <p style="text-align: center;font-weight: 700;">Tipo de Empleo en {{ datos.grupoAISD }} -
                 Encuestas</p>
             <table
                 style="width: 100%;margin-top: 10px;border-spacing: 0;margin-bottom: 10px;border-collapse: collapse;">
@@ -199,22 +199,22 @@
                 style="margin-right: 20px;">b.2.</span>Ingresos de la población</p>
         <p style="text-align:justify;margin-bottom: 5px;"><span class="ingresosPoblacionComponent1 subrayado">{{ datos.detalleIngresos }}</span>
         </p>
-        <p style="text-align:justify;margin-bottom: 5px;">De las {{ datos.cantidadEncuestas }} encuestas aplicadas,
+        <p *ngIf="datos.cantidadEncuestas > 0" style="text-align:justify;margin-bottom: 5px;">De las {{ datos.cantidadEncuestas }} encuestas aplicadas,
             se obtiene que el promedio de los ingresos mensuales es de S/<span class="highlight">{{
                 datos.ingresosMensualesPromedio }}</span> No obstante, empleando la mediana se tiene como
             resultado que, ordenando de menor a mayor la variable, la primera mitad de la muestra tiene como ingreso
             máximo S/<span class="highlight">{{ datos.ingresosMaximo }}</span>. </p>
         <p style="text-align:justify;margin-bottom: 5px;font-weight: 700;"><span
                 style="margin-right: 20px;">b.3.</span>Índice de desempleo</p>
-        <p style="text-align:justify;margin-bottom: 5px;">A nivel distrital de {{ datos.distritoSeleccionado }}, según
+        <p style="text-align:justify;margin-bottom: 5px;">A nivel distrital de {{ datos.grupoAISD }}, según
             el censo del INEI del año
-            2017, tenemos que solamente el <span class="peaDesocupadaPorcentaje subrayado"></span>% de la PEA se
+            2017, tenemos que solamente el <span class="peaDesocupadaPorcentaje subrayado">{{ datos.datosobtenidosAPI4.porcentaje_Desocupada }}</span> de la PEA se
             encuentra desocupada, pero debe considerarse que la población ocupada también se encuentra en la búsqueda de
             mejores oportunidades laborales, debido a la alta tasa de informalidad. </p>
         <p style="text-align:justify;margin-bottom: 5px;"><span class="indiceDesmpleoComponent1 subrayado">{{ datos.detalleIndiceDesempleo }}</span></p>
         <div id="ubicacionTable">
             <p style="text-align: center;font-weight: 700;">Cuadro N° 3. 10</p>
-            <p style="text-align: center;">PEA ocupada y desocupada del distrito {{ datos.distritoSeleccionado }} (2017)
+            <p style="text-align: center;">PEA ocupada y desocupada del distrito {{ datos.grupoAISD }} (2017)
             </p>
             <table
                 style="width: 100%;margin-top: 10px;border-spacing: 0;margin-bottom: 10px;border-collapse: collapse;">
@@ -278,35 +278,35 @@
         <div class="label">DETALLE PEA SITUACIÓN DEL EMPLEO 1</div>
         <input class="inputstyle2" type="text" [(ngModel)]="datos.detallePeaEmpleo1">
 
-        <div class="title">Encuestas</div>
+        <div *ngIf="datos.cantidadEncuestas > 0" class="title">Encuestas</div>
 
-        <div class="label">ENCUESTAS INDEPENDIENTE</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.encuestasIndependiente">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">ENCUESTAS INDEPENDIENTE</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.encuestasIndependiente">
 
-        <div class="label">ENCUESTAS DEPENDIENTE PÚBLICA</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.encuestasDependientePublica">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">ENCUESTAS DEPENDIENTE PÚBLICA</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.encuestasDependientePublica">
 
-        <div class="label">ENCUESTAS DEPENDIENTE PRIVADA</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.encuestasDependientePrivada">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">ENCUESTAS DEPENDIENTE PRIVADA</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.encuestasDependientePrivada">
 
-        <div class="label">ENCUESTAS NO APLICA</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.encuestasNoAplica">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">ENCUESTAS NO APLICA</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.encuestasNoAplica">
 
-        <div class="label">DETALLE PEA SITUACIÓN DEL EMPLEO - ENCUESTAS</div>
-        <input class="inputstyle2" type="text" [(ngModel)]="datos.detallePeaSituacionEmpleo">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">DETALLE PEA SITUACIÓN DEL EMPLEO - ENCUESTAS</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle2" type="text" [(ngModel)]="datos.detallePeaSituacionEmpleo">
 
-        <button class="guardar" (click)="actualizarDatos()">Actualizar encuestas</button>
+        <button *ngIf="datos.cantidadEncuestas > 0" class="guardar" (click)="actualizarDatos()">Actualizar encuestas</button>
 
         <div class="title">Ingresos</div>
 
         <div class="label">DETALLE INGRESOS POBLACIÓN</div>
         <input class="inputstyle2" type="text" [(ngModel)]="datos.detalleIngresos">
 
-        <div class="label">INGRESOS MENSUALES PROMEDIO</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.ingresosMensualesPromedio">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">INGRESOS MENSUALES PROMEDIO</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.ingresosMensualesPromedio">
 
-        <div class="label">INGRESO MÁXIMO</div>
-        <input class="inputstyle" type="text" [(ngModel)]="datos.ingresosMaximo">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">INGRESO MÁXIMO</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" class="inputstyle" type="text" [(ngModel)]="datos.ingresosMaximo">
 
         <div class="title">Desempleo</div>
 

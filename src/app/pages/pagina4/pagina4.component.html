@@ -19,7 +19,7 @@
             alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social.
             Para la obtención de información cualitativa, se realizaron un total de <span class="highlight">{{
                 datos.cantidadEntrevistas || '...' }}</span> entrevistas en profundidad a informantes calificados y
-            autoridades locales, tanto <span class="highlight">{{ datos.cantidadEntrevistas || '...' }}</span></p>
+            autoridades locales, tanto  <span class="highlight">{{ datos.componenteFuentesPrimarias1 || '...' }}</span></p>
         <p style="text-align:justify;margin-bottom: 5px;">A continuación, se muestra en el siguiente cuadro los cargos u
             ocupaciones principales de las <span class="highlight">{{ datos.cantidadEntrevistas || '...' }}</span>
             autoridades e
@@ -50,7 +50,7 @@
         <p style="text-align:justify;margin-bottom: 5px;">Fuente:<span class="highlight">{{ datos.consultora || '...'
                 }}</span>
         </p>
-        <p style="text-align:justify;margin-bottom: 5px;">Por otro lado, en lo que respecta a información cuantitativa,
+        <p *ngIf="datos.cantidadEncuestas > 0" style="text-align:justify;margin-bottom: 5px;">Por otro lado, en lo que respecta a información cuantitativa,
             se aplicaron un total de
             <span class="highlight">{{ datos.cantidadEncuestas || '...' }}</span> encuestas dentro del AISD <span
                 class="highlight">{{ datos.componenteFuentesPrimarias2 || '...' }}</span> para obtener información
@@ -103,10 +103,10 @@
             </table>
         </div>
 
-        <p style="text-align:justify;margin-bottom: 5px;">Fuente:<span class="highlight">{{ datos.consultora || '...'
+        <p  *ngIf="datos.cantidadEncuestas > 0" style="text-align:justify;margin-bottom: 5px;">Fuente:<span class="highlight">{{ datos.consultora || '...'
                 }}</span>
         </p>
-        <p style="text-align:justify;margin-bottom: 5px;">En el caso del AISD, es la única área de influencia en donde
+        <p *ngIf="datos.cantidadEncuestas > 0" style="text-align:justify;margin-bottom: 5px;">En el caso del AISD, es la única área de influencia en donde
             se ha considerado el recojo de información cuantitativa de fuentes primarias a través de las encuestas,
             mientras que para la descripción y caracterización del AISI (<span class="highlight">{{
                 datos.pagina4DistDpto || '...' }}</span>) se ha optado por hacer uso únicamente de fuentes
@@ -160,12 +160,12 @@
             <input class="inputstyle" type="text" [(ngModel)]="datos.componenteFuentesPrimarias1">
         </div>
 
-        <div>
+        <div *ngIf="datos.cantidadEncuestas > 0">
             <div class="label">FUENES PRIMARIAS COMPONENTE 2</div>
             <input class="inputstyle" type="text" [(ngModel)]="datos.componenteFuentesPrimarias2">
         </div>
 
-        <div>
+        <div *ngIf="datos.cantidadEncuestas > 0">
             <div class="label">JUSTIFICACIÓN AISI</div>
             <input class="inputstyle" type="text" [(ngModel)]="datos.justificacionAISI">
         </div>
@@ -190,11 +190,11 @@
 
         <button class="guardar" (click)="guardar()">Guardar</button>
 
-        <div class="title">Encuestas</div>
-        <div class="label">LISTA DE ENCUESTAS</div>
+        <div *ngIf="datos.cantidadEncuestas > 0" class="title">Encuestas</div>
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">LISTA DE ENCUESTAS</div>
         <p>{{ title }}</p>
 
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+        <div *ngIf="datos.cantidadEncuestas > 0" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
             <div class="container-input">
                 <input class="inputstyle2" type="text" [(ngModel)]="datos.muestra" placeholder="Muestra">
                 <input class="inputstyle2" type="text" [(ngModel)]="datos.universo" placeholder="Universo">
@@ -209,13 +209,13 @@
                 <button class="actualizar" (click)="actualizar()">Actualizar</button>
             </div>
         </div>
-        <div class="label">DETALLE DE LA ENCUESTA</div>
-        <input style="margin-bottom: 15px;" class="inputstyle2" type="text" [(ngModel)]="datos.detalleEncuesta">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">DETALLE DE LA ENCUESTA</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" style="margin-bottom: 15px;" class="inputstyle2" type="text" [(ngModel)]="datos.detalleEncuesta">
 
-        <div class="label">PRECISIÓN DE LA ENCUESTA</div>
-        <input style="margin-bottom: 15px;" class="inputstyle2" type="text" [(ngModel)]="datos.precisionEncuesta">
+        <div *ngIf="datos.cantidadEncuestas > 0" class="label">PRECISIÓN DE LA ENCUESTA</div>
+        <input *ngIf="datos.cantidadEncuestas > 0" style="margin-bottom: 15px;" class="inputstyle2" type="text" [(ngModel)]="datos.precisionEncuesta">
 
-        <button class="guardar" (click)="guardar2()">Guardar</button>
+        <button *ngIf="datos.cantidadEncuestas > 0" class="guardar" (click)="guardar2()">Guardar</button>
         <br>
         <div style="display: flex; gap: 20px;">
             <button class="atras" (click)="regresar()">Atrás</button>
