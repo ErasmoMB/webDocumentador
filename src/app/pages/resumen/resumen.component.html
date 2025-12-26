@@ -6,20 +6,20 @@
     <p>
         Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del
         área de influencia social del proyecto
-        <span class="highlight">{{ datos.projectName || '...' }}</span>, como un patrón de referencia inicial en
+        <span class="highlight">{{ normalizarNombreProyecto(datos.projectName, false) }}</span>, como un patrón de referencia inicial en
         base a la
         cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.
     </p>
     <p>
-        El Proyecto <span class="highlight">{{ datos.projectName || '...' }}</span> se encuentra ubicado en el
+        <span class="highlight">{{ normalizarNombreProyecto(datos.projectName, true) }}</span> se encuentra ubicado en el
         distrito
         <span class="highlight">{{ datos.distritoSeleccionado || '...' }}</span>, provincia
         <span class="highlight">{{ datos.provinciaSeleccionada || '...' }}</span>, en el departamento
         <span class="highlight">{{ datos.departamentoSeleccionado || '...' }}</span>, bajo la administración del
         Gobierno
         Regional de
-        <span class="highlight">{{ datos.departamentoSeleccionado || '...' }}</span>, en el
-        <span class="highlight">{{ datos.detalleProyecto || '...' }}</span> del Perú.
+        <span class="highlight">{{ datos.departamentoSeleccionado || '...' }}</span>, en
+        <span class="highlight">{{ normalizarDetalleProyecto(datos.detalleProyecto) || '...' }}</span>.
     </p>
     <h3 style="margin-left: 50px;display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">3.1.1</span>Objetivos de la línea base social</h3>
@@ -28,8 +28,7 @@
     <ul style="padding-left: 20px;">
         <li style="list-style: disc;text-align:justify;margin-bottom: 5px;">Describir los aspectos demográficos,
             sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de
-            influencia social del proyecto de exploración minera <span class="highlight">{{ datos.projectName ||
-                '...' }}</span>.</li>
+            influencia social del proyecto de exploración minera <span class="highlight">{{ normalizarNombreProyecto(datos.projectName, false) }}</span>.</li>
         <li style="list-style: disc;text-align:justify;margin-bottom: 5px;">Brindar información básica de los
             poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base
             para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración
@@ -55,19 +54,18 @@
 
     <h3 style="display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">A</span>Áreas de influencia social directa (AISD)</h3>
-    <p style="text-align:justify;margin-bottom: 5px;">Para el Proyecto <span class="highlight">{{
-            datos.detalleProyecto || '...' }}</span>
+    <p style="text-align:justify;margin-bottom: 5px;">Para <span class="highlight">{{ normalizarNombreProyecto(datos.projectName, true) }}</span>
         se ha determinado, teniendo en cuenta la ubicación de sus componentes, como Área de Influencia Social
         Directa (AISD)
-        a <span class="highlight">{{ datos.aisdComponente1 || '...' }}</span>.</p>
+        a <span class="highlight">{{ normalizarComponente1(datos.aisdComponente1) }}</span></p>
     <p style="text-align:justify;margin-bottom: 5px;">Para determinar el AISD se está teniendo en cuenta que <span
-            class="highlight">{{ datos.aisdComponente2 || '...' }}</span>.</p>
+            class="highlight">{{ normalizarDespuesDeQue(datos.aisdComponente2) }}</span></p>
     <h3 style="display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">B</span>Áreas de influencia social indirecta (AISI)</h3>
     <p style="text-align:justify;margin-bottom: 5px;">En cuanto al área de influencia social indirecta (AISI), está
-        conformada por <span class="highlight">{{ datos.aisiComponente1 || '...' }}</span>.</p>
+        conformada por <span class="highlight">{{ normalizarComponente1(datos.aisiComponente1) }}</span></p>
     <p style="text-align:justify;margin-bottom: 5px;">Para determinar el AISI se está teniendo en cuenta que <span
-            class="highlight">{{ datos.aisiComponente2 || '...' }}</span>.</p>
+            class="highlight">{{ normalizarDespuesDeQue(datos.aisiComponente2) }}</span></p>
 
     <h3 style="margin-left: 50px;display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">3.1.3</span>Índices demográficos, sociales, económicos, de ocupación laboral
@@ -88,7 +86,7 @@
         alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social.
         Para la obtención de información cualitativa, se realizaron un total de <span class="highlight">{{
             datos.cantidadEntrevistas || '...' }}</span> entrevistas en profundidad a informantes calificados y
-        autoridades locales, tanto <span class="highlight">{{ datos.cantidadEntrevistas || '...' }}</span></p>
+        autoridades locales.</p>
     <p style="text-align:justify;margin-bottom: 5px;">A continuación, se muestra en el siguiente cuadro los cargos u
         ocupaciones principales de las <span class="highlight">{{ datos.cantidadEntrevistas || '...' }}</span>
         autoridades e
@@ -120,8 +118,8 @@
     </p>
     <p style="text-align:justify;margin-bottom: 5px;">Por otro lado, en lo que respecta a información cuantitativa,
         se aplicaron un total de
-        <span class="highlight">{{ datos.cantidadEncuestas || '...' }}</span> encuestas dentro del AISD <span
-            class="highlight">{{ datos.componenteFuentesPrimarias2 || '...' }}</span> para obtener información
+        <span class="highlight">{{ datos.cantidadEncuestas || '...' }}</span> encuestas dentro del AISD, <span
+            class="highlight">{{ datos.componenteFuentesPrimarias2 || '...' }}</span>, para obtener información
         socioeconómica
         más
         generalizada como datos de su ocupación principal, nivel educativo, integrantes de la familia,
@@ -177,8 +175,7 @@
         se ha considerado el recojo de información cuantitativa de fuentes primarias a través de las encuestas,
         mientras que para la descripción y caracterización del AISI (<span class="highlight">{{
             datos.pagina4DistDpto || '...' }}</span>) se ha optado por hacer uso únicamente de fuentes
-        secundarias oficiales debido a <span class="highlight">{{
-            datos.justificacionAISI || '...' }}</span></p>
+        secundarias oficiales debido a <span class="highlight">{{ agregarPuntoFinal(datos.justificacionAISI) }}</span></p>
     <h3 style="display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">B</span>Fuentes secundarias</h3>
     <ul>
@@ -263,10 +260,10 @@
 
     <h3 style="display: flex;margin-bottom: 10px;margin-top: 10px;text-align:justify;"><span
             style="margin-right: 20px;">A.1.1 </span> Institucionalidad local</h3>
-    <p style="text-align:justify;margin-bottom: 5px;">La institucionalidad local de la {{ datos.distritoSeleccionado
-        }} está organizada de la siguiente manera</p>
+    <p style="text-align:justify;margin-bottom: 5px;">La institucionalidad local del distrito de {{ datos.distritoSeleccionado
+        }} está organizada de la siguiente manera:</p>
     <p style="text-align: center;font-weight: 700;">Cuadro N° 3.5</p>
-    <p style="text-align: center;font-weight: 700;">Instituciones existentes en la {{ datos.distritoSeleccionado
+    <p style="text-align: center;font-weight: 700;">Instituciones existentes en el distrito de {{ datos.distritoSeleccionado
         }}</p>
     <table style="width: 100%;margin-top: 10px;border-spacing: 0;margin-bottom: 10px;border-collapse: collapse;">
         <thead>

@@ -1,0 +1,42 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 preview-column">
+      <div class="preview-content">
+        <h3>A.1.9 Salud</h3>
+        <p>{{ datos.textoSalud }}</p>
+
+        <h3>A.1.10 Educación</h3>
+        <p>{{ datos.textoEducacion }}</p>
+
+        <h3>A.1.11 Cultura</h3>
+        <p>{{ datos.textoCultura }}</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 formulario-column">
+      <div class="formulario-content">
+        <h4>Formulario - Salud, Educación y Cultura</h4>
+
+        <div class="form-group">
+          <label>Texto sobre salud:</label>
+          <textarea [(ngModel)]="datos.textoSalud" class="form-control" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Texto sobre educación:</label>
+          <textarea [(ngModel)]="datos.textoEducacion" class="form-control" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Texto sobre cultura:</label>
+          <textarea [(ngModel)]="datos.textoCultura" class="form-control" rows="4"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation-buttons">
+    <button class="btn btn-secondary" (click)="regresar()">Atrás</button>
+    <button class="btn btn-primary" (click)="siguientePaso()">Siguiente</button>
+  </div>
+</div>

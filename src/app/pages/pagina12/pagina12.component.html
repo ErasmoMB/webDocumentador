@@ -1,0 +1,36 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 preview-column">
+      <div class="preview-content">
+        <h3>A.1.7 Transporte y Telecomunicaciones</h3>
+        
+        <h4>a. Transporte</h4>
+        <p>{{ datos.textoTransporte }}</p>
+
+        <h4>b. Telecomunicaciones</h4>
+        <p>{{ datos.textoTelecomunicaciones }}</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 formulario-column">
+      <div class="formulario-content">
+        <h4>Formulario - Transporte y Telecomunicaciones</h4>
+
+        <div class="form-group">
+          <label>Texto sobre transporte:</label>
+          <textarea [(ngModel)]="datos.textoTransporte" class="form-control" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Texto sobre telecomunicaciones:</label>
+          <textarea [(ngModel)]="datos.textoTelecomunicaciones" class="form-control" rows="4"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation-buttons">
+    <button class="btn btn-secondary" (click)="regresar()">Atrás</button>
+    <button class="btn btn-primary" (click)="siguientePaso()">Siguiente</button>
+  </div>
+</div>

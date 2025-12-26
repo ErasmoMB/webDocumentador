@@ -1,0 +1,270 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 preview-column">
+      <div class="preview-content">
+        <h3>A.1.6 Servicios Básicos</h3>
+        
+        <p>{{ datos.textoServiciosBasicos }}</p>
+
+        <h4>a. Abastecimiento de Agua</h4>
+        <p>{{ datos.textoAgua }}</p>
+        
+        <table border="1" style="width: 100%; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th>Fuente de abastecimiento</th>
+              <th>Total</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Red pública dentro de la vivienda</td>
+              <td>{{ servicios.agua.redPublica.total }}</td>
+              <td>{{ servicios.agua.redPublica.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Pozo/Manantial</td>
+              <td>{{ servicios.agua.pozo.total }}</td>
+              <td>{{ servicios.agua.pozo.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Camión cisterna</td>
+              <td>{{ servicios.agua.camion.total }}</td>
+              <td>{{ servicios.agua.camion.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Río/acequia/lago</td>
+              <td>{{ servicios.agua.rio.total }}</td>
+              <td>{{ servicios.agua.rio.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Vecino/Pilón público</td>
+              <td>{{ servicios.agua.vecino.total }}</td>
+              <td>{{ servicios.agua.vecino.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Otros</td>
+              <td>{{ servicios.agua.otros.total }}</td>
+              <td>{{ servicios.agua.otros.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>b. Servicio Higiénico</h4>
+        <p>{{ datos.textoDesague }}</p>
+        
+        <table border="1" style="width: 100%; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th>Tipo de servicio higiénico</th>
+              <th>Total</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Red pública dentro de la vivienda</td>
+              <td>{{ servicios.desague.redPublica.total }}</td>
+              <td>{{ servicios.desague.redPublica.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Pozo séptico/ciego</td>
+              <td>{{ servicios.desague.pozo.total }}</td>
+              <td>{{ servicios.desague.pozo.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Letrina</td>
+              <td>{{ servicios.desague.letrina.total }}</td>
+              <td>{{ servicios.desague.letrina.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Río/acequia</td>
+              <td>{{ servicios.desague.rio.total }}</td>
+              <td>{{ servicios.desague.rio.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>No tiene</td>
+              <td>{{ servicios.desague.noTiene.total }}</td>
+              <td>{{ servicios.desague.noTiene.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Otros</td>
+              <td>{{ servicios.desague.otros.total }}</td>
+              <td>{{ servicios.desague.otros.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>c. Alumbrado Eléctrico</h4>
+        <p>{{ datos.textoElectricidad }}</p>
+        
+        <table border="1" style="width: 100%; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th>Tipo de alumbrado</th>
+              <th>Total</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Red pública</td>
+              <td>{{ servicios.electricidad.redPublica.total }}</td>
+              <td>{{ servicios.electricidad.redPublica.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Generador/Motor</td>
+              <td>{{ servicios.electricidad.generador.total }}</td>
+              <td>{{ servicios.electricidad.generador.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Panel solar</td>
+              <td>{{ servicios.electricidad.panelSolar.total }}</td>
+              <td>{{ servicios.electricidad.panelSolar.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>No tiene</td>
+              <td>{{ servicios.electricidad.noTiene.total }}</td>
+              <td>{{ servicios.electricidad.noTiene.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Otros</td>
+              <td>{{ servicios.electricidad.otros.total }}</td>
+              <td>{{ servicios.electricidad.otros.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>d. Eliminación de Residuos Sólidos</h4>
+        <p>{{ datos.textoResiduos }}</p>
+        
+        <table border="1" style="width: 100%; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th>Forma de eliminación</th>
+              <th>Total</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Camión recolector</td>
+              <td>{{ servicios.residuos.camion.total }}</td>
+              <td>{{ servicios.residuos.camion.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Quema</td>
+              <td>{{ servicios.residuos.quema.total }}</td>
+              <td>{{ servicios.residuos.quema.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Entierra</td>
+              <td>{{ servicios.residuos.entierra.total }}</td>
+              <td>{{ servicios.residuos.entierra.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Arroja al río/acequia</td>
+              <td>{{ servicios.residuos.rio.total }}</td>
+              <td>{{ servicios.residuos.rio.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+            <tr>
+              <td>Otros</td>
+              <td>{{ servicios.residuos.otros.total }}</td>
+              <td>{{ servicios.residuos.otros.porcentaje | number:'1.2-2' }}%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size: 0.9em; text-align: center;">FUENTE: Censo Nacional 2017, INEI</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 formulario-column">
+      <div class="formulario-content">
+        <h4>Formulario - Servicios Básicos</h4>
+
+        <div class="form-group">
+          <label>Texto introductorio:</label>
+          <textarea [(ngModel)]="datos.textoServiciosBasicos" class="form-control" rows="2"></textarea>
+        </div>
+
+        <h5>Agua</h5>
+        <div class="form-group">
+          <label>Texto sobre agua:</label>
+          <textarea [(ngModel)]="datos.textoAgua" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Red pública:</label><input type="number" [(ngModel)]="servicios.agua.redPublica.total" class="form-control"></div>
+          <div class="col"><label>Pozo/Manantial:</label><input type="number" [(ngModel)]="servicios.agua.pozo.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Camión:</label><input type="number" [(ngModel)]="servicios.agua.camion.total" class="form-control"></div>
+          <div class="col"><label>Río:</label><input type="number" [(ngModel)]="servicios.agua.rio.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Vecino:</label><input type="number" [(ngModel)]="servicios.agua.vecino.total" class="form-control"></div>
+          <div class="col"><label>Otros:</label><input type="number" [(ngModel)]="servicios.agua.otros.total" class="form-control"></div>
+        </div>
+
+        <h5>Desagüe</h5>
+        <div class="form-group">
+          <label>Texto sobre desagüe:</label>
+          <textarea [(ngModel)]="datos.textoDesague" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Red pública:</label><input type="number" [(ngModel)]="servicios.desague.redPublica.total" class="form-control"></div>
+          <div class="col"><label>Pozo séptico:</label><input type="number" [(ngModel)]="servicios.desague.pozo.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Letrina:</label><input type="number" [(ngModel)]="servicios.desague.letrina.total" class="form-control"></div>
+          <div class="col"><label>Río:</label><input type="number" [(ngModel)]="servicios.desague.rio.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>No tiene:</label><input type="number" [(ngModel)]="servicios.desague.noTiene.total" class="form-control"></div>
+          <div class="col"><label>Otros:</label><input type="number" [(ngModel)]="servicios.desague.otros.total" class="form-control"></div>
+        </div>
+
+        <h5>Electricidad</h5>
+        <div class="form-group">
+          <label>Texto sobre electricidad:</label>
+          <textarea [(ngModel)]="datos.textoElectricidad" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Red pública:</label><input type="number" [(ngModel)]="servicios.electricidad.redPublica.total" class="form-control"></div>
+          <div class="col"><label>Generador:</label><input type="number" [(ngModel)]="servicios.electricidad.generador.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Panel solar:</label><input type="number" [(ngModel)]="servicios.electricidad.panelSolar.total" class="form-control"></div>
+          <div class="col"><label>No tiene:</label><input type="number" [(ngModel)]="servicios.electricidad.noTiene.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Otros:</label><input type="number" [(ngModel)]="servicios.electricidad.otros.total" class="form-control"></div>
+        </div>
+
+        <h5>Residuos Sólidos</h5>
+        <div class="form-group">
+          <label>Texto sobre residuos:</label>
+          <textarea [(ngModel)]="datos.textoResiduos" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Camión:</label><input type="number" [(ngModel)]="servicios.residuos.camion.total" class="form-control"></div>
+          <div class="col"><label>Quema:</label><input type="number" [(ngModel)]="servicios.residuos.quema.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Entierra:</label><input type="number" [(ngModel)]="servicios.residuos.entierra.total" class="form-control"></div>
+          <div class="col"><label>Río:</label><input type="number" [(ngModel)]="servicios.residuos.rio.total" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="col"><label>Otros:</label><input type="number" [(ngModel)]="servicios.residuos.otros.total" class="form-control"></div>
+        </div>
+
+        <button (click)="actualizarDatos()" class="btn btn-primary mt-3">Actualizar Vista Previa</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation-buttons">
+    <button class="btn btn-secondary" (click)="regresar()">Atrás</button>
+    <button class="btn btn-primary" (click)="siguientePaso()">Siguiente</button>
+  </div>
+</div>

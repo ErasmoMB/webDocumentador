@@ -29,6 +29,10 @@ export class DocumentosComponent {
   }
 
   siguientePaso() {
+    // Asegurar que TODOS los campos estén guardados antes de navegar
+    if (!this.datos.projectName) {
+      this.datos.projectName = 'Proyecto ' + this.datos.distritoSeleccionado;
+    }
     this.formularioService.actualizarDatos(this.datos);
     this.router.navigate(['/pagina2']);
   }

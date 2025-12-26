@@ -41,6 +41,126 @@ export class ResumenComponent implements OnInit {
     this.cdRef.detectChanges();
   }
 
+  // Función helper para agregar punto final solo si no existe
+  agregarPuntoFinal(texto: string | undefined | null): string {
+    if (!texto || texto === '...') return '...';
+    const textoTrim = texto.trim();
+    // Si ya termina en punto, signo de interrogación o exclamación, no agregar nada
+    if (/[.!?]$/.test(textoTrim)) {
+      return textoTrim;
+    }
+    // Si no termina en puntuación, agregar punto
+    return textoTrim + '.';
+  }
+
+  // Función para normalizar texto después de "que"
+  normalizarDespuesDeQue(texto: string | undefined | null): string {
+    if (!texto || texto === '...') return '...';
+    let resultado = texto.trim();
+    
+    // Detectar frases incompletas como "el resto del distrito X por rutas..." 
+    // y agregar verbo "se considera"
+    if (/^(el|la|los|las)\s+resto.+\s+por\s+/i.test(resultado)) {
+      resultado = 'se considera ' + resultado;
+    }
+    
+    // Si empieza con mayúscula (excepto nombres propios comunes), cambiar a minúscula
+    if (resultado.length > 0 && /^[A-Z]/.test(resultado)) {
+      // Lista de palabras que deben mantener mayúscula inicial
+      const palabrasConMayuscula = ['El Proyecto', 'La Comunidad', 'Se consideran', 'Debido'];
+      const empiezaConPalabra = palabrasConMayuscula.some(p => resultado.startsWith(p));
+      
+      if (!empiezaConPalabra) {
+        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
+      } else if (resultado.startsWith('Se consideran')) {
+        resultado = 'se consideran' + resultado.slice(13);
+      } else if (resultado.startsWith('El Proyecto')) {
+        resultado = 'el Proyecto' + resultado.slice(11);
+      }
+    }
+    
+    return this.agregarPuntoFinal(resultado);
+  }
+
+  // Función para normalizar AISD/AISI componente1 (después de "a")
+  normalizarComponente1(texto: string | undefined | null): string {
+    if (!texto || texto === '...') return '...';
+    let resultado = texto.trim();
+    
+    // Detectar y corregir frases mal estructuradas como "El Proyecto se ubica en..."
+    // cuando debería ser solo "el distrito de..."
+    if (/^el proyecto se ubica en el distrito de/i.test(resultado)) {
+      resultado = resultado.replace(/^el proyecto se ubica en (el distrito de .+)/i, '$1');
+    }
+    
+    // Convertir primera letra a minúscula si no es nombre propio
+    if (resultado.length > 0 && /^[A-Z]/.test(resultado.charAt(0))) {
+      // Excepciones: nombres propios de lugares
+      const excepciones = ['El Proyecto', 'La Comunidad', 'Los centros'];
+      const esExcepcion = excepciones.some(e => resultado.startsWith(e));
+      
+      if (!esExcepcion) {
+        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
+      } else if (resultado.startsWith('Los centros')) {
+        resultado = 'los centros' + resultado.slice(11);
+      } else if (resultado.startsWith('El Proyecto')) {
+        resultado = 'el Proyecto' + resultado.slice(11);
+      }
+    }
+    
+    return this.agregarPuntoFinal(resultado);
+  }
+
+  // Función para normalizar detalleProyecto (artículos de género)
+  normalizarDetalleProyecto(texto: string | undefined | null): string {
+    if (!texto || texto === '...') return '...';
+    let resultado = texto.trim();
+    
+    // Corregir "el zona" por "la zona"
+    resultado = resultado.replace(/\bel\s+zona\b/gi, 'la zona');
+    // Corregir "el región" por "la región"
+    resultado = resultado.replace(/\bel\s+región\b/gi, 'la región');
+    
+    // Si empieza con mayúscula y no tiene artículo, agregarlo
+    if (/^[A-Z]/.test(resultado)) {
+      // Palabras femeninas que necesitan "la"
+      if (/^(zona|región|provincia|costa|sierra|selva)/i.test(resultado)) {
+        resultado = 'la ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
+      }
+      // Palabras masculinas que necesitan "el"
+      else if (/^(distrito|departamento|valle|territorio)/i.test(resultado)) {
+        resultado = 'el ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
+      }
+    }
+    
+    return resultado;
+  }
+
+  // Función para normalizar nombre del proyecto (evitar "El Proyecto Proyecto X")
+  normalizarNombreProyecto(texto: string | undefined | null, conArticulo: boolean = true): string {
+    if (!texto || texto === '...') return '...';
+    let resultado = texto.trim();
+    
+    // Si el nombre ya empieza con "Proyecto" o "El Proyecto", manejarlo correctamente
+    if (conArticulo) {
+      // Si ya tiene "El Proyecto" al inicio, dejarlo como está
+      if (/^el proyecto /i.test(resultado)) {
+        return resultado.charAt(0).toUpperCase() + resultado.slice(1);
+      }
+      // Si empieza con "Proyecto" solo, agregar "El"
+      else if (/^proyecto /i.test(resultado)) {
+        return 'El ' + resultado.charAt(0).toUpperCase() + resultado.slice(1);
+      }
+      // Si no tiene "Proyecto", agregar "El Proyecto"
+      else {
+        return 'El Proyecto ' + resultado;
+      }
+    } else {
+      // Sin artículo, solo devolver el nombre
+      return resultado;
+    }
+  }
+
   // exportarWord() {
   //   let elemento = document.querySelector(".preview") as HTMLElement;
   //   if (!elemento) {

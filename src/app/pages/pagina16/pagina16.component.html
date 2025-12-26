@@ -1,0 +1,34 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 preview-column">
+      <div class="preview-content">
+        <h3>A.1.15 Organización Social</h3>
+        <p>{{ datos.textoOrganizacion }}</p>
+
+        <h3>A.1.16 Festividades y Costumbres</h3>
+        <p>{{ datos.textoFestividades }}</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 formulario-column">
+      <div class="formulario-content">
+        <h4>Formulario - Organización y Festividades</h4>
+
+        <div class="form-group">
+          <label>Texto sobre organización social:</label>
+          <textarea [(ngModel)]="datos.textoOrganizacion" class="form-control" rows="5"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Texto sobre festividades:</label>
+          <textarea [(ngModel)]="datos.textoFestividades" class="form-control" rows="5"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation-buttons">
+    <button class="btn btn-secondary" (click)="regresar()">Atrás</button>
+    <button class="btn btn-primary" (click)="siguientePaso()">Siguiente (Resumen)</button>
+  </div>
+</div>

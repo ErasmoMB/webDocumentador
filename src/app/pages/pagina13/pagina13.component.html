@@ -1,0 +1,51 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 preview-column">
+      <div class="preview-content">
+        <h3>A.1.8 Infraestructura</h3>
+        
+        <p>{{ datos.textoInfraestructura }}</p>
+
+        <h4>a. Infraestructura de Salud</h4>
+        <p>{{ datos.infraestructuraSalud }}</p>
+
+        <h4>b. Infraestructura Educativa</h4>
+        <p>{{ datos.infraestructuraEducacion }}</p>
+
+        <h4>c. Infraestructura Recreativa y Deportiva</h4>
+        <p>{{ datos.infraestructuraRecreacion }}</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 formulario-column">
+      <div class="formulario-content">
+        <h4>Formulario - Infraestructura</h4>
+
+        <div class="form-group">
+          <label>Texto introductorio:</label>
+          <textarea [(ngModel)]="datos.textoInfraestructura" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Infraestructura de salud:</label>
+          <textarea [(ngModel)]="datos.infraestructuraSalud" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Infraestructura educativa:</label>
+          <textarea [(ngModel)]="datos.infraestructuraEducacion" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Infraestructura recreativa:</label>
+          <textarea [(ngModel)]="datos.infraestructuraRecreacion" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation-buttons">
+    <button class="btn btn-secondary" (click)="regresar()">Atrás</button>
+    <button class="btn btn-primary" (click)="siguientePaso()">Siguiente</button>
+  </div>
+</div>

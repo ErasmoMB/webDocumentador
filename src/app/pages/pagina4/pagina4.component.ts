@@ -20,6 +20,23 @@ export class Pagina4Component {
     console.log(this.formularioService.obtenerJSON());
     // this.jsonData = this.formularioService.obtenerJSON();
 
+    // Inicializar campos si no existen
+    if (!this.datos.entrevistados) {
+      this.datos.entrevistados = [];
+    }
+    if (!this.datos.cantidadEntrevistas) {
+      this.datos.cantidadEntrevistas = 0;
+    }
+    if (!this.datos.consultora) {
+      this.datos.consultora = '';
+    }
+    if (!this.datos.justificacionAISI) {
+      this.datos.justificacionAISI = '';
+    }
+    if (!this.datos.componenteFuentesPrimarias2) {
+      this.datos.componenteFuentesPrimarias2 = '';
+    }
+
     this.datos.componenteFuentesPrimarias1 = 'de la ' + this.datos.distritoSeleccionado + ' (localidad perteneciente al AISD)';
     this.datos.pagina4DistDpto = 'el distrito de ' + this.datos.distritoSeleccionado + ' y la capital distrital, ambos ubicados en la provincia ' + this.datos.provinciaSeleccionada + ', departamento ' + this.datos.departamentoSeleccionado;
 
@@ -70,6 +87,7 @@ export class Pagina4Component {
 
   guardar() {
     this.flagGuardar = true;
+    this.formularioService.actualizarDatos(this.datos);
     console.log('Datos ingresados:', this.datos.entrevistados);
   }
 
@@ -92,6 +110,7 @@ export class Pagina4Component {
 
   guardar2(){
     this.flagGuardar2 = true;
+    this.formularioService.actualizarDatos(this.datos);
   }
 
   resumen() {
