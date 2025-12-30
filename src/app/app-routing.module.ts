@@ -9,7 +9,7 @@ const routes: Routes = [
     path: '',
     component: LayoutComponent,
     children: [
-      { path: '', redirectTo: 'seccion/introduccion', pathMatch: 'full' },
+      { path: '', redirectTo: 'plantilla', pathMatch: 'full' },
       { path: 'seccion/:id', component: SeccionComponent },
       { path: 'plantilla', component: PlantillaViewComponent },
     ]
