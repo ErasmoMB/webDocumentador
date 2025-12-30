@@ -1,8 +1,9 @@
-<div class="foto-info-container" style="text-align: center; margin-bottom: 2em;">
-  <div style="font-weight: bold;">Fotografía N° {{ numero }}</div>
-  <div>{{ titulo }}</div>
-  <div *ngIf="ruta" style="margin: 1em 0;">
-    <img [src]="ruta" alt="{{ titulo }}" style="max-width: 100%; max-height: 400px; border-radius: 8px;" />
+<div class="foto-info" *ngIf="ruta">
+  <p class="foto-numero">Fotografía N° {{ numero }}</p>
+  <p class="foto-titulo">{{ titulo }}</p>
+  <div class="foto-container">
+    <img [src]="ruta" [alt]="titulo" class="foto-imagen">
   </div>
-  <div style="font-size: 0.9em; color: #666; margin-top: 0.5em;">FUENTE: {{ fuente }}</div>
+  <p class="foto-fuente">FUENTE: {{ fuente }}</p>
 </div>
+

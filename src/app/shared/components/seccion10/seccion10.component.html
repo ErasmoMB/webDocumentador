@@ -73,6 +73,7 @@
 <p class="text-justify" *ngIf="!datos.textoDesechosSolidos3 || datos.textoDesechosSolidos3 === '____'">Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del anexo <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span> en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.</p>
 
 <app-foto-info 
+    *ngIf="getFotoDesechosSolidos().ruta"
     [numero]="getFotoDesechosSolidos().numero"
     [titulo]="getFotoDesechosSolidos().titulo"
     [fuente]="getFotoDesechosSolidos().fuente"
@@ -112,6 +113,7 @@
 <p class="text-justify" *ngIf="!datos.textoElectricidad2 || datos.textoElectricidad2 === '____'">Adicionalmente, con las entrevistas semiestructuradas se pudo validar que la empresa responsable de la provisión del servicio eléctrico y su respectivo mantenimiento es <span class="highlight">{{ datos.empresaElectrica || 'ADINELSA' }}</span>. Asimismo, según los entrevistados, el costo promedio por este servicio ronda entre S/. <span class="highlight">{{ datos.costoElectricidadMinimo || '20' }}</span> y S/. <span class="highlight">{{ datos.costoElectricidadMaximo || '40' }}</span> de acuerdo al medidor de cada vivienda. Por otro lado, cabe mencionar que son pocas las familias dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> que cuentan con vale FISE.</p>
 
 <app-foto-info 
+    *ngIf="getFotoElectricidad().ruta"
     [numero]="getFotoElectricidad().numero"
     [titulo]="getFotoElectricidad().titulo"
     [fuente]="getFotoElectricidad().fuente"

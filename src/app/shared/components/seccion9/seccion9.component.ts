@@ -67,6 +67,15 @@ export class Seccion9Component implements OnInit {
     const fuente = this.datos?.['fotografiaEstructuraFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaEstructuraImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 6',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 6',
       titulo: titulo,

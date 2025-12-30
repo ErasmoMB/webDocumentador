@@ -259,6 +259,7 @@ export class ResumenComponent implements OnInit {
 
   getFilasTablaAISD2(): any[] {
     const filas: any[] = [];
+    const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2();
     
     // Buscar todas las filas con datos (hasta 20 filas máximo)
     for (let i = 1; i <= 20; i++) {
@@ -268,8 +269,11 @@ export class ResumenComponent implements OnInit {
       const viviendasEmp = this.datos?.[`tablaAISD2Fila${i}ViviendasEmpadronadas`];
       const viviendasOcp = this.datos?.[`tablaAISD2Fila${i}ViviendasOcupadas`];
       
-      // Incluir fila si tiene al menos un dato
-      if (punto || codigo || poblacion || viviendasEmp || viviendasOcp) {
+      const codigoStr = codigo ? codigo.toString().trim() : '';
+      const esFilaActiva = filasActivas.length === 0 || filasActivas.includes(codigoStr);
+      
+      // Incluir fila solo si está activa y tiene al menos un dato
+      if (esFilaActiva && (punto || codigo || poblacion || viviendasEmp || viviendasOcp)) {
         filas.push({
           punto: punto || '____',
           codigo: codigo || '____',
@@ -297,30 +301,19 @@ export class ResumenComponent implements OnInit {
   getFotografiasAISD(): any[] {
     const fotos: any[] = [];
     
-    // Buscar todas las fotografías (hasta 10 máximo)
     for (let i = 1; i <= 10; i++) {
       const titulo = this.datos?.[`fotografiaAISD${i}Titulo`];
       const fuente = this.datos?.[`fotografiaAISD${i}Fuente`];
       const imagen = this.datos?.[`fotografiaAISD${i}Imagen`];
       
-      if (titulo || fuente || imagen) {
+      if (imagen) {
         fotos.push({
           numero: i,
-          titulo: titulo || '____',
-          fuente: fuente || '____',
-          preview: imagen || null
+          titulo: titulo || 'Título de fotografía',
+          fuente: fuente || 'GEADES, 2024',
+          preview: imagen
         });
       }
-    }
-    
-    // Si no hay fotografías, mostrar una placeholder
-    if (fotos.length === 0) {
-      fotos.push({
-        numero: 1,
-        titulo: '____',
-        fuente: '____',
-        preview: null
-      });
     }
     
     return fotos;

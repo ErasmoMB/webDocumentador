@@ -6,6 +6,7 @@
 <p class="text-justify" *ngIf="!datos.textoAgua || datos.textoAgua === '____'">En cuanto al uso agrícola, el agua proviene del río <span class="highlight">{{ datos.rioAgricola || 'Yuracyacu' }}</span> y la quebrada <span class="highlight">{{ datos.quebradaAgricola || 'Pucaccocha' }}</span>, que sirven como una fuente importante de riego. Finalmente, para el uso ganadero, la comunidad se abastece de las diferentes quebradas que se hallan dentro del área de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, las cuales proporcionan agua para el sustento del ganado local, principalmente vacunos y ovinos.</p>
 
 <app-foto-info 
+    *ngIf="getFotoReservorio().ruta"
     [numero]="getFotoReservorio().numero"
     [titulo]="getFotoReservorio().titulo"
     [fuente]="getFotoReservorio().fuente"
@@ -19,6 +20,7 @@
 <p class="text-justify" *ngIf="!datos.textoRecursosNaturalesZona || datos.textoRecursosNaturalesZona === '____'">Además, según algunos comuneros, dentro del territorio de la comunidad existen diversas hierbas medicinales con efectos positivos para la salud. Entre ellas destacan la huamanripa, llantén, muña y salvia. Estas son utilizadas en un primer nivel de atención antes de acudir al establecimiento de salud local.</p>
 
 <app-foto-info 
+    *ngIf="getFotoUsoSuelos().ruta"
     [numero]="getFotoUsoSuelos().numero"
     [titulo]="getFotoUsoSuelos().titulo"
     [fuente]="getFotoUsoSuelos().fuente"

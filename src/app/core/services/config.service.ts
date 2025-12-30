@@ -25,6 +25,12 @@ export class ConfigService {
       useMockData: this.config.useMockData,
       hasWindowEnv: typeof window !== 'undefined' && !!(window as any).__ENV__
     });
+    
+    if (!this.config.useMockData) {
+      console.log('MODO BASE DE DATOS ACTIVADO - Usando backend real en:', this.config.apiUrl);
+    } else {
+      console.warn('MODO MOCK ACTIVADO - Usando datos de prueba');
+    }
   }
 
   private initializeConfig(): void {

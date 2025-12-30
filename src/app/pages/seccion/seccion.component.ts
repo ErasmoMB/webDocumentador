@@ -94,7 +94,39 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   previewFlex: string = '1';
   formularioFlex: string = '0 0 400px';
   filasTablaAISD2: number = 1;
-  fotografias: any[] = [{ numero: 1, titulo: '', fuente: '', imagen: null, preview: null }];
+  fotografias: any[] = [{ numero: 1, titulo: 'Título de fotografía', fuente: 'GEADES, 2024', imagen: null, preview: null }];
+  fotografiasCahuacho: any[] = [];
+  fotografiasCahuachoFormMulti: any[] = [];
+  fotografiasActividadesEconomicasFormMulti: any[] = [];
+  fotografiasMercadoFormMulti: any[] = [];
+  fotografiasInstitucionalidadFormMulti: any[] = [];
+  fotografiasGanaderiaFormMulti: any[] = [];
+  fotografiasAgriculturaFormMulti: any[] = [];
+  fotografiasComercioFormMulti: any[] = [];
+  fotografiasEstructuraFormMulti: any[] = [];
+  fotografiasDesechosSolidosFormMulti: any[] = [];
+  fotografiasElectricidadFormMulti: any[] = [];
+  fotografiasTransporteFormMulti: any[] = [];
+  fotografiasTelecomunicacionesFormMulti: any[] = [];
+  fotografiasSaludFormMulti: any[] = [];
+  fotografiasEducacionFormMulti: any[] = [];
+  fotografiasRecreacionFormMulti: any[] = [];
+  fotografiasDeporteFormMulti: any[] = [];
+  fotografiasIglesiaFormMulti: any[] = [];
+  fotografiasReservorioFormMulti: any[] = [];
+  fotografiasUsoSuelosFormMulti: any[] = [];
+  fotografiasEstructuraAISIFormMulti: any[] = [];
+  fotografiasDesechosSolidosAISIFormMulti: any[] = [];
+  fotografiasElectricidadAISIFormMulti: any[] = [];
+  fotografiasTransporteAISIFormMulti: any[] = [];
+  fotografiasTelecomunicacionesAISIFormMulti: any[] = [];
+  fotografiasSaludAISIFormMulti: any[] = [];
+  fotografiasEducacionAISIFormMulti: any[] = [];
+  fotografiasEducacion1AISIFormMulti: any[] = [];
+  fotografiasEducacion2AISIFormMulti: any[] = [];
+  fotografiasEducacion3AISIFormMulti: any[] = [];
+  fotografiasRecreacionAISIFormMulti: any[] = [];
+  fotografiasDeporteAISIFormMulti: any[] = [];
   
   fotoInstitucionalidadDragOver: boolean = false;
   fotoInstitucionalidadPreview: string | null = null;
@@ -130,6 +162,11 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   fotoRecreacionAISIPreview: string | null = null;
   fotoDeporteAISIPreview: string | null = null;
 
+  jsonFileName: string = '';
+  centrosPobladosJSON: any[] = [];
+  centroPobladoSeleccionado: any = null;
+  geoInfo: { DPTO: string, PROV: string, DIST: string } = { DPTO: '', PROV: '', DIST: '' };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -148,6 +185,23 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     
     this.datos = this.formularioService.obtenerDatos();
     this.formData = { ...this.datos };
+
+    const jsonData = this.formularioService.obtenerJSON();
+    if (jsonData && jsonData.length > 0) {
+      this.centrosPobladosJSON = jsonData.map((cp: any) => ({
+        ...cp,
+        selected: false
+      }));
+
+      if (this.centrosPobladosJSON.length > 0) {
+        const primerCP = this.centrosPobladosJSON[0];
+        this.geoInfo = {
+          DPTO: primerCP.DPTO || '',
+          PROV: primerCP.PROV || '',
+          DIST: primerCP.DIST || ''
+        };
+      }
+    }
   }
 
   async cargarSeccion() {
@@ -159,33 +213,73 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     
     if (this.seccionId === '3.1.4.A.1.1') {
       this.fotoInstitucionalidadPreview = this.datos['fotografiaAISD3Imagen'] || this.datos['fotografiaInstitucionalidadImagen'] || null;
+      
+      if (!this.datos['tituloInstituciones']) {
+        const tituloDefault = 'Instituciones existentes - CC ' + (this.datos['grupoAISD'] || 'Ayroca');
+        this.onFieldChange('tituloInstituciones', tituloDefault);
+      }
+      
+      if (!this.datos['fuenteInstituciones']) {
+        this.onFieldChange('fuenteInstituciones', 'GEADES (2024)');
+      }
+      
+      if (!this.datos['fotografiaAISD3Titulo'] && !this.datos['fotoInstitucionalidadTitulo']) {
+        const tituloFotoDefault = 'Local Comunal de la CC ' + (this.datos['grupoAISD'] || 'Ayroca');
+        this.onFieldChange('fotografiaAISD3Titulo', tituloFotoDefault);
+        this.onFieldChange('fotoInstitucionalidadTitulo', tituloFotoDefault);
+      }
+      
+      if (!this.datos['fotografiaAISD3Fuente'] && !this.datos['fotoInstitucionalidadFuente']) {
+        this.onFieldChange('fotografiaAISD3Fuente', 'GEADES, 2024');
+        this.onFieldChange('fotoInstitucionalidadFuente', 'GEADES, 2024');
+      }
     }
     
     if (this.seccionId === '3.1.4.A.1.4') {
+      if (this.fotosGanaderia.length === 0) {
+        this.getFotografiasGanaderiaForm();
+      }
+      if (this.fotosAgricultura.length === 0) {
+        this.getFotografiasAgriculturaForm();
+      }
       this.fotosGanaderia = [];
       this.fotosAgricultura = [];
       this.fotoComercioPreview = this.datos['fotografiaComercioImagen'] || null;
     }
     
+    if (this.seccionId === '3.1.4.B' || this.seccionId === '3.1.4.B.1') {
+      this.fotoCahuachoPreview = this.datos['fotografiaCahuachoImagen'] || null;
+      if (!this.datos['fotografiaCahuachoTitulo']) {
+        this.onFieldChange('fotografiaCahuachoTitulo', 'Vista panorámica del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'));
+      }
+      if (!this.datos['fotografiaCahuachoFuente']) {
+        this.onFieldChange('fotografiaCahuachoFuente', 'GEADES, 2024');
+      }
+      this.actualizarFotografiasCahuachoFormMulti();
+    }
+    
     if (this.seccionId === '3.1.4.A.1.5') {
-      this.fotoEstructuraPreview = this.datos['fotografiaEstructuraImagen'] || null;
+      this.actualizarFotografiasEstructuraFormMulti();
+      if (!this.datos.condicionOcupacionTabla || this.datos.condicionOcupacionTabla.length === 0) {
+        this.inicializarCondicionOcupacion();
+      }
     }
     
     if (this.seccionId === '3.1.4.A.1.6') {
-      this.fotoDesechosSolidosPreview = this.datos['fotografiaDesechosSolidosImagen'] || null;
-      this.fotoElectricidadPreview = this.datos['fotografiaElectricidadImagen'] || null;
+      this.actualizarFotografiasDesechosSolidosFormMulti();
+      this.actualizarFotografiasElectricidadFormMulti();
     }
     
     if (this.seccionId === '3.1.4.A.1.7') {
-      this.fotoTransportePreview = this.datos['fotografiaTransporteImagen'] || null;
-      this.fotoTelecomunicacionesPreview = this.datos['fotografiaTelecomunicacionesImagen'] || null;
+      this.actualizarFotografiasTransporteFormMulti();
+      this.actualizarFotografiasTelecomunicacionesFormMulti();
     }
     
     if (this.seccionId === '3.1.4.A.1.8') {
-      this.fotoSaludPreview = this.datos['fotografiaSaludImagen'] || null;
-      this.fotosEducacion = [];
-      this.fotosRecreacion = [];
-      this.fotosDeporte = [];
+      this.actualizarFotografiasSaludFormMulti();
+      this.actualizarFotografiasEducacionFormMulti();
+      this.actualizarFotografiasRecreacionFormMulti();
+      this.actualizarFotografiasDeporteFormMulti();
     }
     
     if (this.seccionId === '3.1.4.A.1.11') {
@@ -209,6 +303,18 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     if (this.seccionId === '3.1.4.A.1.12') {
       this.fotoReservorioPreview = this.datos['fotografiaReservorioImagen'] || null;
       this.fotoUsoSuelosPreview = this.datos['fotografiaUsoSuelosImagen'] || null;
+      if (!this.datos['fotografiaReservorioTitulo']) {
+        this.onFieldChange('fotografiaReservorioTitulo', 'Reservorio del anexo ' + (this.datos.grupoAISD || 'Ayroca'));
+      }
+      if (!this.datos['fotografiaReservorioFuente']) {
+        this.onFieldChange('fotografiaReservorioFuente', 'GEADES, 2024');
+      }
+      if (!this.datos['fotografiaUsoSuelosTitulo']) {
+        this.onFieldChange('fotografiaUsoSuelosTitulo', 'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca'));
+      }
+      if (!this.datos['fotografiaUsoSuelosFuente']) {
+        this.onFieldChange('fotografiaUsoSuelosFuente', 'GEADES, 2024');
+      }
     }
     
     // Actualizar seccion1 si estamos en la sección 3.1.1
@@ -229,8 +335,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       }, 100);
     }
     
-    // Actualizar seccion3 si estamos en la sección 3.1.3
-    if (this.seccionId === '3.1.3') {
+    // Actualizar seccion3 si estamos en la sección 3.1.3, 3.1.3.A o 3.1.3.B
+    if (this.seccionId === '3.1.3' || this.seccionId === '3.1.3.A' || this.seccionId === '3.1.3.B') {
       setTimeout(() => {
         if (this.seccion3Component) {
           this.seccion3Component.actualizarDatos();
@@ -244,7 +350,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     
     if (this.seccionId === '3.1.4' || this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1') {
       this.filasTablaAISD2 = 1;
-      this.fotografias = [{ numero: 1, titulo: '', fuente: '', imagen: null, preview: null, dragOver: false }];
+      this.fotografias = [{ numero: 1, titulo: 'Título de fotografía', fuente: 'GEADES, 2024', imagen: null, preview: null, dragOver: false }];
     }
     
     this.sectionFields.forEach(field => {
@@ -270,9 +376,43 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
         this.formData['altitudAISD'] = '';
         this.datos['altitudAISD'] = '';
       }
-      setTimeout(() => {
-        this.calcularTotalesTablaAISD2();
-      }, 100);
+
+      if (!this.formData['cuadroTituloAISD1']) {
+        this.onFieldChange('cuadroTituloAISD1', 'Ubicación referencial');
+      }
+      if (!this.formData['cuadroFuenteAISD1']) {
+        this.onFieldChange('cuadroFuenteAISD1', 'GEADES (2024)');
+      }
+      if (!this.formData['cuadroTituloAISD2']) {
+        this.onFieldChange('cuadroTituloAISD2', 'Cantidad total de población y viviendas');
+      }
+      if (!this.formData['cuadroFuenteAISD2']) {
+        this.onFieldChange('cuadroFuenteAISD2', 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)');
+      }
+
+      this.fotografias.forEach((foto, index) => {
+        const fotoKey1 = `fotografiaAISD${index + 1}Titulo`;
+        const fotoKey2 = `fotografiaAISD${index + 1}Fuente`;
+        if (!this.formData[fotoKey1]) {
+          this.onFieldChange(fotoKey1, 'Título de fotografía');
+          foto.titulo = 'Título de fotografía';
+        }
+        if (!this.formData[fotoKey2]) {
+          this.onFieldChange(fotoKey2, 'GEADES, 2024');
+          foto.fuente = 'GEADES, 2024';
+        }
+      });
+
+      const jsonData = this.formularioService.obtenerJSON();
+      if (jsonData && jsonData.length > 0) {
+        setTimeout(() => {
+          this.poblarTablaAISD2DesdeJSON(jsonData);
+        }, 200);
+      } else {
+        setTimeout(() => {
+          this.calcularTotalesTablaAISD2();
+        }, 100);
+      }
     }
     
     if (this.formData['distritoSeleccionado']) {
@@ -302,39 +442,180 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   }
 
   cargarDatosDemografiaAISD() {
-    const grupoAISD = this.datos['grupoAISD'];
-    const distrito = this.datos['distritoSeleccionado'];
+    let codigosCPP: string[] = [];
     
-    if (!grupoAISD || !distrito) {
+    if (this.datos['codigos'] && Array.isArray(this.datos['codigos'])) {
+      codigosCPP = this.datos['codigos'];
+    } else {
+      for (let i = 1; i <= this.filasTablaAISD2; i++) {
+        const codigo = this.formData[`tablaAISD2Fila${i}Codigo`] || this.datos[`tablaAISD2Fila${i}Codigo`] || '';
+        if (codigo && codigo.trim() !== '') {
+          codigosCPP.push(codigo.trim());
+        }
+      }
+    }
+    
+    if (!codigosCPP || codigosCPP.length === 0) {
+      const distrito = this.datos['distritoSeleccionado'];
+      if (!distrito) {
+        alert('Por favor, primero carga el JSON en la sección 3.1.4 para obtener los códigos CPP. Sin códigos CPP solo se puede cargar población por sexo, no por grupo etario.');
+        return;
+      }
+      
+      const confirmar = confirm('No se encontraron códigos CPP. El endpoint por distrito solo proporciona datos de población por sexo, no por grupo etario. ¿Deseas cargar solo los datos de población por sexo? Para datos completos, carga el JSON en la sección 3.1.4.');
+      if (!confirmar) {
+        return;
+      }
+      
+      this.dataService.getPoblacionByDistrito(distrito.toUpperCase()).subscribe({
+        next: (response) => {
+          if (response && response.success && Array.isArray(response.data)) {
+            const grupoAISD = this.datos['grupoAISD'];
+            const centroPoblado = response.data.find((cp: CentroPoblado) => 
+              cp.centro_poblado && cp.centro_poblado.toUpperCase() === grupoAISD?.toUpperCase()
+            ) || response.data[0];
+            
+            if (centroPoblado) {
+              const total = centroPoblado.total || 0;
+              const hombres = centroPoblado.hombres || 0;
+              const mujeres = centroPoblado.mujeres || 0;
+              
+              const porcentajeHombres = total > 0 ? ((hombres / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0 %';
+              const porcentajeMujeres = total > 0 ? ((mujeres / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0 %';
+              
+              this.datos['tablaAISD2TotalPoblacion'] = total.toString();
+              this.datos['poblacionSexoAISD'] = [
+                { sexo: 'Hombres', casos: hombres, porcentaje: porcentajeHombres },
+                { sexo: 'Mujeres', casos: mujeres, porcentaje: porcentajeMujeres }
+              ];
+              
+              alert('Datos de población por sexo cargados. Nota: Para cargar datos de grupo etario, necesitas cargar el JSON en la sección 3.1.4 para obtener los códigos CPP.');
+              
+              this.formularioService.actualizarDatos(this.datos);
+              this.cdRef.detectChanges();
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar datos demográficos:', error);
+          alert('Error al cargar los datos desde el backend. Verifica que el distrito sea correcto o carga el JSON en la sección 3.1.4.');
+        }
+      });
       return;
     }
     
-    this.dataService.getPoblacionByDistrito(distrito.toUpperCase()).subscribe({
+    const codigosValidos = codigosCPP.filter((codigo: string) => codigo && codigo.trim() !== '');
+    if (codigosValidos.length === 0) {
+      alert('No se encontraron códigos CPP válidos. Por favor, verifica la tabla en la sección 3.1.4.');
+      return;
+    }
+    
+    this.dataService.getPoblacionByCpp(codigosValidos).subscribe({
       next: (response) => {
-        if (response && response.success && Array.isArray(response.data)) {
-          const centroPoblado = response.data.find((cp: CentroPoblado) => 
-            cp.centro_poblado && cp.centro_poblado.toUpperCase() === grupoAISD.toUpperCase()
-          );
+        if (response && response.success && response.data && response.data.poblacion) {
+          const poblacion = response.data.poblacion;
           
-          if (centroPoblado) {
-            const total = centroPoblado.total || 0;
-            const hombres = centroPoblado.hombres || 0;
-            const mujeres = centroPoblado.mujeres || 0;
-            
-            const porcentajeHombres = total > 0 ? ((hombres / total) * 100).toFixed(2) + '%' : '0%';
-            const porcentajeMujeres = total > 0 ? ((mujeres / total) * 100).toFixed(2) + '%' : '0%';
-            
-            this.datos['poblacionSexoAISD'] = [
-              { sexo: 'Hombres', casos: hombres, porcentaje: porcentajeHombres },
-              { sexo: 'Mujeres', casos: mujeres, porcentaje: porcentajeMujeres }
+          const totalPoblacion = poblacion.total_poblacion || 0;
+          const totalHombres = poblacion.total_varones || 0;
+          const totalMujeres = poblacion.total_mujeres || 0;
+          
+          const porcentajeHombres = totalPoblacion > 0 
+            ? ((totalHombres / totalPoblacion) * 100).toFixed(2).replace('.', ',') + ' %' 
+            : '0 %';
+          const porcentajeMujeres = totalPoblacion > 0 
+            ? ((totalMujeres / totalPoblacion) * 100).toFixed(2).replace('.', ',') + ' %' 
+            : '0 %';
+          
+          this.datos['tablaAISD2TotalPoblacion'] = totalPoblacion.toString();
+          this.datos['poblacionSexoAISD'] = [
+            { sexo: 'Hombres', casos: totalHombres, porcentaje: porcentajeHombres },
+            { sexo: 'Mujeres', casos: totalMujeres, porcentaje: porcentajeMujeres }
+          ];
+          
+          const edad0_14 = poblacion.edad_0_14 || 0;
+          const edad15_29 = poblacion.edad_15_29 || 0;
+          const edad30_44 = poblacion.edad_30_44 || 0;
+          const edad45_64 = poblacion.edad_45_64 || 0;
+          const edad65_mas = poblacion.edad_65_mas || 0;
+          
+          const calcularPorcentaje = (valor: number) => {
+            return totalPoblacion > 0 
+              ? ((valor / totalPoblacion) * 100).toFixed(2).replace('.', ',') + ' %' 
+              : '0 %';
+          };
+          
+          this.datos['poblacionEtarioAISD'] = [
+            {
+              categoria: '0 a 14 años',
+              casos: edad0_14,
+              porcentaje: calcularPorcentaje(edad0_14)
+            },
+            {
+              categoria: '15 a 29 años',
+              casos: edad15_29,
+              porcentaje: calcularPorcentaje(edad15_29)
+            },
+            {
+              categoria: '30 a 44 años',
+              casos: edad30_44,
+              porcentaje: calcularPorcentaje(edad30_44)
+            },
+            {
+              categoria: '45 a 64 años',
+              casos: edad45_64,
+              porcentaje: calcularPorcentaje(edad45_64)
+            },
+            {
+              categoria: '65 años a más',
+              casos: edad65_mas,
+              porcentaje: calcularPorcentaje(edad65_mas)
+            }
+          ];
+          
+          const petTotal = edad15_29 + edad30_44 + edad45_64 + edad65_mas;
+          const calcularPorcentajePET = (valor: number) => {
+            return petTotal > 0 
+              ? ((valor / petTotal) * 100).toFixed(2).replace('.', ',') + ' %' 
+              : '0 %';
+          };
+          
+          if (!this.datos['petTabla'] || this.datos['petTabla'].length === 0) {
+            this.datos['petTabla'] = [
+              {
+                categoria: '15 a 29 años',
+                casos: edad15_29,
+                porcentaje: calcularPorcentajePET(edad15_29)
+              },
+              {
+                categoria: '30 a 44 años',
+                casos: edad30_44,
+                porcentaje: calcularPorcentajePET(edad30_44)
+              },
+              {
+                categoria: '45 a 64 años',
+                casos: edad45_64,
+                porcentaje: calcularPorcentajePET(edad45_64)
+              },
+              {
+                categoria: '65 años a más',
+                casos: edad65_mas,
+                porcentaje: calcularPorcentajePET(edad65_mas)
+              },
+              {
+                categoria: 'Total',
+                casos: petTotal,
+                porcentaje: '100,00 %'
+              }
             ];
-            
-            this.formularioService.actualizarDatos(this.datos);
-            this.cdRef.detectChanges();
           }
+          
+          this.formularioService.actualizarDatos(this.datos);
+          this.cdRef.detectChanges();
         }
       },
       error: (error) => {
+        console.error('Error al cargar datos demográficos desde códigos CPP:', error);
+        alert('Error al cargar los datos desde el backend. Verifica que los códigos CPP sean válidos.');
       }
     });
   }
@@ -345,6 +626,31 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     
     if (!distrito) {
       return;
+    }
+
+    const jsonData = this.formularioService.obtenerJSON();
+    if (jsonData && jsonData.length > 0) {
+      const centroPoblado = jsonData.find((cp: any) => 
+        cp.CCPP && cp.CCPP.toUpperCase() === grupoAISI.toUpperCase()
+      ) || jsonData.find((cp: any) => cp.CATEGORIA === 'Capital distrital');
+
+      if (centroPoblado && centroPoblado.POBLACION) {
+        const poblacionTotal = centroPoblado.POBLACION;
+        const porcentajeHombres = '49.65%';
+        const porcentajeMujeres = '50.35%';
+        const hombres = Math.round(poblacionTotal * 0.4965);
+        const mujeres = poblacionTotal - hombres;
+
+        this.datos['poblacionSexoAISI'] = [
+          { sexo: 'Hombre', casos: hombres, porcentaje: porcentajeHombres },
+          { sexo: 'Mujer', casos: mujeres, porcentaje: porcentajeMujeres },
+          { sexo: 'Total', casos: poblacionTotal, porcentaje: '100,00 %' }
+        ];
+
+        this.formularioService.actualizarDatos(this.datos);
+        this.cdRef.detectChanges();
+        return;
+      }
     }
     
     this.dataService.getPoblacionByDistrito(distrito.toUpperCase()).subscribe({
@@ -379,32 +685,223 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
 
   cargarDatosPEAAISI() {
     const distrito = this.datos['distritoSeleccionado'];
+    const grupoAISI = this.datos['grupoAISI'] || this.datos['centroPobladoAISI'] || distrito;
     
     if (!distrito) {
+      alert('Por favor, seleccione primero un distrito');
       return;
     }
-    
+
+    this.dataService.getPoblacionByDistrito(distrito.toUpperCase()).subscribe({
+      next: (poblacionResponse) => {
+        let totalHombresDistrito = 0;
+        let totalMujeresDistrito = 0;
+        let poblacionDistritalTotal = 0;
+
+        if (poblacionResponse && poblacionResponse.success && Array.isArray(poblacionResponse.data)) {
+          poblacionDistritalTotal = poblacionResponse.data.reduce((sum: number, cp: CentroPoblado) => {
+            totalHombresDistrito += cp.hombres || 0;
+            totalMujeresDistrito += cp.mujeres || 0;
+            return sum + (cp.total || 0);
+          }, 0);
+        }
+
+        this.datos['poblacionDistritalAISI'] = poblacionDistritalTotal.toString();
+
+        const jsonData = this.formularioService.obtenerJSON();
+        let codigoCPP: string | null = null;
+        
+        if (jsonData && jsonData.length > 0) {
+          const centroPoblado = jsonData.find((cp: any) => 
+            cp.CCPP && cp.CCPP.toUpperCase() === grupoAISI.toUpperCase()
+          ) || jsonData.find((cp: any) => cp.CATEGORIA === 'Capital distrital');
+          
+          if (centroPoblado && centroPoblado.CODIGO) {
+            codigoCPP = centroPoblado.CODIGO.toString();
+          }
+        }
+
+        if (codigoCPP) {
+          this.dataService.getPoblacionByCpp([codigoCPP]).subscribe({
+            next: (poblacionCppResponse) => {
+              if (poblacionCppResponse && poblacionCppResponse.success && poblacionCppResponse.data?.poblacion) {
+                const poblacion = poblacionCppResponse.data.poblacion;
+                const edad15_29 = poblacion.edad_15_29 || 0;
+                const edad30_44 = poblacion.edad_30_44 || 0;
+                const edad45_64 = poblacion.edad_45_64 || 0;
+                const edad65_mas = poblacion.edad_65_mas || 0;
+                const totalPET = edad15_29 + edad30_44 + edad45_64 + edad65_mas;
+
+                this.datos['petGruposEdadAISI'] = [
+                  {
+                    categoria: '15 a 29 años',
+                    casos: edad15_29,
+                    porcentaje: totalPET > 0 ? ((edad15_29 / totalPET) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %'
+                  },
+                  {
+                    categoria: '30 a 44 años',
+                    casos: edad30_44,
+                    porcentaje: totalPET > 0 ? ((edad30_44 / totalPET) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %'
+                  },
+                  {
+                    categoria: '45 a 64 años',
+                    casos: edad45_64,
+                    porcentaje: totalPET > 0 ? ((edad45_64 / totalPET) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %'
+                  },
+                  {
+                    categoria: '65 años a más',
+                    casos: edad65_mas,
+                    porcentaje: totalPET > 0 ? ((edad65_mas / totalPET) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %'
+                  },
+                  {
+                    categoria: 'Total',
+                    casos: totalPET,
+                    porcentaje: '100,00 %'
+                  }
+                ];
+              }
+              
+              this.cargarPEADataAISI(distrito, poblacionDistritalTotal, totalHombresDistrito, totalMujeresDistrito);
+            },
+            error: (error) => {
+              console.error('Error al cargar población por CPP:', error);
+              this.cargarPEADataAISI(distrito, poblacionDistritalTotal, totalHombresDistrito, totalMujeresDistrito);
+            }
+          });
+        } else {
+          this.cargarPEADataAISI(distrito, poblacionDistritalTotal, totalHombresDistrito, totalMujeresDistrito);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar población distrital:', error);
+        alert('Error al cargar la población distrital. Verifica que el distrito sea correcto.');
+      }
+    });
+  }
+
+  cargarPEADataAISI(distrito: string, poblacionDistritalTotal: number, totalHombresDistrito: number, totalMujeresDistrito: number) {
     this.dataService.getPEAByDistrito(distrito.toUpperCase()).subscribe({
       next: (response) => {
         if (response && response.success && response.data) {
-          const peaData = response.data;
+          const data = response.data;
           
-          this.datos['peaAISI'] = {
-            pea: peaData.pea || 0,
-            no_pea: peaData.no_pea || 0,
-            porcentaje_pea: peaData.porcentaje_pea || '0%',
-            porcentaje_no_pea: peaData.porcentaje_no_pea || '0%',
-            ocupada: peaData.ocupada || 0,
-            desocupada: peaData.desocupada || 0,
-            porcentaje_ocupada: peaData.porcentaje_ocupada || '0%',
-            porcentaje_desocupada: peaData.porcentaje_desocupada || '0%'
+          const totalPEA = data.pea || 0;
+          const totalNoPEA = data.no_pea || 0;
+          const totalPET = totalPEA + totalNoPEA;
+          
+          this.datos['petDistritalAISI'] = totalPET.toString();
+          
+          const totalOcupada = data.ocupada || 0;
+          const totalDesocupada = data.desocupada || 0;
+          
+          const proporcionHombres = poblacionDistritalTotal > 0 ? totalHombresDistrito / poblacionDistritalTotal : 0.5;
+          const proporcionMujeres = 1 - proporcionHombres;
+          
+          const hombresPEA = Math.round(totalPEA * proporcionHombres);
+          const mujeresPEA = totalPEA - hombresPEA;
+          const hombresNoPEA = Math.round(totalNoPEA * proporcionHombres);
+          const mujeresNoPEA = totalNoPEA - hombresNoPEA;
+          
+          const totalHombresPET = hombresPEA + hombresNoPEA;
+          const totalMujeresPET = mujeresPEA + mujeresNoPEA;
+          
+          const calcularPorcentajeSexo = (valor: number, total: number) => {
+            return total > 0 ? ((valor / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0 %';
           };
           
-          this.formularioService.actualizarDatos(this.datos);
+          this.datos['peaDistritoSexoTabla'] = [
+            {
+              categoria: 'PEA',
+              hombres: hombresPEA,
+              porcentajeHombres: calcularPorcentajeSexo(hombresPEA, totalHombresPET),
+              mujeres: mujeresPEA,
+              porcentajeMujeres: calcularPorcentajeSexo(mujeresPEA, totalMujeresPET),
+              casos: totalPEA,
+              porcentaje: data.porcentaje_pea || '0%'
+            },
+            {
+              categoria: 'No PEA',
+              hombres: hombresNoPEA,
+              porcentajeHombres: calcularPorcentajeSexo(hombresNoPEA, totalHombresPET),
+              mujeres: mujeresNoPEA,
+              porcentajeMujeres: calcularPorcentajeSexo(mujeresNoPEA, totalMujeresPET),
+              casos: totalNoPEA,
+              porcentaje: data.porcentaje_no_pea || '0%'
+            },
+            {
+              categoria: 'Total',
+              hombres: totalHombresPET,
+              porcentajeHombres: '100,00 %',
+              mujeres: totalMujeresPET,
+              porcentajeMujeres: '100,00 %',
+              casos: totalPET,
+              porcentaje: '100,00 %'
+            }
+          ];
+          
+          const hombresOcupada = Math.round(totalOcupada * proporcionHombres);
+          const mujeresOcupada = totalOcupada - hombresOcupada;
+          const hombresDesocupada = Math.round(totalDesocupada * proporcionHombres);
+          const mujeresDesocupada = totalDesocupada - hombresDesocupada;
+          
+          const totalHombresPEA = hombresOcupada + hombresDesocupada;
+          const totalMujeresPEA = mujeresOcupada + mujeresDesocupada;
+          const totalPEA2 = totalHombresPEA + totalMujeresPEA;
+          
+          this.datos['peaOcupadaDesocupadaTabla'] = [
+            {
+              categoria: 'PEA Ocupada',
+              hombres: hombresOcupada,
+              porcentajeHombres: calcularPorcentajeSexo(hombresOcupada, totalHombresPEA),
+              mujeres: mujeresOcupada,
+              porcentajeMujeres: calcularPorcentajeSexo(mujeresOcupada, totalMujeresPEA),
+              casos: totalOcupada,
+              porcentaje: data.porcentaje_ocupada || '0%'
+            },
+            {
+              categoria: 'PEA Desocupada',
+              hombres: hombresDesocupada,
+              porcentajeHombres: calcularPorcentajeSexo(hombresDesocupada, totalHombresPEA),
+              mujeres: mujeresDesocupada,
+              porcentajeMujeres: calcularPorcentajeSexo(mujeresDesocupada, totalMujeresPEA),
+              casos: totalDesocupada,
+              porcentaje: data.porcentaje_desocupada || '0%'
+            },
+            {
+              categoria: 'Total',
+              hombres: totalHombresPEA,
+              porcentajeHombres: '100,00 %',
+              mujeres: totalMujeresPEA,
+              porcentajeMujeres: '100,00 %',
+              casos: totalPEA2,
+              porcentaje: '100,00 %'
+            }
+          ];
+          
+          this.datos['peaAISI'] = {
+            pea: totalPEA,
+            no_pea: totalNoPEA,
+            porcentaje_pea: data.porcentaje_pea || '0%',
+            porcentaje_no_pea: data.porcentaje_no_pea || '0%',
+            ocupada: totalOcupada,
+            desocupada: totalDesocupada,
+            porcentaje_ocupada: data.porcentaje_ocupada || '0%',
+            porcentaje_desocupada: data.porcentaje_desocupada || '0%'
+          };
+          
+          this.formularioService.actualizarDato('poblacionDistritalAISI', this.datos['poblacionDistritalAISI']);
+          this.formularioService.actualizarDato('petDistritalAISI', this.datos['petDistritalAISI']);
+          this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+          this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+          this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+          this.formularioService.actualizarDato('peaAISI', this.datos['peaAISI']);
+          this.actualizarComponenteSeccion();
           this.cdRef.detectChanges();
         }
       },
       error: (error) => {
+        console.error('Error al cargar datos PEA:', error);
+        alert('Error al cargar los datos PEA desde el backend. Verifica que el distrito sea correcto.');
       }
     });
   }
@@ -919,6 +1416,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       '3.1.1': () => this.seccion1Component?.actualizarDatos(),
       '3.1.2': () => this.seccion2Component?.actualizarDatos(),
       '3.1.3': () => this.seccion3Component?.actualizarDatos(),
+      '3.1.3.A': () => this.seccion3Component?.actualizarDatos(),
+      '3.1.3.B': () => this.seccion3Component?.actualizarDatos(),
       '3.1.4.A.1.1': () => this.seccion5Component?.actualizarDatos(),
       '3.1.4.A.1.2': () => this.seccion6Component?.actualizarDatos(),
       '3.1.4.A.1.3': () => this.seccion7Component?.actualizarDatos(),
@@ -935,11 +1434,21 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       '3.1.4.A.1.14': () => this.seccion18Component?.actualizarDatos(),
       '3.1.4.A.1.15': () => this.seccion19Component?.actualizarDatos(),
       '3.1.4.A.1.16': () => this.seccion20Component?.actualizarDatos(),
-      '3.1.4.B': () => this.seccion21Component?.actualizarDatos(),
-      '3.1.4.B.1': () => this.seccion21Component?.actualizarDatos(),
+      '3.1.4.B': () => {
+        this.seccion21Component?.actualizarDatos();
+        this.actualizarFotografiasCahuachoFormMulti();
+      },
+      '3.1.4.B.1': () => {
+        this.seccion21Component?.actualizarDatos();
+        this.actualizarFotografiasCahuachoFormMulti();
+      },
       '3.1.4.B.1.1': () => this.seccion22Component?.actualizarDatos(),
       '3.1.4.B.1.2': () => this.seccion23Component?.actualizarDatos(),
-      '3.1.4.B.1.3': () => this.seccion24Component?.actualizarDatos(),
+      '3.1.4.B.1.3': () => {
+        this.seccion24Component?.actualizarDatos();
+        this.actualizarFotografiasActividadesEconomicasFormMulti();
+        this.actualizarFotografiasMercadoFormMulti();
+      },
       '3.1.4.B.1.4': () => this.seccion25Component?.actualizarDatos(),
       '3.1.4.B.1.5': () => this.seccion26Component?.actualizarDatos(),
       '3.1.4.B.1.6': () => this.seccion27Component?.actualizarDatos(),
@@ -961,7 +1470,11 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       }
     }
     
-    const valorLimpio = (value !== undefined && value !== null) ? value : '';
+    let valorLimpio = '';
+    if (value !== undefined && value !== null && value !== 'undefined') {
+      valorLimpio = value;
+    }
+    
     this.formData[fieldId] = valorLimpio;
     this.datos[fieldId] = valorLimpio;
     this.formularioService.actualizarDato(fieldId, valorLimpio);
@@ -969,14 +1482,35 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     
     this.actualizarComponenteSeccion();
     
-    if (fieldId.includes('tablaAISD2Fila') && (fieldId.includes('Poblacion') || fieldId.includes('Viviendas'))) {
-      this.calcularTotalesTablaAISD2();
+    if (fieldId.includes('tablaAISD2Fila')) {
+      if (fieldId.includes('Poblacion') || fieldId.includes('Viviendas')) {
+        this.calcularTotalesTablaAISD2();
+      }
+      if (fieldId.includes('Codigo')) {
+        setTimeout(() => {
+          this.actualizarFilasActivas();
+        }, 100);
+      }
     }
     
     this.cdRef.markForCheck();
     setTimeout(() => {
       this.cdRef.detectChanges();
     }, 0);
+  }
+
+  limpiarDatos() {
+    if (confirm('¿Está seguro que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
+      this.formularioService.limpiarDatos();
+      this.datos = this.formularioService.obtenerDatos();
+      this.formData = { ...this.datos };
+      this.centrosPobladosJSON = [];
+      this.jsonFileName = '';
+      this.geoInfo = { DPTO: '', PROV: '', DIST: '' };
+      this.centroPobladoSeleccionado = null;
+      this.cdRef.detectChanges();
+      alert('Todos los datos han sido limpiados.');
+    }
   }
 
   inicializarPoblacionSexo() {
@@ -1250,46 +1784,136 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       return;
     }
 
-    this.dataService.getPEAByDistrito(distrito.toUpperCase()).subscribe({
-      next: (response) => {
-        if (response && response.success && response.data) {
-          const data = response.data;
-          this.datos.peaTabla = [
-            {
-              categoria: 'PEA',
-              hombres: data.ocupada || 0,
-              porcentajeHombres: data.porcentaje_ocupada || '0%',
-              mujeres: data.desocupada || 0,
-              porcentajeMujeres: data.porcentaje_desocupada || '0%',
-              casos: data.pea || 0,
-              porcentaje: data.porcentaje_pea || '0%'
-            },
-            {
-              categoria: 'No PEA',
-              hombres: 0,
-              porcentajeHombres: '0%',
-              mujeres: 0,
-              porcentajeMujeres: '0%',
-              casos: data.no_pea || 0,
-              porcentaje: data.porcentaje_no_pea || '0%'
-            },
-            {
-              categoria: 'Total',
-              hombres: (data.pea || 0) + (data.no_pea || 0),
-              porcentajeHombres: '100,00 %',
-              mujeres: 0,
-              porcentajeMujeres: '0%',
-              casos: (data.pea || 0) + (data.no_pea || 0),
-              porcentaje: '100,00 %'
-            }
-          ];
-          this.formularioService.actualizarDato('peaTabla', this.datos.peaTabla);
-          this.actualizarComponenteSeccion();
-          this.cdRef.detectChanges();
+    this.dataService.getPoblacionByDistrito(distrito.toUpperCase()).subscribe({
+      next: (poblacionResponse) => {
+        let totalHombresDistrito = 0;
+        let totalMujeresDistrito = 0;
+        let poblacionDistritalTotal = 0;
+
+        if (poblacionResponse && poblacionResponse.success && Array.isArray(poblacionResponse.data)) {
+          poblacionDistritalTotal = poblacionResponse.data.reduce((sum: number, cp: CentroPoblado) => {
+            totalHombresDistrito += cp.hombres || 0;
+            totalMujeresDistrito += cp.mujeres || 0;
+            return sum + (cp.total || 0);
+          }, 0);
         }
+
+        this.datos['poblacionDistritalCahuacho'] = poblacionDistritalTotal.toString();
+
+        this.dataService.getPEAByDistrito(distrito.toUpperCase()).subscribe({
+          next: (response) => {
+            if (response && response.success && response.data) {
+              const data = response.data;
+              
+              const totalPEA = data.pea || 0;
+              const totalNoPEA = data.no_pea || 0;
+              const totalPET = totalPEA + totalNoPEA;
+              
+              this.datos['petDistritalCahuacho'] = totalPET.toString();
+              
+              const totalOcupada = data.ocupada || 0;
+              const totalDesocupada = data.desocupada || 0;
+              
+              const proporcionHombres = poblacionDistritalTotal > 0 ? totalHombresDistrito / poblacionDistritalTotal : 0.5;
+              const proporcionMujeres = 1 - proporcionHombres;
+              
+              const hombresPEA = Math.round(totalPEA * proporcionHombres);
+              const mujeresPEA = totalPEA - hombresPEA;
+              const hombresNoPEA = Math.round(totalNoPEA * proporcionHombres);
+              const mujeresNoPEA = totalNoPEA - hombresNoPEA;
+              
+              const totalHombresPET = hombresPEA + hombresNoPEA;
+              const totalMujeresPET = mujeresPEA + mujeresNoPEA;
+              
+              const calcularPorcentajeSexo = (valor: number, total: number) => {
+                return total > 0 ? ((valor / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0 %';
+              };
+              
+              this.datos.peaTabla = [
+                {
+                  categoria: 'PEA',
+                  hombres: hombresPEA,
+                  porcentajeHombres: calcularPorcentajeSexo(hombresPEA, totalHombresPET),
+                  mujeres: mujeresPEA,
+                  porcentajeMujeres: calcularPorcentajeSexo(mujeresPEA, totalMujeresPET),
+                  casos: totalPEA,
+                  porcentaje: data.porcentaje_pea || '0%'
+                },
+                {
+                  categoria: 'No PEA',
+                  hombres: hombresNoPEA,
+                  porcentajeHombres: calcularPorcentajeSexo(hombresNoPEA, totalHombresPET),
+                  mujeres: mujeresNoPEA,
+                  porcentajeMujeres: calcularPorcentajeSexo(mujeresNoPEA, totalMujeresPET),
+                  casos: totalNoPEA,
+                  porcentaje: data.porcentaje_no_pea || '0%'
+                },
+                {
+                  categoria: 'Total',
+                  hombres: totalHombresPET,
+                  porcentajeHombres: '100,00 %',
+                  mujeres: totalMujeresPET,
+                  porcentajeMujeres: '100,00 %',
+                  casos: totalPET,
+                  porcentaje: '100,00 %'
+                }
+              ];
+              
+              const hombresOcupada = Math.round(totalOcupada * proporcionHombres);
+              const mujeresOcupada = totalOcupada - hombresOcupada;
+              const hombresDesocupada = Math.round(totalDesocupada * proporcionHombres);
+              const mujeresDesocupada = totalDesocupada - hombresDesocupada;
+              
+              const totalHombresPEA = hombresOcupada + hombresDesocupada;
+              const totalMujeresPEA = mujeresOcupada + mujeresDesocupada;
+              
+              this.datos.peaOcupadaTabla = [
+                {
+                  categoria: 'PEA Ocupada',
+                  hombres: hombresOcupada,
+                  porcentajeHombres: calcularPorcentajeSexo(hombresOcupada, totalHombresPEA),
+                  mujeres: mujeresOcupada,
+                  porcentajeMujeres: calcularPorcentajeSexo(mujeresOcupada, totalMujeresPEA),
+                  casos: totalOcupada,
+                  porcentaje: data.porcentaje_ocupada || '0%'
+                },
+                {
+                  categoria: 'PEA Desocupada',
+                  hombres: hombresDesocupada,
+                  porcentajeHombres: calcularPorcentajeSexo(hombresDesocupada, totalHombresPEA),
+                  mujeres: mujeresDesocupada,
+                  porcentajeMujeres: calcularPorcentajeSexo(mujeresDesocupada, totalMujeresPEA),
+                  casos: totalDesocupada,
+                  porcentaje: data.porcentaje_desocupada || '0%'
+                },
+                {
+                  categoria: 'Total',
+                  hombres: totalHombresPEA,
+                  porcentajeHombres: '100,00 %',
+                  mujeres: totalMujeresPEA,
+                  porcentajeMujeres: '100,00 %',
+                  casos: totalPEA,
+                  porcentaje: '100,00 %'
+                }
+              ];
+              
+              this.formularioService.actualizarDato('poblacionDistritalCahuacho', this.datos['poblacionDistritalCahuacho']);
+              this.formularioService.actualizarDato('petDistritalCahuacho', this.datos['petDistritalCahuacho']);
+              this.formularioService.actualizarDato('peaTabla', this.datos.peaTabla);
+              this.formularioService.actualizarDato('peaOcupadaTabla', this.datos.peaOcupadaTabla);
+              this.actualizarComponenteSeccion();
+              this.cdRef.detectChanges();
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar datos PEA:', error);
+            alert('Error al cargar los datos PEA desde el backend. Verifica que el distrito sea correcto.');
+          }
+        });
       },
       error: (error) => {
-        console.error('Error al cargar datos PEA:', error);
+        console.error('Error al cargar población distrital:', error);
+        alert('Error al cargar la población distrital. Verifica que el distrito sea correcto.');
       }
     });
   }
@@ -1476,8 +2100,37 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   }
 
   actualizarFotoGanaderia(index: number, field: string, value: any) {
-    const fotoKey = `fotografiaGanaderia${index + 1}${field === 'titulo' ? 'Titulo' : 'Fuente'}`;
-    this.onFieldChange(fotoKey, value);
+    if (field === 'titulo') {
+      this.onFieldChange(`fotografiaGanaderia${index + 1}Titulo`, value);
+    } else if (field === 'fuente') {
+      this.onFieldChange(`fotografiaGanaderia${index + 1}Fuente`, value);
+    } else if (field === 'imagen') {
+      this.onFieldChange(`fotografiaGanaderia${index + 1}Imagen`, value);
+      if (this.fotosGanaderia[index]) {
+        this.fotosGanaderia[index].preview = value;
+      }
+    }
+  }
+
+  agregarFotoGanaderia() {
+    const nuevoIndex = this.fotosGanaderia.length + 1;
+    this.fotosGanaderia.push({
+      titulo: '',
+      fuente: 'GEADES, 2024',
+      preview: null,
+      dragOver: false
+    });
+  }
+
+  eliminarFotoGanaderia(index: number) {
+    if (this.fotosGanaderia.length > 1) {
+      const fotoKey = `fotografiaGanaderia${index + 1}`;
+      this.onFieldChange(`${fotoKey}Titulo`, '');
+      this.onFieldChange(`${fotoKey}Fuente`, '');
+      this.onFieldChange(`${fotoKey}Imagen`, '');
+      this.fotosGanaderia.splice(index, 1);
+      this.cdRef.detectChanges();
+    }
   }
 
   getFotografiasAgriculturaForm(): any[] {
@@ -1510,8 +2163,334 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   }
 
   actualizarFotoAgricultura(index: number, field: string, value: any) {
-    const fotoKey = `fotografiaAgricultura${index + 1}${field === 'titulo' ? 'Titulo' : 'Fuente'}`;
-    this.onFieldChange(fotoKey, value);
+    if (field === 'titulo') {
+      this.onFieldChange(`fotografiaAgricultura${index + 1}Titulo`, value);
+    } else if (field === 'fuente') {
+      this.onFieldChange(`fotografiaAgricultura${index + 1}Fuente`, value);
+    } else if (field === 'imagen') {
+      this.onFieldChange(`fotografiaAgricultura${index + 1}Imagen`, value);
+      if (this.fotosAgricultura[index]) {
+        this.fotosAgricultura[index].preview = value;
+      }
+    }
+  }
+
+  agregarFotoAgricultura() {
+    const nuevoIndex = this.fotosAgricultura.length + 1;
+    this.fotosAgricultura.push({
+      titulo: '',
+      fuente: 'GEADES, 2024',
+      preview: null,
+      dragOver: false
+    });
+  }
+
+  eliminarFotoAgricultura(index: number) {
+    if (this.fotosAgricultura.length > 1) {
+      const fotoKey = `fotografiaAgricultura${index + 1}`;
+      this.onFieldChange(`${fotoKey}Titulo`, '');
+      this.onFieldChange(`${fotoKey}Fuente`, '');
+      this.onFieldChange(`${fotoKey}Imagen`, '');
+      this.fotosAgricultura.splice(index, 1);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  getFotografiasGanaderiaFormMulti(): any[] {
+    const fotos = this.getFotografiasGanaderiaForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Ganado vacuno en la CC ' + (this.datos.grupoAISD || 'Ayroca') : 'Ganado ovino y caprino en la CC ' + (this.datos.grupoAISD || 'Ayroca')),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `ganaderia-${index}`
+    }));
+  }
+
+  actualizarFotografiasGanaderiaFormMulti() {
+    const nuevasFotografias = this.getFotografiasGanaderiaFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasGanaderiaFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasGanaderiaFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasGanaderiaChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaGanaderia${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaGanaderia${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaGanaderia${num}Imagen`, foto.imagen || '');
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaGanaderia${i}Titulo`, '');
+      this.onFieldChange(`fotografiaGanaderia${i}Fuente`, '');
+      this.onFieldChange(`fotografiaGanaderia${i}Imagen`, '');
+    }
+    this.fotosGanaderia = fotografias.map(f => ({ ...f, preview: f.imagen }));
+    this.actualizarFotografiasGanaderiaFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasAgriculturaFormMulti(): any[] {
+    const fotos = this.getFotografiasAgriculturaForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Parcela agrícola en el anexo ' + (this.datos.grupoAISD || 'Ayroca') : 'Sector agrícola en la CC ' + (this.datos.grupoAISD || 'Ayroca')),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `agricultura-${index}`
+    }));
+  }
+
+  actualizarFotografiasAgriculturaFormMulti() {
+    const nuevasFotografias = this.getFotografiasAgriculturaFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasAgriculturaFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasAgriculturaFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasAgriculturaChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaAgricultura${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaAgricultura${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaAgricultura${num}Imagen`, foto.imagen || '');
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaAgricultura${i}Titulo`, '');
+      this.onFieldChange(`fotografiaAgricultura${i}Fuente`, '');
+      this.onFieldChange(`fotografiaAgricultura${i}Imagen`, '');
+    }
+    this.fotosAgricultura = fotografias.map(f => ({ ...f, preview: f.imagen }));
+    this.actualizarFotografiasAgriculturaFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasEducacionFormMulti(): any[] {
+    const fotos = this.getFotografiasEducacionForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Infraestructura de la IE ' + (this.datos.grupoAISD || 'Ayroca') : 'Infraestructura de la IE N°40270'),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `educacion-${index}`
+    }));
+  }
+
+  actualizarFotografiasEducacionFormMulti() {
+    const nuevasFotografias = this.getFotografiasEducacionFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasEducacionFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasEducacionFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasEducacionChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      if (index === 0) {
+        this.onFieldChange('fotografiaIEAyrocaTitulo', foto.titulo);
+        this.onFieldChange('fotografiaIEAyrocaFuente', foto.fuente);
+        this.onFieldChange('fotografiaIEAyrocaImagen', foto.imagen || '');
+      } else {
+        this.onFieldChange('fotografiaIE40270Titulo', foto.titulo);
+        this.onFieldChange('fotografiaIE40270Fuente', foto.fuente);
+        this.onFieldChange('fotografiaIE40270Imagen', foto.imagen || '');
+      }
+    });
+    this.fotosEducacion = fotografias.map(f => ({ ...f, preview: f.imagen }));
+    this.actualizarFotografiasEducacionFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasRecreacionFormMulti(): any[] {
+    const fotos = this.getFotografiasRecreacionForm();
+    const titulosDefault = [
+      'Parque recreacional público del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'Plaza de toros del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'Plaza central del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    ];
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || titulosDefault[index] || '',
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `recreacion-${index}`
+    }));
+  }
+
+  actualizarFotografiasRecreacionFormMulti() {
+    const nuevasFotografias = this.getFotografiasRecreacionFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasRecreacionFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasRecreacionFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasRecreacionChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaRecreacion${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaRecreacion${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaRecreacion${num}Imagen`, foto.imagen || '');
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaRecreacion${i}Titulo`, '');
+      this.onFieldChange(`fotografiaRecreacion${i}Fuente`, '');
+      this.onFieldChange(`fotografiaRecreacion${i}Imagen`, '');
+    }
+    this.fotosRecreacion = fotografias.map(f => ({ ...f, preview: f.imagen }));
+    this.actualizarFotografiasRecreacionFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasDeporteFormMulti(): any[] {
+    const fotos = this.getFotografiasDeporteForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Losa deportiva del anexo ' + (this.datos.grupoAISD || 'Ayroca') : 'Estadio del anexo ' + (this.datos.grupoAISD || 'Ayroca')),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `deporte-${index}`
+    }));
+  }
+
+  actualizarFotografiasDeporteFormMulti() {
+    const nuevasFotografias = this.getFotografiasDeporteFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasDeporteFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasDeporteFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasDeporteChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaDeporte${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaDeporte${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaDeporte${num}Imagen`, foto.imagen || '');
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaDeporte${i}Titulo`, '');
+      this.onFieldChange(`fotografiaDeporte${i}Fuente`, '');
+      this.onFieldChange(`fotografiaDeporte${i}Imagen`, '');
+    }
+    this.fotosDeporte = fotografias.map(f => ({ ...f, preview: f.imagen }));
+    this.actualizarFotografiasDeporteFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasAISDFormMulti(): any[] {
+    return this.fotografias.map((foto, index) => ({
+      titulo: foto.titulo || 'Título de fotografía',
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || foto.imagen || null,
+      id: `aisd-${index}`
+    }));
+  }
+
+  onFotografiasAISDChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaAISD${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaAISD${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaAISD${num}Imagen`, foto.imagen || '');
+      this.fotografias[index] = {
+        numero: num,
+        titulo: foto.titulo,
+        fuente: foto.fuente,
+        imagen: foto.imagen,
+        preview: foto.imagen
+      };
+    });
+    this.fotografias = this.fotografias.slice(0, fotografias.length);
+    this.formularioService.actualizarDato('fotografias', this.fotografias);
+  }
+
+  getFotografiasEducacionAISIFormMulti(): any[] {
+    const fotos = [];
+    for (let i = 1; i <= 3; i++) {
+      const tituloKey = `fotografiaEducacion${i}AISITitulo`;
+      const fuenteKey = `fotografiaEducacion${i}AISIFuente`;
+      const imagenKey = `fotografiaEducacion${i}AISIImagen`;
+      const titulosDefault = [
+        'Infraestructura de la IE Cahuacho',
+        'Infraestructura de la IE N°40271',
+        'Infraestructura de la IE Virgen de Copacabana'
+      ];
+      fotos.push({
+        titulo: this.datos[tituloKey] || titulosDefault[i - 1] || '',
+        fuente: this.datos[fuenteKey] || 'GEADES, 2024',
+        imagen: this.datos[imagenKey] || null,
+        id: `educacion-aisi-${i}`
+      });
+    }
+    return fotos;
+  }
+
+  onFotografiasEducacionAISIChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaEducacion${num}AISITitulo`, foto.titulo);
+      this.onFieldChange(`fotografiaEducacion${num}AISIFuente`, foto.fuente);
+      this.onFieldChange(`fotografiaEducacion${num}AISIImagen`, foto.imagen || '');
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaEducacion${i}AISITitulo`, '');
+      this.onFieldChange(`fotografiaEducacion${i}AISIFuente`, '');
+      this.onFieldChange(`fotografiaEducacion${i}AISIImagen`, '');
+    }
   }
 
   calcularTotalesTablaAISD2() {
@@ -1572,14 +2551,69 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     return Array.from({ length: this.filasTablaAISD2 }, (_, i) => i + 1);
   }
 
+  poblarTablaAISD2DesdeJSON(centrosPoblados: any[]) {
+    if (!centrosPoblados || centrosPoblados.length === 0) return;
+
+    const centrosPobladosValidos = centrosPoblados.filter((cp: any) => cp.CCPP && cp.CODIGO);
+    
+    if (centrosPobladosValidos.length === 0) return;
+
+    const filasActivasGuardadas = this.formularioService.obtenerFilasActivasTablaAISD2();
+    const codigosActivos: string[] = [];
+
+    if (filasActivasGuardadas.length > 0) {
+      let filaIndex = 1;
+      centrosPobladosValidos.forEach((cp: any) => {
+        const codigoCPP = cp.CODIGO?.toString() || '';
+        if (filasActivasGuardadas.includes(codigoCPP)) {
+          this.onFieldChange(`tablaAISD2Fila${filaIndex}Punto`, cp.CCPP || '');
+          this.onFieldChange(`tablaAISD2Fila${filaIndex}Codigo`, codigoCPP);
+          this.onFieldChange(`tablaAISD2Fila${filaIndex}Poblacion`, cp.POBLACION?.toString() || '0');
+          codigosActivos.push(codigoCPP);
+          filaIndex++;
+        }
+      });
+      this.filasTablaAISD2 = codigosActivos.length;
+    } else {
+      this.filasTablaAISD2 = centrosPobladosValidos.length;
+      centrosPobladosValidos.forEach((cp: any, index: number) => {
+        const filaIndex = index + 1;
+        const codigoCPP = cp.CODIGO?.toString() || '';
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Punto`, cp.CCPP || '');
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Codigo`, codigoCPP);
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Poblacion`, cp.POBLACION?.toString() || '0');
+        codigosActivos.push(codigoCPP);
+      });
+      this.formularioService.guardarFilasActivasTablaAISD2(codigosActivos);
+    }
+
+    setTimeout(() => {
+      this.calcularTotalesTablaAISD2();
+      this.cdRef.detectChanges();
+    }, 100);
+  }
+
   agregarFilaTabla() {
     this.filasTablaAISD2++;
-    this.cdRef.detectChanges();
+    this.actualizarFilasActivas();
+  }
+
+  actualizarFilasActivas() {
+    const codigosActivos: string[] = [];
+    for (let i = 1; i <= this.filasTablaAISD2; i++) {
+      const codigo = this.formData[`tablaAISD2Fila${i}Codigo`] || '';
+      if (codigo) {
+        codigosActivos.push(codigo);
+      }
+    }
+    this.formularioService.guardarFilasActivasTablaAISD2(codigosActivos);
   }
 
   eliminarFilaTabla(index: number) {
     if (this.filasTablaAISD2 > 1) {
       const filaIndex = index + 1;
+      const codigoEliminado = this.formData[`tablaAISD2Fila${filaIndex}Codigo`] || '';
+      
       this.onFieldChange(`tablaAISD2Fila${filaIndex}Punto`, '');
       this.onFieldChange(`tablaAISD2Fila${filaIndex}Codigo`, '');
       this.onFieldChange(`tablaAISD2Fila${filaIndex}Poblacion`, '');
@@ -1601,9 +2635,48 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       }
       
       this.filasTablaAISD2--;
+      
+      if (codigoEliminado) {
+        const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2();
+        const nuevasFilasActivas = filasActivas.filter((codigo: string) => codigo !== codigoEliminado);
+        this.formularioService.guardarFilasActivasTablaAISD2(nuevasFilasActivas);
+      }
+      
       this.calcularTotalesTablaAISD2();
       this.cdRef.detectChanges();
     }
+  }
+
+  agregarEntrevistado() {
+    if (!this.datos.entrevistados) {
+      this.datos.entrevistados = [];
+    }
+    this.datos.entrevistados.push({ nombre: '', cargo: '', organizacion: '' });
+    this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarEntrevistado(index: number) {
+    if (this.datos.entrevistados && this.datos.entrevistados.length > 0) {
+      this.datos.entrevistados.splice(index, 1);
+      this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
+      this.actualizarComponenteSeccion();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarEntrevistado(index: number, campo: string, value: string) {
+    if (!this.datos.entrevistados) {
+      this.datos.entrevistados = [];
+    }
+    if (!this.datos.entrevistados[index]) {
+      this.datos.entrevistados[index] = { nombre: '', cargo: '', organizacion: '' };
+    }
+    this.datos.entrevistados[index][campo] = value;
+    this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
   }
 
   getRenderedTemplate(): string {
@@ -1746,6 +2819,13 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       template = template.replace(textoPattern, textoMatch[1] + textoHTML + textoMatch[3]);
     }
     
+    const tituloTabla = this.datos['tituloInstituciones'] || 'Instituciones existentes – CC ' + (this.datos['grupoAISD'] || 'Ayroca');
+    const tituloPattern = /(<p class="table-title">Cuadro N° 3\. 4<\/p>[\s\S]*?<p class="table-title-main">)([\s\S]*?)(<\/p>)/;
+    const tituloMatch = template.match(tituloPattern);
+    if (tituloMatch) {
+      template = template.replace(tituloPattern, tituloMatch[1] + tituloTabla + tituloMatch[3]);
+    }
+    
     const tablaPattern = /(<p class="table-title">Cuadro N° 3\. 4<\/p>[\s\S]*?<table class="table-container">[\s\S]*?<thead>[\s\S]*?Categoría[\s\S]*?<\/thead>[\s\S]*?<tbody>)([\s\S]*?)(<\/tbody>[\s\S]*?<\/table>)/;
     const match = template.match(tablaPattern);
     
@@ -1860,6 +2940,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       return template;
     }
     
+    const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2();
     let filasHTML = '';
     
     for (let i = 1; i <= this.filasTablaAISD2; i++) {
@@ -1869,7 +2950,10 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       const viviendasEmp = this.datos[`tablaAISD2Fila${i}ViviendasEmpadronadas`] || '';
       const viviendasOcp = this.datos[`tablaAISD2Fila${i}ViviendasOcupadas`] || '';
       
-      if (punto || codigo || poblacion || viviendasEmp || viviendasOcp) {
+      const codigoStr = codigo.toString().trim();
+      const esFilaActiva = filasActivas.length === 0 || filasActivas.includes(codigoStr);
+      
+      if (esFilaActiva && (punto || codigo || poblacion || viviendasEmp || viviendasOcp)) {
         filasHTML += `
             <tr>
                 <td class="table-cell"><span class="highlight">${punto || '____'}</span></td>
@@ -2007,15 +3091,11 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
           html += `
             <div class="image-item">
               <p class="text-center"><strong>Fotografía N° 3. ${idx + 1}</strong></p>
-              <p class="text-center">${foto.titulo || '____'}</p>
-              ${foto.preview ? 
-                `<div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                  <img src="${foto.preview}" style="max-width: 100%; max-height: 400px; border-radius: 8px;" alt="Fotografía">
-                </div>` :
-                `<div style="width: 100%; height: 300px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5;">
-                </div>`
-              }
-              <p class="text-center" style="font-size: 0.9em; margin-top: 5px;">FUENTE: ${foto.fuente || '____'}</p>
+              <p class="text-center">${foto.titulo || 'Título de fotografía'}</p>
+              <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                <img src="${foto.preview}" style="max-width: 100%; max-height: 400px; border-radius: 8px;" alt="Fotografía">
+              </div>
+              <p class="text-center" style="font-size: 0.9em; margin-top: 5px;">FUENTE: ${foto.fuente || 'GEADES, 2024'}</p>
             </div>
           `;
         });
@@ -2038,23 +3118,14 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       const fuente = this.datos?.[`fotografiaAISD${i}Fuente`];
       const imagen = this.datos?.[`fotografiaAISD${i}Imagen`];
       
-      if (titulo || fuente || imagen) {
+      if (imagen) {
         fotos.push({
           numero: i,
-          titulo: titulo || '____',
-          fuente: fuente || '____',
-          preview: imagen || null
+          titulo: titulo || 'Título de fotografía',
+          fuente: fuente || 'GEADES, 2024',
+          preview: imagen
         });
       }
-    }
-    
-    if (fotos.length === 0 && (this.seccionId === '3.1.4' || this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1')) {
-      fotos.push({
-        numero: 1,
-        titulo: '____',
-        fuente: '____',
-        preview: null
-      });
     }
     
     return fotos;
@@ -2221,6 +3292,35 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       return;
     }
 
+    const jsonData = this.formularioService.obtenerJSON();
+    if (jsonData && jsonData.length > 0) {
+      const centroPoblado = jsonData.find((cp: any) => 
+        cp.CODIGO && cp.CODIGO.toString().trim() === cppCode.trim()
+      );
+
+      if (centroPoblado) {
+        let filaIndex = -1;
+        for (let i = 1; i <= this.filasTablaAISD2; i++) {
+          if (!this.formData[`tablaAISD2Fila${i}Punto`] || this.formData[`tablaAISD2Fila${i}Punto`] === '' || this.formData[`tablaAISD2Fila${i}Punto`] === '____') {
+            filaIndex = i;
+            break;
+          }
+        }
+
+        if (filaIndex === -1) {
+          this.agregarFilaTabla();
+          filaIndex = this.filasTablaAISD2;
+        }
+
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Punto`, centroPoblado.CCPP || '');
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Codigo`, centroPoblado.CODIGO?.toString() || '');
+        this.onFieldChange(`tablaAISD2Fila${filaIndex}Poblacion`, centroPoblado.POBLACION?.toString() || '');
+        
+        this.cdRef.detectChanges();
+        return;
+      }
+    }
+
     const distrito = this.formData['distritoSeleccionado'];
     if (!distrito) {
       alert('Por favor seleccione primero el distrito principal');
@@ -2279,12 +3379,16 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     const nuevoNumero = this.fotografias.length + 1;
     this.fotografias.push({
       numero: nuevoNumero,
-      titulo: '',
-      fuente: '',
+      titulo: 'Título de fotografía',
+      fuente: 'GEADES, 2024',
       imagen: null,
       preview: null,
       dragOver: false
     });
+    const fotoKey1 = `fotografiaAISD${nuevoNumero}Titulo`;
+    const fotoKey2 = `fotografiaAISD${nuevoNumero}Fuente`;
+    this.onFieldChange(fotoKey1, 'Título de fotografía');
+    this.onFieldChange(fotoKey2, 'GEADES, 2024');
     this.cdRef.detectChanges();
   }
 
@@ -2627,10 +3731,21 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
 
   inicializarCondicionOcupacion() {
     if (!this.datos.condicionOcupacionTabla || this.datos.condicionOcupacionTabla.length === 0) {
+      const totalEmpadronadas = parseInt(this.datos['tablaAISD2TotalViviendasEmpadronadas'] || '0') || 0;
+      const totalOcupadas = parseInt(this.datos['tablaAISD2TotalViviendasOcupadas'] || '0') || 0;
+      const otrasCondiciones = totalEmpadronadas - totalOcupadas;
+      
+      const porcentajeOcupadas = totalEmpadronadas > 0 
+        ? ((totalOcupadas / totalEmpadronadas) * 100).toFixed(2).replace('.', ',') + ' %' 
+        : '0 %';
+      const porcentajeOtras = totalEmpadronadas > 0 
+        ? ((otrasCondiciones / totalEmpadronadas) * 100).toFixed(2).replace('.', ',') + ' %' 
+        : '0 %';
+      
       this.datos.condicionOcupacionTabla = [
-        { categoria: 'Viviendas ocupadas', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas con otra condición', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '0%' }
+        { categoria: 'Viviendas ocupadas', casos: totalOcupadas, porcentaje: porcentajeOcupadas },
+        { categoria: 'Viviendas con otra condición', casos: otrasCondiciones, porcentaje: porcentajeOtras },
+        { categoria: 'Total', casos: totalEmpadronadas, porcentaje: '100,00 %' }
       ];
       this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos.condicionOcupacionTabla);
       this.cdRef.detectChanges();
@@ -3291,9 +4406,10 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
         const imagenKey = i === 1 ? 'fotografiaIEAyrocaImagen' : 'fotografiaIE40270Imagen';
         const tituloKey = i === 1 ? 'fotografiaIEAyrocaTitulo' : 'fotografiaIE40270Titulo';
         const fuenteKey = i === 1 ? 'fotografiaIEAyrocaFuente' : 'fotografiaIE40270Fuente';
+        const tituloDefault = i === 1 ? 'Infraestructura de la IE ' + (this.datos.grupoAISD || 'Ayroca') : 'Infraestructura de la IE N°40270';
         this.fotosEducacion.push({
-          titulo: this.datos[tituloKey] || '',
-          fuente: this.datos[fuenteKey] || '',
+          titulo: this.datos[tituloKey] || tituloDefault,
+          fuente: this.datos[fuenteKey] || 'GEADES, 2024',
           preview: this.datos[imagenKey] || null
         });
       }
@@ -3302,14 +4418,19 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
         const imagenKey = i === 0 ? 'fotografiaIEAyrocaImagen' : 'fotografiaIE40270Imagen';
         const tituloKey = i === 0 ? 'fotografiaIEAyrocaTitulo' : 'fotografiaIE40270Titulo';
         const fuenteKey = i === 0 ? 'fotografiaIEAyrocaFuente' : 'fotografiaIE40270Fuente';
+        const tituloDefault = i === 0 ? 'Infraestructura de la IE ' + (this.datos.grupoAISD || 'Ayroca') : 'Infraestructura de la IE N°40270';
         if (!this.fotosEducacion[i].preview && this.datos[imagenKey]) {
           this.fotosEducacion[i].preview = this.datos[imagenKey];
         }
         if (!this.fotosEducacion[i].titulo && this.datos[tituloKey]) {
           this.fotosEducacion[i].titulo = this.datos[tituloKey];
+        } else if (!this.fotosEducacion[i].titulo) {
+          this.fotosEducacion[i].titulo = tituloDefault;
         }
         if (!this.fotosEducacion[i].fuente && this.datos[fuenteKey]) {
           this.fotosEducacion[i].fuente = this.datos[fuenteKey];
+        } else if (!this.fotosEducacion[i].fuente) {
+          this.fotosEducacion[i].fuente = 'GEADES, 2024';
         }
       }
     }
@@ -3334,14 +4455,19 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   }
 
   getFotografiasRecreacionForm(): any[] {
+    const titulosDefault = [
+      'Parque recreacional público del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'Plaza de toros del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'Plaza central del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    ];
     if (this.fotosRecreacion.length === 0) {
       for (let i = 1; i <= 3; i++) {
         const imagenKey = `fotografiaRecreacion${i}Imagen`;
         const tituloKey = `fotografiaRecreacion${i}Titulo`;
         const fuenteKey = `fotografiaRecreacion${i}Fuente`;
         this.fotosRecreacion.push({
-          titulo: this.datos[tituloKey] || '',
-          fuente: this.datos[fuenteKey] || '',
+          titulo: this.datos[tituloKey] || titulosDefault[i - 1],
+          fuente: this.datos[fuenteKey] || 'GEADES, 2024',
           preview: this.datos[imagenKey] || null
         });
       }
@@ -3355,9 +4481,13 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
         }
         if (!this.fotosRecreacion[i].titulo && this.datos[tituloKey]) {
           this.fotosRecreacion[i].titulo = this.datos[tituloKey];
+        } else if (!this.fotosRecreacion[i].titulo) {
+          this.fotosRecreacion[i].titulo = titulosDefault[i];
         }
         if (!this.fotosRecreacion[i].fuente && this.datos[fuenteKey]) {
           this.fotosRecreacion[i].fuente = this.datos[fuenteKey];
+        } else if (!this.fotosRecreacion[i].fuente) {
+          this.fotosRecreacion[i].fuente = 'GEADES, 2024';
         }
       }
     }
@@ -3383,14 +4513,18 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   }
 
   getFotografiasDeporteForm(): any[] {
+    const titulosDefault = [
+      'Losa deportiva del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'Estadio del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    ];
     if (this.fotosDeporte.length === 0) {
       for (let i = 1; i <= 2; i++) {
         const imagenKey = `fotografiaDeporte${i}Imagen`;
         const tituloKey = `fotografiaDeporte${i}Titulo`;
         const fuenteKey = `fotografiaDeporte${i}Fuente`;
         this.fotosDeporte.push({
-          titulo: this.datos[tituloKey] || '',
-          fuente: this.datos[fuenteKey] || '',
+          titulo: this.datos[tituloKey] || titulosDefault[i - 1],
+          fuente: this.datos[fuenteKey] || 'GEADES, 2024',
           preview: this.datos[imagenKey] || null
         });
       }
@@ -3404,9 +4538,13 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
         }
         if (!this.fotosDeporte[i].titulo && this.datos[tituloKey]) {
           this.fotosDeporte[i].titulo = this.datos[tituloKey];
+        } else if (!this.fotosDeporte[i].titulo) {
+          this.fotosDeporte[i].titulo = titulosDefault[i];
         }
         if (!this.fotosDeporte[i].fuente && this.datos[fuenteKey]) {
           this.fotosDeporte[i].fuente = this.datos[fuenteKey];
+        } else if (!this.fotosDeporte[i].fuente) {
+          this.fotosDeporte[i].fuente = 'GEADES, 2024';
         }
       }
     }
@@ -4188,12 +5326,108 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     }
   }
 
+  getFotografiasCahuachoForm(): any[] {
+    const fotografias: any[] = [];
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `fotografiaCahuacho${i}Imagen`;
+      let preview = this.datos[imagenKey] || null;
+      
+      if (i === 1 && !preview) {
+        preview = this.datos['fotografiaCahuachoImagen'] || null;
+      }
+      
+      let titulo = this.datos[`fotografiaCahuacho${i}Titulo`];
+      let fuente = this.datos[`fotografiaCahuacho${i}Fuente`];
+      
+      if (i === 1) {
+        if (!titulo) {
+          titulo = this.datos['fotografiaCahuachoTitulo'] || 'Vista panorámica del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho');
+        }
+        if (!fuente) {
+          fuente = this.datos['fotografiaCahuachoFuente'] || 'GEADES, 2024';
+        }
+      }
+      
+      if (i === 1 || titulo || preview) {
+        fotografias.push({
+          titulo: titulo || (i === 1 ? 'Vista panorámica del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : ''),
+          fuente: fuente || 'GEADES, 2024',
+          preview: preview,
+          dragOver: false
+        });
+      }
+    }
+    
+    if (fotografias.length === 0) {
+      fotografias.push({
+        titulo: 'Vista panorámica del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+        fuente: 'GEADES, 2024',
+        preview: null,
+        dragOver: false
+      });
+    }
+    
+    this.fotografiasCahuacho = fotografias;
+    return fotografias;
+  }
+
+  getFotografiasCahuachoFormMulti(): any[] {
+    const fotos = this.getFotografiasCahuachoForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Vista panorámica del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : 'Título de fotografía'),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `cahuacho-${index}-${Date.now()}`
+    }));
+  }
+
+  actualizarFotografiasCahuachoFormMulti() {
+    const nuevasFotografias = this.getFotografiasCahuachoFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasCahuachoFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasCahuachoFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasCahuachoChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaCahuacho${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaCahuacho${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaCahuacho${num}Imagen`, foto.imagen || '');
+      
+      if (num === 1) {
+        this.onFieldChange('fotografiaCahuachoTitulo', foto.titulo);
+        this.onFieldChange('fotografiaCahuachoFuente', foto.fuente);
+        this.onFieldChange('fotografiaCahuachoImagen', foto.imagen || '');
+        this.fotoCahuachoPreview = foto.imagen || null;
+      }
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaCahuacho${i}Titulo`, '');
+      this.onFieldChange(`fotografiaCahuacho${i}Fuente`, '');
+      this.onFieldChange(`fotografiaCahuacho${i}Imagen`, '');
+    }
+    this.fotografiasCahuacho = fotografias.map(f => ({ ...f, preview: f.imagen, dragOver: false }));
+    this.actualizarFotografiasCahuachoFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
   onImagenCahuachoChange(imagenBase64: string) {
     this.fotoCahuachoPreview = imagenBase64 || null;
-    const fotoKey = 'fotografiaCahuachoImagen';
-    this.formData[fotoKey] = imagenBase64;
-    this.datos[fotoKey] = imagenBase64;
-    this.formularioService.actualizarDato(fotoKey, imagenBase64);
+    this.onFieldChange('fotografiaCahuachoImagen', imagenBase64 || '');
     this.actualizarComponenteSeccion();
     this.cdRef.detectChanges();
   }
@@ -4656,6 +5890,903 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     this.formularioService.actualizarDato(fotoKey, imagenBase64);
     this.actualizarComponenteSeccion();
     this.cdRef.detectChanges();
+  }
+
+  getFotografiasActividadesEconomicasForm(): any[] {
+    const fotografias: any[] = [];
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `fotografiaActividadesEconomicas${i}Imagen`;
+      let preview = this.datos[imagenKey] || null;
+      
+      if (i === 1 && !preview) {
+        preview = this.datos['fotografiaActividadesEconomicasImagen'] || null;
+      }
+      
+      let titulo = this.datos[`fotografiaActividadesEconomicas${i}Titulo`];
+      let fuente = this.datos[`fotografiaActividadesEconomicas${i}Fuente`];
+      
+      if (i === 1) {
+        if (!titulo) {
+          titulo = this.datos['fotografiaActividadesEconomicasTitulo'] || 'Parcelas agrícolas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho');
+        }
+        if (!fuente) {
+          fuente = this.datos['fotografiaActividadesEconomicasFuente'] || 'GEADES, 2024';
+        }
+      }
+      
+      if (i === 1 || titulo || preview) {
+        fotografias.push({
+          titulo: titulo || (i === 1 ? 'Parcelas agrícolas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : ''),
+          fuente: fuente || 'GEADES, 2024',
+          preview: preview,
+          dragOver: false
+        });
+      }
+    }
+    
+    if (fotografias.length === 0) {
+      fotografias.push({
+        titulo: 'Parcelas agrícolas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+        fuente: 'GEADES, 2024',
+        preview: null,
+        dragOver: false
+      });
+    }
+    
+    return fotografias;
+  }
+
+  getFotografiasActividadesEconomicasFormMulti(): any[] {
+    const fotos = this.getFotografiasActividadesEconomicasForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Parcelas agrícolas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : 'Título de fotografía'),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `actividades-${index}-${Date.now()}`
+    }));
+  }
+
+  actualizarFotografiasActividadesEconomicasFormMulti() {
+    const nuevasFotografias = this.getFotografiasActividadesEconomicasFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasActividadesEconomicasFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasActividadesEconomicasFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasActividadesEconomicasChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaActividadesEconomicas${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaActividadesEconomicas${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaActividadesEconomicas${num}Imagen`, foto.imagen || '');
+      
+      if (num === 1) {
+        this.onFieldChange('fotografiaActividadesEconomicasTitulo', foto.titulo);
+        this.onFieldChange('fotografiaActividadesEconomicasFuente', foto.fuente);
+        this.onFieldChange('fotografiaActividadesEconomicasImagen', foto.imagen || '');
+        this.fotoActividadesEconomicasPreview = foto.imagen || null;
+      }
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaActividadesEconomicas${i}Titulo`, '');
+      this.onFieldChange(`fotografiaActividadesEconomicas${i}Fuente`, '');
+      this.onFieldChange(`fotografiaActividadesEconomicas${i}Imagen`, '');
+    }
+    this.actualizarFotografiasActividadesEconomicasFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasMercadoForm(): any[] {
+    const fotografias: any[] = [];
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `fotografiaMercado${i}Imagen`;
+      let preview = this.datos[imagenKey] || null;
+      
+      if (i === 1 && !preview) {
+        preview = this.datos['fotografiaMercadoImagen'] || null;
+      }
+      
+      let titulo = this.datos[`fotografiaMercado${i}Titulo`];
+      let fuente = this.datos[`fotografiaMercado${i}Fuente`];
+      
+      if (i === 1) {
+        if (!titulo) {
+          titulo = this.datos['fotografiaMercadoTitulo'] || 'Bodega en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho');
+        }
+        if (!fuente) {
+          fuente = this.datos['fotografiaMercadoFuente'] || 'GEADES, 2024';
+        }
+      }
+      
+      if (i === 1 || titulo || preview) {
+        fotografias.push({
+          titulo: titulo || (i === 1 ? 'Bodega en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : ''),
+          fuente: fuente || 'GEADES, 2024',
+          preview: preview,
+          dragOver: false
+        });
+      }
+    }
+    
+    if (fotografias.length === 0) {
+      fotografias.push({
+        titulo: 'Bodega en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+        fuente: 'GEADES, 2024',
+        preview: null,
+        dragOver: false
+      });
+    }
+    
+    return fotografias;
+  }
+
+  getFotografiasMercadoFormMulti(): any[] {
+    const fotos = this.getFotografiasMercadoForm();
+    return fotos.map((foto, index) => ({
+      titulo: foto.titulo || (index === 0 ? 'Bodega en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho') : 'Título de fotografía'),
+      fuente: foto.fuente || 'GEADES, 2024',
+      imagen: foto.preview || null,
+      id: `mercado-${index}-${Date.now()}`
+    }));
+  }
+
+  actualizarFotografiasMercadoFormMulti() {
+    const nuevasFotografias = this.getFotografiasMercadoFormMulti();
+    const actualSerialized = JSON.stringify(this.fotografiasMercadoFormMulti.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      this.fotografiasMercadoFormMulti = nuevasFotografias;
+    }
+  }
+
+  onFotografiasMercadoChange(fotografias: any[]) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`fotografiaMercado${num}Titulo`, foto.titulo);
+      this.onFieldChange(`fotografiaMercado${num}Fuente`, foto.fuente);
+      this.onFieldChange(`fotografiaMercado${num}Imagen`, foto.imagen || '');
+      
+      if (num === 1) {
+        this.onFieldChange('fotografiaMercadoTitulo', foto.titulo);
+        this.onFieldChange('fotografiaMercadoFuente', foto.fuente);
+        this.onFieldChange('fotografiaMercadoImagen', foto.imagen || '');
+        this.fotoMercadoPreview = foto.imagen || null;
+      }
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`fotografiaMercado${i}Titulo`, '');
+      this.onFieldChange(`fotografiaMercado${i}Fuente`, '');
+      this.onFieldChange(`fotografiaMercado${i}Imagen`, '');
+    }
+    this.actualizarFotografiasMercadoFormMulti();
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasFormMultiGeneric(
+    prefix: string, 
+    arrayProperty: string, 
+    tituloDefault: string, 
+    fuenteDefault: string = 'GEADES, 2024'
+  ): any[] {
+    const fotografias: any[] = [];
+    const arrayRef = (this as any)[arrayProperty] || [];
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${prefix}${i}Imagen`;
+      let preview = this.datos[imagenKey] || null;
+      
+      if (i === 1 && !preview) {
+        preview = this.datos[`${prefix}Imagen`] || null;
+      }
+      
+      let titulo = this.datos[`${prefix}${i}Titulo`];
+      let fuente = this.datos[`${prefix}${i}Fuente`];
+      
+      if (i === 1) {
+        if (!titulo) {
+          titulo = this.datos[`${prefix}Titulo`] || tituloDefault;
+        }
+        if (!fuente) {
+          fuente = this.datos[`${prefix}Fuente`] || fuenteDefault;
+        }
+      }
+      
+      if (i === 1 || titulo || preview) {
+        fotografias.push({
+          titulo: titulo || (i === 1 ? tituloDefault : 'Título de fotografía'),
+          fuente: fuente || fuenteDefault,
+          imagen: preview || null,
+          id: `${prefix}-${i}-${Date.now()}`
+        });
+      }
+    }
+    
+    if (fotografias.length === 0) {
+      fotografias.push({
+        titulo: tituloDefault,
+        fuente: fuenteDefault,
+        imagen: null,
+        id: `${prefix}-1-${Date.now()}`
+      });
+    }
+    
+    return fotografias;
+  }
+
+  actualizarFotografiasFormMultiGeneric(
+    prefix: string,
+    arrayProperty: string,
+    tituloDefault: string,
+    fuenteDefault: string = 'GEADES, 2024'
+  ) {
+    const nuevasFotografias = this.getFotografiasFormMultiGeneric(prefix, arrayProperty, tituloDefault, fuenteDefault);
+    const arrayRef = (this as any)[arrayProperty] || [];
+    const actualSerialized = JSON.stringify(arrayRef.map((f: any) => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    const nuevasSerialized = JSON.stringify(nuevasFotografias.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.imagen
+    })));
+    
+    if (actualSerialized !== nuevasSerialized) {
+      (this as any)[arrayProperty] = nuevasFotografias;
+    }
+  }
+
+  onFotografiasChangeGeneric(
+    fotografias: any[],
+    prefix: string,
+    arrayProperty: string,
+    tituloDefault: string,
+    fuenteDefault: string = 'GEADES, 2024',
+    previewProperty?: string
+  ) {
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      this.onFieldChange(`${prefix}${num}Titulo`, foto.titulo);
+      this.onFieldChange(`${prefix}${num}Fuente`, foto.fuente);
+      this.onFieldChange(`${prefix}${num}Imagen`, foto.imagen || '');
+      
+      if (num === 1) {
+        this.onFieldChange(`${prefix}Titulo`, foto.titulo);
+        this.onFieldChange(`${prefix}Fuente`, foto.fuente);
+        this.onFieldChange(`${prefix}Imagen`, foto.imagen || '');
+        if (previewProperty) {
+          (this as any)[previewProperty] = foto.imagen || null;
+        }
+      }
+    });
+    for (let i = fotografias.length + 1; i <= 10; i++) {
+      this.onFieldChange(`${prefix}${i}Titulo`, '');
+      this.onFieldChange(`${prefix}${i}Fuente`, '');
+      this.onFieldChange(`${prefix}${i}Imagen`, '');
+    }
+    (this as any)[arrayProperty] = fotografias.map((f: any) => ({ ...f, preview: f.imagen, dragOver: false }));
+    this.actualizarFotografiasFormMultiGeneric(prefix, arrayProperty, tituloDefault, fuenteDefault);
+    this.actualizarComponenteSeccion();
+    this.cdRef.detectChanges();
+  }
+
+  getFotografiasInstitucionalidadFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaInstitucionalidad',
+      'fotografiasInstitucionalidadFormMulti',
+      'Local Comunal de la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasInstitucionalidadFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaInstitucionalidad',
+      'fotografiasInstitucionalidadFormMulti',
+      'Local Comunal de la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasInstitucionalidadChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaInstitucionalidad',
+      'fotografiasInstitucionalidadFormMulti',
+      'Local Comunal de la CC ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoInstitucionalidadPreview'
+    );
+  }
+
+  getFotografiasComercioFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaComercio',
+      'fotografiasComercioFormMulti',
+      'Comercio ambulatorio en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasComercioFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaComercio',
+      'fotografiasComercioFormMulti',
+      'Comercio ambulatorio en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasComercioChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaComercio',
+      'fotografiasComercioFormMulti',
+      'Comercio ambulatorio en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoComercioPreview'
+    );
+  }
+
+  getFotografiasEstructuraFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaEstructura',
+      'fotografiasEstructuraFormMulti',
+      'Estructura de las viviendas en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasEstructuraFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaEstructura',
+      'fotografiasEstructuraFormMulti',
+      'Estructura de las viviendas en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasEstructuraChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaEstructura',
+      'fotografiasEstructuraFormMulti',
+      'Estructura de las viviendas en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoEstructuraPreview'
+    );
+  }
+
+  getFotografiasDesechosSolidosFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaDesechosSolidos',
+      'fotografiasDesechosSolidosFormMulti',
+      'Contenedor de residuos sólidos y plásticos en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasDesechosSolidosFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaDesechosSolidos',
+      'fotografiasDesechosSolidosFormMulti',
+      'Contenedor de residuos sólidos y plásticos en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasDesechosSolidosChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaDesechosSolidos',
+      'fotografiasDesechosSolidosFormMulti',
+      'Contenedor de residuos sólidos y plásticos en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoDesechosSolidosPreview'
+    );
+  }
+
+  getFotografiasElectricidadFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaElectricidad',
+      'fotografiasElectricidadFormMulti',
+      'Infraestructura eléctrica en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasElectricidadFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaElectricidad',
+      'fotografiasElectricidadFormMulti',
+      'Infraestructura eléctrica en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasElectricidadChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaElectricidad',
+      'fotografiasElectricidadFormMulti',
+      'Infraestructura eléctrica en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoElectricidadPreview'
+    );
+  }
+
+  getFotografiasTransporteFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaTransporte',
+      'fotografiasTransporteFormMulti',
+      'Infraestructura de transporte en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasTransporteFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaTransporte',
+      'fotografiasTransporteFormMulti',
+      'Infraestructura de transporte en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasTransporteChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaTransporte',
+      'fotografiasTransporteFormMulti',
+      'Infraestructura de transporte en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoTransportePreview'
+    );
+  }
+
+  getFotografiasTelecomunicacionesFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaTelecomunicaciones',
+      'fotografiasTelecomunicacionesFormMulti',
+      'Infraestructura de telecomunicaciones en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasTelecomunicacionesFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaTelecomunicaciones',
+      'fotografiasTelecomunicacionesFormMulti',
+      'Infraestructura de telecomunicaciones en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasTelecomunicacionesChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaTelecomunicaciones',
+      'fotografiasTelecomunicacionesFormMulti',
+      'Infraestructura de telecomunicaciones en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoTelecomunicacionesPreview'
+    );
+  }
+
+  getFotografiasSaludFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaSalud',
+      'fotografiasSaludFormMulti',
+      'Infraestructura de salud en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasSaludFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaSalud',
+      'fotografiasSaludFormMulti',
+      'Infraestructura de salud en la CC ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasSaludChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaSalud',
+      'fotografiasSaludFormMulti',
+      'Infraestructura de salud en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoSaludPreview'
+    );
+  }
+
+  getFotografiasIglesiaFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaIglesia',
+      'fotografiasIglesiaFormMulti',
+      'Iglesia del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasIglesiaFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaIglesia',
+      'fotografiasIglesiaFormMulti',
+      'Iglesia del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasIglesiaChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaIglesia',
+      'fotografiasIglesiaFormMulti',
+      'Iglesia del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoIglesiaPreview'
+    );
+  }
+
+  getFotografiasReservorioFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaReservorio',
+      'fotografiasReservorioFormMulti',
+      'Reservorio del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasReservorioFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaReservorio',
+      'fotografiasReservorioFormMulti',
+      'Reservorio del anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasReservorioChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaReservorio',
+      'fotografiasReservorioFormMulti',
+      'Reservorio del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoReservorioPreview'
+    );
+  }
+
+  getFotografiasUsoSuelosFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaUsoSuelos',
+      'fotografiasUsoSuelosFormMulti',
+      'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  actualizarFotografiasUsoSuelosFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaUsoSuelos',
+      'fotografiasUsoSuelosFormMulti',
+      'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca')
+    );
+  }
+
+  onFotografiasUsoSuelosChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaUsoSuelos',
+      'fotografiasUsoSuelosFormMulti',
+      'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
+      'GEADES, 2024',
+      'fotoUsoSuelosPreview'
+    );
+  }
+
+  getFotografiasEstructuraAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaEstructuraAISI',
+      'fotografiasEstructuraAISIFormMulti',
+      'Estructura de las viviendas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasEstructuraAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaEstructuraAISI',
+      'fotografiasEstructuraAISIFormMulti',
+      'Estructura de las viviendas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasEstructuraAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaEstructuraAISI',
+      'fotografiasEstructuraAISIFormMulti',
+      'Estructura de las viviendas en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoEstructuraAISIPreview'
+    );
+  }
+
+  getFotografiasDesechosSolidosAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaDesechosSolidosAISI',
+      'fotografiasDesechosSolidosAISIFormMulti',
+      'Desechos sólidos en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasDesechosSolidosAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaDesechosSolidosAISI',
+      'fotografiasDesechosSolidosAISIFormMulti',
+      'Desechos sólidos en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasDesechosSolidosAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaDesechosSolidosAISI',
+      'fotografiasDesechosSolidosAISIFormMulti',
+      'Desechos sólidos en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoDesechosSolidosAISIPreview'
+    );
+  }
+
+  getFotografiasElectricidadAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaElectricidadAISI',
+      'fotografiasElectricidadAISIFormMulti',
+      'Infraestructura eléctrica en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasElectricidadAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaElectricidadAISI',
+      'fotografiasElectricidadAISIFormMulti',
+      'Infraestructura eléctrica en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasElectricidadAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaElectricidadAISI',
+      'fotografiasElectricidadAISIFormMulti',
+      'Infraestructura eléctrica en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoElectricidadAISIPreview'
+    );
+  }
+
+  getFotografiasTransporteAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaTransporteAISI',
+      'fotografiasTransporteAISIFormMulti',
+      'Infraestructura de transporte en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasTransporteAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaTransporteAISI',
+      'fotografiasTransporteAISIFormMulti',
+      'Infraestructura de transporte en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasTransporteAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaTransporteAISI',
+      'fotografiasTransporteAISIFormMulti',
+      'Infraestructura de transporte en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoTransporteAISIPreview'
+    );
+  }
+
+  getFotografiasTelecomunicacionesAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaTelecomunicacionesAISI',
+      'fotografiasTelecomunicacionesAISIFormMulti',
+      'Infraestructura de telecomunicaciones en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasTelecomunicacionesAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaTelecomunicacionesAISI',
+      'fotografiasTelecomunicacionesAISIFormMulti',
+      'Infraestructura de telecomunicaciones en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasTelecomunicacionesAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaTelecomunicacionesAISI',
+      'fotografiasTelecomunicacionesAISIFormMulti',
+      'Infraestructura de telecomunicaciones en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoTelecomunicacionesAISIPreview'
+    );
+  }
+
+  getFotografiasSaludAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaSaludAISI',
+      'fotografiasSaludAISIFormMulti',
+      'Infraestructura de salud en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasSaludAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaSaludAISI',
+      'fotografiasSaludAISIFormMulti',
+      'Infraestructura de salud en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasSaludAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaSaludAISI',
+      'fotografiasSaludAISIFormMulti',
+      'Infraestructura de salud en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoSaludAISIPreview'
+    );
+  }
+
+  getFotografiasEducacion1AISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaEducacion1AISI',
+      'fotografiasEducacion1AISIFormMulti',
+      'Infraestructura educativa 1 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasEducacion1AISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaEducacion1AISI',
+      'fotografiasEducacion1AISIFormMulti',
+      'Infraestructura educativa 1 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasEducacion1AISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaEducacion1AISI',
+      'fotografiasEducacion1AISIFormMulti',
+      'Infraestructura educativa 1 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoEducacion1AISIPreview'
+    );
+  }
+
+  getFotografiasEducacion2AISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaEducacion2AISI',
+      'fotografiasEducacion2AISIFormMulti',
+      'Infraestructura educativa 2 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasEducacion2AISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaEducacion2AISI',
+      'fotografiasEducacion2AISIFormMulti',
+      'Infraestructura educativa 2 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasEducacion2AISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaEducacion2AISI',
+      'fotografiasEducacion2AISIFormMulti',
+      'Infraestructura educativa 2 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoEducacion2AISIPreview'
+    );
+  }
+
+  getFotografiasEducacion3AISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaEducacion3AISI',
+      'fotografiasEducacion3AISIFormMulti',
+      'Infraestructura educativa 3 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasEducacion3AISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaEducacion3AISI',
+      'fotografiasEducacion3AISIFormMulti',
+      'Infraestructura educativa 3 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasEducacion3AISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaEducacion3AISI',
+      'fotografiasEducacion3AISIFormMulti',
+      'Infraestructura educativa 3 en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoEducacion3AISIPreview'
+    );
+  }
+
+  getFotografiasRecreacionAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaRecreacionAISI',
+      'fotografiasRecreacionAISIFormMulti',
+      'Plaza de toros del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasRecreacionAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaRecreacionAISI',
+      'fotografiasRecreacionAISIFormMulti',
+      'Plaza de toros del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasRecreacionAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaRecreacionAISI',
+      'fotografiasRecreacionAISIFormMulti',
+      'Plaza de toros del CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoRecreacionAISIPreview'
+    );
+  }
+
+  getFotografiasDeporteAISIFormMulti(): any[] {
+    return this.getFotografiasFormMultiGeneric(
+      'fotografiaDeporteAISI',
+      'fotografiasDeporteAISIFormMulti',
+      'Losa deportiva en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  actualizarFotografiasDeporteAISIFormMulti() {
+    this.actualizarFotografiasFormMultiGeneric(
+      'fotografiaDeporteAISI',
+      'fotografiasDeporteAISIFormMulti',
+      'Losa deportiva en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho')
+    );
+  }
+
+  onFotografiasDeporteAISIChange(fotografias: any[]) {
+    this.onFotografiasChangeGeneric(
+      fotografias,
+      'fotografiaDeporteAISI',
+      'fotografiasDeporteAISIFormMulti',
+      'Losa deportiva en el CP ' + (this.datos.centroPobladoAISI || 'Cahuacho'),
+      'GEADES, 2024',
+      'fotoDeporteAISIPreview'
+    );
   }
 
   inicializarTiposViviendaAISI() {
@@ -5719,13 +7850,38 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
   llenarDatosPrueba() {
     const datosPrueba: any = {};
 
-    if (this.seccionId === '3.1.1') {
+    if (this.seccionId === '3.1.3' || this.seccionId === '3.1.3.A' || this.seccionId === '3.1.3.B') {
+      datosPrueba.cantidadEntrevistas = '18';
+      datosPrueba.fechaTrabajoCampo = 'noviembre 2024';
+      datosPrueba.consultora = 'GEADES (2024)';
+      datosPrueba.entrevistados = [
+        { nombre: 'Miguel Ángel Sayaverde Rospigliosi', cargo: 'Presidente', organizacion: '' },
+        { nombre: 'Julio Edilberto Ventura Quispe', cargo: 'Vicepresidente', organizacion: 'CC Ayroca' },
+        { nombre: 'Zarita Juana Sayaverde Bustamante', cargo: 'Tesorero', organizacion: 'CC Ayroca' },
+        { nombre: 'Elena Bustamante Rubio', cargo: 'Fiscal', organizacion: 'CC Ayroca' },
+        { nombre: 'Kelvin Quispe Merino', cargo: 'Teniente Gobernador', organizacion: 'Anexo Ayroca' },
+        { nombre: 'María Elena Aguayo Arias', cargo: 'Director', organizacion: 'IE Ayroca' },
+        { nombre: 'Nieves Bernaola Torres', cargo: 'Director', organizacion: 'IE N°40270' },
+        { nombre: 'Daniela Manuel Sivinche', cargo: 'Jefa de Puesto de Salud', organizacion: 'Puesto de Salud Ayroca' },
+        { nombre: 'Daniela Núñez', cargo: 'Obstetra', organizacion: 'Puesto de Salud Ayroca' },
+        { nombre: 'Catalina Inés De la Cruz Rubio', cargo: 'Regidor distrital', organizacion: 'Municipalidad Distrital de Cahuacho' },
+        { nombre: 'Mario Sergio Patiño Merma', cargo: 'Gerente Municipal', organizacion: 'Municipalidad Distrital de Cahuacho' },
+        { nombre: 'Kelvin Elías De la Cruz Quispe', cargo: 'Subprefecto', organizacion: 'Subprefectura Distrital de Cahuacho' },
+        { nombre: 'Edgar Manuel Espinoza Aguayo', cargo: 'Ex-alcalde', organizacion: 'CP Cahuacho' },
+        { nombre: 'Juana Espinoza De la Cruz', cargo: 'Presidente', organizacion: 'Comedor Popular "Virgen del Rosario"' },
+        { nombre: 'María Rosario Yana Franco', cargo: 'Director', organizacion: 'IE Cahuacho' },
+        { nombre: 'Maykeylyn Ccama Mamani', cargo: 'Director', organizacion: 'IE N°40271' },
+        { nombre: 'Adrián Reynaldo Morante Chipana', cargo: 'Director', organizacion: 'IE Virgen de Copacabana' },
+        { nombre: 'Deyma Salazar Herrera', cargo: 'Jefa de Recursos Humanos', organizacion: 'Puesto de Salud Cahuacho' }
+      ];
+    } else if (this.seccionId === '3.1.1') {
       datosPrueba.projectName = 'Paka';
       datosPrueba.distritoSeleccionado = 'Cahuacho';
       datosPrueba.provinciaSeleccionada = 'Caravelí';
       datosPrueba.departamentoSeleccionado = 'Arequipa';
     } else if (this.seccionId === '3.1.4.A.1.1') {
       datosPrueba.grupoAISD = 'Ayroca';
+      datosPrueba.tituloInstituciones = 'Instituciones existentes - CC Ayroca';
       datosPrueba.fuenteInstituciones = 'GEADES (2024)';
       datosPrueba.tablepagina6 = [
         {
@@ -6745,18 +8901,30 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
       if (key === 'poblacionSexoAISD' || key === 'poblacionEtarioAISD' || key === 'tablepagina6' || key === 'petTabla' || key === 'peaTabla' || key === 'peaOcupadaTabla' || key === 'peaOcupacionesTabla' || key === 'poblacionPecuariaTabla' || key === 'caracteristicasAgriculturaTabla' || key === 'condicionOcupacionTabla' || key === 'tiposMaterialesTabla' || key === 'abastecimientoAguaTabla' || key === 'tiposSaneamientoTabla' || key === 'saneamientoTabla' || key === 'coberturaElectricaTabla' || key === 'telecomunicacionesTabla' || key === 'caracteristicasSaludTabla' || key === 'cantidadEstudiantesEducacionTabla' || key === 'ieAyrocaTabla' || key === 'ie40270Tabla' || key === 'alumnosIEAyrocaTabla' || key === 'alumnosIE40270Tabla' || key === 'natalidadMortalidadTabla' || key === 'morbilidadTabla' || key === 'morbiliadTabla' || key === 'afiliacionSaludTabla' || key === 'seguroSaludTabla' || key === 'nivelEducativoTabla' || key === 'tasaAnalfabetismoTabla' || key === 'lenguasMaternasTabla' || key === 'religionesTabla' || key === 'indiceDesarrolloHumanoTabla' || key === 'nbiCCAyrocaTabla' || key === 'nbiDistritoCahuachoTabla' || key === 'autoridades' || key === 'festividades' || key === 'ubicacionCpTabla' || key === 'poblacionSexoAISI' || key === 'poblacionEtarioAISI' || key === 'petGruposEdadAISI' || key === 'peaDistritoSexoTabla' || key === 'peaOcupadaDesocupadaTabla' || key === 'actividadesEconomicasAISI' || key === 'tiposViviendaAISI' || key === 'condicionOcupacionAISI' || key === 'materialesViviendaAISI' || key === 'abastecimientoAguaCpTabla' || key === 'saneamientoCpTabla' || key === 'coberturaElectricaCpTabla' || key === 'combustiblesCocinarCpTabla' || key === 'telecomunicacionesCpTabla' || key === 'puestoSaludCpTabla' || key === 'educacionCpTabla' || key === 'natalidadMortalidadCpTabla' || key === 'morbilidadCpTabla') {
         this.datos[key] = datosPrueba[key];
         this.formularioService.actualizarDato(key, datosPrueba[key]);
+        if (key === 'morbilidadTabla') {
+          if (this.datos.morbiliadTabla) {
+            delete this.datos.morbiliadTabla;
+            this.formularioService.actualizarDato('morbiliadTabla', null);
+          }
+        }
       } else {
         this.onFieldChange(key, datosPrueba[key]);
       }
     });
     
     if (this.seccionId === '3.1.4.A.1.2' || this.seccionId === '3.1.4.A.1.3' || this.seccionId === '3.1.4.A.1.4' || this.seccionId === '3.1.4.A.1.5' || this.seccionId === '3.1.4.A.1.6' || this.seccionId === '3.1.4.A.1.7' || this.seccionId === '3.1.4.A.1.8' || this.seccionId === '3.1.4.A.1.9' || this.seccionId === '3.1.4.A.1.10' || this.seccionId === '3.1.4.A.1.11' || this.seccionId === '3.1.4.A.1.12' || this.seccionId === '3.1.4.A.1.13' || this.seccionId === '3.1.4.A.1.14' || this.seccionId === '3.1.4.A.1.15' || this.seccionId === '3.1.4.A.1.16' || this.seccionId === '3.1.4.B' || this.seccionId === '3.1.4.B.1' || this.seccionId === '3.1.4.B.1.1' || this.seccionId === '3.1.4.B.1.2' || this.seccionId === '3.1.4.B.1.3' || this.seccionId === '3.1.4.B.1.4' || this.seccionId === '3.1.4.B.1.5' || this.seccionId === '3.1.4.B.1.6' || this.seccionId === '3.1.4.B.1.7' || this.seccionId === '3.1.4.B.1.8' || this.seccionId === '3.1.4.B.1.9') {
-      this.datos = this.formularioService.obtenerDatos();
-      this.formData = { ...this.datos };
       setTimeout(() => {
+        this.datos = this.formularioService.obtenerDatos();
+        this.formData = { ...this.datos };
+        if (this.seccionId === '3.1.4.A.1.9' && datosPrueba.morbilidadTabla) {
+          this.datos.morbilidadTabla = datosPrueba.morbilidadTabla;
+          if (this.datos.morbiliadTabla) {
+            delete this.datos.morbiliadTabla;
+          }
+        }
         this.actualizarComponenteSeccion();
         this.cdRef.detectChanges();
-      }, 100);
+      }, 50);
     }
 
     if (this.seccionId === '3.1.4' || this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1') {
@@ -6821,6 +8989,166 @@ export class SeccionComponent implements OnInit, AfterViewChecked {
     document.addEventListener('mousemove', doResize);
     document.addEventListener('mouseup', stopResize);
     event.preventDefault();
+  }
+
+  onJSONFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.jsonFileName = file.name;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        this.procesarJSON(jsonData);
+      } catch (error) {
+        alert('Error al leer el archivo JSON. Verifique que el formato sea correcto.');
+        console.error('Error parsing JSON:', error);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  selectJSONFile() {
+    const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  procesarJSON(jsonData: any) {
+    this.centrosPobladosJSON = [];
+    this.geoInfo = { DPTO: '', PROV: '', DIST: '' };
+
+    const distritoKeys = Object.keys(jsonData);
+    
+    if (distritoKeys.length === 0) {
+      alert('El JSON no contiene datos válidos.');
+      return;
+    }
+
+    const primerDistrito = distritoKeys[0];
+    const centrosPoblados = jsonData[primerDistrito];
+
+    if (!Array.isArray(centrosPoblados) || centrosPoblados.length === 0) {
+      alert('El JSON no contiene un array de centros poblados válido.');
+      return;
+    }
+
+    const capitalDistrital = centrosPoblados.find((cp: any) => cp.CATEGORIA === 'Capital distrital');
+    const centroPobladoPrincipal = capitalDistrital || centrosPoblados[0];
+
+    this.centrosPobladosJSON = centrosPoblados.map((cp: any) => ({
+      ...cp,
+      selected: cp === centroPobladoPrincipal
+    }));
+
+    if (centrosPoblados.length > 0) {
+      const primerCP = centrosPoblados[0];
+      this.geoInfo = {
+        DPTO: primerCP.DPTO || '',
+        PROV: primerCP.PROV || '',
+        DIST: primerCP.DIST || ''
+      };
+
+      if (!this.formData['departamentoSeleccionado'] && this.geoInfo.DPTO) {
+        this.onFieldChange('departamentoSeleccionado', this.geoInfo.DPTO);
+      }
+      if (!this.formData['provinciaSeleccionada'] && this.geoInfo.PROV) {
+        this.onFieldChange('provinciaSeleccionada', this.geoInfo.PROV);
+      }
+      if (!this.formData['distritoSeleccionado'] && this.geoInfo.DIST) {
+        this.onFieldChange('distritoSeleccionado', this.geoInfo.DIST);
+      }
+    }
+
+    if (centroPobladoPrincipal) {
+      this.centroPobladoSeleccionado = centroPobladoPrincipal;
+
+      if (centroPobladoPrincipal.CODIGO) {
+        const codigos = this.datos.codigos || [];
+        if (!codigos.includes(centroPobladoPrincipal.CODIGO.toString())) {
+          codigos.push(centroPobladoPrincipal.CODIGO.toString());
+          this.onFieldChange('codigos', codigos);
+        }
+      }
+
+      if (centroPobladoPrincipal.CATEGORIA === 'Capital distrital' && !this.formData['grupoAISI']) {
+        this.onFieldChange('grupoAISI', centroPobladoPrincipal.CCPP);
+        this.onFieldChange('centroPobladoAISI', centroPobladoPrincipal.CCPP);
+      }
+
+      if (centroPobladoPrincipal.ESTE && centroPobladoPrincipal.NORTE) {
+        const coordenadas = `18L E: ${centroPobladoPrincipal.ESTE.toLocaleString()} m N: ${centroPobladoPrincipal.NORTE.toLocaleString()} m`;
+        if (!this.formData['coordenadasAISD']) {
+          this.onFieldChange('coordenadasAISD', coordenadas);
+        }
+      }
+
+      if (centroPobladoPrincipal.ALTITUD && !this.formData['altitudAISD']) {
+        this.onFieldChange('altitudAISD', centroPobladoPrincipal.ALTITUD.toString());
+      }
+
+      this.onFieldChange('centroPobladoSeleccionadoData', {
+        CCPP: centroPobladoPrincipal.CCPP,
+        CATEGORIA: centroPobladoPrincipal.CATEGORIA,
+        CODIGO: centroPobladoPrincipal.CODIGO,
+        POBLACION: centroPobladoPrincipal.POBLACION,
+        ESTE: centroPobladoPrincipal.ESTE,
+        NORTE: centroPobladoPrincipal.NORTE,
+        ALTITUD: centroPobladoPrincipal.ALTITUD,
+        DPTO: centroPobladoPrincipal.DPTO,
+        PROV: centroPobladoPrincipal.PROV,
+        DIST: centroPobladoPrincipal.DIST
+      });
+    }
+
+    this.poblarTablaAISD2DesdeJSON(centrosPoblados);
+
+    this.formularioService.guardarJSON(centrosPoblados);
+    
+    this.formularioService.actualizarDatos(this.datos);
+    this.cdRef.detectChanges();
+  }
+
+  toggleCentroPoblado(index: number) {
+    const cp = this.centrosPobladosJSON[index];
+    cp.selected = !cp.selected;
+
+    if (cp.selected) {
+      this.centroPobladoSeleccionado = cp;
+      
+      if (cp.CODIGO) {
+        const codigos = this.datos.codigos || [];
+        if (!codigos.includes(cp.CODIGO.toString())) {
+          codigos.push(cp.CODIGO.toString());
+          this.onFieldChange('codigos', codigos);
+        }
+      }
+
+      if (cp.CATEGORIA === 'Capital distrital' && !this.formData['grupoAISI']) {
+        this.onFieldChange('grupoAISI', cp.CCPP);
+        this.onFieldChange('centroPobladoAISI', cp.CCPP);
+      }
+
+      if (cp.ESTE && cp.NORTE) {
+        const coordenadas = `18L E: ${cp.ESTE.toLocaleString()} m N: ${cp.NORTE.toLocaleString()} m`;
+        if (!this.formData['coordenadasAISD']) {
+          this.onFieldChange('coordenadasAISD', coordenadas);
+        }
+      }
+
+      if (cp.ALTITUD && !this.formData['altitudAISD']) {
+        this.onFieldChange('altitudAISD', cp.ALTITUD.toString());
+      }
+    } else {
+      if (this.centroPobladoSeleccionado === cp) {
+        this.centroPobladoSeleccionado = null;
+      }
+    }
+
+    this.cdRef.detectChanges();
   }
 }
 

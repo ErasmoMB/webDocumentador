@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ConfigService } from './config.service';
+import { CacheService } from './cache.service';
 import { 
   ApiResponse, 
   PoblacionData, 
@@ -17,7 +18,8 @@ export class DataService {
 
   constructor(
     private http: HttpClient,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private cacheService: CacheService
   ) { }
 
   getData(filename: string): Observable<any> {
@@ -88,7 +90,16 @@ export class DataService {
   }
 
   getPoblacionByCpp(cppCodes: string[]): Observable<ApiResponse<PoblacionData>> {
+    const url = this.getApiEndpoint('poblacion/');
+    const params = { cpp: cppCodes.join(',') };
+
     if (this.configService.isMockMode()) {
+      const cached = this.cacheService.getMockDataFromCache(url, params);
+      if (cached) {
+        console.log('Usando datos desde cache (modo MOCK)');
+        return of(cached);
+      }
+      
       return this.getSharedData('poblacion').pipe(
         map(data => ({
           success: true,
@@ -99,18 +110,31 @@ export class DataService {
       );
     }
 
-    const params = new HttpParams().set('cpp', cppCodes.join(','));
-    return this.http.get<ApiResponse<PoblacionData>>(
-      this.getApiEndpoint('poblacion/'),
-      { params }
-    ).pipe(
-      catchError(this.handleApiError)
+    const httpParams = new HttpParams().set('cpp', cppCodes.join(','));
+    return this.http.get<ApiResponse<PoblacionData>>(url, { params: httpParams }).pipe(
+      catchError((error) => {
+        const cached = this.cacheService.getMockDataFromCache(url, params);
+        if (cached) {
+          console.log('Backend no disponible, usando datos desde cache');
+          return of(cached);
+        }
+        return this.handleApiError(error);
+      })
     );
   }
 
   getPoblacionByDistrito(distrito: string): Observable<ApiResponse<CentroPoblado[]>> {
+    const url = this.getApiEndpoint('poblacion/distrito');
+    const params = { distrito: distrito };
+
     if (this.configService.isMockMode()) {
-      console.warn('Modo MOCK activado. Los datos no vienen del backend real.');
+      const cached = this.cacheService.getMockDataFromCache(url, params);
+      if (cached) {
+        console.log('Usando datos desde cache (modo MOCK)');
+        return of(cached);
+      }
+      
+      console.warn('Modo MOCK activado. No hay datos en cache para este distrito.');
       return this.getSharedData('poblacion').pipe(
         map(data => ({
           success: true,
@@ -121,15 +145,19 @@ export class DataService {
       );
     }
 
-    const url = this.getApiEndpoint('poblacion/distrito');
-    const params = new HttpParams().set('distrito', distrito);
+    const httpParams = new HttpParams().set('distrito', distrito);
     
-    console.log('Consultando backend:', url);
-    console.log('Parámetros:', { distrito });
+    console.log('Consultando backend real:', url);
+    console.log('Parametros:', params);
     
-    return this.http.get<ApiResponse<CentroPoblado[]>>(url, { params }).pipe(
+    return this.http.get<ApiResponse<CentroPoblado[]>>(url, { params: httpParams }).pipe(
       catchError((error) => {
-        console.error('Error en la petición:', error);
+        console.error('Error al consultar backend:', error);
+        const cached = this.cacheService.getMockDataFromCache(url, params);
+        if (cached) {
+          console.log('Backend no disponible, usando datos desde cache');
+          return of(cached);
+        }
         console.error('URL completa:', `${url}?distrito=${encodeURIComponent(distrito)}`);
         return this.handleApiError(error);
       })
@@ -137,7 +165,16 @@ export class DataService {
   }
 
   getPoblacionByProvincia(provincia: string): Observable<ApiResponse<CentroPoblado[]>> {
+    const url = this.getApiEndpoint('poblacion/provincia');
+    const params = provincia ? { provincia: provincia } : undefined;
+
     if (this.configService.isMockMode()) {
+      const cached = params ? this.cacheService.getMockDataFromCache(url, params) : null;
+      if (cached) {
+        console.log('Usando datos desde cache (modo MOCK)');
+        return of(cached);
+      }
+      
       return this.getSharedData('poblacion').pipe(
         map(data => ({
           success: true,
@@ -149,24 +186,42 @@ export class DataService {
     }
 
     if (!provincia || provincia.trim() === '') {
-      return this.http.get<ApiResponse<CentroPoblado[]>>(
-        this.getApiEndpoint('poblacion/provincia')
-      ).pipe(
-        catchError(this.handleApiError)
+      return this.http.get<ApiResponse<CentroPoblado[]>>(url).pipe(
+        catchError((error) => {
+          const cached = this.cacheService.getMockDataFromCache(url, undefined);
+          if (cached) {
+            console.log('Backend no disponible, usando datos desde cache');
+            return of(cached);
+          }
+          return this.handleApiError(error);
+        })
       );
     }
 
-    const params = new HttpParams().set('provincia', provincia);
-    return this.http.get<ApiResponse<CentroPoblado[]>>(
-      this.getApiEndpoint('poblacion/provincia'),
-      { params }
-    ).pipe(
-      catchError(this.handleApiError)
+    const httpParams = new HttpParams().set('provincia', provincia);
+    return this.http.get<ApiResponse<CentroPoblado[]>>(url, { params: httpParams }).pipe(
+      catchError((error) => {
+        const cached = this.cacheService.getMockDataFromCache(url, params);
+        if (cached) {
+          console.log('Backend no disponible, usando datos desde cache');
+          return of(cached);
+        }
+        return this.handleApiError(error);
+      })
     );
   }
 
   getPEAByDistrito(distrito: string): Observable<ApiResponse<PEAData>> {
+    const url = this.getApiEndpoint('censo/pea-nopea');
+    const params = { distrito: distrito };
+
     if (this.configService.isMockMode()) {
+      const cached = this.cacheService.getMockDataFromCache(url, params);
+      if (cached) {
+        console.log('Usando datos desde cache (modo MOCK)');
+        return of(cached);
+      }
+      
       return this.getSharedData('pea').pipe(
         map(data => ({
           success: true,
@@ -177,12 +232,16 @@ export class DataService {
       );
     }
 
-    const params = new HttpParams().set('distrito', distrito);
-    return this.http.get<ApiResponse<PEAData>>(
-      this.getApiEndpoint('censo/pea-nopea'),
-      { params }
-    ).pipe(
-      catchError(this.handleApiError)
+    const httpParams = new HttpParams().set('distrito', distrito);
+    return this.http.get<ApiResponse<PEAData>>(url, { params: httpParams }).pipe(
+      catchError((error) => {
+        const cached = this.cacheService.getMockDataFromCache(url, params);
+        if (cached) {
+          console.log('Backend no disponible, usando datos desde cache');
+          return of(cached);
+        }
+        return this.handleApiError(error);
+      })
     );
   }
 }

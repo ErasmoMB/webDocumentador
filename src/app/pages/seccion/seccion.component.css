@@ -53,6 +53,32 @@
   gap: var(--spacing-sm);
 }
 
+.btn-clear {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: all 0.2s;
+}
+
+.btn-clear:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.btn-clear svg {
+  width: 16px;
+  height: 16px;
+}
+
 .btn-test {
   background-color: #10b981;
   color: white;
@@ -618,5 +644,92 @@ select {
   .formulario-footer .btn {
     width: 100%;
   }
+}
+
+.file-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-elevated);
+}
+
+.file-name {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.centros-poblados-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.centro-poblado-item {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--surface);
+}
+
+.centro-poblado-item:hover {
+  background-color: var(--surface-elevated);
+  border-color: var(--primary);
+}
+
+.centro-poblado-item.selected {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.cp-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.cp-info strong {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.cp-categoria {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background-color: var(--surface-elevated);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.cp-details {
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.selected-cp-info {
+  padding: var(--spacing-md);
+  background-color: var(--surface-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary);
+}
+
+.selected-cp-info p {
+  margin: var(--spacing-xs) 0;
+  font-size: 0.875rem;
+}
+
+.selected-cp-info strong {
+  color: var(--primary);
 }
 

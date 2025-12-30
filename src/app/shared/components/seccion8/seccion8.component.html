@@ -115,6 +115,7 @@
 <p class="text-justify" *ngIf="!datos.textoMercadoComercializacion2 || datos.textoMercadoComercializacion2 === '____'">Esta dependencia de los intermediarios presenta diversas dificultades. Por un lado, los comuneros reciben precios más bajos en comparación con los que podrían obtener si tuvieran acceso directo a mercados más grandes o si contaran con un punto de venta dentro de la comunidad. Además, el transporte de los productos fuera de la comunidad aumenta los costos logísticos, afectando la rentabilidad de las actividades económicas. Este sistema de comercialización se traduce en una vulnerabilidad económica para las familias, ya que dependen de las condiciones impuestas por terceros para la venta de sus bienes.</p>
 
 <app-foto-info 
+    *ngIf="getFotoComercio().ruta"
     [numero]="getFotoComercio().numero"
     [titulo]="getFotoComercio().titulo"
     [fuente]="getFotoComercio().fuente"

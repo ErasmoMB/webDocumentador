@@ -2,7 +2,7 @@
 <p class="text-justify">Dentro de los límites de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).</p>
 
 <p class="table-title">Cuadro N° 3. 4</p>
-<p class="table-title-main">Instituciones existentes – CC {{ datos.grupoAISD || 'Ayroca' }}</p>
+<p class="table-title-main">{{ datos.tituloInstituciones || 'Instituciones existentes – CC ' + (datos.grupoAISD || 'Ayroca') }}</p>
 <table class="table-container">
     <thead>
         <tr>
@@ -30,9 +30,16 @@
 <p class="source">Fuente:<span *ngIf="datos.fuenteInstituciones && datos.fuenteInstituciones !== '____'" class="highlight">{{ datos.fuenteInstituciones }}</span><span *ngIf="!datos.fuenteInstituciones || datos.fuenteInstituciones === '____'">____</span></p>
 
 <app-foto-info 
+    *ngIf="getFotoInstitucionalidad()"
     [numero]="getFotoInstitucionalidad().numero"
     [titulo]="getFotoInstitucionalidad().titulo"
     [fuente]="getFotoInstitucionalidad().fuente"
-    [ruta]="getFotoInstitucionalidad().ruta">
+    [ruta]="getFotoInstitucionalidad().ruta"
+    [fecha]="getFotoInstitucionalidad().fecha"
+    [coordenadas]="getFotoInstitucionalidad().coordenadas"
+    [direccion]="getFotoInstitucionalidad().direccion"
+    [ubicacion]="getFotoInstitucionalidad().ubicacion"
+    [altitud]="getFotoInstitucionalidad().altitud"
+    [velocidad]="getFotoInstitucionalidad().velocidad">
 </app-foto-info>
 

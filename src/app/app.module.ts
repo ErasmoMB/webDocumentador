@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -46,6 +47,8 @@ import { ImageUploadComponent } from './shared/components/image-upload/image-upl
 import { FormularioService } from './core/services/formulario.service';
 import { DataService } from './core/services/data.service';
 import { ConfigService } from './core/services/config.service';
+import { CacheService } from './core/services/cache.service';
+import { CacheInterceptor } from './core/interceptors/cache.interceptor';
 
 @NgModule({
   declarations: [
@@ -92,12 +95,19 @@ import { ConfigService } from './core/services/config.service';
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    RouterModule
   ],
   providers: [
     FormularioService,
     DataService,
-    ConfigService
+    ConfigService,
+    CacheService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: CacheInterceptor,
+      multi: true
+    }
   ],
   bootstrap: [AppComponent]
 })

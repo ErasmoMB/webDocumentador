@@ -62,6 +62,7 @@
 <p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 <app-foto-info 
+    *ngIf="getFotoEstructura().ruta"
     [numero]="getFotoEstructura().numero"
     [titulo]="getFotoEstructura().titulo"
     [fuente]="getFotoEstructura().fuente"

@@ -26,6 +26,15 @@ export class Seccion12Component implements OnInit {
     const fuente = this.datos?.['fotografiaSaludFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaSaludImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 10',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 10',
       titulo: titulo,
@@ -39,6 +48,15 @@ export class Seccion12Component implements OnInit {
     const fuente = this.datos?.['fotografiaIEAyrocaFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaIEAyrocaImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 12',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 12',
       titulo: titulo,
@@ -51,6 +69,15 @@ export class Seccion12Component implements OnInit {
     const titulo = this.datos?.['fotografiaIE40270Titulo'] || 'Infraestructura de la IE N°40270';
     const fuente = this.datos?.['fotografiaIE40270Fuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaIE40270Imagen'] || '';
+    
+    if (!imagen) {
+      return {
+        numero: '3. 13',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
     
     return {
       numero: '3. 13',
@@ -84,7 +111,9 @@ export class Seccion12Component implements OnInit {
       ruta: this.datos?.['fotografiaRecreacion3Imagen'] || ''
     };
     
-    fotografias.push(foto1, foto2, foto3);
+    if (foto1.ruta) fotografias.push(foto1);
+    if (foto2.ruta) fotografias.push(foto2);
+    if (foto3.ruta) fotografias.push(foto3);
     return fotografias;
   }
 
@@ -105,7 +134,8 @@ export class Seccion12Component implements OnInit {
       ruta: this.datos?.['fotografiaDeporte2Imagen'] || ''
     };
     
-    fotografias.push(foto1, foto2);
+    if (foto1.ruta) fotografias.push(foto1);
+    if (foto2.ruta) fotografias.push(foto2);
     return fotografias;
   }
 }

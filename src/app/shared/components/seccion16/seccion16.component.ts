@@ -26,6 +26,15 @@ export class Seccion16Component implements OnInit {
     const fuente = this.datos?.['fotografiaReservorioFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaReservorioImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 20',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 20',
       titulo: titulo,
@@ -38,6 +47,15 @@ export class Seccion16Component implements OnInit {
     const titulo = this.datos?.['fotografiaUsoSuelosTitulo'] || 'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaUsoSuelosFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaUsoSuelosImagen'] || '';
+    
+    if (!imagen) {
+      return {
+        numero: '3. 24',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
     
     return {
       numero: '3. 24',

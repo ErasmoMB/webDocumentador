@@ -52,20 +52,22 @@ export class Seccion10Component implements OnInit {
   }
 
   getPorcentajeSaneamientoRedPublica(): string {
-    if (!this.datos?.saneamientoTabla || !Array.isArray(this.datos.saneamientoTabla)) {
+    const tabla = this.datos?.tiposSaneamientoTabla || this.datos?.saneamientoTabla;
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const redPublica = this.datos.saneamientoTabla.find((item: any) => 
+    const redPublica = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('red pública')
     );
     return redPublica?.porcentaje || '____';
   }
 
   getPorcentajeSaneamientoSinSaneamiento(): string {
-    if (!this.datos?.saneamientoTabla || !Array.isArray(this.datos.saneamientoTabla)) {
+    const tabla = this.datos?.tiposSaneamientoTabla || this.datos?.saneamientoTabla;
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const sinSaneamiento = this.datos.saneamientoTabla.find((item: any) => 
+    const sinSaneamiento = tabla.find((item: any) => 
       item.categoria && (item.categoria.toLowerCase().includes('sin saneamiento') || item.categoria.toLowerCase().includes('no posee'))
     );
     return sinSaneamiento?.porcentaje || '____';
@@ -96,6 +98,15 @@ export class Seccion10Component implements OnInit {
     const fuente = this.datos?.['fotografiaDesechosSolidosFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaDesechosSolidosImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 7',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 7',
       titulo: titulo,
@@ -108,6 +119,15 @@ export class Seccion10Component implements OnInit {
     const titulo = this.datos?.['fotografiaElectricidadTitulo'] || 'Infraestructura eléctrica en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaElectricidadFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaElectricidadImagen'] || '';
+    
+    if (!imagen) {
+      return {
+        numero: '3. 8',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
     
     return {
       numero: '3. 8',

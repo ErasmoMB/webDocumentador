@@ -27,6 +27,7 @@
 <p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
 
 <app-foto-info 
+    *ngIf="getFotoSalud().ruta"
     [numero]="getFotoSalud().numero"
     [titulo]="getFotoSalud().titulo"
     [fuente]="getFotoSalud().fuente"
@@ -244,6 +245,7 @@
 <p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
 
 <app-foto-info 
+    *ngIf="getFotoIEAyroca().ruta"
     [numero]="getFotoIEAyroca().numero"
     [titulo]="getFotoIEAyroca().titulo"
     [fuente]="getFotoIEAyroca().fuente"
@@ -251,6 +253,7 @@
 </app-foto-info>
 
 <app-foto-info 
+    *ngIf="getFotoIE40270().ruta"
     [numero]="getFotoIE40270().numero"
     [titulo]="getFotoIE40270().titulo"
     [fuente]="getFotoIE40270().fuente"

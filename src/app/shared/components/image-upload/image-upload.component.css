@@ -133,3 +133,16 @@
   transform: scale(1.1);
 }
 
+.foto-item {
+  background: #fff;
+}
+
+.btn-danger {
+  background-color: var(--danger, #ef4444);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-dark, #dc2626);
+}
+

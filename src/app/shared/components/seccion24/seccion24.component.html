@@ -30,10 +30,11 @@
 <p class="text-justify" *ngIf="!datos.textoActividadesEconomicasAISI || datos.textoActividadesEconomicasAISI === '____'">Del cuadro anterior, se aprecia que la actividad económica más frecuente dentro del CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> es el grupo "Agricultura, ganadería, silvicultura y pesca" con un <span class="highlight">{{ getPorcentajeAgricultura() }}</span>. Esto se condice con las entrevistas aplicadas en campo, pues los informantes y autoridades declararon que la mayoría de la población se dedica principalmente a la agricultura y a la ganadería. La segunda actividad más frecuente dentro de esta localidad es la de "Administración pública y defensa; planes de seguridad social de afiliación obligatoria" con <span class="highlight">{{ getPorcentajeAdministracion() }}</span>.</p>
 
 <app-foto-info 
-    [numero]="getFotoActividadesEconomicas().numero"
-    [titulo]="getFotoActividadesEconomicas().titulo"
-    [fuente]="getFotoActividadesEconomicas().fuente"
-    [ruta]="getFotoActividadesEconomicas().ruta">
+    *ngFor="let foto of fotografiasActividadesEconomicasCache"
+    [numero]="foto.numero"
+    [titulo]="foto.titulo"
+    [fuente]="foto.fuente"
+    [ruta]="foto.ruta">
 </app-foto-info>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Mercado y comercialización de productos</strong></p>
@@ -42,10 +43,11 @@
 <p class="text-justify" *ngIf="!datos.textoMercadoProductos || datos.textoMercadoProductos === '____'">Además, la comercialización de productos en <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se complementa con la presencia de comerciantes mayoristas que viajan hacia la localidad para comprar y vender productos. La mayoría de estos comerciantes provienen de la ciudad de <span class="highlight">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, desde donde abastecen las bodegas locales con mercancías diversas. Este sistema de intermediación permite que los pobladores de <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> accedan a una variedad más amplia de productos, aunque la oferta sigue siendo limitada en comparación con las zonas urbanas más grandes. La falta de un mercado formal y de una infraestructura de comercio mayor limita el desarrollo del intercambio comercial en la localidad, pero el dinamismo de las pequeñas bodegas y la llegada de comerciantes externos contribuyen a mantener un flujo de productos que satisface las necesidades básicas de la población.</p>
 
 <app-foto-info 
-    [numero]="getFotoMercado().numero"
-    [titulo]="getFotoMercado().titulo"
-    [fuente]="getFotoMercado().fuente"
-    [ruta]="getFotoMercado().ruta">
+    *ngFor="let foto of fotografiasMercadoCache"
+    [numero]="foto.numero"
+    [titulo]="foto.titulo"
+    [fuente]="foto.fuente"
+    [ruta]="foto.ruta">
 </app-foto-info>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Hábitos de consumo</strong></p>

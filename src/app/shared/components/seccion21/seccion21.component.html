@@ -1,7 +1,6 @@
 <h4>B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
 <p class="text-justify" *ngIf="datos.textoAISIIntro && datos.textoAISIIntro !== '____'">{{ datos.textoAISIIntro }}</p>
 <p class="text-justify" *ngIf="!datos.textoAISIIntro || datos.textoAISIIntro === '____'">En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, en el departamento de <span class="highlight">{{ datos.departamentoSeleccionado || 'Arequipa' }}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.</p>
-<p class="text-justify" *ngIf="!datos.textoAISIIntro || datos.textoAISIIntro === '____'">En los siguientes apartados, se describirán los aspectos socioeconómicos y antropológicos de la localidad en cuestión.</p>
 
 <h5>B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h5>
 <p class="text-justify" *ngIf="datos.textoCentroPoblado && datos.textoCentroPoblado !== '____'">{{ datos.textoCentroPoblado }}</p>
@@ -44,9 +43,10 @@
 <p class="source">FUENTE: GEADES (2024)</p>
 
 <app-foto-info 
-    [numero]="getFotoCahuacho().numero"
-    [titulo]="getFotoCahuacho().titulo"
-    [fuente]="getFotoCahuacho().fuente"
-    [ruta]="getFotoCahuacho().ruta">
+    *ngFor="let foto of fotografiasCahuachoCache"
+    [numero]="foto.numero"
+    [titulo]="foto.titulo"
+    [fuente]="foto.fuente"
+    [ruta]="foto.ruta">
 </app-foto-info>
 

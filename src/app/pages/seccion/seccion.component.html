@@ -6,6 +6,15 @@
         <h2>{{ seccionTitulo }}</h2>
       </div>
       <div class="preview-actions">
+        <button class="btn btn-clear" (click)="limpiarDatos()" title="Limpiar todos los datos guardados">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12c0 1.66-1.34 3-3 3H6c-1.66 0-3-1.34-3-3s1.34-3 3-3h12c1.66 0 3 1.34 3 3z"/>
+            <path d="M9 9V6c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2v3"/>
+            <path d="M12 9v9"/>
+            <path d="M8 9h8"/>
+          </svg>
+          Limpiar
+        </button>
         <button class="btn btn-test" (click)="llenarDatosPrueba()" title="Llenar todos los campos con datos de prueba">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 11l3 3L22 4"/>
@@ -39,7 +48,7 @@
           </div>
         </div>
         <!-- Usar componente seccion3 para la sección 3.1.3 -->
-        <div class="preview preview-static" *ngIf="seccionId === '3.1.3'">
+        <div class="preview preview-static" *ngIf="seccionId === '3.1.3' || seccionId === '3.1.3.A' || seccionId === '3.1.3.B'">
           <div class="viewport-content">
             <app-seccion3></app-seccion3>
           </div>
@@ -174,10 +183,10 @@
             <app-seccion30></app-seccion30>
           </div>
         </div>
-        <div class="preview preview-static" *ngIf="sectionTemplate && seccionId !== '3.1.1' && seccionId !== '3.1.2' && seccionId !== '3.1.3' && seccionId !== '3.1.4.A.1.1' && seccionId !== '3.1.4.A.1.2' && seccionId !== '3.1.4.A.1.3' && seccionId !== '3.1.4.A.1.4' && seccionId !== '3.1.4.A.1.5' && seccionId !== '3.1.4.A.1.6' && seccionId !== '3.1.4.A.1.7' && seccionId !== '3.1.4.A.1.8' && seccionId !== '3.1.4.A.1.9' && seccionId !== '3.1.4.A.1.10' && seccionId !== '3.1.4.A.1.11' && seccionId !== '3.1.4.A.1.12' && seccionId !== '3.1.4.A.1.13' && seccionId !== '3.1.4.A.1.14' && seccionId !== '3.1.4.A.1.15' && seccionId !== '3.1.4.A.1.16' && seccionId !== '3.1.4.B.1' && seccionId !== '3.1.4.B.1.1' && seccionId !== '3.1.4.B.1.2' && seccionId !== '3.1.4.B.1.3' && seccionId !== '3.1.4.B.1.4' && seccionId !== '3.1.4.B.1.5' && seccionId !== '3.1.4.B.1.6' && seccionId !== '3.1.4.B.1.7' && seccionId !== '3.1.4.B.1.8' && seccionId !== '3.1.4.B.1.9'">
+        <div class="preview preview-static" *ngIf="sectionTemplate && seccionId !== '3.1.1' && seccionId !== '3.1.2' && seccionId !== '3.1.3' && seccionId !== '3.1.3.A' && seccionId !== '3.1.3.B' && seccionId !== '3.1.4.A.1.1' && seccionId !== '3.1.4.A.1.2' && seccionId !== '3.1.4.A.1.3' && seccionId !== '3.1.4.A.1.4' && seccionId !== '3.1.4.A.1.5' && seccionId !== '3.1.4.A.1.6' && seccionId !== '3.1.4.A.1.7' && seccionId !== '3.1.4.A.1.8' && seccionId !== '3.1.4.A.1.9' && seccionId !== '3.1.4.A.1.10' && seccionId !== '3.1.4.A.1.11' && seccionId !== '3.1.4.A.1.12' && seccionId !== '3.1.4.A.1.13' && seccionId !== '3.1.4.A.1.14' && seccionId !== '3.1.4.A.1.15' && seccionId !== '3.1.4.A.1.16' && seccionId !== '3.1.4.B' && seccionId !== '3.1.4.B.1' && seccionId !== '3.1.4.B.1.1' && seccionId !== '3.1.4.B.1.2' && seccionId !== '3.1.4.B.1.3' && seccionId !== '3.1.4.B.1.4' && seccionId !== '3.1.4.B.1.5' && seccionId !== '3.1.4.B.1.6' && seccionId !== '3.1.4.B.1.7' && seccionId !== '3.1.4.B.1.8' && seccionId !== '3.1.4.B.1.9'">
           <div class="viewport-content" [innerHTML]="getRenderedTemplate()"></div>
         </div>
-        <div *ngIf="!sectionTemplate && seccionId !== '3.1.1' && seccionId !== '3.1.2' && seccionId !== '3.1.3' && seccionId !== '3.1.4.A.1.1' && seccionId !== '3.1.4.A.1.2' && seccionId !== '3.1.4.A.1.3' && seccionId !== '3.1.4.A.1.4' && seccionId !== '3.1.4.A.1.5' && seccionId !== '3.1.4.A.1.6' && seccionId !== '3.1.4.A.1.7' && seccionId !== '3.1.4.A.1.8' && seccionId !== '3.1.4.A.1.9' && seccionId !== '3.1.4.A.1.10' && seccionId !== '3.1.4.A.1.11' && seccionId !== '3.1.4.A.1.12' && seccionId !== '3.1.4.A.1.13' && seccionId !== '3.1.4.A.1.14' && seccionId !== '3.1.4.A.1.15' && seccionId !== '3.1.4.A.1.16' && seccionId !== '3.1.4.B' && seccionId !== '3.1.4.B.1' && seccionId !== '3.1.4.B.1.1' && seccionId !== '3.1.4.B.1.2' && seccionId !== '3.1.4.B.1.3' && seccionId !== '3.1.4.B.1.4' && seccionId !== '3.1.4.B.1.5' && seccionId !== '3.1.4.B.1.6' && seccionId !== '3.1.4.B.1.7' && seccionId !== '3.1.4.B.1.8' && seccionId !== '3.1.4.B.1.9'" class="preview-placeholder">
+        <div *ngIf="!sectionTemplate && seccionId !== '3.1.1' && seccionId !== '3.1.2' && seccionId !== '3.1.3' && seccionId !== '3.1.3.A' && seccionId !== '3.1.3.B' && seccionId !== '3.1.4.A.1.1' && seccionId !== '3.1.4.A.1.2' && seccionId !== '3.1.4.A.1.3' && seccionId !== '3.1.4.A.1.4' && seccionId !== '3.1.4.A.1.5' && seccionId !== '3.1.4.A.1.6' && seccionId !== '3.1.4.A.1.7' && seccionId !== '3.1.4.A.1.8' && seccionId !== '3.1.4.A.1.9' && seccionId !== '3.1.4.A.1.10' && seccionId !== '3.1.4.A.1.11' && seccionId !== '3.1.4.A.1.12' && seccionId !== '3.1.4.A.1.13' && seccionId !== '3.1.4.A.1.14' && seccionId !== '3.1.4.A.1.15' && seccionId !== '3.1.4.A.1.16' && seccionId !== '3.1.4.B' && seccionId !== '3.1.4.B.1' && seccionId !== '3.1.4.B.1.1' && seccionId !== '3.1.4.B.1.2' && seccionId !== '3.1.4.B.1.3' && seccionId !== '3.1.4.B.1.4' && seccionId !== '3.1.4.B.1.5' && seccionId !== '3.1.4.B.1.6' && seccionId !== '3.1.4.B.1.7' && seccionId !== '3.1.4.B.1.8' && seccionId !== '3.1.4.B.1.9'" class="preview-placeholder">
           <div class="placeholder-content">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -201,8 +210,210 @@
       <span class="badge badge-primary">{{ seccionTitulo }}</span>
     </div>
     <div class="formulario-content scrollbar-thin">
+      <!-- Formulario especializado para 3.1.1 y 3.1.2 -->
+      <ng-container *ngIf="seccionId === '3.1.1' || seccionId === '3.1.2'">
+        <div class="form-group-section" *ngIf="seccionId === '3.1.1'">
+          <h4 class="section-title">Información del Proyecto</h4>
+          
+          <div class="form-field">
+            <label class="label">Nombre del Proyecto <span class="required">*</span></label>
+            <input 
+              type="text" 
+              class="input" 
+              placeholder="Ej: Paka"
+              [value]="formData['projectName'] || ''"
+              (input)="onFieldChange('projectName', $any($event.target).value)">
+          </div>
+        </div>
+
+        <div class="form-group-section">
+          <h4 class="section-title">Cargar Datos de Centros Poblados</h4>
+          
+          <div class="form-field">
+            <label class="label">Subir UBIGEO de Centro Poblado <span class="required">*</span></label>
+            <div class="file-upload-wrapper">
+              <input 
+                type="file" 
+                id="jsonFileInput" 
+                accept=".json" 
+                (change)="onJSONFileSelected($event)"
+                style="display: none;">
+              <button 
+                type="button" 
+                class="btn btn-secondary" 
+                (click)="selectJSONFile()">
+                Seleccionar archivo
+              </button>
+              <span *ngIf="jsonFileName" class="file-name">{{ jsonFileName }}</span>
+              <span *ngIf="!jsonFileName" class="file-name">Ningún archivo seleccionado</span>
+            </div>
+            <small class="form-hint">Seleccione un archivo JSON con datos de centros poblados</small>
+          </div>
+
+          <div class="form-field" *ngIf="centrosPobladosJSON.length > 0">
+            <label class="label">Centros Poblados Disponibles</label>
+            <div class="centros-poblados-list">
+              <div 
+                *ngFor="let cp of centrosPobladosJSON; let i = index" 
+                class="centro-poblado-item"
+                [class.selected]="cp.selected"
+                (click)="toggleCentroPoblado(i)">
+                <div class="cp-info">
+                  <strong>{{ cp.CCPP }}</strong>
+                  <span class="cp-categoria">{{ cp.CATEGORIA }}</span>
+                </div>
+                <div class="cp-details">
+                  <span>Código: {{ cp.CODIGO }}</span>
+                  <span>Población: {{ cp.POBLACION }}</span>
+                  <span>Altitud: {{ cp.ALTITUD }} msnm</span>
+                </div>
+              </div>
+            </div>
+            <small class="form-hint">Haga clic en un centro poblado para seleccionarlo</small>
+          </div>
+
+          <div class="form-field" *ngIf="centrosPobladosJSON.length > 0">
+            <label class="label">Información Geográfica</label>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="label">Departamento <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  class="input" 
+                  [value]="formData['departamentoSeleccionado'] || geoInfo.DPTO || ''"
+                  [readonly]="!!geoInfo.DPTO"
+                  (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)">
+              </div>
+              <div class="form-field">
+                <label class="label">Provincia <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  class="input" 
+                  [value]="formData['provinciaSeleccionada'] || geoInfo.PROV || ''"
+                  [readonly]="!!geoInfo.PROV"
+                  (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)">
+              </div>
+              <div class="form-field">
+                <label class="label">Distrito <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  class="input" 
+                  [value]="formData['distritoSeleccionado'] || geoInfo.DIST || ''"
+                  [readonly]="!!geoInfo.DIST"
+                  (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)">
+              </div>
+            </div>
+            <small class="form-hint">Esta información se completa automáticamente desde el JSON</small>
+          </div>
+
+          <div class="form-field" *ngIf="centroPobladoSeleccionado">
+            <label class="label">Centro Poblado Seleccionado</label>
+            <div class="selected-cp-info">
+              <p><strong>Nombre:</strong> {{ centroPobladoSeleccionado.CCPP }}</p>
+              <p><strong>Categoría:</strong> {{ centroPobladoSeleccionado.CATEGORIA }}</p>
+              <p><strong>Código CPP:</strong> {{ centroPobladoSeleccionado.CODIGO }}</p>
+              <p><strong>Población:</strong> {{ centroPobladoSeleccionado.POBLACION }}</p>
+              <p><strong>Coordenadas:</strong> E: {{ centroPobladoSeleccionado.ESTE }} m, N: {{ centroPobladoSeleccionado.NORTE }} m</p>
+              <p><strong>Altitud:</strong> {{ centroPobladoSeleccionado.ALTITUD }} msnm</p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Formulario especializado para 3.1.3, 3.1.3.A y 3.1.3.B -->
+      <ng-container *ngIf="seccionId === '3.1.3' || seccionId === '3.1.3.A' || seccionId === '3.1.3.B'">
+        <div class="form-group-section">
+          <h4 class="section-title">3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares</h4>
+          
+          <div class="form-field">
+            <label class="label">Cantidad de Entrevistas <span class="required">*</span></label>
+            <input 
+              type="number" 
+              class="input" 
+              placeholder="Ej: 18"
+              [value]="formData['cantidadEntrevistas'] || ''"
+              (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
+          </div>
+
+          <div class="form-field">
+            <label class="label">Fecha de Trabajo de Campo <span class="required">*</span></label>
+            <input 
+              type="text" 
+              class="input" 
+              placeholder="Ej: noviembre 2024"
+              [value]="formData['fechaTrabajoCampo'] || ''"
+              (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
+          </div>
+
+          <div class="form-field">
+            <label class="label">Consultora / Fuente <span class="required">*</span></label>
+            <input 
+              type="text" 
+              class="input" 
+              placeholder="Ej: GEADES (2024)"
+              [value]="formData['consultora'] || ''"
+              (input)="onFieldChange('consultora', $any($event.target).value)">
+          </div>
+
+          <div class="form-field">
+            <label class="label">Lista de Entrevistados</label>
+            <div class="table-editor" style="overflow-x: auto;">
+              <table class="editor-table">
+                <thead>
+                  <tr>
+                    <th>Nombres y Apellidos</th>
+                    <th>Cargo u Ocupación</th>
+                    <th>Organización</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let entrevistado of (datos.entrevistados || []); let i = index">
+                    <td>
+                      <input type="text" class="table-input" 
+                        [value]="entrevistado.nombre || ''"
+                        (input)="actualizarEntrevistado(i, 'nombre', $any($event.target).value)"
+                        placeholder="Ej: Miguel Ángel Sayaverde Rospigliosi">
+                    </td>
+                    <td>
+                      <input type="text" class="table-input" 
+                        [value]="entrevistado.cargo || ''"
+                        (input)="actualizarEntrevistado(i, 'cargo', $any($event.target).value)"
+                        placeholder="Ej: Presidente">
+                    </td>
+                    <td>
+                      <input type="text" class="table-input" 
+                        [value]="entrevistado.organizacion || ''"
+                        (input)="actualizarEntrevistado(i, 'organizacion', $any($event.target).value)"
+                        placeholder="Ej: CC Ayroca">
+                    </td>
+                    <td>
+                      <button type="button" class="btn-icon" (click)="eliminarEntrevistado(i)" title="Eliminar entrevistado">
+                        ×
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="!datos.entrevistados || datos.entrevistados.length === 0">
+                    <td colspan="4" class="text-center">
+                      <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()">
+                        + Agregar Entrevistado
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="form-field" style="margin-top: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()">
+                  + Agregar Entrevistado
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
       <!-- Formulario especializado para 3.1.4, 3.1.4.A y 3.1.4.A.1 -->
-      <ng-container *ngIf="seccionId === '3.1.4' || seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1'; else defaultForm">
+      <ng-container *ngIf="seccionId === '3.1.4' || seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1'">
         <!-- Información General de la Comunidad -->
         <div class="form-group-section">
           <h4 class="section-title">Información General de la Comunidad</h4>
@@ -370,13 +581,13 @@
           <div class="form-field">
             <label class="label">Título <span class="required">*</span></label>
             <input type="text" class="input" placeholder="Ej: Ubicación referencial" 
-              [value]="formData['cuadroTituloAISD1']"
+              [value]="formData['cuadroTituloAISD1'] || ''"
               (input)="onFieldChange('cuadroTituloAISD1', $any($event.target).value)">
           </div>
           <div class="form-field">
             <label class="label">Fuente <span class="required">*</span></label>
             <input type="text" class="input" placeholder="Ej: GEADES (2024)" 
-              [value]="formData['cuadroFuenteAISD1']"
+              [value]="formData['cuadroFuenteAISD1'] || ''"
               (input)="onFieldChange('cuadroFuenteAISD1', $any($event.target).value)">
           </div>
           <small class="form-hint">El número de cuadro se genera automáticamente. Los demás campos (Localidad, Distrito, Provincia, Departamento) se completan automáticamente desde la información general</small>
@@ -388,7 +599,7 @@
           <div class="form-field">
             <label class="label">Título <span class="required">*</span></label>
             <input type="text" class="input" placeholder="Ej: Cantidad total de población y viviendas" 
-              [value]="formData['cuadroTituloAISD2']"
+              [value]="formData['cuadroTituloAISD2'] || ''"
               (input)="onFieldChange('cuadroTituloAISD2', $any($event.target).value)">
           </div>
           <div class="form-field">
@@ -421,31 +632,31 @@
                 <tr *ngFor="let row of getFilasTabla(); let i = index">
                   <td>
                     <input type="text" class="table-input" 
-                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Punto']"
+                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Punto'] || ''"
                       (input)="onFieldChange('tablaAISD2Fila' + (i+1) + 'Punto', $any($event.target).value)"
                       placeholder="____">
                   </td>
                   <td>
                     <input type="text" class="table-input" 
-                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Codigo']"
+                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Codigo'] || ''"
                       (input)="onFieldChange('tablaAISD2Fila' + (i+1) + 'Codigo', $any($event.target).value)"
                       placeholder="____">
                   </td>
                   <td>
                     <input type="text" class="table-input" 
-                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Poblacion']"
+                      [value]="formData['tablaAISD2Fila' + (i+1) + 'Poblacion'] || ''"
                       (input)="onFieldChange('tablaAISD2Fila' + (i+1) + 'Poblacion', $any($event.target).value)"
                       placeholder="____">
                   </td>
                   <td>
                     <input type="text" class="table-input" 
-                      [value]="formData['tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas']"
+                      [value]="formData['tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas'] || ''"
                       (input)="onFieldChange('tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas', $any($event.target).value)"
                       placeholder="____">
                   </td>
                   <td>
                     <input type="text" class="table-input" 
-                      [value]="formData['tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas']"
+                      [value]="formData['tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas'] || ''"
                       (input)="onFieldChange('tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas', $any($event.target).value)"
                       placeholder="____">
                   </td>
@@ -487,72 +698,33 @@
           <div class="form-field">
             <label class="label">Fuente <span class="required">*</span></label>
             <input type="text" class="input" placeholder="Ej: Reporte de Indicadores... REDINFORMA (MIDIS)" 
-              [value]="formData['cuadroFuenteAISD2']"
+              [value]="formData['cuadroFuenteAISD2'] || ''"
               (input)="onFieldChange('cuadroFuenteAISD2', $any($event.target).value)">
           </div>
           <small class="form-hint">El número de cuadro se genera automáticamente</small>
         </div>
 
         <!-- Fotografías -->
-        <div class="form-group-section" *ngFor="let foto of fotografias; let i = index">
-          <h4 class="section-title">Fotografía {{ i + 1 }}</h4>
-          <div class="form-field">
-            <label class="label">Título <span class="required">*</span></label>
-            <input type="text" class="input" placeholder="Ej: Vista panorámica del Anexo Ayroca" 
-              [value]="foto.titulo"
-              (input)="actualizarFoto(i, 'titulo', $any($event.target).value)">
-          </div>
-          <div class="form-field">
-            <label class="label">Fuente <span class="required">*</span></label>
-            <input type="text" class="input" placeholder="Ej: GEADES, 2024" 
-              [value]="foto.fuente"
-              (input)="actualizarFoto(i, 'fuente', $any($event.target).value)">
-          </div>
-          <div class="form-field">
-            <label class="label">Imagen <span class="required">*</span></label>
-            <div class="image-upload-area" 
-                 (dragover)="onDragOver($event)"
-                 (dragleave)="onDragLeave($event)"
-                 (drop)="onDrop($event, i)"
-                 [attr.data-index]="i"
-                 [class.drag-over]="foto.dragOver">
-              <input type="file" 
-                     #fileInput
-                     [id]="'foto-input-' + i"
-                     accept="image/*"
-                     (change)="onFileSelected($event, i)"
-                     style="display: none;">
-              <div *ngIf="!foto.preview" class="upload-placeholder">
-                <p>Arrastra una imagen aquí o</p>
-                <button type="button" class="btn btn-secondary" (click)="fileInput.click()">
-                  Buscar en el explorador
-                </button>
-              </div>
-              <div *ngIf="foto.preview" class="image-preview">
-                <img [src]="foto.preview" alt="Preview">
-                <button type="button" class="btn-icon remove-image" (click)="eliminarImagen(i)" title="Eliminar imagen">
-                  ×
-                </button>
-              </div>
-            </div>
-          </div>
-          <button type="button" class="btn btn-danger" (click)="eliminarFoto(i)" *ngIf="fotografias.length > 1" style="margin-top: 10px;">
-            Eliminar Fotografía
-          </button>
-          <small class="form-hint">El número de fotografía se genera automáticamente</small>
+        <div class="form-field">
+          <label class="label">Fotografías</label>
+          <!-- TODO: Reemplazar con componente de imagen individual o múltiple cuando esté disponible -->
+          <p style="color: #999; font-style: italic;">Componente de múltiples imágenes temporalmente deshabilitado</p>
         </div>
-        <button type="button" class="btn btn-secondary" (click)="agregarFoto()" style="margin-top: 10px;">
-          + Agregar Fotografía
-        </button>
       </ng-container>
 
       <ng-container *ngIf="seccionId === '3.1.4.A.1.1'">
         <div class="form-group-section">
           <h4 class="section-title">A.1.1. Institucionalidad local</h4>
           <div class="form-field">
+            <label class="label">Título de la Tabla <span class="required">*</span></label>
+            <input type="text" class="input" placeholder="Ej: Instituciones existentes - CC Ayroca"
+              [value]="formData['tituloInstituciones'] || 'Instituciones existentes - CC ' + (formData['grupoAISD'] || 'Ayroca')"
+              (input)="onFieldChange('tituloInstituciones', $any($event.target).value)">
+          </div>
+          <div class="form-field">
             <label class="label">Fuente de la Tabla <span class="required">*</span></label>
             <input type="text" class="input" placeholder="Ej: GEADES (2024)"
-              [value]="formData['fuenteInstituciones'] || ''"
+              [value]="formData['fuenteInstituciones'] || 'GEADES (2024)'"
               (input)="onFieldChange('fuenteInstituciones', $any($event.target).value)">
           </div>
           <div class="form-field">
@@ -618,18 +790,17 @@
             </button>
           </div>
           <app-image-upload
-            [titulo]="formData['fotografiaAISD3Titulo'] || formData['fotoInstitucionalidadTitulo'] || ''"
-            [fuente]="formData['fotografiaAISD3Fuente'] || formData['fotoInstitucionalidadFuente'] || ''"
-            [previewInicial]="fotoInstitucionalidadPreview"
-            labelTitulo="Fotografía - Título"
-            labelFuente="Fotografía - Fuente"
+            [fotografias]="fotografiasInstitucionalidadFormMulti"
+            [permitirMultiples]="true"
+            labelTitulo="Título de la fotografía"
+            labelFuente="Fuente de la fotografía"
             labelImagen="Fotografía - Imagen"
             placeholderTitulo="Ej: Local Comunal de la CC Ayroca"
             placeholderFuente="Ej: GEADES, 2024"
+            tituloDefault="Local Comunal de la CC Ayroca"
+            fuenteDefault="GEADES, 2024"
             [requerido]="true"
-            (tituloChange)="onFieldChange('fotografiaAISD3Titulo', $event); onFieldChange('fotoInstitucionalidadTitulo', $event)"
-            (fuenteChange)="onFieldChange('fotografiaAISD3Fuente', $event); onFieldChange('fotoInstitucionalidadFuente', $event)"
-            (imagenChange)="onImagenInstitucionalidadChange($event)">
+            (fotografiasChange)="onFotografiasInstitucionalidadChange($event)">
           </app-image-upload>
         </div>
       </ng-container>
@@ -638,16 +809,13 @@
         <div class="form-group-section">
           <h4 class="section-title">A.1.2. Aspectos Demográficos</h4>
           <div class="form-field">
-            <label class="label">Cargar datos desde distrito</label>
+            <label class="label">Cargar datos demográficos</label>
             <div class="form-row">
-              <input type="text" class="input" placeholder="Ingrese nombre del distrito (ej: CAHUACHO)" 
-                #distritoInput
-                (keyup.enter)="cargarDatosDemografiaAISD()">
               <button type="button" class="btn btn-primary" (click)="cargarDatosDemografiaAISD()">
-                Cargar Datos
+                Cargar Datos desde Backend
               </button>
             </div>
-            <small class="form-hint">Los datos se cargarán automáticamente desde el backend si está disponible</small>
+            <small class="form-hint">Los datos se cargarán automáticamente usando los códigos CPP de la tabla 3.1.4. Si no hay códigos, se intentará cargar desde el distrito seleccionado.</small>
           </div>
           <div class="form-field">
             <label class="label">Población por Sexo</label>
@@ -1102,50 +1270,8 @@
           </div>
           <div class="form-field">
             <label class="label">Fotografías de Ganadería</label>
-            <div *ngFor="let foto of getFotografiasGanaderiaForm(); let i = index" class="form-field" style="margin-top: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
-              <h5 style="margin-bottom: 10px;">Fotografía {{ i + 1 }}</h5>
-              <div class="form-field">
-                <label class="label">Título</label>
-                <input type="text" class="input" 
-                  [value]="foto.titulo || ''"
-                  (input)="actualizarFotoGanaderia(i, 'titulo', $any($event.target).value)"
-                  placeholder="Ej: Ganado vacuno en la CC Ayroca">
-              </div>
-              <div class="form-field">
-                <label class="label">Fuente</label>
-                <input type="text" class="input" 
-                  [value]="foto.fuente || ''"
-                  (input)="actualizarFotoGanaderia(i, 'fuente', $any($event.target).value)"
-                  placeholder="Ej: GEADES, 2024">
-              </div>
-              <div class="form-field">
-                <label class="label">Imagen <span class="required">*</span></label>
-                <div class="image-upload-area" 
-                     (dragover)="onDragOverFotoGanaderia($event, i)"
-                     (dragleave)="onDragLeaveFotoGanaderia($event, i)"
-                     (drop)="onDropFotoGanaderia($event, i)"
-                     [class.drag-over]="foto.dragOver">
-                  <input type="file" 
-                         #fotoGanaderiaInput
-                         [id]="'foto-ganaderia-input-' + i"
-                         accept="image/*"
-                         (change)="onFileSelectedFotoGanaderia($event, i)"
-                         style="display: none;">
-                  <div *ngIf="!foto.preview" class="upload-placeholder">
-                    <p>Arrastra una imagen aquí o</p>
-                    <button type="button" class="btn btn-secondary" (click)="fotoGanaderiaInput.click()">
-                      Buscar en el explorador
-                    </button>
-                  </div>
-                  <div *ngIf="foto.preview" class="image-preview">
-                    <img [src]="foto.preview" alt="Preview">
-                    <button type="button" class="btn-icon remove-image" (click)="eliminarImagenFotoGanaderia(i)" title="Eliminar imagen">
-                      ×
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- TODO: Reemplazar con componente de imagen individual o múltiple cuando esté disponible -->
+            <p style="color: #999; font-style: italic;">Componente de múltiples imágenes temporalmente deshabilitado</p>
           </div>
           <div class="form-field">
             <label class="label">Tabla Características de la Agricultura</label>
@@ -1193,95 +1319,52 @@
             </button>
           </div>
           <div class="form-field">
-            <label class="label">Fotografías de Agricultura</label>
-            <div *ngFor="let foto of getFotografiasAgriculturaForm(); let i = index" class="form-field" style="margin-top: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
-              <h5 style="margin-bottom: 10px;">Fotografía {{ i + 1 }}</h5>
-              <div class="form-field">
-                <label class="label">Título</label>
-                <input type="text" class="input" 
-                  [value]="foto.titulo || ''"
-                  (input)="actualizarFotoAgricultura(i, 'titulo', $any($event.target).value)"
-                  placeholder="Ej: Parcela agrícola en el anexo Ayroca">
-              </div>
-              <div class="form-field">
-                <label class="label">Fuente</label>
-                <input type="text" class="input" 
-                  [value]="foto.fuente || ''"
-                  (input)="actualizarFotoAgricultura(i, 'fuente', $any($event.target).value)"
-                  placeholder="Ej: GEADES, 2024">
-              </div>
-              <div class="form-field">
-                <label class="label">Imagen <span class="required">*</span></label>
-                <div class="image-upload-area" 
-                     (dragover)="onDragOverFotoAgricultura($event, i)"
-                     (dragleave)="onDragLeaveFotoAgricultura($event, i)"
-                     (drop)="onDropFotoAgricultura($event, i)"
-                     [class.drag-over]="foto.dragOver">
-                  <input type="file" 
-                         #fotoAgriculturaInput
-                         [id]="'foto-agricultura-input-' + i"
-                         accept="image/*"
-                         (change)="onFileSelectedFotoAgricultura($event, i)"
-                         style="display: none;">
-                  <div *ngIf="!foto.preview" class="upload-placeholder">
-                    <p>Arrastra una imagen aquí o</p>
-                    <button type="button" class="btn btn-secondary" (click)="fotoAgriculturaInput.click()">
-                      Buscar en el explorador
-                    </button>
-                  </div>
-                  <div *ngIf="foto.preview" class="image-preview">
-                    <img [src]="foto.preview" alt="Preview">
-                    <button type="button" class="btn-icon remove-image" (click)="eliminarImagenFotoAgricultura(i)" title="Eliminar imagen">
-                      ×
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <label class="label">Fotografías de Ganadería</label>
+            <app-image-upload
+              [fotografias]="fotografiasGanaderiaFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Ganado vacuno en la CC Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Ganado vacuno en la CC Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasGanaderiaChange($event)">
+            </app-image-upload>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Comercio</label>
-            <div class="form-field">
-              <label class="label">Título</label>
-              <input type="text" class="input" 
-                [value]="formData['fotografiaComercioTitulo'] || ''"
-                (input)="onFieldChange('fotografiaComercioTitulo', $any($event.target).value)"
-                placeholder="Ej: Comercio ambulatorio en el anexo Ayroca">
-            </div>
-            <div class="form-field">
-              <label class="label">Fuente</label>
-              <input type="text" class="input" 
-                [value]="formData['fotografiaComercioFuente'] || ''"
-                (input)="onFieldChange('fotografiaComercioFuente', $any($event.target).value)"
-                placeholder="Ej: GEADES, 2024">
-            </div>
-            <div class="form-field">
-              <label class="label">Imagen <span class="required">*</span></label>
-              <div class="image-upload-area" 
-                   (dragover)="onDragOverFotoComercio($event)"
-                   (dragleave)="onDragLeaveFotoComercio($event)"
-                   (drop)="onDropFotoComercio($event)"
-                   [class.drag-over]="fotoComercioDragOver">
-                <input type="file" 
-                       #fotoComercioInput
-                       id="foto-comercio-input"
-                       accept="image/*"
-                       (change)="onFileSelectedFotoComercio($event)"
-                       style="display: none;">
-                <div *ngIf="!fotoComercioPreview" class="upload-placeholder">
-                  <p>Arrastra una imagen aquí o</p>
-                  <button type="button" class="btn btn-secondary" (click)="fotoComercioInput.click()">
-                    Buscar en el explorador
-                  </button>
-                </div>
-                <div *ngIf="fotoComercioPreview" class="image-preview">
-                  <img [src]="fotoComercioPreview" alt="Preview">
-                  <button type="button" class="btn-icon remove-image" (click)="eliminarImagenFotoComercio()" title="Eliminar imagen">
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
+            <label class="label">Fotografías de Agricultura</label>
+            <app-image-upload
+              [fotografias]="fotografiasAgriculturaFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Parcela agrícola en el anexo Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Parcela agrícola en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasAgriculturaChange($event)">
+            </app-image-upload>
+          </div>
+          <div class="form-field">
+            <label class="label">Fotografías de Comercio</label>
+            <app-image-upload
+              [fotografias]="fotografiasComercioFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Comercio ambulatorio en el anexo Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Comercio ambulatorio en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasComercioChange($event)">
+            </app-image-upload>
           </div>
         </div>
       </ng-container>
@@ -1400,20 +1483,22 @@
               + Agregar Fila
             </button>
           </div>
-          <app-image-upload
-            [titulo]="formData['fotografiaEstructuraTitulo'] || ''"
-            [fuente]="formData['fotografiaEstructuraFuente'] || ''"
-            [previewInicial]="fotoEstructuraPreview"
-            labelTitulo="Fotografía - Título"
-            labelFuente="Fotografía - Fuente"
-            labelImagen="Fotografía - Imagen"
-            placeholderTitulo="Ej: Estructura de las viviendas en el anexo Ayroca"
-            placeholderFuente="Ej: GEADES, 2024"
-            [requerido]="true"
-            (tituloChange)="onFieldChange('fotografiaEstructuraTitulo', $event)"
-            (fuenteChange)="onFieldChange('fotografiaEstructuraFuente', $event)"
-            (imagenChange)="onImagenEstructuraChange($event)">
-          </app-image-upload>
+          <div class="form-field">
+            <label class="label">Fotografías de Estructura</label>
+            <app-image-upload
+              [fotografias]="fotografiasEstructuraFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Estructura de las viviendas en el anexo Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Estructura de las viviendas en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasEstructuraChange($event)">
+            </app-image-upload>
+          </div>
         </div>
       </ng-container>
 
@@ -1531,20 +1616,19 @@
             </button>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Desechos Sólidos</label>
+            <label class="label">Fotografías de Desechos Sólidos</label>
             <app-image-upload
-              [titulo]="formData['fotografiaDesechosSolidosTitulo'] || ''"
-              [fuente]="formData['fotografiaDesechosSolidosFuente'] || ''"
-              [previewInicial]="fotoDesechosSolidosPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasDesechosSolidosFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaDesechosSolidosTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaDesechosSolidosFuente', $event)"
-              (imagenChange)="onImagenDesechosSolidosChange($event)">
+              (fotografiasChange)="onFotografiasDesechosSolidosChange($event)">
             </app-image-upload>
           </div>
           <div class="form-field">
@@ -1620,20 +1704,19 @@
             </div>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Electricidad</label>
+            <label class="label">Fotografías de Electricidad</label>
             <app-image-upload
-              [titulo]="formData['fotografiaElectricidadTitulo'] || ''"
-              [fuente]="formData['fotografiaElectricidadFuente'] || ''"
-              [previewInicial]="fotoElectricidadPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasElectricidadFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura eléctrica en el anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura eléctrica en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaElectricidadTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaElectricidadFuente', $event)"
-              (imagenChange)="onImagenElectricidadChange($event)">
+              (fotografiasChange)="onFotografiasElectricidadChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -1657,20 +1740,19 @@
             </div>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Transporte</label>
+            <label class="label">Fotografías de Transporte</label>
             <app-image-upload
-              [titulo]="formData['fotografiaTransporteTitulo'] || ''"
-              [fuente]="formData['fotografiaTransporteFuente'] || ''"
-              [previewInicial]="fotoTransportePreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasTransporteFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura de transporte en la CC Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura de transporte en la CC Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaTransporteTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaTransporteFuente', $event)"
-              (imagenChange)="onImagenTransporteChange($event)">
+              (fotografiasChange)="onFotografiasTransporteChange($event)">
             </app-image-upload>
           </div>
           <div class="form-field">
@@ -1719,20 +1801,19 @@
             </button>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Telecomunicaciones</label>
+            <label class="label">Fotografías de Telecomunicaciones</label>
             <app-image-upload
-              [titulo]="formData['fotografiaTelecomunicacionesTitulo'] || ''"
-              [fuente]="formData['fotografiaTelecomunicacionesFuente'] || ''"
-              [previewInicial]="fotoTelecomunicacionesPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasTelecomunicacionesFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Vivienda con antena de DIRECTV en el anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Vivienda con antena de DIRECTV en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaTelecomunicacionesTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaTelecomunicacionesFuente', $event)"
-              (imagenChange)="onImagenTelecomunicacionesChange($event)">
+              (fotografiasChange)="onFotografiasTelecomunicacionesChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -1787,20 +1868,19 @@
             </button>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Salud</label>
+            <label class="label">Fotografías de Salud</label>
             <app-image-upload
-              [titulo]="formData['fotografiaSaludTitulo'] || ''"
-              [fuente]="formData['fotografiaSaludFuente'] || ''"
-              [previewInicial]="fotoSaludPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasSaludFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura externa del Puesto de Salud Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura externa del Puesto de Salud Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaSaludTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaSaludFuente', $event)"
-              (imagenChange)="onImagenSaludChange($event)">
+              (fotografiasChange)="onFotografiasSaludChange($event)">
             </app-image-upload>
           </div>
           <div class="form-field">
@@ -2218,63 +2298,51 @@
           </div>
           <div class="form-field">
             <label class="label">Fotografías de Educación</label>
-            <div *ngFor="let foto of getFotografiasEducacionForm(); let i = index" class="form-field" style="margin-top: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
-              <h5 style="margin-bottom: 10px;">Fotografía {{ i + 1 }}</h5>
-              <app-image-upload
-                [titulo]="foto.titulo || ''"
-                [fuente]="foto.fuente || ''"
-                [previewInicial]="foto.preview"
-                labelTitulo="Fotografía - Título"
-                labelFuente="Fotografía - Fuente"
-                labelImagen="Fotografía - Imagen"
-                [placeholderTitulo]="i === 0 ? 'Ej: Infraestructura de la IE Ayroca' : 'Ej: Infraestructura de la IE N°40270'"
-                placeholderFuente="Ej: GEADES, 2024"
-                [requerido]="true"
-                (tituloChange)="actualizarFotoEducacion(i, 'titulo', $event)"
-                (fuenteChange)="actualizarFotoEducacion(i, 'fuente', $event)"
-                (imagenChange)="actualizarFotoEducacion(i, 'imagen', $event)">
-              </app-image-upload>
-            </div>
+            <app-image-upload
+              [fotografias]="fotografiasEducacionFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Infraestructura de la IE Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura de la IE Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasEducacionChange($event)">
+            </app-image-upload>
           </div>
           <div class="form-field">
             <label class="label">Fotografías de Recreación</label>
-            <div *ngFor="let foto of getFotografiasRecreacionForm(); let i = index" class="form-field" style="margin-top: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
-              <h5 style="margin-bottom: 10px;">Fotografía {{ i + 1 }}</h5>
-              <app-image-upload
-                [titulo]="foto.titulo || ''"
-                [fuente]="foto.fuente || ''"
-                [previewInicial]="foto.preview"
-                labelTitulo="Fotografía - Título"
-                labelFuente="Fotografía - Fuente"
-                labelImagen="Fotografía - Imagen"
-                [placeholderTitulo]="getPlaceholderRecreacion(i)"
-                placeholderFuente="Ej: GEADES, 2024"
-                [requerido]="true"
-                (tituloChange)="actualizarFotoRecreacion(i, 'titulo', $event)"
-                (fuenteChange)="actualizarFotoRecreacion(i, 'fuente', $event)"
-                (imagenChange)="actualizarFotoRecreacion(i, 'imagen', $event)">
-              </app-image-upload>
-            </div>
+            <app-image-upload
+              [fotografias]="fotografiasRecreacionFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Parque recreacional público del anexo Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Parque recreacional público del anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasRecreacionChange($event)">
+            </app-image-upload>
           </div>
           <div class="form-field">
             <label class="label">Fotografías de Deporte</label>
-            <div *ngFor="let foto of getFotografiasDeporteForm(); let i = index" class="form-field" style="margin-top: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
-              <h5 style="margin-bottom: 10px;">Fotografía {{ i + 1 }}</h5>
-              <app-image-upload
-                [titulo]="foto.titulo || ''"
-                [fuente]="foto.fuente || ''"
-                [previewInicial]="foto.preview"
-                labelTitulo="Fotografía - Título"
-                labelFuente="Fotografía - Fuente"
-                labelImagen="Fotografía - Imagen"
-                [placeholderTitulo]="i === 0 ? 'Ej: Losa deportiva del anexo Ayroca' : 'Ej: Estadio del anexo Ayroca'"
-                placeholderFuente="Ej: GEADES, 2024"
-                [requerido]="true"
-                (tituloChange)="actualizarFotoDeporte(i, 'titulo', $event)"
-                (fuenteChange)="actualizarFotoDeporte(i, 'fuente', $event)"
-                (imagenChange)="actualizarFotoDeporte(i, 'imagen', $event)">
-              </app-image-upload>
-            </div>
+            <app-image-upload
+              [fotografias]="fotografiasDeporteFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
+              labelImagen="Fotografía - Imagen"
+              placeholderTitulo="Ej: Losa deportiva del anexo Ayroca"
+              placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Losa deportiva del anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasDeporteChange($event)">
+            </app-image-upload>
           </div>
         </div>
       </ng-container>
@@ -2710,20 +2778,19 @@
             </button>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de la Iglesia</label>
+            <label class="label">Fotografías de la Iglesia</label>
             <app-image-upload
-              [titulo]="formData['fotografiaIglesiaTitulo'] || ''"
-              [fuente]="formData['fotografiaIglesiaFuente'] || ''"
-              [previewInicial]="fotoIglesiaPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasIglesiaFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Iglesia Matriz del anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaIglesiaTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaIglesiaFuente', $event)"
-              (imagenChange)="onImagenIglesiaChange($event)">
+              (fotografiasChange)="onFotografiasIglesiaChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -2761,37 +2828,35 @@
             </div>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía del Reservorio</label>
+            <label class="label">Fotografías del Reservorio</label>
             <app-image-upload
-              [titulo]="formData['fotografiaReservorioTitulo'] || ''"
-              [fuente]="formData['fotografiaReservorioFuente'] || ''"
-              [previewInicial]="fotoReservorioPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasReservorioFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Reservorio del anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Reservorio del anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaReservorioTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaReservorioFuente', $event)"
-              (imagenChange)="onImagenReservorioChange($event)">
+              (fotografiasChange)="onFotografiasReservorioChange($event)">
             </app-image-upload>
           </div>
           <div class="form-field">
-            <label class="label">Fotografía de Uso de Suelos</label>
+            <label class="label">Fotografías de Uso de Suelos</label>
             <app-image-upload
-              [titulo]="formData['fotografiaUsoSuelosTitulo'] || ''"
-              [fuente]="formData['fotografiaUsoSuelosFuente'] || ''"
-              [previewInicial]="fotoUsoSuelosPreview"
-              labelTitulo="Fotografía - Título"
-              labelFuente="Fotografía - Fuente"
+              [fotografias]="fotografiasUsoSuelosFormMulti"
+              [permitirMultiples]="true"
+              labelTitulo="Título de la fotografía"
+              labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Uso de los suelos en el anexo Ayroca"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Uso de los suelos en el anexo Ayroca"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaUsoSuelosTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaUsoSuelosFuente', $event)"
-              (imagenChange)="onImagenUsoSuelosChange($event)">
+              (fotografiasChange)="onFotografiasUsoSuelosChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -3312,20 +3377,19 @@
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Vista panorámica del CP Cahuacho</label>
+            <label class="label">Fotografías Vista panorámica del CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaCahuachoTitulo || ''"
-              [fuente]="datos.fotografiaCahuachoFuente || ''"
-              [previewInicial]="fotoCahuachoPreview"
+              [fotografias]="fotografiasCahuachoFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Vista panorámica del CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Vista panorámica del CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaCahuachoTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaCahuachoFuente', $event)"
-              (imagenChange)="onImagenCahuachoChange($event)">
+              (fotografiasChange)="onFotografiasCahuachoChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -3772,38 +3836,36 @@
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Parcelas agrícolas en el CP Cahuacho</label>
+            <label class="label">Fotografías Parcelas agrícolas en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaActividadesEconomicasTitulo || ''"
-              [fuente]="datos.fotografiaActividadesEconomicasFuente || ''"
-              [previewInicial]="fotoActividadesEconomicasPreview"
+              [fotografias]="fotografiasActividadesEconomicasFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Parcelas agrícolas en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Parcelas agrícolas en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaActividadesEconomicasTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaActividadesEconomicasFuente', $event)"
-              (imagenChange)="onImagenActividadesEconomicasChange($event)">
+              (fotografiasChange)="onFotografiasActividadesEconomicasChange($event)">
             </app-image-upload>
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Bodega en el CP Cahuacho</label>
+            <label class="label">Fotografías Bodega en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaMercadoTitulo || ''"
-              [fuente]="datos.fotografiaMercadoFuente || ''"
-              [previewInicial]="fotoMercadoPreview"
+              [fotografias]="fotografiasMercadoFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Bodega en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Bodega en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaMercadoTitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaMercadoFuente', $event)"
-              (imagenChange)="onImagenMercadoChange($event)">
+              (fotografiasChange)="onFotografiasMercadoChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -3983,20 +4045,19 @@
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Estructura de viviendas en el CP Cahuacho</label>
+            <label class="label">Fotografías Estructura de viviendas en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaEstructuraAISITitulo || ''"
-              [fuente]="datos.fotografiaEstructuraAISIFuente || ''"
-              [previewInicial]="fotoEstructuraAISIPreview"
+              [fotografias]="fotografiasEstructuraAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Estructura de viviendas en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Estructura de viviendas en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaEstructuraAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaEstructuraAISIFuente', $event)"
-              (imagenChange)="onImagenEstructuraAISIChange($event)">
+              (fotografiasChange)="onFotografiasEstructuraAISIChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -4117,18 +4178,17 @@
           <div class="form-field" style="margin-top: 20px;">
             <label class="label">Fotografía Contenedores de residuos sólidos en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaDesechosSolidosAISITitulo || ''"
-              [fuente]="datos.fotografiaDesechosSolidosAISIFuente || ''"
-              [previewInicial]="fotoDesechosSolidosAISIPreview"
+              [fotografias]="fotografiasDesechosSolidosAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Contenedores de residuos sólidos en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Contenedores de residuos sólidos en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaDesechosSolidosAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaDesechosSolidosAISIFuente', $event)"
-              (imagenChange)="onImagenDesechosSolidosAISIChange($event)">
+              (fotografiasChange)="onFotografiasDesechosSolidosAISIChange($event)">
             </app-image-upload>
           </div>
 
@@ -4189,18 +4249,17 @@
           <div class="form-field" style="margin-top: 20px;">
             <label class="label">Fotografía Infraestructura eléctrica en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaElectricidadAISITitulo || ''"
-              [fuente]="datos.fotografiaElectricidadAISIFuente || ''"
-              [previewInicial]="fotoElectricidadAISIPreview"
+              [fotografias]="fotografiasElectricidadAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura eléctrica en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura eléctrica en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaElectricidadAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaElectricidadAISIFuente', $event)"
-              (imagenChange)="onImagenElectricidadAISIChange($event)">
+              (fotografiasChange)="onFotografiasElectricidadAISIChange($event)">
             </app-image-upload>
           </div>
 
@@ -4283,18 +4342,17 @@
           <div class="form-field" style="margin-top: 20px;">
             <label class="label">Fotografía Infraestructura de transporte en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaTransporteAISITitulo || ''"
-              [fuente]="datos.fotografiaTransporteAISIFuente || ''"
-              [previewInicial]="fotoTransporteAISIPreview"
+              [fotografias]="fotografiasTransporteAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura de transporte en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura de transporte en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaTransporteAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaTransporteAISIFuente', $event)"
-              (imagenChange)="onImagenTransporteAISIChange($event)">
+              (fotografiasChange)="onFotografiasTransporteAISIChange($event)">
             </app-image-upload>
           </div>
 
@@ -4347,18 +4405,17 @@
           <div class="form-field" style="margin-top: 20px;">
             <label class="label">Fotografía Infraestructura de telecomunicaciones en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaTelecomunicacionesAISITitulo || ''"
-              [fuente]="datos.fotografiaTelecomunicacionesAISIFuente || ''"
-              [previewInicial]="fotoTelecomunicacionesAISIPreview"
+              [fotografias]="fotografiasTelecomunicacionesAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura de telecomunicaciones en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura de telecomunicaciones en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaTelecomunicacionesAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaTelecomunicacionesAISIFuente', $event)"
-              (imagenChange)="onImagenTelecomunicacionesAISIChange($event)">
+              (fotografiasChange)="onFotografiasTelecomunicacionesAISIChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -4417,18 +4474,17 @@
           <div class="form-field" style="margin-top: 20px;">
             <label class="label">Fotografía Infraestructura del Puesto de Salud Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaSaludAISITitulo || ''"
-              [fuente]="datos.fotografiaSaludAISIFuente || ''"
-              [previewInicial]="fotoSaludAISIPreview"
+              [fotografias]="fotografiasSaludAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura del Puesto de Salud Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Infraestructura del Puesto de Salud Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaSaludAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaSaludAISIFuente', $event)"
-              (imagenChange)="onImagenSaludAISIChange($event)">
+              (fotografiasChange)="onFotografiasSaludAISIChange($event)">
             </app-image-upload>
           </div>
 
@@ -4517,89 +4573,53 @@
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía 1 - Infraestructura de la IE Cahuacho</label>
+            <label class="label">Fotografías de Educación</label>
             <app-image-upload
-              [titulo]="datos.fotografiaEducacion1AISITitulo || ''"
-              [fuente]="datos.fotografiaEducacion1AISIFuente || ''"
-              [previewInicial]="fotoEducacion1AISIPreview"
+              [fotografias]="fotografiasEducacionAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Infraestructura de la IE Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
-              (tituloChange)="onFieldChange('fotografiaEducacion1AISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaEducacion1AISIFuente', $event)"
-              (imagenChange)="onImagenEducacion1AISIChange($event)">
+              tituloDefault="Infraestructura de la IE Cahuacho"
+              fuenteDefault="GEADES, 2024"
+              [requerido]="true"
+              (fotografiasChange)="onFotografiasEducacionAISIChange($event)">
             </app-image-upload>
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía 2 - Infraestructura de la IE N°40271</label>
+            <label class="label">Fotografías Plaza de toros del CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaEducacion2AISITitulo || ''"
-              [fuente]="datos.fotografiaEducacion2AISIFuente || ''"
-              [previewInicial]="fotoEducacion2AISIPreview"
-              labelTitulo="Título de la fotografía"
-              labelFuente="Fuente de la fotografía"
-              labelImagen="Fotografía - Imagen"
-              placeholderTitulo="Ej: Infraestructura de la IE N°40271"
-              placeholderFuente="Ej: GEADES, 2024"
-              (tituloChange)="onFieldChange('fotografiaEducacion2AISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaEducacion2AISIFuente', $event)"
-              (imagenChange)="onImagenEducacion2AISIChange($event)">
-            </app-image-upload>
-          </div>
-
-          <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía 3 - Infraestructura de la IE Virgen de Copacabana</label>
-            <app-image-upload
-              [titulo]="datos.fotografiaEducacion3AISITitulo || ''"
-              [fuente]="datos.fotografiaEducacion3AISIFuente || ''"
-              [previewInicial]="fotoEducacion3AISIPreview"
-              labelTitulo="Título de la fotografía"
-              labelFuente="Fuente de la fotografía"
-              labelImagen="Fotografía - Imagen"
-              placeholderTitulo="Ej: Infraestructura de la IE Virgen de Copacabana"
-              placeholderFuente="Ej: GEADES, 2024"
-              (tituloChange)="onFieldChange('fotografiaEducacion3AISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaEducacion3AISIFuente', $event)"
-              (imagenChange)="onImagenEducacion3AISIChange($event)">
-            </app-image-upload>
-          </div>
-
-          <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Plaza de toros del CP Cahuacho</label>
-            <app-image-upload
-              [titulo]="datos.fotografiaRecreacionAISITitulo || ''"
-              [fuente]="datos.fotografiaRecreacionAISIFuente || ''"
-              [previewInicial]="fotoRecreacionAISIPreview"
+              [fotografias]="fotografiasRecreacionAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Plaza de toros del CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Plaza de toros del CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaRecreacionAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaRecreacionAISIFuente', $event)"
-              (imagenChange)="onImagenRecreacionAISIChange($event)">
+              (fotografiasChange)="onFotografiasRecreacionAISIChange($event)">
             </app-image-upload>
           </div>
 
           <div class="form-field" style="margin-top: 20px;">
-            <label class="label">Fotografía Losa deportiva en el CP Cahuacho</label>
+            <label class="label">Fotografías Losa deportiva en el CP Cahuacho</label>
             <app-image-upload
-              [titulo]="datos.fotografiaDeporteAISITitulo || ''"
-              [fuente]="datos.fotografiaDeporteAISIFuente || ''"
-              [previewInicial]="fotoDeporteAISIPreview"
+              [fotografias]="fotografiasDeporteAISIFormMulti"
+              [permitirMultiples]="true"
               labelTitulo="Título de la fotografía"
               labelFuente="Fuente de la fotografía"
               labelImagen="Fotografía - Imagen"
               placeholderTitulo="Ej: Losa deportiva en el CP Cahuacho"
               placeholderFuente="Ej: GEADES, 2024"
+              tituloDefault="Losa deportiva en el CP Cahuacho"
+              fuenteDefault="GEADES, 2024"
               [requerido]="true"
-              (tituloChange)="onFieldChange('fotografiaDeporteAISITitulo', $event)"
-              (fuenteChange)="onFieldChange('fotografiaDeporteAISIFuente', $event)"
-              (imagenChange)="onImagenDeporteAISIChange($event)">
+              (fotografiasChange)="onFotografiasDeporteAISIChange($event)">
             </app-image-upload>
           </div>
         </div>
@@ -4918,6 +4938,10 @@
       </ng-container>
 
       <!-- Formulario por defecto para otras secciones -->
+      <ng-container *ngIf="seccionId !== '3.1.1' && seccionId !== '3.1.2' && seccionId !== '3.1.4' && seccionId !== '3.1.4.A' && seccionId !== '3.1.4.A.1'">
+        <ng-container *ngTemplateOutlet="defaultForm"></ng-container>
+      </ng-container>
+
       <ng-template #defaultForm>
         <div class="form-section" *ngFor="let field of sectionFields">
           <label class="label">

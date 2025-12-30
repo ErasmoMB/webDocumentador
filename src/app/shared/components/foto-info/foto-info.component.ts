@@ -6,8 +6,19 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./foto-info.component.css']
 })
 export class FotoInfoComponent {
-  @Input() numero: string = '1';
-  @Input() titulo: string = 'Vista panorámica del Anexo Ayroca';
+  @Input() numero: string = '';
+  @Input() titulo: string = '';
   @Input() fuente: string = 'GEADES, 2024';
   @Input() ruta: string = '';
+  @Input() fecha: string = '';
+  @Input() coordenadas: string = '';
+  @Input() direccion: string = '';
+  @Input() ubicacion: string = '';
+  @Input() altitud: string = '';
+  @Input() velocidad: string = '0.0km/h';
+  @Input() mostrarCompass: boolean = true;
+  @Input() mostrarMetadata: boolean = true;
+
+  constructor() {}
 }
+

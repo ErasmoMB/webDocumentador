@@ -25,6 +25,16 @@ export class WordGeneratorService {
     const doc = new Document({
       sections: [
         {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                right: 1440,
+                bottom: 1440,
+                left: 1440,
+              },
+            },
+          },
           children: children,
         },
       ],
@@ -60,6 +70,10 @@ export class WordGeneratorService {
     const tagName = elem.tagName.toLowerCase();
     const text = elem.innerText?.trim();
 
+    if (tagName === 'app-foto-info') {
+      return await this.procesarFotoInfo(elem);
+    }
+
     if (tagName.startsWith('app-')) {
       return await this.procesarContenidoDiv(elem);
     }
@@ -92,6 +106,9 @@ export class WordGeneratorService {
         if (elem.classList.contains('image-gallery')) {
           return await this.procesarGaleriaImagenes(elem);
         }
+        if (elem.classList.contains('foto-info')) {
+          return await this.procesarFotoInfo(elem);
+        }
         return await this.procesarContenidoDiv(elem);
       default:
         return null;
@@ -102,7 +119,7 @@ export class WordGeneratorService {
     return new Paragraph({
       text: texto,
       heading: nivel,
-      spacing: { after: 200 },
+      spacing: { before: 240, after: 200 },
     });
   }
 
@@ -129,9 +146,9 @@ export class WordGeneratorService {
     }
 
     return new Paragraph({
-      alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.LEFT,
+      alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
       children: children,
-      spacing: { after: esSource ? 150 : 100 },
+      spacing: { after: esSource ? 200 : 120 },
     });
   }
 
@@ -223,7 +240,55 @@ export class WordGeneratorService {
         insideHorizontal: { size: 1, color: '000000', style: BorderStyle.SINGLE },
         insideVertical: { size: 1, color: '000000', style: BorderStyle.SINGLE },
       },
+      margins: {
+        top: 100,
+        bottom: 100,
+        left: 100,
+        right: 100,
+      },
     });
+  }
+
+  private async procesarFotoInfo(elem: HTMLElement): Promise<any[]> {
+    const contenido: any[] = [];
+    
+    const numero = elem.querySelector('.foto-numero')?.textContent?.trim() || '';
+    const titulo = elem.querySelector('.foto-titulo')?.textContent?.trim() || '';
+    const fuente = elem.querySelector('.foto-fuente')?.textContent?.trim() || '';
+    const img = elem.querySelector('img') as HTMLImageElement;
+    
+    if (numero) {
+      contenido.push(new Paragraph({
+        children: [new TextRun({ text: numero, bold: true })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 100 },
+      }));
+    }
+    
+    if (titulo) {
+      contenido.push(new Paragraph({
+        children: [new TextRun({ text: titulo })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 150 },
+      }));
+    }
+    
+    if (img && img.src) {
+      const imagen = await this.crearImagen(img);
+      if (imagen) {
+        contenido.push(imagen);
+      }
+    }
+    
+    if (fuente) {
+      contenido.push(new Paragraph({
+        children: [new TextRun({ text: fuente })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 300 },
+      }));
+    }
+    
+    return contenido;
   }
 
   private async crearImagen(elem: HTMLImageElement): Promise<Paragraph | null> {
@@ -242,14 +307,14 @@ export class WordGeneratorService {
 
       const image = new ImageRun({
         data: new Uint8Array(arrayBuffer),
-        transformation: { width: 400, height: 300 },
+        transformation: { width: 500, height: 375 },
         type,
       });
 
       return new Paragraph({
         children: [image],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 150 },
+        spacing: { before: 150, after: 200 },
       });
     } catch (error) {
       console.error('Error al procesar imagen:', error);

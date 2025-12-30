@@ -34,34 +34,19 @@ export class Seccion8Component implements OnInit {
   getFotografiasGanaderia(): any[] {
     const fotos: any[] = [];
     
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 10; i++) {
       const titulo = this.datos?.[`fotografiaGanaderia${i}Titulo`];
       const fuente = this.datos?.[`fotografiaGanaderia${i}Fuente`];
       const imagen = this.datos?.[`fotografiaGanaderia${i}Imagen`];
       
-      if (titulo || fuente || imagen) {
+      if (imagen) {
         fotos.push({
-          numero: `3. ${i === 1 ? '4' : '4'}`,
-          titulo: titulo || (i === 1 ? 'Ganado vacuno en la CC ' + (this.datos.grupoAISD || 'Ayroca') : 'Ganado ovino y caprino en la CC ' + (this.datos.grupoAISD || 'Ayroca')),
+          numero: `3. ${4 + (fotos.length)}`,
+          titulo: titulo || 'Ganado en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
           fuente: fuente || 'GEADES, 2024',
-          ruta: imagen || ''
+          ruta: imagen
         });
       }
-    }
-    
-    if (fotos.length === 0) {
-      fotos.push({
-        numero: '3. 4',
-        titulo: 'Ganado vacuno en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
-        fuente: 'GEADES, 2024',
-        ruta: ''
-      });
-      fotos.push({
-        numero: '3. 4',
-        titulo: 'Ganado ovino y caprino en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
-        fuente: 'GEADES, 2024',
-        ruta: ''
-      });
     }
     
     return fotos;
@@ -70,34 +55,19 @@ export class Seccion8Component implements OnInit {
   getFotografiasAgricultura(): any[] {
     const fotos: any[] = [];
     
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 10; i++) {
       const titulo = this.datos?.[`fotografiaAgricultura${i}Titulo`];
       const fuente = this.datos?.[`fotografiaAgricultura${i}Fuente`];
       const imagen = this.datos?.[`fotografiaAgricultura${i}Imagen`];
       
-      if (titulo || fuente || imagen) {
+      if (imagen) {
         fotos.push({
-          numero: `3. ${i === 1 ? '5' : '5'}`,
-          titulo: titulo || (i === 1 ? 'Parcela agrícola en el anexo ' + (this.datos.grupoAISD || 'Ayroca') : 'Sector agrícola en la CC ' + (this.datos.grupoAISD || 'Ayroca')),
+          numero: `3. ${5 + (fotos.length)}`,
+          titulo: titulo || 'Agricultura en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
           fuente: fuente || 'GEADES, 2024',
-          ruta: imagen || ''
+          ruta: imagen
         });
       }
-    }
-    
-    if (fotos.length === 0) {
-      fotos.push({
-        numero: '3. 5',
-        titulo: 'Parcela agrícola en el anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-        fuente: 'GEADES, 2024',
-        ruta: ''
-      });
-      fotos.push({
-        numero: '3. 5',
-        titulo: 'Sector agrícola en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
-        fuente: 'GEADES, 2024',
-        ruta: ''
-      });
     }
     
     return fotos;
@@ -107,6 +77,15 @@ export class Seccion8Component implements OnInit {
     const titulo = this.datos?.['fotografiaComercioTitulo'] || 'Comercio ambulatorio en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaComercioFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaComercioImagen'] || '';
+    
+    if (!imagen) {
+      return {
+        numero: '3. 6',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
     
     return {
       numero: '3. 6',

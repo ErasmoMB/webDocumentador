@@ -64,5 +64,64 @@ export class Seccion6Component implements OnInit {
     
     return grupo?.porcentaje || '____';
   }
+
+  getGrupoEtarioMayoritario(): string {
+    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+      return '15 a 29 años';
+    }
+    
+    let mayorPorcentaje = 0;
+    let grupoMayoritario = '15 a 29 años';
+    
+    this.datos.poblacionEtarioAISD.forEach((item: any) => {
+      if (item.porcentaje) {
+        const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
+        if (!isNaN(porcentajeNum) && porcentajeNum > mayorPorcentaje) {
+          mayorPorcentaje = porcentajeNum;
+          grupoMayoritario = item.categoria || '15 a 29 años';
+        }
+      }
+    });
+    
+    return grupoMayoritario;
+  }
+
+  getGrupoEtarioSegundo(): string {
+    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+      return '0 a 14 años';
+    }
+    
+    const gruposOrdenados = [...this.datos.poblacionEtarioAISD]
+      .filter((item: any) => item.porcentaje && item.categoria)
+      .map((item: any) => ({
+        categoria: item.categoria,
+        porcentaje: parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim())
+      }))
+      .filter((item: any) => !isNaN(item.porcentaje))
+      .sort((a: any, b: any) => b.porcentaje - a.porcentaje);
+    
+    return gruposOrdenados.length > 1 ? gruposOrdenados[1].categoria : '0 a 14 años';
+  }
+
+  getGrupoEtarioMenoritario(): string {
+    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+      return '65 años a más';
+    }
+    
+    let menorPorcentaje = Infinity;
+    let grupoMenoritario = '65 años a más';
+    
+    this.datos.poblacionEtarioAISD.forEach((item: any) => {
+      if (item.porcentaje) {
+        const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
+        if (!isNaN(porcentajeNum) && porcentajeNum < menorPorcentaje) {
+          menorPorcentaje = porcentajeNum;
+          grupoMenoritario = item.categoria || '65 años a más';
+        }
+      }
+    });
+    
+    return grupoMenoritario;
+  }
 }
 

@@ -26,6 +26,15 @@ export class Seccion11Component implements OnInit {
     const fuente = this.datos?.['fotografiaTransporteFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaTransporteImagen'] || '';
     
+    if (!imagen) {
+      return {
+        numero: '3. 6',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
+    
     return {
       numero: '3. 6',
       titulo: titulo,
@@ -38,6 +47,15 @@ export class Seccion11Component implements OnInit {
     const titulo = this.datos?.['fotografiaTelecomunicacionesTitulo'] || 'Vivienda con antena de DIRECTV en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaTelecomunicacionesFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaTelecomunicacionesImagen'] || '';
+    
+    if (!imagen) {
+      return {
+        numero: '3. 9',
+        titulo: '',
+        fuente: '',
+        ruta: ''
+      };
+    }
     
     return {
       numero: '3. 9',

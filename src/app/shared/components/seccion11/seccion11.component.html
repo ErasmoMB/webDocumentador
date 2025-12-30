@@ -6,6 +6,7 @@
 <p class="text-justify" *ngIf="!datos.textoTransporte2 || datos.textoTransporte2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la comunidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span class="highlight">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span class="highlight">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los comuneros para desplazarse a ciudades más grandes.</p>
 
 <app-foto-info 
+    *ngIf="getFotoTransporte().ruta"
     [numero]="getFotoTransporte().numero"
     [titulo]="getFotoTransporte().titulo"
     [fuente]="getFotoTransporte().fuente"
@@ -40,6 +41,7 @@
 <p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
 
 <app-foto-info 
+    *ngIf="getFotoTelecomunicaciones().ruta"
     [numero]="getFotoTelecomunicaciones().numero"
     [titulo]="getFotoTelecomunicaciones().titulo"
     [fuente]="getFotoTelecomunicaciones().fuente"

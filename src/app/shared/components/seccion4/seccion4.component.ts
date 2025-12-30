@@ -23,6 +23,7 @@ export class Seccion4Component implements OnInit {
 
   getFilasTablaAISD2(): any[] {
     const filas: any[] = [];
+    const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2();
     
     // Buscar todas las filas con datos (hasta 20 filas máximo)
     for (let i = 1; i <= 20; i++) {
@@ -32,8 +33,11 @@ export class Seccion4Component implements OnInit {
       const viviendasEmp = this.datos?.[`tablaAISD2Fila${i}ViviendasEmpadronadas`];
       const viviendasOcp = this.datos?.[`tablaAISD2Fila${i}ViviendasOcupadas`];
       
-      // Incluir fila si tiene al menos un dato
-      if (punto || codigo || poblacion || viviendasEmp || viviendasOcp) {
+      const codigoStr = codigo ? codigo.toString().trim() : '';
+      const esFilaActiva = filasActivas.length === 0 || filasActivas.includes(codigoStr);
+      
+      // Incluir fila solo si está activa y tiene al menos un dato
+      if (esFilaActiva && (punto || codigo || poblacion || viviendasEmp || viviendasOcp)) {
         filas.push({
           punto: punto || '____',
           codigo: codigo || '____',
@@ -61,30 +65,19 @@ export class Seccion4Component implements OnInit {
   getFotografiasAISD(): any[] {
     const fotos: any[] = [];
     
-    // Buscar todas las fotografías (hasta 10 máximo)
     for (let i = 1; i <= 10; i++) {
       const titulo = this.datos?.[`fotografiaAISD${i}Titulo`];
       const fuente = this.datos?.[`fotografiaAISD${i}Fuente`];
       const imagen = this.datos?.[`fotografiaAISD${i}Imagen`];
       
-      if (titulo || fuente || imagen) {
+      if (imagen) {
         fotos.push({
           numero: `3. ${i}`,
-          titulo: titulo || 'Vista panorámica del Anexo Ayroca',
+          titulo: titulo || 'Título de fotografía',
           fuente: fuente || 'GEADES, 2024',
-          ruta: imagen || ''
+          ruta: imagen
         });
       }
-    }
-    
-    // Si no hay fotografías, mostrar una placeholder
-    if (fotos.length === 0) {
-      fotos.push({
-        numero: '3. 1',
-        titulo: 'Vista panorámica del Anexo Ayroca',
-        fuente: 'GEADES, 2024',
-        ruta: ''
-      });
     }
     
     return fotos;

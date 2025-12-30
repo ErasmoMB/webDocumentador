@@ -1,52 +1,144 @@
 <div class="image-upload-container">
-  <div class="form-field" *ngIf="mostrarTitulo">
-    <label class="label">{{ labelTitulo }}</label>
-    <input 
-      type="text" 
-      class="input" 
-      [placeholder]="placeholderTitulo"
-      [value]="titulo"
-      (input)="onTituloChange($any($event.target).value)">
-  </div>
-  
-  <div class="form-field" *ngIf="mostrarFuente">
-    <label class="label">{{ labelFuente }}</label>
-    <input 
-      type="text" 
-      class="input" 
-      [placeholder]="placeholderFuente"
-      [value]="fuente"
-      (input)="onFuenteChange($any($event.target).value)">
-  </div>
-  
-  <div class="form-field">
-    <label class="label">
-      {{ labelImagen }}
-      <span *ngIf="requerido" class="required">*</span>
-    </label>
-    <div 
-      class="image-upload-area" 
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-      (drop)="onDrop($event)"
-      [class.drag-over]="dragOver">
-      <input 
-        type="file" 
-        #fileInput
-        accept="image/*"
-        (change)="onFileSelected($event)"
-        style="display: none;">
-      <div *ngIf="!preview" class="upload-placeholder">
-        <p>Arrastra una imagen aquí o</p>
-        <button type="button" class="btn btn-secondary" (click)="triggerFileInput(fileInput)">
-          Buscar en el explorador
+  <!-- Modo múltiples imágenes -->
+  <div *ngIf="permitirMultiples">
+    <div *ngFor="let foto of _fotografias; let i = index" class="foto-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h5 style="margin: 0;">Fotografía {{ i + 1 }}</h5>
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="eliminarImagen(i)" 
+          *ngIf="_fotografias.length > 1"
+          style="padding: 5px 10px; font-size: 0.875rem;">
+          Eliminar Fotografía
         </button>
       </div>
-      <div *ngIf="preview" class="image-preview">
-        <img [src]="preview" alt="Preview">
-        <button type="button" class="btn-icon remove-image" (click)="eliminarImagen()" title="Eliminar imagen">
-          ×
-        </button>
+
+      <div class="form-field" *ngIf="mostrarTitulo">
+        <label class="label">{{ labelTitulo }}</label>
+        <input 
+          type="text" 
+          class="input" 
+          [placeholder]="placeholderTitulo"
+          [value]="foto.titulo"
+          (input)="onTituloChange($any($event.target).value, i)">
+      </div>
+      
+      <div class="form-field" *ngIf="mostrarFuente">
+        <label class="label">{{ labelFuente }}</label>
+        <input 
+          type="text" 
+          class="input" 
+          [placeholder]="placeholderFuente"
+          [value]="foto.fuente"
+          (input)="onFuenteChange($any($event.target).value, i)">
+      </div>
+      
+      <div class="form-field">
+        <label class="label">
+          {{ labelImagen }}
+          <span *ngIf="requerido" class="required">*</span>
+        </label>
+        <div 
+          class="image-upload-area" 
+          (dragover)="onDragOver($event, i)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event, i)"
+          [class.drag-over]="dragOver && dragOverIndex === i">
+          <input 
+            type="file" 
+            [id]="'fileInput_' + i"
+            accept="image/*"
+            (change)="onFileSelected($event, i)"
+            style="display: none;">
+          <div *ngIf="!foto.imagen" class="upload-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; opacity: 0.5;">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p style="font-weight: 500; margin-bottom: 5px;">Fotografía</p>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Arrastra una imagen aquí o</p>
+            <button type="button" class="btn btn-secondary" (click)="triggerFileInputById('fileInput_' + i)">
+              Buscar en el explorador
+            </button>
+          </div>
+          <div *ngIf="foto.imagen" class="image-preview">
+            <img [src]="foto.imagen" alt="Preview">
+            <button type="button" class="btn-icon remove-image" (click)="eliminarImagen(i)" title="Eliminar imagen">
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button 
+      type="button" 
+      class="btn btn-secondary" 
+      (click)="agregarFoto()"
+      style="margin-top: 10px;">
+      + Agregar Fotografía
+    </button>
+  </div>
+
+  <!-- Modo imagen única (compatibilidad hacia atrás) -->
+  <div *ngIf="!permitirMultiples">
+    <div class="form-field" *ngIf="mostrarTitulo">
+      <label class="label">{{ labelTitulo }}</label>
+      <input 
+        type="text" 
+        class="input" 
+        [placeholder]="placeholderTitulo"
+        [value]="titulo"
+        (input)="onTituloChange($any($event.target).value)">
+    </div>
+    
+    <div class="form-field" *ngIf="mostrarFuente">
+      <label class="label">{{ labelFuente }}</label>
+      <input 
+        type="text" 
+        class="input" 
+        [placeholder]="placeholderFuente"
+        [value]="fuente"
+        (input)="onFuenteChange($any($event.target).value)">
+    </div>
+    
+    <div class="form-field">
+      <label class="label">
+        {{ labelImagen }}
+        <span *ngIf="requerido" class="required">*</span>
+      </label>
+      <div 
+        class="image-upload-area" 
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        [class.drag-over]="dragOver">
+        <input 
+          type="file" 
+          #fileInput
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          style="display: none;">
+        <div *ngIf="!preview" class="upload-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 10px; opacity: 0.5;">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p style="font-weight: 500; margin-bottom: 5px;">Fotografía</p>
+          <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Arrastra una imagen aquí o</p>
+          <button type="button" class="btn btn-secondary" (click)="triggerFileInput(fileInput)">
+            Buscar en el explorador
+          </button>
+        </div>
+        <div *ngIf="preview" class="image-preview">
+          <img [src]="preview" alt="Preview">
+          <button type="button" class="btn-icon remove-image" (click)="eliminarImagen()" title="Eliminar imagen">
+            ×
+          </button>
+        </div>
       </div>
     </div>
   </div>

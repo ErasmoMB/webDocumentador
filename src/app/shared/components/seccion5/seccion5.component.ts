@@ -22,17 +22,36 @@ export class Seccion5Component implements OnInit {
   }
 
   getFotoInstitucionalidad(): any {
-    // Buscar la fotografía 3.3 o usar datos específicos
+    const imagen = this.datos?.['fotografiaAISD3Imagen'] || this.datos?.['fotografiaInstitucionalidadImagen'] || '';
+    
+    if (!imagen) {
+      return null;
+    }
+    
     const titulo = this.datos?.['fotografiaAISD3Titulo'] || this.datos?.['fotografiaInstitucionalidadTitulo'] || 'Local Comunal de la CC ' + (this.datos.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaAISD3Fuente'] || this.datos?.['fotografiaInstitucionalidadFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaAISD3Imagen'] || this.datos?.['fotografiaInstitucionalidadImagen'] || '';
     
     return {
       numero: '3. 3',
       titulo: titulo,
       fuente: fuente,
-      ruta: imagen
+      ruta: imagen,
+      fecha: this.datos?.['fotografiaAISD3Fecha'] || '',
+      coordenadas: this.datos?.['coordenadasAISD'] || '',
+      direccion: this.datos?.['fotografiaAISD3Direccion'] || '',
+      ubicacion: this.getUbicacionTexto(),
+      altitud: this.datos?.['altitudAISD'] ? this.datos.altitudAISD + 'm' : '',
+      velocidad: this.datos?.['fotografiaAISD3Velocidad'] || '0.0km/h'
     };
+  }
+
+  getUbicacionTexto(): string {
+    const partes = [];
+    if (this.datos?.grupoAISD) partes.push('C.p ' + this.datos.grupoAISD);
+    if (this.datos?.distritoSeleccionado) partes.push(this.datos.distritoSeleccionado);
+    if (this.datos?.provinciaSeleccionada) partes.push(this.datos.provinciaSeleccionada);
+    if (this.datos?.departamentoSeleccionado) partes.push(this.datos.departamentoSeleccionado);
+    return partes.join(', ') || '';
   }
 }
 
