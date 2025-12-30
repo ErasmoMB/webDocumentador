@@ -1,0 +1,140 @@
+<h5>B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h5>
+<p class="text-justify">Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.</p>
+<p class="text-justify">En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (<span class="highlight">{{ getViviendasOcupadasPresentes() }}</span>), tal como realiza el Censo Nacional 2017.</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Servicios de agua</strong></p>
+<p class="text-justify" *ngIf="datos.textoServiciosAguaAISI && datos.textoServiciosAguaAISI !== '____'">{{ datos.textoServiciosAguaAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoServiciosAguaAISI || datos.textoServiciosAguaAISI === '____'">Respecto al servicio de agua para consumo humano en el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un <span class="highlight">{{ getPorcentajeAguaRedPublicaDentro() }}</span> de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (<span class="highlight">{{ getPorcentajeAguaRedPublicaFuera() }}</span>) consta de red pública fuera de la vivienda, pero dentro de la edificación.</p>
+
+<p class="table-title">Cuadro N° 3. 49</p>
+<p class="table-title-main">Tipos de abastecimiento de agua en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.abastecimientoAguaCpTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.abastecimientoAguaCpTabla || datos.abastecimientoAguaCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Servicios básicos de desagüe</strong></p>
+<p class="text-justify" *ngIf="datos.textoDesagueCP && datos.textoDesagueCP !== '____'">{{ datos.textoDesagueCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoDesagueCP || datos.textoDesagueCP === '____'">Respecto al servicio de saneamiento en las viviendas de la capital distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, se cuenta con una amplia cobertura de dicho servicio. Es así que, según los Censos Nacionales 2017, un 81,63 % de las viviendas cuenta con red pública de desagüe dentro de las mismas. Adicionalmente, un 10,20 % cuenta con pozo séptico, tanque séptico o biodigestor.</p>
+<p class="text-justify" *ngIf="!datos.textoDesagueCP || datos.textoDesagueCP === '____'">Por otra parte, se hallan otras categorías con porcentajes menores: red pública de desagüe fuera de la vivienda, pero dentro de la edificación; letrina (con tratamiento); pozo ciego o negro; y campo abierto o al aire libre, todas las cuales representan un 2,04 % cada una.</p>
+
+<p class="table-title">Cuadro N° 3. 50</p>
+<p class="table-title-main">Tipos de saneamiento en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.saneamientoCpTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.saneamientoCpTabla || datos.saneamientoCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<app-foto-info 
+    [numero]="getFotoDesechosSolidos().numero"
+    [titulo]="getFotoDesechosSolidos().titulo"
+    [fuente]="getFotoDesechosSolidos().fuente"
+    [ruta]="getFotoDesechosSolidos().ruta">
+</app-foto-info>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
+<p class="text-justify" *ngIf="datos.textoDesechosSolidosCP && datos.textoDesechosSolidosCP !== '____'">{{ datos.textoDesechosSolidosCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoDesechosSolidosCP || datos.textoDesechosSolidosCP === '____'">La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.</p>
+<p class="text-justify" *ngIf="!datos.textoDesechosSolidosCP || datos.textoDesechosSolidosCP === '____'">Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo. Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Electricidad</strong></p>
+<p class="text-justify" *ngIf="datos.textoElectricidadCP && datos.textoElectricidadCP !== '____'">{{ datos.textoElectricidadCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoElectricidadCP || datos.textoElectricidadCP === '____'">Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, se cuenta con los siguientes datos: el <span class="highlight">{{ getPorcentajeElectricidadSi() }}</span> de las viviendas cuenta con alumbrado eléctrico, mientras que el <span class="highlight">{{ getPorcentajeElectricidadNo() }}</span> restante no tiene el referido servicio.</p>
+
+<p class="table-title">Cuadro N° 3. 51</p>
+<p class="table-title-main">Cobertura de alumbrado eléctrico en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.coberturaElectricaCpTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.coberturaElectricaCpTabla || datos.coberturaElectricaCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<app-foto-info 
+    [numero]="getFotoElectricidad().numero"
+    [titulo]="getFotoElectricidad().titulo"
+    [fuente]="getFotoElectricidad().fuente"
+    [ruta]="getFotoElectricidad().ruta">
+</app-foto-info>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
+<p class="text-justify" *ngIf="datos.textoEnergiaCocinarCP && datos.textoEnergiaCocinarCP !== '____'">{{ datos.textoEnergiaCocinarCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoEnergiaCocinarCP || datos.textoEnergiaCocinarCP === '____'">Según los Censos Nacionales 2017, de un total de <span class="highlight">{{ getTotalHogares() }}</span> hogares en el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, se obtiene que un <span class="highlight">{{ getPorcentajeLena() }}</span> emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un <span class="highlight">{{ getPorcentajeGas() }}</span>, la bosta o estiércol en un <span class="highlight">{{ getPorcentajeBosta() }}</span> y la electricidad con un <span class="highlight">{{ getPorcentajeElectricidadCocinar() }}</span>. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.</p>
+
+<p class="table-title">Cuadro N° 3. 52</p>
+<p class="table-title-main">Combustibles para cocción en los hogares – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.combustiblesCocinarCpTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.combustiblesCocinarCpTabla || datos.combustiblesCocinarCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+

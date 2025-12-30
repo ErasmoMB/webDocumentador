@@ -1,12 +1,5 @@
-// Simple end-to-end smoke that navega todas las páginas, rellena campos con mock data
-// y descarga el Word desde la página de resumen.
-// Requisitos previos (una sola vez):
-//   cd webDocumentador
-//   npm install -D playwright
-//   npx playwright install chromium
-// Ejecución:
-//   node scripts/fill-and-export.e2e.js
-// Opcional: APP_URL=http://localhost:4200 node scripts/fill-and-export.e2e.js
+const path = require('path');
+const { chromium } = require('playwright');
 
 const path = require('path');
 const { chromium } = require('playwright');
@@ -80,14 +73,12 @@ async function fillInputsNumber(page, values) {
 }
 
 async function fillPage1Documento(page) {
-  // Sube el JSON y selecciona Arequipa/Caraveli/Cahuacho
   const fileInput = page.locator('input[type="file"]');
   if (await fileInput.count()) {
     await fileInput.setInputFiles({ name: 'cahuacho.json', mimeType: 'application/json', buffer: Buffer.from(CAHUACHO_JSON, 'utf-8') });
   }
   await page.waitForTimeout(400);
 
-  // Seleccionar valores si existen
   const selDep = page.locator('select').nth(0);
   const selProv = page.locator('select').nth(1);
   const selDist = page.locator('select').nth(2);
@@ -97,7 +88,6 @@ async function fillPage1Documento(page) {
   await page.waitForTimeout(200);
   await selDist.selectOption({ label: 'Cahuacho' }).catch(() => {});
 
-  // Nombre del proyecto y detalle - usar nth para evitar relleno duplicado
   const projInputs = page.locator('input.inputstyle[type="text"]');
   if ((await projInputs.count()) >= 1) {
     await projInputs.nth(0).fill('Exploración Cahuacho');
@@ -121,7 +111,6 @@ async function fillPagina2(page) {
 }
 
 async function fillPagina3(page) {
-  // Selecciona todos los elementos AISI y rellena los componentes
   const selector = page.locator('select.selectstyle');
   if (await selector.count()) {
     const options = selector.locator('option');
@@ -140,7 +129,6 @@ async function fillPagina3(page) {
 }
 
 async function fillPagina5(page) {
-  // Rellenar AISD correctamente: centros poblados, NO consultora
   const detailedInputs = page.locator('input.inputstyle[type="text"]');
   if ((await detailedInputs.count()) >= 1) {
     await detailedInputs.nth(0).fill('Comunidad Campesina Cahuacho, Anexo Sondor y Caserío Ayroca');
@@ -158,36 +146,28 @@ async function fillPagina5(page) {
 }
 
 async function fillPagina4(page) {
-  // Cantidad de entrevistas - input tipo number
   await fillIfExists(page, 'input.inputstyle[type="number"]', '12');
   await page.waitForTimeout(300);
 
-  // Primero llenar cantidadEncuestas para que aparezcan campos condicionales
   await fillIfExists(page, 'input.inputstyle[type="text"]', '30');
-  await page.waitForTimeout(800); // Esperar a que Angular renderice campos condicionales
+  await page.waitForTimeout(800);
 
-  // Ahora rellenar todos los campos en orden
   const textInputs = page.locator('input.inputstyle[type="text"]');
   const cantidad = await textInputs.count();
   
-  // Orden después de renderizar condicionales:
-  // 0=cantidadEncuestas (ya llenado), 1=fechaTrabajoCampo, 2=componenteFuentesPrimarias1,
-  // 3=componenteFuentesPrimarias2, 4=justificacionAISI, 5=consultora
   if (cantidad >= 2) {
-    await textInputs.nth(1).fill('Julio 2024'); // fechaTrabajoCampo
+    await textInputs.nth(1).fill('Julio 2024');
   }
-  // nth(2) es componenteFuentesPrimarias1 (auto-filled por constructor, dejamos como está)
   if (cantidad >= 4) {
-    await textInputs.nth(3).fill('encuestas socioeconómicas complementarias con participación de capital distrital y anexos'); // componenteFuentesPrimarias2
+    await textInputs.nth(3).fill('encuestas socioeconómicas complementarias con participación de capital distrital y anexos');
   }
   if (cantidad >= 5) {
-    await textInputs.nth(4).fill('la dispersión geográfica, accesibilidad limitada por geografía montañosa y elevados costos operativos en zonas altoandinas'); // justificacionAISI
+    await textInputs.nth(4).fill('la dispersión geográfica, accesibilidad limitada por geografía montañosa y elevados costos operativos en zonas altoandinas');
   }
   if (cantidad >= 6) {
-    await textInputs.nth(5).fill('Consultora Andina SAC'); // consultora
+    await textInputs.nth(5).fill('Consultora Andina SAC');
   }
 
-  // Lista de entrevistados
   const entrevistados = [
     { nombre: 'Rosa Huamani Quispe', cargo: 'Teniente Gobernadora', organizacion: 'Comunidad Cahuacho' },
     { nombre: 'Juan Nina Apaza', cargo: 'Presidente Junta de Usuarios', organizacion: 'Comité de Agua' },
@@ -213,28 +193,23 @@ async function fillPagina4(page) {
     await orgs.nth(i).fill(entrevistados[i].organizacion);
   }
 
-  // Guardar lista de entrevistados (primer Guardar)
   const guardarBtns = page.locator('button:has-text("Guardar")');
   if (await guardarBtns.count() >= 1) {
     await guardarBtns.first().click({ force: true });
     await page.waitForTimeout(500);
   }
 
-  // Parámetros de encuestas (inputstyle2 con placeholders)
   await page.waitForTimeout(300);
   await fillIfExists(page, 'input[placeholder="Muestra"]', '30');
   await fillIfExists(page, 'input[placeholder="Universo"]', '60');
   await fillIfExists(page, 'input[placeholder="Margen de error"]', '5');
   await fillIfExists(page, 'input[placeholder="Nombre del universo"]', 'Hogares del AISD');
   await fillIfExists(page, 'input[placeholder="Variable"]', 'Hogares encuestados');
-  // Dejar Fuente de información vacía para que lo completen en Word
   await fillIfExists(page, 'input[placeholder="Nivel de confianza"]', '95');
 
-  // Hacer clic en Actualizar para calcular porcentajes
   await clickIfExists(page, 'Actualizar');
-  await page.waitForTimeout(600); // Esperar a que se calcule
+  await page.waitForTimeout(600);
 
-  // Rellenar detalle y precisión de la encuesta (inputs sin placeholder)
   const detailPrecisionInputs = page.locator('input.inputstyle2[style*="margin-bottom"]');
   const detailCount = await detailPrecisionInputs.count();
   if (detailCount >= 1) {
@@ -244,7 +219,6 @@ async function fillPagina4(page) {
     await detailPrecisionInputs.nth(1).fill('Cobertura representativa del AISD; margen de error 5% a nivel de confianza 95%. Selección aleatoria de hogares.');
   }
 
-  // Guardar encuesta (segundo botón guardar)
   if (await guardarBtns.count() > 1) {
     await guardarBtns.nth(1).click({ force: true });
     await page.waitForTimeout(500);
@@ -252,7 +226,6 @@ async function fillPagina4(page) {
 }
 
 async function fillPagina6(page) {
-  // Actividades económicas tabla
   const categorias = [
     { actividad: 'Agricultura de secano', casos: '35', comentario: 'Papa y cebada para autoconsumo' },
     { actividad: 'Ganadería ovina', casos: '22', comentario: 'Venta de lana y carne' },
@@ -268,7 +241,6 @@ async function fillPagina6(page) {
 }
 
 async function fillPagina7y8(page) {
-  // Formularios de actores/impactos: texto corto y lista
   await fillTextareas(page, [
     'Actores locales: juntas vecinales, tenientes gobernadores, comités de regantes.',
     'Percepción: demanda de empleo y mejora de vías; preocupación por agua para riego.'
@@ -277,7 +249,6 @@ async function fillPagina7y8(page) {
 }
 
 async function fillPagina9(page) {
-  // Encuestas actividades económicas (tabla 3.12)
   const actividades = [
     { actividad: 'Agricultura', casos: '30', porcentaje: '48.0' },
     { actividad: 'Ganadería', casos: '20', porcentaje: '32.0' },
@@ -293,9 +264,9 @@ async function fillPagina9(page) {
 }
 
 async function fillPagina10(page) {
-  // Viviendas y materiales
   await fillInputsNumber(page, [320, 1180, 50, 180, 12, 90, 45, 22, 38, 25, 100, 75, 60, 40, 30]);
   await fillTextareas(page, [
+    'Según el Censo del 2017, en el distrito de Cahuacho se registraron viviendas con diferentes condiciones de ocupación y materiales de construcción predominantes.',
     'Paredes predominan tapia y piedra con barro, seguidas de adobe.',
     'Techos mezclan calamina y teja en la capital distrital, ichu en anexos altos.',
     'Pisos mayormente de tierra; algunos de cemento en la capital y caseríos cercanos.'
@@ -303,25 +274,71 @@ async function fillPagina10(page) {
 }
 
 async function fillPagina11a16(page) {
-  // Rellenar textareas disponibles
-  await fillTextareas(page, [
-    'Servicios públicos limitados; agua por piletas comunales y electrificación parcial.',
-    'Salud: un puesto con atenciones básicas y referencias a Chala.',
-    'Educación: IE secundaria en capital, multigrado en anexos.',
-    'Organización social: rondas y comités de agua activos.',
-    'Festividades: San Juan y Aniversario Distrital con ferias.'
-  ]);
-
-  // Rellenar inputs de números si existen
-  await fillInputsNumber(page, [280, 120, 30, 140, 20, 85, 50, 15, 35, 25]);
-
-  // Rellenar inputs de texto si existen
-  await fillInputsText(page, [
-    'Agua por piletas comunales, 40% sin acceso seguro',
-    'Electrificación parcial mediante generadores y paneles',
-    'Servicios de salud básicos, referencias a Chala',
-    'IE primaria y secundaria en capital, multigrado en anexos'
-  ]);
+  const url = page.url();
+  
+  // Pagina 11: Servicios básicos (agua, desagüe, electricidad, residuos)
+  if (url.includes('/pagina11')) {
+    await fillTextareas(page, [
+      'En el distrito de Cahuacho, según el Censo Nacional 2017, se identificaron las siguientes condiciones de acceso a servicios básicos.',
+      'Respecto al abastecimiento de agua, la mayoría de viviendas en Cahuacho se abastecen de fuentes naturales como ríos o manantiales. Solo el 25% tiene conexión a red pública.',
+      'En cuanto al servicio higiénico, predomina el uso de letrinas o pozos ciegos (60%), seguido de conexión a red pública en la capital distrital (30%).',
+      'El acceso a electricidad es limitado, con 40% de viviendas conectadas a red pública y 35% sin servicio. Algunos hogares utilizan paneles solares.',
+      'La eliminación de residuos sólidos se realiza principalmente mediante quema (45%) o entierro (30%). Solo en la capital existe servicio de recolección municipal.'
+    ]);
+    await fillInputsNumber(page, [150, 90, 60, 45, 30, 20, 100, 50, 40, 30, 15, 80, 50, 35, 20, 10, 70, 40, 30, 15]);
+  }
+  
+  // Pagina 12: Transporte y telecomunicaciones
+  else if (url.includes('/pagina12')) {
+    await fillTextareas(page, [
+      'El acceso al distrito de Cahuacho se realiza principalmente por vía terrestre a través de carreteras afirmadas desde Chala (120 km, 4 horas) y trochas carrozables hacia anexos.',
+      'En cuanto a telecomunicaciones, el acceso a telefonía móvil es parcial (cobertura Movistar/Claro solo en capital distrital). Internet muy limitado; se utiliza en oficinas municipales.'
+    ]);
+  }
+  
+  // Pagina 13: Infraestructura social
+  else if (url.includes('/pagina13')) {
+    await fillTextareas(page, [
+      'El distrito de Cahuacho cuenta con infraestructura básica en salud, educación y recreación, aunque presenta limitaciones en cobertura y mantenimiento.',
+      'Se cuenta con un puesto de salud en la capital distrital que brinda atención básica. Casos complejos se derivan a Chala o Arequipa.',
+      'Existen instituciones educativas de nivel inicial (2), primaria (3 multigrado) y secundaria (1 en capital). Infraestructura requiere mejoras.',
+      'La infraestructura recreativa incluye losas deportivas en capital y dos anexos, además de plaza principal para eventos cívicos y culturales.'
+    ]);
+  }
+  
+  // Pagina 14: Salud, Educación, Cultura
+  else if (url.includes('/pagina14')) {
+    await fillTextareas(page, [
+      'En el distrito de Cahuacho, los principales indicadores de salud muestran tasas de desnutrición infantil de 28% y anemia en menores de 5 años de 45%, acordes al contexto rural altoandino.',
+      'El nivel educativo de la población presenta tasas de alfabetización de 75% en adultos, con mayor porcentaje en jóvenes (90%) y menor en adultos mayores (55%).',
+      'La población predominantemente habla quechua (85%) con dominio del castellano en población menor de 40 años. La religión católica es mayoritaria (90%), con presencia evangélica (10%).'
+    ]);
+  }
+  
+  // Pagina 15: IDH, NBI, Uso de suelos
+  else if (url.includes('/pagina15')) {
+    await fillTextareas(page, [
+      'El Índice de Desarrollo Humano del distrito de Cahuacho es de 0.3124 (PNUD 2019), ubicándolo en el puesto 1542 a nivel nacional, reflejando condiciones de desarrollo medio-bajo.',
+      'Las Necesidades Básicas Insatisfechas muestran carencias en: vivienda inadecuada (35%), servicios higiénicos (40%), hacinamiento (28%) y baja asistencia escolar (15%).',
+      'El uso de suelos en la zona está destinado principalmente a pastoreo extensivo de ovinos y camélidos (60%), agricultura de secano (25%), y áreas de conservación y protección de fuentes de agua (15%).'
+    ]);
+  }
+  
+  // Pagina 16: Organización, Festividades
+  else if (url.includes('/pagina16')) {
+    await fillTextareas(page, [
+      'La organización social en Cahuacho se estructura a través de la comunidad campesina, juntas vecinales, comités de regantes, club de madres y rondas campesinas.',
+      'Las principales festividades están vinculadas al calendario agrícola y religioso: San Juan (24 junio), Aniversario Distrital (15 agosto), Virgen de la Asunción, Día de Todos los Santos y Carnavales.'
+    ]);
+  }
+  
+  // Genérico para otras páginas
+  else {
+    await fillTextareas(page, [
+      'Descripción general para esta sección del documento.',
+      'Información complementaria relevante al apartado.'
+    ]);
+  }
 }
 
 async function fillGeneric(page) {
@@ -364,7 +381,6 @@ async function fillCurrentPage(page, step) {
     await fillGeneric(page);
   }
 
-  // Botón Siguiente
   const nextBtn = page.locator('button:has-text("Siguiente")');
   if ((await nextBtn.count()) === 0) {
     console.log(`[step ${step}] No se encontró botón "Siguiente". Ruta actual: ${page.url()}`);
@@ -395,7 +411,7 @@ async function fillCurrentPage(page, step) {
     const advanced = await fillCurrentPage(page, step);
     step += 1;
     if (!advanced) break;
-    if (step > 20) break; // salvaguarda
+    if (step > 20) break;
   }
 
   if (!page.url().includes('/resumen')) {
@@ -404,7 +420,6 @@ async function fillCurrentPage(page, step) {
     process.exit(1);
   }
 
-  // Exportar a Word y guardar en disco.
   const downloadPath = path.join(process.cwd(), DOWNLOAD_NAME);
   console.log(`En resumen, iniciando descarga en ${downloadPath}`);
   const [download] = await Promise.all([

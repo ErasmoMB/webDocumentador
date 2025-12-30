@@ -1,0 +1,57 @@
+<h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
+<p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas !== '____'">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[0] }}</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span> se halla un total de <span class="highlight">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span class="highlight">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span class="highlight">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
+
+<p class="table-title">Cuadro N° 3. 35</p>
+<p class="table-title-main">Necesidades Básicas Insatisfechas (NBI) según población – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.nbiCCAyrocaTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.nbiCCAyrocaTabla || datos.nbiCCAyrocaTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+
+<p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1]">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1] }}</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">Por otro lado, a nivel distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, de un total de <span class="highlight">{{ getTotalUnidadesDistrito() }}</span> unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (<span class="highlight">{{ getPorcentajeSinServiciosDistrito() }}</span>), seguida de la de viviendas con hacinamiento (<span class="highlight">{{ getPorcentajeHacinamientoDistrito() }}</span>). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span> con el distrito de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>.</p>
+
+<p class="table-title">Cuadro N° 3. 36</p>
+<p class="table-title-main">Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.nbiDistritoCahuachoTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.nbiDistritoCahuachoTabla || datos.nbiDistritoCahuachoTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017</p>
+

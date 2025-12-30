@@ -1,0 +1,106 @@
+<h5>B.1.8. Indicadores de salud</h5>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Natalidad y Mortalidad</strong></p>
+<p class="text-justify" *ngIf="datos.textoNatalidadCP1 && datos.textoNatalidadCP1 !== '____'">{{ datos.textoNatalidadCP1 }}</p>
+<p class="text-justify" *ngIf="!datos.textoNatalidadCP1 || datos.textoNatalidadCP1 === '____'">Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> indican que, durante el año 2023, se registró un total de <span class="highlight">{{ getNatalidad2023() }}</span> nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente <span class="highlight">{{ getNatalidad2024() }}</span> nacimiento.</p>
+<p class="text-justify" *ngIf="datos.textoNatalidadCP2 && datos.textoNatalidadCP2 !== '____'">{{ datos.textoNatalidadCP2 }}</p>
+<p class="text-justify" *ngIf="!datos.textoNatalidadCP2 || datos.textoNatalidadCP2 === '____'">Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de <span class="highlight">{{ getMortalidad2023() }}</span> durante el año 2023. Sin embargo, para el año 2024, sí se registró <span class="highlight">{{ getMortalidad2024() }}</span> defunción.</p>
+
+<p class="table-title">Cuadro N° 3. 57</p>
+<p class="table-title-main">Indicadores de natalidad y mortalidad – CP {{ datos.centroPobladoAISI || 'Cahuacho' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Año</th>
+            <th class="table-header">Natalidad</th>
+            <th class="table-header">Mortalidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.natalidadMortalidadCpTabla || [])">
+            <td class="table-cell">{{ item.anio || '____' }}</td>
+            <td class="table-cell">{{ item.natalidad || '____' }}</td>
+            <td class="table-cell">{{ item.mortalidad || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.natalidadMortalidadCpTabla || datos.natalidadMortalidadCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: GEADES (2024)</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Morbilidad</strong></p>
+<p class="text-justify" *ngIf="datos.textoMorbilidadCP && datos.textoMorbilidadCP !== '____'">{{ datos.textoMorbilidadCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoMorbilidadCP || datos.textoMorbilidadCP === '____'">Entre los grupos de morbilidad que se hallan a nivel distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al Puesto de Salud <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (<span class="highlight">{{ getCasosInfeccionesRespiratorias() }}</span> casos) y la obesidad y otros de hiperalimentación (<span class="highlight">{{ getCasosObesidad() }}</span> casos). Para el primero, se reportó un mayor número de casos en el grupo etario de 0 a 11 años, mientras que para el segundo, la mayor cantidad se halló en el rango de 30 a 59 años. A continuación, se presenta el cuadro con el número de casos por grupo de morbilidad y bloque etario dentro del distrito, según el portal REUNIS del MINSA.</p>
+
+<p class="table-title">Cuadro N° 3. 58</p>
+<p class="table-title-main">Casos por grupos de morbilidad – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2023)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header" rowspan="2">Grupo de Morbilidad</th>
+            <th class="table-header" colspan="5">Bloques etarios</th>
+            <th class="table-header" rowspan="2">Casos Totales</th>
+        </tr>
+        <tr>
+            <th class="table-header">0 – 11</th>
+            <th class="table-header">12 – 17</th>
+            <th class="table-header">18 – 29</th>
+            <th class="table-header">30 – 59</th>
+            <th class="table-header">60 - ></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.morbilidadCpTabla || [])">
+            <td class="table-cell">{{ item.grupo || '____' }}</td>
+            <td class="table-cell">{{ item.edad0_11 || '____' }}</td>
+            <td class="table-cell">{{ item.edad12_17 || '____' }}</td>
+            <td class="table-cell">{{ item.edad18_29 || '____' }}</td>
+            <td class="table-cell">{{ item.edad30_59 || '____' }}</td>
+            <td class="table-cell">{{ item.edad60_mas || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.morbilidadCpTabla || datos.morbilidadCpTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: REUNIS (2024)</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Población afiliada a Seguros de Salud</strong></p>
+<p class="text-justify" *ngIf="datos.textoAfiliacionSalud && datos.textoAfiliacionSalud !== '____'">{{ datos.textoAfiliacionSalud }}</p>
+<p class="text-justify" *ngIf="!datos.textoAfiliacionSalud || datos.textoAfiliacionSalud === '____'">En el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el <span class="highlight">{{ getPorcentajeSIS() }}</span> de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el <span class="highlight">{{ getPorcentajeESSALUD() }}</span> de la población. Por último, cabe mencionar que el <span class="highlight">{{ getPorcentajeSinSeguro() }}</span> de la población no cuenta con ningún tipo de seguro de salud.</p>
+
+<p class="table-title">Cuadro N° 3. 59</p>
+<p class="table-title-main">Población según tipo de seguro de salud afiliado – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.afiliacionSaludTabla || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.afiliacionSaludTabla || datos.afiliacionSaludTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+

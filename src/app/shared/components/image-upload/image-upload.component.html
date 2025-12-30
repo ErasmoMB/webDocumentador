@@ -1,0 +1,54 @@
+<div class="image-upload-container">
+  <div class="form-field" *ngIf="mostrarTitulo">
+    <label class="label">{{ labelTitulo }}</label>
+    <input 
+      type="text" 
+      class="input" 
+      [placeholder]="placeholderTitulo"
+      [value]="titulo"
+      (input)="onTituloChange($any($event.target).value)">
+  </div>
+  
+  <div class="form-field" *ngIf="mostrarFuente">
+    <label class="label">{{ labelFuente }}</label>
+    <input 
+      type="text" 
+      class="input" 
+      [placeholder]="placeholderFuente"
+      [value]="fuente"
+      (input)="onFuenteChange($any($event.target).value)">
+  </div>
+  
+  <div class="form-field">
+    <label class="label">
+      {{ labelImagen }}
+      <span *ngIf="requerido" class="required">*</span>
+    </label>
+    <div 
+      class="image-upload-area" 
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      [class.drag-over]="dragOver">
+      <input 
+        type="file" 
+        #fileInput
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        style="display: none;">
+      <div *ngIf="!preview" class="upload-placeholder">
+        <p>Arrastra una imagen aquí o</p>
+        <button type="button" class="btn btn-secondary" (click)="triggerFileInput(fileInput)">
+          Buscar en el explorador
+        </button>
+      </div>
+      <div *ngIf="preview" class="image-preview">
+        <img [src]="preview" alt="Preview">
+        <button type="button" class="btn-icon remove-image" (click)="eliminarImagen()" title="Eliminar imagen">
+          ×
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

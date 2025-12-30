@@ -1,0 +1,60 @@
+<h5>A.1.2 Aspectos Demográficos</h5>
+
+<p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
+<p class="text-justify" *ngIf="datos.textoPoblacionSexoAISD && datos.textoPoblacionSexoAISD !== '____'">{{ datos.textoPoblacionSexoAISD }}</p>
+<p class="text-justify" *ngIf="!datos.textoPoblacionSexoAISD || datos.textoPoblacionSexoAISD === '____'">Respecto a la población de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de <span class="highlight">{{ datos.tablaAISD2TotalPoblacion || '____' }}</span> habitantes que residen permanentemente en la comunidad. De este conjunto, el <span class="highlight">{{ getPorcentajeHombres() }}</span> son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (<span class="highlight">{{ getPorcentajeMujeres() }}</span>).</p>
+
+<p class="table-title">Cuadro N° 3. 5</p>
+<p class="table-title-main">Población por sexo – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Sexo</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.poblacionSexoAISD || [])">
+            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" class="highlight">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.poblacionSexoAISD || datos.poblacionSexoAISD.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Población según grupo etario</strong></p>
+<p class="text-justify" *ngIf="datos.textoPoblacionEtarioAISD && datos.textoPoblacionEtarioAISD !== '____'">{{ datos.textoPoblacionEtarioAISD }}</p>
+<p class="text-justify" *ngIf="!datos.textoPoblacionEtarioAISD || datos.textoPoblacionEtarioAISD === '____'">En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es el de 15 a 29 años, puesto que representa el <span class="highlight">{{ getPorcentajeGrupoEtario('15 a 29 años') }}</span> de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de 0 a 14 años (<span class="highlight">{{ getPorcentajeGrupoEtario('0 a 14 años') }}</span>). Por otro lado, el conjunto minoritario está conformado por la población de 65 años a más, pues solo representa un <span class="highlight">{{ getPorcentajeGrupoEtario('65 años a más') }}</span>.</p>
+
+<p class="table-title">Cuadro N° 3. 6</p>
+<p class="table-title-main">Población por grandes grupos de edad – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.poblacionEtarioAISD || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.poblacionEtarioAISD || datos.poblacionEtarioAISD.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+

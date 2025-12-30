@@ -1,0 +1,97 @@
+<h5>B.1.4. Vivienda</h5>
+<p class="text-justify" *ngIf="datos.textoViviendaAISI && datos.textoViviendaAISI !== '____'">{{ datos.textoViviendaAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoViviendaAISI || datos.textoViviendaAISI === '____'">Según los Censos Nacionales 2017, en el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan un total de <span class="highlight">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
+
+<p class="table-title">Cuadro N° 3. 46</p>
+<p class="table-title-main">Tipos de Vivienda – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.tiposViviendaAISI || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.tiposViviendaAISI || datos.tiposViviendaAISI.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<p class="text-justify" *ngIf="datos.textoOcupacionViviendaAISI && datos.textoOcupacionViviendaAISI !== '____'">{{ datos.textoOcupacionViviendaAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoOcupacionViviendaAISI || datos.textoOcupacionViviendaAISI === '____'">Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de <span class="highlight">{{ getViviendasOcupadasPresentes() }}</span>. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el <span class="highlight">{{ getPorcentajeOcupadasPresentes() }}</span> del conjunto analizado.</p>
+
+<p class="table-title">Cuadro N° 3. 47</p>
+<p class="table-title-main">Condición de Ocupación de la Vivienda – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.condicionOcupacionAISI || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.condicionOcupacionAISI || datos.condicionOcupacionAISI.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
+<p class="text-justify" *ngIf="datos.textoEstructuraAISI && datos.textoEstructuraAISI !== '____'">{{ datos.textoEstructuraAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Según la información recabada de los Censos Nacionales 2017, dentro del CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.</p>
+<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span class="highlight">{{ getPorcentajePisosTierra() }}</span>). El porcentaje restante, que consta del <span class="highlight">{{ getPorcentajePisosCemento() }}</span>, cuentan con pisos elaborados a base de cemento.</p>
+
+<p class="table-title">Cuadro N° 3. 48</p>
+<p class="table-title-main">Tipos de materiales de las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Tipo de material</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.materialesViviendaAISI || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.tipoMaterial || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.materialesViviendaAISI || datos.materialesViviendaAISI.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<app-foto-info 
+    [numero]="getFotoEstructura().numero"
+    [titulo]="getFotoEstructura().titulo"
+    [fuente]="getFotoEstructura().fuente"
+    [ruta]="getFotoEstructura().ruta">
+</app-foto-info>
+

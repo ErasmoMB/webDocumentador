@@ -1,0 +1,285 @@
+<h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
+
+<p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
+<p class="text-justify" *ngIf="datos.textoInfraestructuraSalud && datos.textoInfraestructuraSalud !== '____'">{{ datos.textoInfraestructuraSalud }}</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraSalud || datos.textoInfraestructuraSalud === '____'">Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>.</p>
+
+<p class="table-title">Cuadro N° 3. 20</p>
+<p class="table-title-main">Principales características del Puesto de Salud {{ datos.grupoAISD || 'Ayroca' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.caracteristicasSaludTabla || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
+        </tr>
+        <tr *ngIf="!datos.caracteristicasSaludTabla || datos.caracteristicasSaludTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<app-foto-info 
+    [numero]="getFotoSalud().numero"
+    [titulo]="getFotoSalud().titulo"
+    [fuente]="getFotoSalud().fuente"
+    [ruta]="getFotoSalud().ruta">
+</app-foto-info>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
+<p class="text-justify" *ngIf="datos.textoInfraestructuraEducacion && datos.textoInfraestructuraEducacion !== '____'">{{ datos.textoInfraestructuraEducacion }}</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraEducacion || datos.textoInfraestructuraEducacion === '____'">Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
+
+<p class="table-title">Cuadro N° 3. 21</p>
+<p class="table-title-main">Infraestructura educativa – CC {{ datos.grupoAISD || 'Ayroca' }} (2023)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Nombre de IE</th>
+            <th class="table-header">Nivel</th>
+            <th class="table-header">Tipo de Gestión</th>
+            <th class="table-header">Cantidad de estudiantes</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.cantidadEstudiantesEducacionTabla || [])">
+            <td class="table-cell"><span *ngIf="item.institucion && item.institucion !== '____'" class="highlight">{{ item.institucion }}</span><span *ngIf="!item.institucion || item.institucion === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" class="highlight">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.gestion && item.gestion !== '____'" class="highlight">{{ item.gestion }}</span><span *ngIf="!item.gestion || item.gestion === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.total !== undefined && item.total !== '____'" class="highlight">{{ item.total }}</span><span *ngIf="item.total === undefined || item.total === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.cantidadEstudiantesEducacionTabla || datos.cantidadEstudiantesEducacionTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
+
+<p class="text-justify" *ngIf="datos.textoInfraestructuraEducacionPost && datos.textoInfraestructuraEducacionPost !== '____'">{{ datos.textoInfraestructuraEducacionPost }}</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraEducacionPost || datos.textoInfraestructuraEducacionPost === '____'">De las entrevistas aplicadas durante el trabajo de campo, se recopiló información de carácter cualitativo de las instituciones educativas de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>. En los cuadros que se presentan a continuación se detallan características de cada una de ellas para el año 2024.</p>
+
+<p class="table-title">Cuadro N° 3. 22</p>
+<p class="table-title-main">Características y datos – IE {{ datos.grupoAISD || 'Ayroca' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.ieAyrocaTabla || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
+        </tr>
+        <tr *ngIf="!datos.ieAyrocaTabla || datos.ieAyrocaTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<p class="table-title">Cuadro N° 3. 23</p>
+<p class="table-title-main">Características y datos – IE N°40270</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.ie40270Tabla || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
+        </tr>
+        <tr *ngIf="!datos.ie40270Tabla || datos.ie40270Tabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<p class="text-justify" *ngIf="datos.textoAlumnosPorSexoGrado && datos.textoAlumnosPorSexoGrado !== '____'">{{ datos.textoAlumnosPorSexoGrado }}</p>
+<p class="text-justify" *ngIf="!datos.textoAlumnosPorSexoGrado || datos.textoAlumnosPorSexoGrado === '____'">De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.</p>
+
+<p class="table-title">Cuadro N° 3. 25</p>
+<p class="table-title-main">Cantidad de alumnos según grado de enseñanza y sexo – IE {{ datos.grupoAISD || 'Ayroca' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header" rowspan="2">Nombre de IE</th>
+            <th class="table-header" rowspan="2">Nivel</th>
+            <th class="table-header" colspan="2">Total</th>
+            <th class="table-header" colspan="2">3 años</th>
+            <th class="table-header" colspan="2">4 años</th>
+            <th class="table-header" colspan="2">5 años</th>
+        </tr>
+        <tr>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.alumnosIEAyrocaTabla || [])">
+            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" class="highlight">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" class="highlight">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" class="highlight">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" class="highlight">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.tresH !== undefined && item.tresH !== '____'" class="highlight">{{ item.tresH }}</span><span *ngIf="item.tresH === undefined || item.tresH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.tresM !== undefined && item.tresM !== '____'" class="highlight">{{ item.tresM }}</span><span *ngIf="item.tresM === undefined || item.tresM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cuatroH !== undefined && item.cuatroH !== '____'" class="highlight">{{ item.cuatroH }}</span><span *ngIf="item.cuatroH === undefined || item.cuatroH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cuatroM !== undefined && item.cuatroM !== '____'" class="highlight">{{ item.cuatroM }}</span><span *ngIf="item.cuatroM === undefined || item.cuatroM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cincoH !== undefined && item.cincoH !== '____'" class="highlight">{{ item.cincoH }}</span><span *ngIf="item.cincoH === undefined || item.cincoH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cincoM !== undefined && item.cincoM !== '____'" class="highlight">{{ item.cincoM }}</span><span *ngIf="item.cincoM === undefined || item.cincoM === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.alumnosIEAyrocaTabla || datos.alumnosIEAyrocaTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<p class="table-title">Cuadro N° 3. 26</p>
+<p class="table-title-main">Cantidad de alumnos según grado de enseñanza y sexo – IE N°40270</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header" rowspan="2">Nombre de IE</th>
+            <th class="table-header" rowspan="2">Nivel</th>
+            <th class="table-header" colspan="2">Total</th>
+            <th class="table-header" colspan="2">1°</th>
+            <th class="table-header" colspan="2">2°</th>
+            <th class="table-header" colspan="2">3°</th>
+            <th class="table-header" colspan="2">4°</th>
+            <th class="table-header" colspan="2">5°</th>
+            <th class="table-header" colspan="2">6°</th>
+        </tr>
+        <tr>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+            <th class="table-header">H</th>
+            <th class="table-header">M</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.alumnosIE40270Tabla || [])">
+            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" class="highlight">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" class="highlight">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" class="highlight">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" class="highlight">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p1H !== undefined && item.p1H !== '____'" class="highlight">{{ item.p1H }}</span><span *ngIf="item.p1H === undefined || item.p1H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p1M !== undefined && item.p1M !== '____'" class="highlight">{{ item.p1M }}</span><span *ngIf="item.p1M === undefined || item.p1M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p2H !== undefined && item.p2H !== '____'" class="highlight">{{ item.p2H }}</span><span *ngIf="item.p2H === undefined || item.p2H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p2M !== undefined && item.p2M !== '____'" class="highlight">{{ item.p2M }}</span><span *ngIf="item.p2M === undefined || item.p2M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p3H !== undefined && item.p3H !== '____'" class="highlight">{{ item.p3H }}</span><span *ngIf="item.p3H === undefined || item.p3H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p3M !== undefined && item.p3M !== '____'" class="highlight">{{ item.p3M }}</span><span *ngIf="item.p3M === undefined || item.p3M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p4H !== undefined && item.p4H !== '____'" class="highlight">{{ item.p4H }}</span><span *ngIf="item.p4H === undefined || item.p4H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p4M !== undefined && item.p4M !== '____'" class="highlight">{{ item.p4M }}</span><span *ngIf="item.p4M === undefined || item.p4M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p5H !== undefined && item.p5H !== '____'" class="highlight">{{ item.p5H }}</span><span *ngIf="item.p5H === undefined || item.p5H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p5M !== undefined && item.p5M !== '____'" class="highlight">{{ item.p5M }}</span><span *ngIf="item.p5M === undefined || item.p5M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p6H !== undefined && item.p6H !== '____'" class="highlight">{{ item.p6H }}</span><span *ngIf="item.p6H === undefined || item.p6H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p6M !== undefined && item.p6M !== '____'" class="highlight">{{ item.p6M }}</span><span *ngIf="item.p6M === undefined || item.p6M === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.alumnosIE40270Tabla || datos.alumnosIE40270Tabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<app-foto-info 
+    [numero]="getFotoIEAyroca().numero"
+    [titulo]="getFotoIEAyroca().titulo"
+    [fuente]="getFotoIEAyroca().fuente"
+    [ruta]="getFotoIEAyroca().ruta">
+</app-foto-info>
+
+<app-foto-info 
+    [numero]="getFotoIE40270().numero"
+    [titulo]="getFotoIE40270().titulo"
+    [fuente]="getFotoIE40270().fuente"
+    [ruta]="getFotoIE40270().ruta">
+</app-foto-info>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
+<p class="text-justify" *ngIf="datos.textoInfraestructuraRecreacion && datos.textoInfraestructuraRecreacion !== '____'">{{ datos.textoInfraestructuraRecreacion }}</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacion || datos.textoInfraestructuraRecreacion === '____'">Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se cuenta con un espacio destinado a la recreación de la población. Este es el parque recreacional público, el cual se ubica entre el puesto de salud y el local comunal. Aquí la población puede reunirse y también cuenta con juegos recreativos destinados a los niños. La siguiente infraestructura es la plaza de toros, que se halla en la zona este del anexo, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacionDetalle || datos.textoInfraestructuraRecreacionDetalle === '____'">En adición a ello, otro espacio de reunión es la plaza central del anexo <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>. Este lugar sirve ocasionalmente como punto de encuentro para los comuneros, quienes se reúnen allí de manera informal en momentos importantes o festivos.</p>
+
+<app-foto-info 
+    *ngFor="let foto of getFotografiasRecreacion()"
+    [numero]="foto.numero"
+    [titulo]="foto.titulo"
+    [fuente]="foto.fuente"
+    [ruta]="foto.ruta">
+</app-foto-info>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
+<p class="text-justify" *ngIf="datos.textoInfraestructuraDeporte && datos.textoInfraestructuraDeporte !== '____'">{{ datos.textoInfraestructuraDeporte }}</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeporte || datos.textoInfraestructuraDeporte === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, la infraestructura deportiva es limitada. Los únicos espacios dedicados al deporte son una losa deportiva y un "estadio". Estas infraestructuras son utilizadas principalmente para partidos de fútbol y otros encuentros deportivos informales que se organizan entre los comuneros, especialmente durante festividades locales.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeportDetalle || datos.textoInfraestructuraDeportDetalle === '____'">Respecto a la losa deportiva, esta se encuentra hecha a base de cemento. Por otra parte, el "estadio" es un campo de juego de pasto natural de un tamaño más extenso que la losa. No obstante, no cuenta con infraestructura adicional como gradas o servicios higiénicos.</p>
+
+<app-foto-info 
+    *ngFor="let foto of getFotografiasDeporte()"
+    [numero]="foto.numero"
+    [titulo]="foto.titulo"
+    [fuente]="foto.fuente"
+    [ruta]="foto.ruta">
+</app-foto-info>
+

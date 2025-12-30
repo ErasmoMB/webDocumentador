@@ -1,0 +1,32 @@
+<h5>A.1.16. Festividades, Costumbres y Turismo</h5>
+<ng-container *ngIf="datos.textoFestividades && datos.textoFestividades !== '____'">
+  <p class="text-justify" *ngFor="let parrafo of datos.textoFestividades.split('\n\n')">{{ parrafo }}</p>
+</ng-container>
+<p class="text-justify" *ngIf="!datos.textoFestividades || datos.textoFestividades === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, las festividades son momentos de gran importancia cultural y social que refuerzan los lazos comunitarios y mantienen vivas las tradiciones locales. Entre las celebraciones más destacadas se encuentran los carnavales, que tienen lugar en el mes de febrero. Esta festividad está marcada por el entusiasmo de la población, quienes participan en juegos con agua y desfiles.</p>
+<p class="text-justify" *ngIf="!datos.textoFestividades || datos.textoFestividades === '____'">Otra celebración significativa es la dedicada a la Virgen de Chapi, que se lleva a cabo cada 1° de mayo. En esta fecha, los devotos organizan misas solemnes, procesiones en honor a la Virgen y actividades sociales que congregan a familias locales y visitantes. Del 3 al 5 de mayo, se celebra la Fiesta de las Cruces, en la que se realizan ceremonias religiosas, procesiones y actividades tradicionales, como la tauromaquia, acompañadas por grupos musicales que animan el ambiente.</p>
+<p class="text-justify" *ngIf="!datos.textoFestividades || datos.textoFestividades === '____'">En junio, el calendario festivo incluye dos importantes celebraciones: la festividad de San Vicente Ferrer (que es la fiesta patronal principal de la comunidad), que se realiza del 21 al 23 de junio, y el aniversario de la comunidad, celebrado el 24 de junio con actos protocolares, actividades culturales y sociales. Ambas fechas están caracterizadas por su componente religioso, con misas y procesiones, además de eventos que integran a toda la comunidad.</p>
+<p class="text-justify" *ngIf="!datos.textoFestividades || datos.textoFestividades === '____'">Una festividad de gran relevancia ambiental y cultural es el Chaku, o esquila de vicuñas, una actividad tradicional vinculada al aprovechamiento sostenible de esta especie emblemática de los Andes. Aunque las fechas de esta celebración suelen variar, se tiene la propuesta de realizarla cada 15 de noviembre, coincidiendo con el Día de la Vicuña. Durante el Chaku, además de la esquila, se realizan actividades culturales, ceremonias andinas y eventos de integración comunitaria.</p>
+<p class="text-justify" *ngIf="!datos.textoFestividades || datos.textoFestividades === '____'">En cuanto al potencial turístico, la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span> destaca no solo por sus festividades tradicionales, sino también por las ruinas arqueológicas de <span class="highlight">{{ datos.sitioArqueologico || 'Incahuasi' }}</span>, un sitio de valor histórico y cultural. Este lugar, que guarda vestigios del pasado incaico, representa una oportunidad para atraer visitantes interesados en la historia, la arqueología y el turismo vivencial. La promoción de este recurso puede complementar las festividades y posicionar a la comunidad como un destino atractivo para el turismo sostenible, generando beneficios económicos y culturales para sus habitantes.</p>
+
+<p class="table-title">Cuadro N° 3. 38</p>
+<p class="table-title-main">Festividades principales – CC {{ datos.grupoAISD || 'Ayroca' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Festividad</th>
+            <th class="table-header">Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.festividades || [])">
+            <td class="table-cell">{{ item.festividad || '____' }}</td>
+            <td class="table-cell">{{ item.fecha || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.festividades || datos.festividades.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: GEADES (2024)</p>
+

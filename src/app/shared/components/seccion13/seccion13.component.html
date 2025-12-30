@@ -1,0 +1,108 @@
+<h5>A.1.9. Indicadores de salud</h5>
+
+<p style="margin-bottom: 10px;"><strong>a. Natalidad y Mortalidad</strong></p>
+<p class="text-justify" *ngIf="datos.textoNatalidadMortalidad && datos.textoNatalidadMortalidad !== '____'">{{ datos.textoNatalidadMortalidad }}</p>
+<p class="text-justify" *ngIf="!datos.textoNatalidadMortalidad || datos.textoNatalidadMortalidad === '____'">El presente ítem proporciona una visión crucial sobre las dinámicas demográficas, reflejando las tendencias en el crecimiento poblacional. De los datos obtenidos en el Puesto de Salud <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span> durante el trabajo de campo, se obtiene que en el año 2023 solo ocurrió un nacimiento, mientras que para el 2024 (hasta el 13 de noviembre) se dieron un total de tres (03) nacimientos.</p>
+<p class="text-justify" *ngIf="!datos.textoNatalidadMortalidad || datos.textoNatalidadMortalidad === '____'">Respecto a la mortalidad, según la misma fuente, se obtiene que en el año 2023 se registró un fallecimiento, por suicidio; mientras que para el 2024 no ocurrieron decesos dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, hasta la fecha indicada.</p>
+
+<p class="table-title">Cuadro N° 3. 28</p>
+<p class="table-title-main">Indicadores de natalidad y mortalidad – CC {{ datos.grupoAISD || 'Ayroca' }}</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Año</th>
+            <th class="table-header">Natalidad</th>
+            <th class="table-header">Mortalidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.natalidadMortalidadTabla || [])">
+            <td class="table-cell"><span *ngIf="item.anio && item.anio !== '____'" class="highlight">{{ item.anio }}</span><span *ngIf="!item.anio || item.anio === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.natalidad !== undefined && item.natalidad !== '____'" class="highlight">{{ item.natalidad }}</span><span *ngIf="item.natalidad === undefined || item.natalidad === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.mortalidad !== undefined && item.mortalidad !== '____'" class="highlight">{{ item.mortalidad }}</span><span *ngIf="item.mortalidad === undefined || item.mortalidad === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.natalidadMortalidadTabla || datos.natalidadMortalidadTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Morbilidad</strong></p>
+<p class="text-justify" *ngIf="datos.textoMorbilidad && datos.textoMorbilidad !== '____'">{{ datos.textoMorbilidad }}</p>
+<p class="text-justify" *ngIf="!datos.textoMorbilidad || datos.textoMorbilidad === '____'">De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.</p>
+<p class="text-justify" *ngIf="!datos.textoMorbilidad || datos.textoMorbilidad === '____'">En cuanto a los grupos de morbilidad que se hallan a nivel distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca a los poblados de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.</p>
+
+<p class="table-title">Cuadro N° 3. 29</p>
+<p class="table-title-main">Casos por grupos de morbilidad – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2023)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Grupo de Morbilidad</th>
+            <th class="table-header" colspan="5">Bloques etarios</th>
+            <th class="table-header">Casos Totales</th>
+        </tr>
+        <tr>
+            <th class="table-header"></th>
+            <th class="table-header">0 – 11</th>
+            <th class="table-header">12 – 17</th>
+            <th class="table-header">18 – 29</th>
+            <th class="table-header">30 – 59</th>
+            <th class="table-header">60 -></th>
+            <th class="table-header"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.morbiliadTabla || datos.morbilidadTabla || [])">
+            <td class="table-cell"><span *ngIf="item.grupo && item.grupo !== '____'" class="highlight">{{ item.grupo }}</span><span *ngIf="!item.grupo || item.grupo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango0_11 !== undefined && item.rango0_11 !== '____'" class="highlight">{{ item.rango0_11 }}</span><span *ngIf="item.rango0_11 === undefined || item.rango0_11 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango12_17 !== undefined && item.rango12_17 !== '____'" class="highlight">{{ item.rango12_17 }}</span><span *ngIf="item.rango12_17 === undefined || item.rango12_17 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango18_29 !== undefined && item.rango18_29 !== '____'" class="highlight">{{ item.rango18_29 }}</span><span *ngIf="item.rango18_29 === undefined || item.rango18_29 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango30_59 !== undefined && item.rango30_59 !== '____'" class="highlight">{{ item.rango30_59 }}</span><span *ngIf="item.rango30_59 === undefined || item.rango30_59 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango60 !== undefined && item.rango60 !== '____'" class="highlight">{{ item.rango60 }}</span><span *ngIf="item.rango60 === undefined || item.rango60 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="(!datos.morbiliadTabla || datos.morbiliadTabla.length === 0) && (!datos.morbilidadTabla || datos.morbilidadTabla.length === 0)">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">REUNIS (2024)</span></p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Población afiliada a Seguros de Salud</strong></p>
+<p class="text-justify" *ngIf="datos.textoAfiliacionSalud && datos.textoAfiliacionSalud !== '____'">{{ datos.textoAfiliacionSalud }}</p>
+<p class="text-justify" *ngIf="!datos.textoAfiliacionSalud || datos.textoAfiliacionSalud === '____'">Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, la mayoría de habitantes se encuentran afiliados a algún tipo de seguro de salud. Es así que el Seguro Integral de Salud (SIS) se halla en primer lugar, al abarcar el <span class="highlight">{{ datos.porcentajeSIS || '84,44' }}</span> % de la población. A ello le sigue ESSALUD, con un <span class="highlight">{{ datos.porcentajeESSALUD || '3,56' }}</span> %. Por otro lado, el <span class="highlight">{{ datos.porcentajeSinSeguro || '12,00' }}</span> % de la población no cuenta con ningún tipo de seguro de salud.</p>
+
+<p class="table-title">Cuadro N° 3. 30</p>
+<p class="table-title-main">Población según tipo de seguro de salud afiliado – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.afiliacionSaludTabla || datos.seguroSaludTabla || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="(!datos.afiliacionSaludTabla || datos.afiliacionSaludTabla.length === 0) && (!datos.seguroSaludTabla || datos.seguroSaludTabla.length === 0)">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+

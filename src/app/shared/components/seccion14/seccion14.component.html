@@ -1,0 +1,62 @@
+<h5>A.1.10. Indicadores de educación</h5>
+<p class="text-justify" *ngIf="datos.textoIndicadoresEducacion && datos.textoIndicadoresEducacion !== '____'">{{ datos.textoIndicadoresEducacion }}</p>
+<p class="text-justify" *ngIf="!datos.textoIndicadoresEducacion || datos.textoIndicadoresEducacion === '____'">La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.</p>
+
+<p style="margin-bottom: 10px;"><strong>a. Nivel Educativo de la población</strong></p>
+<p class="text-justify" *ngIf="datos.textoNivelEducativo && datos.textoNivelEducativo !== '____'">{{ datos.textoNivelEducativo }}</p>
+<p class="text-justify" *ngIf="!datos.textoNivelEducativo || datos.textoNivelEducativo === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el <span class="highlight">{{ getPorcentajePrimaria() }}</span>. En segundo lugar, se hallan aquellos que cuentan con secundaria (<span class="highlight">{{ getPorcentajeSecundaria() }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un <span class="highlight">{{ getPorcentajeSuperiorNoUniversitaria() }}</span>.</p>
+
+<p class="table-title">Cuadro N° 3. 31</p>
+<p class="table-title-main">Población de 15 años a más según nivel educativo alcanzado – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.nivelEducativoTabla || [])">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.nivelEducativoTabla || datos.nivelEducativoTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tasa de analfabetismo</strong></p>
+<p class="text-justify" *ngIf="datos.textoTasaAnalfabetismo && datos.textoTasaAnalfabetismo !== '____'">{{ datos.textoTasaAnalfabetismo }}</p>
+<p class="text-justify" *ngIf="!datos.textoTasaAnalfabetismo || datos.textoTasaAnalfabetismo === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de <span class="highlight">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span class="highlight">{{ getTasaAnalfabetismo() }}</span> en la comunidad.</p>
+
+<p class="table-title">Cuadro N° 3. 32</p>
+<p class="table-title-main">Tasa de analfabetismo en población de 15 años a más – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Indicador</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.tasaAnalfabetismoTabla || [])">
+            <td class="table-cell"><span *ngIf="item.indicador && item.indicador !== '____'" class="highlight">{{ item.indicador }}</span><span *ngIf="!item.indicador || item.indicador === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="!datos.tasaAnalfabetismoTabla || datos.tasaAnalfabetismoTabla.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+

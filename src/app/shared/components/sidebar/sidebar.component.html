@@ -1,0 +1,59 @@
+<button 
+  *ngIf="!isExpanded" 
+  class="sidebar-toggle-btn" 
+  (click)="toggleSidebar()" 
+  [attr.aria-label]="'Mostrar índice'"
+  title="Mostrar índice">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="currentColor"/>
+  </svg>
+</button>
+
+<div class="sidebar" [class.collapsed]="!isExpanded">
+  <div class="sidebar-header">
+    <button class="toggle-btn" (click)="toggleSidebar()" [attr.aria-label]="'Ocultar índice'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15.41 7.41L14 6L9 11L14 16L15.41 14.59L11.83 11L15.41 7.41Z" fill="currentColor"/>
+      </svg>
+    </button>
+    <h3 *ngIf="isExpanded" class="sidebar-title">Índice</h3>
+  </div>
+  
+  <div class="sidebar-content" *ngIf="isExpanded">
+    <nav class="index-nav">
+      <ul class="index-list">
+        <li *ngFor="let item of indexStructure" class="index-item">
+          <ng-container *ngTemplateOutlet="indexItemTemplate; context: { item: item }"></ng-container>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<ng-template #indexItemTemplate let-item="item">
+  <div 
+    class="index-entry"
+    [class.has-children]="hasChildren(item)"
+    [class.completed]="isItemCompleted(item)"
+    [class.expanded]="isItemExpanded(item)"
+    [style.padding-left.px]="(item.level - 1) * 16">
+    
+    <div class="index-entry-content" (click)="hasChildren(item) ? toggleExpand(item) : navigateToSection(item)">
+      <span *ngIf="hasChildren(item)" class="expand-icon">
+        {{ isItemExpanded(item) ? '▼' : '▶' }}
+      </span>
+      <span *ngIf="!hasChildren(item)" class="expand-icon-placeholder"></span>
+      <span class="index-text" [class.has-route]="item.route">
+        {{ item.title }}
+      </span>
+      <span *ngIf="isItemCompleted(item)" class="completed-icon">✓</span>
+    </div>
+    
+    <ul *ngIf="hasChildren(item) && isItemExpanded(item)" class="index-sublist">
+      <li *ngFor="let child of item.children" class="index-item">
+        <ng-container *ngTemplateOutlet="indexItemTemplate; context: { item: child }"></ng-container>
+      </li>
+    </ul>
+  </div>
+</ng-template>
+

@@ -1,0 +1,28 @@
+<div class="plantilla-container">
+  <div class="plantilla-header">
+    <div class="plantilla-header-left">
+      <button class="btn btn-ghost" (click)="volverASeccion()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Volver a Secciones
+      </button>
+      <h1>Vista Completa de la Plantilla</h1>
+    </div>
+    <div class="plantilla-header-right">
+      <button class="btn btn-secondary" (click)="verEjemplo($event)">{{ verEjemploLabel }}</button>
+      <button class="btn btn-outline" (click)="descargarEjemplo($event)">Descargar Ejemplo</button>
+      <button class="btn btn-primary" (click)="exportarWord()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exportar a Word
+      </button>
+    </div>
+  </div>
+
+  <app-resumen></app-resumen>
+</div>
+

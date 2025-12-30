@@ -1,0 +1,135 @@
+.image-upload-container {
+  width: 100%;
+}
+
+.form-field {
+  margin-bottom: var(--spacing-md, 1rem);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--spacing-xs, 0.5rem);
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+.required {
+  color: var(--danger, #ef4444);
+  margin-left: 2px;
+}
+
+.input {
+  width: 100%;
+  padding: var(--spacing-sm, 0.5rem);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: var(--radius-md, 4px);
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+}
+
+.image-upload-area {
+  border: 2px dashed var(--border, #e0e0e0);
+  border-radius: var(--radius-md, 4px);
+  padding: var(--spacing-xl, 2rem);
+  text-align: center;
+  background-color: var(--surface-elevated, #f9fafb);
+  transition: all 0.2s;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.image-upload-area.drag-over {
+  border-color: var(--primary, #2563eb);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md, 1rem);
+  color: var(--text-muted, #6b7280);
+}
+
+.upload-placeholder p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.btn {
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  border-radius: var(--radius-md, 4px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-secondary {
+  background-color: var(--secondary, #6b7280);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-dark, #4b5563);
+}
+
+.image-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-md, 4px);
+  object-fit: contain;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.remove-image {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--danger, #ef4444);
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.remove-image:hover {
+  background: var(--danger-dark, #dc2626);
+  transform: scale(1.1);
+}
+

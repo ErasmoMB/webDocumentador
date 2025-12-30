@@ -1,0 +1,59 @@
+<h5>B.1.1. Aspectos demográficos</h5>
+<p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
+<p class="text-justify" *ngIf="datos.textoDemografiaAISI && datos.textoDemografiaAISI !== '____'">{{ datos.textoDemografiaAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoDemografiaAISI || datos.textoDemografiaAISI === '____'">Respecto a la población del CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta los Censos Nacionales 2017, existen <span class="highlight">{{ getTotalPoblacion() }}</span> habitantes que viven permanentemente en la localidad. De este conjunto, el <span class="highlight">{{ getPorcentajeMujeres() }}</span> son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (<span class="highlight">{{ getPorcentajeHombres() }}</span>).</p>
+
+<p class="table-title">Cuadro N° 3. 40</p>
+<p class="table-title-main">Población por sexo – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Sexo</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.poblacionSexoAISI || [])">
+            <td class="table-cell">{{ item.sexo || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.poblacionSexoAISI || datos.poblacionSexoAISI.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
+
+<p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
+<p class="text-justify" *ngIf="datos.textoGrupoEtarioAISI && datos.textoGrupoEtarioAISI !== '____'">{{ datos.textoGrupoEtarioAISI }}</p>
+<p class="text-justify" *ngIf="!datos.textoGrupoEtarioAISI || datos.textoGrupoEtarioAISI === '____'">En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el <span class="highlight">{{ getPorcentajeGrupoEtario('0 a 14') }}</span> del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (<span class="highlight">{{ getPorcentajeGrupoEtario('45 a 64') }}</span>). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el <span class="highlight">{{ getPorcentajeGrupoEtario('15 a 29') }}</span> cada uno.</p>
+
+<p class="table-title">Cuadro N° 3. 41</p>
+<p class="table-title-main">Población por grupo etario – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)</p>
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos.poblacionEtarioAISI || [])">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell">{{ item.casos || '____' }}</td>
+            <td class="table-cell">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos.poblacionEtarioAISI || datos.poblacionEtarioAISI.length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+<p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+

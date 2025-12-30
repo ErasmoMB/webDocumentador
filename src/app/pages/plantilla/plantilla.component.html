@@ -1,0 +1,354 @@
+
+<div class="preview preview-static">
+    <div class="viewport-content">
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+      <h1 style="margin: 0;">CAPÍTULO III - LÍNEA BASE</h1>
+      <button 
+        class="btn btn-primary" 
+        (click)="exportarWord()"
+        style="padding: 10px 20px; font-size: 14px; white-space: nowrap;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exportar a Word
+      </button>
+    </div>
+    <!-- SECTION:3.1.1:START -->
+    <app-seccion1></app-seccion1>
+    <!-- SECTION:3.1.1:END -->
+    <app-seccion2></app-seccion2>
+    <app-seccion3></app-seccion3>
+    <app-seccion4></app-seccion4>
+    <app-seccion5></app-seccion5>
+    <app-seccion6></app-seccion6>
+    <app-seccion7></app-seccion7>
+    <app-seccion8></app-seccion8>
+    <app-seccion9></app-seccion9>
+    <app-seccion10></app-seccion10>
+    <app-seccion11></app-seccion11>
+    <app-seccion12></app-seccion12>
+    <app-seccion13></app-seccion13>
+    <app-seccion14></app-seccion14>
+    <app-seccion15></app-seccion15>
+    <app-seccion16></app-seccion16>
+    
+    <app-seccion17></app-seccion17>
+    
+    <app-seccion18></app-seccion18>
+    
+    <app-seccion19></app-seccion19>
+    
+    <app-seccion20></app-seccion20>
+    
+    <app-seccion21></app-seccion21>
+    
+    <app-seccion22></app-seccion22>
+    
+    <app-seccion23></app-seccion23>
+    
+    <app-seccion24></app-seccion24>
+    
+    <app-seccion25></app-seccion25>
+    
+    <app-seccion26></app-seccion26>
+    
+    <app-seccion27></app-seccion27>
+    
+    <app-seccion28></app-seccion28>
+    
+    <app-seccion29></app-seccion29>
+    
+    <app-seccion30></app-seccion30>
+    
+    <h5>B.1.10. Aspectos culturales (lenguas, dialectos, religión y lugares)</h5>
+    <p class="text-justify">{{ datos.textoAspectosCulturales || '____' }}</p>
+    
+    <h5>a. Idioma</h5>
+    <p class="text-justify">{{ datos.textoIdioma || '____' }}</p>
+    <p class="table-title">Cuadro N° 3.62</p>
+    <p class="table-title-main">Lenguas maternas en población de 3 años a más – CP Cahuacho (2017)</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Categoría</th>
+                <th class="table-header">Casos</th>
+                <th class="table-header">Porcentaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.lenguasMaternasTabla && datos.lenguasMaternasTabla.length > 0">
+                <tr *ngFor="let item of datos.lenguasMaternasTabla">
+                    <td class="table-cell">{{ item.categoria }}</td>
+                    <td class="table-cell">{{ item.casos }}</td>
+                    <td class="table-cell">{{ item.porcentaje }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+    
+    <h5>b. Religión</h5>
+    <p class="text-justify">{{ datos.textoReligion || '____' }}</p>
+    <p class="table-title">Cuadro N° 3.63</p>
+    <p class="table-title-main">Religiones profesadas en población de 12 años a más – CP Cahuacho (2017)</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Categoría</th>
+                <th class="table-header">Casos</th>
+                <th class="table-header">Porcentaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.religionesTabla && datos.religionesTabla.length > 0">
+                <tr *ngFor="let item of datos.religionesTabla">
+                    <td class="table-cell">{{ item.categoria }}</td>
+                    <td class="table-cell">{{ item.casos }}</td>
+                    <td class="table-cell">{{ item.porcentaje }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+    
+    <ng-container *ngIf="datos.fotografiasAspectosCulturales && datos.fotografiasAspectosCulturales.length > 0">
+        <div class="fotografias-section" *ngFor="let foto of datos.fotografiasAspectosCulturales">
+            <div class="fotografia-container">
+                <p style="text-align: center; margin-bottom: 5px;"><strong>Fotografía {{ foto.numero }}</strong></p>
+                <p style="text-align: center; margin-top: 0; margin-bottom: 15px;">{{ foto.titulo }}</p>
+                <img [src]="foto.ruta" [alt]="foto.titulo" class="fotografia-img fotografia-small">
+                <p class="source" style="text-align: center; margin-top: 10px;">FUENTE: {{ foto.fuente }}</p>
+            </div>
+        </div>
+    </ng-container>
+    
+    <h5>B.1.11. Agua, Uso de Suelos y Recursos Naturales</h5>
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Fuentes y usos del agua</strong></p>
+    <p class="text-justify">{{ datos.textoFuentesAgua || '____' }}</p>
+    
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tenencia de la Tierra, usos del suelo y de recursos naturales de la zona</strong></p>
+    <p class="text-justify">{{ datos.textoRecursosNaturalesZona || '____' }}</p>
+    <p class="text-justify">{{ datos.textoUsosSuelos || '____' }}</p>
+    
+    <h5>B.1.12. Índice de Desarrollo Humano (IDH) distrital</h5>
+    <p class="text-justify">{{ datos.textoIndiceDesarrolloHumano || '____' }}</p>
+    
+    <p class="table-title">Cuadro N° 3.64</p>
+    <p class="table-title-main">Componentes del IDH - Distrito Cahuacho (2019)</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header" rowspan="2">Población</th>
+                <th class="table-header" rowspan="2">Índice de Desarrollo Humano</th>
+                <th class="table-header" rowspan="2">Esperanza de vida al nacer</th>
+                <th class="table-header" colspan="2">Con Educación secundaria completa (Población 18 años)</th>
+                <th class="table-header" colspan="2">Años de educación (Población 25 y más)</th>
+                <th class="table-header" colspan="2">Ingreso familiar per cápita</th>
+            </tr>
+            <tr>
+                <th class="table-header">Porcentaje</th>
+                <th class="table-header">Rank</th>
+                <th class="table-header">Años</th>
+                <th class="table-header">Rank</th>
+                <th class="table-header">N.S. mes</th>
+                <th class="table-header">Rank</th>
+            </tr>
+            <tr>
+                <th class="table-header">Habitantes</th>
+                <th class="table-header">IDH</th>
+                <th class="table-header">Años</th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.indiceDesarrolloHumanoTabla && datos.indiceDesarrolloHumanoTabla.length > 0">
+                <tr *ngFor="let item of datos.indiceDesarrolloHumanoTabla">
+                    <td class="table-cell">{{ item.poblacion }}</td>
+                    <td class="table-cell">{{ item.idh }}</td>
+                    <td class="table-cell">{{ item.esperanzaVida }}</td>
+                    <td class="table-cell">{{ item.educacion }}</td>
+                    <td class="table-cell">{{ item.rankEducacion2 }}</td>
+                    <td class="table-cell">{{ item.anosEducacion }}</td>
+                    <td class="table-cell">{{ item.rankAnios }}</td>
+                    <td class="table-cell">{{ item.ingreso }}</td>
+                    <td class="table-cell">{{ item.rankIngresoFinal }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: PNUD Informe 2019</p>
+    
+    <h5>B.1.13. Índice de necesidades básicas insatisfechas distrital</h5>
+    <p class="text-justify">{{ datos.textoNecesidadesBasicasInsatisfechas || '____' }}</p>
+    
+    <p class="table-title">Cuadro N° 3.65</p>
+    <p class="table-title-main">Necesidades Básicas Insatisfechas (NBI) según población – CP Cahuacho (2017)</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Categoría</th>
+                <th class="table-header">Casos</th>
+                <th class="table-header">Porcentaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.nbiCCAyrocaTabla && datos.nbiCCAyrocaTabla.length > 0">
+                <tr *ngFor="let item of datos.nbiCCAyrocaTabla">
+                    <td class="table-cell">{{ item.categoria }}</td>
+                    <td class="table-cell">{{ item.casos }}</td>
+                    <td class="table-cell">{{ item.porcentaje }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+    
+    <p class="table-title">Cuadro N° 3.66</p>
+    <p class="table-title-main">Tipos de NBI existentes – Distrito Cahuacho (2017)</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Categoría</th>
+                <th class="table-header">Casos</th>
+                <th class="table-header">Porcentaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.nbiDistritoCahuachoTabla && datos.nbiDistritoCahuachoTabla.length > 0">
+                <tr *ngFor="let item of datos.nbiDistritoCahuachoTabla">
+                    <td class="table-cell">{{ item.categoria }}</td>
+                    <td class="table-cell">{{ item.casos }}</td>
+                    <td class="table-cell">{{ item.porcentaje }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017</p>
+    
+    <h5>B.1.14. Organización social y liderazgo</h5>
+    <p class="text-justify">{{ datos.textoOrganizacionSocial || '____' }}</p>
+    
+    <p class="table-title">Cuadro N° 3.67</p>
+    <p class="table-title-main">Autoridades políticas y sociales – CP Cahuacho</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Organización</th>
+                <th class="table-header">Cargo</th>
+                <th class="table-header">Nombres y Apellidos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.autoridades && datos.autoridades.length > 0">
+                <tr *ngFor="let item of datos.autoridades; let i = index">
+                    <td class="table-cell" *ngIf="shouldShowOrgCell(i, datos.autoridades)" [attr.rowspan]="getOrgRowSpan(item.organizacion, datos.autoridades)">{{ item.organizacion }}</td>
+                    <td class="table-cell">{{ item.cargo }}</td>
+                    <td class="table-cell">{{ item.nombre }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: GEADES (2024)</p>
+    
+    <h5>B.1.15. Festividades, Costumbres y Turismo</h5>
+    <p class="text-justify">Las festividades desempeñan un papel central en la vida cultural y social de una comunidad, reflejando tradiciones profundamente arraigadas que fortalecen los lazos comunitarios. En el CP Cahuacho, estas celebraciones son momentos de gran importancia que unen a la población en torno a sus costumbres y creencias.</p>
+    <p class="text-justify">Entre las festividades más destacadas se encuentran los carnavales, que se celebran en el mes de febrero. Esta festividad está marcada por el colorido, la música y la alegría, donde los residentes participan en actividades tradicionales como juegos con agua, danzas típicas y desfiles que fomentan la unidad comunitaria.</p>
+    <p class="text-justify">La festividad de la Virgen de Copacabana es la más importante a nivel local, considerada como la fiesta patronal principal. Se realiza entre los meses de mayo y junio, con fecha movible. Durante esta celebración se llevan a cabo misas solemnes, procesiones en honor a la Virgen y actividades sociales con música en vivo y comidas típicas, atrayendo tanto a locales como a visitantes.</p>
+    <p class="text-justify">La peregrinación de San Andrés se realiza entre los meses de junio y julio. Esta es una tradición de peregrinación donde los devotos caminan hacia Caravelí como muestra de fe, caracterizada por el sacrificio físico y la devoción espiritual.</p>
+    <p class="text-justify">El aniversario del distrito de Cahuacho se celebra anualmente el 9 de junio. Durante esta fecha se realizan actividades conmemorativas que incluyen desfiles cívicos, ceremonias oficiales, presentaciones culturales y eventos deportivos, mostrando el orgullo de la población por su historia y tradición.</p>
+    <p class="text-justify">La conmemoración de San Andrés el 30 de noviembre es otra fecha significativa para los fieles. Esta celebración incluye actos religiosos y actividades culturales que unen a la población en un ambiente de solemnidad y gratitud.</p>
+    <p class="text-justify">En cuanto al turismo, estas festividades representan un importante atractivo para los visitantes. Las actividades festivas, combinadas con la hospitalidad de los locales y los paisajes andinos que rodean Cahuacho, crean una experiencia agradable para aquellos interesados en conocer las costumbres locales.</p>
+    
+    <p class="table-title">Cuadro N° 3.68</p>
+    <p class="table-title-main">Festividades principales - CP Cahuacho</p>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th class="table-header">Festividad</th>
+                <th class="table-header">Fecha de celebración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="table-cell">Carnavales</td>
+                <td class="table-cell">Febrero</td>
+            </tr>
+            <tr>
+                <td class="table-cell">Virgen de Copacabana</td>
+                <td class="table-cell">Mayo - Junio</td>
+            </tr>
+            <tr>
+                <td class="table-cell">Peregrinación de San Andrés</td>
+                <td class="table-cell">Junio - Julio</td>
+            </tr>
+            <tr>
+                <td class="table-cell">Aniversario del distrito</td>
+                <td class="table-cell">09/06</td>
+            </tr>
+            <tr>
+                <td class="table-cell">San Andrés</td>
+                <td class="table-cell">30/11</td>
+            </tr>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: GEADES (2024)</p>
+    
+    <p class="table-title">Cuadro N° 3.69</p>
+    <p class="table-title-main">Mapa de actores del Proyecto de Exploración Minera Paka</p>
+    <table class="table-container table-actors">
+        <colgroup>
+            <col style="width: 16%">
+            <col style="width: 14%">
+            <col style="width: 15%">
+            <col style="width: 18%">
+            <col style="width: 8%">
+            <col style="width: 8%">
+            <col style="width: 8%">
+            <col style="width: 13%">
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="table-header">CATEGORIA</th>
+                <th class="table-header">ESPACIO</th>
+                <th class="table-header">CARGO</th>
+                <th class="table-header">ACTOR</th>
+                <th class="table-header" colspan="3">POSICIÓN</th>
+                <th class="table-header">PERCEPCIÓN</th>
+            </tr>
+            <tr>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header"></th>
+                <th class="table-header">A favor</th>
+                <th class="table-header">Neutro</th>
+                <th class="table-header">En contra</th>
+                <th class="table-header"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="datos.mapaActores && datos.mapaActores.length > 0">
+                <tr *ngFor="let item of datos.mapaActores; let i = index">
+                    <td class="table-cell" *ngIf="shouldShowCategoriaCell(i)" [attr.rowspan]="getCategoriaRowSpan(item.categoria)">{{ item.categoria }}</td>
+                    <td class="table-cell">{{ item.espacio }}</td>
+                    <td class="table-cell">{{ item.cargo }}</td>
+                    <td class="table-cell">{{ item.actor }}</td>
+                    <td class="table-cell">{{ item.aFavor === 'X' ? 'X' : '' }}</td>
+                    <td class="table-cell">{{ item.neutro === 'X' ? 'X' : '' }}</td>
+                    <td class="table-cell">{{ item.enContra === 'X' ? 'X' : '' }}</td>
+                    <td class="table-cell">{{ item.percepcion }}</td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+    <p class="source">FUENTE: GEADES (2024)</p>
+    <div style="height: 80px; width: 100%;"></div>
+    </div>
+</div>

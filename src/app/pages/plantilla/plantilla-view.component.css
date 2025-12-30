@@ -1,0 +1,105 @@
+.plantilla-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--background);
+}
+
+.plantilla-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.plantilla-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.plantilla-header-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.plantilla-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.plantilla-container app-resumen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.plantilla-container app-resumen {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plantilla-container app-resumen .preview {
+  flex: 1;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plantilla-container app-resumen .preview .viewport-content {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  padding-top: var(--spacing-2xl) !important;
+  padding-bottom: 100px !important;
+  padding-left: var(--spacing-xl) !important;
+  padding-right: var(--spacing-xl) !important;
+  min-height: 0;
+  box-sizing: border-box;
+  margin-bottom: 0 !important;
+}
+
+.plantilla-container app-resumen .preview .viewport-content > *:last-child {
+  margin-bottom: 60px !important;
+}
+
+@media (max-width: 768px) {
+  .plantilla-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .plantilla-header-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .plantilla-header-right .btn {
+    width: 100%;
+  }
+
+  .plantilla-content {
+    padding: var(--spacing-lg);
+  }
+
+  .plantilla-document {
+    padding: var(--spacing-lg);
+  }
+}
+
