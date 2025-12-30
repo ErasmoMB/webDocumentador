@@ -34,31 +34,6 @@
 <p class="text-justify" *ngIf="datos.textoReligion && datos.textoReligion !== '____'">{{ datos.textoReligion }}</p>
 <p class="text-justify" *ngIf="!datos.textoReligion || datos.textoReligion === '____'">La confesión predominante dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>.</p>
 
-<p class="table-title">Cuadro N° 3. 63</p>
-<p class="table-title-main">Religiones profesadas en población de 12 años a más – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos.religionesTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr *ngIf="!datos.religionesTabla || datos.religionesTabla.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
-<p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
-
 <app-foto-info 
     *ngIf="getFotoIglesia().ruta"
     [numero]="getFotoIglesia().numero"

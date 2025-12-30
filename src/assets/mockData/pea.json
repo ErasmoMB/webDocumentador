@@ -1,41 +1,10 @@
 {
   "pea": {
-    "totalPEA": 876,
-    "peaOcupada": 832,
-    "peaDesocupada": 44,
-    "porcentajeOcupada": "94.98",
-    "porcentajeDesocupada": "5.02",
-    "actividades": [
-      {
-        "nombre": "Agricultura, ganadería, caza y silvicultura",
-        "casos": 548,
-        "porcentaje": "62.56"
-      },
-      {
-        "nombre": "Comercio al por menor",
-        "casos": 112,
-        "porcentaje": "12.79"
-      },
-      {
-        "nombre": "Construcción",
-        "casos": 78,
-        "porcentaje": "8.90"
-      },
-      {
-        "nombre": "Enseñanza",
-        "casos": 56,
-        "porcentaje": "6.39"
-      },
-      {
-        "nombre": "Transporte y almacenamiento",
-        "casos": 45,
-        "porcentaje": "5.14"
-      },
-      {
-        "nombre": "Otras actividades",
-        "casos": 37,
-        "porcentaje": "4.22"
-      }
-    ]
+    "totalPEA": 276,
+    "peaOcupada": 267,
+    "peaDesocupada": 9,
+    "porcentajeOcupada": "96.74%",
+    "porcentajeDesocupada": "3.26%",
+    "actividades": []
   }
 }

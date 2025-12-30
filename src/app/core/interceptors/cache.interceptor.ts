@@ -13,23 +13,24 @@ export class CacheInterceptor implements HttpInterceptor {
   ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    if (!this.configService.isMockMode()) {
-      const apiUrl = this.configService.getApiUrl();
-      if (req.url.startsWith(apiUrl)) {
-        return next.handle(req).pipe(
-          tap(event => {
-            if (event instanceof HttpResponse && event.status === 200) {
-              const url = req.url;
-              const params = this.extractParams(req);
-              const responseData = event.body;
-              
-              if (responseData && responseData.success) {
-                this.cacheService.saveResponse(url, params, responseData);
-              }
+    const apiUrl = this.configService.getApiUrl();
+    
+    // Siempre interceptar respuestas del backend, incluso en modo mock (por si se conecta)
+    if (req.url.startsWith(apiUrl)) {
+      return next.handle(req).pipe(
+        tap(event => {
+          if (event instanceof HttpResponse && event.status === 200) {
+            const url = req.url;
+            const params = this.extractParams(req);
+            const responseData = event.body;
+            
+            if (responseData && responseData.success) {
+              console.log('🔄 Interceptando respuesta del backend:', url);
+              this.cacheService.saveResponse(url, params, responseData);
             }
-          })
-        );
-      }
+          }
+        })
+      );
     }
 
     return next.handle(req);

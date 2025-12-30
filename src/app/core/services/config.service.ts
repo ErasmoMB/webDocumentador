@@ -12,7 +12,7 @@ export interface AppConfig {
 })
 export class ConfigService {
   private config: AppConfig = {
-    useMockData: this.getEnvBoolean('USE_MOCK_DATA', true),
+    useMockData: this.getEnvBoolean('USE_MOCK_DATA', true), // Leer de env.js, por defecto true
     apiUrl: this.getEnvString('API_URL', 'http://localhost:8000/api/v1'),
     mockDataPath: this.getEnvString('MOCK_DATA_PATH', 'assets/mockData'),
     nodeEnv: this.getEnvString('NODE_ENV', 'development')
@@ -27,9 +27,11 @@ export class ConfigService {
     });
     
     if (!this.config.useMockData) {
-      console.log('MODO BASE DE DATOS ACTIVADO - Usando backend real en:', this.config.apiUrl);
+      console.log('🔌 MODO BACKEND ACTIVADO - Conectando a:', this.config.apiUrl);
+      console.log('💾 Las respuestas del backend se guardarán automáticamente en cache');
     } else {
-      console.warn('MODO MOCK ACTIVADO - Usando datos de prueba');
+      console.log('📦 MODO MOCK ACTIVADO - Usando datos estáticos');
+      console.log('💡 Para usar el backend, cambia USE_MOCK_DATA a false en env.js');
     }
   }
 

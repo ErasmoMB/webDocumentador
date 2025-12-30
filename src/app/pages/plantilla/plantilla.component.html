@@ -93,27 +93,6 @@
     
     <h5>b. Religión</h5>
     <p class="text-justify">{{ datos.textoReligion || '____' }}</p>
-    <p class="table-title">Cuadro N° 3.63</p>
-    <p class="table-title-main">Religiones profesadas en población de 12 años a más – CP Cahuacho (2017)</p>
-    <table class="table-container">
-        <thead>
-            <tr>
-                <th class="table-header">Categoría</th>
-                <th class="table-header">Casos</th>
-                <th class="table-header">Porcentaje</th>
-            </tr>
-        </thead>
-        <tbody>
-            <ng-container *ngIf="datos.religionesTabla && datos.religionesTabla.length > 0">
-                <tr *ngFor="let item of datos.religionesTabla">
-                    <td class="table-cell">{{ item.categoria }}</td>
-                    <td class="table-cell">{{ item.casos }}</td>
-                    <td class="table-cell">{{ item.porcentaje }}</td>
-                </tr>
-            </ng-container>
-        </tbody>
-    </table>
-    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
     
     <ng-container *ngIf="datos.fotografiasAspectosCulturales && datos.fotografiasAspectosCulturales.length > 0">
         <div class="fotografias-section" *ngFor="let foto of datos.fotografiasAspectosCulturales">

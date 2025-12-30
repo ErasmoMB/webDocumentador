@@ -1,19 +1,19 @@
 {
   "poblacion": {
-    "totalPobladores": 1847,
-    "totalMujeres": 932,
-    "totalVarones": 915,
-    "porcentajeMujeres": "50.46",
-    "porcentajeVarones": "49.54",
-    "de0a14": 628,
-    "de0a14Porcentaje": "34.00",
-    "de14a29": 512,
-    "de14a29Porcentaje": "27.72",
-    "de30a44": 367,
-    "de30a44Porcentaje": "19.87",
-    "de45a64": 248,
-    "de45a64Porcentaje": "13.43",
-    "de65amas": 92,
-    "de65amasPorcentaje": "4.98"
+    "totalPobladores": 160,
+    "totalMujeres": 82,
+    "totalVarones": 78,
+    "porcentajeMujeres": "51.25%",
+    "porcentajeVarones": "48.75%",
+    "de0a14": 41,
+    "de0a14Porcentaje": "25.62",
+    "de14a29": 25,
+    "de14a29Porcentaje": "15.63",
+    "de30a44": 31,
+    "de30a44Porcentaje": "19.38",
+    "de45a64": 38,
+    "de45a64Porcentaje": "23.75",
+    "de65amas": 25,
+    "de65amasPorcentaje": "15.63"
   }
 }

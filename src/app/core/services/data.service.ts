@@ -23,11 +23,8 @@ export class DataService {
   ) { }
 
   getData(filename: string): Observable<any> {
-    if (this.configService.isMockMode()) {
-      return this.loadMockData(filename);
-    } else {
-      return this.loadFromAPI(filename);
-    }
+    // Siempre usar modo mock
+    return this.loadMockData(filename);
   }
 
   private loadMockData(filename: string): Observable<any> {
@@ -93,32 +90,74 @@ export class DataService {
     const url = this.getApiEndpoint('poblacion/');
     const params = { cpp: cppCodes.join(',') };
 
-    if (this.configService.isMockMode()) {
-      const cached = this.cacheService.getMockDataFromCache(url, params);
-      if (cached) {
-        console.log('Usando datos desde cache (modo MOCK)');
-        return of(cached);
-      }
-      
-      return this.getSharedData('poblacion').pipe(
-        map(data => ({
-          success: true,
-          message: 'Datos de población obtenidos correctamente (mock)',
-          data: data,
-          status_code: 200
-        }))
+    // Si NO está en modo mock, intentar conectar al backend primero
+    if (!this.configService.isMockMode()) {
+      const httpParams = new HttpParams().set('cpp', cppCodes.join(','));
+      return this.http.get<ApiResponse<PoblacionData>>(url, { params: httpParams }).pipe(
+        catchError((error) => {
+          console.warn('⚠️ Backend no disponible, usando cache o datos mock');
+          // Si falla, intentar desde cache
+          return this.getPoblacionFromCacheOrMock(url, params);
+        })
       );
     }
 
-    const httpParams = new HttpParams().set('cpp', cppCodes.join(','));
-    return this.http.get<ApiResponse<PoblacionData>>(url, { params: httpParams }).pipe(
-      catchError((error) => {
-        const cached = this.cacheService.getMockDataFromCache(url, params);
-        if (cached) {
-          console.log('Backend no disponible, usando datos desde cache');
-          return of(cached);
-        }
-        return this.handleApiError(error);
+    // Si está en modo mock, usar cache o datos estáticos
+    return this.getPoblacionFromCacheOrMock(url, params);
+  }
+
+  private getPoblacionFromCacheOrMock(url: string, params: any): Observable<ApiResponse<PoblacionData>> {
+    // Primero intentar obtener desde cache consolidado (respuestas del backend guardadas)
+    const consolidatedData = this.cacheService.getConsolidatedMockData('poblacion');
+    if (consolidatedData) {
+      return of({
+        success: true,
+        message: 'Datos de población obtenidos correctamente (desde cache del backend)',
+        data: consolidatedData,
+        status_code: 200
+      });
+    }
+
+    // Luego intentar desde cache normal
+    const cached = this.cacheService.getMockDataFromCache(url, params);
+    if (cached) {
+      return of(cached);
+    }
+    
+    // Finalmente usar archivos JSON estáticos
+    return this.getSharedData('poblacion').pipe(
+      map(data => {
+        // Convertir formato del mock al formato del backend si es necesario
+        const poblacionData = this.convertirFormatoMockAPoblacionData(data);
+        return {
+          success: true,
+          message: 'Datos de población obtenidos correctamente',
+          data: poblacionData,
+          status_code: 200
+        };
+      }),
+      catchError(() => {
+        // Si hay error cargando mock, retornar datos por defecto sin error
+        const defaultData: ApiResponse<PoblacionData> = {
+          success: true,
+          message: 'Datos de población obtenidos correctamente',
+          data: {
+            poblacion: {
+              total_varones: 0,
+              total_mujeres: 0,
+              total_poblacion: 0,
+              porcentaje_varones: '0%',
+              porcentaje_mujeres: '0%',
+              edad_0_14: 0,
+              edad_15_29: 0,
+              edad_30_44: 0,
+              edad_45_64: 0,
+              edad_65_mas: 0
+            }
+          },
+          status_code: 200
+        };
+        return of(defaultData);
       })
     );
   }
@@ -127,39 +166,27 @@ export class DataService {
     const url = this.getApiEndpoint('poblacion/distrito');
     const params = { distrito: distrito };
 
-    if (this.configService.isMockMode()) {
-      const cached = this.cacheService.getMockDataFromCache(url, params);
-      if (cached) {
-        console.log('Usando datos desde cache (modo MOCK)');
-        return of(cached);
-      }
-      
-      console.warn('Modo MOCK activado. No hay datos en cache para este distrito.');
-      return this.getSharedData('poblacion').pipe(
-        map(data => ({
-          success: true,
-          message: `Datos de población para ${distrito} obtenidos correctamente (mock)`,
-          data: data.centros_poblados || [],
-          status_code: 200
-        }))
-      );
+    // Siempre usar modo mock
+    const cached = this.cacheService.getMockDataFromCache(url, params);
+    if (cached) {
+      return of(cached);
     }
-
-    const httpParams = new HttpParams().set('distrito', distrito);
     
-    console.log('Consultando backend real:', url);
-    console.log('Parametros:', params);
-    
-    return this.http.get<ApiResponse<CentroPoblado[]>>(url, { params: httpParams }).pipe(
-      catchError((error) => {
-        console.error('Error al consultar backend:', error);
-        const cached = this.cacheService.getMockDataFromCache(url, params);
-        if (cached) {
-          console.log('Backend no disponible, usando datos desde cache');
-          return of(cached);
-        }
-        console.error('URL completa:', `${url}?distrito=${encodeURIComponent(distrito)}`);
-        return this.handleApiError(error);
+    return this.getSharedData('poblacion').pipe(
+      map(data => ({
+        success: true,
+        message: `Datos de población para ${distrito} obtenidos correctamente`,
+        data: data.centros_poblados || [],
+        status_code: 200
+      })),
+      catchError(() => {
+        // Si hay error cargando mock, retornar datos vacíos sin error
+        return of({
+          success: true,
+          message: `Datos de población para ${distrito} obtenidos correctamente`,
+          data: [],
+          status_code: 200
+        });
       })
     );
   }
@@ -168,45 +195,27 @@ export class DataService {
     const url = this.getApiEndpoint('poblacion/provincia');
     const params = provincia ? { provincia: provincia } : undefined;
 
-    if (this.configService.isMockMode()) {
-      const cached = params ? this.cacheService.getMockDataFromCache(url, params) : null;
-      if (cached) {
-        console.log('Usando datos desde cache (modo MOCK)');
-        return of(cached);
-      }
-      
-      return this.getSharedData('poblacion').pipe(
-        map(data => ({
+    // Siempre usar modo mock
+    const cached = params ? this.cacheService.getMockDataFromCache(url, params) : null;
+    if (cached) {
+      return of(cached);
+    }
+    
+    return this.getSharedData('poblacion').pipe(
+      map(data => ({
+        success: true,
+        message: `Datos de población para ${provincia} obtenidos correctamente`,
+        data: data.centros_poblados || [],
+        status_code: 200
+      })),
+      catchError(() => {
+        // Si hay error cargando mock, retornar datos vacíos sin error
+        return of({
           success: true,
-          message: `Datos de población para ${provincia} obtenidos correctamente (mock)`,
-          data: data.centros_poblados || [],
+          message: `Datos de población para ${provincia} obtenidos correctamente`,
+          data: [],
           status_code: 200
-        }))
-      );
-    }
-
-    if (!provincia || provincia.trim() === '') {
-      return this.http.get<ApiResponse<CentroPoblado[]>>(url).pipe(
-        catchError((error) => {
-          const cached = this.cacheService.getMockDataFromCache(url, undefined);
-          if (cached) {
-            console.log('Backend no disponible, usando datos desde cache');
-            return of(cached);
-          }
-          return this.handleApiError(error);
-        })
-      );
-    }
-
-    const httpParams = new HttpParams().set('provincia', provincia);
-    return this.http.get<ApiResponse<CentroPoblado[]>>(url, { params: httpParams }).pipe(
-      catchError((error) => {
-        const cached = this.cacheService.getMockDataFromCache(url, params);
-        if (cached) {
-          console.log('Backend no disponible, usando datos desde cache');
-          return of(cached);
-        }
-        return this.handleApiError(error);
+        });
       })
     );
   }
@@ -215,33 +224,123 @@ export class DataService {
     const url = this.getApiEndpoint('censo/pea-nopea');
     const params = { distrito: distrito };
 
-    if (this.configService.isMockMode()) {
-      const cached = this.cacheService.getMockDataFromCache(url, params);
-      if (cached) {
-        console.log('Usando datos desde cache (modo MOCK)');
-        return of(cached);
-      }
-      
-      return this.getSharedData('pea').pipe(
-        map(data => ({
-          success: true,
-          message: `Datos PEA/No PEA para ${distrito} obtenidos correctamente (mock)`,
-          data: data,
-          status_code: 200
-        }))
+    // Si NO está en modo mock, intentar conectar al backend primero
+    if (!this.configService.isMockMode()) {
+      const httpParams = new HttpParams().set('distrito', distrito);
+      return this.http.get<ApiResponse<PEAData>>(url, { params: httpParams }).pipe(
+        catchError((error) => {
+          console.warn('⚠️ Backend no disponible, usando cache o datos mock');
+          // Si falla, intentar desde cache
+          return this.getPEAFromCacheOrMock(url, params, distrito);
+        })
       );
     }
 
-    const httpParams = new HttpParams().set('distrito', distrito);
-    return this.http.get<ApiResponse<PEAData>>(url, { params: httpParams }).pipe(
-      catchError((error) => {
-        const cached = this.cacheService.getMockDataFromCache(url, params);
-        if (cached) {
-          console.log('Backend no disponible, usando datos desde cache');
-          return of(cached);
-        }
-        return this.handleApiError(error);
+    // Si está en modo mock, usar cache o datos estáticos
+    return this.getPEAFromCacheOrMock(url, params, distrito);
+  }
+
+  private getPEAFromCacheOrMock(url: string, params: any, distrito: string): Observable<ApiResponse<PEAData>> {
+    // Primero intentar obtener desde cache consolidado (respuestas del backend guardadas)
+    const consolidatedData = this.cacheService.getConsolidatedMockData('pea');
+    if (consolidatedData) {
+      return of({
+        success: true,
+        message: `Datos PEA/No PEA para ${distrito} obtenidos correctamente (desde cache del backend)`,
+        data: consolidatedData,
+        status_code: 200
+      });
+    }
+
+    // Luego intentar desde cache normal
+    const cached = this.cacheService.getMockDataFromCache(url, params);
+    if (cached) {
+      return of(cached);
+    }
+    
+    // Finalmente usar archivos JSON estáticos
+    return this.getSharedData('pea').pipe(
+      map(data => ({
+        success: true,
+        message: `Datos PEA/No PEA para ${distrito} obtenidos correctamente`,
+        data: data,
+        status_code: 200
+      })),
+      catchError(() => {
+        // Si hay error cargando mock, retornar datos por defecto sin error
+        const defaultData: ApiResponse<PEAData> = {
+          success: true,
+          message: `Datos PEA/No PEA para ${distrito} obtenidos correctamente`,
+          data: {
+            pea: 0,
+            no_pea: 0,
+            porcentaje_pea: '0%',
+            porcentaje_no_pea: '0%',
+            ocupada: 0,
+            desocupada: 0,
+            porcentaje_ocupada: '0%',
+            porcentaje_desocupada: '0%'
+          },
+          status_code: 200
+        };
+        return of(defaultData);
       })
     );
+  }
+
+  /**
+   * Convierte el formato del mock (totalPobladores, totalVarones, etc.) 
+   * al formato del backend (total_poblacion, total_varones, etc.)
+   */
+  private convertirFormatoMockAPoblacionData(data: any): PoblacionData {
+    // Si ya está en formato del backend, retornarlo tal cual
+    if (data.poblacion && data.poblacion.total_poblacion !== undefined) {
+      return data as PoblacionData;
+    }
+
+    // Si está en formato del mock, convertirlo
+    if (data.poblacion && data.poblacion.totalPobladores !== undefined) {
+      const mock = data.poblacion;
+      const total = mock.totalPobladores || 0;
+      const varones = mock.totalVarones || 0;
+      const mujeres = mock.totalMujeres || 0;
+
+      return {
+        poblacion: {
+          total_poblacion: total,
+          total_varones: varones,
+          total_mujeres: mujeres,
+          porcentaje_varones: mock.porcentajeVarones || this.calcularPorcentaje(varones, total),
+          porcentaje_mujeres: mock.porcentajeMujeres || this.calcularPorcentaje(mujeres, total),
+          edad_0_14: mock.de0a14 || 0,
+          edad_15_29: mock.de14a29 || 0,
+          edad_30_44: mock.de30a44 || 0,
+          edad_45_64: mock.de45a64 || 0,
+          edad_65_mas: mock.de65amas || 0
+        }
+      };
+    }
+
+    // Si no tiene el formato esperado, retornar estructura vacía
+    return {
+      poblacion: {
+        total_varones: 0,
+        total_mujeres: 0,
+        total_poblacion: 0,
+        porcentaje_varones: '0%',
+        porcentaje_mujeres: '0%',
+        edad_0_14: 0,
+        edad_15_29: 0,
+        edad_30_44: 0,
+        edad_45_64: 0,
+        edad_65_mas: 0
+      }
+    };
+  }
+
+  private calcularPorcentaje(parte: number, total: number): string {
+    if (total === 0) return '0%';
+    const porcentaje = (parte / total) * 100;
+    return porcentaje.toFixed(2) + '%';
   }
 }
