@@ -1,0 +1,63 @@
+<h5>B.1.12. Índice de Desarrollo Humano (IDH) distrital</h5>
+<p class="text-justify" *ngIf="datos?.['textoIndiceDesarrolloHumano'] && datos?.['textoIndiceDesarrolloHumano'] !== '____'">{{ datos?.['textoIndiceDesarrolloHumano'] }}</p>
+<p class="text-justify" *ngIf="!datos?.['textoIndiceDesarrolloHumano'] || datos?.['textoIndiceDesarrolloHumano'] === '____'">____</p>
+
+<app-table-wrapper title="Componentes del IDH - Distrito {{ datos?.['distritoSeleccionado'] || 'Cahuacho' }} (2019)" sectionId="3.1.4.B.1.12">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header" rowspan="2">Población</th>
+            <th class="table-header" rowspan="2">Índice de Desarrollo Humano</th>
+            <th class="table-header" rowspan="2">Esperanza de vida al nacer</th>
+            <th class="table-header" colspan="2">Con Educación secundaria completa (Población 18 años)</th>
+            <th class="table-header" colspan="2">Años de educación (Población 25 y más)</th>
+            <th class="table-header" colspan="2">Ingreso familiar per cápita</th>
+        </tr>
+        <tr>
+            <th class="table-header">Porcentaje</th>
+            <th class="table-header">Rank</th>
+            <th class="table-header">Años</th>
+            <th class="table-header">Rank</th>
+            <th class="table-header">N.S. mes</th>
+            <th class="table-header">Rank</th>
+        </tr>
+        <tr>
+            <th class="table-header">Habitantes</th>
+            <th class="table-header">IDH</th>
+            <th class="table-header">Años</th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of (datos?.['indiceDesarrolloHumanoTabla'] || [])">
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.poblacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.idh || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.esperanzaVida || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.educacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankEducacion2 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.anosEducacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankAnios || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.ingreso || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankIngresoFinal || '____' }}</td>
+        </tr>
+        <tr *ngIf="!datos?.['indiceDesarrolloHumanoTabla'] || (datos?.['indiceDesarrolloHumanoTabla'] || []).length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> PNUD Informe 2019</span></p>
+

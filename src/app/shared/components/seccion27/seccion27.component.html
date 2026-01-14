@@ -2,12 +2,14 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Transporte</strong></p>
 <p class="text-justify" *ngIf="datos.textoTransporteCP1 && datos.textoTransporteCP1 !== '____'">{{ datos.textoTransporteCP1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoTransporteCP1 || datos.textoTransporteCP1 === '____'">En el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.</p>
+<p class="text-justify" *ngIf="!datos.textoTransporteCP1 || datos.textoTransporteCP1 === '____'">En el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.</p>
 <p class="text-justify" *ngIf="datos.textoTransporteCP2 && datos.textoTransporteCP2 !== '____'">{{ datos.textoTransporteCP2 }}</p>
-<p class="text-justify" *ngIf="!datos.textoTransporteCP2 || datos.textoTransporteCP2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span class="highlight">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span class="highlight">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span class="highlight">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.</p>
+<p class="text-justify" *ngIf="!datos.textoTransporteCP2 || datos.textoTransporteCP2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span [appDataSource]="'manual'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.</p>
 
 <app-foto-info 
-    [numero]="getFotoTransporte().numero"
+    *ngIf="getFotoTransporte().ruta"
+    [autoNumber]="true"
+    [sectionId]="'3.1.4.B.1.6'"
     [titulo]="getFotoTransporte().titulo"
     [fuente]="getFotoTransporte().fuente"
     [ruta]="getFotoTransporte().ruta">
@@ -15,15 +17,14 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
 <p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP1 && datos.textoTelecomunicacionesCP1 !== '____'">{{ datos.textoTelecomunicacionesCP1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP1 || datos.textoTelecomunicacionesCP1 === '____'">En el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.</p>
+<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP1 || datos.textoTelecomunicacionesCP1 === '____'">En el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.</p>
 <p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP2 && datos.textoTelecomunicacionesCP2 !== '____'">{{ datos.textoTelecomunicacionesCP2 }}</p>
 <p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP2 || datos.textoTelecomunicacionesCP2 === '____'">En cuanto a radiodifusión, se puede captar señal de emisoras nacionales como RPP, Nacional y Unión, las cuales sirven como importantes fuentes de información y entretenimiento para la población local. Estas emisoras proporcionan noticias, música y programas de interés general que son valorados por los habitantes del centro poblado.</p>
 <p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP3 && datos.textoTelecomunicacionesCP3 !== '____'">{{ datos.textoTelecomunicacionesCP3 }}</p>
-<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP3 || datos.textoTelecomunicacionesCP3 === '____'">Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.</p>
+<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP3 || datos.textoTelecomunicacionesCP3 === '____'">Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.</p>
 <p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP3 || datos.textoTelecomunicacionesCP3 === '____'">En lo que respecta a la telefonía móvil e internet, la cobertura es proporcionada por las operadoras Movistar, Claro y Entel, lo que facilita la comunicación dentro del área y con el exterior. Para el acceso a internet, la población principalmente se conecta a través de los datos móviles proporcionados por Movistar y Entel, lo que les permite mantenerse conectados para actividades cotidianas y laborales.</p>
 
-<p class="table-title">Cuadro N° 3. 54</p>
-<p class="table-title-main">Servicios de telecomunicaciones – CP {{ datos.centroPobladoAISI || 'Cahuacho' }}</p>
+<app-table-wrapper title="Servicios de telecomunicaciones – CP {{ datos.centroPobladoAISI || 'Cahuacho' }}" sectionId="3.1.4.B.1.6">
 <table class="table-container">
     <thead>
         <tr>
@@ -33,8 +34,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.telecomunicacionesCpTabla || [])">
-            <td class="table-cell">{{ item.medio || '____' }}</td>
-            <td class="table-cell">{{ item.descripcion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'">{{ item.medio || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'">{{ item.descripcion || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.telecomunicacionesCpTabla || datos.telecomunicacionesCpTabla.length === 0">
             <td class="table-cell">____</td>
@@ -42,12 +43,25 @@
         </tr>
     </tbody>
 </table>
-<p class="source">FUENTE: GEADES (2024)</p>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
 <app-foto-info 
-    [numero]="getFotoTelecomunicaciones().numero"
+    *ngIf="getFotoTelecomunicaciones().ruta"
+    [autoNumber]="true"
+    [sectionId]="'3.1.4.B.1.6'"
     [titulo]="getFotoTelecomunicaciones().titulo"
     [fuente]="getFotoTelecomunicaciones().fuente"
     [ruta]="getFotoTelecomunicaciones().ruta">
 </app-foto-info>
 
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasInstitucionalidadCache"
+    [sectionId]="'3.1.4.B.1.6'"
+    [photoPrefix]="'fotografiaCahuachoB16'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>

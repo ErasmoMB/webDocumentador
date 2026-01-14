@@ -420,7 +420,8 @@
 }
 
 .input,
-select {
+select,
+.textarea {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border);
@@ -432,15 +433,23 @@ select {
   transition: var(--transition);
 }
 
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
 .input:focus,
-select:focus {
+select:focus,
+.textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
 }
 
 .input:disabled,
-select:disabled {
+select:disabled,
+.textarea:disabled {
   background-color: var(--border-light);
   color: var(--text-muted);
   cursor: not-allowed;

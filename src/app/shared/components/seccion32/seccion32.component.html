@@ -1,0 +1,11 @@
+<h5>B.1.11. Agua, Uso de Suelos y Recursos Naturales</h5>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Fuentes y usos del agua</strong></p>
+<p class="text-justify" *ngIf="datos?.['textoFuentesAgua'] && datos?.['textoFuentesAgua'] !== '____'">{{ datos?.['textoFuentesAgua'] }}</p>
+<p class="text-justify" *ngIf="!datos?.['textoFuentesAgua'] || datos?.['textoFuentesAgua'] === '____'">____</p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tenencia de la Tierra, usos del suelo y de recursos naturales de la zona</strong></p>
+<p class="text-justify" *ngIf="datos?.['textoRecursosNaturalesZona'] && datos?.['textoRecursosNaturalesZona'] !== '____'">{{ datos?.['textoRecursosNaturalesZona'] }}</p>
+<p class="text-justify" *ngIf="!datos?.['textoRecursosNaturalesZona'] || datos?.['textoRecursosNaturalesZona'] === '____'">____</p>
+<p class="text-justify" *ngIf="datos?.['textoUsosSuelos'] && datos?.['textoUsosSuelos'] !== '____'">{{ datos?.['textoUsosSuelos'] }}</p>
+<p class="text-justify" *ngIf="!datos?.['textoUsosSuelos'] || datos?.['textoUsosSuelos'] === '____'">____</p>
+

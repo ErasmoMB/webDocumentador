@@ -1,24 +1,76 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion6',
   templateUrl: './seccion6.component.html',
   styleUrls: ['./seccion6.component.css']
 })
-export class Seccion6Component implements OnInit {
+export class Seccion6Component implements OnInit, OnChanges, DoCheck {
+  @Input() seccionId: string = '';
   datos: any = {};
+  private datosAnteriores: any = {};
+  watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD'];
 
   constructor(
-    private formularioService: FormularioService
+    private formularioService: FormularioService,
+    private fieldMapping: FieldMappingService,
+    private sectionDataLoader: SectionDataLoaderService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.actualizarDatos();
+    this.loadSectionData();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['seccionId']) {
+      this.actualizarDatos();
+      this.loadSectionData();
+    }
+  }
+
+  ngDoCheck() {
+    const datosActuales = this.formularioService.obtenerDatos();
+    const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
+    const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
+    const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos) {
+      this.actualizarDatos();
+      this.cdRef.markForCheck();
+    }
   }
 
   actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.formularioService.obtenerDatos();
+    this.datos = { ...datosNuevos };
+    this.actualizarValoresConPrefijo();
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+    });
+    this.cdRef.detectChanges();
+  }
+
+  actualizarValoresConPrefijo() {
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
+  }
+
+  private loadSectionData(): void {
+    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
+    if (fieldsToLoad.length > 0) {
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+    }
+  }
+
+  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+    return this.fieldMapping.getDataSourceType(fieldName);
   }
 
   getPorcentajeHombres(): string {
@@ -122,6 +174,56 @@ export class Seccion6Component implements OnInit {
     });
     
     return grupoMenoritario;
+  }
+
+  getTotalPoblacionSexo(): string {
+    if (!this.datos?.poblacionSexoAISD || !Array.isArray(this.datos.poblacionSexoAISD)) {
+      return '0';
+    }
+    const total = this.datos.poblacionSexoAISD.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPoblacionEtario(): string {
+    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+      return '0';
+    }
+    const total = this.datos.poblacionEtarioAISD.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  obtenerPrefijoGrupo(): string {
+    if (this.seccionId === '3.1.4.A.1.2' || this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
+    if (this.seccionId === '3.1.4.A.2.2' || this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
+    if (this.seccionId === '3.1.4.B.1.2' || this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
+    if (this.seccionId === '3.1.4.B.2.2' || this.seccionId.startsWith('3.1.4.B.2.')) return '_B2';
+    return '';
+  }
+
+  getFotografiasDemografiaVista(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fotografias: any[] = [];
+    for (let i = 1; i <= 10; i++) {
+      const imagenConPrefijo = prefijo ? this.datos[`fotografiaDemografia${i}Imagen${prefijo}`] : null;
+      const imagenSinPrefijo = this.datos[`fotografiaDemografia${i}Imagen`];
+      const imagen = imagenConPrefijo || imagenSinPrefijo;
+      if (imagen && imagen.trim() !== '') {
+        const tituloConPrefijo = prefijo ? this.datos[`fotografiaDemografia${i}Titulo${prefijo}`] : null;
+        const tituloSinPrefijo = this.datos[`fotografiaDemografia${i}Titulo`];
+        const titulo = tituloConPrefijo || tituloSinPrefijo || 'Demografía';
+        const fuenteConPrefijo = prefijo ? this.datos[`fotografiaDemografia${i}Fuente${prefijo}`] : null;
+        const fuenteSinPrefijo = this.datos[`fotografiaDemografia${i}Fuente`];
+        const fuente = fuenteConPrefijo || fuenteSinPrefijo || 'GEADES, 2024';
+        fotografias.push({ imagen, titulo, fuente });
+      }
+    }
+    return fotografias;
   }
 }
 

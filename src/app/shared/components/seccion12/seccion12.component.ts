@@ -1,142 +1,150 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion12',
   templateUrl: './seccion12.component.html',
   styleUrls: ['./seccion12.component.css']
 })
-export class Seccion12Component implements OnInit {
+export class Seccion12Component implements OnInit, OnChanges, DoCheck {
+  @Input() seccionId: string = '';
   datos: any = {};
+  private datosAnteriores: any = {};
+  watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion12_salud_completo', 'parrafoSeccion12_educacion_completo', 'caracteristicasSaludTabla', 'cantidadEstudiantesEducacionTabla', 'ieAyrocaTabla', 'ie40270Tabla', 'alumnosIEAyrocaTabla', 'alumnosIE40270Tabla'];
 
   constructor(
-    private formularioService: FormularioService
+    private formularioService: FormularioService,
+    private fieldMapping: FieldMappingService,
+    private sectionDataLoader: SectionDataLoaderService,
+    private imageService: ImageManagementService,
+    private photoNumberingService: PhotoNumberingService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.actualizarDatos();
+    this.loadSectionData();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['seccionId']) {
+      this.actualizarDatos();
+      this.loadSectionData();
+    }
+  }
+
+  ngDoCheck() {
+    const datosActuales = this.formularioService.obtenerDatos();
+    const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
+    const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
+    const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    let hayCambios = false;
+    
+    for (const campo of this.watchedFields) {
+      const valorActual = (datosActuales as any)[campo] || null;
+      const valorAnterior = this.datosAnteriores[campo] || null;
+      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+        hayCambios = true;
+        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+      }
+    }
+    
+    if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
+      this.actualizarDatos();
+      this.cdRef.markForCheck();
+    }
   }
 
   actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.formularioService.obtenerDatos();
+    this.datos = { ...datosNuevos };
+    this.actualizarValoresConPrefijo();
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
+    });
+    this.cdRef.detectChanges();
   }
 
-  getFotoSalud(): any {
-    const titulo = this.datos?.['fotografiaSaludTitulo'] || 'Infraestructura externa del Puesto de Salud ' + (this.datos.grupoAISD || 'Ayroca');
-    const fuente = this.datos?.['fotografiaSaludFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaSaludImagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 10',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
+  actualizarValoresConPrefijo() {
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
+  }
+
+  private loadSectionData(): void {
+    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
+    if (fieldsToLoad.length > 0) {
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
     }
-    
-    return {
-      numero: '3. 10',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
   }
 
-  getFotoIEAyroca(): any {
-    const titulo = this.datos?.['fotografiaIEAyrocaTitulo'] || 'Infraestructura de la IE ' + (this.datos.grupoAISD || 'Ayroca');
-    const fuente = this.datos?.['fotografiaIEAyrocaFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaIEAyrocaImagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 12',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
-    }
-    
-    return {
-      numero: '3. 12',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+    return this.fieldMapping.getDataSourceType(fieldName);
   }
 
-  getFotoIE40270(): any {
-    const titulo = this.datos?.['fotografiaIE40270Titulo'] || 'Infraestructura de la IE N°40270';
-    const fuente = this.datos?.['fotografiaIE40270Fuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaIE40270Imagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 13',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
-    }
-    
-    return {
-      numero: '3. 13',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  formatearParrafo(texto: string): string {
+    if (!texto) return '';
+    const parrafos = texto.split(/\n\n+/);
+    return parrafos.map(p => {
+      const textoLimpio = p.trim().replace(/\n/g, '<br>');
+      return `<p class="text-justify">${textoLimpio}</p>`;
+    }).join('');
   }
 
-  getFotografiasRecreacion(): any[] {
-    const fotografias = [];
-    
-    const foto1 = {
-      numero: '3. 16',
-      titulo: this.datos?.['fotografiaRecreacion1Titulo'] || 'Parque recreacional público del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-      fuente: this.datos?.['fotografiaRecreacion1Fuente'] || 'GEADES, 2024',
-      ruta: this.datos?.['fotografiaRecreacion1Imagen'] || ''
-    };
-    
-    const foto2 = {
-      numero: '3. 16',
-      titulo: this.datos?.['fotografiaRecreacion2Titulo'] || 'Plaza de toros del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-      fuente: this.datos?.['fotografiaRecreacion2Fuente'] || 'GEADES, 2024',
-      ruta: this.datos?.['fotografiaRecreacion2Imagen'] || ''
-    };
-    
-    const foto3 = {
-      numero: '3. 16',
-      titulo: this.datos?.['fotografiaRecreacion3Titulo'] || 'Plaza central del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-      fuente: this.datos?.['fotografiaRecreacion3Fuente'] || 'GEADES, 2024',
-      ruta: this.datos?.['fotografiaRecreacion3Imagen'] || ''
-    };
-    
-    if (foto1.ruta) fotografias.push(foto1);
-    if (foto2.ruta) fotografias.push(foto2);
-    if (foto3.ruta) fotografias.push(foto3);
-    return fotografias;
+  obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  getFotografiasDeporte(): any[] {
-    const fotografias = [];
-    
-    const foto1 = {
-      numero: '3. 17',
-      titulo: this.datos?.['fotografiaDeporte1Titulo'] || 'Losa deportiva del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-      fuente: this.datos?.['fotografiaDeporte1Fuente'] || 'GEADES, 2024',
-      ruta: this.datos?.['fotografiaDeporte1Imagen'] || ''
-    };
-    
-    const foto2 = {
-      numero: '3. 17',
-      titulo: this.datos?.['fotografiaDeporte2Titulo'] || 'Estadio del anexo ' + (this.datos.grupoAISD || 'Ayroca'),
-      fuente: this.datos?.['fotografiaDeporte2Fuente'] || 'GEADES, 2024',
-      ruta: this.datos?.['fotografiaDeporte2Imagen'] || ''
-    };
-    
-    if (foto1.ruta) fotografias.push(foto1);
-    if (foto2.ruta) fotografias.push(foto2);
-    return fotografias;
+  getFotografiasSaludVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaSalud',
+      groupPrefix
+    );
+  }
+
+  getFotografiasIEAyrocaVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaIEAyroca',
+      groupPrefix
+    );
+  }
+
+  getFotografiasIE40270Vista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaIE40270',
+      groupPrefix
+    );
+  }
+
+  getFotografiasRecreacionVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaRecreacion',
+      groupPrefix
+    );
+  }
+
+  getFotografiasDeporteVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaDeporte',
+      groupPrefix
+    );
   }
 }
 

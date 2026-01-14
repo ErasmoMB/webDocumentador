@@ -1,15 +1,18 @@
 <h4>B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
-<p class="text-justify" *ngIf="datos.textoAISIIntro && datos.textoAISIIntro !== '____'">{{ datos.textoAISIIntro }}</p>
-<p class="text-justify" *ngIf="!datos.textoAISIIntro || datos.textoAISIIntro === '____'">En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, en el departamento de <span class="highlight">{{ datos.departamentoSeleccionado || 'Arequipa' }}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.</p>
+<div *ngIf="datos.parrafoSeccion21_aisi_intro_completo; else aisiIntroCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion21_aisi_intro_completo)"></div>
+<ng-template #aisiIntroCompletoDefault>
+    <p class="text-justify">En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span [appDataSource]="'automatic'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, en el departamento de <span [appDataSource]="'automatic'">{{ datos.departamentoSeleccionado || 'Arequipa' }}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.</p>
+</ng-template>
 
 <h5>B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h5>
-<p class="text-justify" *ngIf="datos.textoCentroPoblado && datos.textoCentroPoblado !== '____'">{{ datos.textoCentroPoblado }}</p>
-<p class="text-justify" *ngIf="!datos.textoCentroPoblado || datos.textoCentroPoblado === '____'">El CP <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> es la capital del distrito homónimo, perteneciente a la provincia de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, en el departamento de <span class="highlight">{{ datos.departamentoSeleccionado || 'Arequipa' }}</span>. Su designación como capital distrital se oficializó mediante la Ley N°<span class="highlight">{{ datos.leyCreacionDistrito || '8004' }}</span>, promulgada el <span class="highlight">{{ datos.fechaCreacionDistrito || '22 de febrero de 1935' }}</span>, fecha en que se creó el distrito de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. Antes de ello, este asentamiento era un caserío del distrito de <span class="highlight">{{ datos.distritoAnterior || 'Caravelí' }}</span>, marcando un importante cambio en su desarrollo administrativo y social.</p>
-<p class="text-justify" *ngIf="!datos.textoCentroPoblado || datos.textoCentroPoblado === '____'">Los primeros pobladores de <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> provenían principalmente de <span class="highlight">{{ datos.origenPobladores1 || 'Caravelí' }}</span> y la provincia de <span class="highlight">{{ datos.origenPobladores2 || 'Parinacochas' }}</span>, en <span class="highlight">{{ datos.departamentoOrigen || 'Ayacucho' }}</span>. Entre las familias pioneras destacan apellidos como Espinoza, Miralles, De la Cruz y Aguayo, quienes sentaron las bases de la localidad actual. El nombre "<span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>" proviene del término quechua Ccahuayhuachu, que se traduce como "mírame desde aquí", reflejando posiblemente su ubicación estratégica o una percepción cultural del entorno.</p>
-<p class="text-justify" *ngIf="!datos.textoCentroPoblado || datos.textoCentroPoblado === '____'">A diferencia de algunos anexos del distrito, como <span class="highlight">{{ datos.anexosEjemplo || 'Ayroca o Sóndor' }}</span>, que son centros administrativos de sus respectivas comunidades campesinas, el centro poblado <span class="highlight">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> no se encuentra dentro de los límites de ninguna comunidad campesina. Esto le otorga una característica particular dentro del contexto rural, marcando su identidad como un núcleo urbano-administrativo independiente en el distrito.</p>
+<div *ngIf="datos.parrafoSeccion21_centro_poblado_completo; else centroPobladoCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion21_centro_poblado_completo)"></div>
+<ng-template #centroPobladoCompletoDefault>
+    <p class="text-justify">El CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> es la capital del distrito homónimo, perteneciente a la provincia de <span [appDataSource]="'automatic'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, en el departamento de <span [appDataSource]="'automatic'">{{ datos.departamentoSeleccionado || 'Arequipa' }}</span>. Su designación como capital distrital se oficializó mediante la Ley N°<span [appDataSource]="'manual'">{{ datos.leyCreacionDistrito || '8004' }}</span>, promulgada el <span [appDataSource]="'manual'">{{ datos.fechaCreacionDistrito || '22 de febrero de 1935' }}</span>, fecha en que se creó el distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. Antes de ello, este asentamiento era un caserío del distrito de <span [appDataSource]="'manual'">{{ datos.distritoAnterior || 'Caravelí' }}</span>, marcando un importante cambio en su desarrollo administrativo y social.</p>
+    <p class="text-justify">Los primeros pobladores de <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> provenían principalmente de <span [appDataSource]="'manual'">{{ datos.origenPobladores1 || 'Caravelí' }}</span> y la provincia de <span [appDataSource]="'manual'">{{ datos.origenPobladores2 || 'Parinacochas' }}</span>, en <span [appDataSource]="'manual'">{{ datos.departamentoOrigen || 'Ayacucho' }}</span>. Entre las familias pioneras destacan apellidos como Espinoza, Miralles, De la Cruz y Aguayo, quienes sentaron las bases de la localidad actual. El nombre "<span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>" proviene del término quechua Ccahuayhuachu, que se traduce como "mírame desde aquí", reflejando posiblemente su ubicación estratégica o una percepción cultural del entorno.</p>
+    <p class="text-justify">A diferencia de algunos anexos del distrito, como <span [appDataSource]="'manual'">{{ datos.anexosEjemplo || 'Ayroca o Sóndor' }}</span>, que son centros administrativos de sus respectivas comunidades campesinas, el centro poblado <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> no se encuentra dentro de los límites de ninguna comunidad campesina. Esto le otorga una característica particular dentro del contexto rural, marcando su identidad como un núcleo urbano-administrativo independiente en el distrito.</p>
+</ng-template>
 
-<p class="table-title">Cuadro N° 3. 39</p>
-<p class="table-title-main">Ubicación referencial – Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</p>
+<app-table-wrapper title="Ubicación referencial – Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}" sectionId="3.1.4.B">
 <table class="table-container">
     <thead>
         <tr>
@@ -23,12 +26,12 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.ubicacionCpTabla || [])">
-            <td class="table-cell">{{ item.localidad || '____' }}</td>
-            <td class="table-cell" style="white-space: pre-line;">{{ item.coordenadas || '____' }}</td>
-            <td class="table-cell">{{ item.altitud || '____' }}</td>
-            <td class="table-cell">{{ item.distrito || '____' }}</td>
-            <td class="table-cell">{{ item.provincia || '____' }}</td>
-            <td class="table-cell">{{ item.departamento || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'">{{ item.localidad || '____' }}</td>
+            <td class="table-cell" style="white-space: pre-line;" [appDataSource]="'manual'">{{ item.coordenadas || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'">{{ item.altitud || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.distrito || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.provincia || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.departamento || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.ubicacionCpTabla || datos.ubicacionCpTabla.length === 0">
             <td class="table-cell">____</td>
@@ -40,13 +43,17 @@
         </tr>
     </tbody>
 </table>
-<p class="source">FUENTE: GEADES (2024)</p>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
-<app-foto-info 
-    *ngFor="let foto of fotografiasCahuachoCache"
-    [numero]="foto.numero"
-    [titulo]="foto.titulo"
-    [fuente]="foto.fuente"
-    [ruta]="foto.ruta">
-</app-foto-info>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasCahuachoVista()"
+    [sectionId]="'3.1.4.B.1'"
+    [photoPrefix]="'fotografiaCahuacho'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 

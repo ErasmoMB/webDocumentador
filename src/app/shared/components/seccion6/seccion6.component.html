@@ -2,10 +2,9 @@
 
 <p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
 <p class="text-justify" *ngIf="datos.textoPoblacionSexoAISD && datos.textoPoblacionSexoAISD !== '____'">{{ datos.textoPoblacionSexoAISD }}</p>
-<p class="text-justify" *ngIf="!datos.textoPoblacionSexoAISD || datos.textoPoblacionSexoAISD === '____'">Respecto a la población de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de <span class="highlight">{{ datos.tablaAISD2TotalPoblacion || '____' }}</span> habitantes que residen permanentemente en la comunidad. De este conjunto, el <span class="highlight">{{ getPorcentajeHombres() }}</span> son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (<span class="highlight">{{ getPorcentajeMujeres() }}</span>).</p>
+<p class="text-justify" *ngIf="!datos.textoPoblacionSexoAISD || datos.textoPoblacionSexoAISD === '____'">Respecto a la población de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de <span [appDataSource]="'tablaAISD2TotalPoblacion' | dataSource">{{ datos.tablaAISD2TotalPoblacion || '____' }}</span> habitantes que residen permanentemente en la comunidad. De este conjunto, el <span [appDataSource]="'manual'">{{ getPorcentajeHombres() }}</span> son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (<span [appDataSource]="'manual'">{{ getPorcentajeMujeres() }}</span>).</p>
 
-<p class="table-title">Cuadro N° 3. 5</p>
-<p class="table-title-main">Población por sexo – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="Población por sexo – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.2">
 <table class="table-container">
     <thead>
         <tr>
@@ -16,9 +15,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.poblacionSexoAISD || [])">
-            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" class="highlight">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" [appDataSource]="'automatic'">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'automatic'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'automatic'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr class="total-row" *ngIf="datos.poblacionSexoAISD && datos.poblacionSexoAISD.length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ getTotalPoblacionSexo() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">100,00 %</span></td>
         </tr>
         <tr *ngIf="!datos.poblacionSexoAISD || datos.poblacionSexoAISD.length === 0">
             <td class="table-cell">____</td>
@@ -27,14 +31,14 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Población según grupo etario</strong></p>
 <p class="text-justify" *ngIf="datos.textoPoblacionEtarioAISD && datos.textoPoblacionEtarioAISD !== '____'">{{ datos.textoPoblacionEtarioAISD }}</p>
-<p class="text-justify" *ngIf="!datos.textoPoblacionEtarioAISD || datos.textoPoblacionEtarioAISD === '____'">En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es el de <span class="highlight">{{ getGrupoEtarioMayoritario() }}</span>, puesto que representa el <span class="highlight">{{ getPorcentajeGrupoEtario(getGrupoEtarioMayoritario()) }}</span> de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de <span class="highlight">{{ getGrupoEtarioSegundo() }}</span> (<span class="highlight">{{ getPorcentajeGrupoEtario(getGrupoEtarioSegundo()) }}</span>). Por otro lado, el conjunto minoritario está conformado por la población de <span class="highlight">{{ getGrupoEtarioMenoritario() }}</span>, pues solo representa un <span class="highlight">{{ getPorcentajeGrupoEtario(getGrupoEtarioMenoritario()) }}</span>.</p>
+<p class="text-justify" *ngIf="!datos.textoPoblacionEtarioAISD || datos.textoPoblacionEtarioAISD === '____'">En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> es el de <span [appDataSource]="'manual'">{{ getGrupoEtarioMayoritario() }}</span>, puesto que representa el <span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioMayoritario()) }}</span> de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de <span [appDataSource]="'manual'">{{ getGrupoEtarioSegundo() }}</span> (<span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioSegundo()) }}</span>). Por otro lado, el conjunto minoritario está conformado por la población de <span [appDataSource]="'manual'">{{ getGrupoEtarioMenoritario() }}</span>, pues solo representa un <span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioMenoritario()) }}</span>.</p>
 
-<p class="table-title">Cuadro N° 3. 6</p>
-<p class="table-title-main">Población por grandes grupos de edad – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="Población por grandes grupos de edad – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.2">
 <table class="table-container">
     <thead>
         <tr>
@@ -45,9 +49,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.poblacionEtarioAISD || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'automatic'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'automatic'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'automatic'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr class="total-row" *ngIf="datos.poblacionEtarioAISD && datos.poblacionEtarioAISD.length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ getTotalPoblacionEtario() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">100,00 %</span></td>
         </tr>
         <tr *ngIf="!datos.poblacionEtarioAISD || datos.poblacionEtarioAISD.length === 0">
             <td class="table-cell">____</td>
@@ -56,5 +65,16 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasDemografiaVista()"
+    [sectionId]="seccionId"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 

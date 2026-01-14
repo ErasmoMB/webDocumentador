@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -42,13 +42,24 @@ import { Seccion27Component } from './shared/components/seccion27/seccion27.comp
 import { Seccion28Component } from './shared/components/seccion28/seccion28.component';
 import { Seccion29Component } from './shared/components/seccion29/seccion29.component';
 import { Seccion30Component } from './shared/components/seccion30/seccion30.component';
+import { Seccion31Component } from './shared/components/seccion31/seccion31.component';
+import { Seccion32Component } from './shared/components/seccion32/seccion32.component';
+import { Seccion33Component } from './shared/components/seccion33/seccion33.component';
+import { Seccion34Component } from './shared/components/seccion34/seccion34.component';
+import { Seccion35Component } from './shared/components/seccion35/seccion35.component';
+import { Seccion36Component } from './shared/components/seccion36/seccion36.component';
 import { ImageUploadComponent } from './shared/components/image-upload/image-upload.component';
+import { TableWrapperComponent } from './shared/components/table-wrapper/table-wrapper.component';
+import { LoadingDirective } from './core/directives/loading.directive';
+import { DataSourceDirective } from './shared/directives/data-source.directive';
+import { TableNumberDirective } from './shared/directives/table-number.directive';
+import { PhotoNumberDirective } from './shared/directives/photo-number.directive';
+import { DataSourcePipe } from './shared/pipes/data-source.pipe';
 
 import { FormularioService } from './core/services/formulario.service';
 import { DataService } from './core/services/data.service';
 import { ConfigService } from './core/services/config.service';
 import { CacheService } from './core/services/cache.service';
-import { CacheInterceptor } from './core/interceptors/cache.interceptor';
 
 @NgModule({
   declarations: [
@@ -89,7 +100,19 @@ import { CacheInterceptor } from './core/interceptors/cache.interceptor';
     Seccion28Component,
     Seccion29Component,
     Seccion30Component,
+    Seccion31Component,
+    Seccion32Component,
+    Seccion33Component,
+    Seccion34Component,
+    Seccion35Component,
+    Seccion36Component,
     ImageUploadComponent,
+    TableWrapperComponent,
+    LoadingDirective,
+    DataSourceDirective,
+    TableNumberDirective,
+    PhotoNumberDirective,
+    DataSourcePipe,
   ],
   imports: [
     BrowserModule,
@@ -102,12 +125,7 @@ import { CacheInterceptor } from './core/interceptors/cache.interceptor';
     FormularioService,
     DataService,
     ConfigService,
-    CacheService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CacheInterceptor,
-      multi: true
-    }
+    CacheService
   ],
   bootstrap: [AppComponent]
 })

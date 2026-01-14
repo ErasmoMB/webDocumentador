@@ -1,28 +1,27 @@
 <h3>3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral
     y otros similares</h3>
-<p class="text-justify">Para la descripción del aspecto socioeconómico se ha utilizado
-    una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado
-    las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como
-    de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que
-    luego son contrastados y completados con la consulta de diversas fuentes de información oficiales
-    actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale –
-    MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre
-    otros.</p>
+<div *ngIf="datos.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_metodologia)"></div>
+<ng-template #metodologiaDefault>
+    <p class="text-justify">Para la descripción del aspecto socioeconómico se ha utilizado
+        una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado
+        las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como
+        de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que
+        luego son contrastados y completados con la consulta de diversas fuentes de información oficiales
+        actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale –
+        MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre
+        otros.</p>
+</ng-template>
 <h4>A. Fuentes primarias</h4>
-<p class="text-justify">Dentro de las fuentes primarias se consideran a las
-    autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información
-    cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un
-    alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social.
-    Para la obtención de información cualitativa, se realizaron un total de <span class="highlight">{{ datos.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y
-    autoridades locales.</p>
+<div *ngIf="datos.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_primarias)"></div>
+<ng-template #fuentesPrimariasDefault>
+    <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')">{{ datos.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
+</ng-template>
 <p class="text-justify">A continuación, se muestra en el siguiente cuadro los cargos u
-    ocupaciones principales de las <span class="highlight">{{ datos.cantidadEntrevistas || '____' }}</span>
+    ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')">{{ datos.cantidadEntrevistas || '____' }}</span>
     autoridades e
     informantes que fueron entrevistados durante el trabajo de campo llevado a cabo en el mes de <span
-        class="highlight">{{ datos.fechaTrabajoCampo || '____' }}</span>. </p>
-<p class="table-title">Cuadro N° 3. 1</p>
-<p class="table-title-main">Lista de entrevistados</p>
-
+        [appDataSource]="getDataSourceType('fechaTrabajoCampo')">{{ datos.fechaTrabajoCampo || '____' }}</span>. </p>
+<app-table-wrapper title="Lista de entrevistados" sectionId="3.1.3">
 <table class="table-container">
     <thead>
         <tr>
@@ -58,23 +57,24 @@
         </ng-container>
     </tbody>
 </table>
-<p class="text-justify">Fuente: <span class="highlight">{{ datos.consultora || 'GEADES (2024)' }}</span></p>
+</app-table-wrapper>
+<p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')">{{ datos.consultora || 'GEADES (2024)' }}</span></p>
 <h4>B. Fuentes secundarias</h4>
-<p class="text-justify">En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:</p>
+<div *ngIf="datos.parrafoSeccion3_fuentes_secundarias; else fuentesSecundariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_secundarias)"></div>
+<ng-template #fuentesSecundariasDefault>
+    <p class="text-justify">En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:</p>
+</ng-template>
 <ul>
-    <li class="list-item">Base de Datos de Pueblos Indígenas u Originarios – BDPI.</li>
-    <li class="list-item">Censos Nacionales 2017 (XII de Población, VII de Vivienda y III de Comunidades Indígenas) ejecutados por el Instituto Nacional de Estadística e Informática (INEI).</li>
-    <li class="list-item">Estadísticas de la Calidad Educativa (ESCALE) de la Unidad de Estadística del Ministerio de Educación (MINEDU).</li>
-    <li class="list-item">Ministerio de Energía y Minas (MINEM).</li>
-    <li class="list-item">Ministerio de Trabajo y Promoción del Empleo (MTPE).</li>
-    <li class="list-item">Ministerio de Transporte y Comunicaciones (MTC).</li>
-    <li class="list-item">Observatorio Socio Económico Laboral (OSEL).</li>
-    <li class="list-item">Organismo Supervisor de Inversión Privada en Telecomunicaciones – OSIPTEL.</li>
-    <li class="list-item">Programa de Naciones Unidas para el Desarrollo – PNUD.</li>
-    <li class="list-item">Registro Nacional de Instituciones Prestadoras de Servicios de Salud (RENIPRESS).</li>
-    <li class="list-item">Repositorio Digital de Información Multisectorial (REDINFORMA) – MIDIS.</li>
-    <li class="list-item">Repositorio Único Nacional de Información en Salud (REUNIS).</li>
-    <li class="list-item">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI.</li>
-    <li class="list-item">Sistema de Información Distrital para la Gestión Pública – INEI.</li>
+    <li class="list-item" *ngFor="let fuente of obtenerFuentesSecundarias()">{{ fuente }}</li>
+    <li class="list-item" *ngIf="obtenerFuentesSecundarias().length === 0">____</li>
 </ul>
 
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasSeccion3"
+    [sectionId]="'3.1.3'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>

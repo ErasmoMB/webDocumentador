@@ -1,13 +1,20 @@
 <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
 <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
-<p class="text-justify">Se ha determinado como Área de Influencia Social Directa (AISD) a la CC Ayroca. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.</p>
+<div *ngIf="datos.parrafoSeccion4_introduccion_aisd; else introduccionAISDDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_introduccion_aisd)"></div>
+<ng-template #introduccionAISDDefault>
+    <p class="text-justify">Se ha determinado como Área de Influencia Social Directa (AISD) a la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.</p>
+</ng-template>
 
-<h5>A.1. Comunidad Campesina {{ datos.grupoAISD || '____' }}</h5>
-<p class="text-justify">La CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se encuentra ubicada predominantemente dentro del distrito de <span class="highlight">{{ datos.distritoSeleccionado || '____' }}</span>, provincia de <span class="highlight">{{ datos.provinciaSeleccionada || '____' }}</span>; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de <span class="highlight">{{ datos.aisdComponente1 || '____' }}</span> y de <span class="highlight">{{ datos.aisdComponente2 || '____' }}</span>, del departamento de <span class="highlight">{{ datos.departamentoSeleccionado || '____' }}</span>. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo <span class="highlight">{{ datos.grupoAISD || '____' }}</span>.</p>
-<p class="text-justify">En cuanto al nombre "<span class="highlight">{{ datos.grupoAISD || '____' }}</span>", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP <span class="highlight">{{ datos.grupoAISI || datos.distritoSeleccionado || '____' }}</span> y al oeste del anexo Nauquipa.</p>
-<p class="text-justify">Asimismo, la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.</p>
-<p class="table-title">Cuadro N° 3. 2</p>
-<p class="table-title-main">{{ datos.cuadroTituloAISD1 || 'Ubicación referencial' }} – CC {{ datos.cuadroComunidadAISD1 || datos.grupoAISD || '____' }}</p>
+<h5 *ngIf="seccionId.includes('3.1.4.A.1')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
+<h5 *ngIf="seccionId.includes('3.1.4.A.2')">A.2. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
+<h5 *ngIf="!seccionId.includes('3.1.4.A.1') && !seccionId.includes('3.1.4.A.2')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
+<div *ngIf="datos.parrafoSeccion4_comunidad_completo; else comunidadCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_comunidad_completo)"></div>
+<ng-template #comunidadCompletoDefault>
+    <p class="text-justify">La CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> se encuentra ubicada predominantemente dentro del distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || '____' }}</span>, provincia de <span [appDataSource]="'automatic'">{{ datos.provinciaSeleccionada || '____' }}</span>; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de <span [appDataSource]="'automatic'">{{ datos.aisdComponente1 || '____' }}</span> y de <span [appDataSource]="'automatic'">{{ datos.aisdComponente2 || '____' }}</span>, del departamento de <span [appDataSource]="'automatic'">{{ datos.departamentoSeleccionado || '____' }}</span>. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>.</p>
+    <p class="text-justify">En cuanto al nombre "<span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP {{ datos.grupoAISI || datos.distritoSeleccionado || '____' }} y al oeste del anexo Nauquipa.</p>
+    <p class="text-justify">Asimismo, la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.</p>
+</ng-template>
+<app-table-wrapper [title]="(datos.cuadroTituloAISD1 || 'Ubicación referencial') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
 <table class="table-container">
     <thead>
         <tr>
@@ -21,20 +28,23 @@
     </thead>
     <tbody>
         <tr>
-            <td class="table-cell">{{ datos.tablaAISD1Localidad || datos.grupoAISD || '____' }}</td>
-            <td class="table-cell">{{ datos.tablaAISD1Coordenadas || datos.coordenadasAISD || '____' }}</td>
-            <td class="table-cell">{{ datos.tablaAISD1Altitud || datos.altitudAISD || '____' }}</td>
-            <td class="table-cell">{{ datos.tablaAISD1Distrito || datos.distritoSeleccionado || '____' }}</td>
-            <td class="table-cell">{{ datos.tablaAISD1Provincia || datos.provinciaSeleccionada || '____' }}</td>
-            <td class="table-cell">{{ datos.tablaAISD1Departamento || datos.departamentoSeleccionado || '____' }}</td>
+            <td class="table-cell"><span [appDataSource]="'section'">{{ datos.tablaAISD1Localidad || obtenerNombreComunidadActual() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ datos.tablaAISD1Coordenadas || datos.coordenadasAISD || '____' }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ datos.tablaAISD1Altitud || datos.altitudAISD || '____' }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ datos.tablaAISD1Distrito || datos.distritoSeleccionado || '____' }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ datos.tablaAISD1Provincia || datos.provinciaSeleccionada || '____' }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'automatic'">{{ datos.tablaAISD1Departamento || datos.departamentoSeleccionado || '____' }}</span></td>
         </tr>
     </tbody>
 </table>
-<p class="text-justify">FUENTE: <span class="highlight">{{ datos.cuadroFuenteAISD1 || 'GEADES (2024)' }}</span></p>
+</app-table-wrapper>
+<p class="text-justify">FUENTE: <span [appDataSource]="'manual'">{{ datos.cuadroFuenteAISD1 || 'GEADES (2024)' }}</span></p>
 
-<p class="text-justify">Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.</p>
-<p class="table-title">Cuadro N° 3. 3</p>
-<p class="table-title-main">{{ datos.cuadroTituloAISD2 || 'Cantidad total de población y viviendas' }} – CC {{ datos.cuadroComunidadAISD2 || datos.grupoAISD || '____' }}</p>
+<div *ngIf="datos.parrafoSeccion4_caracterizacion_indicadores; else caracterizacionIndicadoresDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_caracterizacion_indicadores)"></div>
+<ng-template #caracterizacionIndicadoresDefault>
+    <p class="text-justify">Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.</p>
+</ng-template>
+<app-table-wrapper [title]="(datos.cuadroTituloAISD2 || 'Cantidad total de población y viviendas') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
 <table class="table-container">
     <thead>
         <tr>
@@ -46,31 +56,45 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let fila of getFilasTablaAISD2()">
-            <td class="table-cell"><span *ngIf="fila.punto !== '____'" class="highlight">{{ fila.punto }}</span><span *ngIf="fila.punto === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.codigo !== '____'" class="highlight">{{ fila.codigo }}</span><span *ngIf="fila.codigo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.poblacion !== '____'" class="highlight">{{ fila.poblacion }}</span><span *ngIf="fila.poblacion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.viviendasEmpadronadas !== '____'" class="highlight">{{ fila.viviendasEmpadronadas }}</span><span *ngIf="fila.viviendasEmpadronadas === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.viviendasOcupadas !== '____'" class="highlight">{{ fila.viviendasOcupadas }}</span><span *ngIf="fila.viviendasOcupadas === '____'">____</span></td>
+        <tr *ngFor="let fila of getFilasTablaAISD2(); let i = index">
+            <td class="table-cell"><span *ngIf="fila.punto !== '____'" [appDataSource]="'automatic'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Punto'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Punto')">{{ fila.punto }}</span><span *ngIf="fila.punto === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="fila.codigo !== '____'" [appDataSource]="'automatic'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Codigo'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Codigo')">{{ fila.codigo }}</span><span *ngIf="fila.codigo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="fila.poblacion !== '____'" [appDataSource]="'automatic'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Poblacion'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Poblacion')">{{ fila.poblacion }}</span><span *ngIf="fila.poblacion === '____'">____</span></td>
+            <td class="table-cell manual-cell"><span *ngIf="fila.viviendasEmpadronadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas')">{{ fila.viviendasEmpadronadas }}</span><span *ngIf="fila.viviendasEmpadronadas === '____'">____</span></td>
+            <td class="table-cell manual-cell"><span *ngIf="fila.viviendasOcupadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas')">{{ fila.viviendasOcupadas }}</span><span *ngIf="fila.viviendasOcupadas === '____'">____</span></td>
         </tr>
         <tr>
             <th class="table-header">Total</th>
             <th class="table-header"></th>
-            <th class="table-header"><span *ngIf="(datos.tablaAISD2TotalPoblacion || '____') !== '____'" class="highlight">{{ datos.tablaAISD2TotalPoblacion || '____' }}</span><span *ngIf="(datos.tablaAISD2TotalPoblacion || '____') === '____'">____</span></th>
-            <th class="table-header"><span *ngIf="(datos.tablaAISD2TotalViviendasEmpadronadas || '____') !== '____'" class="highlight">{{ datos.tablaAISD2TotalViviendasEmpadronadas || '____' }}</span><span *ngIf="(datos.tablaAISD2TotalViviendasEmpadronadas || '____') === '____'">____</span></th>
-            <th class="table-header"><span *ngIf="(datos.tablaAISD2TotalViviendasOcupadas || '____') !== '____'" class="highlight">{{ datos.tablaAISD2TotalViviendasOcupadas || '____' }}</span><span *ngIf="(datos.tablaAISD2TotalViviendasOcupadas || '____') === '____'">____</span></th>
+            <th class="table-header"><span>{{ getTotalPoblacionAISD2() }}</span></th>
+            <th class="table-header"><span>{{ getTotalViviendasEmpadronadasAISD2() }}</span></th>
+            <th class="table-header"><span>{{ getTotalViviendasOcupadasAISD2() }}</span></th>
         </tr>
     </tbody>
 </table>
-<p class="text-justify">FUENTE: <span *ngIf="datos.cuadroFuenteAISD2 && datos.cuadroFuenteAISD2 !== '____'" class="highlight">{{ datos.cuadroFuenteAISD2 }}</span><span *ngIf="!datos.cuadroFuenteAISD2" class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span><span *ngIf="datos.cuadroFuenteAISD2 === '____'">____</span></p>
+</app-table-wrapper>
+<p class="text-justify">FUENTE: <span *ngIf="datos.cuadroFuenteAISD2 && datos.cuadroFuenteAISD2 !== '____'" [appDataSource]="'manual'">{{ datos.cuadroFuenteAISD2 }}</span><span *ngIf="!datos.cuadroFuenteAISD2" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span><span *ngIf="datos.cuadroFuenteAISD2 === '____'">____</span></p>
 
-<div class="image-gallery">
-    <app-foto-info 
-        *ngFor="let foto of getFotografiasAISD(); let i = index"
-        [numero]="foto.numero"
-        [titulo]="foto.titulo"
-        [fuente]="foto.fuente"
-        [ruta]="foto.ruta">
-    </app-foto-info>
-</div>
+<!-- Mostrar galería AISD para subsecciones AISD o sección 3.1.4 -->
+<app-image-upload
+    *ngIf="esSubseccionAISD() || seccionId.startsWith('3.1.4')"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasAISD"
+    [sectionId]="seccionId"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 
+<!-- Mostrar galería Sección 4 solo para otras secciones -->
+<app-image-upload
+    *ngIf="!esSubseccionAISD() && !seccionId.startsWith('3.1.4')"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasSeccion4"
+    [sectionId]="seccionId"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>

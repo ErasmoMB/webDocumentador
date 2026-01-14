@@ -2,7 +2,10 @@ import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { WordGeneratorService } from 'src/app/core/services/word-generator.service';
+import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
+import { LoggerService } from 'src/app/core/services/logger.service';
 import { ResumenComponent } from './plantilla.component';
+import { FormularioDatos, CentroPobladoData } from 'src/app/core/models/formulario.model';
 
 @Component({
   selector: 'app-plantilla-view',
@@ -12,19 +15,21 @@ import { ResumenComponent } from './plantilla.component';
 export class PlantillaViewComponent implements OnInit, AfterViewInit {
   @ViewChild(ResumenComponent) resumenComponent!: ResumenComponent;
   
-  datos: any;
-  json: any;
+  datos: FormularioDatos | null = null;
+  json: CentroPobladoData[] = [];
   modoEjemplo: boolean = false;
   verEjemploLabel: string = 'Ver Ejemplo';
-  datosBackup: any = null;
-  jsonBackup: any = null;
+  datosBackup: FormularioDatos | null = null;
+  jsonBackup: CentroPobladoData[] | null = null;
 
   constructor(
     private formularioService: FormularioService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private cdRef: ChangeDetectorRef,
-    private wordGeneratorService: WordGeneratorService
+    private wordGeneratorService: WordGeneratorService,
+    private textNormalization: TextNormalizationService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit() {
@@ -76,118 +81,41 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
   }
 
   agregarPuntoFinal(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    const textoTrim = texto.trim();
-    if (/[.!?]$/.test(textoTrim)) {
-      return textoTrim;
-    }
-    return textoTrim + '.';
+    return this.textNormalization.agregarPuntoFinal(texto);
   }
 
   normalizarDespuesDeQue(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    if (/^(el|la|los|las)\s+resto.+\s+por\s+/i.test(resultado)) {
-      resultado = 'se considera ' + resultado;
-    }
-    
-    if (resultado.length > 0 && /^[A-Z]/.test(resultado)) {
-      const palabrasConMayuscula = ['El Proyecto', 'La Comunidad', 'Se consideran', 'Debido'];
-      const empiezaConPalabra = palabrasConMayuscula.some(p => resultado.startsWith(p));
-      
-      if (!empiezaConPalabra) {
-        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      } else if (resultado.startsWith('Se consideran')) {
-        resultado = 'se consideran' + resultado.slice(13);
-      } else if (resultado.startsWith('El Proyecto')) {
-        resultado = 'el Proyecto' + resultado.slice(11);
-      }
-    }
-    
-    return this.agregarPuntoFinal(resultado);
+    return this.textNormalization.normalizarDespuesDeQue(texto);
   }
 
   normalizarComponente1(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    if (/^el proyecto se ubica en el distrito de/i.test(resultado)) {
-      resultado = resultado.replace(/^el proyecto se ubica en (el distrito de .+)/i, '$1');
-    }
-    
-    if (resultado.length > 0 && /^[A-Z]/.test(resultado.charAt(0))) {
-      const excepciones = ['El Proyecto', 'La Comunidad', 'Los centros'];
-      const esExcepcion = excepciones.some(e => resultado.startsWith(e));
-      
-      if (!esExcepcion) {
-        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      } else if (resultado.startsWith('Los centros')) {
-        resultado = 'los centros' + resultado.slice(11);
-      } else if (resultado.startsWith('El Proyecto')) {
-        resultado = 'el Proyecto' + resultado.slice(11);
-      }
-    }
-    
-    return this.agregarPuntoFinal(resultado);
+    return this.textNormalization.normalizarComponente1(texto);
   }
 
   normalizarDetalleProyecto(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    resultado = resultado.replace(/\bel\s+zona\b/gi, 'la zona');
-    resultado = resultado.replace(/\bel\s+región\b/gi, 'la región');
-    
-    if (/^[A-Z]/.test(resultado)) {
-      if (/^(zona|región|provincia|costa|sierra|selva)/i.test(resultado)) {
-        resultado = 'la ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      }
-      else if (/^(distrito|departamento|valle|territorio)/i.test(resultado)) {
-        resultado = 'el ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      }
-    }
-    
-    return resultado;
+    return this.textNormalization.normalizarDetalleProyecto(texto);
   }
 
   capitalizarTexto(texto: string): string {
-    if (!texto || texto.trim() === '') return texto;
-    const textoLimpio = texto.trim();
-    return textoLimpio.charAt(0).toUpperCase() + textoLimpio.slice(1).toLowerCase();
+    return this.textNormalization.capitalizarTexto(texto);
   }
 
   normalizarNombreProyecto(texto: string | undefined | null, conArticulo: boolean = true): string {
-    if (!texto || texto === '____' || texto === '...') return '____';
-    let resultado = this.capitalizarTexto(texto.trim());
-    
-    if (conArticulo) {
-      if (/^el proyecto /i.test(resultado)) {
-        return resultado.charAt(0).toUpperCase() + resultado.slice(1);
-      }
-      else if (/^proyecto /i.test(resultado)) {
-        return 'El ' + resultado.charAt(0).toUpperCase() + resultado.slice(1);
-      }
-      else {
-        return 'El Proyecto ' + resultado;
-      }
-    } else {
-      return resultado;
-    }
+    return this.textNormalization.normalizarNombreProyecto(texto, conArticulo);
   }
 
   calcularTotalPoblacion(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.poblacion || 0), 0);
   }
 
   calcularTotalViviendasEmpadronadas(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.viviendasEmpadronadas || 0), 0);
   }
 
   calcularTotalViviendasOcupadas(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.viviendasOcupadas || 0), 0);
   }
 
@@ -195,11 +123,11 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
     const elemento = document.querySelector(".viewport-content") as HTMLElement || 
                      document.querySelector(".preview") as HTMLElement;
     if (!elemento) {
-      console.error("No se encontró el contenido para exportar.");
+      this.logger.error("No se encontró el contenido para exportar.");
       return;
     }
 
-    const nombreArchivo = `LBS${this.datos.projectName || 'Documento'}`.replace(/\s+/g, '');
+    const nombreArchivo = `LBS${this.datos?.projectName || 'Documento'}`.replace(/\s+/g, '');
     await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
   }
 
@@ -216,7 +144,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
       }
       return true;
     } catch (error) {
-      console.error('Error al hacer backup de datos:', error);
+      this.logger.error('Error al hacer backup de datos', error);
       this.datosBackup = null;
       this.jsonBackup = null;
       return false;
@@ -286,7 +214,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
         this.cdRef.detectChanges();
       }
     } catch (error: any) {
-      console.error('Error al alternar ejemplo:', error);
+      this.logger.error('Error al alternar ejemplo', error);
       const mensajeError = error?.message || 'Error desconocido al alternar el modo ejemplo';
       alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
     } finally {
@@ -301,7 +229,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
       await this.wordGeneratorService.generarDocumentoEjemplo();
       if (boton) { boton.disabled = false; boton.textContent = 'Descargar Ejemplo'; }
     } catch (error) {
-      console.error('Error al descargar ejemplo:', error);
+      this.logger.error('Error al descargar ejemplo', error);
       alert('Error al generar el documento ejemplo.');
       const boton = event?.target as HTMLButtonElement;
       if (boton) { boton.disabled = false; boton.textContent = 'Descargar Ejemplo'; }

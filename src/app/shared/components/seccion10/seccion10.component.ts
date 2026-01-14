@@ -1,24 +1,101 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion10',
   templateUrl: './seccion10.component.html',
   styleUrls: ['./seccion10.component.css']
 })
-export class Seccion10Component implements OnInit {
+export class Seccion10Component implements OnInit, OnChanges, DoCheck {
+  @Input() seccionId: string = '';
   datos: any = {};
+  private datosAnteriores: any = {};
+  watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'coberturaElectricaTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo'];
 
   constructor(
-    private formularioService: FormularioService
+    private formularioService: FormularioService,
+    private fieldMapping: FieldMappingService,
+    private sectionDataLoader: SectionDataLoaderService,
+    private imageService: ImageManagementService,
+    private photoNumberingService: PhotoNumberingService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.actualizarDatos();
+    this.loadSectionData();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['seccionId']) {
+      this.actualizarDatos();
+      this.loadSectionData();
+    }
+  }
+
+  ngDoCheck() {
+    const datosActuales = this.formularioService.obtenerDatos();
+    const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
+    const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
+    const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    let hayCambios = false;
+    
+    for (const campo of this.watchedFields) {
+      const valorActual = (datosActuales as any)[campo] || null;
+      const valorAnterior = this.datosAnteriores[campo] || null;
+      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+        hayCambios = true;
+        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+      }
+    }
+    
+    if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
+      this.actualizarDatos();
+      this.cdRef.markForCheck();
+    }
   }
 
   actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.formularioService.obtenerDatos();
+    this.datos = { ...datosNuevos };
+    this.actualizarValoresConPrefijo();
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
+    });
+    this.cdRef.detectChanges();
+  }
+
+  actualizarValoresConPrefijo() {
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
+  }
+
+  private loadSectionData(): void {
+    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
+    if (fieldsToLoad.length > 0) {
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+    }
+  }
+
+  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+    return this.fieldMapping.getDataSourceType(fieldName);
+  }
+
+  formatearParrafo(texto: string): string {
+    if (!texto) return '';
+    const parrafos = texto.split(/\n\n+/);
+    return parrafos.map(p => {
+      const textoLimpio = p.trim().replace(/\n/g, '<br>');
+      return `<p class="text-justify">${textoLimpio}</p>`;
+    }).join('');
   }
 
   getViviendasOcupadas(): string {
@@ -93,48 +170,26 @@ export class Seccion10Component implements OnInit {
     return sinElectricidad?.porcentaje || '____';
   }
 
-  getFotoDesechosSolidos(): any {
-    const titulo = this.datos?.['fotografiaDesechosSolidosTitulo'] || 'Contenedor de residuos sólidos y plásticos en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
-    const fuente = this.datos?.['fotografiaDesechosSolidosFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaDesechosSolidosImagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 7',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
-    }
-    
-    return {
-      numero: '3. 7',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  getFotoElectricidad(): any {
-    const titulo = this.datos?.['fotografiaElectricidadTitulo'] || 'Infraestructura eléctrica en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
-    const fuente = this.datos?.['fotografiaElectricidadFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaElectricidadImagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 8',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
-    }
-    
-    return {
-      numero: '3. 8',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  getFotografiasDesechosSolidosVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaDesechosSolidos',
+      groupPrefix
+    );
+  }
+
+  getFotografiasElectricidadVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaElectricidad',
+      groupPrefix
+    );
   }
 }
 

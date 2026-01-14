@@ -1,24 +1,101 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion8',
   templateUrl: './seccion8.component.html',
   styleUrls: ['./seccion8.component.css']
 })
-export class Seccion8Component implements OnInit {
+export class Seccion8Component implements OnInit, OnChanges, DoCheck {
+  @Input() seccionId: string = '';
   datos: any = {};
+  private datosAnteriores: any = {};
+  watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion8_ganaderia_completo', 'parrafoSeccion8_agricultura_completo', 'peaOcupacionesTabla', 'poblacionPecuariaTabla', 'caracteristicasAgriculturaTabla'];
 
   constructor(
-    private formularioService: FormularioService
+    private formularioService: FormularioService,
+    private fieldMapping: FieldMappingService,
+    private sectionDataLoader: SectionDataLoaderService,
+    private imageService: ImageManagementService,
+    private photoNumberingService: PhotoNumberingService,
+    private cdRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.actualizarDatos();
+    this.loadSectionData();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['seccionId']) {
+      this.actualizarDatos();
+      this.loadSectionData();
+    }
+  }
+
+  ngDoCheck() {
+    const datosActuales = this.formularioService.obtenerDatos();
+    const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
+    const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
+    const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    let hayCambios = false;
+    
+    for (const campo of this.watchedFields) {
+      const valorActual = (datosActuales as any)[campo] || null;
+      const valorAnterior = this.datosAnteriores[campo] || null;
+      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+        hayCambios = true;
+        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+      }
+    }
+    
+    if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
+      this.actualizarDatos();
+      this.cdRef.markForCheck();
+    }
   }
 
   actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.formularioService.obtenerDatos();
+    this.datos = { ...datosNuevos };
+    this.actualizarValoresConPrefijo();
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
+    });
+    this.cdRef.detectChanges();
+  }
+
+  actualizarValoresConPrefijo() {
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
+  }
+
+  private loadSectionData(): void {
+    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
+    if (fieldsToLoad.length > 0) {
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+    }
+  }
+
+  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+    return this.fieldMapping.getDataSourceType(fieldName);
+  }
+
+  formatearParrafo(texto: string): string {
+    if (!texto) return '';
+    const parrafos = texto.split(/\n\n+/);
+    return parrafos.map(p => {
+      const textoLimpio = p.trim().replace(/\n/g, '<br>');
+      return `<p class="text-justify">${textoLimpio}</p>`;
+    }).join('');
   }
 
   getPorcentajeOcupacion(categoria: string): string {
@@ -31,68 +108,50 @@ export class Seccion8Component implements OnInit {
     return item?.porcentaje || '____';
   }
 
-  getFotografiasGanaderia(): any[] {
-    const fotos: any[] = [];
-    
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.datos?.[`fotografiaGanaderia${i}Titulo`];
-      const fuente = this.datos?.[`fotografiaGanaderia${i}Fuente`];
-      const imagen = this.datos?.[`fotografiaGanaderia${i}Imagen`];
-      
-      if (imagen) {
-        fotos.push({
-          numero: `3. ${4 + (fotos.length)}`,
-          titulo: titulo || 'Ganado en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
-          fuente: fuente || 'GEADES, 2024',
-          ruta: imagen
-        });
-      }
-    }
-    
-    return fotos;
+  obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  getFotografiasAgricultura(): any[] {
-    const fotos: any[] = [];
-    
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.datos?.[`fotografiaAgricultura${i}Titulo`];
-      const fuente = this.datos?.[`fotografiaAgricultura${i}Fuente`];
-      const imagen = this.datos?.[`fotografiaAgricultura${i}Imagen`];
-      
-      if (imagen) {
-        fotos.push({
-          numero: `3. ${5 + (fotos.length)}`,
-          titulo: titulo || 'Agricultura en la CC ' + (this.datos.grupoAISD || 'Ayroca'),
-          fuente: fuente || 'GEADES, 2024',
-          ruta: imagen
-        });
-      }
-    }
-    
-    return fotos;
+  getFotografiasGanaderiaVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaGanaderia',
+      groupPrefix
+    );
   }
 
-  getFotoComercio(): any {
-    const titulo = this.datos?.['fotografiaComercioTitulo'] || 'Comercio ambulatorio en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
-    const fuente = this.datos?.['fotografiaComercioFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaComercioImagen'] || '';
-    
-    if (!imagen) {
-      return {
-        numero: '3. 6',
-        titulo: '',
-        fuente: '',
-        ruta: ''
-      };
-    }
-    
-    return {
-      numero: '3. 6',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  onFotografiasGanaderiaChange(fotografias: FotoItem[]): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.imageService.saveImages(this.seccionId, 'fotografiaGanaderia', fotografias, groupPrefix);
+  }
+
+  getFotografiasAgriculturaVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaAgricultura',
+      groupPrefix
+    );
+  }
+
+  onFotografiasAgriculturaChange(fotografias: FotoItem[]): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.imageService.saveImages(this.seccionId, 'fotografiaAgricultura', fotografias, groupPrefix);
+  }
+
+  getFotografiasComercioVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaComercio',
+      groupPrefix
+    );
+  }
+
+  onFotografiasComercioChange(fotografias: FotoItem[]): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.imageService.saveImages(this.seccionId, 'fotografiaComercio', fotografias, groupPrefix);
   }
 }
 

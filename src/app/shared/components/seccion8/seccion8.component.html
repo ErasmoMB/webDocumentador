@@ -1,10 +1,9 @@
 <h5>A.1.4. Actividades económicas de la población</h5>
 <p class="text-justify" *ngIf="datos.textoActividadesEconomicas && datos.textoActividadesEconomicas !== '____'">{{ datos.textoActividadesEconomicas }}</p>
-<p class="text-justify" *ngIf="!datos.textoActividadesEconomicas || datos.textoActividadesEconomicas === '____'">Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describe las ocupaciones principales existentes en los poblados de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, que forma parte del AISD.</p>
-<p class="text-justify" *ngIf="!datos.textoFuentesActividadesEconomicas || datos.textoFuentesActividadesEconomicas === '____'">A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.</p>
+<p class="text-justify" *ngIf="!datos.textoActividadesEconomicas || datos.textoActividadesEconomicas === '____'">Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describe las ocupaciones principales existentes en los poblados de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, que forma parte del AISD.</p>
+<p class="text-justify" *ngIf="!datos.textoFuentesActividadesEconomicas || datos.textoFuentesActividadesEconomicas === '____'">A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.</p>
 
-<p class="table-title">Cuadro N° 3. 10</p>
-<p class="table-title-main">PEA Ocupada según ocupaciones principales – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="PEA Ocupada según ocupaciones principales – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.4">
 <table class="table-container">
     <thead>
         <tr>
@@ -15,9 +14,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.peaOcupacionesTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'manual'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.peaOcupacionesTabla || datos.peaOcupacionesTabla.length === 0">
             <td class="table-cell">____</td>
@@ -26,19 +25,21 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
 <p class="text-justify" *ngIf="datos.textoAnalisisCuadro310 && datos.textoAnalisisCuadro310 !== '____'">{{ datos.textoAnalisisCuadro310 }}</p>
-<p class="text-justify" *ngIf="!datos.textoAnalisisCuadro310 || datos.textoAnalisisCuadro310 === '____'">Del cuadro anterior, se aprecia que, al momento de la aplicación de los Censos Nacionales 2017, la ocupación más frecuente dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es la de "Trabajador independiente o por cuenta propia" con un <span class="highlight">{{ getPorcentajeOcupacion('independiente') }}</span>. Las siguientes ocupaciones que se hallan son la de obrero (<span class="highlight">{{ getPorcentajeOcupacion('obrero') }}</span>) y empleado (<span class="highlight">{{ getPorcentajeOcupacion('empleado') }}</span>). Ello se condice con las entrevistas aplicadas en campo, puesto que se recolectó información que indica que la mayor parte de la población se dedica a las actividades agropecuarias de subsistencia de manera independiente o por cuenta propia.</p>
+<p class="text-justify" *ngIf="!datos.textoAnalisisCuadro310 || datos.textoAnalisisCuadro310 === '____'">Del cuadro anterior, se aprecia que, al momento de la aplicación de los Censos Nacionales 2017, la ocupación más frecuente dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> es la de "Trabajador independiente o por cuenta propia" con un <span [appDataSource]="'manual'">{{ getPorcentajeOcupacion('independiente') }}</span>. Las siguientes ocupaciones que se hallan son la de obrero (<span [appDataSource]="'manual'">{{ getPorcentajeOcupacion('obrero') }}</span>) y empleado (<span [appDataSource]="'manual'">{{ getPorcentajeOcupacion('empleado') }}</span>). Ello se condice con las entrevistas aplicadas en campo, puesto que se recolectó información que indica que la mayor parte de la población se dedica a las actividades agropecuarias de subsistencia de manera independiente o por cuenta propia.</p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Ganadería</strong></p>
-<p class="text-justify" *ngIf="datos.textoGanaderia1 && datos.textoGanaderia1 !== '____'">{{ datos.textoGanaderia1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoGanaderia1 || datos.textoGanaderia1 === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.</p>
-<p class="text-justify" *ngIf="!datos.textoGanaderia2 || datos.textoGanaderia2 === '____'">La alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de <span class="highlight">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span> para la venta; también se elabora yogurt, aunque en menor medida.</p>
-<p class="text-justify" *ngIf="!datos.textoGanaderia3 || datos.textoGanaderia3 === '____'">A pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.</p>
+<div *ngIf="datos.parrafoSeccion8_ganaderia_completo; else ganaderiaCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion8_ganaderia_completo)"></div>
+<ng-template #ganaderiaCompletoDefault>
+    <p class="text-justify">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.</p>
+    <p class="text-justify">La alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de <span [appDataSource]="'automatic'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span> para la venta; también se elabora yogurt, aunque en menor medida.</p>
+    <p class="text-justify">A pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.</p>
+</ng-template>
 
-<p class="table-title">Cuadro N° 3. 11</p>
-<p class="table-title-main">Población pecuaria promedio y precios de venta – CC {{ datos.grupoAISD || 'Ayroca' }}</p>
+<app-table-wrapper title="Población pecuaria promedio y precios de venta – CC {{ datos.grupoAISD || 'Ayroca' }}" sectionId="3.1.4.A.1.4">
 <table class="table-container">
     <thead>
         <tr>
@@ -49,9 +50,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.poblacionPecuariaTabla || [])">
-            <td class="table-cell"><span *ngIf="item.especie && item.especie !== '____'" class="highlight">{{ item.especie }}</span><span *ngIf="!item.especie || item.especie === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.cantidadPromedio && item.cantidadPromedio !== '____'" class="highlight">{{ item.cantidadPromedio }}</span><span *ngIf="!item.cantidadPromedio || item.cantidadPromedio === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.ventaUnidad && item.ventaUnidad !== '____'" class="highlight">{{ item.ventaUnidad }}</span><span *ngIf="!item.ventaUnidad || item.ventaUnidad === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.especie && item.especie !== '____'" [appDataSource]="'manual'">{{ item.especie }}</span><span *ngIf="!item.especie || item.especie === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cantidadPromedio && item.cantidadPromedio !== '____'" [appDataSource]="'manual'">{{ item.cantidadPromedio }}</span><span *ngIf="!item.cantidadPromedio || item.cantidadPromedio === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.ventaUnidad && item.ventaUnidad !== '____'" [appDataSource]="'manual'">{{ item.ventaUnidad }}</span><span *ngIf="!item.ventaUnidad || item.ventaUnidad === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.poblacionPecuariaTabla || datos.poblacionPecuariaTabla.length === 0">
             <td class="table-cell">____</td>
@@ -60,25 +61,28 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">GEADES (2024)</span></p>
 
-<div class="image-gallery">
-    <app-foto-info 
-        *ngFor="let foto of getFotografiasGanaderia()"
-        [numero]="foto.numero"
-        [titulo]="foto.titulo"
-        [fuente]="foto.fuente"
-        [ruta]="foto.ruta">
-    </app-foto-info>
-</div>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasGanaderiaVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaGanaderia'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Agricultura</strong></p>
-<p class="text-justify" *ngIf="datos.textoAgricultura1 && datos.textoAgricultura1 !== '____'">{{ datos.textoAgricultura1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoAgricultura1 || datos.textoAgricultura1 === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 95 % según los entrevistados, se destina al autoconsumo, mientras que solo un 5 % se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectárea de tierra.</p>
-<p class="text-justify" *ngIf="!datos.textoAgricultura2 || datos.textoAgricultura2 === '____'">El sistema de riego utilizado en la comunidad es principalmente por gravedad, aprovechando las fuentes de agua disponibles en la zona. Sin embargo, la actividad agrícola enfrenta serios desafíos, como las heladas, que dañan los cultivos durante las temporadas frías, y las sequías, que disminuyen la disponibilidad de agua, afectando la capacidad productiva de las familias. Adicionalmente, se enfrentan plagas y enfermedades como roedores y el gusano blanco. Estas problemáticas, recurrentes en el ciclo agrícola, limitan tanto la cantidad como la calidad de los productos cosechados.</p>
+<div *ngIf="datos.parrafoSeccion8_agricultura_completo; else agriculturaCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion8_agricultura_completo)"></div>
+<ng-template #agriculturaCompletoDefault>
+    <p class="text-justify">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 95 % según los entrevistados, se destina al autoconsumo, mientras que solo un 5 % se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectárea de tierra.</p>
+    <p class="text-justify">El sistema de riego utilizado en la comunidad es principalmente por gravedad, aprovechando las fuentes de agua disponibles en la zona. Sin embargo, la actividad agrícola enfrenta serios desafíos, como las heladas, que dañan los cultivos durante las temporadas frías, y las sequías, que disminuyen la disponibilidad de agua, afectando la capacidad productiva de las familias. Adicionalmente, se enfrentan plagas y enfermedades como roedores y el gusano blanco. Estas problemáticas, recurrentes en el ciclo agrícola, limitan tanto la cantidad como la calidad de los productos cosechados.</p>
+</ng-template>
 
-<p class="table-title">Cuadro N° 3. 12</p>
-<p class="table-title-main">Características de la Agricultura – CC {{ datos.grupoAISD || 'Ayroca' }}</p>
+<app-table-wrapper title="Características de la Agricultura – CC {{ datos.grupoAISD || 'Ayroca' }}" sectionId="3.1.4.A.1.4">
 <table class="table-container">
     <thead>
         <tr>
@@ -88,8 +92,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.caracteristicasAgriculturaTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.detalle && item.detalle !== '____'" class="highlight">{{ item.detalle }}</span><span *ngIf="!item.detalle || item.detalle === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.detalle && item.detalle !== '____'" [appDataSource]="'manual'">{{ item.detalle }}</span><span *ngIf="!item.detalle || item.detalle === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.caracteristicasAgriculturaTabla || datos.caracteristicasAgriculturaTabla.length === 0">
             <td class="table-cell">____</td>
@@ -97,33 +101,38 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">GEADES (2024)</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">GEADES (2024)</span></p>
 
-<div class="image-gallery">
-    <app-foto-info 
-        *ngFor="let foto of getFotografiasAgricultura()"
-        [numero]="foto.numero"
-        [titulo]="foto.titulo"
-        [fuente]="foto.fuente"
-        [ruta]="foto.ruta">
-    </app-foto-info>
-</div>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasAgriculturaVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaAgricultura'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Mercado y comercialización de productos</strong></p>
 <p class="text-justify" *ngIf="datos.textoMercadoComercializacion1 && datos.textoMercadoComercializacion1 !== '____'">{{ datos.textoMercadoComercializacion1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoMercadoComercializacion1 || datos.textoMercadoComercializacion1 === '____'">Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> no existe un mercado local donde se puedan comercializar los productos agrícolas o ganaderos directamente. Toda la venta de estos productos se realiza a través de intermediarios que visitan la comunidad en busca de animales en pie o productos como el queso. Estos intermediarios suelen establecer los precios de compra, lo que limita la capacidad de los comuneros para negociar y obtener un valor justo por su producción.</p>
+<p class="text-justify" *ngIf="!datos.textoMercadoComercializacion1 || datos.textoMercadoComercializacion1 === '____'">Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> no existe un mercado local donde se puedan comercializar los productos agrícolas o ganaderos directamente. Toda la venta de estos productos se realiza a través de intermediarios que visitan la comunidad en busca de animales en pie o productos como el queso. Estos intermediarios suelen establecer los precios de compra, lo que limita la capacidad de los comuneros para negociar y obtener un valor justo por su producción.</p>
 <p class="text-justify" *ngIf="!datos.textoMercadoComercializacion2 || datos.textoMercadoComercializacion2 === '____'">Esta dependencia de los intermediarios presenta diversas dificultades. Por un lado, los comuneros reciben precios más bajos en comparación con los que podrían obtener si tuvieran acceso directo a mercados más grandes o si contaran con un punto de venta dentro de la comunidad. Además, el transporte de los productos fuera de la comunidad aumenta los costos logísticos, afectando la rentabilidad de las actividades económicas. Este sistema de comercialización se traduce en una vulnerabilidad económica para las familias, ya que dependen de las condiciones impuestas por terceros para la venta de sus bienes.</p>
 
-<app-foto-info 
-    *ngIf="getFotoComercio().ruta"
-    [numero]="getFotoComercio().numero"
-    [titulo]="getFotoComercio().titulo"
-    [fuente]="getFotoComercio().fuente"
-    [ruta]="getFotoComercio().ruta">
-</app-foto-info>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasComercioVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaComercio'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Hábitos de consumo</strong></p>
 <p class="text-justify" *ngIf="datos.textoHabitosConsumo1 && datos.textoHabitosConsumo1 !== '____'">{{ datos.textoHabitosConsumo1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoHabitosConsumo1 || datos.textoHabitosConsumo1 === '____'">En la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, los hábitos de consumo se caracterizan por una dieta basada principalmente en productos que se adquieren de comerciantes que visitan la comunidad periódicamente (quincenalmente, en promedio), así como en pequeñas bodegas locales. Entre los alimentos más consumidos destacan los abarrotes como el arroz, maíz y fideos, que forman parte esencial de la alimentación diaria de las familias. Estos productos son complementados con la producción local de papa y habas, que también son alimentos fundamentales en la dieta.</p>
-<p class="text-justify" *ngIf="!datos.textoHabitosConsumo2 || datos.textoHabitosConsumo2 === '____'">El consumo de papa y habas es especialmente importante, ya que ambos son productos locales y tradicionales, que no solo se destinan al autoconsumo, sino que también forman parte de la base alimentaria debido a su disponibilidad y bajo costo. La producción de estos alimentos es continua, lo que asegura su presencia en la mayoría de los hogares. Dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> resaltan algunos platos tradicionales como el "revuelto de habas", cuy chactado y el chicharrón. Por otra parte, también destaca el consumo de frutas que son obtenidas a través de los comerciantes que visitan la comunidad, los cuales ofrecen productos adicionales como verduras y prendas en determinadas ocasiones.</p>
+<p class="text-justify" *ngIf="!datos.textoHabitosConsumo1 || datos.textoHabitosConsumo1 === '____'">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, los hábitos de consumo se caracterizan por una dieta basada principalmente en productos que se adquieren de comerciantes que visitan la comunidad periódicamente (quincenalmente, en promedio), así como en pequeñas bodegas locales. Entre los alimentos más consumidos destacan los abarrotes como el arroz, maíz y fideos, que forman parte esencial de la alimentación diaria de las familias. Estos productos son complementados con la producción local de papa y habas, que también son alimentos fundamentales en la dieta.</p>
+<p class="text-justify" *ngIf="!datos.textoHabitosConsumo2 || datos.textoHabitosConsumo2 === '____'">El consumo de papa y habas es especialmente importante, ya que ambos son productos locales y tradicionales, que no solo se destinan al autoconsumo, sino que también forman parte de la base alimentaria debido a su disponibilidad y bajo costo. La producción de estos alimentos es continua, lo que asegura su presencia en la mayoría de los hogares. Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> resaltan algunos platos tradicionales como el "revuelto de habas", cuy chactado y el chicharrón. Por otra parte, también destaca el consumo de frutas que son obtenidas a través de los comerciantes que visitan la comunidad, los cuales ofrecen productos adicionales como verduras y prendas en determinadas ocasiones.</p>
 

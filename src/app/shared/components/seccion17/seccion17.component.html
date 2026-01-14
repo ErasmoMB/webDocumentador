@@ -1,10 +1,9 @@
 <h5>A.1.13. Índice de Desarrollo Humano distrital</h5>
 <p class="text-justify" *ngIf="datos.textoIndiceDesarrolloHumano && datos.textoIndiceDesarrolloHumano !== '____'">{{ datos.textoIndiceDesarrolloHumano }}</p>
 <p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">El Índice de Desarrollo Humano (IDH) mide el logro medio de un país (en nuestro país se mide también a niveles departamentales, provinciales y distritales) tratándose de un índice compuesto. El IDH contiene tres variables: la esperanza de vida al nacer, el logro educacional (alfabetización de adultos y la tasa bruta de matriculación primaria, secundaria y terciaria combinada) y el PIB real per cápita (PPA en dólares). El ingreso se considera en el IDH en representación de un nivel decente de vida y en reemplazo de todas las opciones humanas que no se reflejan en las otras dos dimensiones.</p>
-<p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">Según el informe del PNUD para el año 2019, el Índice de Desarrollo Humano del distrito de <span class="highlight">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> es de <span class="highlight">{{ getIDH() }}</span>. Es así que ocupa el puesto N°<span class="highlight">{{ getRankIDH() }}</span> en el país, siendo una de las divisiones políticas de nivel subnacional con uno de los IDH más bajos.</p>
+<p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">Según el informe del PNUD para el año 2019, el Índice de Desarrollo Humano del distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> es de <span [appDataSource]="'automatic'">{{ getIDH() }}</span>. Es así que ocupa el puesto N°<span [appDataSource]="'automatic'">{{ getRankIDH() }}</span> en el país, siendo una de las divisiones políticas de nivel subnacional con uno de los IDH más bajos.</p>
 
-<p class="table-title">Cuadro N° 3. 34</p>
-<p class="table-title-main">Componentes del IDH – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2019)</p>
+<app-table-wrapper title="Componentes del IDH – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2019)" sectionId="3.1.4.A.1.13">
 <table class="table-container">
     <thead>
         <tr>
@@ -32,18 +31,18 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.indiceDesarrolloHumanoTabla || [])">
-            <td class="table-cell">{{ item.poblacion || '____' }}</td>
-            <td class="table-cell">{{ item.rankIdh1 || '____' }}</td>
-            <td class="table-cell">{{ item.idh || '____' }}</td>
-            <td class="table-cell">{{ item.rankEsperanza || '____' }}</td>
-            <td class="table-cell">{{ item.esperanzaVida || '____' }}</td>
-            <td class="table-cell">{{ item.rankEducacion1 || '____' }}</td>
-            <td class="table-cell">{{ item.educacion || '____' }}</td>
-            <td class="table-cell">{{ item.rankEducacion2 || '____' }}</td>
-            <td class="table-cell">{{ item.anosEducacion || '____' }}</td>
-            <td class="table-cell">{{ item.rankAnios || '____' }}</td>
-            <td class="table-cell">{{ item.ingreso || '____' }}</td>
-            <td class="table-cell">{{ item.rankIngreso || item.rankIngresoFinal || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.poblacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankIdh1 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.idh || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankEsperanza || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.esperanzaVida || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankEducacion1 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.educacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankEducacion2 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.anosEducacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankAnios || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.ingreso || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankIngreso || item.rankIngresoFinal || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.indiceDesarrolloHumanoTabla || datos.indiceDesarrolloHumanoTabla.length === 0">
             <td class="table-cell">____</td>
@@ -61,5 +60,17 @@
         </tr>
     </tbody>
 </table>
-<p class="source">FUENTE: PNUD Informe 2019</p>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> PNUD Informe 2019</span></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasIDHVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaIDH'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 

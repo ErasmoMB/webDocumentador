@@ -2,6 +2,10 @@ import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { WordGeneratorService } from 'src/app/core/services/word-generator.service';
+import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
+import { LoggerService } from 'src/app/core/services/logger.service';
+import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
+import { FormularioDatos, CentroPobladoData, Entrevistado } from 'src/app/core/models/formulario.model';
 import { Seccion1Component } from 'src/app/shared/components/seccion1/seccion1.component';
 import { Seccion2Component } from 'src/app/shared/components/seccion2/seccion2.component';
 import { Seccion3Component } from 'src/app/shared/components/seccion3/seccion3.component';
@@ -32,6 +36,12 @@ import { Seccion27Component } from 'src/app/shared/components/seccion27/seccion2
 import { Seccion28Component } from 'src/app/shared/components/seccion28/seccion28.component';
 import { Seccion29Component } from 'src/app/shared/components/seccion29/seccion29.component';
 import { Seccion30Component } from 'src/app/shared/components/seccion30/seccion30.component';
+import { Seccion31Component } from 'src/app/shared/components/seccion31/seccion31.component';
+import { Seccion32Component } from 'src/app/shared/components/seccion32/seccion32.component';
+import { Seccion33Component } from 'src/app/shared/components/seccion33/seccion33.component';
+import { Seccion34Component } from 'src/app/shared/components/seccion34/seccion34.component';
+import { Seccion35Component } from 'src/app/shared/components/seccion35/seccion35.component';
+import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion36.component';
 
 
 @Component({
@@ -39,51 +49,131 @@ import { Seccion30Component } from 'src/app/shared/components/seccion30/seccion3
   templateUrl: './plantilla.component.html',
 })
 export class ResumenComponent implements OnInit {
-  @ViewChild(Seccion1Component) seccion1Component!: Seccion1Component;
-  @ViewChild(Seccion2Component) seccion2Component!: Seccion2Component;
-  @ViewChild(Seccion3Component) seccion3Component!: Seccion3Component;
-  @ViewChild(Seccion4Component) seccion4Component!: Seccion4Component;
-  @ViewChild(Seccion5Component) seccion5Component!: Seccion5Component;
-  @ViewChild(Seccion6Component) seccion6Component!: Seccion6Component;
-  @ViewChild(Seccion7Component) seccion7Component!: Seccion7Component;
-  @ViewChild(Seccion8Component) seccion8Component!: Seccion8Component;
-  @ViewChild(Seccion9Component) seccion9Component!: Seccion9Component;
-  @ViewChild(Seccion10Component) seccion10Component!: Seccion10Component;
-  @ViewChild(Seccion11Component) seccion11Component!: Seccion11Component;
-  @ViewChild(Seccion12Component) seccion12Component!: Seccion12Component;
-  @ViewChild(Seccion13Component) seccion13Component!: Seccion13Component;
-  @ViewChild(Seccion14Component) seccion14Component!: Seccion14Component;
-  @ViewChild(Seccion15Component) seccion15Component!: Seccion15Component;
-  @ViewChild(Seccion16Component) seccion16Component!: Seccion16Component;
-  @ViewChild(Seccion17Component) seccion17Component!: Seccion17Component;
-  @ViewChild(Seccion18Component) seccion18Component!: Seccion18Component;
-  @ViewChild(Seccion19Component) seccion19Component!: Seccion19Component;
-  @ViewChild(Seccion20Component) seccion20Component!: Seccion20Component;
-  @ViewChild(Seccion21Component) seccion21Component!: Seccion21Component;
-  @ViewChild(Seccion22Component) seccion22Component!: Seccion22Component;
-  @ViewChild(Seccion23Component) seccion23Component!: Seccion23Component;
-  @ViewChild(Seccion24Component) seccion24Component!: Seccion24Component;
-  @ViewChild(Seccion25Component) seccion25Component!: Seccion25Component;
-  @ViewChild(Seccion26Component) seccion26Component!: Seccion26Component;
-  @ViewChild(Seccion27Component) seccion27Component!: Seccion27Component;
-  @ViewChild(Seccion28Component) seccion28Component!: Seccion28Component;
-  @ViewChild(Seccion29Component) seccion29Component!: Seccion29Component;
-  @ViewChild(Seccion30Component) seccion30Component!: Seccion30Component;
+  @ViewChild(Seccion1Component) set seccion1(comp: Seccion1Component) {
+    ViewChildHelper.registerComponent('seccion1', comp);
+  }
+  @ViewChild(Seccion2Component) set seccion2(comp: Seccion2Component) {
+    ViewChildHelper.registerComponent('seccion2', comp);
+  }
+  @ViewChild(Seccion3Component) set seccion3(comp: Seccion3Component) {
+    ViewChildHelper.registerComponent('seccion3', comp);
+  }
+  @ViewChild(Seccion4Component) set seccion4(comp: Seccion4Component) {
+    ViewChildHelper.registerComponent('seccion4', comp);
+  }
+  @ViewChild(Seccion5Component) set seccion5(comp: Seccion5Component) {
+    ViewChildHelper.registerComponent('seccion5', comp);
+  }
+  @ViewChild(Seccion6Component) set seccion6(comp: Seccion6Component) {
+    ViewChildHelper.registerComponent('seccion6', comp);
+  }
+  @ViewChild(Seccion7Component) set seccion7(comp: Seccion7Component) {
+    ViewChildHelper.registerComponent('seccion7', comp);
+  }
+  @ViewChild(Seccion8Component) set seccion8(comp: Seccion8Component) {
+    ViewChildHelper.registerComponent('seccion8', comp);
+  }
+  @ViewChild(Seccion9Component) set seccion9(comp: Seccion9Component) {
+    ViewChildHelper.registerComponent('seccion9', comp);
+  }
+  @ViewChild(Seccion10Component) set seccion10(comp: Seccion10Component) {
+    ViewChildHelper.registerComponent('seccion10', comp);
+  }
+  @ViewChild(Seccion11Component) set seccion11(comp: Seccion11Component) {
+    ViewChildHelper.registerComponent('seccion11', comp);
+  }
+  @ViewChild(Seccion12Component) set seccion12(comp: Seccion12Component) {
+    ViewChildHelper.registerComponent('seccion12', comp);
+  }
+  @ViewChild(Seccion13Component) set seccion13(comp: Seccion13Component) {
+    ViewChildHelper.registerComponent('seccion13', comp);
+  }
+  @ViewChild(Seccion14Component) set seccion14(comp: Seccion14Component) {
+    ViewChildHelper.registerComponent('seccion14', comp);
+  }
+  @ViewChild(Seccion15Component) set seccion15(comp: Seccion15Component) {
+    ViewChildHelper.registerComponent('seccion15', comp);
+  }
+  @ViewChild(Seccion16Component) set seccion16(comp: Seccion16Component) {
+    ViewChildHelper.registerComponent('seccion16', comp);
+  }
+  @ViewChild(Seccion17Component) set seccion17(comp: Seccion17Component) {
+    ViewChildHelper.registerComponent('seccion17', comp);
+  }
+  @ViewChild(Seccion18Component) set seccion18(comp: Seccion18Component) {
+    ViewChildHelper.registerComponent('seccion18', comp);
+  }
+  @ViewChild(Seccion19Component) set seccion19(comp: Seccion19Component) {
+    ViewChildHelper.registerComponent('seccion19', comp);
+  }
+  @ViewChild(Seccion20Component) set seccion20(comp: Seccion20Component) {
+    ViewChildHelper.registerComponent('seccion20', comp);
+  }
+  @ViewChild(Seccion21Component) set seccion21(comp: Seccion21Component) {
+    ViewChildHelper.registerComponent('seccion21', comp);
+  }
+  @ViewChild(Seccion22Component) set seccion22(comp: Seccion22Component) {
+    ViewChildHelper.registerComponent('seccion22', comp);
+  }
+  @ViewChild(Seccion23Component) set seccion23(comp: Seccion23Component) {
+    ViewChildHelper.registerComponent('seccion23', comp);
+  }
+  @ViewChild(Seccion24Component) set seccion24(comp: Seccion24Component) {
+    ViewChildHelper.registerComponent('seccion24', comp);
+  }
+  @ViewChild(Seccion25Component) set seccion25(comp: Seccion25Component) {
+    ViewChildHelper.registerComponent('seccion25', comp);
+  }
+  @ViewChild(Seccion26Component) set seccion26(comp: Seccion26Component) {
+    ViewChildHelper.registerComponent('seccion26', comp);
+  }
+  @ViewChild(Seccion27Component) set seccion27(comp: Seccion27Component) {
+    ViewChildHelper.registerComponent('seccion27', comp);
+  }
+  @ViewChild(Seccion28Component) set seccion28(comp: Seccion28Component) {
+    ViewChildHelper.registerComponent('seccion28', comp);
+  }
+  @ViewChild(Seccion29Component) set seccion29(comp: Seccion29Component) {
+    ViewChildHelper.registerComponent('seccion29', comp);
+  }
+  @ViewChild(Seccion30Component) set seccion30(comp: Seccion30Component) {
+    ViewChildHelper.registerComponent('seccion30', comp);
+  }
+  @ViewChild(Seccion31Component) set seccion31(comp: Seccion31Component) {
+    ViewChildHelper.registerComponent('seccion31', comp);
+  }
+  @ViewChild(Seccion32Component) set seccion32(comp: Seccion32Component) {
+    ViewChildHelper.registerComponent('seccion32', comp);
+  }
+  @ViewChild(Seccion33Component) set seccion33(comp: Seccion33Component) {
+    ViewChildHelper.registerComponent('seccion33', comp);
+  }
+  @ViewChild(Seccion34Component) set seccion34(comp: Seccion34Component) {
+    ViewChildHelper.registerComponent('seccion34', comp);
+  }
+  @ViewChild(Seccion35Component) set seccion35(comp: Seccion35Component) {
+    ViewChildHelper.registerComponent('seccion35', comp);
+  }
+  @ViewChild(Seccion36Component) set seccion36(comp: Seccion36Component) {
+    ViewChildHelper.registerComponent('seccion36', comp);
+  }
   
-  datos: any;
-  json: any;
-  entrevistados: any[] = [];
-  entrevistados2: { nombre: string; cargo: string; organizacion: string }[] = [];
+  datos: FormularioDatos | null = null;
+  json: CentroPobladoData[] = [];
+  entrevistados: Entrevistado[] = [];
+  entrevistados2: Entrevistado[] = [];
   modoEjemplo: boolean = false;
   verEjemploLabel: string = 'Ver Ejemplo';
-  datosBackup: any = null;
-  jsonBackup: any = null;
+  datosBackup: FormularioDatos | null = null;
+  jsonBackup: CentroPobladoData[] | null = null;
 
   constructor(
     private formularioService: FormularioService,
     private router: Router,
     private cdRef: ChangeDetectorRef,
-    private wordGeneratorService: WordGeneratorService
+    private wordGeneratorService: WordGeneratorService,
+    private textNormalization: TextNormalizationService,
+    private logger: LoggerService
   ) { }
 
   ngOnInit() {
@@ -98,129 +188,7 @@ export class ResumenComponent implements OnInit {
       this.entrevistados2 = this.datos.entrevistados;
     }
     
-    // Actualizar seccion1 si existe
-    if (this.seccion1Component) {
-      this.seccion1Component.actualizarDatos();
-    }
-    
-    // Actualizar seccion2 si existe
-    if (this.seccion2Component) {
-      this.seccion2Component.actualizarDatos();
-    }
-    
-    // Actualizar seccion3 si existe
-    if (this.seccion3Component) {
-      this.seccion3Component.actualizarDatos();
-    }
-    
-    // Actualizar seccion4 si existe
-    if (this.seccion4Component) {
-      this.seccion4Component.actualizarDatos();
-    }
-    
-    if (this.seccion5Component) {
-      this.seccion5Component.actualizarDatos();
-    }
-    
-    if (this.seccion6Component) {
-      this.seccion6Component.actualizarDatos();
-    }
-    
-    if (this.seccion7Component) {
-      this.seccion7Component.actualizarDatos();
-    }
-    
-    if (this.seccion8Component) {
-      this.seccion8Component.actualizarDatos();
-    }
-    
-    if (this.seccion9Component) {
-      this.seccion9Component.actualizarDatos();
-    }
-    
-    if (this.seccion10Component) {
-      this.seccion10Component.actualizarDatos();
-    }
-    
-    if (this.seccion11Component) {
-      this.seccion11Component.actualizarDatos();
-    }
-    
-    if (this.seccion12Component) {
-      this.seccion12Component.actualizarDatos();
-    }
-    
-    if (this.seccion13Component) {
-      this.seccion13Component.actualizarDatos();
-    }
-    
-    if (this.seccion14Component) {
-      this.seccion14Component.actualizarDatos();
-    }
-    
-    if (this.seccion15Component) {
-      this.seccion15Component.actualizarDatos();
-    }
-    
-    if (this.seccion16Component) {
-      this.seccion16Component.actualizarDatos();
-    }
-    
-    if (this.seccion17Component) {
-      this.seccion17Component.actualizarDatos();
-    }
-    
-    if (this.seccion18Component) {
-      this.seccion18Component.actualizarDatos();
-    }
-    
-    if (this.seccion19Component) {
-      this.seccion19Component.actualizarDatos();
-    }
-    
-    if (this.seccion20Component) {
-      this.seccion20Component.actualizarDatos();
-    }
-    
-    if (this.seccion21Component) {
-      this.seccion21Component.actualizarDatos();
-    }
-    
-    if (this.seccion22Component) {
-      this.seccion22Component.actualizarDatos();
-    }
-    
-    if (this.seccion23Component) {
-      this.seccion23Component.actualizarDatos();
-    }
-    
-    if (this.seccion24Component) {
-      this.seccion24Component.actualizarDatos();
-    }
-    
-    if (this.seccion25Component) {
-      this.seccion25Component.actualizarDatos();
-    }
-    
-    if (this.seccion26Component) {
-      this.seccion26Component.actualizarDatos();
-    }
-    
-    if (this.seccion27Component) {
-      this.seccion27Component.actualizarDatos();
-    }
-    
-    if (this.seccion28Component) {
-      this.seccion28Component.actualizarDatos();
-    }
-    
-    if (this.seccion29Component) {
-      this.seccion29Component.actualizarDatos();
-    }
-    
-    if (this.seccion30Component) {
-      this.seccion30Component.actualizarDatos();
-    }
+    ViewChildHelper.updateAllComponents('actualizarDatos');
     
     this.cdRef.detectChanges();
   }
@@ -320,112 +288,35 @@ export class ResumenComponent implements OnInit {
   }
 
   agregarPuntoFinal(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    const textoTrim = texto.trim();
-    if (/[.!?]$/.test(textoTrim)) {
-      return textoTrim;
-    }
-    return textoTrim + '.';
+    return this.textNormalization.agregarPuntoFinal(texto);
   }
 
   normalizarDespuesDeQue(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    if (/^(el|la|los|las)\s+resto.+\s+por\s+/i.test(resultado)) {
-      resultado = 'se considera ' + resultado;
-    }
-    
-    if (resultado.length > 0 && /^[A-Z]/.test(resultado)) {
-      const palabrasConMayuscula = ['El Proyecto', 'La Comunidad', 'Se consideran', 'Debido'];
-      const empiezaConPalabra = palabrasConMayuscula.some(p => resultado.startsWith(p));
-      
-      if (!empiezaConPalabra) {
-        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      } else if (resultado.startsWith('Se consideran')) {
-        resultado = 'se consideran' + resultado.slice(13);
-      } else if (resultado.startsWith('El Proyecto')) {
-        resultado = 'el Proyecto' + resultado.slice(11);
-      }
-    }
-    
-    return this.agregarPuntoFinal(resultado);
+    return this.textNormalization.normalizarDespuesDeQue(texto);
   }
 
   normalizarComponente1(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    if (/^el proyecto se ubica en el distrito de/i.test(resultado)) {
-      resultado = resultado.replace(/^el proyecto se ubica en (el distrito de .+)/i, '$1');
-    }
-    
-    if (resultado.length > 0 && /^[A-Z]/.test(resultado.charAt(0))) {
-      const excepciones = ['El Proyecto', 'La Comunidad', 'Los centros'];
-      const esExcepcion = excepciones.some(e => resultado.startsWith(e));
-      
-      if (!esExcepcion) {
-        resultado = resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      } else if (resultado.startsWith('Los centros')) {
-        resultado = 'los centros' + resultado.slice(11);
-      } else if (resultado.startsWith('El Proyecto')) {
-        resultado = 'el Proyecto' + resultado.slice(11);
-      }
-    }
-    
-    return this.agregarPuntoFinal(resultado);
+    return this.textNormalization.normalizarComponente1(texto);
   }
 
   normalizarDetalleProyecto(texto: string | undefined | null): string {
-    if (!texto || texto === '...') return '...';
-    let resultado = texto.trim();
-    
-    resultado = resultado.replace(/\bel\s+zona\b/gi, 'la zona');
-    resultado = resultado.replace(/\bel\s+región\b/gi, 'la región');
-    
-    if (/^[A-Z]/.test(resultado)) {
-      if (/^(zona|región|provincia|costa|sierra|selva)/i.test(resultado)) {
-        resultado = 'la ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      }
-      else if (/^(distrito|departamento|valle|territorio)/i.test(resultado)) {
-        resultado = 'el ' + resultado.charAt(0).toLowerCase() + resultado.slice(1);
-      }
-    }
-    
-    return resultado;
+    return this.textNormalization.normalizarDetalleProyecto(texto);
   }
 
   capitalizarTexto(texto: string): string {
-    if (!texto || texto.trim() === '') return texto;
-    const textoLimpio = texto.trim();
-    return textoLimpio.charAt(0).toUpperCase() + textoLimpio.slice(1).toLowerCase();
+    return this.textNormalization.capitalizarTexto(texto);
   }
 
   normalizarNombreProyecto(texto: string | undefined | null, conArticulo: boolean = true): string {
-    if (!texto || texto === '____' || texto === '...') return '____';
-    let resultado = this.capitalizarTexto(texto.trim());
-    
-    if (conArticulo) {
-      if (/^el proyecto /i.test(resultado)) {
-        return resultado.charAt(0).toUpperCase() + resultado.slice(1);
-      }
-      else if (/^proyecto /i.test(resultado)) {
-        return 'El ' + resultado.charAt(0).toUpperCase() + resultado.slice(1);
-      }
-      else {
-        return 'El Proyecto ' + resultado;
-      }
-    } else {
-      return resultado;
-    }
+    return this.textNormalization.normalizarNombreProyecto(texto, conArticulo);
   }
   calcularTotalPoblacion(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.poblacion || 0), 0);
   }
 
   calcularTotalViviendasEmpadronadas(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.viviendasEmpadronadas || 0), 0);
   }
 
@@ -450,7 +341,7 @@ export class ResumenComponent implements OnInit {
   }
 
   getFotoIglesia(): any {
-    const titulo = this.datos?.['fotografiaIglesiaTitulo'] || 'Iglesia Matriz del anexo ' + (this.datos.grupoAISD || 'Ayroca');
+    const titulo = this.datos?.['fotografiaIglesiaTitulo'] || 'Iglesia Matriz del anexo ' + (this.datos?.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaIglesiaFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaIglesiaImagen'] || '';
     
@@ -463,7 +354,7 @@ export class ResumenComponent implements OnInit {
   }
 
   getFotoReservorio(): any {
-    const titulo = this.datos?.['fotografiaReservorioTitulo'] || 'Reservorio del anexo ' + (this.datos.grupoAISD || 'Ayroca');
+    const titulo = this.datos?.['fotografiaReservorioTitulo'] || 'Reservorio del anexo ' + (this.datos?.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaReservorioFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaReservorioImagen'] || '';
     
@@ -476,7 +367,7 @@ export class ResumenComponent implements OnInit {
   }
 
   getFotoUsoSuelos(): any {
-    const titulo = this.datos?.['fotografiaUsoSuelosTitulo'] || 'Uso de los suelos en el anexo ' + (this.datos.grupoAISD || 'Ayroca');
+    const titulo = this.datos?.['fotografiaUsoSuelosTitulo'] || 'Uso de los suelos en el anexo ' + (this.datos?.grupoAISD || 'Ayroca');
     const fuente = this.datos?.['fotografiaUsoSuelosFuente'] || 'GEADES, 2024';
     const imagen = this.datos?.['fotografiaUsoSuelosImagen'] || '';
     
@@ -489,7 +380,7 @@ export class ResumenComponent implements OnInit {
   }
 
   calcularTotalViviendasOcupadas(): number {
-    if (!this.datos.puntosPoblacion) return 0;
+    if (!this.datos?.puntosPoblacion) return 0;
     return this.datos.puntosPoblacion.reduce((sum: number, punto: any) => sum + (punto.viviendasOcupadas || 0), 0);
   }
 
@@ -503,7 +394,7 @@ export class ResumenComponent implements OnInit {
     const elemento = document.querySelector(".viewport-content") as HTMLElement || 
                      document.querySelector(".preview") as HTMLElement;
     if (!elemento) {
-      console.error("No se encontró el contenido para exportar.");
+      this.logger.error("No se encontró el contenido para exportar.");
       alert("No se pudo encontrar el contenido para exportar. Por favor, recarga la página e intenta nuevamente.");
       return;
     }
@@ -513,7 +404,7 @@ export class ResumenComponent implements OnInit {
     try {
       await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
     } catch (error) {
-      console.error("Error al exportar a Word:", error);
+      this.logger.error("Error al exportar a Word", error);
       alert("Hubo un error al exportar el documento. Por favor, intenta nuevamente.");
     }
   }
@@ -531,7 +422,7 @@ export class ResumenComponent implements OnInit {
       }
       return true;
     } catch (error) {
-      console.error('Error al hacer backup de datos:', error);
+      this.logger.error('Error al hacer backup de datos', error);
       this.datosBackup = null;
       this.jsonBackup = null;
       return false;
@@ -575,9 +466,9 @@ export class ResumenComponent implements OnInit {
         this.cdRef.detectChanges();
       }
     } catch (error: any) {
-      console.error('Error al alternar ejemplo:', error);
+      this.logger.error('Error al alternar ejemplo', error);
       const mensajeError = error?.message || 'Error desconocido al alternar el modo ejemplo';
-      console.error('Detalle del error:', mensajeError);
+      this.logger.error('Detalle del error', null, mensajeError);
       alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
     } finally {
       if (boton) { boton.disabled = false; }
@@ -591,7 +482,7 @@ export class ResumenComponent implements OnInit {
       await this.wordGeneratorService.generarDocumentoEjemplo();
       if (boton) { boton.disabled = false; boton.textContent = 'Descargar ejemplo'; }
     } catch (error) {
-      console.error('Error al descargar ejemplo:', error);
+      this.logger.error('Error al descargar ejemplo', error);
       alert('Error al generar el documento ejemplo.');
       const boton = event?.target as HTMLButtonElement;
       if (boton) { boton.disabled = false; boton.textContent = 'Descargar ejemplo'; }

@@ -3,10 +3,9 @@
 
 <h5>a. Idioma</h5>
 <p class="text-justify" *ngIf="datos.textoIdioma && datos.textoIdioma !== '____'">{{ datos.textoIdioma }}</p>
-<p class="text-justify" *ngIf="!datos.textoIdioma || datos.textoIdioma === '____'">Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el <span class="highlight">{{ getPorcentajeCastellano() }}</span> de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del <span class="highlight">{{ getPorcentajeQuechua() }}</span> de los habitantes.</p>
+<p class="text-justify" *ngIf="!datos.textoIdioma || datos.textoIdioma === '____'">Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el <span [appDataSource]="'manual'">{{ getPorcentajeCastellano() }}</span> de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del <span [appDataSource]="'manual'">{{ getPorcentajeQuechua() }}</span> de los habitantes.</p>
 
-<p class="table-title">Cuadro N° 3. 33</p>
-<p class="table-title-main">Lenguas maternas en población de 3 años a más – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="Lenguas maternas en población de 3 años a más – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.11">
 <table class="table-container">
     <thead>
         <tr>
@@ -17,9 +16,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.lenguasMaternasTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'manual'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.lenguasMaternasTabla || datos.lenguasMaternasTabla.length === 0">
             <td class="table-cell">____</td>
@@ -28,17 +27,23 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
 <h5>b. Religión</h5>
-<p class="text-justify" *ngIf="datos.textoReligion && datos.textoReligion !== '____'">{{ datos.textoReligion }}</p>
-<p class="text-justify" *ngIf="!datos.textoReligion || datos.textoReligion === '____'">La confesión predominante dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span class="highlight">{{ datos.grupoAISD || 'Ayroca' }}</span>.</p>
+<div *ngIf="datos.parrafoSeccion15_religion_completo; else religionCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion15_religion_completo)"></div>
+<ng-template #religionCompletoDefault>
+    <p class="text-justify">La confesión predominante dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>.</p>
+</ng-template>
 
-<app-foto-info 
-    *ngIf="getFotoIglesia().ruta"
-    [numero]="getFotoIglesia().numero"
-    [titulo]="getFotoIglesia().titulo"
-    [fuente]="getFotoIglesia().fuente"
-    [ruta]="getFotoIglesia().ruta">
-</app-foto-info>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasIglesiaVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaIglesia'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 

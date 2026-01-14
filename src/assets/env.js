@@ -7,11 +7,10 @@
   }
 
   window.__ENV__ = {
-    USE_MOCK_DATA: getEnv('USE_MOCK_DATA', 'true'), // Por defecto true para funcionar sin backend
-    API_URL: getEnv('API_URL', 'http://localhost:8000/api/v1'),
+    USE_MOCK_DATA: getEnv('USE_MOCK_DATA', 'false'),
+    API_URL: getEnv('API_URL', 'http://localhost:8000'),
     MOCK_DATA_PATH: getEnv('MOCK_DATA_PATH', 'assets/mockData'),
     NODE_ENV: getEnv('NODE_ENV', 'production')
   };
 
-  console.log('env.js cargado:', window.__ENV__);
 })();

@@ -1,2 +1,11 @@
-/* Estilos específicos para seccion1 si son necesarios */
+.text-justify {
+  text-align: justify;
+}
 
+.text-justify p {
+  margin-bottom: 1em;
+}
+
+.text-justify p:last-child {
+  margin-bottom: 0;
+}

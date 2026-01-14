@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 import { DataService } from './data.service';
+import { BackendApiService } from './backend-api.service';
+import { MathUtil } from '../utils/math.util';
+import { DataTransformerUtil } from '../utils/data-transformer.util';
 
 export interface PoblacionResponse {
   success: boolean;
@@ -47,30 +49,14 @@ export interface PEANoPEAResponse {
   success: boolean;
   message: string;
   data: {
-    pea: {
-      total: number;
-      hombres: number;
-      mujeres: number;
-      porcentaje_hombres: string;
-      porcentaje_mujeres: string;
-    };
-    no_pea: {
-      total: number;
-      hombres: number;
-      mujeres: number;
-      porcentaje_hombres: string;
-      porcentaje_mujeres: string;
-    };
-    pea_ocupada: {
-      total: number;
-      hombres: number;
-      mujeres: number;
-    };
-    pea_desocupada: {
-      total: number;
-      hombres: number;
-      mujeres: number;
-    };
+    pea: number;
+    no_pea: number;
+    porcentaje_pea: string;
+    porcentaje_no_pea: string;
+    ocupada: number;
+    desocupada: number;
+    porcentaje_ocupada: string;
+    porcentaje_desocupada: string;
   };
   status_code: number;
 }
@@ -81,9 +67,9 @@ export interface PEANoPEAResponse {
 export class PoblacionService {
 
   constructor(
-    private http: HttpClient,
     private configService: ConfigService,
-    private dataService: DataService
+    private dataService: DataService,
+    private backendApi: BackendApiService
   ) { }
 
   getPoblacionByCpp(cpp: string[]): Observable<PoblacionResponse> {
@@ -98,10 +84,43 @@ export class PoblacionService {
       );
     }
 
-    const apiUrl = `${this.configService.getApiUrl()}/poblacion/`;
-    const params = new HttpParams().set('cpp', cpp.join(','));
-    
-    return this.http.get<PoblacionResponse>(apiUrl, { params }).pipe(
+    const idUbigeo = cpp.length > 0 ? cpp[0] : undefined;
+    if (!idUbigeo) {
+      return of({
+        success: false,
+        message: 'No se proporcionó código CPP',
+        data: { poblacion: {} as any },
+        status_code: 400
+      } as PoblacionResponse);
+    }
+
+    return this.backendApi.getDatosDemograficos(idUbigeo).pipe(
+      map(response => {
+        if (response.data && response.data.length > 0) {
+          const datos = response.data[0];
+          const transformed = DataTransformerUtil.transformDatosDemograficos(datos);
+          return {
+            success: true,
+            message: 'Datos de población obtenidos correctamente',
+            data: {
+              poblacion: {
+                ...transformed,
+                total_varones: datos.hombres || 0,
+                total_mujeres: datos.mujeres || 0,
+                porcentaje_varones: MathUtil.calcularPorcentaje(datos.hombres || 0, datos.poblacion_total || 0),
+                porcentaje_mujeres: MathUtil.calcularPorcentaje(datos.mujeres || 0, datos.poblacion_total || 0)
+              }
+            },
+            status_code: 200
+          } as PoblacionResponse;
+        }
+        return {
+          success: false,
+          message: 'No se encontraron datos',
+          data: { poblacion: {} as any },
+          status_code: 404
+        } as PoblacionResponse;
+      }),
       catchError(error => {
         console.error('Error al obtener población por CPP:', error);
         return of({
@@ -126,10 +145,25 @@ export class PoblacionService {
       );
     }
 
-    const apiUrl = `${this.configService.getApiUrl()}/poblacion/distrito`;
-    const params = new HttpParams().set('distrito', distrito);
-    
-    return this.http.get<PoblacionDistritoResponse>(apiUrl, { params }).pipe(
+    return this.backendApi.getUbicacionesConDatosDemograficos().pipe(
+      map(response => {
+        if (response.data && Array.isArray(response.data)) {
+          const filtered = DataTransformerUtil.filterByDistrito(response.data, distrito);
+          const centrosPoblados: PoblacionDistritoItem[] = filtered.map(DataTransformerUtil.mapToCentroPoblado);
+          return {
+            success: true,
+            message: `Datos de población para ${distrito} obtenidos correctamente`,
+            data: centrosPoblados,
+            status_code: 200
+          } as PoblacionDistritoResponse;
+        }
+        return {
+          success: false,
+          message: 'No se encontraron datos',
+          data: [],
+          status_code: 404
+        } as PoblacionDistritoResponse;
+      }),
       catchError(error => {
         console.error('Error al obtener población por distrito:', error);
         return of({
@@ -154,10 +188,25 @@ export class PoblacionService {
       );
     }
 
-    const apiUrl = `${this.configService.getApiUrl()}/poblacion/provincia`;
-    const params = new HttpParams().set('provincia', provincia);
-    
-    return this.http.get<PoblacionDistritoResponse>(apiUrl, { params }).pipe(
+    return this.backendApi.getUbicacionesConDatosDemograficos().pipe(
+      map(response => {
+        if (response.data && Array.isArray(response.data)) {
+          const filtered = DataTransformerUtil.filterByProvincia(response.data, provincia);
+          const centrosPoblados: PoblacionDistritoItem[] = filtered.map(DataTransformerUtil.mapToCentroPoblado);
+          return {
+            success: true,
+            message: `Datos de población para ${provincia} obtenidos correctamente`,
+            data: centrosPoblados,
+            status_code: 200
+          } as PoblacionDistritoResponse;
+        }
+        return {
+          success: false,
+          message: 'No se encontraron datos',
+          data: [],
+          status_code: 404
+        } as PoblacionDistritoResponse;
+      }),
       catchError(error => {
         console.error('Error al obtener población por provincia:', error);
         return of({
@@ -182,10 +231,13 @@ export class PoblacionService {
       );
     }
 
-    const apiUrl = `${this.configService.getApiUrl()}/censo/pea-nopea`;
-    const params = new HttpParams().set('distrito', distrito);
-    
-    return this.http.get<PEANoPEAResponse>(apiUrl, { params }).pipe(
+    return this.dataService.getSharedData('pea').pipe(
+      map(data => ({
+        success: true,
+        message: `Datos de PEA y No PEA para ${distrito} obtenidos correctamente`,
+        data: data,
+        status_code: 200
+      } as PEANoPEAResponse)),
       catchError(error => {
         console.error('Error al obtener PEA/No PEA por distrito:', error);
         return of({

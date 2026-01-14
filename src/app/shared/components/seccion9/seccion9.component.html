@@ -1,9 +1,8 @@
 <h5>A.1.5. Viviendas</h5>
 <p class="text-justify" *ngIf="datos.textoViviendas && datos.textoViviendas !== '____'">{{ datos.textoViviendas }}</p>
-<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span> se hallan un total de <span class="highlight">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span class="highlight">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span class="highlight">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
+<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> se hallan un total de <span [appDataSource]="'automatic'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span [appDataSource]="'automatic'">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span [appDataSource]="'automatic'">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
 
-<p class="table-title">Cuadro N° 3. 13</p>
-<p class="table-title-main">Condición de ocupación de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="Condición de ocupación de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
     <thead>
         <tr>
@@ -14,9 +13,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.condicionOcupacionTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'automatic'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'automatic'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'automatic'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.condicionOcupacionTabla || datos.condicionOcupacionTabla.length === 0">
             <td class="table-cell">____</td>
@@ -25,16 +24,16 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
 <p class="text-justify" *ngIf="datos.textoEstructura && datos.textoEstructura !== '____'">{{ datos.textoEstructura }}</p>
-<p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro de la CC <span class="highlight">{{ datos.grupoAISD || '____' }}</span>, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el <span class="highlight">{{ getPorcentajeMaterial('paredes', 'adobe') }}</span>. A ello le complementa el material de triplay / calamina / estera (<span class="highlight">{{ getPorcentajeMaterial('paredes', 'triplay') }}</span>).</p>
-<p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un <span class="highlight">{{ getPorcentajeMaterial('techos', 'calamina') }}</span>. El porcentaje restante consiste en triplay / estera / carrizo (<span class="highlight">{{ getPorcentajeMaterial('techos', 'triplay') }}</span>) y en tejas (<span class="highlight">{{ getPorcentajeMaterial('techos', 'tejas') }}</span>).</p>
-<p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span class="highlight">{{ getPorcentajeMaterial('pisos', 'tierra') }}</span>). Por otra parte, el porcentaje restante (<span class="highlight">{{ getPorcentajeMaterial('pisos', 'cemento') }}</span>) consiste en cemento.</p>
+    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el <span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('paredes', 'adobe') }}</span>. A ello le complementa el material de triplay / calamina / estera (<span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('paredes', 'triplay') }}</span>).</p>
+    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un <span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('techos', 'calamina') }}</span>. El porcentaje restante consiste en triplay / estera / carrizo (<span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('techos', 'triplay') }}</span>) y en tejas (<span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('techos', 'tejas') }}</span>).</p>
+    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('pisos', 'tierra') }}</span>). Por otra parte, el porcentaje restante (<span [appDataSource]="'automatic'">{{ getPorcentajeMaterial('pisos', 'cemento') }}</span>) consiste en cemento.</p>
 
-<p class="table-title">Cuadro N° 3. 14</p>
-<p class="table-title-main">Tipos de materiales de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)</p>
+<app-table-wrapper title="Tipos de materiales de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
     <thead>
         <tr>
@@ -46,10 +45,10 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.tiposMaterialesTabla || [])" [class.table-row-total]="item.tipoMaterial === 'Total'">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" class="highlight">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" class="highlight">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" class="highlight">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" class="highlight">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'automatic'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'automatic'">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'automatic'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'automatic'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.tiposMaterialesTabla || datos.tiposMaterialesTabla.length === 0">
             <td class="table-cell">____</td>
@@ -59,13 +58,17 @@
         </tr>
     </tbody>
 </table>
-<p class="source">Fuente:<span class="highlight">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+</app-table-wrapper>
+<p class="source">Fuente:<span [appDataSource]="'manual'">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
-<app-foto-info 
-    *ngIf="getFotoEstructura().ruta"
-    [numero]="getFotoEstructura().numero"
-    [titulo]="getFotoEstructura().titulo"
-    [fuente]="getFotoEstructura().fuente"
-    [ruta]="getFotoEstructura().ruta">
-</app-foto-info>
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasEstructuraVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaEstructura'"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
 

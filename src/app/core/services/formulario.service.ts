@@ -1,28 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
-interface DatosJSON {
-  ITEM?: number;
-  UBIGEO?: number;
-  CODIGO?: number;
-  CCPP?: string;
-  CATEGORIA?: string;
-  POBLACION?: number;
-  DPTO?: string;
-  PROV?: string;
-  DIST?: string;
-  ESTE?: number;
-  NORTE?: number;
-  ALTITUD?: number;
-}
+import { FormularioDatos, CentroPobladoData, ComunidadCampesina } from '../models/formulario.model';
+import { LoggerService } from './logger.service';
+import { StateService } from './state.service';
+import { ImageMigrationService } from './image-migration.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FormularioService {
 
-  datos: any = {
+  datos: FormularioDatos = {
     projectName: '',
     grupoAISD: '',
     grupoAISI: '',
@@ -141,52 +130,145 @@ export class FormularioService {
     textoAfiliacionSalud: '',
     afiliacionSaludTabla: [],
     fotografias: [],
+    comunidadesCampesinas: [],
+    parrafoSeccion1_principal: '',
+    parrafoSeccion1_4: '',
+    objetivoSeccion1_1: '',
+    objetivoSeccion1_2: '',
+    parrafoSeccion2_introduccion: '',
+    parrafoSeccion2_aisd_completo: '',
+    parrafoSeccion2_aisi_completo: '',
+    parrafoSeccion3_metodologia: '',
+    parrafoSeccion3_fuentes_primarias: '',
+    parrafoSeccion3_fuentes_primarias_cuadro: '',
+    parrafoSeccion3_fuentes_secundarias: '',
+    fuentesSecundariasLista: [
+      'Base de Datos de Pueblos Indígenas u Originarios – BDPI.',
+      'Censos Nacionales 2017 (XII de Población, VII de Vivienda y III de Comunidades Indígenas) ejecutados por el Instituto Nacional de Estadística e Informática (INEI).',
+      'Estadísticas de la Calidad Educativa (ESCALE) de la Unidad de Estadística del Ministerio de Educación (MINEDU).',
+      'Ministerio de Energía y Minas (MINEM).',
+      'Ministerio de Trabajo y Promoción del Empleo (MTPE).',
+      'Ministerio de Transporte y Comunicaciones (MTC).',
+      'Observatorio Socio Económico Laboral (OSEL).',
+      'Organismo Supervisor de Inversión Privada en Telecomunicaciones – OSIPTEL.',
+      'Programa de Naciones Unidas para el Desarrollo – PNUD.',
+      'Registro Nacional de Instituciones Prestadoras de Servicios de Salud (RENIPRESS).',
+      'Repositorio Digital de Información Multisectorial (REDINFORMA) – MIDIS.',
+      'Repositorio Único Nacional de Información en Salud (REUNIS).',
+      'Resultados Definitivos de la Población Económicamente Activa 2017 – INEI.',
+      'Sistema de Información Distrital para la Gestión Pública – INEI.'
+    ],
+    parrafoSeccion5_institucionalidad: '',
+    parrafoSeccion5_institucionalidad_A1: '',
+    parrafoSeccion5_institucionalidad_A2: '',
+    parrafoSeccion4_introduccion_aisd: '',
+    parrafoSeccion4_comunidad_completo: '',
+    parrafoSeccion4_caracterizacion_indicadores: '',
+    parrafoSeccion7_situacion_empleo_completo: '',
+    parrafoSeccion7_ingresos_completo: '',
+    parrafoSeccion8_ganaderia_completo: '',
+    parrafoSeccion8_agricultura_completo: '',
+    parrafoSeccion10_servicios_basicos_intro: '',
+    parrafoSeccion11_transporte_completo: '',
+    parrafoSeccion11_telecomunicaciones_completo: '',
+    parrafoSeccion12_salud_completo: '',
+    parrafoSeccion12_educacion_completo: '',
+    parrafoSeccion13_natalidad_mortalidad_completo: '',
+    parrafoSeccion13_morbilidad_completo: '',
+    parrafoSeccion14_indicadores_educacion_intro: '',
+    parrafoSeccion21_aisi_intro_completo: '',
+    parrafoSeccion21_centro_poblado_completo: '',
+    parrafoSeccion15_religion_completo: '',
+    parrafoSeccion16_agua_completo: '',
+    parrafoSeccion16_recursos_naturales_completo: '',
+    parrafoSeccion30_indicadores_educacion_intro: '',
   };
 
-  jsonData: any[] = [];
+  jsonData: CentroPobladoData[] = [];
   private readonly STORAGE_KEY = 'formulario_datos';
   private readonly STORAGE_JSON_KEY = 'formulario_json';
   private readonly STORAGE_TABLA_FILAS_KEY = 'tabla_aisd2_filas_activas';
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService,
+    private stateService: StateService,
+    private imageMigration: ImageMigrationService
+  ) {
     this.cargarDesdeLocalStorage();
+    this.sincronizarConEstado();
+    this.ejecutarMigracionImagenes();
   }
 
-  actualizarDato(campo: string, valor: any) {
-    if (this.datos) {
-      this.datos[campo] = valor;
-      this.guardarEnLocalStorage();
+  private async ejecutarMigracionImagenes(): Promise<void> {
+    const MIGRATION_KEY = 'imagenes_migradas_v1';
+    
+    // Verificar si ya se ejecutó la migración
+    if (localStorage.getItem(MIGRATION_KEY)) {
+      return;
+    }
+
+    try {
+      const tamanioActual = this.imageMigration.obtenerTamanioLocalStorage();
+      
+      // Solo migrar si el tamaño es mayor a 3 MB
+      if (tamanioActual > 3) {
+        this.logger.info('Iniciando migración automática de imágenes...');
+        await this.imageMigration.comprimirImagenesEnLocalStorage();
+        localStorage.setItem(MIGRATION_KEY, 'true');
+        this.logger.info('Migración completada exitosamente');
+        
+        // Recargar datos desde localStorage
+        this.cargarDesdeLocalStorage();
+      }
+    } catch (error) {
+      this.logger.error('Error durante la migración automática:', error);
     }
   }
 
-  actualizarDatos(nuevosDatos: any) {
-    this.datos = { ...this.datos, ...nuevosDatos };
-    this.guardarEnLocalStorage();
+  private sincronizarConEstado(): void {
+    this.stateService.setDatos(this.datos);
   }
 
-  reemplazarDatos(nuevosDatos: any) {
+  actualizarDato(campo: keyof FormularioDatos, valor: any): void {
+    if (this.datos) {
+      (this.datos as any)[campo] = valor;
+      this.guardarEnLocalStorage();
+      this.stateService.updateDato(campo, valor);
+    }
+  }
+
+  actualizarDatos(nuevosDatos: Partial<FormularioDatos>): void {
+    this.datos = { ...this.datos, ...nuevosDatos };
+    this.guardarEnLocalStorage();
+    this.stateService.setDatos(this.datos);
+  }
+
+  reemplazarDatos(nuevosDatos: FormularioDatos): void {
     if (!nuevosDatos) {
-      console.warn('reemplazarDatos: nuevosDatos es null o undefined');
+      this.logger.warn('reemplazarDatos: nuevosDatos es null o undefined');
       return;
     }
     try {
       this.datos = JSON.parse(JSON.stringify(nuevosDatos));
+      this.stateService.setDatos(this.datos);
     } catch (error) {
-      console.error('Error al reemplazar datos:', error);
+      this.logger.error('Error al reemplazar datos', error);
       this.datos = { ...nuevosDatos };
+      this.stateService.setDatos(this.datos);
     }
   }
 
-  obtenerDatos() {
+  obtenerDatos(): FormularioDatos {
     return this.datos;
   }
 
-  guardarJSON(data: any) {
+  guardarJSON(data: CentroPobladoData[]): void {
     this.jsonData = data;
     this.guardarJSONEnLocalStorage();
   }
 
-  obtenerJSON(): DatosJSON[] {
+  obtenerJSON(): CentroPobladoData[] {
     return this.jsonData;
   }
 
@@ -196,32 +278,35 @@ export class FormularioService {
       const tamanioMB = new Blob([datosSerializados]).size / (1024 * 1024);
       
       if (tamanioMB > 4) {
-        console.warn(`Los datos son muy grandes (${tamanioMB.toFixed(2)} MB). Algunas imágenes pueden no guardarse correctamente.`);
+        this.logger.warn(`Los datos son muy grandes (${tamanioMB.toFixed(2)} MB). Algunas imágenes pueden no guardarse correctamente.`);
       }
       
       localStorage.setItem(this.STORAGE_KEY, datosSerializados);
     } catch (error: any) {
       if (error.name === 'QuotaExceededError' || error.code === 22) {
-        console.error('Error: localStorage está lleno. Intenta eliminar datos antiguos o reducir el tamaño de las imágenes.');
+        this.logger.error('Error: localStorage está lleno. Intenta eliminar datos antiguos o reducir el tamaño de las imágenes.');
       } else {
-        console.error('Error al guardar en localStorage:', error);
+        this.logger.error('Error al guardar en localStorage', error);
       }
     }
   }
 
-  private guardarJSONEnLocalStorage() {
+  private guardarJSONEnLocalStorage(): void {
     try {
       localStorage.setItem(this.STORAGE_JSON_KEY, JSON.stringify(this.jsonData));
     } catch (error) {
-      console.error('Error al guardar JSON en localStorage:', error);
+      this.logger.error('Error al guardar JSON en localStorage', error);
     }
   }
 
-  private cargarDesdeLocalStorage() {
+  private cargarDesdeLocalStorage(): void {
     try {
       const datosGuardados = localStorage.getItem(this.STORAGE_KEY);
       if (datosGuardados) {
-        this.datos = JSON.parse(datosGuardados);
+        const datosCargados = JSON.parse(datosGuardados);
+        Object.keys(datosCargados).forEach(key => {
+          (this.datos as any)[key] = datosCargados[key];
+        });
       }
 
       const jsonGuardado = localStorage.getItem(this.STORAGE_JSON_KEY);
@@ -229,26 +314,34 @@ export class FormularioService {
         this.jsonData = JSON.parse(jsonGuardado);
       }
     } catch (error) {
-      console.error('Error al cargar desde localStorage:', error);
+      this.logger.error('Error al cargar desde localStorage', error);
     }
   }
 
-  guardarFilasActivasTablaAISD2(codigosActivos: string[]) {
+  guardarFilasActivasTablaAISD2(codigosActivos: string[], prefijo: string = ''): void {
     try {
-      localStorage.setItem(this.STORAGE_TABLA_FILAS_KEY, JSON.stringify(codigosActivos));
+      const key = prefijo ? `${this.STORAGE_TABLA_FILAS_KEY}${prefijo}` : this.STORAGE_TABLA_FILAS_KEY;
+      localStorage.setItem(key, JSON.stringify(codigosActivos));
     } catch (error) {
-      console.error('Error al guardar filas activas:', error);
+      this.logger.error('Error al guardar filas activas', error);
     }
   }
 
-  obtenerFilasActivasTablaAISD2(): string[] {
+  obtenerFilasActivasTablaAISD2(prefijo: string = ''): string[] {
     try {
-      const filasGuardadas = localStorage.getItem(this.STORAGE_TABLA_FILAS_KEY);
+      const key = prefijo ? `${this.STORAGE_TABLA_FILAS_KEY}${prefijo}` : this.STORAGE_TABLA_FILAS_KEY;
+      const filasGuardadas = localStorage.getItem(key);
       if (filasGuardadas) {
         return JSON.parse(filasGuardadas);
       }
+      if (!prefijo) {
+        const filasA1 = localStorage.getItem(`${this.STORAGE_TABLA_FILAS_KEY}_A1`);
+        if (filasA1) {
+          return JSON.parse(filasA1);
+        }
+      }
     } catch (error) {
-      console.error('Error al obtener filas activas:', error);
+      this.logger.error('Error al obtener filas activas', error);
     }
     return [];
   }
@@ -373,11 +466,87 @@ export class FormularioService {
       textoAfiliacionSalud: '',
       afiliacionSaludTabla: [],
       fotografias: [],
+      parrafoSeccion1_principal: '',
+      parrafoSeccion1_4: '',
+      objetivoSeccion1_1: '',
+      objetivoSeccion1_2: '',
+      parrafoSeccion2_introduccion: '',
+      parrafoSeccion2_aisd_completo: '',
+      parrafoSeccion2_aisi_completo: '',
+      parrafoSeccion3_metodologia: '',
+      parrafoSeccion3_fuentes_primarias: '',
+      parrafoSeccion3_fuentes_primarias_cuadro: '',
+      parrafoSeccion3_fuentes_secundarias: '',
+      fuentesSecundariasLista: [
+        'Base de Datos de Pueblos Indígenas u Originarios – BDPI.',
+        'Censos Nacionales 2017 (XII de Población, VII de Vivienda y III de Comunidades Indígenas) ejecutados por el Instituto Nacional de Estadística e Informática (INEI).',
+        'Estadísticas de la Calidad Educativa (ESCALE) de la Unidad de Estadística del Ministerio de Educación (MINEDU).',
+        'Ministerio de Energía y Minas (MINEM).',
+        'Ministerio de Trabajo y Promoción del Empleo (MTPE).',
+        'Ministerio de Transporte y Comunicaciones (MTC).',
+        'Observatorio Socio Económico Laboral (OSEL).',
+        'Organismo Supervisor de Inversión Privada en Telecomunicaciones – OSIPTEL.',
+        'Programa de Naciones Unidas para el Desarrollo – PNUD.',
+        'Registro Nacional de Instituciones Prestadoras de Servicios de Salud (RENIPRESS).',
+        'Repositorio Digital de Información Multisectorial (REDINFORMA) – MIDIS.',
+        'Repositorio Único Nacional de Información en Salud (REUNIS).',
+        'Resultados Definitivos de la Población Económicamente Activa 2017 – INEI.',
+        'Sistema de Información Distrital para la Gestión Pública – INEI.'
+      ],
+      parrafoSeccion5_institucionalidad: '',
+      parrafoSeccion5_institucionalidad_A1: '',
+      parrafoSeccion5_institucionalidad_A2: '',
+      parrafoSeccion4_introduccion_aisd: '',
+      parrafoSeccion4_comunidad_completo: '',
+      parrafoSeccion4_caracterizacion_indicadores: '',
+      parrafoSeccion7_situacion_empleo_completo: '',
+      parrafoSeccion7_ingresos_completo: '',
+      parrafoSeccion8_ganaderia_completo: '',
+      parrafoSeccion8_agricultura_completo: '',
+      parrafoSeccion10_servicios_basicos_intro: '',
+      parrafoSeccion11_transporte_completo: '',
+      parrafoSeccion11_telecomunicaciones_completo: '',
+      parrafoSeccion12_salud_completo: '',
+      parrafoSeccion12_educacion_completo: '',
+      parrafoSeccion13_natalidad_mortalidad_completo: '',
+      parrafoSeccion13_morbilidad_completo: '',
+      parrafoSeccion14_indicadores_educacion_intro: '',
+      parrafoSeccion21_aisi_intro_completo: '',
+      parrafoSeccion21_centro_poblado_completo: '',
+      parrafoSeccion15_religion_completo: '',
+      parrafoSeccion16_agua_completo: '',
+      parrafoSeccion16_recursos_naturales_completo: '',
+      parrafoSeccion30_indicadores_educacion_intro: '',
+      comunidadesCampesinas: [],
     };
     this.jsonData = [];
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.STORAGE_JSON_KEY);
     localStorage.removeItem(this.STORAGE_TABLA_FILAS_KEY);
+    
+    const prefijos = ['_A1', '_A2', '_A3', '_A4', '_A5', '_B1', '_B2'];
+    prefijos.forEach(prefijo => {
+      localStorage.removeItem(`${this.STORAGE_TABLA_FILAS_KEY}${prefijo}`);
+    });
+    
+    prefijos.forEach(prefijo => {
+      for (let i = 1; i <= 20; i++) {
+        const campos = [
+          `tablaAISD2Fila${i}Punto${prefijo}`,
+          `tablaAISD2Fila${i}Codigo${prefijo}`,
+          `tablaAISD2Fila${i}Poblacion${prefijo}`,
+          `tablaAISD2Fila${i}ViviendasEmpadronadas${prefijo}`,
+          `tablaAISD2Fila${i}ViviendasOcupadas${prefijo}`
+        ];
+        campos.forEach(campo => {
+          if (this.datos[campo as keyof FormularioDatos]) {
+            delete this.datos[campo as keyof FormularioDatos];
+          }
+        });
+      }
+    });
+    
+    this.stateService.setDatos(this.datos);
   }
 
   async cargarMockCapitulo3(): Promise<boolean> {
@@ -388,12 +557,12 @@ export class FormularioService {
       const data = await firstValueFrom(this.http.get<any>(url));
       
       if (!data) {
-        console.error('Mock vacío o no encontrado:', url);
+        this.logger.error('Mock vacío o no encontrado', null, url);
         return false;
       }
       
       if (!data.datos) {
-        console.error('No se encontró la propiedad "datos" en el JSON');
+        this.logger.error('No se encontró la propiedad "datos" en el JSON');
         return false;
       }
       
@@ -420,13 +589,13 @@ export class FormularioService {
       
       return true;
     } catch (error: any) {
-      console.error('Error HTTP al cargar mock capitulo3:', error);
+      this.logger.error('Error HTTP al cargar mock capitulo3', error);
       if (error.status === 404) {
-        console.error('Archivo no encontrado en:', url);
+        this.logger.error('Archivo no encontrado en', null, url);
       } else if (error.status === 0) {
-        console.error('Error de red o CORS. Verifique que el servidor esté ejecutándose y que el archivo exista en:', url);
+        this.logger.error('Error de red o CORS. Verifique que el servidor esté ejecutándose y que el archivo exista en', null, url);
       } else if (error.error) {
-        console.error('Error del servidor:', error.error);
+        this.logger.error('Error del servidor', error.error);
       }
       return false;
     }
