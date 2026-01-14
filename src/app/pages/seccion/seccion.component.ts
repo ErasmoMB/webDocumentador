@@ -639,6 +639,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     if (this.seccionId === '3.1.4.B.1.2' || this.seccionId === '3.1.4.B.2.2') {
       this.actualizarFotografiasDemografiaAISIFormMulti();
+      this.actualizarFotografiasPEAAISIFormMulti();
     }
 
     if (this.seccionId === '3.1.4.B.1.3' || this.seccionId === '3.1.4.B.2.3') {
