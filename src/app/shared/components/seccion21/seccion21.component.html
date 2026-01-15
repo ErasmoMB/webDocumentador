@@ -63,171 +63,127 @@
   <div class="form-group-section">
     <h4 class="section-title">B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
     
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Ley Creación Distrito</label>
-        <input type="text" class="input" placeholder="Ej: 8004"
-          [value]="datos['leyCreacionDistrito'] || ''"
-          (input)="onFieldChange('leyCreacionDistrito', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Fecha Creación Distrito</label>
-        <input type="text" class="input" placeholder="Ej: 22 de febrero de 1935"
-          [value]="datos['fechaCreacionDistrito'] || ''"
-          (input)="onFieldChange('fechaCreacionDistrito', $any($event.target).value)">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Distrito Anterior</label>
-        <input type="text" class="input" placeholder="Ej: Caravelí"
-          [value]="datos['distritoAnterior'] || ''"
-          (input)="onFieldChange('distritoAnterior', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Origen Pobladores 1</label>
-        <input type="text" class="input" placeholder="Ej: Caravelí"
-          [value]="datos['origenPobladores1'] || ''"
-          (input)="onFieldChange('origenPobladores1', $any($event.target).value)">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Origen Pobladores 2</label>
-        <input type="text" class="input" placeholder="Ej: Parinacochas"
-          [value]="datos['origenPobladores2'] || ''"
-          (input)="onFieldChange('origenPobladores2', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Departamento Origen</label>
-        <input type="text" class="input" placeholder="Ej: Ayacucho"
-          [value]="datos['departamentoOrigen'] || ''"
-          (input)="onFieldChange('departamentoOrigen', $any($event.target).value)">
-      </div>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Anexos Ejemplo</label>
-      <input type="text" class="input" placeholder="Ej: Ayroca o Sóndor"
-        [value]="datos['anexosEjemplo'] || ''"
-        (input)="onFieldChange('anexosEjemplo', $any($event.target).value)">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Ubicación CP</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Localidad</th>
-              <th>Coordenadas</th>
-              <th>Altitud</th>
-              <th>Distrito</th>
-              <th>Provincia</th>
-              <th>Departamento</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['ubicacionCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.localidad || ''"
-                  (input)="actualizarUbicacionCp(i, 'localidad', $any($event.target).value)"
-                  placeholder="Cahuacho">
-              </td>
-              <td>
-                <textarea class="table-input" rows="2"
-                  [value]="item.coordenadas || ''"
-                  (input)="actualizarUbicacionCp(i, 'coordenadas', $any($event.target).value)"
-                  placeholder="Lat: -15.1234&#10;Lon: -73.5678"></textarea>
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.altitud || ''"
-                  (input)="actualizarUbicacionCp(i, 'altitud', $any($event.target).value)"
-                  placeholder="3500 m">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.distrito || ''"
-                  (input)="actualizarUbicacionCp(i, 'distrito', $any($event.target).value)"
-                  placeholder="Cahuacho">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.provincia || ''"
-                  (input)="actualizarUbicacionCp(i, 'provincia', $any($event.target).value)"
-                  placeholder="Caravelí">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.departamento || ''"
-                  (input)="actualizarUbicacionCp(i, 'departamento', $any($event.target).value)"
-                  placeholder="Arequipa">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarUbicacionCp(i)" *ngIf="(datos['ubicacionCpTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['ubicacionCpTabla'] || datos['ubicacionCpTabla'].length === 0">
-              <td colspan="7" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarUbicacionCp()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarUbicacionCp()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
         fieldId="parrafoSeccion21_aisi_intro_completo"
         label="AISI - Introducción - Texto Completo"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
         [value]="obtenerTextoSeccion21AISIIntroCompleto()"
         (valueChange)="onFieldChange('parrafoSeccion21_aisi_intro_completo', $event)">
       </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="parrafoSeccion21_centro_poblado_completo"
-        label="Centro Poblado - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoSeccion21CentroPobladoCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion21_centro_poblado_completo', $event)">
-      </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Cahuacho</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Centro Poblado Cahuacho"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Centro Poblado Cahuacho"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion21_centro_poblado_completo"
+          label="Centro Poblado - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoSeccion21CentroPobladoCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion21_centro_poblado_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Ubicación CP</label>
+        <div class="table-editor" style="overflow-x: auto;">
+          <table class="editor-table">
+            <thead>
+              <tr>
+                <th>Localidad</th>
+                <th>Coordenadas</th>
+                <th>Altitud</th>
+                <th>Distrito</th>
+                <th>Provincia</th>
+                <th>Departamento</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of (datos['ubicacionCpTabla'] || []); let i = index">
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="item.localidad || ''"
+                    (input)="actualizarUbicacionCp(i, 'localidad', $any($event.target).value)"
+                    placeholder="Cahuacho">
+                </td>
+                <td>
+                  <textarea class="table-input" rows="2"
+                    [value]="item.coordenadas || ''"
+                    (input)="actualizarUbicacionCp(i, 'coordenadas', $any($event.target).value)"
+                    placeholder="Lat: -15.1234&#10;Lon: -73.5678"></textarea>
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="item.altitud || ''"
+                    (input)="actualizarUbicacionCp(i, 'altitud', $any($event.target).value)"
+                    placeholder="3500 m">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="item.distrito || ''"
+                    (input)="actualizarUbicacionCp(i, 'distrito', $any($event.target).value)"
+                    placeholder="Cahuacho">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="item.provincia || ''"
+                    (input)="actualizarUbicacionCp(i, 'provincia', $any($event.target).value)"
+                    placeholder="Caravelí">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="item.departamento || ''"
+                    (input)="actualizarUbicacionCp(i, 'departamento', $any($event.target).value)"
+                    placeholder="Arequipa">
+                </td>
+                <td>
+                  <button type="button" class="btn-icon" (click)="eliminarUbicacionCp(i)" *ngIf="(datos['ubicacionCpTabla'] || []).length > 1" title="Eliminar fila">
+                    ×
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!datos['ubicacionCpTabla'] || datos['ubicacionCpTabla'].length === 0">
+                <td colspan="7" style="text-align: center; padding: 10px;">
+                  <button type="button" class="btn btn-secondary" (click)="inicializarUbicacionCp()">
+                    Agregar Primera Fila
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="agregarUbicacionCp()" style="margin-top: 10px;">
+          + Agregar Fila
+        </button>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Cahuacho</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Centro Poblado Cahuacho"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Centro Poblado Cahuacho"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

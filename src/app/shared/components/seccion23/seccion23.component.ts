@@ -22,7 +22,7 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI', 'textoPEAAISI', 'textoPET_AISI', 'textoIndicadoresDistritalesAISI', 'textoPEA_AISI', 'textoAnalisisPEA_AISI', 'textoEmpleoAISI', 'textoIngresosAISI', 'textoIndiceDesempleoAISI'];
   
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   
@@ -217,8 +217,101 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
     return this.datos?.poblacionDistritalAISI || '610';
   }
 
+  obtenerTextoPET_AISI(): string {
+    if (this.datos.textoPET_AISI && this.datos.textoPET_AISI !== '____') {
+      return this.datos.textoPET_AISI;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje4564 = this.getPorcentajeGrupoPET('45 a 64');
+    const porcentaje65 = this.getPorcentajeGrupoPET('65');
+    
+    return `La población en edad de trabajar (PET) en el CP ${centroPoblado} representa un ${porcentajePET} de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el ${porcentaje4564} de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el ${porcentaje65} de la PET.`;
+  }
+
+  obtenerTextoIndicadoresDistritalesAISI(): string {
+    if (this.datos.textoIndicadoresDistritalesAISI && this.datos.textoIndicadoresDistritalesAISI !== '____') {
+      return this.datos.textoIndicadoresDistritalesAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const poblacionDistrital = this.getPoblacionDistrital();
+    const petDistrital = this.getPETDistrital();
+    
+    return `No obstante, los indicadores de la Población Económicamente Activa (PEA), tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de ${distrito}, jurisdicción donde se ubica el AISD en cuestión, es de ${poblacionDistrital} personas, y que la PET (de 14 años a más) al mismo nivel está conformada por ${petDistrital} personas.`;
+  }
+
+  obtenerTextoPEA_AISI(): string {
+    if (this.datos.textoPEA_AISI && this.datos.textoPEA_AISI !== '____') {
+      return this.datos.textoPEA_AISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de ${distrito}, jurisdicción que abarca a su capital distrital, el CP ${centroPoblado}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.`;
+  }
+
+  obtenerTextoAnalisisPEA_AISI(): string {
+    if (this.datos.textoAnalisisPEA_AISI && this.datos.textoAnalisisPEA_AISI !== '____') {
+      return this.datos.textoAnalisisPEA_AISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajePEA = this.getPorcentajePEA();
+    const porcentajeNoPEA = this.getPorcentajeNoPEA();
+    const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
+    const porcentajeMujeresNoPEA = this.getPorcentajeMujeresNoPEA();
+    
+    return `Del cuadro precedente, se aprecia que la PEA del distrito de ${distrito} representa un ${porcentajePEA} del total de la PET de la jurisdicción, mientras que la No PEA abarca el ${porcentajeNoPEA} restante. Asimismo, se visualiza que los hombres se hallan predominantemente dentro de la PEA, pues el ${porcentajeHombresPEA} se halla en esta categoría. Por otro lado, la mayor parte de las mujeres se hallan en el indicador de No PEA con un ${porcentajeMujeresNoPEA}.`;
+  }
+
+  obtenerTextoEmpleoAISI(): string {
+    if (this.datos.textoEmpleoAISI && this.datos.textoEmpleoAISI !== '____') {
+      return this.datos.textoEmpleoAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    
+    return `La mayor parte de la población de la capital distrital de ${distrito} se dedica a actividades agropecuarias, siendo la agricultura y la ganadería las principales fuentes de empleo independiente. En el sector agrícola, los cultivos predominantes son la papa, cebada, habas, trigo y oca, productos que abastecen tanto el consumo local como el comercio en menor medida. Asimismo, la ganadería juega un papel importante, con la crianza de vacunos y ovinos como las principales actividades ganaderas de la zona. Aunque en menor proporción, algunos pobladores también se dedican al comercio, complementando así su ingreso económico.\n\nEn cuanto al empleo dependiente, este sector es reducido y está conformado principalmente por trabajadores de la municipalidad distrital, quienes cumplen funciones administrativas y operativas; el personal de las instituciones educativas que ofrecen servicios de enseñanza en la localidad; y los empleados del puesto de salud que brindan atención básica a los habitantes. Este tipo de empleo proporciona estabilidad a un pequeño grupo de la población, pero no es la fuente principal de ingresos entre los habitantes. En general, el empleo independiente predomina como el principal medio de subsistencia para la mayoría de los pobladores.`;
+  }
+
+  obtenerTextoIngresosAISI(): string {
+    if (this.datos.textoIngresosAISI && this.datos.textoIngresosAISI !== '____') {
+      return this.datos.textoIngresosAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const ingresoPerCapita = this.getIngresoPerCapita();
+    const rankingIngreso = this.getRankingIngreso();
+    
+    return `Los ingresos de la población en la capital distrital de ${distrito} están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. La agricultura, en particular, proporciona una fuente regular de alimentos y productos que, en su mayoría, se destinan al autoconsumo, mientras que un porcentaje menor es comercializado. Los ingresos provenientes de la ganadería dependen de la venta de animales en pie, especialmente vacunos y ovinos, así como de productos derivados como el queso, el cual se vende a intermediarios. Sin embargo, las fluctuaciones en los precios del mercado, así como las limitaciones en infraestructura y acceso a mercados directos, afectan los ingresos de los habitantes, generando una inestabilidad económica.\n\nAquellos que trabajan de manera dependiente, como los empleados municipales, profesores y personal del puesto de salud, tienen ingresos más regulares. Sin embargo, debido a que este sector representa una pequeña proporción de la población, sus ingresos no son significativos en la economía general de la localidad, mucho menos del distrito. Además, el acceso a empleos dependientes es limitado y no logra cubrir las necesidades de una mayor parte de la población.\n\nAdicionalmente, cabe mencionar que, según el informe del PNUD 2019, el distrito de ${distrito} (jurisdicción que abarca al CP ${centroPoblado}) cuenta con un ingreso familiar per cápita de S/. ${ingresoPerCapita} mensuales, ocupando el puesto N°${rankingIngreso} en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.`;
+  }
+
+  obtenerTextoIndiceDesempleoAISI(): string {
+    if (this.datos.textoIndiceDesempleoAISI && this.datos.textoIndiceDesempleoAISI !== '____') {
+      return this.datos.textoIndiceDesempleoAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca al CP ${centroPoblado} (capital distrital). Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).`;
+  }
+
   obtenerTextoPEAAISI(): string {
-    return this.datos.textoPEAAISI || '';
+    if (this.datos.textoPEAAISI && this.datos.textoPEAAISI !== '____') {
+      return this.datos.textoPEAAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajeDesempleo = this.getPorcentajeDesempleo();
+    const porcentajeHombresOcupados = this.getPorcentajeHombresOcupados();
+    const porcentajeMujeresOcupadas = this.getPorcentajeMujeresOcupadas();
+    
+    return `Del cuadro precedente, se halla que en el distrito de ${distrito} la PEA Desocupada representa un ${porcentajeDesempleo} del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de ${porcentajeHombresOcupados} y ${porcentajeMujeresOcupadas}, respectivamente.`;
   }
 
   getPETDistrital(): string {

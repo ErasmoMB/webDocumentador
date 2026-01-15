@@ -20,7 +20,7 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion13_natalidad_mortalidad_completo', 'parrafoSeccion13_morbilidad_completo', 'natalidadMortalidadTabla', 'morbilidadTabla', 'porcentajeSIS', 'porcentajeESSALUD', 'porcentajeSinSeguro', 'afiliacionSaludTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion13_natalidad_mortalidad_completo', 'parrafoSeccion13_morbilidad_completo', 'natalidadMortalidadTabla', 'morbilidadTabla', 'porcentajeSIS', 'porcentajeESSALUD', 'porcentajeSinSeguro', 'afiliacionSaludTabla', 'textoAfiliacionSalud'];
   
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
   private stateSubscription?: Subscription;
@@ -195,6 +195,19 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
     return `De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC ${grupoAISD} son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.\n\nEn cuanto a los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca a los poblados de la CC ${grupoAISD}) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.`;
+  }
+
+  obtenerTextoAfiliacionSalud(): string {
+    if (this.datos.textoAfiliacionSalud && this.datos.textoAfiliacionSalud !== '____') {
+      return this.datos.textoAfiliacionSalud;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajeSIS = this.datos.porcentajeSIS || '84,44';
+    const porcentajeESSALUD = this.datos.porcentajeESSALUD || '3,56';
+    const porcentajeSinSeguro = this.datos.porcentajeSinSeguro || '12,00';
+    
+    return `Dentro de la CC ${grupoAISD}, la mayoría de habitantes se encuentran afiliados a algún tipo de seguro de salud. Es así que el Seguro Integral de Salud (SIS) se halla en primer lugar, al abarcar el ${porcentajeSIS} % de la población. A ello le sigue ESSALUD, con un ${porcentajeESSALUD} %. Por otro lado, el ${porcentajeSinSeguro} % de la población no cuenta con ningún tipo de seguro de salud.`;
   }
 
   onMorbilidadFieldChange(index: number, field: string, value: any) {

@@ -22,7 +22,7 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'parrafoSeccion30_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'parrafoSeccion30_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'textoNivelEducativo', 'textoTasaAnalfabetismo'];
   
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB19';
   
@@ -308,11 +308,35 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoNivelEducativo(): string {
-    return this.datos.textoNivelEducativo || '';
+    if (this.datos.textoNivelEducativo && this.datos.textoNivelEducativo !== '____') {
+      return this.datos.textoNivelEducativo;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajeSecundaria = this.getPorcentajeSecundaria();
+    const porcentajePrimaria = this.getPorcentajePrimaria();
+    const porcentajeSinNivel = this.getPorcentajeSinNivel();
+    
+    return `En el CP ${centroPoblado}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria, pues representan el ${porcentajeSecundaria}. En segundo lugar, se hallan aquellos que cuentan con primaria (${porcentajePrimaria}). Por otro lado, la categoría minoritaria corresponde a aquellos con sin nivel o inicial, pues representan solamente un ${porcentajeSinNivel}.`;
   }
 
   obtenerTextoTasaAnalfabetismo(): string {
-    return this.datos.textoTasaAnalfabetismo || '';
+    if (this.datos.textoTasaAnalfabetismo && this.datos.textoTasaAnalfabetismo !== '____') {
+      return this.datos.textoTasaAnalfabetismo;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const casosAnalfabetismo = this.getCasosAnalfabetismo();
+    const porcentajeAnalfabetismo = this.getPorcentajeAnalfabetismo();
+    
+    return `En el CP ${centroPoblado}, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de ${casosAnalfabetismo}. Esto representa una tasa de analfabetismo del ${porcentajeAnalfabetismo} en esta localidad.`;
+  }
+
+  obtenerTextoSeccion30IndicadoresEducacionIntro(): string {
+    if (this.datos.parrafoSeccion30_indicadores_educacion_intro && this.datos.parrafoSeccion30_indicadores_educacion_intro !== '____') {
+      return this.datos.parrafoSeccion30_indicadores_educacion_intro;
+    }
+    return `La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.`;
   }
 }
 

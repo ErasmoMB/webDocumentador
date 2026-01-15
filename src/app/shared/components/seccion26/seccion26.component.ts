@@ -22,11 +22,18 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla', 'textoIntroServiciosBasicosAISI', 'textoServiciosAguaAISI', 'textoDesagueCP', 'textoDesechosSolidosCP', 'textoElectricidadCP', 'textoEnergiaCocinarCP'];
   
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB15';
   
+  readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidosAISI';
+  readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidadAISI';
+  readonly PHOTO_PREFIX_COCINAR = 'fotografiaEnergiaCocinarAISI';
+  
   fotografiasInstitucionalidadCache: any[] = [];
+  fotografiasDesechosFormMulti: FotoItem[] = [];
+  fotografiasElectricidadFormMulti: FotoItem[] = [];
+  fotografiasCocinarFormMulti: FotoItem[] = [];
 
   abastecimientoAguaConfig: TableConfig = {
     tablaKey: 'abastecimientoAguaCpTabla',
@@ -99,6 +106,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     } else {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
+        this.actualizarFotografiasCache();
         this.cdRef.detectChanges();
       });
     }
@@ -147,6 +155,15 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
 
   protected override tieneFotografias(): boolean {
     return true;
+  }
+
+  formatearParrafo(texto: string): string {
+    if (!texto) return '';
+    const parrafos = texto.split(/\n\n+/);
+    return parrafos.map(p => {
+      const textoLimpio = p.trim().replace(/\n/g, '<br>');
+      return `<p class="text-justify">${textoLimpio}</p>`;
+    }).join('');
   }
 
   getViviendasOcupadasPresentes(): string {
@@ -251,6 +268,22 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
 
   override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasDesechosFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_DESECHOS,
+      groupPrefix
+    );
+    this.fotografiasElectricidadFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_ELECTRICIDAD,
+      groupPrefix
+    );
+    this.fotografiasCocinarFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_COCINAR,
+      groupPrefix
+    );
   }
 
   override getFotografiasVista(): FotoItem[] {
@@ -262,11 +295,53 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     );
   }
 
+  getFotografiasDesechosVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_DESECHOS,
+      groupPrefix
+    );
+  }
+
+  getFotografiasElectricidadVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_ELECTRICIDAD,
+      groupPrefix
+    );
+  }
+
+  getFotografiasCocinarVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_COCINAR,
+      groupPrefix
+    );
+  }
+
   protected override actualizarFotografiasFormMulti(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.fotografiasFormMulti = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasDesechosFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_DESECHOS,
+      groupPrefix
+    );
+    this.fotografiasElectricidadFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_ELECTRICIDAD,
+      groupPrefix
+    );
+    this.fotografiasCocinarFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_COCINAR,
       groupPrefix
     );
   }
@@ -294,69 +369,88 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     this.fotografiasCache = [...fotografias];
   }
 
-
-  getFotoDesechosSolidos(): any {
-    const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
-    const titulo = this.datos?.['fotografiaDesechosSolidosAISITitulo'] || 'Contenedores de residuos sólidos en el CP ' + centroPobladoAISI;
-    const fuente = this.datos?.['fotografiaDesechosSolidosAISIFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaDesechosSolidosAISIImagen'] || '';
-    
-    return {
-      numero: '3. 28',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
+  onFotografiasDesechosChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_DESECHOS, fotografias);
+    this.fotografiasDesechosFormMulti = [...fotografias];
   }
 
-  getFotoDesechosSolidosParaImageUpload(): FotoItem[] {
-    const foto = this.getFotoDesechosSolidos();
-    if (!foto.ruta) {
-      return [];
+  onFotografiasElectricidadChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_ELECTRICIDAD, fotografias);
+    this.fotografiasElectricidadFormMulti = [...fotografias];
+  }
+
+  onFotografiasCocinarChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_COCINAR, fotografias);
+    this.fotografiasCocinarFormMulti = [...fotografias];
+  }
+
+  obtenerTextoIntroServiciosBasicosAISI(): string {
+    if (this.datos.textoIntroServiciosBasicosAISI && this.datos.textoIntroServiciosBasicosAISI !== '____') {
+      return this.datos.textoIntroServiciosBasicosAISI;
     }
-    return [{
-      titulo: foto.titulo,
-      fuente: foto.fuente,
-      imagen: foto.ruta
-    }];
-  }
-
-  getFotoElectricidad(): any {
-    const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
-    const titulo = this.datos?.['fotografiaElectricidadAISITitulo'] || 'Infraestructura eléctrica en el CP ' + centroPobladoAISI;
-    const fuente = this.datos?.['fotografiaElectricidadAISIFuente'] || 'GEADES, 2024';
-    const imagen = this.datos?.['fotografiaElectricidadAISIImagen'] || '';
     
-    return {
-      numero: '3. 30',
-      titulo: titulo,
-      fuente: fuente,
-      ruta: imagen
-    };
-  }
-
-  getFotoElectricidadParaImageUpload(): FotoItem[] {
-    const foto = this.getFotoElectricidad();
-    if (!foto.ruta) {
-      return [];
-    }
-    return [{
-      titulo: foto.titulo,
-      fuente: foto.fuente,
-      imagen: foto.ruta
-    }];
+    const viviendasOcupadas = this.getViviendasOcupadasPresentes();
+    
+    return `Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.\n\nEn 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (${viviendasOcupadas}), tal como realiza el Censo Nacional 2017.`;
   }
 
   obtenerTextoServiciosAguaAISI(): string {
-    return this.datos.textoServiciosAguaAISI || '';
+    if (this.datos.textoServiciosAguaAISI && this.datos.textoServiciosAguaAISI !== '____') {
+      return this.datos.textoServiciosAguaAISI;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajeDentro = this.getPorcentajeAguaRedPublicaDentro();
+    const porcentajeFuera = this.getPorcentajeAguaRedPublicaFuera();
+    
+    return `Respecto al servicio de agua para consumo humano en el CP ${centroPoblado}, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un ${porcentajeDentro} de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (${porcentajeFuera}) consta de red pública fuera de la vivienda, pero dentro de la edificación.`;
   }
 
   obtenerTextoDesechosSolidosCP(): string {
-    return this.datos.textoDesechosSolidosCP || '';
+    if (this.datos.textoDesechosSolidosCP && this.datos.textoDesechosSolidosCP !== '____') {
+      return this.datos.textoDesechosSolidosCP;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de ${distrito}, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.\n\nCuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo. Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del CP ${centroPoblado} en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.`;
+  }
+
+  obtenerTextoDesagueCP(): string {
+    if (this.datos.textoDesagueCP && this.datos.textoDesagueCP !== '____') {
+      return this.datos.textoDesagueCP;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    
+    return `Respecto al servicio de saneamiento en las viviendas de la capital distrital de ${distrito}, se cuenta con una amplia cobertura de dicho servicio. Es así que, según los Censos Nacionales 2017, un 81,63 % de las viviendas cuenta con red pública de desagüe dentro de las mismas. Adicionalmente, un 10,20 % cuenta con pozo séptico, tanque séptico o biodigestor.\n\nPor otra parte, se hallan otras categorías con porcentajes menores: red pública de desagüe fuera de la vivienda, pero dentro de la edificación; letrina (con tratamiento); pozo ciego o negro; y campo abierto o al aire libre, todas las cuales representan un 2,04 % cada una.`;
+  }
+
+  obtenerTextoElectricidadCP(): string {
+    if (this.datos.textoElectricidadCP && this.datos.textoElectricidadCP !== '____') {
+      return this.datos.textoElectricidadCP;
+    }
+    
+    const porcentajeSi = this.getPorcentajeElectricidadSi();
+    const porcentajeNo = this.getPorcentajeElectricidadNo();
+    
+    return `Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, se cuenta con los siguientes datos: el ${porcentajeSi} de las viviendas cuenta con alumbrado eléctrico, mientras que el ${porcentajeNo} restante no tiene el referido servicio.`;
   }
 
   obtenerTextoEnergiaCocinarCP(): string {
-    return this.datos.textoEnergiaCocinarCP || '';
+    if (this.datos.textoEnergiaCocinarCP && this.datos.textoEnergiaCocinarCP !== '____') {
+      return this.datos.textoEnergiaCocinarCP;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const totalHogares = this.getTotalHogares();
+    const porcentajeLena = this.getPorcentajeLena();
+    const porcentajeGas = this.getPorcentajeGas();
+    const porcentajeBosta = this.getPorcentajeBosta();
+    const porcentajeElectricidad = this.getPorcentajeElectricidadCocinar();
+    
+    return `Según los Censos Nacionales 2017, de un total de ${totalHogares} hogares en el CP ${centroPoblado}, se obtiene que un ${porcentajeLena} emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un ${porcentajeGas}, la bosta o estiércol en un ${porcentajeBosta} y la electricidad con un ${porcentajeElectricidad}. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.`;
   }
 }
 

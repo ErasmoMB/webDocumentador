@@ -79,68 +79,102 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.10. Indicadores de educación</h4>
     
-    <div class="form-field">
-      <label class="label">Tabla Nivel Educativo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="nivelEducativoConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'nivelEducativoTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Tasa de Analfabetismo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="tasaAnalfabetismoConfig"
-        [columns]="[
-          { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'tasaAnalfabetismoTabla'"
-        [totalKey]="'indicador'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
         fieldId="parrafoSeccion14_indicadores_educacion_intro"
         label="Introducción - Indicadores de Educación"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
         [value]="obtenerTextoSeccion14IndicadoresEducacionIntro()"
         (valueChange)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $event)">
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Indicadores de Educación</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Indicadores de educación"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Indicadores de educación"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Nivel Educativo de la población</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoNivelEducativo"
+          label="Nivel Educativo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoNivelEducativo()"
+          (valueChange)="onFieldChange('textoNivelEducativo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Nivel Educativo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="nivelEducativoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'nivelEducativoTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Indicadores de Educación</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Indicadores de educación"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Indicadores de educación"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Tasa de analfabetismo</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoTasaAnalfabetismo"
+          label="Tasa de Analfabetismo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoTasaAnalfabetismo()"
+          (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tasa de Analfabetismo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="tasaAnalfabetismoConfig"
+          [columns]="[
+            { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'tasaAnalfabetismoTabla'"
+          [totalKey]="'indicador'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
     </div>
   </div>
 </div>

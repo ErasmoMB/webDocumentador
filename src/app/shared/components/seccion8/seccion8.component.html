@@ -142,7 +142,30 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.4. Actividades económicas de la población</h4>
     
-    <div class="form-field">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoActividadesEconomicas"
+        label="Actividades Económicas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoActividadesEconomicas()"
+        (valueChange)="onFieldChange('textoActividadesEconomicas', $event)">
+      </app-paragraph-editor>
+      
+      <app-paragraph-editor
+        fieldId="textoFuentesActividadesEconomicas"
+        label="Fuentes Actividades Económicas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="2"
+        [value]="obtenerTextoFuentesActividadesEconomicas()"
+        (valueChange)="onFieldChange('textoFuentesActividadesEconomicas', $event)"
+        style="margin-top: 15px;">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla PEA Ocupada según ocupaciones principales</label>
       <app-dynamic-table
         [datos]="datos"
@@ -158,114 +181,193 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field">
-      <label class="label">Tabla Población Pecuaria</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="poblacionPecuariaConfig"
-        [columns]="[
-          { field: 'especie', label: 'Especie', type: 'text', placeholder: 'Vacuno' },
-          { field: 'cantidadPromedio', label: 'Cantidad promedio por familia', type: 'text', placeholder: '4 – 50' },
-          { field: 'ventaUnidad', label: 'Venta por unidad', type: 'text', placeholder: 'S/. 1 200 – S/. 1 500' }
-        ]"
-        [tablaKey]="'poblacionPecuariaTabla'"
-        [totalKey]="'especie'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Características de la Agricultura</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="caracteristicasAgriculturaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Categoría' },
-          { field: 'detalle', label: 'Detalle', type: 'text', placeholder: 'Detalle' }
-        ]"
-        [tablaKey]="'caracteristicasAgriculturaTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
-        fieldId="parrafoSeccion8_ganaderia_completo"
-        label="Ganadería - Texto Completo"
-        hint="Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="8"
-        [value]="obtenerTextoSeccion8GanaderiaCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion8_ganaderia_completo', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="parrafoSeccion8_agricultura_completo"
-        label="Agricultura - Texto Completo"
-        hint="Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoSeccion8AgriculturaCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion8_agricultura_completo', $event)">
+        fieldId="textoAnalisisCuadro310"
+        label="Análisis Cuadro 3.10 - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoAnalisisCuadro310()"
+        (valueChange)="onFieldChange('textoAnalisisCuadro310', $event)">
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Ganadería</label>
-      <app-image-upload
-        [fotografias]="fotografiasGanaderiaFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_GANADERIA"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Ganadería en la CC Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Ganadería"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasGanaderiaChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Ganadería</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion8_ganaderia_completo"
+          label="Ganadería - Texto Completo"
+          hint="Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="8"
+          [value]="obtenerTextoSeccion8GanaderiaCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion8_ganaderia_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Población Pecuaria</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="poblacionPecuariaConfig"
+          [columns]="[
+            { field: 'especie', label: 'Especie', type: 'text', placeholder: 'Vacuno' },
+            { field: 'cantidadPromedio', label: 'Cantidad promedio por familia', type: 'text', placeholder: '4 – 50' },
+            { field: 'ventaUnidad', label: 'Venta por unidad', type: 'text', placeholder: 'S/. 1 200 – S/. 1 500' }
+          ]"
+          [tablaKey]="'poblacionPecuariaTabla'"
+          [totalKey]="'especie'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Ganadería</label>
+        <app-image-upload
+          [fotografias]="fotografiasGanaderiaFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_GANADERIA"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Ganadería en la CC Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Ganadería"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasGanaderiaChange($event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Agricultura</label>
-      <app-image-upload
-        [fotografias]="fotografiasAgriculturaFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Agricultura en la CC Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Agricultura"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasAgriculturaChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Agricultura</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion8_agricultura_completo"
+          label="Agricultura - Texto Completo"
+          hint="Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoSeccion8AgriculturaCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion8_agricultura_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Características de la Agricultura</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="caracteristicasAgriculturaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Categoría' },
+            { field: 'detalle', label: 'Detalle', type: 'text', placeholder: 'Detalle' }
+          ]"
+          [tablaKey]="'caracteristicasAgriculturaTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Agricultura</label>
+        <app-image-upload
+          [fotografias]="fotografiasAgriculturaFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Agricultura en la CC Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Agricultura"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasAgriculturaChange($event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Comercio</label>
-      <app-image-upload
-        [fotografias]="fotografiasComercioFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_COMERCIO"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Comercio en la CC Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Comercio"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasComercioChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Mercado y comercialización de productos</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoMercadoComercializacion1"
+          label="Mercado y Comercialización - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoMercadoComercializacion1()"
+          (valueChange)="onFieldChange('textoMercadoComercializacion1', $event)">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoMercadoComercializacion2"
+          label="Mercado y Comercialización - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoMercadoComercializacion2()"
+          (valueChange)="onFieldChange('textoMercadoComercializacion2', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Comercio</label>
+        <app-image-upload
+          [fotografias]="fotografiasComercioFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_COMERCIO"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Comercio en la CC Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Comercio"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasComercioChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Hábitos de consumo</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoHabitosConsumo1"
+          label="Hábitos de Consumo - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoHabitosConsumo1()"
+          (valueChange)="onFieldChange('textoHabitosConsumo1', $event)">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoHabitosConsumo2"
+          label="Hábitos de Consumo - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoHabitosConsumo2()"
+          (valueChange)="onFieldChange('textoHabitosConsumo2', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
     </div>
   </div>
 </div>

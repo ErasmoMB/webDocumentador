@@ -22,7 +22,7 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'condicionOcupacionTabla', 'tiposMaterialesTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'condicionOcupacionTabla', 'tiposMaterialesTabla', 'textoViviendas', 'textoEstructura'];
   
   override readonly PHOTO_PREFIX = 'fotografiaEstructura';
 
@@ -205,7 +205,33 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoViviendas(): string {
-    return this.datos.textoViviendas || '';
+    if (this.datos.textoViviendas && this.datos.textoViviendas !== '____') {
+      return this.datos.textoViviendas;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const totalViviendas = this.getTotalViviendasEmpadronadas();
+    const viviendasOcupadas = this.getViviendasOcupadas();
+    const porcentajeOcupadas = this.getPorcentajeViviendasOcupadas();
+    
+    return `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${grupoAISD} se hallan un total de ${totalViviendas} viviendas empadronadas. De estas, solamente ${viviendasOcupadas} se encuentran ocupadas, representando un ${porcentajeOcupadas}. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.`;
+  }
+
+  obtenerTextoEstructura(): string {
+    if (this.datos.textoEstructura && this.datos.textoEstructura !== '____') {
+      return this.datos.textoEstructura;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajeAdobe = this.getPorcentajeMaterial('paredes', 'adobe');
+    const porcentajeTriplayParedes = this.getPorcentajeMaterial('paredes', 'triplay');
+    const porcentajeCalamina = this.getPorcentajeMaterial('techos', 'calamina');
+    const porcentajeTriplayTechos = this.getPorcentajeMaterial('techos', 'triplay');
+    const porcentajeTejas = this.getPorcentajeMaterial('techos', 'tejas');
+    const porcentajeTierra = this.getPorcentajeMaterial('pisos', 'tierra');
+    const porcentajeCemento = this.getPorcentajeMaterial('pisos', 'cemento');
+    
+    return `Según la información recabada de los Censos Nacionales 2017, dentro de la CC ${grupoAISD}, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el ${porcentajeAdobe}. A ello le complementa el material de triplay / calamina / estera (${porcentajeTriplayParedes}).\n\nRespecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un ${porcentajeCalamina}. El porcentaje restante consiste en triplay / estera / carrizo (${porcentajeTriplayTechos}) y en tejas (${porcentajeTejas}).\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajeTierra}). Por otra parte, el porcentaje restante (${porcentajeCemento}) consiste en cemento.`;
   }
 }
 

@@ -35,8 +35,8 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tasa de analfabetismo</strong></p>
-<p class="text-justify" *ngIf="datos.textoAnalfabetismo && datos.textoAnalfabetismo !== '____'">{{ datos.textoAnalfabetismo }}</p>
-<p class="text-justify" *ngIf="!datos.textoAnalfabetismo || datos.textoAnalfabetismo === '____'">En el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de <span [appDataSource]="'automatic'">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span [appDataSource]="'automatic'">{{ getPorcentajeAnalfabetismo() }}</span> en esta localidad.</p>
+<p class="text-justify" *ngIf="datos.textoTasaAnalfabetismo && datos.textoTasaAnalfabetismo !== '____'">{{ datos.textoTasaAnalfabetismo }}</p>
+<p class="text-justify" *ngIf="!datos.textoTasaAnalfabetismo || datos.textoTasaAnalfabetismo === '____'">En el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de <span [appDataSource]="'automatic'">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span [appDataSource]="'automatic'">{{ getPorcentajeAnalfabetismo() }}</span> en esta localidad.</p>
 
 <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
 <table class="table-container">
@@ -77,7 +77,40 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
+    <h4 class="section-title">B.1.9. Indicadores de educación</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion30_indicadores_educacion_intro"
+        label="Introducción - Indicadores de Educación"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion30IndicadoresEducacionIntro()"
+        (valueChange)="onFieldChange('parrafoSeccion30_indicadores_educacion_intro', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoNivelEducativo"
+        label="Nivel Educativo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoNivelEducativo()"
+        (valueChange)="onFieldChange('textoNivelEducativo', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTasaAnalfabetismo"
+        label="Tasa de Analfabetismo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTasaAnalfabetismo()"
+        (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Población de 15 años a más según nivel educativo alcanzado</label>
       <app-dynamic-table
         [datos]="datos"
@@ -107,28 +140,6 @@
         [totalKey]="'indicador'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="textoNivelEducativo"
-        label="Nivel Educativo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoNivelEducativo()"
-        (valueChange)="onFieldChange('textoNivelEducativo', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="textoTasaAnalfabetismo"
-        label="Tasa de Analfabetismo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTasaAnalfabetismo()"
-        (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

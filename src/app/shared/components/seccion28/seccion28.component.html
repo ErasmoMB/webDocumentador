@@ -28,15 +28,14 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
 <app-image-upload
-    *ngIf="getFotoSaludParaImageUpload().length > 0"
-    [fotografias]="getFotoSaludParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.7'"
-    [photoPrefix]="'fotografiaSaludAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasSaludVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_SALUD"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
@@ -75,15 +74,14 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
 
 <app-image-upload
-    *ngIf="getFotografiasEducacionParaImageUpload().length > 0"
-    [fotografias]="getFotografiasEducacionParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.7'"
-    [photoPrefix]="'fotografiaEducacionAISI'"
     [modoVista]="true"
     [permitirMultiples]="true"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [fotografias]="getFotografiasEducacionVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
@@ -95,15 +93,14 @@
 <p class="text-justify" *ngIf="!datos.textoRecreacionCP3 || datos.textoRecreacionCP3 === '____'">Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.</p>
 
 <app-image-upload
-    *ngIf="getFotoRecreacionParaImageUpload().length > 0"
-    [fotografias]="getFotoRecreacionParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.7'"
-    [photoPrefix]="'fotografiaRecreacionAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasRecreacionVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_RECREACION"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
@@ -113,15 +110,14 @@
 <p class="text-justify" *ngIf="!datos.textoDeporteCP2 || datos.textoDeporteCP2 === '____'">Asimismo, cabe mencionar que en <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.</p>
 
 <app-image-upload
-    *ngIf="getFotoDeporteParaImageUpload().length > 0"
-    [fotografias]="getFotoDeporteParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.7'"
-    [photoPrefix]="'fotografiaDeporteAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasDeporteVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <app-image-upload
@@ -138,112 +134,228 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Tabla Principales características del Puesto de Salud</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="puestoSaludConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Nombre' },
-          { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Puesto de Salud Cahuacho' }
-        ]"
-        [tablaKey]="'puestoSaludCpTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
-      <input type="text" class="form-control" 
-        [value]="datos['nombreIEMayorEstudiantes'] || ''"
-        (input)="onFieldChange('nombreIEMayorEstudiantes', $any($event.target).value)"
-        placeholder="Ej: IE Virgen de Copacabana">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Cantidad de estudiantes de la IE con mayor cantidad</label>
-      <input type="number" class="form-control" 
-        [value]="datos['cantidadEstudiantesIEMayor'] || ''"
-        (input)="onFieldChange('cantidadEstudiantesIEMayor', $any($event.target).value)"
-        placeholder="Ej: 28">
-    </div>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Tabla Infraestructura educativa</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="educacionConfig"
-        [columns]="[
-          { field: 'nombreIE', label: 'Nombre de IE', type: 'text', placeholder: 'Ej: IE Cahuacho' },
-          { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Ej: Inicial - Jardín' },
-          { field: 'tipoGestion', label: 'Tipo de Gestión', type: 'text', placeholder: 'Ej: Pública de gestión directa' },
-          { field: 'cantidadEstudiantes', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'educacionCpTabla'"
-        [totalKey]="'nombreIE'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
+    <h4 class="section-title">B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h4>
+    
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Infraestructura en salud</h4>
       
-      <app-paragraph-editor
-        fieldId="textoSaludCP"
-        label="Infraestructura en Salud - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoSaludCP()"
-        (valueChange)="onFieldChange('textoSaludCP', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoSaludCP"
+          label="Infraestructura en Salud - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSaludCP()"
+          (valueChange)="onFieldChange('textoSaludCP', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="textoEducacionCP"
-        label="Infraestructura en Educación - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoEducacionCP()"
-        (valueChange)="onFieldChange('textoEducacionCP', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Principales características del Puesto de Salud</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="puestoSaludConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Nombre' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Puesto de Salud Cahuacho' }
+          ]"
+          [tablaKey]="'puestoSaludCpTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="textoRecreacionCP1"
-        label="Infraestructura en Recreación - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoRecreacionCP1()"
-        (valueChange)="onFieldChange('textoRecreacionCP1', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="textoDeporteCP1"
-        label="Infraestructura en Deporte - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoDeporteCP1()"
-        (valueChange)="onFieldChange('textoDeporteCP1', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Infraestructura en salud</label>
+        <app-image-upload
+          [fotografias]="fotografiasSaludFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_SALUD"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Puesto de Salud"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Puesto de Salud"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasSaludChange($event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Infraestructura en salud, educación, recreativa y deportiva</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Infraestructura en salud, educación, recreativa y deportiva"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Infraestructura en salud, educación, recreativa y deportiva"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Infraestructura en educación</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEducacionCP"
+          label="Infraestructura en Educación - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoEducacionCP()"
+          (valueChange)="onFieldChange('textoEducacionCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-row" style="margin-top: 20px;">
+        <div class="form-field">
+          <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
+          <input type="text" class="input" 
+            [value]="datos['nombreIEMayorEstudiantes'] || ''"
+            (input)="onFieldChange('nombreIEMayorEstudiantes', $any($event.target).value)"
+            placeholder="Ej: IE Virgen de Copacabana">
+        </div>
+
+        <div class="form-field">
+          <label class="label">Cantidad de estudiantes de la IE con mayor cantidad</label>
+          <input type="number" class="input" 
+            [value]="datos['cantidadEstudiantesIEMayor'] || ''"
+            (input)="onFieldChange('cantidadEstudiantesIEMayor', $any($event.target).value)"
+            placeholder="Ej: 28">
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Infraestructura educativa</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="educacionConfig"
+          [columns]="[
+            { field: 'nombreIE', label: 'Nombre de IE', type: 'text', placeholder: 'Ej: IE Cahuacho' },
+            { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Ej: Inicial - Jardín' },
+            { field: 'tipoGestion', label: 'Tipo de Gestión', type: 'text', placeholder: 'Ej: Pública de gestión directa' },
+            { field: 'cantidadEstudiantes', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'educacionCpTabla'"
+          [totalKey]="'nombreIE'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Infraestructura en educación</label>
+        <app-image-upload
+          [fotografias]="fotografiasEducacionFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura educativa"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura educativa"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasEducacionChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Infraestructura en recreación</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP1"
+          label="Infraestructura en Recreación - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP1()"
+          (valueChange)="onFieldChange('textoRecreacionCP1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP2"
+          label="Infraestructura en Recreación - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP2()"
+          (valueChange)="onFieldChange('textoRecreacionCP2', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP3"
+          label="Infraestructura en Recreación - Párrafo 3"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP3()"
+          (valueChange)="onFieldChange('textoRecreacionCP3', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Infraestructura en recreación</label>
+        <app-image-upload
+          [fotografias]="fotografiasRecreacionFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_RECREACION"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Plaza de toros"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Plaza de toros"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasRecreacionChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Infraestructura en deporte</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDeporteCP1"
+          label="Infraestructura en Deporte - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDeporteCP1()"
+          (valueChange)="onFieldChange('textoDeporteCP1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoDeporteCP2"
+          label="Infraestructura en Deporte - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoDeporteCP2()"
+          (valueChange)="onFieldChange('textoDeporteCP2', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Infraestructura en deporte</label>
+        <app-image-upload
+          [fotografias]="fotografiasDeporteFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Losa deportiva"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Losa deportiva"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasDeporteChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

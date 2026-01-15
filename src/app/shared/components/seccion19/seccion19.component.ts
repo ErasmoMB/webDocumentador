@@ -22,7 +22,7 @@ export class Seccion19Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'comunerosCalificados', 'autoridades'];
+  override watchedFields: string[] = ['grupoAISD', 'comunerosCalificados', 'autoridades', 'textoOrganizacionSocial'];
   
   override readonly PHOTO_PREFIX = 'fotografiaOrganizacionSocial';
 
@@ -154,7 +154,14 @@ export class Seccion19Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoOrganizacionSocial(): string {
-    return this.datos.textoOrganizacionSocial || '';
+    if (this.datos.textoOrganizacionSocial && this.datos.textoOrganizacionSocial !== '____') {
+      return this.datos.textoOrganizacionSocial;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const comunerosCalificados = this.datos.comunerosCalificados || '65';
+    
+    return `La organización social más importante y con mayor poder es la CC ${grupoAISD}. Esta comunidad cuenta con una estructura organizativa que incluye una junta directiva, encargada de la gestión y representación legal de la comunidad. Por otra parte, la toma de decisiones clave se realiza en la asamblea general, en la cual participan y votan todos los comuneros activos que están debidamente inscritos en el padrón comunal. Esta asamblea es el máximo órgano de deliberación, donde se discuten temas de interés comunitario, como el uso de la tierra, los proyectos de desarrollo y la organización de actividades económicas y sociales.\n\nAl momento del trabajo de campo, según los entrevistados, se cuenta con ${comunerosCalificados} comuneros calificados dentro de la CC ${grupoAISD}. Estos se encuentran inscritos en el padrón, el cual es actualizado cada dos años antes de cada elección para una nueva junta directiva. Asimismo, cabe mencionar que esta última puede reelegirse por un período adicional, con la posibilidad de que una misma junta pueda gestionar por cuatro años como máximo.\n\nRespecto al rol de la mujer, es posible que estas puedan ser inscritas como comuneras calificadas dentro del padrón comunal. No obstante, solo se permite la inscripción si estas mujeres son viudas o madres solteras. De lo contrario, es el varón quien asume la responsabilidad. Por otra parte, dentro de la estructura interna de la comunidad campesina se cuenta con instancias especializadas como la JASS, la Asociación de Vicuñas y la Junta de Usuarios de Riego. Cada una de ellas cuenta con funciones específicas y sus representantes también son electos democráticamente.\n\nTambién se hallan autoridades locales como el teniente gobernador, quien es el representante del gobierno central a nivel local. El teniente gobernador tiene la función de coordinar y mediar entre las instituciones del Estado y la comunidad, así como de velar por el orden público. Asimismo, el agente municipal es responsable de la supervisión y cumplimiento de las normativas municipales, así como de brindar apoyo en la organización de actividades locales.`;
   }
 }
 

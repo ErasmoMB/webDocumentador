@@ -137,88 +137,8 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.6. Servicios básicos</h4>
+    <h4 class="section-title">A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h4>
     
-    <div class="form-field">
-      <label class="label">Tabla Abastecimiento de Agua</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="abastecimientoAguaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con abastecimiento de agua por red pública' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'abastecimientoAguaTabla'"
-        [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)"
-        (tableUpdated)="onAbastecimientoAguaTableUpdated()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Cuota Mensual de Agua (S/.)</label>
-      <input type="text" class="input" placeholder="Ej: 4"
-        [value]="datos['cuotaMensualAgua'] || ''"
-        (input)="onFieldChange('cuotaMensualAgua', $any($event.target).value)">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Tipos de Saneamiento</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="tiposSaneamientoConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con saneamiento vía red pública' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="(datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla')"
-        [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onTiposSaneamientoFieldChange.bind(this)"
-        (tableUpdated)="onTiposSaneamientoTableUpdated()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Cobertura Eléctrica</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="coberturaElectricaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con acceso a electricidad' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'coberturaElectricaTabla'"
-        [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)"
-        (tableUpdated)="onCoberturaElectricaTableUpdated()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Empresa Eléctrica</label>
-      <input type="text" class="input" placeholder="Ej: ADINELSA"
-        [value]="datos['empresaElectrica'] || ''"
-        (input)="onFieldChange('empresaElectrica', $any($event.target).value)">
-    </div>
-
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Costo Eléctrico Mínimo (S/.)</label>
-        <input type="text" class="input" placeholder="Ej: 20"
-          [value]="datos['costoElectricidadMinimo'] || ''"
-          (input)="onFieldChange('costoElectricidadMinimo', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Costo Eléctrico Máximo (S/.)</label>
-        <input type="text" class="input" placeholder="Ej: 40"
-          [value]="datos['costoElectricidadMaximo'] || ''"
-          (input)="onFieldChange('costoElectricidadMaximo', $any($event.target).value)">
-      </div>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
@@ -232,42 +152,266 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Desechos Sólidos</label>
-      <app-image-upload
-        [fotografias]="fotografiasDesechosSolidosFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_DESECHOS"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasDesechosSolidosChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Servicios de agua</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoServiciosAgua"
+          label="Servicios de Agua - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosAgua()"
+          (valueChange)="onFieldChange('textoServiciosAgua', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Abastecimiento de Agua</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="abastecimientoAguaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con abastecimiento de agua por red pública' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'abastecimientoAguaTabla'"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)"
+          (tableUpdated)="onAbastecimientoAguaTableUpdated()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoServiciosAguaDetalle"
+          label="Servicios de Agua - Detalle"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosAguaDetalle()"
+          (valueChange)="onFieldChange('textoServiciosAguaDetalle', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Cuota Mensual de Agua (S/.)</label>
+        <input type="text" class="input" placeholder="Ej: 4"
+          [value]="datos['cuotaMensualAgua'] || ''"
+          (input)="onFieldChange('cuotaMensualAgua', $any($event.target).value)">
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Electricidad</label>
-      <app-image-upload
-        [fotografias]="fotografiasElectricidadFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Infraestructura eléctrica en el anexo Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Infraestructura eléctrica en el anexo Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasElectricidadChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoServiciosDesague"
+          label="Servicios de Desagüe - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosDesague()"
+          (valueChange)="onFieldChange('textoServiciosDesague', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de Saneamiento</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="tiposSaneamientoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con saneamiento vía red pública' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="(datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla')"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onTiposSaneamientoFieldChange.bind(this)"
+          (tableUpdated)="onTiposSaneamientoTableUpdated()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoServiciosDesagueDetalle"
+          label="Servicios de Desagüe - Detalle"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoServiciosDesagueDetalle()"
+          (valueChange)="onFieldChange('textoServiciosDesagueDetalle', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidos1"
+          label="Desechos Sólidos - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDesechosSolidos1()"
+          (valueChange)="onFieldChange('textoDesechosSolidos1', $event)">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidos2"
+          label="Desechos Sólidos - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDesechosSolidos2()"
+          (valueChange)="onFieldChange('textoDesechosSolidos2', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidos3"
+          label="Desechos Sólidos - Párrafo 3"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDesechosSolidos3()"
+          (valueChange)="onFieldChange('textoDesechosSolidos3', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Desechos Sólidos</label>
+        <app-image-upload
+          [fotografias]="fotografiasDesechosSolidosFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_DESECHOS"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasDesechosSolidosChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Electricidad</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoElectricidad1"
+          label="Electricidad - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoElectricidad1()"
+          (valueChange)="onFieldChange('textoElectricidad1', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Cobertura Eléctrica</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="coberturaElectricaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con acceso a electricidad' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'coberturaElectricaTabla'"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)"
+          (tableUpdated)="onCoberturaElectricaTableUpdated()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoElectricidad2"
+          label="Electricidad - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoElectricidad2()"
+          (valueChange)="onFieldChange('textoElectricidad2', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Empresa Eléctrica</label>
+        <input type="text" class="input" placeholder="Ej: ADINELSA"
+          [value]="datos['empresaElectrica'] || ''"
+          (input)="onFieldChange('empresaElectrica', $any($event.target).value)">
+      </div>
+
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="form-field">
+          <label class="label">Costo Eléctrico Mínimo (S/.)</label>
+          <input type="text" class="input" placeholder="Ej: 20"
+            [value]="datos['costoElectricidadMinimo'] || ''"
+            (input)="onFieldChange('costoElectricidadMinimo', $any($event.target).value)">
+        </div>
+        <div class="form-field">
+          <label class="label">Costo Eléctrico Máximo (S/.)</label>
+          <input type="text" class="input" placeholder="Ej: 40"
+            [value]="datos['costoElectricidadMaximo'] || ''"
+            (input)="onFieldChange('costoElectricidadMaximo', $any($event.target).value)">
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Electricidad</label>
+        <app-image-upload
+          [fotografias]="fotografiasElectricidadFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura eléctrica en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura eléctrica en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasElectricidadChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">e. Energía para cocinar</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEnergiaParaCocinar"
+          label="Energía para Cocinar - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoEnergiaParaCocinar()"
+          (valueChange)="onFieldChange('textoEnergiaParaCocinar', $event)">
+        </app-paragraph-editor>
+      </div>
     </div>
   </div>
 </div>

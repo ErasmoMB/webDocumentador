@@ -56,30 +56,34 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.1. Institucionalidad local</h4>
     
-    <app-paragraph-editor
-      fieldId="parrafoSeccion5_institucionalidad"
-      label="Párrafo de Institucionalidad"
-      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-      [rows]="4"
-      [value]="obtenerParrafoInstitucionalidad()"
-      (valueChange)="onFieldChange('parrafoSeccion5_institucionalidad', $event)">
-    </app-paragraph-editor>
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion5_institucionalidad"
+        label="Párrafo de Institucionalidad"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerParrafoInstitucionalidad()"
+        (valueChange)="onFieldChange('parrafoSeccion5_institucionalidad', $event)">
+      </app-paragraph-editor>
+    </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Título de la Tabla</label>
       <input type="text" class="input" placeholder="Ej: Instituciones existentes - CC Ayroca"
         [value]="datos.tituloInstituciones || 'Instituciones existentes - CC ' + (datos.grupoAISD || 'Ayroca')"
         (input)="onFieldChange('tituloInstituciones', $any($event.target).value)">
     </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 15px;">
       <label class="label">Fuente de la Tabla</label>
       <input type="text" class="input" placeholder="Ej: GEADES (2024)"
         [value]="datos.fuenteInstituciones || 'GEADES (2024)'"
         (input)="onFieldChange('fuenteInstituciones', $any($event.target).value)">
     </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla de Instituciones</label>
       <div class="table-editor">
         <table class="editor-table">
@@ -142,7 +146,7 @@
       </button>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Fotografías</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

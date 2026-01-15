@@ -1,7 +1,10 @@
 <div *ngIf="!modoFormulario">
 <h5>B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h5>
-<p class="text-justify">Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.</p>
-<p class="text-justify">En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (<span [appDataSource]="'automatic'">{{ getViviendasOcupadasPresentes() }}</span>), tal como realiza el Censo Nacional 2017.</p>
+<div *ngIf="datos.textoIntroServiciosBasicosAISI && datos.textoIntroServiciosBasicosAISI !== '____'" class="text-justify" [innerHTML]="formatearParrafo(datos.textoIntroServiciosBasicosAISI)"></div>
+<div *ngIf="!datos.textoIntroServiciosBasicosAISI || datos.textoIntroServiciosBasicosAISI === '____'">
+  <p class="text-justify">Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.</p>
+  <p class="text-justify">En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (<span [appDataSource]="'automatic'">{{ getViviendasOcupadasPresentes() }}</span>), tal como realiza el Censo Nacional 2017.</p>
+</div>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Servicios de agua</strong></p>
 <p class="text-justify" *ngIf="datos.textoServiciosAguaAISI && datos.textoServiciosAguaAISI !== '____'">{{ datos.textoServiciosAguaAISI }}</p>
@@ -63,15 +66,14 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
 <app-image-upload
-    *ngIf="getFotoDesechosSolidosParaImageUpload().length > 0"
-    [fotografias]="getFotoDesechosSolidosParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.5'"
-    [photoPrefix]="'fotografiaDesechosSolidosAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasDesechosVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_DESECHOS"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
@@ -109,15 +111,14 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
 <app-image-upload
-    *ngIf="getFotoElectricidadParaImageUpload().length > 0"
-    [fotografias]="getFotoElectricidadParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.5'"
-    [photoPrefix]="'fotografiaElectricidadAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasElectricidadVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
@@ -152,9 +153,9 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="getFotografiasVista()"
+    [fotografias]="getFotografiasCocinarVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
+    [photoPrefix]="PHOTO_PREFIX_COCINAR"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -163,118 +164,225 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="abastecimientoAguaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública dentro de la vivienda' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'abastecimientoAguaCpTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="saneamientoConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública de desagüe dentro de la vivienda' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'saneamientoCpTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="coberturaElectricaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Si tiene alumbrado eléctrico' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'coberturaElectricaCpTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla Combustibles para cocción en los hogares</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="combustiblesCocinarConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Leña' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'combustiblesCocinarCpTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
+    <h4 class="section-title">B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h4>
+    
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
-        fieldId="textoServiciosAguaAISI"
-        label="Servicios de Agua - Texto Completo"
+        fieldId="textoIntroServiciosBasicosAISI"
+        label="Servicios Básicos - Introducción - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
-        [value]="obtenerTextoServiciosAguaAISI()"
-        (valueChange)="onFieldChange('textoServiciosAguaAISI', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="textoDesechosSolidosCP"
-        label="Gestión y Destino de Desechos Sólidos - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoDesechosSolidosCP()"
-        (valueChange)="onFieldChange('textoDesechosSolidosCP', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="textoEnergiaCocinarCP"
-        label="Energía para Cocinar - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoEnergiaCocinarCP()"
-        (valueChange)="onFieldChange('textoEnergiaCocinarCP', $event)">
+        [value]="obtenerTextoIntroServiciosBasicosAISI()"
+        (valueChange)="onFieldChange('textoIntroServiciosBasicosAISI', $event)">
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Servicios Básicos</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Servicios básicos del CP"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Servicios Básicos del CP"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Servicios de agua</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoServiciosAguaAISI"
+          label="Servicios de Agua - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoServiciosAguaAISI()"
+          (valueChange)="onFieldChange('textoServiciosAguaAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="abastecimientoAguaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública dentro de la vivienda' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'abastecimientoAguaCpTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDesagueCP"
+          label="Servicios básicos de desagüe - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoDesagueCP()"
+          (valueChange)="onFieldChange('textoDesagueCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="saneamientoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública de desagüe dentro de la vivienda' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'saneamientoCpTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Desechos Sólidos</label>
+        <app-image-upload
+          [fotografias]="fotografiasDesechosFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_DESECHOS"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Contenedores de residuos sólidos"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Contenedores de residuos sólidos"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasDesechosChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidosCP"
+          label="Gestión y Destino de Desechos Sólidos - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoDesechosSolidosCP()"
+          (valueChange)="onFieldChange('textoDesechosSolidosCP', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Electricidad</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoElectricidadCP"
+          label="Electricidad - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoElectricidadCP()"
+          (valueChange)="onFieldChange('textoElectricidadCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="coberturaElectricaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Si tiene alumbrado eléctrico' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'coberturaElectricaCpTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Electricidad</label>
+        <app-image-upload
+          [fotografias]="fotografiasElectricidadFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura eléctrica"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura eléctrica"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasElectricidadChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">e. Energía para cocinar</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEnergiaCocinarCP"
+          label="Energía para Cocinar - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoEnergiaCocinarCP()"
+          (valueChange)="onFieldChange('textoEnergiaCocinarCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Combustibles para cocción en los hogares</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="combustiblesCocinarConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Leña' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'combustiblesCocinarCpTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Energía para Cocinar</label>
+        <app-image-upload
+          [fotografias]="fotografiasCocinarFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_COCINAR"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Energía para cocinar"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Energía para cocinar"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasCocinarChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

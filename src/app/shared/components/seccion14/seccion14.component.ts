@@ -20,7 +20,7 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion14_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion14_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'textoNivelEducativo', 'textoTasaAnalfabetismo'];
   
   override readonly PHOTO_PREFIX = 'fotografiaEducacionIndicadores';
   private stateSubscription?: Subscription;
@@ -204,10 +204,35 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoSeccion14IndicadoresEducacionIntro(): string {
-    if (this.datos.parrafoSeccion14_indicadores_educacion_intro) {
+    if (this.datos.parrafoSeccion14_indicadores_educacion_intro && this.datos.parrafoSeccion14_indicadores_educacion_intro !== '____') {
       return this.datos.parrafoSeccion14_indicadores_educacion_intro;
     }
     return `La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.`;
+  }
+
+  obtenerTextoNivelEducativo(): string {
+    if (this.datos.textoNivelEducativo && this.datos.textoNivelEducativo !== '____') {
+      return this.datos.textoNivelEducativo;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const porcentajePrimaria = this.getPorcentajePrimaria() || '____';
+    const porcentajeSecundaria = this.getPorcentajeSecundaria() || '____';
+    const porcentajeSuperiorNoUniversitaria = this.getPorcentajeSuperiorNoUniversitaria() || '____';
+    
+    return `En la CC ${grupoAISD}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el ${porcentajePrimaria}. En segundo lugar, se hallan aquellos que cuentan con secundaria (${porcentajeSecundaria}). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un ${porcentajeSuperiorNoUniversitaria}.`;
+  }
+
+  obtenerTextoTasaAnalfabetismo(): string {
+    if (this.datos.textoTasaAnalfabetismo && this.datos.textoTasaAnalfabetismo !== '____') {
+      return this.datos.textoTasaAnalfabetismo;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const casosAnalfabetismo = this.getCasosAnalfabetismo() || '____';
+    const tasaAnalfabetismo = this.getTasaAnalfabetismo() || '____';
+    
+    return `En la CC ${grupoAISD}, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de ${casosAnalfabetismo}. Esto representa una tasa de analfabetismo del ${tasaAnalfabetismo} en la comunidad.`;
   }
 
   inicializarNivelEducativo() {

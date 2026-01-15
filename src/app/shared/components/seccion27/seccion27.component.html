@@ -8,15 +8,14 @@
 <p class="text-justify" *ngIf="!datos.textoTransporteCP2 || datos.textoTransporteCP2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span [appDataSource]="'manual'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.</p>
 
 <app-image-upload
-    *ngIf="getFotoTransporteParaImageUpload().length > 0"
-    [fotografias]="getFotoTransporteParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.6'"
-    [photoPrefix]="'fotografiaTransporteAISI'"
     [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasTransporteVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
@@ -51,23 +50,11 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
 <app-image-upload
-    *ngIf="getFotoTelecomunicacionesParaImageUpload().length > 0"
-    [fotografias]="getFotoTelecomunicacionesParaImageUpload()"
-    [sectionId]="'3.1.4.B.1.6'"
-    [photoPrefix]="'fotografiaTelecomunicacionesAISI'"
-    [modoVista]="true"
-    [permitirMultiples]="false"
-    [mostrarNumero]="true"
-    [mostrarTitulo]="true"
-    [mostrarFuente]="true">
-</app-image-upload>
-
-<app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="getFotografiasVista()"
+    [fotografias]="getFotografiasTelecomunicacionesVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
+    [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -76,103 +63,138 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Costo mínimo de transporte (S/.)</label>
-      <input type="number" class="form-control" 
-        [value]="datos['costoTransporteMinimo'] || ''"
-        (input)="onFieldChange('costoTransporteMinimo', $any($event.target).value)"
-        placeholder="Ej: 25">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Costo máximo de transporte (S/.)</label>
-      <input type="number" class="form-control" 
-        [value]="datos['costoTransporteMaximo'] || ''"
-        (input)="onFieldChange('costoTransporteMaximo', $any($event.target).value)"
-        placeholder="Ej: 30">
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla Servicios de telecomunicaciones</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="telecomunicacionesConfig"
-        [columns]="[
-          { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Ej: Emisoras de radio' },
-          { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: RPP, Nacional, Unión' }
-        ]"
-        [tablaKey]="'telecomunicacionesCpTabla'"
-        [totalKey]="'medio'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
+    <h4 class="section-title">B.1.6. Infraestructura para transportes y comunicaciones</h4>
+    
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Transporte</h4>
       
-      <app-paragraph-editor
-        fieldId="textoTransporteCP1"
-        label="Transporte - Párrafo 1"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTransporteCP1()"
-        (valueChange)="onFieldChange('textoTransporteCP1', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoTransporteCP1"
+          label="Transporte - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoTransporteCP1()"
+          (valueChange)="onFieldChange('textoTransporteCP1', $event)">
+        </app-paragraph-editor>
 
-      <app-paragraph-editor
-        fieldId="textoTransporteCP2"
-        label="Transporte - Párrafo 2"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTransporteCP2()"
-        (valueChange)="onFieldChange('textoTransporteCP2', $event)">
-      </app-paragraph-editor>
+        <app-paragraph-editor
+          fieldId="textoTransporteCP2"
+          label="Transporte - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoTransporteCP2()"
+          (valueChange)="onFieldChange('textoTransporteCP2', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="textoTelecomunicacionesCP1"
-        label="Telecomunicaciones - Párrafo 1"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTelecomunicacionesCP1()"
-        (valueChange)="onFieldChange('textoTelecomunicacionesCP1', $event)">
-      </app-paragraph-editor>
+      <div class="form-row" style="margin-top: 20px;">
+        <div class="form-field">
+          <label class="label">Costo mínimo de transporte (S/.)</label>
+          <input type="number" class="input" 
+            [value]="datos['costoTransporteMinimo'] || ''"
+            (input)="onFieldChange('costoTransporteMinimo', $any($event.target).value)"
+            placeholder="Ej: 25">
+        </div>
 
-      <app-paragraph-editor
-        fieldId="textoTelecomunicacionesCP2"
-        label="Telecomunicaciones - Párrafo 2"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTelecomunicacionesCP2()"
-        (valueChange)="onFieldChange('textoTelecomunicacionesCP2', $event)">
-      </app-paragraph-editor>
+        <div class="form-field">
+          <label class="label">Costo máximo de transporte (S/.)</label>
+          <input type="number" class="input" 
+            [value]="datos['costoTransporteMaximo'] || ''"
+            (input)="onFieldChange('costoTransporteMaximo', $any($event.target).value)"
+            placeholder="Ej: 30">
+        </div>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="textoTelecomunicacionesCP3"
-        label="Telecomunicaciones - Párrafo 3"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoTelecomunicacionesCP3()"
-        (valueChange)="onFieldChange('textoTelecomunicacionesCP3', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Transporte</label>
+        <app-image-upload
+          [fotografias]="fotografiasTransporteFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura de transporte"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura de transporte"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasTransporteChange($event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Infraestructura para transportes y comunicaciones</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Infraestructura de transporte y comunicaciones"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Infraestructura de transporte y comunicaciones"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Telecomunicaciones</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoTelecomunicacionesCP1"
+          label="Telecomunicaciones - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoTelecomunicacionesCP1()"
+          (valueChange)="onFieldChange('textoTelecomunicacionesCP1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoTelecomunicacionesCP2"
+          label="Telecomunicaciones - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoTelecomunicacionesCP2()"
+          (valueChange)="onFieldChange('textoTelecomunicacionesCP2', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoTelecomunicacionesCP3"
+          label="Telecomunicaciones - Párrafo 3"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="5"
+          [value]="obtenerTextoTelecomunicacionesCP3()"
+          (valueChange)="onFieldChange('textoTelecomunicacionesCP3', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Servicios de telecomunicaciones</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="telecomunicacionesConfig"
+          [columns]="[
+            { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Ej: Emisoras de radio' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: RPP, Nacional, Unión' }
+          ]"
+          [tablaKey]="'telecomunicacionesCpTabla'"
+          [totalKey]="'medio'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Telecomunicaciones</label>
+        <app-image-upload
+          [fotografias]="fotografiasTelecomunicacionesFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura de telecomunicaciones"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura de telecomunicaciones"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasTelecomunicacionesChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

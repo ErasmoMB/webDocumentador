@@ -33,7 +33,8 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     'cuadroTituloAISD1',
     'cuadroFuenteAISD1',
     'cuadroTituloAISD2',
-    'cuadroFuenteAISD2'
+    'cuadroFuenteAISD2',
+    'parrafoSeccion4_caracterizacion_indicadores'
   ];
 
   constructor(
@@ -226,5 +227,28 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
   onFotografiasPoblacionChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange('fotografiaPoblacionViviendas', fotografias);
     this.fotografiasPoblacionFormMulti = [...fotografias];
+  }
+
+  obtenerNombreComunidadActual(): string {
+    const component = ViewChildHelper.getComponent('seccion4');
+    if (component && component['obtenerNombreComunidadActual']) {
+      return component['obtenerNombreComunidadActual']();
+    }
+    const prefijo = this.obtenerPrefijoGrupo();
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      return this.datos.grupoAISD || '____';
+    }
+    return this.datos.grupoAISD || '____';
+  }
+
+  obtenerTextoSeccion4CaracterizacionIndicadores(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoParrafo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
+    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
+      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores'];
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    return `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${grupoAISD}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
   }
 }

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, AfterViewInit, ElementRef } from '@angular/core';
-import { NumberingService } from 'src/app/core/services/numbering.service';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-table-wrapper',
@@ -8,6 +8,9 @@ import { NumberingService } from 'src/app/core/services/numbering.service';
     <p class="table-title-main" *ngIf="title">{{ title }}</p>
     <ng-content></ng-content>
   `,
+  host: {
+    '[attr.data-section-id]': 'sectionId'
+  },
   styles: []
 })
 export class TableWrapperComponent implements OnInit, AfterViewInit {
@@ -17,7 +20,7 @@ export class TableWrapperComponent implements OnInit, AfterViewInit {
   tableNumber: string = '';
 
   constructor(
-    private numberingService: NumberingService,
+    private tableNumberingService: TableNumberingService,
     private el: ElementRef
   ) {}
 
@@ -26,15 +29,27 @@ export class TableWrapperComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.calculateTableNumber();
+    setTimeout(() => {
+      this.calculateTableNumber();
+    }, 0);
   }
 
   private calculateTableNumber() {
     const allTables = Array.from(document.querySelectorAll('app-table-wrapper'));
-    const localIndex = allTables.indexOf(this.el.nativeElement);
-    const globalIndex = this.numberingService.getGlobalTableIndex(this.sectionId, localIndex, this.el.nativeElement);
-    const formattedNumber = this.numberingService.getFormattedTableNumber(this.sectionId, globalIndex);
-    this.tableNumber = formattedNumber;
+    let localIndex = 0;
+    
+    for (let i = 0; i < allTables.length; i++) {
+      if (allTables[i] === this.el.nativeElement) {
+        break;
+      }
+      const tableElement = allTables[i];
+      const tableSectionId = tableElement.getAttribute('data-section-id');
+      if (tableSectionId === this.sectionId) {
+        localIndex++;
+      }
+    }
+    
+    this.tableNumber = this.tableNumberingService.getGlobalTableNumber(this.sectionId, localIndex);
   }
 }
 

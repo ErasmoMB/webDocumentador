@@ -131,7 +131,15 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
   obtenerParrafoInstitucionalidad(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const campoParrafo = prefijo ? `parrafoSeccion5_institucionalidad${prefijo}` : 'parrafoSeccion5_institucionalidad';
-    return this.datos[campoParrafo] || this.datos['parrafoSeccion5_institucionalidad'] || '';
+    const parrafoGuardado = this.datos[campoParrafo] || this.datos['parrafoSeccion5_institucionalidad'];
+    
+    if (parrafoGuardado && parrafoGuardado !== '____') {
+      return parrafoGuardado;
+    }
+    
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    
+    return `Dentro de los límites de la CC ${nombreComunidad} se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).`;
   }
 
   obtenerNombreComunidadActual(): string {

@@ -312,120 +312,327 @@
     <h4 class="section-title">A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h4>
     
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Infraestructura en salud</h4>
       
-      <app-paragraph-editor
-        fieldId="parrafoSeccion12_salud_completo"
-        label="Salud - Texto Completo"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoSeccion12SaludCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion12_salud_completo"
+          label="Salud - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion12SaludCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="parrafoSeccion12_educacion_completo"
-        label="Educación - Texto Completo"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoSeccion12EducacionCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion12_educacion_completo', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Características del Puesto de Salud</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="caracteristicasSaludConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
+          ]"
+          [tablaKey]="'caracteristicasSaludTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Salud</label>
+        <app-image-upload
+          [fotografias]="fotografiasSaludFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_SALUD"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Puesto de Salud Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Puesto de Salud Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_SALUD, $event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Salud</label>
-      <app-image-upload
-        [fotografias]="fotografiasSaludFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_SALUD"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Puesto de Salud Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Puesto de Salud Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_SALUD, $event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Infraestructura en educación</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion12_educacion_completo"
+          label="Educación - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion12EducacionCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion12_educacion_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Infraestructura Educativa</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="cantidadEstudiantesEducacionConfig"
+          [columns]="[
+            { field: 'institucion', label: 'Nombre de IE', type: 'text', placeholder: 'Ej: IE Ayroca' },
+            { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Inicial/Primaria' },
+            { field: 'gestion', label: 'Tipo de Gestión', type: 'text', placeholder: 'Pública' },
+            { field: 'total', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'cantidadEstudiantesEducacionTabla'"
+          [totalKey]="'institucion'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoInfraestructuraEducacionPost"
+          label="Infraestructura Educación - Post Tabla"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoInfraestructuraEducacionPost()"
+          (valueChange)="onFieldChange('textoInfraestructuraEducacionPost', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Características IE Ayroca</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="ieAyrocaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
+          ]"
+          [tablaKey]="'ieAyrocaTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías IE Ayroca</label>
+        <app-image-upload
+          [fotografias]="fotografiasIEAyrocaFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: IE Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="IE Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_AYROCA, $event)">
+        </app-image-upload>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Características IE N°40270</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="ie40270Config"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
+          ]"
+          [tablaKey]="'ie40270Tabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoAlumnosPorSexoGrado"
+          label="Alumnos por Sexo y Grado - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoAlumnosPorSexoGrado()"
+          (valueChange)="onFieldChange('textoAlumnosPorSexoGrado', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Alumnos IE Ayroca</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="alumnosIEAyrocaConfig"
+          [columns]="[
+            { field: 'nombre', label: 'Nombre de IE', type: 'text', placeholder: 'IE Ayroca' },
+            { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Inicial' },
+            { field: 'totalH', label: 'Total H', type: 'number', placeholder: '0' },
+            { field: 'totalM', label: 'Total M', type: 'number', placeholder: '0' },
+            { field: 'tresH', label: '3 años H', type: 'number', placeholder: '0' },
+            { field: 'tresM', label: '3 años M', type: 'number', placeholder: '0' },
+            { field: 'cuatroH', label: '4 años H', type: 'number', placeholder: '0' },
+            { field: 'cuatroM', label: '4 años M', type: 'number', placeholder: '0' },
+            { field: 'cincoH', label: '5 años H', type: 'number', placeholder: '0' },
+            { field: 'cincoM', label: '5 años M', type: 'number', placeholder: '0' }
+          ]"
+          [tablaKey]="'alumnosIEAyrocaTabla'"
+          [totalKey]="'nombre'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Alumnos IE N°40270</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="alumnosIE40270Config"
+          [columns]="[
+            { field: 'nombre', label: 'Nombre de IE', type: 'text', placeholder: 'IE N°40270' },
+            { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Primaria' },
+            { field: 'totalH', label: 'Total H', type: 'number', placeholder: '0' },
+            { field: 'totalM', label: 'Total M', type: 'number', placeholder: '0' },
+            { field: 'p1H', label: '1° H', type: 'number', placeholder: '0' },
+            { field: 'p1M', label: '1° M', type: 'number', placeholder: '0' },
+            { field: 'p2H', label: '2° H', type: 'number', placeholder: '0' },
+            { field: 'p2M', label: '2° M', type: 'number', placeholder: '0' },
+            { field: 'p3H', label: '3° H', type: 'number', placeholder: '0' },
+            { field: 'p3M', label: '3° M', type: 'number', placeholder: '0' },
+            { field: 'p4H', label: '4° H', type: 'number', placeholder: '0' },
+            { field: 'p4M', label: '4° M', type: 'number', placeholder: '0' },
+            { field: 'p5H', label: '5° H', type: 'number', placeholder: '0' },
+            { field: 'p5M', label: '5° M', type: 'number', placeholder: '0' },
+            { field: 'p6H', label: '6° H', type: 'number', placeholder: '0' },
+            { field: 'p6M', label: '6° M', type: 'number', placeholder: '0' }
+          ]"
+          [tablaKey]="'alumnosIE40270Tabla'"
+          [totalKey]="'nombre'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías IE N°40270</label>
+        <app-image-upload
+          [fotografias]="fotografiasIE40270FormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_IE_40270"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: IE N°40270"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="IE N°40270"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_40270, $event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías IE Ayroca</label>
-      <app-image-upload
-        [fotografias]="fotografiasIEAyrocaFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: IE Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="IE Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_AYROCA, $event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Infraestructura en recreación</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoInfraestructuraRecreacion"
+          label="Infraestructura Recreación - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoInfraestructuraRecreacion()"
+          (valueChange)="onFieldChange('textoInfraestructuraRecreacion', $event)">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoInfraestructuraRecreacionDetalle"
+          label="Infraestructura Recreación - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoInfraestructuraRecreacionDetalle()"
+          (valueChange)="onFieldChange('textoInfraestructuraRecreacionDetalle', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Recreación</label>
+        <app-image-upload
+          [fotografias]="fotografiasRecreacionFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_RECREACION"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Parque recreacional en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Parque recreacional en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_RECREACION, $event)">
+        </app-image-upload>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías IE N°40270</label>
-      <app-image-upload
-        [fotografias]="fotografiasIE40270FormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_IE_40270"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: IE N°40270"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="IE N°40270"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_40270, $event)">
-      </app-image-upload>
-    </div>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Infraestructura en deporte</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoInfraestructuraDeporte"
+          label="Infraestructura Deporte - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoInfraestructuraDeporte()"
+          (valueChange)="onFieldChange('textoInfraestructuraDeporte', $event)">
+        </app-paragraph-editor>
+        
+        <app-paragraph-editor
+          fieldId="textoInfraestructuraDeportDetalle"
+          label="Infraestructura Deporte - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoInfraestructuraDeportDetalle()"
+          (valueChange)="onFieldChange('textoInfraestructuraDeportDetalle', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Recreación</label>
-      <app-image-upload
-        [fotografias]="fotografiasRecreacionFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_RECREACION"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Parque recreacional en el anexo Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Parque recreacional en el anexo Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_RECREACION, $event)">
-      </app-image-upload>
-    </div>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Deporte</label>
-      <app-image-upload
-        [fotografias]="fotografiasDeporteFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_DEPORTE"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Losa deportiva en el anexo Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Losa deportiva en el anexo Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_DEPORTE, $event)">
-      </app-image-upload>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Deporte</label>
+        <app-image-upload
+          [fotografias]="fotografiasDeporteFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Losa deportiva en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Losa deportiva en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_DEPORTE, $event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

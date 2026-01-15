@@ -138,108 +138,229 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Población distrital</label>
-      <input type="number" class="form-control" 
-        [value]="datos['poblacionDistritalAISI'] || ''"
-        (input)="onFieldChange('poblacionDistritalAISI', $any($event.target).value)"
-        placeholder="Ej: 610">
-    </div>
-
-    <div class="form-field">
-      <label class="label">PET distrital (14 años a más)</label>
-      <input type="number" class="form-control" 
-        [value]="datos['petDistritalAISI'] || ''"
-        (input)="onFieldChange('petDistritalAISI', $any($event.target).value)"
-        placeholder="Ej: 461">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Ingreso familiar per cápita (S/.)</label>
-      <input type="text" class="form-control" 
-        [value]="datos['ingresoPerCapitaAISI'] || ''"
-        (input)="onFieldChange('ingresoPerCapitaAISI', $any($event.target).value)"
-        placeholder="Ej: 391,06">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Ranking de ingreso</label>
-      <input type="number" class="form-control" 
-        [value]="datos['rankingIngresoAISI'] || ''"
-        (input)="onFieldChange('rankingIngresoAISI', $any($event.target).value)"
-        placeholder="Ej: 1191">
-    </div>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Tabla PET según grupos de edad</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="petGruposEdadConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: 14 a 29 años' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'petGruposEdadAISI'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla PEA y No PEA según sexo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="peaDistritoSexoConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA' },
-          { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
-          { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'peaDistritoSexoTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="calcularPorcentajesPEADistritoSexo(); cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="peaOcupadaDesocupadaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA Ocupada' },
-          { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
-          { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'peaOcupadaDesocupadaTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="calcularPorcentajesPEAOcupadaDesocupada(); cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
+    <h4 class="section-title">B.1.2. Indicadores y distribución de la Población Económicamente Activa</h4>
+    
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Población en edad de trabajar (PET)</h4>
       
-      <app-paragraph-editor
-        fieldId="textoPEAAISI"
-        label="PEA Ocupada y Desocupada - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoPEAAISI()"
-        (valueChange)="onFieldChange('textoPEAAISI', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoPET_AISI"
+          label="PET - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPET_AISI()"
+          (valueChange)="onFieldChange('textoPET_AISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla PET según grupos de edad</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="petGruposEdadConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: 14 a 29 años' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'petGruposEdadAISI'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoIndicadoresDistritalesAISI"
+          label="Indicadores Distritales - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoIndicadoresDistritalesAISI()"
+          (valueChange)="onFieldChange('textoIndicadoresDistritalesAISI', $event)">
+        </app-paragraph-editor>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Población Económicamente Activa (PEA)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoPEA_AISI"
+          label="PEA - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPEA_AISI()"
+          (valueChange)="onFieldChange('textoPEA_AISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla PEA y No PEA según sexo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="peaDistritoSexoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA' },
+            { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
+            { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+            { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
+            { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'peaDistritoSexoTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="calcularPorcentajesPEADistritoSexo(); cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoAnalisisPEA_AISI"
+          label="Análisis PEA - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoAnalisisPEA_AISI()"
+          (valueChange)="onFieldChange('textoAnalisisPEA_AISI', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.1. Situación del empleo (dependiente o independiente)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEmpleoAISI"
+          label="Situación del empleo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoEmpleoAISI()"
+          (valueChange)="onFieldChange('textoEmpleoAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.2. Ingresos de la población</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoIngresosAISI"
+          label="Ingresos de la población - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="8"
+          [value]="obtenerTextoIngresosAISI()"
+          (valueChange)="onFieldChange('textoIngresosAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.3. Índice de Desempleo</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoIndiceDesempleoAISI"
+          label="Índice de Desempleo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoIndiceDesempleoAISI()"
+          (valueChange)="onFieldChange('textoIndiceDesempleoAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="peaOcupadaDesocupadaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA Ocupada' },
+            { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
+            { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+            { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
+            { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'peaOcupadaDesocupadaTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="calcularPorcentajesPEAOcupadaDesocupada(); cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoPEAAISI"
+          label="Análisis PEA Ocupada y Desocupada - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPEAAISI()"
+          (valueChange)="onFieldChange('textoPEAAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">Datos Adicionales</h4>
+      
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="form-field">
+          <label class="label">Población distrital</label>
+          <input type="number" class="input" 
+            [value]="datos['poblacionDistritalAISI'] || ''"
+            (input)="onFieldChange('poblacionDistritalAISI', $any($event.target).value)"
+            placeholder="Ej: 610">
+        </div>
+
+        <div class="form-field">
+          <label class="label">PET distrital (14 años a más)</label>
+          <input type="number" class="input" 
+            [value]="datos['petDistritalAISI'] || ''"
+            (input)="onFieldChange('petDistritalAISI', $any($event.target).value)"
+            placeholder="Ej: 461">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="form-field">
+          <label class="label">Ingreso familiar per cápita (S/.)</label>
+          <input type="text" class="input" 
+            [value]="datos['ingresoPerCapitaAISI'] || ''"
+            (input)="onFieldChange('ingresoPerCapitaAISI', $any($event.target).value)"
+            placeholder="Ej: 391,06">
+        </div>
+
+        <div class="form-field">
+          <label class="label">Ranking de ingreso</label>
+          <input type="number" class="input" 
+            [value]="datos['rankingIngresoAISI'] || ''"
+            (input)="onFieldChange('rankingIngresoAISI', $any($event.target).value)"
+            placeholder="Ej: 1191">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Fotografías de PEA</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

@@ -22,7 +22,7 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion8_ganaderia_completo', 'parrafoSeccion8_agricultura_completo', 'peaOcupacionesTabla', 'poblacionPecuariaTabla', 'caracteristicasAgriculturaTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion8_ganaderia_completo', 'parrafoSeccion8_agricultura_completo', 'peaOcupacionesTabla', 'poblacionPecuariaTabla', 'caracteristicasAgriculturaTabla', 'textoActividadesEconomicas', 'textoFuentesActividadesEconomicas', 'textoAnalisisCuadro310', 'textoMercadoComercializacion1', 'textoMercadoComercializacion2', 'textoHabitosConsumo1', 'textoHabitosConsumo2'];
   
   readonly PHOTO_PREFIX_GANADERIA = 'fotografiaGanaderia';
   readonly PHOTO_PREFIX_AGRICULTURA = 'fotografiaAgricultura';
@@ -215,6 +215,77 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
     
     return `En la CC ${grupoAISD}, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 95 % según los entrevistados, se destina al autoconsumo, mientras que solo un 5 % se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectárea de tierra.\n\nEl sistema de riego utilizado en la comunidad es principalmente por gravedad, aprovechando las fuentes de agua disponibles en la zona. Sin embargo, la actividad agrícola enfrenta serios desafíos, como las heladas, que dañan los cultivos durante las temporadas frías, y las sequías, que disminuyen la disponibilidad de agua, afectando la capacidad productiva de las familias. Adicionalmente, se enfrentan plagas y enfermedades como roedores y el gusano blanco. Estas problemáticas, recurrentes en el ciclo agrícola, limitan tanto la cantidad como la calidad de los productos cosechados.`;
+  }
+
+  obtenerTextoActividadesEconomicas(): string {
+    if (this.datos.textoActividadesEconomicas && this.datos.textoActividadesEconomicas !== '____') {
+      return this.datos.textoActividadesEconomicas;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describe las ocupaciones principales existentes en los poblados de la CC ${grupoAISD}, que forma parte del AISD.`;
+  }
+
+  obtenerTextoFuentesActividadesEconomicas(): string {
+    if (this.datos.textoFuentesActividadesEconomicas && this.datos.textoFuentesActividadesEconomicas !== '____') {
+      return this.datos.textoFuentesActividadesEconomicas;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC ${grupoAISD}. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.`;
+  }
+
+  obtenerTextoAnalisisCuadro310(): string {
+    if (this.datos.textoAnalisisCuadro310 && this.datos.textoAnalisisCuadro310 !== '____') {
+      return this.datos.textoAnalisisCuadro310;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajeIndependiente = this.getPorcentajeOcupacion('independiente');
+    const porcentajeObrero = this.getPorcentajeOcupacion('obrero');
+    const porcentajeEmpleado = this.getPorcentajeOcupacion('empleado');
+    
+    return `Del cuadro anterior, se aprecia que, al momento de la aplicación de los Censos Nacionales 2017, la ocupación más frecuente dentro de la CC ${grupoAISD} es la de "Trabajador independiente o por cuenta propia" con un ${porcentajeIndependiente}. Las siguientes ocupaciones que se hallan son la de obrero (${porcentajeObrero}) y empleado (${porcentajeEmpleado}). Ello se condice con las entrevistas aplicadas en campo, puesto que se recolectó información que indica que la mayor parte de la población se dedica a las actividades agropecuarias de subsistencia de manera independiente o por cuenta propia.`;
+  }
+
+  obtenerTextoMercadoComercializacion1(): string {
+    if (this.datos.textoMercadoComercializacion1 && this.datos.textoMercadoComercializacion1 !== '____') {
+      return this.datos.textoMercadoComercializacion1;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `Dentro de la CC ${grupoAISD} no existe un mercado local donde se puedan comercializar los productos agrícolas o ganaderos directamente. Toda la venta de estos productos se realiza a través de intermediarios que visitan la comunidad en busca de animales en pie o productos como el queso. Estos intermediarios suelen establecer los precios de compra, lo que limita la capacidad de los comuneros para negociar y obtener un valor justo por su producción.`;
+  }
+
+  obtenerTextoMercadoComercializacion2(): string {
+    if (this.datos.textoMercadoComercializacion2 && this.datos.textoMercadoComercializacion2 !== '____') {
+      return this.datos.textoMercadoComercializacion2;
+    }
+    
+    return `Esta dependencia de los intermediarios presenta diversas dificultades. Por un lado, los comuneros reciben precios más bajos en comparación con los que podrían obtener si tuvieran acceso directo a mercados más grandes o si contaran con un punto de venta dentro de la comunidad. Además, el transporte de los productos fuera de la comunidad aumenta los costos logísticos, afectando la rentabilidad de las actividades económicas. Este sistema de comercialización se traduce en una vulnerabilidad económica para las familias, ya que dependen de las condiciones impuestas por terceros para la venta de sus bienes.`;
+  }
+
+  obtenerTextoHabitosConsumo1(): string {
+    if (this.datos.textoHabitosConsumo1 && this.datos.textoHabitosConsumo1 !== '____') {
+      return this.datos.textoHabitosConsumo1;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `En la CC ${grupoAISD}, los hábitos de consumo se caracterizan por una dieta basada principalmente en productos que se adquieren de comerciantes que visitan la comunidad periódicamente (quincenalmente, en promedio), así como en pequeñas bodegas locales. Entre los alimentos más consumidos destacan los abarrotes como el arroz, maíz y fideos, que forman parte esencial de la alimentación diaria de las familias. Estos productos son complementados con la producción local de papa y habas, que también son alimentos fundamentales en la dieta.`;
+  }
+
+  obtenerTextoHabitosConsumo2(): string {
+    if (this.datos.textoHabitosConsumo2 && this.datos.textoHabitosConsumo2 !== '____') {
+      return this.datos.textoHabitosConsumo2;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `El consumo de papa y habas es especialmente importante, ya que ambos son productos locales y tradicionales, que no solo se destinan al autoconsumo, sino que también forman parte de la base alimentaria debido a su disponibilidad y bajo costo. La producción de estos alimentos es continua, lo que asegura su presencia en la mayoría de los hogares. Dentro de la CC ${grupoAISD} resaltan algunos platos tradicionales como el "revuelto de habas", cuy chactado y el chicharrón. Por otra parte, también destaca el consumo de frutas que son obtenidas a través de los comerciantes que visitan la comunidad, los cuales ofrecen productos adicionales como verduras y prendas en determinadas ocasiones.`;
   }
 
 

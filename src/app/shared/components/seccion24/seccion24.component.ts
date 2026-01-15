@@ -21,7 +21,7 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI', 'ciudadOrigenComercio'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI', 'ciudadOrigenComercio', 'textoIntroActividadesEconomicasAISI', 'textoActividadesEconomicasAISI', 'textoMercadoProductos', 'textoHabitosConsumo'];
   
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB13';
   
@@ -300,8 +300,51 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     this.fotografiasFormMulti = [...fotografias];
   }
 
+  obtenerTextoIntroActividadesEconomicasAISI(): string {
+    if (this.datos.textoIntroActividadesEconomicasAISI && this.datos.textoIntroActividadesEconomicasAISI !== '____') {
+      return this.datos.textoIntroActividadesEconomicasAISI;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describirá la estructura y la diversidad de las actividades económicas en la capital distrital de ${distrito}, que forma parte del AISI.\n\nA partir de fuentes oficiales, se exploran las principales fuentes de ingresos y los sectores productivos más relevantes dentro del CP ${centroPoblado} (capital distrital). En esta ocasión, se recurre a los datos provistos por los Censos Nacionales 2017.`;
+  }
+
   obtenerTextoActividadesEconomicasAISI(): string {
-    return this.datos.textoActividadesEconomicasAISI || '';
+    if (this.datos.textoActividadesEconomicasAISI && this.datos.textoActividadesEconomicasAISI !== '____') {
+      return this.datos.textoActividadesEconomicasAISI;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajeAgricultura = this.getPorcentajeAgricultura();
+    const porcentajeAdministracion = this.getPorcentajeAdministracion();
+    
+    return `Del cuadro anterior, se aprecia que la actividad económica más frecuente dentro del CP ${centroPoblado} es el grupo "Agricultura, ganadería, silvicultura y pesca" con un ${porcentajeAgricultura}. Esto se condice con las entrevistas aplicadas en campo, pues los informantes y autoridades declararon que la mayoría de la población se dedica principalmente a la agricultura y a la ganadería. La segunda actividad más frecuente dentro de esta localidad es la de "Administración pública y defensa; planes de seguridad social de afiliación obligatoria" con ${porcentajeAdministracion}.`;
+  }
+
+  obtenerTextoMercadoProductos(): string {
+    if (this.datos.textoMercadoProductos && this.datos.textoMercadoProductos !== '____') {
+      return this.datos.textoMercadoProductos;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const ciudadOrigen = this.datos.ciudadOrigenComercio || 'Caravelí';
+    
+    return `El CP ${centroPoblado} no cuenta con un mercado formal que centralice las actividades comerciales de la localidad. El comercio en este lugar es incipiente y se lleva a cabo principalmente a través de pequeñas bodegas. Estas bodegas atienden la demanda cotidiana en la localidad, pero la oferta sigue siendo limitada y gran parte de los productos llega desde ${ciudadOrigen}.\n\nAdemás, la comercialización de productos en ${distrito} se complementa con la presencia de comerciantes mayoristas que viajan hacia la localidad para comprar y vender productos. La mayoría de estos comerciantes provienen de la ciudad de ${ciudadOrigen}, desde donde abastecen las bodegas locales con mercancías diversas. Este sistema de intermediación permite que los pobladores de ${centroPoblado} accedan a una variedad más amplia de productos, aunque la oferta sigue siendo limitada en comparación con las zonas urbanas más grandes. La falta de un mercado formal y de una infraestructura de comercio mayor limita el desarrollo del intercambio comercial en la localidad, pero el dinamismo de las pequeñas bodegas y la llegada de comerciantes externos contribuyen a mantener un flujo de productos que satisface las necesidades básicas de la población.`;
+  }
+
+  obtenerTextoHabitosConsumo(): string {
+    if (this.datos.textoHabitosConsumo && this.datos.textoHabitosConsumo !== '____') {
+      return this.datos.textoHabitosConsumo;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const ciudadOrigen = this.datos.ciudadOrigenComercio || 'Caravelí';
+    
+    return `En la capital distrital de ${distrito}, los hábitos de consumo están basados principalmente en alimentos tradicionales y accesibles dentro de la comunidad. Los productos más consumidos incluyen tubérculos (como papa y oca) y verduras, los cuales son esenciales en la dieta diaria de los hogares. Estos productos se adquieren tanto a través de la producción local, como es el caso de la papa y la oca, como de compras a pequeños comerciantes que llegan a la capital distrital desde ${ciudadOrigen}. La papa, por ser uno de los cultivos más abundantes en la zona, tiene un rol fundamental en la alimentación, acompañando la mayoría de las comidas junto a otros carbohidratos.\n\nEn cuanto al consumo de proteínas, los habitantes del pueblo suelen recurrir a la carne de animales menores como las gallinas y los cuyes, así como de vacuno, los cuales son criados en sus propias viviendas. Estas carnes son un complemento importante en la dieta y una fuente de nutrientes esenciales, especialmente en eventos familiares o festividades. Si bien se consumen otros tipos de carne en menor proporción, como ovino, estas son generalmente reservadas para ocasiones especiales. Los hábitos de consumo en esta localidad reflejan una combinación de autosuficiencia en algunos alimentos, y la dependencia de productos traídos por comerciantes para completar la dieta diaria.\n\nPor otra parte, cabe mencionar que en el CP ${centroPoblado} se preparan diversos platos tradicionales, comúnmente durante las festividades o en ocasiones especiales. Entre ellos destacan el cuy chactado, el picante de cuy, sopa de morón con charqui, picante de quinua, mazamorra de quinua y chicha de cebada.`;
   }
 }
 

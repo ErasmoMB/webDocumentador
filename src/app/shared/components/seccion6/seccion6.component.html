@@ -83,107 +83,119 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.2. Aspectos Demográficos</h4>
+    <h4 class="section-title">A.1.2 Aspectos Demográficos</h4>
     
-    <div class="form-field">
-      <label class="label">Población por Sexo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="poblacionSexoConfig"
-        [columns]="[
-          { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombres/Mujeres' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'poblacionSexoAISD'"
-        [totalKey]="'sexo'"
-        [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
-        (tableUpdated)="onPoblacionSexoTableUpdated()">
-      </app-dynamic-table>
-      <div class="table-editor" *ngIf="datos['poblacionSexoAISD'] && datos['poblacionSexoAISD'].length > 0" style="margin-top: 10px;">
-        <table class="editor-table">
-          <tbody>
-            <tr class="total-row">
-              <td><strong>Total</strong></td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="getTotalPoblacionSexo()"
-                  readonly
-                  style="background-color: #f5f5f5; cursor: not-allowed;">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  value="100,00 %"
-                  readonly
-                  style="background-color: #f5f5f5; cursor: not-allowed;">
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Población por Grupo Etario</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="poblacionEtarioConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'poblacionEtarioAISD'"
-        [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
-        (tableUpdated)="onPoblacionEtarioTableUpdated()">
-      </app-dynamic-table>
-      <div class="table-editor" *ngIf="datos['poblacionEtarioAISD'] && datos['poblacionEtarioAISD'].length > 0" style="margin-top: 10px;">
-        <table class="editor-table">
-          <tbody>
-            <tr class="total-row">
-              <td><strong>Total</strong></td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="getTotalPoblacionEtario()"
-                  readonly
-                  style="background-color: #f5f5f5; cursor: not-allowed;">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  value="100,00 %"
-                  readonly
-                  style="background-color: #f5f5f5; cursor: not-allowed;">
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Población según sexo</h4>
       
-      <app-paragraph-editor
-        fieldId="textoPoblacionSexoAISD"
-        label="Población según Sexo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoPoblacionSexoAISD()"
-        (valueChange)="onFieldChange('textoPoblacionSexoAISD', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoPoblacionSexoAISD"
+          label="Población según Sexo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPoblacionSexoAISD()"
+          (valueChange)="onFieldChange('textoPoblacionSexoAISD', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="textoPoblacionEtarioAISD"
-        label="Población por Grupo Etario - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoPoblacionEtarioAISD()"
-        (valueChange)="onFieldChange('textoPoblacionEtarioAISD', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Población por Sexo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="poblacionSexoConfig"
+          [columns]="[
+            { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombres/Mujeres' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'poblacionSexoAISD'"
+          [totalKey]="'sexo'"
+          [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
+          (tableUpdated)="onPoblacionSexoTableUpdated()">
+        </app-dynamic-table>
+        <div class="table-editor" *ngIf="datos['poblacionSexoAISD'] && datos['poblacionSexoAISD'].length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="getTotalPoblacionSexo()"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    value="100,00 %"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Población según grupo etario</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoPoblacionEtarioAISD"
+          label="Población por Grupo Etario - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPoblacionEtarioAISD()"
+          (valueChange)="onFieldChange('textoPoblacionEtarioAISD', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Población por Grupo Etario</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="poblacionEtarioConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'poblacionEtarioAISD'"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
+          (tableUpdated)="onPoblacionEtarioTableUpdated()">
+        </app-dynamic-table>
+        <div class="table-editor" *ngIf="datos['poblacionEtarioAISD'] && datos['poblacionEtarioAISD'].length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="getTotalPoblacionEtario()"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    value="100,00 %"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Fotografías de Aspectos Demográficos</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

@@ -47,14 +47,20 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.16. Festividades, Costumbres y Turismo</h4>
     
-    <div class="form-field">
-      <label class="label">Sitio Arqueológico</label>
-      <input type="text" class="input" placeholder="Ej: Incahuasi"
-        [value]="datos['sitioArqueologico'] || ''"
-        (input)="onFieldChange('sitioArqueologico', $any($event.target).value)">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoFestividades"
+        label="Festividades, Costumbres y Turismo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoFestividades()"
+        (valueChange)="onFieldChange('textoFestividades', $event)">
+      </app-paragraph-editor>
     </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Festividades</label>
       <app-dynamic-table
         [datos]="datos"
@@ -67,19 +73,6 @@
         [totalKey]="'festividad'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="textoFestividades"
-        label="Festividades, Costumbres y Turismo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="8"
-        [value]="obtenerTextoFestividades()"
-        (valueChange)="onFieldChange('textoFestividades', $event)">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

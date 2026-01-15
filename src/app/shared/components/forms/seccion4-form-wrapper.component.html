@@ -76,6 +76,19 @@
 </div>
 
 <div class="form-group-section">
+  <h4 class="section-title">Editar Párrafos</h4>
+  
+  <app-paragraph-editor
+    fieldId="parrafoSeccion4_caracterizacion_indicadores"
+    label="Caracterización de Indicadores"
+    hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+    [rows]="2"
+    [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
+    (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+  </app-paragraph-editor>
+</div>
+
+<div class="form-group-section">
   <h4 class="section-title">Cuadro 2: Población y viviendas</h4>
   <div class="form-field">
     <label class="label">Título <span class="required">*</span></label>

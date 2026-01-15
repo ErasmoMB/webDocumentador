@@ -47,29 +47,9 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.3. Aspectos Económicos</h4>
-    
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Población en edad de Trabajar (PET)</h4>
       
-      <app-paragraph-editor
-        fieldId="parrafoSeccion7_situacion_empleo_completo"
-        label="Situación del Empleo - Texto Completo"
-        hint="Edite todo el bloque de texto sobre situación del empleo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $event)">
-      </app-paragraph-editor>
-
-      <app-paragraph-editor
-        fieldId="parrafoSeccion7_ingresos_completo"
-        label="Ingresos de la Población - Texto Completo"
-        hint="Edite todo el bloque de texto sobre ingresos. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="8"
-        [value]="obtenerTextoSeccion7IngresosCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo', $event)">
-      </app-paragraph-editor>
-
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de PEA y Empleo</label>
         <app-image-upload
@@ -87,6 +67,40 @@
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.1. Situación del empleo (independiente o dependiente)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion7_situacion_empleo_completo"
+          label="Situación del Empleo - Texto Completo"
+          hint="Edite todo el bloque de texto sobre situación del empleo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.2. Ingresos de la población</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion7_ingresos_completo"
+          label="Ingresos de la Población - Texto Completo"
+          hint="Edite todo el bloque de texto sobre ingresos. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="8"
+          [value]="obtenerTextoSeccion7IngresosCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo', $event)">
+        </app-paragraph-editor>
       </div>
     </div>
   </div>

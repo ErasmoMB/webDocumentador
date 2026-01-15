@@ -72,7 +72,20 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
     
-    <div class="form-field">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoNecesidadesBasicasInsatisfechas"
+        label="Necesidades Básicas Insatisfechas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. El primer párrafo aparecerá antes de la tabla NBI CC, y el segundo párrafo aparecerá después de la tabla NBI CC y antes de la tabla NBI Distrito. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoNecesidadesBasicasInsatisfechas()"
+        (valueChange)="onFieldChange('textoNecesidadesBasicasInsatisfechas', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla NBI CC Ayroca</label>
       <app-dynamic-table
         [datos]="datos"
@@ -88,7 +101,7 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla NBI Distrito Cahuacho</label>
       <app-dynamic-table
         [datos]="datos"
@@ -102,19 +115,6 @@
         [totalKey]="'categoria'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="textoNecesidadesBasicasInsatisfechas"
-        label="Necesidades Básicas Insatisfechas - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoNecesidadesBasicasInsatisfechas()"
-        (valueChange)="onFieldChange('textoNecesidadesBasicasInsatisfechas', $event)">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

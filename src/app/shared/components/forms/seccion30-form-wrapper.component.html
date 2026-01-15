@@ -1,14 +1,1 @@
 <app-seccion30 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion30>
-
-<div class="form-group-section">
-  <h4 class="section-title">Editar Párrafos</h4>
-  
-  <app-paragraph-editor
-    fieldId="parrafoSeccion30_indicadores_educacion_intro"
-    label="Introducción - Indicadores de Educación"
-    hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-    [rows]="4"
-    [value]="obtenerTextoSeccion30IndicadoresEducacionIntro()"
-    (valueChange)="onFieldChange('parrafoSeccion30_indicadores_educacion_intro', $event)">
-  </app-paragraph-editor>
-</div>

@@ -20,7 +20,7 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion15_religion_completo', 'lenguasMaternasTabla', 'religionesTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion15_religion_completo', 'lenguasMaternasTabla', 'religionesTabla', 'textoAspectosCulturales', 'textoIdioma'];
   
   override readonly PHOTO_PREFIX = 'fotografiaIglesia';
   private stateSubscription?: Subscription;
@@ -204,6 +204,17 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     }
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
     return `La confesión predominante dentro de la CC ${grupoAISD} es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
+  }
+
+  obtenerTextoIdioma(): string {
+    if (this.datos.textoIdioma && this.datos.textoIdioma !== '____') {
+      return this.datos.textoIdioma;
+    }
+    
+    const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
+    const porcentajeQuechua = this.getPorcentajeQuechua() || '____';
+    
+    return `Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el ${porcentajeCastellano} de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del ${porcentajeQuechua} de los habitantes.`;
   }
 
   inicializarLenguasMaternas() {

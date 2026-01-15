@@ -127,98 +127,127 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.9. Indicadores de salud</h4>
     
-    <div class="form-field">
-      <label class="label">Tabla Natalidad y Mortalidad</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="natalidadMortalidadConfig"
-        [columns]="[
-          { field: 'anio', label: 'Año', type: 'text', placeholder: '2023' },
-          { field: 'natalidad', label: 'Natalidad', type: 'number', placeholder: '0' },
-          { field: 'mortalidad', label: 'Mortalidad', type: 'number', placeholder: '0' }
-        ]"
-        [tablaKey]="'natalidadMortalidadTabla'"
-        [totalKey]="'anio'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Morbilidad</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="morbilidadConfig"
-        [columns]="[
-          { field: 'grupo', label: 'Grupo de Morbilidad', type: 'text', placeholder: 'Infecciones agudas' },
-          { field: 'rango0_11', label: '0 – 11', type: 'number', placeholder: '0' },
-          { field: 'rango12_17', label: '12 – 17', type: 'number', placeholder: '0' },
-          { field: 'rango18_29', label: '18 – 29', type: 'number', placeholder: '0' },
-          { field: 'rango30_59', label: '30 – 59', type: 'number', placeholder: '0' },
-          { field: 'rango60', label: '60 ->', type: 'number', placeholder: '0' },
-          { field: 'casos', label: 'Casos Totales', type: 'number', placeholder: '0', readonly: true }
-        ]"
-        [tablaKey]="'morbilidadTabla'"
-        [totalKey]="'grupo'"
-        [customFieldChangeHandler]="onMorbilidadFieldChange.bind(this)"
-        (tableUpdated)="onMorbilidadTableUpdated()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Afiliación a Seguros de Salud</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="afiliacionSaludConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'SIS' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'afiliacionSaludTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Natalidad y Mortalidad</h4>
       
-      <app-paragraph-editor
-        fieldId="parrafoSeccion13_natalidad_mortalidad_completo"
-        label="Natalidad y Mortalidad - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion13_natalidad_mortalidad_completo"
+          label="Natalidad y Mortalidad - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="parrafoSeccion13_morbilidad_completo"
-        label="Morbilidad - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoSeccion13MorbilidadCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion13_morbilidad_completo', $event)">
-      </app-paragraph-editor>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Natalidad y Mortalidad</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="natalidadMortalidadConfig"
+          [columns]="[
+            { field: 'anio', label: 'Año', type: 'text', placeholder: '2023' },
+            { field: 'natalidad', label: 'Natalidad', type: 'number', placeholder: '0' },
+            { field: 'mortalidad', label: 'Mortalidad', type: 'number', placeholder: '0' }
+          ]"
+          [tablaKey]="'natalidadMortalidadTabla'"
+          [totalKey]="'anio'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Indicadores de Salud</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Indicadores de Salud"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Indicadores de Salud"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Morbilidad</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion13_morbilidad_completo"
+          label="Morbilidad - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoSeccion13MorbilidadCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion13_morbilidad_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Morbilidad</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="morbilidadConfig"
+          [columns]="[
+            { field: 'grupo', label: 'Grupo de Morbilidad', type: 'text', placeholder: 'Infecciones agudas' },
+            { field: 'rango0_11', label: '0 – 11', type: 'number', placeholder: '0' },
+            { field: 'rango12_17', label: '12 – 17', type: 'number', placeholder: '0' },
+            { field: 'rango18_29', label: '18 – 29', type: 'number', placeholder: '0' },
+            { field: 'rango30_59', label: '30 – 59', type: 'number', placeholder: '0' },
+            { field: 'rango60', label: '60 ->', type: 'number', placeholder: '0' },
+            { field: 'casos', label: 'Casos Totales', type: 'number', placeholder: '0', readonly: true }
+          ]"
+          [tablaKey]="'morbilidadTabla'"
+          [totalKey]="'grupo'"
+          [customFieldChangeHandler]="onMorbilidadFieldChange.bind(this)"
+          (tableUpdated)="onMorbilidadTableUpdated()">
+        </app-dynamic-table>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Población afiliada a Seguros de Salud</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoAfiliacionSalud"
+          label="Afiliación a Seguros de Salud - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoAfiliacionSalud()"
+          (valueChange)="onFieldChange('textoAfiliacionSalud', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Afiliación a Seguros de Salud</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="afiliacionSaludConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'SIS' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'afiliacionSaludTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Indicadores de Salud</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Indicadores de Salud"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Indicadores de Salud"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

@@ -53,68 +53,73 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h4>
     
-    <div class="form-field">
-      <label class="label">Tabla Lenguas Maternas</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="lenguasMaternasConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'lenguasMaternasTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Religiones</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="religionesConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-        ]"
-        [tablaKey]="'religionesTabla'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Idioma</h4>
       
-      <app-paragraph-editor
-        fieldId="parrafoSeccion15_religion_completo"
-        label="Religión - Texto Completo"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoSeccion15ReligionCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoIdioma"
+          label="Idioma - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoIdioma()"
+          (valueChange)="onFieldChange('textoIdioma', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Lenguas Maternas</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="lenguasMaternasConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
+          [tablaKey]="'lenguasMaternasTabla'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Iglesia</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Iglesia Matriz del anexo Ayroca"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Religión</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion15_religion_completo"
+          label="Religión - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion15ReligionCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Iglesia</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Iglesia Matriz del anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

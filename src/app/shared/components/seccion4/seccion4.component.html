@@ -101,33 +101,40 @@
 
 <div *ngIf="modoFormulario && (seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A.2')" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">Editar Párrafos</h4>
+    <h4 class="section-title">3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h4>
+    <h4 class="section-title" style="margin-top: 15px;">A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
     
-    <app-paragraph-editor
-      fieldId="parrafoSeccion4_introduccion_aisd"
-      label="Introducción AISD"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="3"
-      [value]="obtenerTextoSeccion4IntroduccionAISD()"
-      (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
-    </app-paragraph-editor>
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion4_introduccion_aisd"
+        label="Introducción AISD"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoSeccion4IntroduccionAISD()"
+        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+      </app-paragraph-editor>
+    </div>
 
-    <app-paragraph-editor
-      fieldId="parrafoSeccion4_comunidad_completo"
-      label="Información de la Comunidad - Texto Completo"
-      hint="Edite todo el bloque de texto sobre la comunidad. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="12"
-      [value]="obtenerTextoSeccion4ComunidadCompleto()"
-      (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
-    </app-paragraph-editor>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title" *ngIf="seccionId.includes('3.1.4.A.1')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h4>
+      <h4 class="section-title" *ngIf="seccionId.includes('3.1.4.A.2')">A.2. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h4>
+      <h4 class="section-title" *ngIf="!seccionId.includes('3.1.4.A.1') && !seccionId.includes('3.1.4.A.2')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion4_comunidad_completo"
+          label="Información de la Comunidad - Texto Completo"
+          hint="Edite todo el bloque de texto sobre la comunidad. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="12"
+          [value]="obtenerTextoSeccion4ComunidadCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
 
-    <app-paragraph-editor
-      fieldId="parrafoSeccion4_caracterizacion_indicadores"
-      label="Caracterización de Indicadores"
-      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-      [rows]="2"
-      [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
-      (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
-    </app-paragraph-editor>
   </div>
 </div>

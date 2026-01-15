@@ -22,11 +22,16 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla', 'costoTransporteMinimo', 'costoTransporteMaximo'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla', 'costoTransporteMinimo', 'costoTransporteMaximo', 'textoTransporteCP1', 'textoTransporteCP2', 'textoTelecomunicacionesCP1', 'textoTelecomunicacionesCP2', 'textoTelecomunicacionesCP3'];
   
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB16';
   
+  readonly PHOTO_PREFIX_TRANSPORTE = 'fotografiaTransporteAISI';
+  readonly PHOTO_PREFIX_TELECOMUNICACIONES = 'fotografiaTelecomunicacionesAISI';
+  
   fotografiasInstitucionalidadCache: any[] = [];
+  fotografiasTransporteFormMulti: FotoItem[] = [];
+  fotografiasTelecomunicacionesFormMulti: FotoItem[] = [];
 
   telecomunicacionesConfig: TableConfig = {
     tablaKey: 'telecomunicacionesCpTabla',
@@ -171,6 +176,17 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
 
   override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasTransporteFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TRANSPORTE,
+      groupPrefix
+    );
+    this.fotografiasTelecomunicacionesFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TELECOMUNICACIONES,
+      groupPrefix
+    );
   }
 
   override getFotografiasVista(): FotoItem[] {
@@ -182,11 +198,39 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
     );
   }
 
+  getFotografiasTransporteVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TRANSPORTE,
+      groupPrefix
+    );
+  }
+
+  getFotografiasTelecomunicacionesVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TELECOMUNICACIONES,
+      groupPrefix
+    );
+  }
+
   protected override actualizarFotografiasFormMulti(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.fotografiasFormMulti = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasTransporteFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TRANSPORTE,
+      groupPrefix
+    );
+    this.fotografiasTelecomunicacionesFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TELECOMUNICACIONES,
       groupPrefix
     );
   }
@@ -214,24 +258,65 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
     this.fotografiasCache = [...fotografias];
   }
 
+  onFotografiasTransporteChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_TRANSPORTE, fotografias);
+    this.fotografiasTransporteFormMulti = [...fotografias];
+  }
+
+  onFotografiasTelecomunicacionesChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_TELECOMUNICACIONES, fotografias);
+    this.fotografiasTelecomunicacionesFormMulti = [...fotografias];
+  }
+
   obtenerTextoTransporteCP1(): string {
-    return this.datos.textoTransporteCP1 || '';
+    if (this.datos.textoTransporteCP1 && this.datos.textoTransporteCP1 !== '____') {
+      return this.datos.textoTransporteCP1;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `En el CP ${centroPoblado}, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.`;
   }
 
   obtenerTextoTransporteCP2(): string {
-    return this.datos.textoTransporteCP2 || '';
+    if (this.datos.textoTransporteCP2 && this.datos.textoTransporteCP2 !== '____') {
+      return this.datos.textoTransporteCP2;
+    }
+    
+    const ciudadOrigen = this.datos.ciudadOrigenComercio || 'Caravelí';
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const costoMin = this.datos.costoTransporteMinimo || '25';
+    const costoMax = this.datos.costoTransporteMaximo || '30';
+    
+    return `Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de ${ciudadOrigen}, a la cual parte cerca de las 10:30 am desde la capital distrital de ${distrito}. El costo por este servicio varía entre S/. ${costoMin} y S/. ${costoMax} por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.`;
   }
 
   obtenerTextoTelecomunicacionesCP1(): string {
-    return this.datos.textoTelecomunicacionesCP1 || '';
+    if (this.datos.textoTelecomunicacionesCP1 && this.datos.textoTelecomunicacionesCP1 !== '____') {
+      return this.datos.textoTelecomunicacionesCP1;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `En el CP ${centroPoblado}, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.`;
   }
 
   obtenerTextoTelecomunicacionesCP2(): string {
-    return this.datos.textoTelecomunicacionesCP2 || '';
+    if (this.datos.textoTelecomunicacionesCP2 && this.datos.textoTelecomunicacionesCP2 !== '____') {
+      return this.datos.textoTelecomunicacionesCP2;
+    }
+    
+    return `En cuanto a radiodifusión, se puede captar señal de emisoras nacionales como RPP, Nacional y Unión, las cuales sirven como importantes fuentes de información y entretenimiento para la población local. Estas emisoras proporcionan noticias, música y programas de interés general que son valorados por los habitantes del centro poblado.`;
   }
 
   obtenerTextoTelecomunicacionesCP3(): string {
-    return this.datos.textoTelecomunicacionesCP3 || '';
+    if (this.datos.textoTelecomunicacionesCP3 && this.datos.textoTelecomunicacionesCP3 !== '____') {
+      return this.datos.textoTelecomunicacionesCP3;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    
+    return `Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en ${centroPoblado} optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.\n\nEn lo que respecta a la telefonía móvil e internet, la cobertura es proporcionada por las operadoras Movistar, Claro y Entel, lo que facilita la comunicación dentro del área y con el exterior. Para el acceso a internet, la población principalmente se conecta a través de los datos móviles proporcionados por Movistar y Entel, lo que les permite mantenerse conectados para actividades cotidianas y laborales.`;
   }
 }
 

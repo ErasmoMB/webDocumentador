@@ -22,7 +22,7 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'nbiCCAyrocaTabla', 'nbiDistritoCahuachoTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'nbiCCAyrocaTabla', 'nbiDistritoCahuachoTabla', 'textoNecesidadesBasicasInsatisfechas'];
   
   override readonly PHOTO_PREFIX = 'fotografiaNBI';
 
@@ -145,7 +145,20 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoNecesidadesBasicasInsatisfechas(): string {
-    return this.datos.textoNecesidadesBasicasInsatisfechas || '';
+    if (this.datos.textoNecesidadesBasicasInsatisfechas && this.datos.textoNecesidadesBasicasInsatisfechas !== '____') {
+      return this.datos.textoNecesidadesBasicasInsatisfechas;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const totalPersonas = this.getTotalPersonasCC();
+    const porcentajeHacinamiento = this.getPorcentajeHacinamientoCC();
+    const porcentajeSinServicios = this.getPorcentajeSinServiciosCC();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const totalUnidades = this.getTotalUnidadesDistrito();
+    const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito();
+    const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito();
+    
+    return `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de ${totalPersonas} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (${porcentajeHacinamiento}), seguido de la de viviendas sin servicios higiénicos (${porcentajeSinServicios}).\n\nPor otro lado, a nivel distrital de ${distrito}, de un total de ${totalUnidades} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (${porcentajeSinServiciosDistrito}), seguida de la de viviendas con hacinamiento (${porcentajeHacinamientoDistrito}). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
   }
 
   getPorcentajeSinServiciosDistrito(): string {

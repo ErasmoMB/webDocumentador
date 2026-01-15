@@ -22,7 +22,7 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'coberturaElectricaTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'coberturaElectricaTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo', 'textoServiciosAgua', 'textoServiciosAguaDetalle', 'textoServiciosDesague', 'textoServiciosDesagueDetalle', 'textoDesechosSolidos1', 'textoDesechosSolidos2', 'textoDesechosSolidos3', 'textoElectricidad1', 'textoElectricidad2', 'textoEnergiaParaCocinar'];
   
   readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidos';
   readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidad';
@@ -343,6 +343,113 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
+  }
+
+  obtenerTextoServiciosAgua(): string {
+    if (this.datos.textoServiciosAgua && this.datos.textoServiciosAgua !== '____') {
+      return this.datos.textoServiciosAgua;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajeRedPublica = this.getPorcentajeAguaRedPublica();
+    const porcentajeSinAbastecimiento = this.getPorcentajeAguaSinAbastecimiento();
+    
+    return `Respecto al servicio de agua para consumo humano en la CC ${grupoAISD}, se cuenta con cobertura regular de dicho recurso en las viviendas. Es así que, según la plataforma REDINFORMA, un ${porcentajeRedPublica} de las viviendas cuenta con abastecimiento de agua por red pública. Ninguna vivienda cuenta con abastecimiento por pilón, mientras que el ${porcentajeSinAbastecimiento} restante no se abastece por ninguno de estos dos medios.`;
+  }
+
+  obtenerTextoServiciosAguaDetalle(): string {
+    if (this.datos.textoServiciosAguaDetalle && this.datos.textoServiciosAguaDetalle !== '____') {
+      return this.datos.textoServiciosAguaDetalle;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const cuotaMensual = this.datos.cuotaMensualAgua || '4';
+    
+    return `De las entrevistas aplicadas durante el trabajo de campo, se obtuvo la información de que la institución responsable de la administración del servicio de abastecimiento de agua y de su respectivo mantenimiento es la JASS ${grupoAISD}. Esta junta lleva a cabo una cloración del recurso hídrico para el consumo de las familias de la CC ${grupoAISD} y también realiza el cobro de una cuota mensual de S/. ${cuotaMensual} para poder contar con recursos económicos y desarrollar sus actividades.`;
+  }
+
+  obtenerTextoServiciosDesague(): string {
+    if (this.datos.textoServiciosDesague && this.datos.textoServiciosDesague !== '____') {
+      return this.datos.textoServiciosDesague;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajeRedPublica = this.getPorcentajeSaneamientoRedPublica();
+    const porcentajeSinSaneamiento = this.getPorcentajeSaneamientoSinSaneamiento();
+    
+    return `Respecto al servicio de saneamiento en las viviendas de la CC ${grupoAISD}, se cuenta con cobertura regular. Es así que, según la plataforma REDINFORMA, un ${porcentajeRedPublica} de las viviendas cuenta con saneamiento vía red pública. Ninguna vivienda tiene saneamiento vía pozo séptico, mientras que el ${porcentajeSinSaneamiento} restante no posee saneamiento por vía de los dos medios mencionados.`;
+  }
+
+  obtenerTextoServiciosDesagueDetalle(): string {
+    if (this.datos.textoServiciosDesagueDetalle && this.datos.textoServiciosDesagueDetalle !== '____') {
+      return this.datos.textoServiciosDesagueDetalle;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    
+    return `Por medio de las entrevistas aplicadas, se recolectó la información de que la institución responsable de la administración del servicio de desagüe por red pública y de su mantenimiento es, al igual que con el agua, la JASS ${grupoAISD}. Las excretas son destinadas a una poza de oxidación, ubicada fuera del entorno urbano del anexo ${grupoAISD}.`;
+  }
+
+  obtenerTextoDesechosSolidos1(): string {
+    if (this.datos.textoDesechosSolidos1 && this.datos.textoDesechosSolidos1 !== '____') {
+      return this.datos.textoDesechosSolidos1;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    
+    return `La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de ${distrito}, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.`;
+  }
+
+  obtenerTextoDesechosSolidos2(): string {
+    if (this.datos.textoDesechosSolidos2 && this.datos.textoDesechosSolidos2 !== '____') {
+      return this.datos.textoDesechosSolidos2;
+    }
+    
+    return `Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.`;
+  }
+
+  obtenerTextoDesechosSolidos3(): string {
+    if (this.datos.textoDesechosSolidos3 && this.datos.textoDesechosSolidos3 !== '____') {
+      return this.datos.textoDesechosSolidos3;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    
+    return `Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del anexo ${grupoAISD} en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.`;
+  }
+
+  obtenerTextoElectricidad1(): string {
+    if (this.datos.textoElectricidad1 && this.datos.textoElectricidad1 !== '____') {
+      return this.datos.textoElectricidad1;
+    }
+    
+    const porcentajeElectricidad = this.getPorcentajeElectricidad();
+    const porcentajeSinElectricidad = this.getPorcentajeSinElectricidad();
+    
+    return `Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas de la comunidad campesina en cuestión. Según la plataforma REDINFORMA, se cuenta con los siguientes datos: el ${porcentajeElectricidad} de las viviendas cuenta con alumbrado eléctrico, mientras que el ${porcentajeSinElectricidad} restante no tiene el referido servicio.`;
+  }
+
+  obtenerTextoElectricidad2(): string {
+    if (this.datos.textoElectricidad2 && this.datos.textoElectricidad2 !== '____') {
+      return this.datos.textoElectricidad2;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const empresa = this.datos.empresaElectrica || 'ADINELSA';
+    const costoMinimo = this.datos.costoElectricidadMinimo || '20';
+    const costoMaximo = this.datos.costoElectricidadMaximo || '40';
+    
+    return `Adicionalmente, con las entrevistas semiestructuradas se pudo validar que la empresa responsable de la provisión del servicio eléctrico y su respectivo mantenimiento es ${empresa}. Asimismo, según los entrevistados, el costo promedio por este servicio ronda entre S/. ${costoMinimo} y S/. ${costoMaximo} de acuerdo al medidor de cada vivienda. Por otro lado, cabe mencionar que son pocas las familias dentro de la CC ${grupoAISD} que cuentan con vale FISE.`;
+  }
+
+  obtenerTextoEnergiaParaCocinar(): string {
+    if (this.datos.textoEnergiaParaCocinar && this.datos.textoEnergiaParaCocinar !== '____') {
+      return this.datos.textoEnergiaParaCocinar;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `En la CC ${grupoAISD}, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.\n\nDe manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.`;
   }
 }
 

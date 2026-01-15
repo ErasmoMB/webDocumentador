@@ -115,7 +115,22 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
+    <h4 class="section-title">B.1.4. Vivienda</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoViviendaAISI"
+        label="Vivienda - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoViviendaAISI()"
+        (valueChange)="onFieldChange('textoViviendaAISI', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla Tipos de Vivienda</label>
       <app-dynamic-table
         [datos]="datos"
@@ -131,7 +146,20 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoOcupacionViviendaAISI"
+        label="Condición de Ocupación - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoOcupacionViviendaAISI()"
+        (valueChange)="onFieldChange('textoOcupacionViviendaAISI', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla Condición de Ocupación de la Vivienda</label>
       <app-dynamic-table
         [datos]="datos"
@@ -147,54 +175,58 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Tabla Tipos de materiales de las viviendas</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="materialesViviendaConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
-          { field: 'tipoMaterial', label: 'Tipo de material', type: 'text', placeholder: 'Ej: Adobe' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'materialesViviendaAISI'"
-        [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
-        (tableUpdated)="onMaterialesViviendaTableUpdated()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Estructura</h4>
       
-      <app-paragraph-editor
-        fieldId="textoViviendaAISI"
-        label="Vivienda - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoViviendaAISI()"
-        (valueChange)="onFieldChange('textoViviendaAISI', $event)">
-      </app-paragraph-editor>
-    </div>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEstructuraAISI"
+          label="Estructura - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoEstructuraAISI()"
+          (valueChange)="onFieldChange('textoEstructuraAISI', $event)">
+        </app-paragraph-editor>
+      </div>
 
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Estructura de viviendas</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Estructura de viviendas en el CP"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Estructura de viviendas en el CP"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de materiales de las viviendas</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="materialesViviendaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
+            { field: 'tipoMaterial', label: 'Tipo de material', type: 'text', placeholder: 'Ej: Adobe' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'materialesViviendaAISI'"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
+          (tableUpdated)="onMaterialesViviendaTableUpdated()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Estructura de viviendas</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Estructura de viviendas en el CP"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Estructura de viviendas en el CP"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

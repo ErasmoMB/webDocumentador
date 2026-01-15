@@ -80,7 +80,20 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.13. Índice de Desarrollo Humano distrital</h4>
     
-    <div class="form-field">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoIndiceDesarrolloHumano"
+        label="Índice de Desarrollo Humano - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoIndiceDesarrolloHumano()"
+        (valueChange)="onFieldChange('textoIndiceDesarrolloHumano', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Índice de Desarrollo Humano</label>
       <app-dynamic-table
         [datos]="datos"
@@ -103,19 +116,6 @@
         [totalKey]="'poblacion'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="textoIndiceDesarrolloHumano"
-        label="Índice de Desarrollo Humano - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="6"
-        [value]="obtenerTextoIndiceDesarrolloHumano()"
-        (valueChange)="onFieldChange('textoIndiceDesarrolloHumano', $event)">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

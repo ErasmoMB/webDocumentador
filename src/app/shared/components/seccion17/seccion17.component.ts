@@ -21,7 +21,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['distritoSeleccionado', 'indiceDesarrolloHumanoTabla'];
+  override watchedFields: string[] = ['distritoSeleccionado', 'indiceDesarrolloHumanoTabla', 'textoIndiceDesarrolloHumano'];
   
   override readonly PHOTO_PREFIX = 'fotografiaIDH';
 
@@ -139,7 +139,15 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoIndiceDesarrolloHumano(): string {
-    return this.datos.textoIndiceDesarrolloHumano || '';
+    if (this.datos.textoIndiceDesarrolloHumano && this.datos.textoIndiceDesarrolloHumano !== '____') {
+      return this.datos.textoIndiceDesarrolloHumano;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const idh = this.getIDH();
+    const rankIdh = this.getRankIDH();
+    
+    return `El Índice de Desarrollo Humano (IDH) mide el logro medio de un país (en nuestro país se mide también a niveles departamentales, provinciales y distritales) tratándose de un índice compuesto. El IDH contiene tres variables: la esperanza de vida al nacer, el logro educacional (alfabetización de adultos y la tasa bruta de matriculación primaria, secundaria y terciaria combinada) y el PIB real per cápita (PPA en dólares). El ingreso se considera en el IDH en representación de un nivel decente de vida y en reemplazo de todas las opciones humanas que no se reflejan en las otras dos dimensiones.\n\nSegún el informe del PNUD para el año 2019, el Índice de Desarrollo Humano del distrito de ${distrito} es de ${idh}. Es así que ocupa el puesto N°${rankIdh} en el país, siendo una de las divisiones políticas de nivel subnacional con uno de los IDH más bajos.`;
   }
 }
 

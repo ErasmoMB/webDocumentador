@@ -74,52 +74,73 @@
   <div class="form-group-section">
     <h4 class="section-title">B.1.1. Aspectos demográficos</h4>
     
-    <div class="form-field">
-      <label class="label">Tabla Población por Sexo</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="poblacionSexoAISIConfig"
-        [columns]="[
-          { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombre' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'poblacionSexoAISI'"
-        [totalKey]="'sexo'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-field">
-      <label class="label">Tabla Población por Grupo Etario</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="poblacionEtarioAISIConfig"
-        [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
-        ]"
-        [tablaKey]="'poblacionEtarioAISI'"
-        [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">a. Población según sexo</h4>
       
-      <app-paragraph-editor
-        fieldId="textoDemografiaAISI"
-        label="Aspectos Demográficos - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="4"
-        [value]="obtenerTextoDemografiaAISI()"
-        (valueChange)="onFieldChange('textoDemografiaAISI', $event)">
-      </app-paragraph-editor>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDemografiaAISI"
+          label="Población según sexo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoDemografiaAISI()"
+          (valueChange)="onFieldChange('textoDemografiaAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Población por Sexo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="poblacionSexoAISIConfig"
+          [columns]="[
+            { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombre' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'poblacionSexoAISI'"
+          [totalKey]="'sexo'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Población según grupo etario</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoGrupoEtarioAISI"
+          label="Población según grupo etario - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoGrupoEtarioAISI()"
+          (valueChange)="onFieldChange('textoGrupoEtarioAISI', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Población por Grupo Etario</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="poblacionEtarioAISIConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          ]"
+          [tablaKey]="'poblacionEtarioAISI'"
+          [totalKey]="'categoria'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Fotografías de Demografía AISI</label>
       <app-image-upload
         [fotografias]="fotografiasCahuachoB11FormMulti"

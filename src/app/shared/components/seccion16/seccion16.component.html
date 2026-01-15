@@ -42,36 +42,6 @@
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
     <h4 class="section-title">A.1.12. Uso de los suelos y de los recursos naturales</h4>
-    
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Ojos de Agua 1</label>
-        <input type="text" class="input" placeholder="Ej: Quinsa Rumi"
-          [value]="datos['ojosAgua1'] || ''"
-          (input)="onFieldChange('ojosAgua1', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Ojos de Agua 2</label>
-        <input type="text" class="input" placeholder="Ej: Pallalli"
-          [value]="datos['ojosAgua2'] || ''"
-          (input)="onFieldChange('ojosAgua2', $any($event.target).value)">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-field">
-        <label class="label">Río Agrícola</label>
-        <input type="text" class="input" placeholder="Ej: Yuracyacu"
-          [value]="datos['rioAgricola'] || ''"
-          (input)="onFieldChange('rioAgricola', $any($event.target).value)">
-      </div>
-      <div class="form-field">
-        <label class="label">Quebrada Agrícola</label>
-        <input type="text" class="input" placeholder="Ej: Pucaccocha"
-          [value]="datos['quebradaAgricola'] || ''"
-          (input)="onFieldChange('quebradaAgricola', $any($event.target).value)">
-      </div>
-    </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>

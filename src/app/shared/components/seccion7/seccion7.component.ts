@@ -23,7 +23,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   private datosSubscription?: Subscription;
   private actualizandoDatos: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'poblacionDistritalCahuacho', 'petDistritalCahuacho', 'ingresoFamiliarPerCapita', 'rankingIngresoPerCapita', 'petTabla', 'peaTabla', 'peaOcupadaTabla'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'poblacionDistritalCahuacho', 'petDistritalCahuacho', 'ingresoFamiliarPerCapita', 'rankingIngresoPerCapita', 'petTabla', 'peaTabla', 'peaOcupadaTabla', 'parrafoSeccion7_situacion_empleo_completo', 'parrafoSeccion7_ingresos_completo', 'textoPET', 'textoDetalePEA', 'textoDefinicionPEA', 'textoAnalisisPEA', 'textoIndiceDesempleo', 'textoAnalisisOcupacion'];
   
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
 
@@ -264,6 +264,80 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     const ranking = this.datos.rankingIngresoPerCapita || '1191';
     
     return `En la CC ${grupoAISD}, los ingresos de la población provienen principalmente de las actividades ganaderas y agrícolas, que son las fuentes económicas predominantes en la localidad. La venta de vacunos y ovinos, así como de productos agrícolas como papa, habas y cebada, proporciona ingresos variables, dependiendo de las condiciones climáticas y las fluctuaciones en los mercados locales. Sin embargo, debido a la dependencia de estos sectores primarios, los ingresos no son estables ni regulares, y pueden verse afectados por factores como las heladas, la falta de pasto en épocas de sequía o la baja demanda de los productos en el mercado.\n\nOtra parte de los ingresos proviene de los comuneros que participan en actividades de comercio de pequeña escala, vendiendo sus productos en mercados locales o en ferias regionales. No obstante, esta forma de generación de ingresos sigue siendo limitada y no representa una fuente principal para la mayoría de las familias. En cuanto a los pocos habitantes que se encuentran empleados de manera dependiente, tales como los maestros en las instituciones educativas y el personal del puesto de salud, sus ingresos son más regulares, aunque representan una porción muy pequeña de la población.\n\nAdicionalmente, cabe mencionar que, según el informe del PNUD 2019, el distrito de ${distrito} (jurisdicción que abarca a los poblados que conforman la CC ${grupoAISD}) cuenta con un ingreso familiar per cápita de S/. ${ingresoPerCapita} mensuales, ocupando el puesto N°${ranking} en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.`;
+  }
+
+  obtenerTextoPET(): string {
+    if (this.datos.textoPET && this.datos.textoPET !== '____') {
+      return this.datos.textoPET;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29 años');
+    const porcentaje65 = this.getPorcentajePETGrupo('65 años a más');
+    
+    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del ${porcentajePET} de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el ${porcentaje1529} de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ${porcentaje65}.`;
+  }
+
+  obtenerTextoDetalePEA(): string {
+    if (this.datos.textoDetalePEA && this.datos.textoDetalePEA !== '____') {
+      return this.datos.textoDetalePEA;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const poblacionDistrital = this.datos.poblacionDistritalCahuacho || '610';
+    const petDistrital = this.datos.petDistritalCahuacho || '461';
+    
+    return `No obstante, los indicadores de la PEA, tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de ${distrito}, jurisdicción donde se ubica el AISD en cuestión, es de ${poblacionDistrital} personas, y que la PET (de 14 años a más) al mismo nivel está conformada por ${petDistrital} personas.`;
+  }
+
+  obtenerTextoDefinicionPEA(): string {
+    if (this.datos.textoDefinicionPEA && this.datos.textoDefinicionPEA !== '____') {
+      return this.datos.textoDefinicionPEA;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de ${distrito}, jurisdicción que abarca a las poblaciones de la CC ${grupoAISD}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.`;
+  }
+
+  obtenerTextoAnalisisPEA(): string {
+    if (this.datos.textoAnalisisPEA && this.datos.textoAnalisisPEA !== '____') {
+      return this.datos.textoAnalisisPEA;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajePEA = this.getPorcentajePEA();
+    const porcentajeNoPEA = this.getPorcentajeNoPEA();
+    const porcentajePEAHombres = this.getPorcentajePEAHombres();
+    const porcentajeNoPEAMujeres = this.getPorcentajeNoPEAMujeres();
+    
+    return `Del cuadro precedente, se aprecia que la PEA del distrito de ${distrito} representa un ${porcentajePEA} del total de la PET de la jurisdicción, mientras que la No PEA abarca el ${porcentajeNoPEA} restante. Asimismo, se visualiza que los hombres se encuentran predominantemente dentro del indicador de PEA con un ${porcentajePEAHombres}; mientras que, en el caso de las mujeres, se hallan mayormente en el indicador de No PEA (${porcentajeNoPEAMujeres}).`;
+  }
+
+  obtenerTextoIndiceDesempleo(): string {
+    if (this.datos.textoIndiceDesempleo && this.datos.textoIndiceDesempleo !== '____') {
+      return this.datos.textoIndiceDesempleo;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca los poblados de la CC ${grupoAISD}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).`;
+  }
+
+  obtenerTextoAnalisisOcupacion(): string {
+    if (this.datos.textoAnalisisOcupacion && this.datos.textoAnalisisOcupacion !== '____') {
+      return this.datos.textoAnalisisOcupacion;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajeDesocupada = this.getPorcentajePEADesocupada();
+    const porcentajeOcupadaHombres = this.getPorcentajePEAOcupadaHombres();
+    const porcentajeOcupadaMujeres = this.getPorcentajePEAOcupadaMujeres();
+    
+    return `Del cuadro precedente, se halla que en el distrito de ${distrito} la PEA Desocupada representa un ${porcentajeDesocupada} del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de ${porcentajeOcupadaHombres} y ${porcentajeOcupadaMujeres}, respectivamente.`;
   }
 }
 

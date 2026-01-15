@@ -22,7 +22,7 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD'];
+  override watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD', 'textoPoblacionSexoAISD', 'textoPoblacionEtarioAISD'];
   
   override readonly PHOTO_PREFIX = 'fotografiaDemografia';
 
@@ -310,11 +310,32 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoPoblacionSexoAISD(): string {
-    return this.datos.textoPoblacionSexoAISD || '';
+    if (this.datos.textoPoblacionSexoAISD && this.datos.textoPoblacionSexoAISD !== '____') {
+      return this.datos.textoPoblacionSexoAISD;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const totalPoblacion = this.datos.tablaAISD2TotalPoblacion || '____';
+    const porcentajeHombres = this.getPorcentajeHombres();
+    const porcentajeMujeres = this.getPorcentajeMujeres();
+    
+    return `Respecto a la población de la CC ${grupoAISD}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ${totalPoblacion} habitantes que residen permanentemente en la comunidad. De este conjunto, el ${porcentajeHombres} son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (${porcentajeMujeres}).`;
   }
 
   obtenerTextoPoblacionEtarioAISD(): string {
-    return this.datos.textoPoblacionEtarioAISD || '';
+    if (this.datos.textoPoblacionEtarioAISD && this.datos.textoPoblacionEtarioAISD !== '____') {
+      return this.datos.textoPoblacionEtarioAISD;
+    }
+    
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoMayoritario = this.getGrupoEtarioMayoritario();
+    const porcentajeMayoritario = this.getPorcentajeGrupoEtario(grupoMayoritario);
+    const grupoSegundo = this.getGrupoEtarioSegundo();
+    const porcentajeSegundo = this.getPorcentajeGrupoEtario(grupoSegundo);
+    const grupoMenoritario = this.getGrupoEtarioMenoritario();
+    const porcentajeMenoritario = this.getPorcentajeGrupoEtario(grupoMenoritario);
+    
+    return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${grupoAISD} es el de ${grupoMayoritario}, puesto que representa el ${porcentajeMayoritario} de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ${grupoSegundo} (${porcentajeSegundo}). Por otro lado, el conjunto minoritario está conformado por la población de ${grupoMenoritario}, pues solo representa un ${porcentajeMenoritario}.`;
   }
 }
 

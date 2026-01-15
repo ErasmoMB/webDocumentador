@@ -22,7 +22,7 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
   private stateSubscription?: Subscription;
   
   fotografiasInstitucionalidadCache: any[] = [];
-  override watchedFields: string[] = ['centroPobladoAISI', 'poblacionSexoAISI', 'poblacionEtarioAISI'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'poblacionSexoAISI', 'poblacionEtarioAISI', 'textoDemografiaAISI', 'textoGrupoEtarioAISI'];
   
   readonly PHOTO_PREFIX_CAHUACHO_B11 = 'fotografiaCahuachoB11';
   
@@ -198,7 +198,28 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoDemografiaAISI(): string {
-    return this.datos.textoDemografiaAISI || '';
+    if (this.datos.textoDemografiaAISI && this.datos.textoDemografiaAISI !== '____') {
+      return this.datos.textoDemografiaAISI;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const totalPoblacion = this.getTotalPoblacion();
+    const porcentajeMujeres = this.getPorcentajeMujeres();
+    const porcentajeHombres = this.getPorcentajeHombres();
+    
+    return `Respecto a la población del CP ${centroPoblado}, tomando en cuenta los Censos Nacionales 2017, existen ${totalPoblacion} habitantes que viven permanentemente en la localidad. De este conjunto, el ${porcentajeMujeres} son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (${porcentajeHombres}).`;
+  }
+
+  obtenerTextoGrupoEtarioAISI(): string {
+    if (this.datos.textoGrupoEtarioAISI && this.datos.textoGrupoEtarioAISI !== '____') {
+      return this.datos.textoGrupoEtarioAISI;
+    }
+    
+    const porcentaje014 = this.getPorcentajeGrupoEtario('0 a 14');
+    const porcentaje4564 = this.getPorcentajeGrupoEtario('45 a 64');
+    const porcentaje1529 = this.getPorcentajeGrupoEtario('15 a 29');
+    
+    return `En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el ${porcentaje014} del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (${porcentaje4564}). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el ${porcentaje1529} cada uno.`;
   }
 }
 

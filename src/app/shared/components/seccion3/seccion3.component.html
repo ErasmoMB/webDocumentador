@@ -84,53 +84,10 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Cantidad de Entrevistas</label>
-      <input 
-        type="number" 
-        class="input" 
-        placeholder="Ej: 18"
-        [value]="datos.cantidadEntrevistas || ''"
-        (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
-    </div>
 
-    <div class="form-field">
-      <label class="label">Fecha de Trabajo de Campo</label>
-      <input 
-        type="text" 
-        class="input" 
-        placeholder="Ej: noviembre 2024"
-        [value]="datos.fechaTrabajoCampo || ''"
-        (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
-    </div>
-
-    <div class="form-field">
-      <label class="label">Consultora / Fuente</label>
-      <input 
-        type="text" 
-        class="input" 
-        placeholder="Ej: GEADES (2024)"
-        [value]="datos.consultora || ''"
-        (input)="onFieldChange('consultora', $any($event.target).value)">
-    </div>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Lista de Entrevistados</label>
-      <app-dynamic-table
-        [datos]="datos"
-        [config]="entrevistadosConfig"
-        [columns]="[
-          { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Ej: Miguel Ángel Sayaverde Rospigliosi' },
-          { field: 'cargo', label: 'Cargo u Ocupación', type: 'text', placeholder: 'Ej: Presidente' },
-          { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Ej: CC Ayroca' }
-        ]"
-        [tablaKey]="'entrevistados'"
-        [totalKey]="'nombre'"
-        (tableUpdated)="cdRef.detectChanges()">
-      </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 30px;">
+    <h4 class="section-title">3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -141,30 +98,89 @@
         [value]="obtenerTextoSeccion3Metodologia()"
         (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
       </app-paragraph-editor>
+    </div>
 
-      <app-paragraph-editor
-        fieldId="parrafoSeccion3_fuentes_primarias"
-        label="Fuentes Primarias"
-        hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoSeccion3FuentesPrimarias()"
-        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
-      </app-paragraph-editor>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">A. Fuentes primarias</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion3_fuentes_primarias"
+          label="Fuentes Primarias"
+          hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoSeccion3FuentesPrimarias()"
+          (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
+        </app-paragraph-editor>
+      </div>
 
-      <app-paragraph-editor
-        fieldId="parrafoSeccion3_fuentes_secundarias"
-        label="Fuentes Secundarias - Texto Introductorio"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="2"
-        [value]="obtenerTextoSeccion3FuentesSecundarias()"
-        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
-      </app-paragraph-editor>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Cantidad de Entrevistas</label>
+        <input 
+          type="number" 
+          class="input" 
+          placeholder="Ej: 18"
+          [value]="datos.cantidadEntrevistas || ''"
+          (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
+      </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Fecha de Trabajo de Campo</label>
+        <input 
+          type="text" 
+          class="input" 
+          placeholder="Ej: noviembre 2024"
+          [value]="datos.fechaTrabajoCampo || ''"
+          (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Lista de Entrevistados</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="entrevistadosConfig"
+          [columns]="[
+            { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Ej: Miguel Ángel Sayaverde Rospigliosi' },
+            { field: 'cargo', label: 'Cargo u Ocupación', type: 'text', placeholder: 'Ej: Presidente' },
+            { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Ej: CC Ayroca' }
+          ]"
+          [tablaKey]="'entrevistados'"
+          [totalKey]="'nombre'"
+          (tableUpdated)="cdRef.detectChanges()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Consultora / Fuente</label>
+        <input 
+          type="text" 
+          class="input" 
+          placeholder="Ej: GEADES (2024)"
+          [value]="datos.consultora || ''"
+          (input)="onFieldChange('consultora', $any($event.target).value)">
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Lista de Fuentes Secundarias</h4>
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">B. Fuentes secundarias</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion3_fuentes_secundarias"
+          label="Fuentes Secundarias - Texto Introductorio"
+          hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoSeccion3FuentesSecundarias()"
+          (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Lista de Fuentes Secundarias</h4>
       
       <div class="form-field" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;">
         <input 
@@ -193,7 +209,7 @@
       </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Fotografías</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

@@ -22,7 +22,7 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['centroPobladoAISI', 'natalidadMortalidadCpTabla', 'morbilidadCpTabla', 'afiliacionSaludTabla'];
+  override watchedFields: string[] = ['centroPobladoAISI', 'natalidadMortalidadCpTabla', 'morbilidadCpTabla', 'afiliacionSaludTabla', 'textoNatalidadCP1', 'textoNatalidadCP2', 'textoMorbilidadCP', 'textoAfiliacionSalud'];
   
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB18';
   
@@ -301,15 +301,52 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoNatalidadCP1(): string {
-    return this.datos.textoNatalidadCP1 || '';
+    if (this.datos.textoNatalidadCP1 && this.datos.textoNatalidadCP1 !== '____') {
+      return this.datos.textoNatalidadCP1;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const natalidad2023 = this.getNatalidad2023();
+    const natalidad2024 = this.getNatalidad2024();
+    
+    return `Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud ${centroPoblado} indican que, durante el año 2023, se registró un total de ${natalidad2023} nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente ${natalidad2024} nacimiento.`;
   }
 
   obtenerTextoNatalidadCP2(): string {
-    return this.datos.textoNatalidadCP2 || '';
+    if (this.datos.textoNatalidadCP2 && this.datos.textoNatalidadCP2 !== '____') {
+      return this.datos.textoNatalidadCP2;
+    }
+    
+    const mortalidad2023 = this.getMortalidad2023();
+    const mortalidad2024 = this.getMortalidad2024();
+    
+    return `Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de ${mortalidad2023} durante el año 2023. Sin embargo, para el año 2024, sí se registró ${mortalidad2024} defunción.`;
   }
 
   obtenerTextoMorbilidadCP(): string {
-    return this.datos.textoMorbilidadCP || '';
+    if (this.datos.textoMorbilidadCP && this.datos.textoMorbilidadCP !== '____') {
+      return this.datos.textoMorbilidadCP;
+    }
+    
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const casosInfecciones = this.getCasosInfeccionesRespiratorias();
+    const casosObesidad = this.getCasosObesidad();
+    
+    return `Entre los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca al Puesto de Salud ${centroPoblado}), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (${casosInfecciones} casos) y la obesidad y otros de hiperalimentación (${casosObesidad} casos). Para el primero, se reportó un mayor número de casos en el grupo etario de 0 a 11 años, mientras que para el segundo, la mayor cantidad se halló en el rango de 30 a 59 años. A continuación, se presenta el cuadro con el número de casos por grupo de morbilidad y bloque etario dentro del distrito, según el portal REUNIS del MINSA.`;
+  }
+
+  obtenerTextoAfiliacionSalud(): string {
+    if (this.datos.textoAfiliacionSalud && this.datos.textoAfiliacionSalud !== '____') {
+      return this.datos.textoAfiliacionSalud;
+    }
+    
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajeSIS = this.getPorcentajeSIS();
+    const porcentajeESSALUD = this.getPorcentajeESSALUD();
+    const porcentajeSinSeguro = this.getPorcentajeSinSeguro();
+    
+    return `En el CP ${centroPoblado}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${porcentajeSIS} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${porcentajeESSALUD} de la población. Por último, cabe mencionar que el ${porcentajeSinSeguro} de la población no cuenta con ningún tipo de seguro de salud.`;
   }
 }
 

@@ -49,14 +49,20 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.15. Organización social y liderazgo</h4>
     
-    <div class="form-field">
-      <label class="label">Comuneros Calificados</label>
-      <input type="number" class="input" placeholder="Ej: 65"
-        [value]="datos['comunerosCalificados'] || ''"
-        (input)="onFieldChange('comunerosCalificados', $any($event.target).value)">
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoOrganizacionSocial"
+        label="Organización Social y Liderazgo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoOrganizacionSocial()"
+        (valueChange)="onFieldChange('textoOrganizacionSocial', $event)">
+      </app-paragraph-editor>
     </div>
 
-    <div class="form-field">
+    <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Autoridades y Líderes Sociales</label>
       <app-dynamic-table
         [datos]="datos"
@@ -70,19 +76,6 @@
         [totalKey]="'organizacion'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="textoOrganizacionSocial"
-        label="Organización Social y Liderazgo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="8"
-        [value]="obtenerTextoOrganizacionSocial()"
-        (valueChange)="onFieldChange('textoOrganizacionSocial', $event)">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
