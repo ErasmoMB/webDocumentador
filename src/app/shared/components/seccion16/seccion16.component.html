@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.12. Uso de los suelos y de los recursos naturales</h5>
 
 <h5>a. Fuentes y usos del agua</h5>
@@ -12,7 +13,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasReservorioVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaReservorio'"
+    [photoPrefix]="PHOTO_PREFIX_RESERVORIO"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -31,9 +32,108 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasUsoSuelosVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaUsoSuelos'"
+    [photoPrefix]="PHOTO_PREFIX_USO_SUELOS"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.12. Uso de los suelos y de los recursos naturales</h4>
+    
+    <div class="form-row">
+      <div class="form-field">
+        <label class="label">Ojos de Agua 1</label>
+        <input type="text" class="input" placeholder="Ej: Quinsa Rumi"
+          [value]="datos['ojosAgua1'] || ''"
+          (input)="onFieldChange('ojosAgua1', $any($event.target).value)">
+      </div>
+      <div class="form-field">
+        <label class="label">Ojos de Agua 2</label>
+        <input type="text" class="input" placeholder="Ej: Pallalli"
+          [value]="datos['ojosAgua2'] || ''"
+          (input)="onFieldChange('ojosAgua2', $any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="label">Río Agrícola</label>
+        <input type="text" class="input" placeholder="Ej: Yuracyacu"
+          [value]="datos['rioAgricola'] || ''"
+          (input)="onFieldChange('rioAgricola', $any($event.target).value)">
+      </div>
+      <div class="form-field">
+        <label class="label">Quebrada Agrícola</label>
+        <input type="text" class="input" placeholder="Ej: Pucaccocha"
+          [value]="datos['quebradaAgricola'] || ''"
+          (input)="onFieldChange('quebradaAgricola', $any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Agua - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="6"
+          [value]="obtenerTextoSeccion16AguaCompleto()"
+          (input)="onFieldChange('parrafoSeccion16_agua_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Recursos Naturales - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="6"
+          [value]="obtenerTextoSeccion16RecursosNaturalesCompleto()"
+          (input)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Reservorio</label>
+      <app-image-upload
+        [fotografias]="fotografiasReservorioFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_RESERVORIO"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Reservorio del anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Reservorio del anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasReservorioChange($event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Uso de Suelos</label>
+      <app-image-upload
+        [fotografias]="fotografiasUsoSuelosFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_USO_SUELOS"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Uso de los suelos en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Uso de los suelos en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasUsoSuelosChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

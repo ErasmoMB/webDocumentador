@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.4. Vivienda</h5>
 <p class="text-justify" *ngIf="datos.textoViviendaAISI && datos.textoViviendaAISI !== '____'">{{ datos.textoViviendaAISI }}</p>
 <p class="text-justify" *ngIf="!datos.textoViviendaAISI || datos.textoViviendaAISI === '____'">Según los Censos Nacionales 2017, en el CP <span [appDataSource]="'centroPobladoAISI' | dataSource">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan un total de <span [appDataSource]="'automatic'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
@@ -101,9 +102,202 @@
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="getFotografiasVista()"
-    [sectionId]="'3.1.4.B.1.4'"
-    [photoPrefix]="'fotografiaCahuachoB14'"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Tabla Tipos de Vivienda</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['tiposViviendaAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarTiposViviendaAISI(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: Casa independiente">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarTiposViviendaAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarTiposViviendaAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarTiposViviendaAISI(i)" *ngIf="(datos['tiposViviendaAISI'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['tiposViviendaAISI'] || datos['tiposViviendaAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarTiposViviendaAISI()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarTiposViviendaAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla Condición de Ocupación de la Vivienda</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['condicionOcupacionAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarCondicionOcupacionAISI(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: Ocupada, con personas presentes">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarCondicionOcupacionAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarCondicionOcupacionAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarCondicionOcupacionAISI(i)" *ngIf="(datos['condicionOcupacionAISI'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['condicionOcupacionAISI'] || datos['condicionOcupacionAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarCondicionOcupacionAISI()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarCondicionOcupacionAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla Tipos de materiales de las viviendas</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Tipo de material</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['materialesViviendaAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarMaterialesViviendaAISI(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: Materiales de las paredes de las viviendas">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.tipoMaterial || ''"
+                  (input)="actualizarMaterialesViviendaAISI(i, 'tipoMaterial', $any($event.target).value)"
+                  placeholder="Ej: Adobe">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarMaterialesViviendaAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarMaterialesViviendaAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarMaterialesViviendaAISI(i)" *ngIf="(datos['materialesViviendaAISI'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['materialesViviendaAISI'] || datos['materialesViviendaAISI'].length === 0">
+              <td colspan="5" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarMaterialesViviendaAISI()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarMaterialesViviendaAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Estructura de viviendas</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Estructura de viviendas en el CP"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Estructura de viviendas en el CP"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

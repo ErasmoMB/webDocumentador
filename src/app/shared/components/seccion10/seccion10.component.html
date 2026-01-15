@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h5>
 <div *ngIf="datos.parrafoSeccion10_servicios_basicos_intro; else serviciosBasicosIntroDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion10_servicios_basicos_intro)"></div>
 <ng-template #serviciosBasicosIntroDefault>
@@ -79,7 +80,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasDesechosSolidosVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaDesechosSolidos'"
+    [photoPrefix]="PHOTO_PREFIX_DESECHOS"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -122,7 +123,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasElectricidadVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaElectricidad'"
+    [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -132,4 +133,251 @@
 <p class="text-justify" *ngIf="datos.textoEnergiaParaCocinar && datos.textoEnergiaParaCocinar !== '____'">{{ datos.textoEnergiaParaCocinar }}</p>
 <p class="text-justify" *ngIf="!datos.textoEnergiaParaCocinar || datos.textoEnergiaParaCocinar === '____'">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.</p>
 <p class="text-justify" *ngIf="!datos.textoEnergiaParaCocinar || datos.textoEnergiaParaCocinar === '____'">De manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.</p>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.6. Servicios básicos</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla Abastecimiento de Agua</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['abastecimientoAguaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarAbastecimientoAgua(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas con abastecimiento de agua por red pública">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarAbastecimientoAgua(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarAbastecimientoAgua(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarAbastecimientoAgua(i)" *ngIf="(datos['abastecimientoAguaTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['abastecimientoAguaTabla'] || datos['abastecimientoAguaTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarAbastecimientoAgua()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarAbastecimientoAgua()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Cuota Mensual de Agua (S/.)</label>
+      <input type="text" class="input" placeholder="Ej: 4"
+        [value]="datos['cuotaMensualAgua'] || ''"
+        (input)="onFieldChange('cuotaMensualAgua', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Tipos de Saneamiento</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['tiposSaneamientoTabla'] || datos['saneamientoTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarTiposSaneamiento(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas con saneamiento vía red pública">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarTiposSaneamiento(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarTiposSaneamiento(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarTiposSaneamiento(i)" *ngIf="((datos['tiposSaneamientoTabla'] || datos['saneamientoTabla'] || []).length > 1) && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="(!datos['tiposSaneamientoTabla'] || datos['tiposSaneamientoTabla'].length === 0) && (!datos['saneamientoTabla'] || datos['saneamientoTabla'].length === 0)">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarTiposSaneamiento()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarTiposSaneamiento()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Cobertura Eléctrica</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['coberturaElectricaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarCoberturaElectrica(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas con acceso a electricidad">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarCoberturaElectrica(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarCoberturaElectrica(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarCoberturaElectrica(i)" *ngIf="(datos['coberturaElectricaTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['coberturaElectricaTabla'] || datos['coberturaElectricaTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarCoberturaElectrica()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarCoberturaElectrica()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Empresa Eléctrica</label>
+      <input type="text" class="input" placeholder="Ej: ADINELSA"
+        [value]="datos['empresaElectrica'] || ''"
+        (input)="onFieldChange('empresaElectrica', $any($event.target).value)">
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="label">Costo Eléctrico Mínimo (S/.)</label>
+        <input type="text" class="input" placeholder="Ej: 20"
+          [value]="datos['costoElectricidadMinimo'] || ''"
+          (input)="onFieldChange('costoElectricidadMinimo', $any($event.target).value)">
+      </div>
+      <div class="form-field">
+        <label class="label">Costo Eléctrico Máximo (S/.)</label>
+        <input type="text" class="input" placeholder="Ej: 40"
+          [value]="datos['costoElectricidadMaximo'] || ''"
+          (input)="onFieldChange('costoElectricidadMaximo', $any($event.target).value)">
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Introducción - Servicios Básicos</label>
+        <textarea 
+          class="textarea" 
+          rows="4"
+          [value]="obtenerTextoSeccion10ServiciosBasicosIntro()"
+          (input)="onFieldChange('parrafoSeccion10_servicios_basicos_intro', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Desechos Sólidos</label>
+      <app-image-upload
+        [fotografias]="fotografiasDesechosSolidosFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_DESECHOS"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasDesechosSolidosChange($event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Electricidad</label>
+      <app-image-upload
+        [fotografias]="fotografiasElectricidadFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Infraestructura eléctrica en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Infraestructura eléctrica en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasElectricidadChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

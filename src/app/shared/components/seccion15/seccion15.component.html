@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h5>
 <p class="text-justify" *ngIf="datos.textoAspectosCulturales && datos.textoAspectosCulturales !== '____'">{{ datos.textoAspectosCulturales }}</p>
 
@@ -41,9 +42,155 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasIglesiaVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaIglesia'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla Lenguas Maternas</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['lenguasMaternasTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarLenguasMaternas(i, 'categoria', $any($event.target).value)"
+                  placeholder="Castellano">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarLenguasMaternas(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarLenguasMaternas(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarLenguasMaternas(i)" *ngIf="(datos['lenguasMaternasTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['lenguasMaternasTabla'] || datos['lenguasMaternasTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarLenguasMaternas()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarLenguasMaternas()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Religiones</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['religionesTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarReligiones(i, 'categoria', $any($event.target).value)"
+                  placeholder="Católica">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarReligiones(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarReligiones(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarReligiones(i)" *ngIf="(datos['religionesTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['religionesTabla'] || datos['religionesTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarReligiones()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarReligiones()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Religión - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="4"
+          [value]="obtenerTextoSeccion15ReligionCompleto()"
+          (input)="onFieldChange('parrafoSeccion15_religion_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Iglesia</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Iglesia Matriz del anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

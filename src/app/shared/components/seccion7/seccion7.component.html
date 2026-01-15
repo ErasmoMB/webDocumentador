@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.3. Indicadores y distribución de la Población Económicamente Activa por rama de actividad, tipo de empleo, tasas e ingresos.</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Población en edad de Trabajar (PET)</strong></p>
@@ -37,11 +38,63 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasPEAVista()"
     [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
 
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.3. Aspectos Económicos</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Situación del Empleo - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="6"
+          [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
+          (input)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite todo el bloque de texto sobre situación del empleo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Ingresos de la Población - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="8"
+          [value]="obtenerTextoSeccion7IngresosCompleto()"
+          (input)="onFieldChange('parrafoSeccion7_ingresos_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite todo el bloque de texto sobre ingresos. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de PEA y Empleo</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: PEA de la CC Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="PEA y Empleo"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!modoFormulario">
 <p class="text-justify" *ngIf="datos.textoDetalePEA && datos.textoDetalePEA !== '____'">{{ datos.textoDetalePEA }}</p>
 <p class="text-justify" *ngIf="!datos.textoDetalePEA || datos.textoDetalePEA === '____'">No obstante, los indicadores de la PEA, tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, jurisdicción donde se ubica el AISD en cuestión, es de <span [appDataSource]="'automatic'">{{ datos.poblacionDistritalCahuacho || '610' }}</span> personas, y que la PET (de 14 años a más) al mismo nivel está conformada por <span [appDataSource]="'automatic'">{{ datos.petDistritalCahuacho || '461' }}</span> personas.</p>
 
@@ -161,4 +214,5 @@
 
 <p class="text-justify" *ngIf="datos.textoAnalisisOcupacion && datos.textoAnalisisOcupacion !== '____'">{{ datos.textoAnalisisOcupacion }}</p>
 <p class="text-justify" *ngIf="!datos.textoAnalisisOcupacion || datos.textoAnalisisOcupacion === '____'">Del cuadro precedente, se halla que en el distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> la PEA Desocupada representa un <span [appDataSource]="'automatic'">{{ getPorcentajePEADesocupada() }}</span> del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de <span [appDataSource]="'automatic'">{{ getPorcentajePEAOcupadaHombres() }}</span> y <span [appDataSource]="'automatic'">{{ getPorcentajePEAOcupadaMujeres() }}</span>, respectivamente.</p>
+</div>
 

@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.1. Institucionalidad local</h5>
 
 <!-- Párrafo informativo -->
@@ -42,9 +43,123 @@
     [modoVista]="true"
     [fotografias]="fotografiasVista"
     [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [mostrarTitulo]="true"
     [mostrarFuente]="true"
     [mostrarNumero]="true"
     [tituloDefault]="'Local Comunal de la CC ' + obtenerNombreComunidadActual()"
     [fuenteDefault]="'GEADES, 2024'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.1. Institucionalidad local</h4>
+    
+    <div class="form-field">
+      <label class="label">Párrafo de Institucionalidad</label>
+      <textarea 
+        class="textarea" 
+        rows="4"
+        [value]="obtenerParrafoInstitucionalidad()"
+        (input)="onFieldChange('parrafoSeccion5_institucionalidad', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Título de la Tabla</label>
+      <input type="text" class="input" placeholder="Ej: Instituciones existentes - CC Ayroca"
+        [value]="datos.tituloInstituciones || 'Instituciones existentes - CC ' + (datos.grupoAISD || 'Ayroca')"
+        (input)="onFieldChange('tituloInstituciones', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Fuente de la Tabla</label>
+      <input type="text" class="input" placeholder="Ej: GEADES (2024)"
+        [value]="datos.fuenteInstituciones || 'GEADES (2024)'"
+        (input)="onFieldChange('fuenteInstituciones', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla de Instituciones</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>SI/NO</th>
+              <th>Nombre</th>
+              <th>Comentario</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let institucion of (datos.tablepagina6 || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="institucion.categoria || ''"
+                  (input)="actualizarInstitucion(i, 'categoria', $any($event.target).value)"
+                  placeholder="Categoría">
+              </td>
+              <td>
+                <select class="table-input" 
+                  [value]="institucion.respuesta || ''"
+                  (change)="actualizarInstitucion(i, 'respuesta', $any($event.target).value)">
+                  <option value="">--</option>
+                  <option value="SI">SI</option>
+                  <option value="NO">NO</option>
+                </select>
+              </td>
+              <td>
+                <textarea class="table-input" rows="2"
+                  [value]="institucion.nombre || ''"
+                  (input)="actualizarInstitucion(i, 'nombre', $any($event.target).value)"
+                  placeholder="Nombre (puede ser múltiples líneas)"></textarea>
+              </td>
+              <td>
+                <textarea class="table-input" rows="2"
+                  [value]="institucion.comentario || ''"
+                  (input)="actualizarInstitucion(i, 'comentario', $any($event.target).value)"
+                  placeholder="Comentario"></textarea>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarInstitucion(i)" *ngIf="(datos.tablepagina6 || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos.tablepagina6 || datos.tablepagina6.length === 0">
+              <td colspan="5" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarInstituciones()">
+                  Agregar Primera Institución
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarInstitucion()" style="margin-top: 10px;">
+        + Agregar Institución
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Local Comunal de la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Local Comunal de la CC Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="true"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

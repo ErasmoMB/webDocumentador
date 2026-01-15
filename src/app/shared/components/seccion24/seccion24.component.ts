@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,39 +12,32 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion24.component.html',
   styleUrls: ['./seccion24.component.css']
 })
-export class Seccion24Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
+export class Seccion24Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI', 'ciudadOrigenComercio'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB13';
+  
   fotografiasActividadesEconomicasCache: any[] = [];
   fotografiasMercadoCache: any[] = [];
   fotografiasInstitucionalidadCache: any[] = [];
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI'];
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
-    setTimeout(() => {
-      this.cdRef.detectChanges();
-    }, 0);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -61,12 +55,13 @@ export class Seccion24Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
+  protected override actualizarDatos(): void {
     const datosAnteriores = JSON.stringify({
       actividades: this.datos?.['fotografiaActividadesEconomicasImagen'],
       mercado: this.datos?.['fotografiaMercadoImagen']
@@ -93,28 +88,20 @@ export class Seccion24Component implements OnInit, OnChanges, DoCheck {
     }
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
+  protected override tieneFotografias(): boolean {
+    return true;
   }
 
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
-  }
-
-  actualizarFotografiasCache() {
+  override actualizarFotografiasCache() {
     this.fotografiasActividadesEconomicasCache = this.getFotografiasActividadesEconomicas();
     this.fotografiasMercadoCache = this.getFotografiasMercado();
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
-    this.cdRef.markForCheck();
   }
 
   getFotografiasActividadesEconomicas(): any[] {
@@ -228,12 +215,109 @@ export class Seccion24Component implements OnInit, OnChanges, DoCheck {
   }
 
   getFotografiasVista(): FotoItem[] {
-    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.3');
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
-      '3.1.4.B.1.3',
-      'fotografiaCahuachoB13',
+      this.seccionId,
+      this.PHOTO_PREFIX,
       groupPrefix
     );
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
+    }
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarActividadesEconomicasAISI() {
+    if (!this.datos['actividadesEconomicasAISI'] || this.datos['actividadesEconomicasAISI'].length === 0) {
+      this.datos['actividadesEconomicasAISI'] = [
+        { actividad: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarActividadesEconomicasAISI() {
+    if (!this.datos['actividadesEconomicasAISI']) {
+      this.inicializarActividadesEconomicasAISI();
+    }
+    this.datos['actividadesEconomicasAISI'].push({ actividad: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+    this.calcularPorcentajesActividadesEconomicasAISI();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarActividadesEconomicasAISI(index: number) {
+    if (this.datos['actividadesEconomicasAISI'] && this.datos['actividadesEconomicasAISI'].length > 1) {
+      const item = this.datos['actividadesEconomicasAISI'][index];
+      if (!item.actividad || !item.actividad.toLowerCase().includes('total')) {
+        this.datos['actividadesEconomicasAISI'].splice(index, 1);
+        this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+        this.calcularPorcentajesActividadesEconomicasAISI();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarActividadesEconomicasAISI(index: number, field: string, value: any) {
+    if (!this.datos['actividadesEconomicasAISI']) {
+      this.inicializarActividadesEconomicasAISI();
+    }
+    if (this.datos['actividadesEconomicasAISI'][index]) {
+      this.datos['actividadesEconomicasAISI'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesActividadesEconomicasAISI();
+      }
+      this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesActividadesEconomicasAISI() {
+    if (!this.datos['actividadesEconomicasAISI'] || this.datos['actividadesEconomicasAISI'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['actividadesEconomicasAISI'].find((item: any) => 
+      item.actividad && item.actividad.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['actividadesEconomicasAISI'].forEach((item: any) => {
+        if (!item.actividad || !item.actividad.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
   }
 }
 

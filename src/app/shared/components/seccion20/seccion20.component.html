@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.16. Festividades, Costumbres y Turismo</h5>
 <ng-container *ngIf="datos.textoFestividades && datos.textoFestividades !== '____'">
   <p class="text-justify" *ngFor="let parrafo of datos.textoFestividades.split('\n\n')">{{ parrafo }}</p>
@@ -35,9 +36,88 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasFestividadesVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaFestividades'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.16. Festividades, Costumbres y Turismo</h4>
+    
+    <div class="form-field">
+      <label class="label">Sitio Arqueológico</label>
+      <input type="text" class="input" placeholder="Ej: Incahuasi"
+        [value]="datos['sitioArqueologico'] || ''"
+        (input)="onFieldChange('sitioArqueologico', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Festividades</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Festividad</th>
+              <th>Fecha</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['festividades'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.festividad || ''"
+                  (input)="actualizarFestividades(i, 'festividad', $any($event.target).value)"
+                  placeholder="Carnavales">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.fecha || ''"
+                  (input)="actualizarFestividades(i, 'fecha', $any($event.target).value)"
+                  placeholder="Febrero">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarFestividades(i)" *ngIf="(datos['festividades'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['festividades'] || datos['festividades'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarFestividades()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarFestividades()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Festividades</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Festividades"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Festividades"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

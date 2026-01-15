@@ -1,10 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef, DoCheck } from '@angular/core';
+import { Component, Input, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { ComunidadCampesina } from 'src/app/core/models/formulario.model';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -12,17 +13,22 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion2.component.html',
   styleUrls: ['./seccion2.component.css']
 })
-export class Seccion2Component implements OnInit, DoCheck {
-  datos: any = {};
+export class Seccion2Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '3.1.2';
+  @Input() override modoFormulario: boolean = false;
+  
   distritosDisponibles: string[] = [];
   distritosSeleccionados: { [key: string]: string } = {};
   seccionesAISI: number[] = [];
+  distritosDisponiblesAISI: string[] = [];
   distritosSeleccionadosAISI: string[] = [];
   comunidadesCampesinas: ComunidadCampesina[] = [];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaSeccion2';
+  
   fotografiasSeccion2: FotoItem[] = [];
-  private datosAnteriores: any = {};
-  seccionId: string = '3.1.2';
-  watchedFields: string[] = [
+  
+  override watchedFields: string[] = [
     'parrafoSeccion2_introduccion',
     'parrafoSeccion2_aisd_completo',
     'parrafoSeccion2_aisi_completo',
@@ -39,22 +45,22 @@ export class Seccion2Component implements OnInit, DoCheck {
   ];
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private photoNumberingService: PhotoNumberingService,
-    private cdRef: ChangeDetectorRef
-  ) { }
-
-  ngOnInit() {
-    this.actualizarDatos();
-    this.detectarDistritos();
-    this.cargarSeccionesAISI();
-    this.loadSectionData();
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  ngDoCheck() {
+  protected override onInitCustom(): void {
+    this.detectarDistritos();
+    this.cargarSeccionesAISI();
+  }
+
+  protected detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     let hayCambios = false;
     let necesitaRecargar = false;
@@ -72,17 +78,20 @@ export class Seccion2Component implements OnInit, DoCheck {
       }
     }
 
-    if (hayCambios) {
-      this.actualizarDatos();
-      if (necesitaRecargar) {
-        this.loadSectionData();
-      }
-      this.cdRef.markForCheck();
+    if (necesitaRecargar && hayCambios) {
+      this.loadSectionData();
     }
+
+    return hayCambios;
   }
 
-  actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+  protected actualizarValoresConPrefijo(): void {
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+    });
+  }
+
+  protected override actualizarDatosCustom(): void {
     this.distritosSeleccionados = this.datos['distritosAISI'] || {};
     this.distritosSeleccionadosAISI = this.datos['distritosSeleccionadosAISI'] || [];
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
@@ -93,21 +102,11 @@ export class Seccion2Component implements OnInit, DoCheck {
         centrosPobladosSeleccionados: this.datos['centrosPobladosSeleccionadosAISD'] || []
       }];
     }
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
-    });
+    this.detectarDistritosAISI();
     this.cargarFotografias();
-    this.cdRef.detectChanges();
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+  override getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
     return this.fieldMapping.getDataSourceType(fieldName);
   }
 
@@ -355,15 +354,127 @@ export class Seccion2Component implements OnInit, DoCheck {
     }
   }
 
-  obtenerPrefijoGrupo(): string {
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasSeccion2 = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = this.fotografiasSeccion2;
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  obtenerTextoSeccion2Introduccion(): string {
+    if (this.datos.parrafoSeccion2_introduccion) {
+      return this.datos.parrafoSeccion2_introduccion;
+    }
+    
+    return 'En términos generales, la delimitación del ámbito de estudio de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales, individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los recursos respecto de los cuales el proyecto de exploración minera tiene incidencia.\n\nAsimismo, el área de influencia social de un Proyecto tiene en consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina "grupos de interés" a aquellos grupos humanos que son impactados por dicho Proyecto).\n\nEl criterio social para la delimitación de un área de influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos, expectativas, intereses y/o demandas del entorno social.\n\nEn base a estos criterios se han identificado las áreas de influencia social directa e indirecta:';
+  }
+
+  obtenerTextoSeccion2AISDCompleto(): string {
+    if (this.datos.parrafoSeccion2_aisd_completo) {
+      return this.datos.parrafoSeccion2_aisd_completo;
+    }
+    
+    const comunidades = this.obtenerComunidadesCampesinas();
+    const tieneUna = comunidades.length === 1;
+    const tieneMultiples = comunidades.length > 1;
+    const textoComunidades = this.obtenerTextoComunidades();
+    const distrito = this.datos.distritoSeleccionado || '____';
+    const aisd1 = this.datos.aisdComponente1 || '____';
+    const aisd2 = this.datos.aisdComponente2 || '____';
+    const departamento = this.datos.departamentoSeleccionado || '____';
+    
+    let texto = `El Área de influencia social directa (AISD) se delimita en torno a ${tieneUna ? 'la comunidad campesina (CC)' : 'las comunidades campesinas (CC)'} ${textoComunidades}`;
+    texto += tieneUna 
+      ? `, cuya área comunal se encuentra predominantemente en el distrito de ${distrito} y en menor proporción en los distritos de ${aisd1} y de ${aisd2}, pertenecientes al departamento de ${departamento}`
+      : `, cuyas áreas comunales se encuentran predominantemente en el distrito de ${distrito} y en menor proporción en los distritos de ${aisd1} y de ${aisd2}, pertenecientes al departamento de ${departamento}`;
+    texto += `. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. ${this.obtenerTextoComunidadesPosesion()} y gestiona${tieneMultiples ? 'n' : ''} las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto.\n\n`;
+    texto += `La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de ${this.obtenerTextoComunidadesSingular()} requiere${tieneMultiples ? 'n' : ''} una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de ${tieneUna ? 'la comunidad' : 'las comunidades'}.\n\n`;
+    texto += `Los impactos directos en ${this.obtenerPrefijoCCImpactos()}${this.obtenerTextoComunidadesImpactos()}, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y ${tieneUna ? 'la comunidad' : 'las comunidades'} promoverá${tieneMultiples ? 'n' : ''} un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de ${this.obtenerPrefijoCCFinal()}${this.obtenerTextoComunidadesFinal()}.`;
+    
+    return texto;
+  }
+
+  obtenerTextoSeccion2AISICompleto(): string {
+    if (this.datos.parrafoSeccion2_aisi_completo) {
+      return this.datos.parrafoSeccion2_aisi_completo;
+    }
+    
+    const distritosAISI = this.obtenerDistritosSeleccionadosAISI();
+    const tieneUnDistrito = distritosAISI.length === 1;
+    const tieneMultiplesDistritos = distritosAISI.length > 1;
+    const textoAISI = this.obtenerTextoAISI();
+    
+    if (tieneUnDistrito) {
+      return `El Área de influencia social indirecta (AISI) se delimita en torno a la capital distrital de la jurisdicción de ${textoAISI}. Esta localidad se considera dentro del AISI debido a su función como centro administrativo y político de su respectivo distrito. Como capital distrital, el Centro Poblado (CP) ${textoAISI} es un punto focal para la interacción con las autoridades locales, quienes jugarán un papel crucial en la gestión y supervisión de las actividades del Proyecto. Además, la adquisición de bienes y servicios esporádicos en este centro poblado será esencial para el soporte logístico, lo que justifica su inclusión en el AISI.\n\nLa delimitación también se basa en la necesidad de establecer un diálogo continuo y efectivo con las autoridades políticas locales en el distrito de ${textoAISI}. Esta interacción es vital para asegurar que las operaciones del Proyecto sean transparentes y alineadas con las normativas locales y las expectativas de la población. Asimismo, la compra esporádica de suministros y la contratación de servicios en este centro poblado contribuirá al dinamismo económico de la capital distrital, generando beneficios indirectos para esta población. De esta manera, la delimitación del AISI considera tanto la dimensión administrativa y política como la económica, garantizando un enfoque integral y sostenible en la implementación del Proyecto.`;
+    } else if (tieneMultiplesDistritos) {
+      return `El Área de influencia social indirecta (AISI) se delimita en torno a las capitales distritales de las jurisdicciones de ${textoAISI}. Estas localidades se consideran dentro del AISI debido a su función como centros administrativos y políticos de sus respectivos distritos. Como capitales distritales, los Centros Poblados (CP) de ${textoAISI} son puntos focales para la interacción con las autoridades locales, quienes jugarán un papel crucial en la gestión y supervisión de las actividades del Proyecto. Además, la adquisición de bienes y servicios esporádicos en estos centros poblados será esencial para el soporte logístico, lo que justifica su inclusión en el AISI.\n\nLa delimitación también se basa en la necesidad de establecer un diálogo continuo y efectivo con las autoridades políticas locales en los distritos de ${textoAISI}. Esta interacción es vital para asegurar que las operaciones del Proyecto sean transparentes y alineadas con las normativas locales y las expectativas de la población. Asimismo, la compra esporádica de suministros y la contratación de servicios en estos centros poblados contribuirá al dinamismo económico de las capitales distritales, generando beneficios indirectos para esta población. De esta manera, la delimitación del AISI considera tanto la dimensión administrativa y política como la económica, garantizando un enfoque integral y sostenible en la implementación del Proyecto.`;
+    }
+    
     return '';
   }
 
-  cargarFotografias(): void {
-    this.fotografiasSeccion2 = this.imageService.loadImages(
-      this.seccionId,
-      'fotografiaSeccion2'
-    );
+  detectarDistritosAISI() {
+    const jsonData = this.formularioService.obtenerJSON();
+    const distritosSet = new Set<string>();
+
+    if (Array.isArray(jsonData)) {
+      jsonData.forEach((cp: any) => {
+        if (cp && cp.DIST) {
+          distritosSet.add(cp.DIST);
+        }
+      });
+    } else if (jsonData && typeof jsonData === 'object') {
+      Object.keys(jsonData).forEach((key: string) => {
+        const centrosPoblados: any = jsonData[key];
+        if (Array.isArray(centrosPoblados)) {
+          centrosPoblados.forEach((cp: any) => {
+            if (cp && cp.DIST) {
+              distritosSet.add(cp.DIST);
+            }
+          });
+        } else if (centrosPoblados && typeof centrosPoblados === 'object' && centrosPoblados.DIST) {
+          distritosSet.add(centrosPoblados.DIST);
+        }
+      });
+    }
+
+    this.distritosDisponiblesAISI = Array.from(distritosSet).sort();
+
+    if (this.distritosSeleccionadosAISI.length === 0 && this.distritosDisponiblesAISI.length > 0) {
+      this.distritosSeleccionadosAISI = [...this.distritosDisponiblesAISI];
+      this.onFieldChange('distritosSeleccionadosAISI', this.distritosSeleccionadosAISI);
+    }
+  }
+
+  toggleDistritoAISI(distrito: string) {
+    const index = this.distritosSeleccionadosAISI.indexOf(distrito);
+    if (index > -1) {
+      this.distritosSeleccionadosAISI.splice(index, 1);
+    } else {
+      this.distritosSeleccionadosAISI.push(distrito);
+    }
+    this.onFieldChange('distritosSeleccionadosAISI', [...this.distritosSeleccionadosAISI]);
+    this.actualizarDatos();
+  }
+
+  estaDistritoSeleccionadoAISI(distrito: string): boolean {
+    return this.distritosSeleccionadosAISI.includes(distrito);
   }
 }
 

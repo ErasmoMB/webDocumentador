@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.3. Actividades económicas de la población</h5>
 <p class="text-justify">Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describirá la estructura y la diversidad de las actividades económicas en la capital distrital de <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, que forma parte del AISI.</p>
 <p class="text-justify">A partir de fuentes oficiales, se exploran las principales fuentes de ingresos y los sectores productivos más relevantes dentro del CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> (capital distrital). En esta ocasión, se recurre a los datos provistos por los Censos Nacionales 2017.</p>
@@ -61,10 +62,96 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasInstitucionalidadCache"
-    [sectionId]="'3.1.4.B.1.3'"
-    [photoPrefix]="'fotografiaCahuachoB13'"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Ciudad de origen del comercio</label>
+      <input type="text" class="form-control" 
+        [value]="datos['ciudadOrigenComercio'] || ''"
+        (input)="onFieldChange('ciudadOrigenComercio', $any($event.target).value)"
+        placeholder="Ej: Caravelí">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Tabla PEA Ocupada según actividad económica</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Actividad Económica</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['actividadesEconomicasAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.actividad || ''"
+                  (input)="actualizarActividadesEconomicasAISI(i, 'actividad', $any($event.target).value)"
+                  placeholder="Ej: Agricultura, ganadería, silvicultura y pesca">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarActividadesEconomicasAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarActividadesEconomicasAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarActividadesEconomicasAISI(i)" *ngIf="(datos['actividadesEconomicasAISI'] || []).length > 1 && !item.actividad?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['actividadesEconomicasAISI'] || datos['actividadesEconomicasAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarActividadesEconomicasAISI()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarActividadesEconomicasAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Actividades Económicas</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Actividades económicas del CP"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Actividades Económicas del CP"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

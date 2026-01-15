@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,35 +12,35 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion22.component.html',
   styleUrls: ['./seccion22.component.css']
 })
-export class Seccion22Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['centroPobladoAISI', 'poblacionSexoAISI', 'poblacionEtarioAISI'];
+export class Seccion22Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
   fotografiasInstitucionalidadCache: any[] = [];
+  override watchedFields: string[] = ['centroPobladoAISI', 'poblacionSexoAISI', 'poblacionEtarioAISI'];
+  
+  readonly PHOTO_PREFIX_CAHUACHO_B11 = 'fotografiaCahuachoB11';
+  
+  fotografiasCahuachoB11FormMulti: FotoItem[] = [];
+  
+  override readonly PHOTO_PREFIX = '';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    this.actualizarFotografiasFormMulti();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -57,37 +58,24 @@ export class Seccion22Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
+  protected override actualizarDatosCustom(): void {
     this.actualizarFotografiasCache();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  protected override tieneFotografias(): boolean {
+    return false;
   }
 
   getTotalPoblacion(): string {
@@ -130,7 +118,7 @@ export class Seccion22Component implements OnInit, OnChanges, DoCheck {
     return item?.porcentaje || '____';
   }
 
-  actualizarFotografiasCache() {
+  override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
   }
 
@@ -138,9 +126,144 @@ export class Seccion22Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.1');
     return this.imageService.loadImages(
       '3.1.4.B.1.1',
-      'fotografiaCahuachoB11',
+      this.PHOTO_PREFIX_CAHUACHO_B11,
       groupPrefix
     );
+  }
+
+  override actualizarFotografiasFormMulti() {
+    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.1');
+    this.fotografiasCahuachoB11FormMulti = this.imageService.loadImages(
+      '3.1.4.B.1.1',
+      this.PHOTO_PREFIX_CAHUACHO_B11,
+      groupPrefix
+    );
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
+    }
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.1');
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_CAHUACHO_B11}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_CAHUACHO_B11}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_CAHUACHO_B11}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarPoblacionSexoAISI() {
+    if (!this.datos['poblacionSexoAISI'] || this.datos['poblacionSexoAISI'].length === 0) {
+      this.datos['poblacionSexoAISI'] = [
+        { sexo: 'Hombre', casos: 0, porcentaje: '0,00 %' },
+        { sexo: 'Mujer', casos: 0, porcentaje: '0,00 %' },
+        { sexo: 'Total', casos: 0, porcentaje: '100,00 %' }
+      ];
+      this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarPoblacionSexoAISI() {
+    if (!this.datos['poblacionSexoAISI']) {
+      this.inicializarPoblacionSexoAISI();
+    }
+    const totalIndex = this.datos['poblacionSexoAISI'].findIndex((item: any) => item.sexo === 'Total');
+    if (totalIndex >= 0) {
+      this.datos['poblacionSexoAISI'].splice(totalIndex, 0, { sexo: '', casos: 0, porcentaje: '0,00 %' });
+    } else {
+      this.datos['poblacionSexoAISI'].push({ sexo: '', casos: 0, porcentaje: '0,00 %' });
+    }
+    this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarPoblacionSexoAISI(index: number) {
+    if (this.datos['poblacionSexoAISI'] && this.datos['poblacionSexoAISI'].length > 1) {
+      const item = this.datos['poblacionSexoAISI'][index];
+      if (!item.sexo || !item.sexo.toLowerCase().includes('total')) {
+        this.datos['poblacionSexoAISI'].splice(index, 1);
+        this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarPoblacionSexoAISI(index: number, field: string, value: any) {
+    if (!this.datos['poblacionSexoAISI']) {
+      this.inicializarPoblacionSexoAISI();
+    }
+    if (this.datos['poblacionSexoAISI'][index]) {
+      this.datos['poblacionSexoAISI'][index][field] = value;
+      this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  inicializarPoblacionEtarioAISI() {
+    if (!this.datos['poblacionEtarioAISI'] || this.datos['poblacionEtarioAISI'].length === 0) {
+      this.datos['poblacionEtarioAISI'] = [
+        { categoria: '0 a 14 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
+      ];
+      this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarPoblacionEtarioAISI() {
+    if (!this.datos['poblacionEtarioAISI']) {
+      this.inicializarPoblacionEtarioAISI();
+    }
+    const totalIndex = this.datos['poblacionEtarioAISI'].findIndex((item: any) => item.categoria === 'Total');
+    if (totalIndex >= 0) {
+      this.datos['poblacionEtarioAISI'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0,00 %' });
+    } else {
+      this.datos['poblacionEtarioAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    }
+    this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarPoblacionEtarioAISI(index: number) {
+    if (this.datos['poblacionEtarioAISI'] && this.datos['poblacionEtarioAISI'].length > 1) {
+      const item = this.datos['poblacionEtarioAISI'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['poblacionEtarioAISI'].splice(index, 1);
+        this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarPoblacionEtarioAISI(index: number, field: string, value: any) {
+    if (!this.datos['poblacionEtarioAISI']) {
+      this.inicializarPoblacionEtarioAISI();
+    }
+    if (this.datos['poblacionEtarioAISI'][index]) {
+      this.datos['poblacionEtarioAISI'][index][field] = value;
+      this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 }
 

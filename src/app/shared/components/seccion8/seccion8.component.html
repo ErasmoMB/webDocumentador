@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.4. Actividades económicas de la población</h5>
 <p class="text-justify" *ngIf="datos.textoActividadesEconomicas && datos.textoActividadesEconomicas !== '____'">{{ datos.textoActividadesEconomicas }}</p>
 <p class="text-justify" *ngIf="!datos.textoActividadesEconomicas || datos.textoActividadesEconomicas === '____'">Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describe las ocupaciones principales existentes en los poblados de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, que forma parte del AISD.</p>
@@ -109,7 +110,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasAgriculturaVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaAgricultura'"
+    [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -125,7 +126,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasComercioVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaComercio'"
+    [photoPrefix]="PHOTO_PREFIX_COMERCIO"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -135,4 +136,244 @@
 <p class="text-justify" *ngIf="datos.textoHabitosConsumo1 && datos.textoHabitosConsumo1 !== '____'">{{ datos.textoHabitosConsumo1 }}</p>
 <p class="text-justify" *ngIf="!datos.textoHabitosConsumo1 || datos.textoHabitosConsumo1 === '____'">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, los hábitos de consumo se caracterizan por una dieta basada principalmente en productos que se adquieren de comerciantes que visitan la comunidad periódicamente (quincenalmente, en promedio), así como en pequeñas bodegas locales. Entre los alimentos más consumidos destacan los abarrotes como el arroz, maíz y fideos, que forman parte esencial de la alimentación diaria de las familias. Estos productos son complementados con la producción local de papa y habas, que también son alimentos fundamentales en la dieta.</p>
 <p class="text-justify" *ngIf="!datos.textoHabitosConsumo2 || datos.textoHabitosConsumo2 === '____'">El consumo de papa y habas es especialmente importante, ya que ambos son productos locales y tradicionales, que no solo se destinan al autoconsumo, sino que también forman parte de la base alimentaria debido a su disponibilidad y bajo costo. La producción de estos alimentos es continua, lo que asegura su presencia en la mayoría de los hogares. Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> resaltan algunos platos tradicionales como el "revuelto de habas", cuy chactado y el chicharrón. Por otra parte, también destaca el consumo de frutas que son obtenidas a través de los comerciantes que visitan la comunidad, los cuales ofrecen productos adicionales como verduras y prendas en determinadas ocasiones.</p>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.4. Actividades económicas de la población</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla PEA Ocupada según ocupaciones principales</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['peaOcupacionesTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPEAOcupaciones(i, 'categoria', $any($event.target).value)"
+                  placeholder="Trabajador independiente">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPEAOcupaciones(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPEAOcupaciones(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPEAOcupaciones(i)" *ngIf="(datos['peaOcupacionesTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['peaOcupacionesTabla'] || datos['peaOcupacionesTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPEAOcupaciones()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupaciones()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Población Pecuaria</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Especie</th>
+              <th>Cantidad promedio por familia</th>
+              <th>Venta por unidad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['poblacionPecuariaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.especie || ''"
+                  (input)="actualizarPoblacionPecuaria(i, 'especie', $any($event.target).value)"
+                  placeholder="Vacuno">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.cantidadPromedio || ''"
+                  (input)="actualizarPoblacionPecuaria(i, 'cantidadPromedio', $any($event.target).value)"
+                  placeholder="4 – 50">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.ventaUnidad || ''"
+                  (input)="actualizarPoblacionPecuaria(i, 'ventaUnidad', $any($event.target).value)"
+                  placeholder="S/. 1 200 – S/. 1 500">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPoblacionPecuaria(i)" *ngIf="(datos['poblacionPecuariaTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['poblacionPecuariaTabla'] || datos['poblacionPecuariaTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionPecuaria()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPoblacionPecuaria()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Características de la Agricultura</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Detalle</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['caracteristicasAgriculturaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarCaracteristicasAgricultura(i, 'categoria', $any($event.target).value)"
+                  placeholder="Categoría">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.detalle || ''"
+                  (input)="actualizarCaracteristicasAgricultura(i, 'detalle', $any($event.target).value)"
+                  placeholder="Detalle">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarCaracteristicasAgricultura(i)" *ngIf="(datos['caracteristicasAgriculturaTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['caracteristicasAgriculturaTabla'] || datos['caracteristicasAgriculturaTabla'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarCaracteristicasAgricultura()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarCaracteristicasAgricultura()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Ganadería - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="8"
+          [value]="obtenerTextoSeccion8GanaderiaCompleto()"
+          (input)="onFieldChange('parrafoSeccion8_ganaderia_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Agricultura - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="6"
+          [value]="obtenerTextoSeccion8AgriculturaCompleto()"
+          (input)="onFieldChange('parrafoSeccion8_agricultura_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Ganadería</label>
+      <app-image-upload
+        [fotografias]="fotografiasGanaderiaFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_GANADERIA"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Ganadería en la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Ganadería"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasGanaderiaChange($event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Agricultura</label>
+      <app-image-upload
+        [fotografias]="fotografiasAgriculturaFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Agricultura en la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Agricultura"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasAgriculturaChange($event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Comercio</label>
+      <app-image-upload
+        [fotografias]="fotografiasComercioFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_COMERCIO"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Comercio en la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Comercio"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasComercioChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

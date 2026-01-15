@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.13. Índice de Desarrollo Humano distrital</h5>
 <p class="text-justify" *ngIf="datos.textoIndiceDesarrolloHumano && datos.textoIndiceDesarrolloHumano !== '____'">{{ datos.textoIndiceDesarrolloHumano }}</p>
 <p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">El Índice de Desarrollo Humano (IDH) mide el logro medio de un país (en nuestro país se mide también a niveles departamentales, provinciales y distritales) tratándose de un índice compuesto. El IDH contiene tres variables: la esperanza de vida al nacer, el logro educacional (alfabetización de adultos y la tasa bruta de matriculación primaria, secundaria y terciaria combinada) y el PIB real per cápita (PPA en dólares). El ingreso se considera en el IDH en representación de un nivel decente de vida y en reemplazo de todas las opciones humanas que no se reflejan en las otras dos dimensiones.</p>
@@ -68,9 +69,151 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasIDHVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaIDH'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.13. Índice de Desarrollo Humano distrital</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla Índice de Desarrollo Humano</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Población</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2">IDH</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2">Esperanza de vida</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2">Educación Secundaria</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2">Años de educación</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2">Ingreso</th>
+              <th rowspan="2">Rank</th>
+              <th rowspan="2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['indiceDesarrolloHumanoTabla'] || []); let i = index">
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.poblacion || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'poblacion', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankIdh1 || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankIdh1', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.idh || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'idh', $any($event.target).value)"
+                  placeholder="0.000">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankEsperanza || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEsperanza', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.esperanzaVida || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'esperanzaVida', $any($event.target).value)"
+                  placeholder="0.0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankEducacion1 || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEducacion1', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.educacion || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'educacion', $any($event.target).value)"
+                  placeholder="0.0%">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankEducacion2 || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEducacion2', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.anosEducacion || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'anosEducacion', $any($event.target).value)"
+                  placeholder="0.0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankAnios || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankAnios', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.ingreso || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'ingreso', $any($event.target).value)"
+                  placeholder="0.0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.rankIngreso || item.rankIngresoFinal || ''"
+                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankIngreso', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarIndiceDesarrolloHumano(i)" *ngIf="(datos['indiceDesarrolloHumanoTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['indiceDesarrolloHumanoTabla'] || datos['indiceDesarrolloHumanoTabla'].length === 0">
+              <td colspan="13" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarIndiceDesarrolloHumano()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarIndiceDesarrolloHumano()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de IDH</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Índice de Desarrollo Humano"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Índice de Desarrollo Humano"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

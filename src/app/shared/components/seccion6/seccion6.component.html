@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.2 Aspectos Demográficos</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
@@ -73,8 +74,153 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasDemografiaVista()"
     [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.2. Aspectos Demográficos</h4>
+    
+    <div class="form-field">
+      <label class="label">Población por Sexo</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Sexo</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['poblacionSexoAISD'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.sexo || ''"
+                  (input)="actualizarPoblacionSexo(i, 'sexo', $any($event.target).value)"
+                  placeholder="Hombres/Mujeres">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPoblacionSexo(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPoblacionSexo(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+            </tr>
+            <tr class="total-row" *ngIf="datos['poblacionSexoAISD'] && datos['poblacionSexoAISD'].length > 0">
+              <td><strong>Total</strong></td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="getTotalPoblacionSexo()"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  value="100,00 %"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+            </tr>
+            <tr *ngIf="!datos['poblacionSexoAISD'] || datos['poblacionSexoAISD'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionSexo()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Población por Grupo Etario</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['poblacionEtarioAISD'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPoblacionEtario(i, 'categoria', $any($event.target).value)"
+                  placeholder="0 a 14 años">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPoblacionEtario(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPoblacionEtario(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+            </tr>
+            <tr class="total-row" *ngIf="datos['poblacionEtarioAISD'] && datos['poblacionEtarioAISD'].length > 0">
+              <td><strong>Total</strong></td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="getTotalPoblacionEtario()"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  value="100,00 %"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+            </tr>
+            <tr *ngIf="!datos['poblacionEtarioAISD'] || datos['poblacionEtarioAISD'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionEtario()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Aspectos Demográficos</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Población de la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Población"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

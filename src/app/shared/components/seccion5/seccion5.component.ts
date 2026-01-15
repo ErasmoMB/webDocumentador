@@ -1,23 +1,26 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
-import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion5',
   templateUrl: './seccion5.component.html',
   styleUrls: ['./seccion5.component.css']
 })
-export class Seccion5Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
+export class Seccion5Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override readonly PHOTO_PREFIX = 'fotografiaInstitucionalidad';
+  
   fotografiasVista: FotoItem[] = [];
-  watchedFields: string[] = [
+  
+  override watchedFields: string[] = [
     'parrafoSeccion5_institucionalidad',
     'grupoAISD',
     'tituloInstituciones',
@@ -26,31 +29,24 @@ export class Seccion5Component implements OnInit, OnChanges, DoCheck {
   ];
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private photoNumberingService: PhotoNumberingService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     setTimeout(() => {
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }, 150);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `grupoAISD${prefijo}` : 'grupoAISD';
@@ -62,7 +58,6 @@ export class Seccion5Component implements OnInit, OnChanges, DoCheck {
     const parrafoActual = (datosActuales as any)[campoParrafo] || null;
     const parrafoAnterior = this.datosAnteriores.parrafoInstitucionalidad || null;
     
-    // Check only AISD base image fields for changes (cleaner detection)
     const fotoImagenAISDBaseCon = prefijo ? datosActuales[`fotografiaAISDImagen${prefijo}`] : null;
     const fotoImagenAISDBase = datosActuales['fotografiaAISDImagen'];
     const fotoImagenActual = fotoImagenAISDBaseCon || fotoImagenAISDBase || null;
@@ -76,49 +71,23 @@ export class Seccion5Component implements OnInit, OnChanges, DoCheck {
         grupoAISDActual !== grupoAISDEnDatos || 
         parrafoActual !== parrafoAnterior ||
         hayCambioImagen) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
-    
-    const fotoImagenAISDBaseCon = this.obtenerPrefijoGrupo() ? datosNuevos[`fotografiaAISDImagen${this.obtenerPrefijoGrupo()}`] : null;
-    const fotoImagenAISDBase = datosNuevos['fotografiaAISDImagen'];
+  protected override actualizarDatosCustom(): void {
+    const fotoImagenAISDBaseCon = this.obtenerPrefijoGrupo() ? this.datos[`fotografiaAISDImagen${this.obtenerPrefijoGrupo()}`] : null;
+    const fotoImagenAISDBase = this.datos['fotografiaAISDImagen'];
     const fotoImagen = fotoImagenAISDBaseCon || fotoImagenAISDBase || null;
     
     this.datosAnteriores.fotoImagen = fotoImagen;
     
     this.fotografiasVista = this.cargarFotografiasVista();
-    this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(event: any): void {
-  }
-
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
-  }
-
-  obtenerPrefijoGrupo(): string {
-    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  }
-
-  obtenerValorConPrefijo(campo: string): any {
-    return PrefijoHelper.obtenerValorConPrefijo(this.datos, campo, this.seccionId);
-  }
-
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const prefijo = this.obtenerPrefijoGrupo();
     if (prefijo) {
       const grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
@@ -183,7 +152,7 @@ export class Seccion5Component implements OnInit, OnChanges, DoCheck {
     const fuente = fuente1Con || fuente1Sin || fuenteSinNumero || fuenteAISDBaseCon || fuenteAISD1Con || fuenteAISD3Con || 'GEADES, 2024';
     
     // Usar numeración global y consecutiva
-    const numeroGlobal = this.photoNumberingService.getGlobalPhotoNumber(
+    const numeroGlobal = this.photoNumberingService?.getGlobalPhotoNumber(
       this.seccionId,
       1,
       'fotografiaInstitucionalidad',
@@ -209,10 +178,74 @@ export class Seccion5Component implements OnInit, OnChanges, DoCheck {
     
     const result = this.imageService.loadImages(
       this.seccionId,
-      'fotografiaInstitucionalidad',
+      this.PHOTO_PREFIX,
       groupPrefix
     );
     return result;
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarInstituciones() {
+    if (!this.datos.tablepagina6 || this.datos.tablepagina6.length === 0) {
+      this.datos.tablepagina6 = [
+        { categoria: '', respuesta: '', nombre: '', comentario: '' }
+      ];
+      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarInstitucion() {
+    if (!this.datos.tablepagina6) {
+      this.inicializarInstituciones();
+    }
+    this.datos.tablepagina6.push({ categoria: '', respuesta: '', nombre: '', comentario: '' });
+    this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarInstitucion(index: number) {
+    if (this.datos.tablepagina6 && this.datos.tablepagina6.length > 1) {
+      this.datos.tablepagina6.splice(index, 1);
+      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarInstitucion(index: number, field: string, value: any) {
+    if (!this.datos.tablepagina6) {
+      this.inicializarInstituciones();
+    }
+    if (this.datos.tablepagina6[index]) {
+      this.datos.tablepagina6[index][field] = value;
+      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 
   getUbicacionTexto(): string {

@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.2. Indicadores y distribución de la Población Económicamente Activa</h5>
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población en edad de trabajar (PET)</strong></p>
 <p class="text-justify">La población cumplida de 14 años de edad, se encuentra en edad de trabajar, en concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001.</p>
@@ -126,10 +127,307 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasInstitucionalidadCache"
+    [fotografias]="getFotografiasVista()"
     [sectionId]="'3.1.4.B.1.2'"
     [photoPrefix]="'fotografiaCahuachoB12'"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Fotografías de Aspectos Demográficos</label>
+      <app-image-upload
+        [fotografias]="fotografiasDemografiaFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_DEMOGRAFIA"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Población del CP"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Población del CP"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasDemografiaChange($event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Población distrital</label>
+      <input type="number" class="form-control" 
+        [value]="datos['poblacionDistritalAISI'] || ''"
+        (input)="onFieldChange('poblacionDistritalAISI', $any($event.target).value)"
+        placeholder="Ej: 610">
+    </div>
+
+    <div class="form-field">
+      <label class="label">PET distrital (14 años a más)</label>
+      <input type="number" class="form-control" 
+        [value]="datos['petDistritalAISI'] || ''"
+        (input)="onFieldChange('petDistritalAISI', $any($event.target).value)"
+        placeholder="Ej: 461">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Ingreso familiar per cápita (S/.)</label>
+      <input type="text" class="form-control" 
+        [value]="datos['ingresoPerCapitaAISI'] || ''"
+        (input)="onFieldChange('ingresoPerCapitaAISI', $any($event.target).value)"
+        placeholder="Ej: 391,06">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Ranking de ingreso</label>
+      <input type="number" class="form-control" 
+        [value]="datos['rankingIngresoAISI'] || ''"
+        (input)="onFieldChange('rankingIngresoAISI', $any($event.target).value)"
+        placeholder="Ej: 1191">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Tabla PET según grupos de edad</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['petGruposEdadAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPETGruposEdadAISI(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: 14 a 29 años">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPETGruposEdadAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPETGruposEdadAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPETGruposEdadAISI(i)" *ngIf="(datos['petGruposEdadAISI'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['petGruposEdadAISI'] || datos['petGruposEdadAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPETGruposEdadAISI()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPETGruposEdadAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla PEA y No PEA según sexo</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categorías</th>
+              <th>Hombres</th>
+              <th>Porcentaje</th>
+              <th>Mujeres</th>
+              <th>Porcentaje</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['peaDistritoSexoTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: PEA">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.hombres || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'hombres', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentajeHombres || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'porcentajeHombres', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.mujeres || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'mujeres', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentajeMujeres || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'porcentajeMujeres', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPEADistritoSexo(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPEADistritoSexo(i)" *ngIf="(datos['peaDistritoSexoTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['peaDistritoSexoTabla'] || datos['peaDistritoSexoTabla'].length === 0">
+              <td colspan="8" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPEADistritoSexo()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPEADistritoSexo()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categorías</th>
+              <th>Hombres</th>
+              <th>Porcentaje</th>
+              <th>Mujeres</th>
+              <th>Porcentaje</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['peaOcupadaDesocupadaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: PEA Ocupada">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.hombres || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'hombres', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentajeHombres || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentajeHombres', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.mujeres || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'mujeres', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentajeMujeres || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentajeMujeres', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPEAOcupadaDesocupada(i)" *ngIf="(datos['peaOcupadaDesocupadaTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['peaOcupadaDesocupadaTabla'] || datos['peaOcupadaDesocupadaTabla'].length === 0">
+              <td colspan="8" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPEAOcupadaDesocupada()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupadaDesocupada()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de PEA</label>
+      <app-image-upload
+        [fotografias]="fotografiasPEAFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_PEA"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Actividad económica del CP"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Población Económicamente Activa del CP"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasPEAChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

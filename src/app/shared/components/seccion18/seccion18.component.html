@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
 <p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas !== '____'">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[0] }}</p>
 <p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span> se halla un total de <span [appDataSource]="'automatic'">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span [appDataSource]="'automatic'">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span [appDataSource]="'automatic'">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
@@ -60,9 +61,141 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasNBIVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaNBI'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla NBI CC Ayroca</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['nbiCCAyrocaTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarNBICCAyroca(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas con hacinamiento">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarNBICCAyroca(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarNBICCAyroca(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarNBICCAyroca(i)" *ngIf="(datos['nbiCCAyrocaTabla'] || []).length > 1 && item.categoria !== 'Total referencial'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['nbiCCAyrocaTabla'] || datos['nbiCCAyrocaTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarNBICCAyroca()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarNBICCAyroca()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla NBI Distrito Cahuacho</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['nbiDistritoCahuachoTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarNBIDistritoCahuacho(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas sin servicios higiénicos">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarNBIDistritoCahuacho(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarNBIDistritoCahuacho(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarNBIDistritoCahuacho(i)" *ngIf="(datos['nbiDistritoCahuachoTabla'] || []).length > 1 && item.categoria !== 'Total referencial'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['nbiDistritoCahuachoTabla'] || datos['nbiDistritoCahuachoTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarNBIDistritoCahuacho()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarNBIDistritoCahuacho()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de NBI</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Necesidades Básicas Insatisfechas"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Necesidades Básicas Insatisfechas"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

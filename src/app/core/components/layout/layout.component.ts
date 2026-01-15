@@ -91,13 +91,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       { id: `3.1.4.B.${numero}.6`, title: `B.${numero}.6 Infraestructura de transporte y comunicaciones`, route: `/seccion/3.1.4.B.${numero}.6`, level: 5 },
       { id: `3.1.4.B.${numero}.7`, title: `B.${numero}.7 Infraestructura en salud, educación, recreación y deporte`, route: `/seccion/3.1.4.B.${numero}.7`, level: 5 },
       { id: `3.1.4.B.${numero}.8`, title: `B.${numero}.8 Indicadores de salud`, route: `/seccion/3.1.4.B.${numero}.8`, level: 5 },
-      { id: `3.1.4.B.${numero}.9`, title: `B.${numero}.9 Indicadores de educación`, route: `/seccion/3.1.4.B.${numero}.9`, level: 5 },
-      { id: `3.1.4.B.${numero}.10`, title: `B.${numero}.10 Aspectos culturales`, route: `/seccion/3.1.4.B.${numero}.10`, level: 5 },
-      { id: `3.1.4.B.${numero}.11`, title: `B.${numero}.11 Agua, uso de suelos y recursos naturales`, route: `/seccion/3.1.4.B.${numero}.11`, level: 5 },
-      { id: `3.1.4.B.${numero}.12`, title: `B.${numero}.12 Índice de Desarrollo Humano (IDH)`, route: `/seccion/3.1.4.B.${numero}.12`, level: 5 },
-      { id: `3.1.4.B.${numero}.13`, title: `B.${numero}.13 Necesidades Básicas Insatisfechas (NBI)`, route: `/seccion/3.1.4.B.${numero}.13`, level: 5 },
-      { id: `3.1.4.B.${numero}.14`, title: `B.${numero}.14 Organización social y liderazgo`, route: `/seccion/3.1.4.B.${numero}.14`, level: 5 },
-      { id: `3.1.4.B.${numero}.15`, title: `B.${numero}.15 Festividades, costumbres y turismo`, route: `/seccion/3.1.4.B.${numero}.15`, level: 5 }
+      { id: `3.1.4.B.${numero}.9`, title: `B.${numero}.9 Indicadores de educación`, route: `/seccion/3.1.4.B.${numero}.9`, level: 5 }
     ];
   }
 

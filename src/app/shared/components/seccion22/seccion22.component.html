@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.1. Aspectos demográficos</h5>
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
 <p class="text-justify" *ngIf="datos.textoDemografiaAISI && datos.textoDemografiaAISI !== '____'">{{ datos.textoDemografiaAISI }}</p>
@@ -62,8 +63,140 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasVista()"
     [sectionId]="'3.1.4.B.1.1'"
-    [photoPrefix]="'fotografiaCahuachoB11'"
+    [photoPrefix]="PHOTO_PREFIX_CAHUACHO_B11"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.1. Aspectos demográficos</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla Población por Sexo</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Sexo</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['poblacionSexoAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.sexo || ''"
+                  (input)="actualizarPoblacionSexoAISI(i, 'sexo', $any($event.target).value)"
+                  placeholder="Hombre">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPoblacionSexoAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPoblacionSexoAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPoblacionSexoAISI(i)" *ngIf="(datos['poblacionSexoAISI'] || []).length > 1 && !item.sexo?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['poblacionSexoAISI'] || datos['poblacionSexoAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionSexoAISI()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPoblacionSexoAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Población por Grupo Etario</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['poblacionEtarioAISI'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPoblacionEtarioAISI(i, 'categoria', $any($event.target).value)"
+                  placeholder="0 a 14 años">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarPoblacionEtarioAISI(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarPoblacionEtarioAISI(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPoblacionEtarioAISI(i)" *ngIf="(datos['poblacionEtarioAISI'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['poblacionEtarioAISI'] || datos['poblacionEtarioAISI'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionEtarioAISI()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPoblacionEtarioAISI()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Demografía AISI</label>
+      <app-image-upload
+        [fotografias]="fotografiasCahuachoB11FormMulti"
+        [sectionId]="'3.1.4.B.1.1'"
+        [photoPrefix]="PHOTO_PREFIX_CAHUACHO_B11"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Aspectos demográficos"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Aspectos demográficos"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

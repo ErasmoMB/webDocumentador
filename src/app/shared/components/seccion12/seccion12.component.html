@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
@@ -33,7 +34,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasSaludVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaSalud'"
+    [photoPrefix]="PHOTO_PREFIX_SALUD"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -183,7 +184,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasIEAyrocaVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaIEAyroca'"
+    [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -267,7 +268,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasIE40270Vista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaIE40270'"
+    [photoPrefix]="PHOTO_PREFIX_IE_40270"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -283,7 +284,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasRecreacionVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaRecreacion'"
+    [photoPrefix]="PHOTO_PREFIX_RECREACION"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -299,9 +300,135 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasDeporteVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaDeporte'"
+    [photoPrefix]="PHOTO_PREFIX_DEPORTE"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Salud - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="4"
+          [value]="obtenerTextoSeccion12SaludCompleto()"
+          (input)="onFieldChange('parrafoSeccion12_salud_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Educación - Texto Completo</label>
+        <textarea 
+          class="textarea" 
+          rows="4"
+          [value]="obtenerTextoSeccion12EducacionCompleto()"
+          (input)="onFieldChange('parrafoSeccion12_educacion_completo', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Salud</label>
+      <app-image-upload
+        [fotografias]="fotografiasSaludFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_SALUD"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Puesto de Salud Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Puesto de Salud Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_SALUD, $event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías IE Ayroca</label>
+      <app-image-upload
+        [fotografias]="fotografiasIEAyrocaFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: IE Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="IE Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_AYROCA, $event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías IE N°40270</label>
+      <app-image-upload
+        [fotografias]="fotografiasIE40270FormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_IE_40270"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: IE N°40270"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="IE N°40270"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_40270, $event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Recreación</label>
+      <app-image-upload
+        [fotografias]="fotografiasRecreacionFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_RECREACION"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Parque recreacional en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Parque recreacional en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_RECREACION, $event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Deporte</label>
+      <app-image-upload
+        [fotografias]="fotografiasDeporteFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Losa deportiva en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Losa deportiva en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_DEPORTE, $event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,35 +12,31 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion26.component.html',
   styleUrls: ['./seccion26.component.css']
 })
-export class Seccion26Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
+export class Seccion26Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB15';
+  
   fotografiasInstitucionalidadCache: any[] = [];
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla'];
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -57,37 +54,24 @@ export class Seccion26Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
+  protected override actualizarDatosCustom(): void {
     this.actualizarFotografiasCache();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  protected override tieneFotografias(): boolean {
+    return true;
   }
 
   getViviendasOcupadasPresentes(): string {
@@ -190,17 +174,321 @@ export class Seccion26Component implements OnInit, OnChanges, DoCheck {
     return item?.porcentaje || '____';
   }
 
-  actualizarFotografiasCache() {
+  override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
   }
 
   getFotografiasVista(): FotoItem[] {
-    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.5');
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
-      '3.1.4.B.1.5',
-      'fotografiaCahuachoB15',
+      this.seccionId,
+      this.PHOTO_PREFIX,
       groupPrefix
     );
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
+    }
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarAbastecimientoAguaCP() {
+    if (!this.datos['abastecimientoAguaCpTabla'] || this.datos['abastecimientoAguaCpTabla'].length === 0) {
+      this.datos['abastecimientoAguaCpTabla'] = [
+        { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos['abastecimientoAguaCpTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarAbastecimientoAguaCP() {
+    if (!this.datos['abastecimientoAguaCpTabla']) {
+      this.inicializarAbastecimientoAguaCP();
+    }
+    this.datos['abastecimientoAguaCpTabla'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos['abastecimientoAguaCpTabla']);
+    this.calcularPorcentajesAbastecimientoAguaCP();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarAbastecimientoAguaCP(index: number) {
+    if (this.datos['abastecimientoAguaCpTabla'] && this.datos['abastecimientoAguaCpTabla'].length > 1) {
+      const item = this.datos['abastecimientoAguaCpTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['abastecimientoAguaCpTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos['abastecimientoAguaCpTabla']);
+        this.calcularPorcentajesAbastecimientoAguaCP();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarAbastecimientoAguaCP(index: number, field: string, value: any) {
+    if (!this.datos['abastecimientoAguaCpTabla']) {
+      this.inicializarAbastecimientoAguaCP();
+    }
+    if (this.datos['abastecimientoAguaCpTabla'][index]) {
+      this.datos['abastecimientoAguaCpTabla'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesAbastecimientoAguaCP();
+      }
+      this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos['abastecimientoAguaCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesAbastecimientoAguaCP() {
+    if (!this.datos['abastecimientoAguaCpTabla'] || this.datos['abastecimientoAguaCpTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['abastecimientoAguaCpTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['abastecimientoAguaCpTabla'].forEach((item: any) => {
+        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
+  }
+
+  inicializarSaneamientoCP() {
+    if (!this.datos['saneamientoCpTabla'] || this.datos['saneamientoCpTabla'].length === 0) {
+      this.datos['saneamientoCpTabla'] = [
+        { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('saneamientoCpTabla', this.datos['saneamientoCpTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarSaneamientoCP() {
+    if (!this.datos['saneamientoCpTabla']) {
+      this.inicializarSaneamientoCP();
+    }
+    this.datos['saneamientoCpTabla'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('saneamientoCpTabla', this.datos['saneamientoCpTabla']);
+    this.calcularPorcentajesSaneamientoCP();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarSaneamientoCP(index: number) {
+    if (this.datos['saneamientoCpTabla'] && this.datos['saneamientoCpTabla'].length > 1) {
+      const item = this.datos['saneamientoCpTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['saneamientoCpTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('saneamientoCpTabla', this.datos['saneamientoCpTabla']);
+        this.calcularPorcentajesSaneamientoCP();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarSaneamientoCP(index: number, field: string, value: any) {
+    if (!this.datos['saneamientoCpTabla']) {
+      this.inicializarSaneamientoCP();
+    }
+    if (this.datos['saneamientoCpTabla'][index]) {
+      this.datos['saneamientoCpTabla'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesSaneamientoCP();
+      }
+      this.formularioService.actualizarDato('saneamientoCpTabla', this.datos['saneamientoCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesSaneamientoCP() {
+    if (!this.datos['saneamientoCpTabla'] || this.datos['saneamientoCpTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['saneamientoCpTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['saneamientoCpTabla'].forEach((item: any) => {
+        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
+  }
+
+  inicializarCoberturaElectricaCP() {
+    if (!this.datos['coberturaElectricaCpTabla'] || this.datos['coberturaElectricaCpTabla'].length === 0) {
+      this.datos['coberturaElectricaCpTabla'] = [
+        { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos['coberturaElectricaCpTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarCoberturaElectricaCP() {
+    if (!this.datos['coberturaElectricaCpTabla']) {
+      this.inicializarCoberturaElectricaCP();
+    }
+    this.datos['coberturaElectricaCpTabla'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos['coberturaElectricaCpTabla']);
+    this.calcularPorcentajesCoberturaElectricaCP();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarCoberturaElectricaCP(index: number) {
+    if (this.datos['coberturaElectricaCpTabla'] && this.datos['coberturaElectricaCpTabla'].length > 1) {
+      const item = this.datos['coberturaElectricaCpTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['coberturaElectricaCpTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos['coberturaElectricaCpTabla']);
+        this.calcularPorcentajesCoberturaElectricaCP();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarCoberturaElectricaCP(index: number, field: string, value: any) {
+    if (!this.datos['coberturaElectricaCpTabla']) {
+      this.inicializarCoberturaElectricaCP();
+    }
+    if (this.datos['coberturaElectricaCpTabla'][index]) {
+      this.datos['coberturaElectricaCpTabla'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesCoberturaElectricaCP();
+      }
+      this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos['coberturaElectricaCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesCoberturaElectricaCP() {
+    if (!this.datos['coberturaElectricaCpTabla'] || this.datos['coberturaElectricaCpTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['coberturaElectricaCpTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['coberturaElectricaCpTabla'].forEach((item: any) => {
+        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
+  }
+
+  inicializarCombustiblesCocinarCP() {
+    if (!this.datos['combustiblesCocinarCpTabla'] || this.datos['combustiblesCocinarCpTabla'].length === 0) {
+      this.datos['combustiblesCocinarCpTabla'] = [
+        { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos['combustiblesCocinarCpTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarCombustiblesCocinarCP() {
+    if (!this.datos['combustiblesCocinarCpTabla']) {
+      this.inicializarCombustiblesCocinarCP();
+    }
+    this.datos['combustiblesCocinarCpTabla'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos['combustiblesCocinarCpTabla']);
+    this.calcularPorcentajesCombustiblesCocinarCP();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarCombustiblesCocinarCP(index: number) {
+    if (this.datos['combustiblesCocinarCpTabla'] && this.datos['combustiblesCocinarCpTabla'].length > 1) {
+      const item = this.datos['combustiblesCocinarCpTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['combustiblesCocinarCpTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos['combustiblesCocinarCpTabla']);
+        this.calcularPorcentajesCombustiblesCocinarCP();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarCombustiblesCocinarCP(index: number, field: string, value: any) {
+    if (!this.datos['combustiblesCocinarCpTabla']) {
+      this.inicializarCombustiblesCocinarCP();
+    }
+    if (this.datos['combustiblesCocinarCpTabla'][index]) {
+      this.datos['combustiblesCocinarCpTabla'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesCombustiblesCocinarCP();
+      }
+      this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos['combustiblesCocinarCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesCombustiblesCocinarCP() {
+    if (!this.datos['combustiblesCocinarCpTabla'] || this.datos['combustiblesCocinarCpTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['combustiblesCocinarCpTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['combustiblesCocinarCpTabla'].forEach((item: any) => {
+        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
   }
 
   getFotoDesechosSolidos(): any {

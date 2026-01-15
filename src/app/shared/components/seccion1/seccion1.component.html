@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h2>3.1. DESCRIPCIÓN Y CARACTERIZACIÓN DE LOS ASPECTOS SOCIALES, CULTURALES Y ANTROPOLÓGICOS DE LA POBLACIÓN UBICADA EN EL ÁREA DE INFLUENCIA SOCIAL DEL PROYECTO</h2>
 <div *ngIf="datos.parrafoSeccion1_principal; else parrafoPrincipalDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion1_principal)"></div>
 <ng-template #parrafoPrincipalDefault>
@@ -51,9 +52,76 @@
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="fotografiasSeccion1"
-    [sectionId]="'3.1.1'"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <div class="form-field">
+      <label class="label">Párrafo Principal</label>
+      <textarea 
+        class="textarea" 
+        rows="8"
+        [value]="obtenerTextoParrafoPrincipal()"
+        (input)="onFieldChange('parrafoSeccion1_principal', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Introducción a Objetivos</label>
+      <textarea 
+        class="textarea" 
+        rows="2"
+        [value]="obtenerTextoIntroduccionObjetivos()"
+        (input)="onFieldChange('parrafoSeccion1_4', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Objetivo 1</label>
+      <textarea 
+        class="textarea" 
+        rows="3"
+        [value]="obtenerTextoObjetivo1()"
+        (input)="onFieldChange('objetivoSeccion1_1', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Objetivo 2</label>
+      <textarea 
+        class="textarea" 
+        rows="4"
+        [value]="obtenerTextoObjetivo2()"
+        (input)="onFieldChange('objetivoSeccion1_2', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Fotografía de la sección 1"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Sección 1"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

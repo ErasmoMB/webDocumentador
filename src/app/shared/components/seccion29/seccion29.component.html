@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.8. Indicadores de salud</h5>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Natalidad y Mortalidad</strong></p>
@@ -107,10 +108,226 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasInstitucionalidadCache"
-    [sectionId]="'3.1.4.B.1.8'"
-    [photoPrefix]="'fotografiaCahuachoB18'"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Tabla Indicadores de natalidad y mortalidad</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Año</th>
+              <th>Natalidad</th>
+              <th>Mortalidad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['natalidadMortalidadCpTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.anio || ''"
+                  (input)="actualizarNatalidadMortalidadCP(i, 'anio', $any($event.target).value)"
+                  placeholder="Ej: 2023">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.natalidad || ''"
+                  (input)="actualizarNatalidadMortalidadCP(i, 'natalidad', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.mortalidad || ''"
+                  (input)="actualizarNatalidadMortalidadCP(i, 'mortalidad', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarNatalidadMortalidadCP(i)" *ngIf="(datos['natalidadMortalidadCpTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['natalidadMortalidadCpTabla'] || datos['natalidadMortalidadCpTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarNatalidadMortalidadCP()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarNatalidadMortalidadCP()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla Casos por grupos de morbilidad</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Grupo de Morbilidad</th>
+              <th colspan="5">Bloques etarios</th>
+              <th rowspan="2">Casos Totales</th>
+              <th rowspan="2"></th>
+            </tr>
+            <tr>
+              <th>0 – 11</th>
+              <th>12 – 17</th>
+              <th>18 – 29</th>
+              <th>30 – 59</th>
+              <th>60 - ></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['morbilidadCpTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.grupo || ''"
+                  (input)="actualizarMorbilidadCP(i, 'grupo', $any($event.target).value)"
+                  placeholder="Ej: Enfermedades infecciosas intestinales">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.edad0_11 || ''"
+                  (input)="actualizarMorbilidadCP(i, 'edad0_11', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.edad12_17 || ''"
+                  (input)="actualizarMorbilidadCP(i, 'edad12_17', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.edad18_29 || ''"
+                  (input)="actualizarMorbilidadCP(i, 'edad18_29', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.edad30_59 || ''"
+                  (input)="actualizarMorbilidadCP(i, 'edad30_59', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.edad60_mas || ''"
+                  (input)="actualizarMorbilidadCP(i, 'edad60_mas', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarMorbilidadCP(i, 'casos', $any($event.target).value)"
+                  placeholder="0"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarMorbilidadCP(i)" *ngIf="(datos['morbilidadCpTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['morbilidadCpTabla'] || datos['morbilidadCpTabla'].length === 0">
+              <td colspan="8" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarMorbilidadCP()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarMorbilidadCP()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla Población según tipo de seguro de salud afiliado</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['afiliacionSaludTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarAfiliacionSaludTabla(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: Seguro Integral de Salud (SIS)">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarAfiliacionSaludTabla(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarAfiliacionSaludTabla(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarAfiliacionSaludTabla(i)" *ngIf="(datos['afiliacionSaludTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['afiliacionSaludTabla'] || datos['afiliacionSaludTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarAfiliacionSaludTabla()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarAfiliacionSaludTabla()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Indicadores de salud</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Indicadores de salud"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Indicadores de salud"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

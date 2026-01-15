@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.6. Infraestructura para transportes y comunicaciones</h5>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Transporte</strong></p>
@@ -58,10 +59,96 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasInstitucionalidadCache"
-    [sectionId]="'3.1.4.B.1.6'"
-    [photoPrefix]="'fotografiaCahuachoB16'"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Costo mínimo de transporte (S/.)</label>
+      <input type="number" class="form-control" 
+        [value]="datos['costoTransporteMinimo'] || ''"
+        (input)="onFieldChange('costoTransporteMinimo', $any($event.target).value)"
+        placeholder="Ej: 25">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Costo máximo de transporte (S/.)</label>
+      <input type="number" class="form-control" 
+        [value]="datos['costoTransporteMaximo'] || ''"
+        (input)="onFieldChange('costoTransporteMaximo', $any($event.target).value)"
+        placeholder="Ej: 30">
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Tabla Servicios de telecomunicaciones</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Medio de comunicación</th>
+              <th>Descripción</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['telecomunicacionesCpTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.medio || ''"
+                  (input)="actualizarTelecomunicacionesCP(i, 'medio', $any($event.target).value)"
+                  placeholder="Ej: Emisoras de radio">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.descripcion || ''"
+                  (input)="actualizarTelecomunicacionesCP(i, 'descripcion', $any($event.target).value)"
+                  placeholder="Ej: RPP, Nacional, Unión">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarTelecomunicacionesCP(i)" *ngIf="(datos['telecomunicacionesCpTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['telecomunicacionesCpTabla'] || datos['telecomunicacionesCpTabla'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarTelecomunicacionesCP()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarTelecomunicacionesCP()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Infraestructura para transportes y comunicaciones</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Infraestructura de transporte y comunicaciones"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Infraestructura de transporte y comunicaciones"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

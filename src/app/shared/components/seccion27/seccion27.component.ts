@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,35 +12,31 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion27.component.html',
   styleUrls: ['./seccion27.component.css']
 })
-export class Seccion27Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
+export class Seccion27Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla', 'costoTransporteMinimo', 'costoTransporteMaximo'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB16';
+  
   fotografiasInstitucionalidadCache: any[] = [];
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla'];
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -57,37 +54,24 @@ export class Seccion27Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
+  protected override actualizarDatosCustom(): void {
     this.actualizarFotografiasCache();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  protected override tieneFotografias(): boolean {
+    return true;
   }
 
   getFotoTransporte(): any {
@@ -118,17 +102,86 @@ export class Seccion27Component implements OnInit, OnChanges, DoCheck {
     };
   }
 
-  actualizarFotografiasCache() {
+  override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
   }
 
   getFotografiasVista(): FotoItem[] {
-    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.6');
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
-      '3.1.4.B.1.6',
-      'fotografiaCahuachoB16',
+      this.seccionId,
+      this.PHOTO_PREFIX,
       groupPrefix
     );
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
+    }
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarTelecomunicacionesCP() {
+    if (!this.datos['telecomunicacionesCpTabla'] || this.datos['telecomunicacionesCpTabla'].length === 0) {
+      this.datos['telecomunicacionesCpTabla'] = [
+        { medio: '', descripcion: '' }
+      ];
+      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarTelecomunicacionesCP() {
+    if (!this.datos['telecomunicacionesCpTabla']) {
+      this.inicializarTelecomunicacionesCP();
+    }
+    this.datos['telecomunicacionesCpTabla'].push({ medio: '', descripcion: '' });
+    this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarTelecomunicacionesCP(index: number) {
+    if (this.datos['telecomunicacionesCpTabla'] && this.datos['telecomunicacionesCpTabla'].length > 1) {
+      this.datos['telecomunicacionesCpTabla'].splice(index, 1);
+      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarTelecomunicacionesCP(index: number, field: string, value: any) {
+    if (!this.datos['telecomunicacionesCpTabla']) {
+      this.inicializarTelecomunicacionesCP();
+    }
+    if (this.datos['telecomunicacionesCpTabla'][index]) {
+      this.datos['telecomunicacionesCpTabla'][index][field] = value;
+      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 }
 

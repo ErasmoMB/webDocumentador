@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h3>3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral
     y otros similares</h3>
 <div *ngIf="datos.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_metodologia)"></div>
@@ -73,8 +74,180 @@
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="fotografiasSeccion3"
-    [sectionId]="'3.1.3'"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Cantidad de Entrevistas</label>
+      <input 
+        type="number" 
+        class="input" 
+        placeholder="Ej: 18"
+        [value]="datos.cantidadEntrevistas || ''"
+        (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Fecha de Trabajo de Campo</label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ej: noviembre 2024"
+        [value]="datos.fechaTrabajoCampo || ''"
+        (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Consultora / Fuente</label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ej: GEADES (2024)"
+        [value]="datos.consultora || ''"
+        (input)="onFieldChange('consultora', $any($event.target).value)">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Lista de Entrevistados</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Nombres y Apellidos</th>
+              <th>Cargo u Ocupación</th>
+              <th>Organización</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entrevistado of (datos.entrevistados || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="entrevistado.nombre || ''"
+                  (input)="actualizarEntrevistado(i, 'nombre', $any($event.target).value)"
+                  placeholder="Ej: Miguel Ángel Sayaverde Rospigliosi">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="entrevistado.cargo || ''"
+                  (input)="actualizarEntrevistado(i, 'cargo', $any($event.target).value)"
+                  placeholder="Ej: Presidente">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="entrevistado.organizacion || ''"
+                  (input)="actualizarEntrevistado(i, 'organizacion', $any($event.target).value)"
+                  placeholder="Ej: CC Ayroca">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarEntrevistado(i)" title="Eliminar entrevistado">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos.entrevistados || datos.entrevistados.length === 0">
+              <td colspan="4" class="text-center">
+                <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()">
+                  + Agregar Entrevistado
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()" style="margin-top: 10px;">
+        + Agregar Entrevistado
+      </button>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <div class="form-field">
+        <label class="label">Metodología</label>
+        <textarea 
+          class="textarea" 
+          rows="3"
+          [value]="obtenerTextoSeccion3Metodologia()"
+          (input)="onFieldChange('parrafoSeccion3_metodologia', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Fuentes Primarias</label>
+        <textarea 
+          class="textarea" 
+          rows="3"
+          [value]="obtenerTextoSeccion3FuentesPrimarias()"
+          (input)="onFieldChange('parrafoSeccion3_fuentes_primarias', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Fuentes Secundarias - Texto Introductorio</label>
+        <textarea 
+          class="textarea" 
+          rows="2"
+          [value]="obtenerTextoSeccion3FuentesSecundarias()"
+          (input)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $any($event.target).value)"></textarea>
+        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Lista de Fuentes Secundarias</h4>
+      
+      <div class="form-field" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;">
+        <input 
+          type="text" 
+          class="input" 
+          [value]="fuente"
+          (input)="actualizarFuenteSecundaria(i, $any($event.target).value)"
+          style="flex: 1;">
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="eliminarFuenteSecundaria(i)"
+          style="padding: 8px 16px; white-space: nowrap;">
+          Eliminar
+        </button>
+      </div>
+
+      <div class="form-field">
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="agregarFuenteSecundaria()"
+          style="width: 100%;">
+          Agregar Nueva Fuente
+        </button>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Fotografía de la sección 3"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Sección 3"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

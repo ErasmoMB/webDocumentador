@@ -1,10 +1,11 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -12,34 +13,38 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion12.component.html',
   styleUrls: ['./seccion12.component.css']
 })
-export class Seccion12Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion12_salud_completo', 'parrafoSeccion12_educacion_completo', 'caracteristicasSaludTabla', 'cantidadEstudiantesEducacionTabla', 'ieAyrocaTabla', 'ie40270Tabla', 'alumnosIEAyrocaTabla', 'alumnosIE40270Tabla'];
+export class Seccion12Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion12_salud_completo', 'parrafoSeccion12_educacion_completo', 'caracteristicasSaludTabla', 'cantidadEstudiantesEducacionTabla', 'ieAyrocaTabla', 'ie40270Tabla', 'alumnosIEAyrocaTabla', 'alumnosIE40270Tabla'];
+  
+  readonly PHOTO_PREFIX_SALUD = 'fotografiaSalud';
+  readonly PHOTO_PREFIX_IE_AYROCA = 'fotografiaIEAyroca';
+  readonly PHOTO_PREFIX_IE_40270 = 'fotografiaIE40270';
+  readonly PHOTO_PREFIX_RECREACION = 'fotografiaRecreacion';
+  readonly PHOTO_PREFIX_DEPORTE = 'fotografiaDeporte';
+  
+  fotografiasSaludFormMulti: FotoItem[] = [];
+  fotografiasIEAyrocaFormMulti: FotoItem[] = [];
+  fotografiasIE40270FormMulti: FotoItem[] = [];
+  fotografiasRecreacionFormMulti: FotoItem[] = [];
+  fotografiasDeporteFormMulti: FotoItem[] = [];
+  
+  override readonly PHOTO_PREFIX = '';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private photoNumberingService: PhotoNumberingService,
-    private cdRef: ChangeDetectorRef
-  ) { }
-
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
@@ -57,36 +62,20 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
-  }
-
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  protected override tieneFotografias(): boolean {
+    return false;
   }
 
   formatearParrafo(texto: string): string {
@@ -98,7 +87,7 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     }).join('');
   }
 
-  obtenerPrefijoGrupo(): string {
+  override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
@@ -106,7 +95,7 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaSalud',
+      this.PHOTO_PREFIX_SALUD,
       groupPrefix
     );
   }
@@ -115,7 +104,7 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaIEAyroca',
+      this.PHOTO_PREFIX_IE_AYROCA,
       groupPrefix
     );
   }
@@ -124,7 +113,7 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaIE40270',
+      this.PHOTO_PREFIX_IE_40270,
       groupPrefix
     );
   }
@@ -133,7 +122,7 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaRecreacion',
+      this.PHOTO_PREFIX_RECREACION,
       groupPrefix
     );
   }
@@ -142,9 +131,58 @@ export class Seccion12Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaDeporte',
+      this.PHOTO_PREFIX_DEPORTE,
       groupPrefix
     );
+  }
+
+  override actualizarFotografiasFormMulti() {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasSaludFormMulti = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_SALUD, groupPrefix);
+    this.fotografiasIEAyrocaFormMulti = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_IE_AYROCA, groupPrefix);
+    this.fotografiasIE40270FormMulti = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_IE_40270, groupPrefix);
+    this.fotografiasRecreacionFormMulti = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_RECREACION, groupPrefix);
+    this.fotografiasDeporteFormMulti = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_DEPORTE, groupPrefix);
+  }
+
+  protected override onInitCustom(): void {
+    this.actualizarFotografiasFormMulti();
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
+    }
+  }
+
+  onFotografiasChange(prefix: string, fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${prefix}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${prefix}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${prefix}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  obtenerTextoSeccion12SaludCompleto(): string {
+    if (this.datos.parrafoSeccion12_salud_completo) {
+      return this.datos.parrafoSeccion12_salud_completo;
+    }
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const provincia = this.datos.provinciaSeleccionada || 'Caravelí';
+    return `Dentro de la CC ${grupoAISD} se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de ${provincia}.`;
+  }
+
+  obtenerTextoSeccion12EducacionCompleto(): string {
+    if (this.datos.parrafoSeccion12_educacion_completo) {
+      return this.datos.parrafoSeccion12_educacion_completo;
+    }
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    return `Dentro de la CC ${grupoAISD} se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo ${grupoAISD}, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.`;
   }
 }
 

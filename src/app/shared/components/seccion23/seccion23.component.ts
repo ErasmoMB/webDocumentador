@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,35 +12,37 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion23.component.html',
   styleUrls: ['./seccion23.component.css']
 })
-export class Seccion23Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla'];
+export class Seccion23Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI'];
+  
+  readonly PHOTO_PREFIX_DEMOGRAFIA = 'fotografiaCahuachoB12';
+  readonly PHOTO_PREFIX_PEA = 'fotografiaPEA';
+  
+  fotografiasDemografiaFormMulti: FotoItem[] = [];
+  fotografiasPEAFormMulti: FotoItem[] = [];
   fotografiasInstitucionalidadCache: any[] = [];
+  
+  override readonly PHOTO_PREFIX = '';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    this.actualizarFotografiasFormMulti();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -57,42 +60,78 @@ export class Seccion23Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
+  protected override actualizarDatosCustom(): void {
     this.actualizarFotografiasCache();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
   }
 
-  actualizarFotografiasCache() {
+  protected override tieneFotografias(): boolean {
+    return false;
+  }
+
+  override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+  override actualizarFotografiasFormMulti() {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    
+    this.fotografiasDemografiaFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_DEMOGRAFIA,
+      groupPrefix
+    );
+    
+    this.fotografiasPEAFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_PEA,
+      groupPrefix
+    );
+  }
+
+  protected override onChangesCustom(changes: any): void {
+    if (changes['seccionId']) {
+      this.actualizarFotografiasFormMulti();
     }
   }
 
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  onFotografiasDemografiaChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
   }
+
+  onFotografiasPEAChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
 
   getPorcentajePET(): string {
     if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
@@ -232,6 +271,239 @@ export class Seccion23Component implements OnInit, OnChanges, DoCheck {
       return imagen.type.startsWith('image/');
     }
     return false;
+  }
+
+  inicializarPETGruposEdadAISI() {
+    if (!this.datos['petGruposEdadAISI'] || this.datos['petGruposEdadAISI'].length === 0) {
+      this.datos['petGruposEdadAISI'] = [
+        { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarPETGruposEdadAISI() {
+    if (!this.datos['petGruposEdadAISI']) {
+      this.inicializarPETGruposEdadAISI();
+    }
+    this.datos['petGruposEdadAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+    this.calcularPorcentajesPETGruposEdadAISI();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarPETGruposEdadAISI(index: number) {
+    if (this.datos['petGruposEdadAISI'] && this.datos['petGruposEdadAISI'].length > 1) {
+      const item = this.datos['petGruposEdadAISI'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['petGruposEdadAISI'].splice(index, 1);
+        this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+        this.calcularPorcentajesPETGruposEdadAISI();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarPETGruposEdadAISI(index: number, field: string, value: any) {
+    if (!this.datos['petGruposEdadAISI']) {
+      this.inicializarPETGruposEdadAISI();
+    }
+    if (this.datos['petGruposEdadAISI'][index]) {
+      this.datos['petGruposEdadAISI'][index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesPETGruposEdadAISI();
+      }
+      this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesPETGruposEdadAISI() {
+    if (!this.datos['petGruposEdadAISI'] || this.datos['petGruposEdadAISI'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['petGruposEdadAISI'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    if (total > 0) {
+      this.datos['petGruposEdadAISI'].forEach((item: any) => {
+        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+          const casos = parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    }
+  }
+
+  inicializarPEADistritoSexo() {
+    if (!this.datos['peaDistritoSexoTabla'] || this.datos['peaDistritoSexoTabla'].length === 0) {
+      this.datos['peaDistritoSexoTabla'] = [
+        { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarPEADistritoSexo() {
+    if (!this.datos['peaDistritoSexoTabla']) {
+      this.inicializarPEADistritoSexo();
+    }
+    this.datos['peaDistritoSexoTabla'].push({ categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.calcularPorcentajesPEADistritoSexo();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarPEADistritoSexo(index: number) {
+    if (this.datos['peaDistritoSexoTabla'] && this.datos['peaDistritoSexoTabla'].length > 1) {
+      const item = this.datos['peaDistritoSexoTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['peaDistritoSexoTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+        this.calcularPorcentajesPEADistritoSexo();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarPEADistritoSexo(index: number, field: string, value: any) {
+    if (!this.datos['peaDistritoSexoTabla']) {
+      this.inicializarPEADistritoSexo();
+    }
+    if (this.datos['peaDistritoSexoTabla'][index]) {
+      this.datos['peaDistritoSexoTabla'][index][field] = value;
+      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+        this.calcularPorcentajesPEADistritoSexo();
+      }
+      this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesPEADistritoSexo() {
+    if (!this.datos['peaDistritoSexoTabla'] || this.datos['peaDistritoSexoTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['peaDistritoSexoTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const totalHombres = totalItem ? parseFloat(totalItem.hombres) || 0 : 0;
+    const totalMujeres = totalItem ? parseFloat(totalItem.mujeres) || 0 : 0;
+    const totalCasos = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    this.datos['peaDistritoSexoTabla'].forEach((item: any) => {
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        const hombres = parseFloat(item.hombres) || 0;
+        const mujeres = parseFloat(item.mujeres) || 0;
+        const casos = parseFloat(item.casos) || 0;
+        
+        if (totalHombres > 0) {
+          const porcentajeHombres = ((hombres / totalHombres) * 100).toFixed(2);
+          item.porcentajeHombres = porcentajeHombres + ' %';
+        }
+        if (totalMujeres > 0) {
+          const porcentajeMujeres = ((mujeres / totalMujeres) * 100).toFixed(2);
+          item.porcentajeMujeres = porcentajeMujeres + ' %';
+        }
+        if (totalCasos > 0) {
+          const porcentaje = ((casos / totalCasos) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      }
+    });
+  }
+
+  inicializarPEAOcupadaDesocupada() {
+    if (!this.datos['peaOcupadaDesocupadaTabla'] || this.datos['peaOcupadaDesocupadaTabla'].length === 0) {
+      this.datos['peaOcupadaDesocupadaTabla'] = [
+        { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+      ];
+      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarPEAOcupadaDesocupada() {
+    if (!this.datos['peaOcupadaDesocupadaTabla']) {
+      this.inicializarPEAOcupadaDesocupada();
+    }
+    this.datos['peaOcupadaDesocupadaTabla'].push({ categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' });
+    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.calcularPorcentajesPEAOcupadaDesocupada();
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarPEAOcupadaDesocupada(index: number) {
+    if (this.datos['peaOcupadaDesocupadaTabla'] && this.datos['peaOcupadaDesocupadaTabla'].length > 1) {
+      const item = this.datos['peaOcupadaDesocupadaTabla'][index];
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        this.datos['peaOcupadaDesocupadaTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+        this.calcularPorcentajesPEAOcupadaDesocupada();
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarPEAOcupadaDesocupada(index: number, field: string, value: any) {
+    if (!this.datos['peaOcupadaDesocupadaTabla']) {
+      this.inicializarPEAOcupadaDesocupada();
+    }
+    if (this.datos['peaOcupadaDesocupadaTabla'][index]) {
+      this.datos['peaOcupadaDesocupadaTabla'][index][field] = value;
+      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+        this.calcularPorcentajesPEAOcupadaDesocupada();
+      }
+      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  calcularPorcentajesPEAOcupadaDesocupada() {
+    if (!this.datos['peaOcupadaDesocupadaTabla'] || this.datos['peaOcupadaDesocupadaTabla'].length === 0) {
+      return;
+    }
+    const totalItem = this.datos['peaOcupadaDesocupadaTabla'].find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('total')
+    );
+    const totalHombres = totalItem ? parseFloat(totalItem.hombres) || 0 : 0;
+    const totalMujeres = totalItem ? parseFloat(totalItem.mujeres) || 0 : 0;
+    const totalCasos = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+    
+    this.datos['peaOcupadaDesocupadaTabla'].forEach((item: any) => {
+      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+        const hombres = parseFloat(item.hombres) || 0;
+        const mujeres = parseFloat(item.mujeres) || 0;
+        const casos = parseFloat(item.casos) || 0;
+        
+        if (totalHombres > 0) {
+          const porcentajeHombres = ((hombres / totalHombres) * 100).toFixed(2);
+          item.porcentajeHombres = porcentajeHombres + ' %';
+        }
+        if (totalMujeres > 0) {
+          const porcentajeMujeres = ((mujeres / totalMujeres) * 100).toFixed(2);
+          item.porcentajeMujeres = porcentajeMujeres + ' %';
+        }
+        if (totalCasos > 0) {
+          const porcentaje = ((casos / totalCasos) * 100).toFixed(2);
+          item.porcentaje = porcentaje + ' %';
+        }
+      }
+    });
   }
 }
 

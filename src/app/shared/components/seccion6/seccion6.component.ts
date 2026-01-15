@@ -1,76 +1,54 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion6',
   templateUrl: './seccion6.component.html',
   styleUrls: ['./seccion6.component.css']
 })
-export class Seccion6Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD'];
+export class Seccion6Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaDemografia';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private cdRef: ChangeDetectorRef
-  ) { }
-
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
-    });
-    this.cdRef.detectChanges();
-  }
-
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
-  }
-
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
   }
 
   getPorcentajeHombres(): string {
@@ -198,7 +176,7 @@ export class Seccion6Component implements OnInit, OnChanges, DoCheck {
     return total.toString();
   }
 
-  obtenerPrefijoGrupo(): string {
+  override obtenerPrefijoGrupo(): string {
     if (this.seccionId === '3.1.4.A.1.2' || this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
     if (this.seccionId === '3.1.4.A.2.2' || this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
     if (this.seccionId === '3.1.4.B.1.2' || this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
@@ -224,6 +202,95 @@ export class Seccion6Component implements OnInit, OnChanges, DoCheck {
       }
     }
     return fotografias;
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarPoblacionSexo() {
+    if (!this.datos['poblacionSexoAISD'] || this.datos['poblacionSexoAISD'].length === 0) {
+      this.datos['poblacionSexoAISD'] = [
+        { sexo: 'Hombres', casos: 0, porcentaje: '0%' },
+        { sexo: 'Mujeres', casos: 0, porcentaje: '0%' }
+      ];
+      this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  inicializarPoblacionEtario() {
+    if (!this.datos['poblacionEtarioAISD'] || this.datos['poblacionEtarioAISD'].length === 0) {
+      this.datos['poblacionEtarioAISD'] = [
+        { categoria: '0 a 14 años', casos: 0, porcentaje: '0%' },
+        { categoria: '15 a 29 años', casos: 0, porcentaje: '0%' },
+        { categoria: '30 a 44 años', casos: 0, porcentaje: '0%' },
+        { categoria: '45 a 64 años', casos: 0, porcentaje: '0%' },
+        { categoria: '65 años a más', casos: 0, porcentaje: '0%' }
+      ];
+      this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarPoblacionSexo(index: number, field: string, value: any) {
+    if (!this.datos['poblacionSexoAISD']) {
+      this.inicializarPoblacionSexo();
+    }
+    if (this.datos['poblacionSexoAISD'][index]) {
+      this.datos['poblacionSexoAISD'][index][field] = value;
+      if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
+        const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
+        if (total > 0) {
+          const casos = parseInt(value) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
+          this.datos['poblacionSexoAISD'][index].porcentaje = porcentaje;
+        }
+      }
+      this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarPoblacionEtario(index: number, field: string, value: any) {
+    if (!this.datos['poblacionEtarioAISD']) {
+      this.inicializarPoblacionEtario();
+    }
+    if (this.datos['poblacionEtarioAISD'][index]) {
+      this.datos['poblacionEtarioAISD'][index][field] = value;
+      if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
+        const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
+        if (total > 0) {
+          const casos = parseInt(value) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
+          this.datos['poblacionEtarioAISD'][index].porcentaje = porcentaje;
+        }
+      }
+      this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 }
 

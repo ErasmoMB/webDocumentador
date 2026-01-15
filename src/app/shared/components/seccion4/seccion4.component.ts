@@ -1,9 +1,10 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -11,15 +12,19 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion4.component.html',
   styleUrls: ['./seccion4.component.css']
 })
-export class Seccion4Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
+export class Seccion4Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
   private filasCache: any[] | null = null;
   private ultimoPrefijoCache: string | null = null;
+  
+  override readonly PHOTO_PREFIX = 'fotografiaAISD';
+  
   fotografiasSeccion4: FotoItem[] = [];
   fotografiasAISD: FotoItem[] = [];
-  watchedFields: string[] = [
+  
+  override watchedFields: string[] = [
     'parrafoSeccion4_introduccion_aisd',
     'parrafoSeccion4_comunidad_completo',
     'parrafoSeccion4_caracterizacion_indicadores',
@@ -49,31 +54,29 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
   }
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private photoNumberingService: PhotoNumberingService,
-    private cdRef: ChangeDetectorRef
-  ) { }
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+  protected override onInitCustom(): void {
     this.llenarTablaAutomaticamenteSiNecesario();
     this.calcularCoordenadasYAltitudReferenciales();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  protected override onChangesCustom(changes: any): void {
     if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
       this.llenarTablaAutomaticamenteSiNecesario();
       this.calcularCoordenadasYAltitudReferenciales();
     }
   }
 
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `grupoAISD${prefijo}` : 'grupoAISD';
@@ -95,46 +98,23 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
     const hayCambioGrupoAISD = grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos;
     
     if (hayCambioGrupoAISD || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      const centrosPobladosJSON = datosActuales['centrosPobladosJSON'] || [];
+      if (centrosPobladosJSON.length > 0 && prefijo && prefijo.startsWith('_A')) {
+        this.llenarTablaAutomaticamenteSiNecesario();
+      }
+      return true;
     }
-
-    const centrosPobladosJSON = datosActuales['centrosPobladosJSON'] || [];
-    if (centrosPobladosJSON.length > 0 && prefijo && prefijo.startsWith('_A')) {
-      this.llenarTablaAutomaticamenteSiNecesario();
-    }
+    
+    return false;
   }
 
-  actualizarDatos() {
+  protected override actualizarDatosCustom(): void {
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.actualizarValoresConPrefijo();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
-    });
-    this.filasCache = null;
-    this.ultimoPrefijoCache = null;
-    
     this.cargarFotografias();
-    
-    this.cdRef.detectChanges();
   }
 
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
-  }
-
-  obtenerPrefijoGrupo(): string {
+  override obtenerPrefijoGrupo(): string {
     const aisdMatch = this.seccionId.match(/^3\.1\.4\.([AB])(?:\.(\d+))?/);
     if (aisdMatch) {
       const letra = aisdMatch[1];
@@ -168,7 +148,7 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
     return this.datos.grupoAISD || '____';
   }
 
-  obtenerValorConPrefijo(campo: string): any {
+  override obtenerValorConPrefijo(campo: string): any {
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
     const valorConPrefijo = this.datos[campoConPrefijo];
@@ -188,7 +168,7 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
     return datos[campoConPrefijo] || datos[campo] || null;
   }
 
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const prefijo = this.obtenerPrefijoGrupo();
     if (prefijo) {
       const grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
@@ -426,7 +406,7 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
       
       this.fotografiasAISD = this.imageService.loadImages(
         this.seccionId,
-        'fotografiaAISD',
+        this.PHOTO_PREFIX,
         groupPrefix
       );
       
@@ -439,6 +419,85 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
       
       this.fotografiasAISD = [];
     }
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    if (this.seccionId.startsWith('3.1.4')) {
+      const groupPrefix = this.obtenerPrefijoGrupo();
+      this.fotografiasFormMulti = this.imageService.loadImages(
+        this.seccionId,
+        this.PHOTO_PREFIX,
+        groupPrefix
+      );
+    } else {
+      this.fotografiasFormMulti = this.imageService.loadImages(
+        this.seccionId,
+        'fotografiaSeccion4'
+      );
+    }
+  }
+
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    if (this.seccionId.startsWith('3.1.4')) {
+      const groupPrefix = this.obtenerPrefijoGrupo();
+      fotografias.forEach((foto, index) => {
+        const num = index + 1;
+        const suffix = groupPrefix ? groupPrefix : '';
+        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+      });
+    } else {
+      fotografias.forEach((foto, index) => {
+        const num = index + 1;
+        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Titulo` as any, foto.titulo || '');
+        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Fuente` as any, foto.fuente || '');
+        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Imagen` as any, foto.imagen || '');
+      });
+    }
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  obtenerTextoSeccion4IntroduccionAISD(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoParrafo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
+    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_introduccion_aisd']) {
+      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_introduccion_aisd'];
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    return `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${grupoAISD}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
+  }
+
+  obtenerTextoSeccion4ComunidadCompleto(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoParrafo = prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
+    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo']) {
+      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo'];
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const distrito = this.datos.distritoSeleccionado || '____';
+    const provincia = this.datos.provinciaSeleccionada || '____';
+    const aisd1 = this.datos.aisdComponente1 || '____';
+    const aisd2 = this.datos.aisdComponente2 || '____';
+    const departamento = this.datos.departamentoSeleccionado || '____';
+    const grupoAISI = this.datos.grupoAISI || this.datos.distritoSeleccionado || '____';
+    
+    return `La CC ${grupoAISD} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${grupoAISD}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${grupoAISD}.\n\nEn cuanto al nombre "${grupoAISD}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${grupoAISD} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+  }
+
+  obtenerTextoSeccion4CaracterizacionIndicadores(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoParrafo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
+    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
+      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores'];
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    return `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${grupoAISD}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
   }
 
   formatearParrafo(texto: string): string {
@@ -454,11 +513,12 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.obtenerPrefijoGrupo();
     this.imageService.saveImages(
       this.seccionId,
-      'fotografiaAISD',
+      this.PHOTO_PREFIX,
       fotografias,
       groupPrefix
     );
     this.fotografiasAISD = fotografias;
+    this.actualizarFotografiasFormMulti();
   }
 
   onFotografiasSeccion4Change(fotografias: FotoItem[]) {
@@ -468,6 +528,7 @@ export class Seccion4Component implements OnInit, OnChanges, DoCheck {
       fotografias
     );
     this.fotografiasSeccion4 = fotografias;
+    this.actualizarFotografiasFormMulti();
   }
 }
 

@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.5. Viviendas</h5>
 <p class="text-justify" *ngIf="datos.textoViviendas && datos.textoViviendas !== '____'">{{ datos.textoViviendas }}</p>
 <p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> se hallan un total de <span [appDataSource]="'automatic'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span [appDataSource]="'automatic'">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span [appDataSource]="'automatic'">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
@@ -66,9 +67,148 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasEstructuraVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaEstructura'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.5. Viviendas</h4>
+    
+    <div class="form-field">
+      <label class="label">Tabla Condición de Ocupación</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Condición de ocupación</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['condicionOcupacionTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarCondicionOcupacion(i, 'categoria', $any($event.target).value)"
+                  placeholder="Viviendas ocupadas">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarCondicionOcupacion(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarCondicionOcupacion(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarCondicionOcupacion(i)" *ngIf="(datos['condicionOcupacionTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['condicionOcupacionTabla'] || datos['condicionOcupacionTabla'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarCondicionOcupacion()">
+                  Agregar Filas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarCondicionOcupacion()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Tipos de Materiales</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categorías</th>
+              <th>Tipos de materiales</th>
+              <th>Casos</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['tiposMaterialesTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarTiposMateriales(i, 'categoria', $any($event.target).value)"
+                  placeholder="Materiales de las paredes">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.tipoMaterial || ''"
+                  (input)="actualizarTiposMateriales(i, 'tipoMaterial', $any($event.target).value)"
+                  placeholder="Adobe">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.casos || ''"
+                  (input)="actualizarTiposMateriales(i, 'casos', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarTiposMateriales(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0%">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarTiposMateriales(i)" *ngIf="(datos['tiposMaterialesTabla'] || []).length > 1 && item.tipoMaterial !== 'Total'" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['tiposMaterialesTabla'] || datos['tiposMaterialesTabla'].length === 0">
+              <td colspan="5" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarTiposMateriales()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarTiposMateriales()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Estructura</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Estructura de las viviendas en el anexo Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Estructura de las viviendas en el anexo Ayroca"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 

@@ -1,40 +1,37 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion17',
   templateUrl: './seccion17.component.html',
   styleUrls: ['./seccion17.component.css']
 })
-export class Seccion17Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['distritoSeleccionado', 'indiceDesarrolloHumanoTabla'];
+export class Seccion17Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['distritoSeleccionado', 'indiceDesarrolloHumanoTabla'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaIDH';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private cdRef: ChangeDetectorRef
-  ) { }
-
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     let hayCambios = false;
     
@@ -47,30 +44,10 @@ export class Seccion17Component implements OnInit, OnChanges, DoCheck {
       }
     }
     
-    if (hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
-    }
+    return hayCambios;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
-  }
-
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
+  protected override actualizarValoresConPrefijo(): void {
   }
 
   getIDH(): string {
@@ -89,32 +66,77 @@ export class Seccion17Component implements OnInit, OnChanges, DoCheck {
     return item?.rankIdh || item?.rankEsperanza || '____';
   }
 
-  getFotografiasIDHVista(): any[] {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fotografias: any[] = [];
-    for (let i = 1; i <= 10; i++) {
-      const imagenConPrefijo = prefijo ? this.datos[`fotografiaIDH${i}Imagen${prefijo}`] : null;
-      const imagenSinPrefijo = this.datos[`fotografiaIDH${i}Imagen`];
-      const imagen = imagenConPrefijo || imagenSinPrefijo;
-      if (imagen && imagen.trim() !== '') {
-        const tituloConPrefijo = prefijo ? this.datos[`fotografiaIDH${i}Titulo${prefijo}`] : null;
-        const tituloSinPrefijo = this.datos[`fotografiaIDH${i}Titulo`];
-        const titulo = tituloConPrefijo || tituloSinPrefijo || 'Índice de Desarrollo Humano';
-        const fuenteConPrefijo = prefijo ? this.datos[`fotografiaIDH${i}Fuente${prefijo}`] : null;
-        const fuenteSinPrefijo = this.datos[`fotografiaIDH${i}Fuente`];
-        const fuente = fuenteConPrefijo || fuenteSinPrefijo || 'GEADES, 2024';
-        fotografias.push({ imagen, titulo, fuente });
-      }
-    }
-    return fotografias;
+  getFotografiasIDHVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
   }
 
-  private obtenerPrefijoGrupo(): string {
-    if (this.seccionId === '3.1.4.A.1.13' || this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
-    if (this.seccionId === '3.1.4.A.2.13' || this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
-    if (this.seccionId === '3.1.4.B.1.13' || this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
-    if (this.seccionId === '3.1.4.B.2.13' || this.seccionId.startsWith('3.1.4.B.2.')) return '_B2';
-    return '';
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarIndiceDesarrolloHumano() {
+    if (!this.datos['indiceDesarrolloHumanoTabla'] || this.datos['indiceDesarrolloHumanoTabla'].length === 0) {
+      this.datos['indiceDesarrolloHumanoTabla'] = [
+        { poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 }
+      ];
+      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarIndiceDesarrolloHumano() {
+    if (!this.datos['indiceDesarrolloHumanoTabla']) {
+      this.inicializarIndiceDesarrolloHumano();
+    }
+    this.datos['indiceDesarrolloHumanoTabla'].push({ poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 });
+    this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarIndiceDesarrolloHumano(index: number) {
+    if (this.datos['indiceDesarrolloHumanoTabla'] && this.datos['indiceDesarrolloHumanoTabla'].length > 1) {
+      this.datos['indiceDesarrolloHumanoTabla'].splice(index, 1);
+      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  actualizarIndiceDesarrolloHumano(index: number, field: string, value: any) {
+    if (!this.datos['indiceDesarrolloHumanoTabla']) {
+      this.inicializarIndiceDesarrolloHumano();
+    }
+    if (this.datos['indiceDesarrolloHumanoTabla'][index]) {
+      this.datos['indiceDesarrolloHumanoTabla'][index][field] = value;
+      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 }
 

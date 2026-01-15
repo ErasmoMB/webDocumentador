@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h5>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
@@ -116,10 +117,164 @@
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasInstitucionalidadCache"
-    [sectionId]="'3.1.4.B.1.7'"
-    [photoPrefix]="'fotografiaCahuachoB17'"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <div class="form-field">
+      <label class="label">Tabla Principales características del Puesto de Salud</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['puestoSaludCpTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.categoria || ''"
+                  (input)="actualizarPuestoSaludCP(i, 'categoria', $any($event.target).value)"
+                  placeholder="Ej: Nombre">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.descripcion || ''"
+                  (input)="actualizarPuestoSaludCP(i, 'descripcion', $any($event.target).value)"
+                  placeholder="Ej: Puesto de Salud Cahuacho">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarPuestoSaludCP(i)" *ngIf="(datos['puestoSaludCpTabla'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['puestoSaludCpTabla'] || datos['puestoSaludCpTabla'].length === 0">
+              <td colspan="3" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarPuestoSaludCP()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarPuestoSaludCP()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
+      <input type="text" class="form-control" 
+        [value]="datos['nombreIEMayorEstudiantes'] || ''"
+        (input)="onFieldChange('nombreIEMayorEstudiantes', $any($event.target).value)"
+        placeholder="Ej: IE Virgen de Copacabana">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Cantidad de estudiantes de la IE con mayor cantidad</label>
+      <input type="number" class="form-control" 
+        [value]="datos['cantidadEstudiantesIEMayor'] || ''"
+        (input)="onFieldChange('cantidadEstudiantesIEMayor', $any($event.target).value)"
+        placeholder="Ej: 28">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Tabla Infraestructura educativa</label>
+      <div class="table-editor" style="overflow-x: auto;">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Nombre de IE</th>
+              <th>Nivel</th>
+              <th>Tipo de Gestión</th>
+              <th>Cantidad de estudiantes</th>
+              <th>Porcentaje</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['educacionCpTabla'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.nombreIE || ''"
+                  (input)="actualizarEducacionCP(i, 'nombreIE', $any($event.target).value)"
+                  placeholder="Ej: IE Cahuacho">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.nivel || ''"
+                  (input)="actualizarEducacionCP(i, 'nivel', $any($event.target).value)"
+                  placeholder="Ej: Inicial - Jardín">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.tipoGestion || ''"
+                  (input)="actualizarEducacionCP(i, 'tipoGestion', $any($event.target).value)"
+                  placeholder="Ej: Pública de gestión directa">
+              </td>
+              <td>
+                <input type="number" class="table-input" 
+                  [value]="item.cantidadEstudiantes || ''"
+                  (input)="actualizarEducacionCP(i, 'cantidadEstudiantes', $any($event.target).value)"
+                  placeholder="0">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.porcentaje || ''"
+                  (input)="actualizarEducacionCP(i, 'porcentaje', $any($event.target).value)"
+                  placeholder="0,00 %"
+                  readonly>
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarEducacionCP(i)" *ngIf="(datos['educacionCpTabla'] || []).length > 1 && !item.nombreIE?.toLowerCase().includes('total')" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['educacionCpTabla'] || datos['educacionCpTabla'].length === 0">
+              <td colspan="6" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarEducacionCP()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarEducacionCP()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Infraestructura en salud, educación, recreativa y deportiva</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Infraestructura en salud, educación, recreativa y deportiva"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Infraestructura en salud, educación, recreativa y deportiva"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

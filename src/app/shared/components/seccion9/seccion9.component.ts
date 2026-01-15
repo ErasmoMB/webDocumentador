@@ -1,10 +1,11 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, Input } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -12,34 +13,26 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion9.component.html',
   styleUrls: ['./seccion9.component.css']
 })
-export class Seccion9Component implements OnInit, OnChanges, DoCheck {
-  @Input() seccionId: string = '';
-  datos: any = {};
-  private datosAnteriores: any = {};
-  watchedFields: string[] = ['grupoAISD', 'condicionOcupacionTabla', 'tiposMaterialesTabla'];
+export class Seccion9Component extends BaseSectionComponent {
+  @Input() override seccionId: string = '';
+  @Input() override modoFormulario: boolean = false;
+  
+  override watchedFields: string[] = ['grupoAISD', 'condicionOcupacionTabla', 'tiposMaterialesTabla'];
+  
+  override readonly PHOTO_PREFIX = 'fotografiaEstructura';
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMapping: FieldMappingService,
-    private sectionDataLoader: SectionDataLoaderService,
-    private imageService: ImageManagementService,
-    private photoNumberingService: PhotoNumberingService,
-    private cdRef: ChangeDetectorRef
-  ) { }
-
-  ngOnInit() {
-    this.actualizarDatos();
-    this.loadSectionData();
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['seccionId']) {
-      this.actualizarDatos();
-      this.loadSectionData();
-    }
-  }
-
-  ngDoCheck() {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
@@ -57,36 +50,16 @@ export class Seccion9Component implements OnInit, OnChanges, DoCheck {
     }
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
-      this.actualizarDatos();
-      this.cdRef.markForCheck();
+      return true;
     }
+    
+    return false;
   }
 
-  actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
-    this.datos = { ...datosNuevos };
-    this.actualizarValoresConPrefijo();
-    this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
-    });
-    this.cdRef.detectChanges();
-  }
-
-  actualizarValoresConPrefijo() {
+  protected override actualizarValoresConPrefijo(): void {
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
-  }
-
-  private loadSectionData(): void {
-    const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
-    if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
-    }
-  }
-
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
-    return this.fieldMapping.getDataSourceType(fieldName);
   }
 
   getTotalViviendasEmpadronadas(): string {
@@ -122,7 +95,7 @@ export class Seccion9Component implements OnInit, OnChanges, DoCheck {
     return item?.porcentaje || '____';
   }
 
-  obtenerPrefijoGrupo(): string {
+  override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
@@ -130,9 +103,149 @@ export class Seccion9Component implements OnInit, OnChanges, DoCheck {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
-      'fotografiaEstructura',
+      this.PHOTO_PREFIX,
       groupPrefix
     );
+  }
+
+  protected override actualizarFotografiasFormMulti(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    fotografias.forEach((foto, index) => {
+      const num = index + 1;
+      const suffix = groupPrefix ? groupPrefix : '';
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
+      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
+    });
+    this.actualizarFotografiasFormMulti();
+    this.actualizarDatos();
+  }
+
+  inicializarCondicionOcupacion() {
+    if (!this.datos['condicionOcupacionTabla'] || this.datos['condicionOcupacionTabla'].length === 0) {
+      this.datos['condicionOcupacionTabla'] = [
+        { categoria: 'Viviendas ocupadas', casos: 0, porcentaje: '0%' },
+        { categoria: 'Viviendas desocupadas', casos: 0, porcentaje: '0%' },
+        { categoria: 'Total', casos: 0, porcentaje: '100%' }
+      ];
+      this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarCondicionOcupacion() {
+    if (!this.datos['condicionOcupacionTabla']) {
+      this.inicializarCondicionOcupacion();
+    }
+    const totalIndex = this.datos['condicionOcupacionTabla'].findIndex((item: any) => item.categoria === 'Total');
+    if (totalIndex >= 0) {
+      this.datos['condicionOcupacionTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
+    } else {
+      this.datos['condicionOcupacionTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
+    }
+    this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarCondicionOcupacion(index: number) {
+    if (this.datos['condicionOcupacionTabla'] && this.datos['condicionOcupacionTabla'].length > 1) {
+      const item = this.datos['condicionOcupacionTabla'][index];
+      if (item.categoria !== 'Total') {
+        this.datos['condicionOcupacionTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarCondicionOcupacion(index: number, field: string, value: any) {
+    if (!this.datos['condicionOcupacionTabla']) {
+      this.inicializarCondicionOcupacion();
+    }
+    if (this.datos['condicionOcupacionTabla'][index]) {
+      this.datos['condicionOcupacionTabla'][index][field] = value;
+      if (field === 'casos' && this.datos['condicionOcupacionTabla'][index].categoria !== 'Total') {
+        const totalCasos = this.datos['condicionOcupacionTabla']
+          .filter((item: any) => item.categoria !== 'Total')
+          .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
+        const totalItem = this.datos['condicionOcupacionTabla'].find((item: any) => item.categoria === 'Total');
+        if (totalItem) {
+          totalItem.casos = totalCasos;
+          totalItem.porcentaje = '100,00 %';
+        }
+      }
+      this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  inicializarTiposMateriales() {
+    if (!this.datos['tiposMaterialesTabla'] || this.datos['tiposMaterialesTabla'].length === 0) {
+      this.datos['tiposMaterialesTabla'] = [
+        { categoria: 'Materiales de las paredes', tipoMaterial: 'Adobe', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de las paredes', tipoMaterial: 'Triplay / Calamina / Estera', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de los techos', tipoMaterial: 'Plancha de calamina, fibra de cemento o similares', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de los techos', tipoMaterial: 'Triplay / Estera / Carrizo', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de los techos', tipoMaterial: 'Tejas', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de los pisos', tipoMaterial: 'Tierra', casos: 0, porcentaje: '0%' },
+        { categoria: 'Materiales de los pisos', tipoMaterial: 'Cemento', casos: 0, porcentaje: '0%' }
+      ];
+      this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  agregarTiposMateriales() {
+    if (!this.datos['tiposMaterialesTabla']) {
+      this.inicializarTiposMateriales();
+    }
+    const totalIndex = this.datos['tiposMaterialesTabla'].findIndex((item: any) => item.tipoMaterial === 'Total');
+    if (totalIndex >= 0) {
+      this.datos['tiposMaterialesTabla'].splice(totalIndex, 0, { categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0%' });
+    } else {
+      this.datos['tiposMaterialesTabla'].push({ categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0%' });
+    }
+    this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  eliminarTiposMateriales(index: number) {
+    if (this.datos['tiposMaterialesTabla'] && this.datos['tiposMaterialesTabla'].length > 1) {
+      const item = this.datos['tiposMaterialesTabla'][index];
+      if (item.tipoMaterial !== 'Total') {
+        this.datos['tiposMaterialesTabla'].splice(index, 1);
+        this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  actualizarTiposMateriales(index: number, field: string, value: any) {
+    if (!this.datos['tiposMaterialesTabla']) {
+      this.inicializarTiposMateriales();
+    }
+    if (this.datos['tiposMaterialesTabla'][index]) {
+      this.datos['tiposMaterialesTabla'][index][field] = value;
+      this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
   }
 }
 

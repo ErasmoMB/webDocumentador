@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h3>3.1.2 Delimitación de las áreas de influencia social</h3>
 <div *ngIf="datos.parrafoSeccion2_introduccion; else introduccionDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion2_introduccion)"></div>
 <ng-template #introduccionDefault>
@@ -36,8 +37,86 @@
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="fotografiasSeccion2"
-    [sectionId]="'3.1.2'"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">3.1.2 Delimitación de las áreas de influencia social</h4>
+    
+    <div class="form-field" *ngIf="distritosDisponiblesAISI.length > 0">
+      <label class="label">Seleccionar Distritos para AISI</label>
+      <div style="margin-bottom: 10px;">
+        <span class="badge badge-primary">{{ distritosDisponiblesAISI.length }} distrito(s) disponible(s)</span>
+        <span class="badge badge-primary" style="margin-left: 10px;">{{ distritosSeleccionadosAISI.length }} seleccionado(s)</span>
+      </div>
+      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+        <div *ngFor="let distrito of distritosDisponiblesAISI" style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
+          <input 
+            type="checkbox" 
+            [checked]="estaDistritoSeleccionadoAISI(distrito)"
+            (change)="toggleDistritoAISI(distrito)"
+            style="margin-right: 8px;">
+          <span style="flex: 1;">{{ distrito }}</span>
+        </div>
+      </div>
+      <small class="form-hint">Seleccione los distritos que formarán parte del AISI. Cada distrito seleccionado generará una sección B.X correspondiente.</small>
+    </div>
+
+    <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
+    
+    <div class="form-field">
+      <label class="label">Introducción - Delimitación de Áreas</label>
+      <textarea 
+        class="textarea" 
+        rows="6"
+        [value]="obtenerTextoSeccion2Introduccion()"
+        (input)="onFieldChange('parrafoSeccion2_introduccion', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">A. Áreas de influencia social directa (AISD) - Texto Completo</label>
+      <textarea 
+        class="textarea" 
+        rows="10"
+        [value]="obtenerTextoSeccion2AISDCompleto()"
+        (input)="onFieldChange('parrafoSeccion2_aisd_completo', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">B. Áreas de influencia social indirecta (AISI) - Texto Completo</label>
+      <textarea 
+        class="textarea" 
+        rows="8"
+        [value]="obtenerTextoSeccion2AISICompleto()"
+        (input)="onFieldChange('parrafoSeccion2_aisi_completo', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Fotografía de la sección 2"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Sección 2"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

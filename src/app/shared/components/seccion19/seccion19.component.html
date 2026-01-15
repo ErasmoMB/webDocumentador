@@ -1,3 +1,4 @@
+<div *ngIf="!modoFormulario">
 <h5>A.1.15. Organización social y liderazgo</h5>
 <ng-container *ngIf="datos.textoOrganizacionSocial && datos.textoOrganizacionSocial !== '____'">
   <p class="text-justify" *ngFor="let parrafo of datos.textoOrganizacionSocial.split('\n\n')">{{ parrafo }}</p>
@@ -37,9 +38,95 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasOrganizacionSocialVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaOrganizacionSocial'"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.15. Organización social y liderazgo</h4>
+    
+    <div class="form-field">
+      <label class="label">Comuneros Calificados</label>
+      <input type="number" class="input" placeholder="Ej: 65"
+        [value]="datos['comunerosCalificados'] || ''"
+        (input)="onFieldChange('comunerosCalificados', $any($event.target).value)">
+    </div>
+
+    <div class="form-field">
+      <label class="label">Tabla Autoridades y Líderes Sociales</label>
+      <div class="table-editor">
+        <table class="editor-table">
+          <thead>
+            <tr>
+              <th>Organización</th>
+              <th>Cargo</th>
+              <th>Nombres y Apellidos</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (datos['autoridades'] || []); let i = index">
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.organizacion || ''"
+                  (input)="actualizarAutoridades(i, 'organizacion', $any($event.target).value)"
+                  placeholder="CC Ayroca">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.cargo || ''"
+                  (input)="actualizarAutoridades(i, 'cargo', $any($event.target).value)"
+                  placeholder="Presidente">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="item.nombre || ''"
+                  (input)="actualizarAutoridades(i, 'nombre', $any($event.target).value)"
+                  placeholder="Nombres y Apellidos">
+              </td>
+              <td>
+                <button type="button" class="btn-icon" (click)="eliminarAutoridades(i)" *ngIf="(datos['autoridades'] || []).length > 1" title="Eliminar fila">
+                  ×
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!datos['autoridades'] || datos['autoridades'].length === 0">
+              <td colspan="4" style="text-align: center; padding: 10px;">
+                <button type="button" class="btn btn-secondary" (click)="inicializarAutoridades()">
+                  Agregar Primera Fila
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="agregarAutoridades()" style="margin-top: 10px;">
+        + Agregar Fila
+      </button>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Organización Social</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Organización social"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Organización social"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
 
