@@ -1,0 +1,9 @@
+<div class="form-field">
+  <label class="label">{{ label }}</label>
+  <textarea 
+    class="textarea" 
+    [rows]="rows"
+    [value]="value"
+    (input)="onInput($event)"></textarea>
+  <small class="form-hint">{{ hint }}</small>
+</div>

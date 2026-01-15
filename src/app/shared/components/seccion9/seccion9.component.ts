@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,34 @@ export class Seccion9Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaEstructura';
 
+  condicionOcupacionConfig: TableConfig = {
+    tablaKey: 'condicionOcupacionTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  tiposMaterialesConfig: TableConfig = {
+    tablaKey: 'tiposMaterialesTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -130,122 +152,37 @@ export class Seccion9Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarCondicionOcupacion() {
-    if (!this.datos['condicionOcupacionTabla'] || this.datos['condicionOcupacionTabla'].length === 0) {
-      this.datos['condicionOcupacionTabla'] = [
-        { categoria: 'Viviendas ocupadas', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas desocupadas', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '100%' }
-      ];
-      this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarCondicionOcupacion() {
-    if (!this.datos['condicionOcupacionTabla']) {
-      this.inicializarCondicionOcupacion();
-    }
-    const totalIndex = this.datos['condicionOcupacionTabla'].findIndex((item: any) => item.categoria === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['condicionOcupacionTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['condicionOcupacionTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
+  onCondicionOcupacionFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.condicionOcupacionConfig, index, field, value, false);
+    if (field === 'casos' && this.datos['condicionOcupacionTabla'][index] && this.datos['condicionOcupacionTabla'][index].categoria !== 'Total') {
+      const totalCasos = this.datos['condicionOcupacionTabla']
+        .filter((item: any) => item.categoria !== 'Total')
+        .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
+      const totalItem = this.datos['condicionOcupacionTabla'].find((item: any) => item.categoria === 'Total');
+      if (totalItem) {
+        totalItem.casos = totalCasos;
+        totalItem.porcentaje = '100,00 %';
+      }
     }
     this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  eliminarCondicionOcupacion(index: number) {
-    if (this.datos['condicionOcupacionTabla'] && this.datos['condicionOcupacionTabla'].length > 1) {
-      const item = this.datos['condicionOcupacionTabla'][index];
-      if (item.categoria !== 'Total') {
-        this.datos['condicionOcupacionTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
+  onCondicionOcupacionTableUpdated() {
+    this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
-  actualizarCondicionOcupacion(index: number, field: string, value: any) {
-    if (!this.datos['condicionOcupacionTabla']) {
-      this.inicializarCondicionOcupacion();
-    }
-    if (this.datos['condicionOcupacionTabla'][index]) {
-      this.datos['condicionOcupacionTabla'][index][field] = value;
-      if (field === 'casos' && this.datos['condicionOcupacionTabla'][index].categoria !== 'Total') {
-        const totalCasos = this.datos['condicionOcupacionTabla']
-          .filter((item: any) => item.categoria !== 'Total')
-          .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
-        const totalItem = this.datos['condicionOcupacionTabla'].find((item: any) => item.categoria === 'Total');
-        if (totalItem) {
-          totalItem.casos = totalCasos;
-          totalItem.porcentaje = '100,00 %';
-        }
-      }
-      this.formularioService.actualizarDato('condicionOcupacionTabla', this.datos['condicionOcupacionTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarTiposMateriales() {
-    if (!this.datos['tiposMaterialesTabla'] || this.datos['tiposMaterialesTabla'].length === 0) {
-      this.datos['tiposMaterialesTabla'] = [
-        { categoria: 'Materiales de las paredes', tipoMaterial: 'Adobe', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de las paredes', tipoMaterial: 'Triplay / Calamina / Estera', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de los techos', tipoMaterial: 'Plancha de calamina, fibra de cemento o similares', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de los techos', tipoMaterial: 'Triplay / Estera / Carrizo', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de los techos', tipoMaterial: 'Tejas', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de los pisos', tipoMaterial: 'Tierra', casos: 0, porcentaje: '0%' },
-        { categoria: 'Materiales de los pisos', tipoMaterial: 'Cemento', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarTiposMateriales() {
-    if (!this.datos['tiposMaterialesTabla']) {
-      this.inicializarTiposMateriales();
-    }
-    const totalIndex = this.datos['tiposMaterialesTabla'].findIndex((item: any) => item.tipoMaterial === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['tiposMaterialesTabla'].splice(totalIndex, 0, { categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['tiposMaterialesTabla'].push({ categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0%' });
-    }
+  onTiposMaterialesTableUpdated() {
     this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  eliminarTiposMateriales(index: number) {
-    if (this.datos['tiposMaterialesTabla'] && this.datos['tiposMaterialesTabla'].length > 1) {
-      const item = this.datos['tiposMaterialesTabla'][index];
-      if (item.tipoMaterial !== 'Total') {
-        this.datos['tiposMaterialesTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarTiposMateriales(index: number, field: string, value: any) {
-    if (!this.datos['tiposMaterialesTabla']) {
-      this.inicializarTiposMateriales();
-    }
-    if (this.datos['tiposMaterialesTabla'][index]) {
-      this.datos['tiposMaterialesTabla'][index][field] = value;
-      this.formularioService.actualizarDato('tiposMaterialesTabla', this.datos['tiposMaterialesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoViviendas(): string {
+    return this.datos.textoViviendas || '';
   }
 }
 

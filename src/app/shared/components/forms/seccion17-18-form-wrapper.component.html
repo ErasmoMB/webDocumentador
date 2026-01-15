@@ -1,0 +1,40 @@
+<div class="form-group-section">
+  <h4 class="section-title" *ngIf="seccionId?.includes('3.1.4.A.1.13') || seccionId?.includes('3.1.4.A.2.13') || seccionId?.includes('3.1.4.B.1.13') || seccionId?.includes('3.1.4.B.2.13')">Fotografías de Índice de Desarrollo Humano (IDH)</h4>
+  <h4 class="section-title" *ngIf="seccionId?.includes('3.1.4.A.1.14') || seccionId?.includes('3.1.4.A.2.14') || seccionId?.includes('3.1.4.B.1.14') || seccionId?.includes('3.1.4.B.2.14')">Fotografías de Necesidades Básicas Insatisfechas (NBI)</h4>
+  
+  <div class="form-field" *ngIf="seccionId?.includes('3.1.4.A.1.13') || seccionId?.includes('3.1.4.A.2.13') || seccionId?.includes('3.1.4.B.1.13') || seccionId?.includes('3.1.4.B.2.13')">
+    <label class="label">Fotografías de IDH</label>
+    <app-image-upload
+      [fotografias]="fotografiasIDHFormMulti"
+      [sectionId]="seccionId"
+      [photoPrefix]="'fotografiaIDH'"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Índice de Desarrollo Humano"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Índice de Desarrollo Humano"
+      fuenteDefault="GEADES, 2024"
+      (fotografiasChange)="onFotografiasIDHChange($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-field" *ngIf="seccionId?.includes('3.1.4.A.1.14') || seccionId?.includes('3.1.4.A.2.14') || seccionId?.includes('3.1.4.B.1.14') || seccionId?.includes('3.1.4.B.2.14')">
+    <label class="label">Fotografías de NBI</label>
+    <app-image-upload
+      [fotografias]="fotografiasNBIFormMulti"
+      [sectionId]="seccionId"
+      [photoPrefix]="'fotografiaNBI'"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Necesidades Básicas Insatisfechas"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Necesidades Básicas Insatisfechas"
+      fuenteDefault="GEADES, 2024"
+      (fotografiasChange)="onFotografiasNBIChange($event)">
+    </app-image-upload>
+  </div>
+</div>

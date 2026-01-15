@@ -144,178 +144,71 @@
     
     <div class="form-field">
       <label class="label">Tabla PEA Ocupada según ocupaciones principales</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['peaOcupacionesTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarPEAOcupaciones(i, 'categoria', $any($event.target).value)"
-                  placeholder="Trabajador independiente">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarPEAOcupaciones(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarPEAOcupaciones(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPEAOcupaciones(i)" *ngIf="(datos['peaOcupacionesTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['peaOcupacionesTabla'] || datos['peaOcupacionesTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPEAOcupaciones()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupaciones()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="peaOcupacionesConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Trabajador independiente' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'peaOcupacionesTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Población Pecuaria</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Especie</th>
-              <th>Cantidad promedio por familia</th>
-              <th>Venta por unidad</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['poblacionPecuariaTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.especie || ''"
-                  (input)="actualizarPoblacionPecuaria(i, 'especie', $any($event.target).value)"
-                  placeholder="Vacuno">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.cantidadPromedio || ''"
-                  (input)="actualizarPoblacionPecuaria(i, 'cantidadPromedio', $any($event.target).value)"
-                  placeholder="4 – 50">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.ventaUnidad || ''"
-                  (input)="actualizarPoblacionPecuaria(i, 'ventaUnidad', $any($event.target).value)"
-                  placeholder="S/. 1 200 – S/. 1 500">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPoblacionPecuaria(i)" *ngIf="(datos['poblacionPecuariaTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['poblacionPecuariaTabla'] || datos['poblacionPecuariaTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPoblacionPecuaria()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPoblacionPecuaria()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="poblacionPecuariaConfig"
+        [columns]="[
+          { field: 'especie', label: 'Especie', type: 'text', placeholder: 'Vacuno' },
+          { field: 'cantidadPromedio', label: 'Cantidad promedio por familia', type: 'text', placeholder: '4 – 50' },
+          { field: 'ventaUnidad', label: 'Venta por unidad', type: 'text', placeholder: 'S/. 1 200 – S/. 1 500' }
+        ]"
+        [tablaKey]="'poblacionPecuariaTabla'"
+        [totalKey]="'especie'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Características de la Agricultura</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Detalle</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['caracteristicasAgriculturaTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarCaracteristicasAgricultura(i, 'categoria', $any($event.target).value)"
-                  placeholder="Categoría">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.detalle || ''"
-                  (input)="actualizarCaracteristicasAgricultura(i, 'detalle', $any($event.target).value)"
-                  placeholder="Detalle">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarCaracteristicasAgricultura(i)" *ngIf="(datos['caracteristicasAgriculturaTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['caracteristicasAgriculturaTabla'] || datos['caracteristicasAgriculturaTabla'].length === 0">
-              <td colspan="3" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarCaracteristicasAgricultura()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarCaracteristicasAgricultura()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="caracteristicasAgriculturaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Categoría' },
+          { field: 'detalle', label: 'Detalle', type: 'text', placeholder: 'Detalle' }
+        ]"
+        [tablaKey]="'caracteristicasAgriculturaTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Ganadería - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="8"
-          [value]="obtenerTextoSeccion8GanaderiaCompleto()"
-          (input)="onFieldChange('parrafoSeccion8_ganaderia_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion8_ganaderia_completo"
+        label="Ganadería - Texto Completo"
+        hint="Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoSeccion8GanaderiaCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion8_ganaderia_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Agricultura - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion8AgriculturaCompleto()"
-          (input)="onFieldChange('parrafoSeccion8_agricultura_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion8_agricultura_completo"
+        label="Agricultura - Texto Completo"
+        hint="Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion8AgriculturaCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion8_agricultura_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

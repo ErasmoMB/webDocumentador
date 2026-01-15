@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -27,13 +28,44 @@ export class Seccion10Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = '';
 
+  abastecimientoAguaConfig: TableConfig = {
+    tablaKey: 'abastecimientoAguaTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  tiposSaneamientoConfig: TableConfig = {
+    tablaKey: 'tiposSaneamientoTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  coberturaElectricaConfig: TableConfig = {
+    tablaKey: 'coberturaElectricaTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -235,190 +267,71 @@ export class Seccion10Component extends BaseSectionComponent {
     return `Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento. En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia el total de viviendas con ocupantes presentes (${viviendasOcupadas}), tal como realiza el Censo Nacional 2017.`;
   }
 
-  inicializarAbastecimientoAgua() {
-    if (!this.datos['abastecimientoAguaTabla'] || this.datos['abastecimientoAguaTabla'].length === 0) {
-      this.datos['abastecimientoAguaTabla'] = [
-        { categoria: 'Viviendas con abastecimiento de agua por red pública', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas con abastecimiento de agua por pilón', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas sin abastecimiento de agua por los medios mencionados', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('abastecimientoAguaTabla', this.datos['abastecimientoAguaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarAbastecimientoAgua() {
-    if (!this.datos['abastecimientoAguaTabla']) {
-      this.inicializarAbastecimientoAgua();
-    }
-    const totalIndex = this.datos['abastecimientoAguaTabla'].findIndex((item: any) => item.categoria === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['abastecimientoAguaTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['abastecimientoAguaTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
+  onAbastecimientoAguaFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.abastecimientoAguaConfig, index, field, value, false);
+    if (field === 'casos' && this.datos['abastecimientoAguaTabla'][index] && this.datos['abastecimientoAguaTabla'][index].categoria !== 'Total') {
+      const totalCasos = this.datos['abastecimientoAguaTabla']
+        .filter((item: any) => item.categoria !== 'Total')
+        .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
+      const totalItem = this.datos['abastecimientoAguaTabla'].find((item: any) => item.categoria === 'Total');
+      if (totalItem) {
+        totalItem.casos = totalCasos;
+        totalItem.porcentaje = '100,00 %';
+      }
     }
     this.formularioService.actualizarDato('abastecimientoAguaTabla', this.datos['abastecimientoAguaTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  eliminarAbastecimientoAgua(index: number) {
-    if (this.datos['abastecimientoAguaTabla'] && this.datos['abastecimientoAguaTabla'].length > 1) {
-      const item = this.datos['abastecimientoAguaTabla'][index];
-      if (item.categoria !== 'Total') {
-        this.datos['abastecimientoAguaTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('abastecimientoAguaTabla', this.datos['abastecimientoAguaTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
+  onAbastecimientoAguaTableUpdated() {
+    this.formularioService.actualizarDato('abastecimientoAguaTabla', this.datos['abastecimientoAguaTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
-  actualizarAbastecimientoAgua(index: number, field: string, value: any) {
-    if (!this.datos['abastecimientoAguaTabla']) {
-      this.inicializarAbastecimientoAgua();
-    }
-    if (this.datos['abastecimientoAguaTabla'][index]) {
-      this.datos['abastecimientoAguaTabla'][index][field] = value;
-      if (field === 'casos' && this.datos['abastecimientoAguaTabla'][index].categoria !== 'Total') {
-        const totalCasos = this.datos['abastecimientoAguaTabla']
-          .filter((item: any) => item.categoria !== 'Total')
-          .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
-        const totalItem = this.datos['abastecimientoAguaTabla'].find((item: any) => item.categoria === 'Total');
-        if (totalItem) {
-          totalItem.casos = totalCasos;
-          totalItem.porcentaje = '100,00 %';
-        }
-      }
-      this.formularioService.actualizarDato('abastecimientoAguaTabla', this.datos['abastecimientoAguaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarTiposSaneamiento() {
-    if ((!this.datos['tiposSaneamientoTabla'] || this.datos['tiposSaneamientoTabla'].length === 0) && (!this.datos['saneamientoTabla'] || this.datos['saneamientoTabla'].length === 0)) {
-      this.datos['tiposSaneamientoTabla'] = [
-        { categoria: 'Viviendas con saneamiento vía red pública', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas con saneamiento vía pozo séptico', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas sin saneamiento vía los medios mencionados', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('tiposSaneamientoTabla', this.datos['tiposSaneamientoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarTiposSaneamiento() {
-    if (!this.datos['tiposSaneamientoTabla'] && !this.datos['saneamientoTabla']) {
-      this.inicializarTiposSaneamiento();
-    }
+  onTiposSaneamientoFieldChange(index: number, field: string, value: any) {
     const tabla = this.datos['tiposSaneamientoTabla'] || this.datos['saneamientoTabla'];
-    if (tabla) {
-      const totalIndex = tabla.findIndex((item: any) => item.categoria === 'Total');
-      if (totalIndex >= 0) {
-        tabla.splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-      } else {
-        tabla.push({ categoria: '', casos: 0, porcentaje: '0%' });
+    if (!tabla) {
+      this.tableService.inicializarTabla(this.datos, this.tiposSaneamientoConfig);
+    }
+    const tablaKey = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
+    const config = { ...this.tiposSaneamientoConfig, tablaKey };
+    this.tableService.actualizarFila(this.datos, config, index, field, value, false);
+    const key = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
+    this.formularioService.actualizarDato(key, this.datos[key]);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onTiposSaneamientoTableUpdated() {
+    const key = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
+    this.formularioService.actualizarDato(key, this.datos[key]);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onCoberturaElectricaFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.coberturaElectricaConfig, index, field, value, false);
+    if (field === 'casos' && this.datos['coberturaElectricaTabla'][index] && this.datos['coberturaElectricaTabla'][index].categoria !== 'Total') {
+      const totalCasos = this.datos['coberturaElectricaTabla']
+        .filter((item: any) => item.categoria !== 'Total')
+        .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
+      const totalItem = this.datos['coberturaElectricaTabla'].find((item: any) => item.categoria === 'Total');
+      if (totalItem) {
+        totalItem.casos = totalCasos;
+        totalItem.porcentaje = '100,00 %';
       }
-      const key = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  eliminarTiposSaneamiento(index: number) {
-    const tabla = this.datos['tiposSaneamientoTabla'] || this.datos['saneamientoTabla'];
-    if (tabla && tabla.length > 1) {
-      const item = tabla[index];
-      if (item.categoria !== 'Total') {
-        tabla.splice(index, 1);
-        const key = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
-        this.formularioService.actualizarDato(key, tabla);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarTiposSaneamiento(index: number, field: string, value: any) {
-    if (!this.datos['tiposSaneamientoTabla'] && !this.datos['saneamientoTabla']) {
-      this.inicializarTiposSaneamiento();
-    }
-    const tabla = this.datos['tiposSaneamientoTabla'] || this.datos['saneamientoTabla'];
-    if (tabla && tabla[index]) {
-      tabla[index][field] = value;
-      const key = this.datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarCoberturaElectrica() {
-    if (!this.datos['coberturaElectricaTabla'] || this.datos['coberturaElectricaTabla'].length === 0) {
-      this.datos['coberturaElectricaTabla'] = [
-        { categoria: 'Viviendas con acceso a alumbrado eléctrico', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas sin acceso a alumbrado eléctrico', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarCoberturaElectrica() {
-    if (!this.datos['coberturaElectricaTabla']) {
-      this.inicializarCoberturaElectrica();
-    }
-    const totalIndex = this.datos['coberturaElectricaTabla'].findIndex((item: any) => item.categoria === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['coberturaElectricaTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['coberturaElectricaTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
     }
     this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  eliminarCoberturaElectrica(index: number) {
-    if (this.datos['coberturaElectricaTabla'] && this.datos['coberturaElectricaTabla'].length > 1) {
-      const item = this.datos['coberturaElectricaTabla'][index];
-      if (item.categoria !== 'Total') {
-        this.datos['coberturaElectricaTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarCoberturaElectrica(index: number, field: string, value: any) {
-    if (!this.datos['coberturaElectricaTabla']) {
-      this.inicializarCoberturaElectrica();
-    }
-    if (this.datos['coberturaElectricaTabla'][index]) {
-      this.datos['coberturaElectricaTabla'][index][field] = value;
-      if (field === 'casos' && this.datos['coberturaElectricaTabla'][index].categoria !== 'Total') {
-        const totalCasos = this.datos['coberturaElectricaTabla']
-          .filter((item: any) => item.categoria !== 'Total')
-          .reduce((sum: number, item: any) => sum + (parseInt(item.casos) || 0), 0);
-        const totalItem = this.datos['coberturaElectricaTabla'].find((item: any) => item.categoria === 'Total');
-        if (totalItem) {
-          totalItem.casos = totalCasos;
-          totalItem.porcentaje = '100,00 %';
-        }
-      }
-      this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  onCoberturaElectricaTableUpdated() {
+    this.formularioService.actualizarDato('coberturaElectricaTabla', this.datos['coberturaElectricaTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 }
 

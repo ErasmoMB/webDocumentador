@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -22,12 +23,21 @@ export class Seccion27Component extends BaseSectionComponent {
   
   fotografiasInstitucionalidadCache: any[] = [];
 
+  telecomunicacionesConfig: TableConfig = {
+    tablaKey: 'telecomunicacionesCpTabla',
+    totalKey: 'medio',
+    campoTotal: 'medio',
+    campoPorcentaje: 'descripcion',
+    estructuraInicial: [{ medio: '', descripcion: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -88,6 +98,18 @@ export class Seccion27Component extends BaseSectionComponent {
     };
   }
 
+  getFotoTransporteParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoTransporte();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
+  }
+
   getFotoTelecomunicaciones(): any {
     const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
     const titulo = this.datos?.['fotografiaTelecomunicacionesAISITitulo'] || 'Infraestructura de telecomunicaciones en el CP ' + centroPobladoAISI;
@@ -100,6 +122,18 @@ export class Seccion27Component extends BaseSectionComponent {
       fuente: fuente,
       ruta: imagen
     };
+  }
+
+  getFotoTelecomunicacionesParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoTelecomunicaciones();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
   }
 
   override actualizarFotografiasCache() {
@@ -143,45 +177,24 @@ export class Seccion27Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarTelecomunicacionesCP() {
-    if (!this.datos['telecomunicacionesCpTabla'] || this.datos['telecomunicacionesCpTabla'].length === 0) {
-      this.datos['telecomunicacionesCpTabla'] = [
-        { medio: '', descripcion: '' }
-      ];
-      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoTransporteCP1(): string {
+    return this.datos.textoTransporteCP1 || '';
   }
 
-  agregarTelecomunicacionesCP() {
-    if (!this.datos['telecomunicacionesCpTabla']) {
-      this.inicializarTelecomunicacionesCP();
-    }
-    this.datos['telecomunicacionesCpTabla'].push({ medio: '', descripcion: '' });
-    this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  obtenerTextoTransporteCP2(): string {
+    return this.datos.textoTransporteCP2 || '';
   }
 
-  eliminarTelecomunicacionesCP(index: number) {
-    if (this.datos['telecomunicacionesCpTabla'] && this.datos['telecomunicacionesCpTabla'].length > 1) {
-      this.datos['telecomunicacionesCpTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoTelecomunicacionesCP1(): string {
+    return this.datos.textoTelecomunicacionesCP1 || '';
   }
 
-  actualizarTelecomunicacionesCP(index: number, field: string, value: any) {
-    if (!this.datos['telecomunicacionesCpTabla']) {
-      this.inicializarTelecomunicacionesCP();
-    }
-    if (this.datos['telecomunicacionesCpTabla'][index]) {
-      this.datos['telecomunicacionesCpTabla'][index][field] = value;
-      this.formularioService.actualizarDato('telecomunicacionesCpTabla', this.datos['telecomunicacionesCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoTelecomunicacionesCP2(): string {
+    return this.datos.textoTelecomunicacionesCP2 || '';
+  }
+
+  obtenerTextoTelecomunicacionesCP3(): string {
+    return this.datos.textoTelecomunicacionesCP3 || '';
   }
 }
 

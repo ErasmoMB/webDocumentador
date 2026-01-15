@@ -192,25 +192,23 @@
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">AISI - Introducción - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion21AISIIntroCompleto()"
-          (input)="onFieldChange('parrafoSeccion21_aisi_intro_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion21_aisi_intro_completo"
+        label="AISI - Introducción - Texto Completo"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion21AISIIntroCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion21_aisi_intro_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Centro Poblado - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion21CentroPobladoCompleto()"
-          (input)="onFieldChange('parrafoSeccion21_centro_poblado_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion21_centro_poblado_completo"
+        label="Centro Poblado - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion21CentroPobladoCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion21_centro_poblado_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -116,87 +116,49 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Lista de Entrevistados</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Nombres y Apellidos</th>
-              <th>Cargo u Ocupación</th>
-              <th>Organización</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let entrevistado of (datos.entrevistados || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="entrevistado.nombre || ''"
-                  (input)="actualizarEntrevistado(i, 'nombre', $any($event.target).value)"
-                  placeholder="Ej: Miguel Ángel Sayaverde Rospigliosi">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="entrevistado.cargo || ''"
-                  (input)="actualizarEntrevistado(i, 'cargo', $any($event.target).value)"
-                  placeholder="Ej: Presidente">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="entrevistado.organizacion || ''"
-                  (input)="actualizarEntrevistado(i, 'organizacion', $any($event.target).value)"
-                  placeholder="Ej: CC Ayroca">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarEntrevistado(i)" title="Eliminar entrevistado">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos.entrevistados || datos.entrevistados.length === 0">
-              <td colspan="4" class="text-center">
-                <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()">
-                  + Agregar Entrevistado
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarEntrevistado()" style="margin-top: 10px;">
-        + Agregar Entrevistado
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="entrevistadosConfig"
+        [columns]="[
+          { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Ej: Miguel Ángel Sayaverde Rospigliosi' },
+          { field: 'cargo', label: 'Cargo u Ocupación', type: 'text', placeholder: 'Ej: Presidente' },
+          { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Ej: CC Ayroca' }
+        ]"
+        [tablaKey]="'entrevistados'"
+        [totalKey]="'nombre'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Metodología</label>
-        <textarea 
-          class="textarea" 
-          rows="3"
-          [value]="obtenerTextoSeccion3Metodologia()"
-          (input)="onFieldChange('parrafoSeccion3_metodologia', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion3_metodologia"
+        label="Metodología"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoSeccion3Metodologia()"
+        (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Fuentes Primarias</label>
-        <textarea 
-          class="textarea" 
-          rows="3"
-          [value]="obtenerTextoSeccion3FuentesPrimarias()"
-          (input)="onFieldChange('parrafoSeccion3_fuentes_primarias', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion3_fuentes_primarias"
+        label="Fuentes Primarias"
+        hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoSeccion3FuentesPrimarias()"
+        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Fuentes Secundarias - Texto Introductorio</label>
-        <textarea 
-          class="textarea" 
-          rows="2"
-          [value]="obtenerTextoSeccion3FuentesSecundarias()"
-          (input)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $any($event.target).value)"></textarea>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion3_fuentes_secundarias"
+        label="Fuentes Secundarias - Texto Introductorio"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="2"
+        [value]="obtenerTextoSeccion3FuentesSecundarias()"
+        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
+      </app-paragraph-editor>
         <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
       </div>
     </div>
@@ -250,4 +212,3 @@
       </app-image-upload>
     </div>
   </div>
-</div>

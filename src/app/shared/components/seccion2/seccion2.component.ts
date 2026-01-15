@@ -60,7 +60,7 @@ export class Seccion2Component extends BaseSectionComponent {
     this.cargarSeccionesAISI();
   }
 
-  protected detectarCambios(): boolean {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     let hayCambios = false;
     let necesitaRecargar = false;
@@ -85,7 +85,7 @@ export class Seccion2Component extends BaseSectionComponent {
     return hayCambios;
   }
 
-  protected actualizarValoresConPrefijo(): void {
+  protected override actualizarValoresConPrefijo(): void {
     this.watchedFields.forEach(campo => {
       this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, AfterViewChecked, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, AfterViewChecked, ViewChild, OnDestroy, Type } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { DataService } from 'src/app/core/services/data.service';
@@ -7,6 +7,7 @@ import { TextNormalizationService } from 'src/app/core/services/text-normalizati
 import { StateService } from 'src/app/core/services/state.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Subscription } from 'rxjs';
@@ -203,7 +204,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     private textNormalization: TextNormalizationService,
     private stateService: StateService,
     private fieldMapping: FieldMappingService,
-    private imageService: ImageManagementService
+    private imageService: ImageManagementService,
+    private navigationService: SectionNavigationService
   ) {}
 
   ngOnInit() {
@@ -360,6 +362,83 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.seccionPadreTitulo = seccionesPadre[this.seccionId] || '';
   }
 
+  getPreviewComponentType(): Type<any> | null {
+    if (this.esSubseccionAISD(this.seccionId, 1)) return Seccion5Component;
+    if (this.esSubseccionAISD(this.seccionId, 2)) return Seccion6Component;
+    if (this.esSubseccionAISD(this.seccionId, 3)) return Seccion7Component;
+    if (this.esSubseccionAISD(this.seccionId, 4)) return Seccion8Component;
+    if (this.esSubseccionAISD(this.seccionId, 5)) return Seccion9Component;
+    if (this.esSubseccionAISD(this.seccionId, 6)) return Seccion10Component;
+    if (this.esSubseccionAISD(this.seccionId, 7)) return Seccion11Component;
+    if (this.esSubseccionAISD(this.seccionId, 8)) return Seccion12Component;
+    if (this.esSubseccionAISD(this.seccionId, 9)) return Seccion13Component;
+    if (this.esSubseccionAISD(this.seccionId, 10)) return Seccion14Component;
+    if (this.esSubseccionAISD(this.seccionId, 11)) return Seccion15Component;
+    if (this.esSubseccionAISD(this.seccionId, 12)) return Seccion16Component;
+    if (this.esSubseccionAISD(this.seccionId, 13)) return Seccion17Component;
+    if (this.esSubseccionAISD(this.seccionId, 14)) return Seccion18Component;
+    if (this.esSubseccionAISD(this.seccionId, 15)) return Seccion19Component;
+    if (this.esSubseccionAISD(this.seccionId, 16)) return Seccion20Component;
+
+    const componentMap: { [key: string]: Type<any> } = {
+      '3.1.1': Seccion1Component,
+      '3.1.2': Seccion2Component,
+      '3.1.2.A': Seccion2Component,
+      '3.1.2.B': Seccion2Component,
+      '3.1.3': Seccion3Component,
+      '3.1.3.A': Seccion3Component,
+      '3.1.3.B': Seccion3Component,
+      '3.1.4.A': Seccion4Component,
+      '3.1.4.A.1': Seccion4Component,
+      '3.1.4.A.2': Seccion4Component,
+      '3.1.4.B': Seccion21Component,
+      '3.1.4.B.1': Seccion21Component,
+      '3.1.4.B.2': Seccion21Component,
+      '3.1.4.B.1.1': Seccion22Component,
+      '3.1.4.B.2.1': Seccion22Component,
+      '3.1.4.B.1.2': Seccion23Component,
+      '3.1.4.B.2.2': Seccion23Component,
+      '3.1.4.B.1.3': Seccion24Component,
+      '3.1.4.B.2.3': Seccion24Component,
+      '3.1.4.B.1.4': Seccion25Component,
+      '3.1.4.B.2.4': Seccion25Component,
+      '3.1.4.B.1.5': Seccion26Component,
+      '3.1.4.B.2.5': Seccion26Component,
+      '3.1.4.B.1.6': Seccion27Component,
+      '3.1.4.B.2.6': Seccion27Component,
+      '3.1.4.B.1.7': Seccion28Component,
+      '3.1.4.B.2.7': Seccion28Component,
+      '3.1.4.B.1.8': Seccion29Component,
+      '3.1.4.B.2.8': Seccion29Component,
+      '3.1.4.B.1.9': Seccion30Component,
+      '3.1.4.B.2.9': Seccion30Component,
+      '3.1.4.B.1.10': Seccion31Component,
+      '3.1.4.B.2.10': Seccion31Component,
+      '3.1.4.B.1.11': Seccion32Component,
+      '3.1.4.B.2.11': Seccion32Component,
+      '3.1.4.B.1.12': Seccion33Component,
+      '3.1.4.B.2.12': Seccion33Component,
+      '3.1.4.B.1.13': Seccion34Component,
+      '3.1.4.B.2.13': Seccion34Component,
+      '3.1.4.B.1.14': Seccion35Component,
+      '3.1.4.B.2.14': Seccion35Component,
+      '3.1.4.B.1.15': Seccion36Component,
+      '3.1.4.B.2.15': Seccion36Component
+    };
+
+    return componentMap[this.seccionId] || null;
+  }
+
+  getPreviewComponentInputs(): { [key: string]: any } {
+    if (this.seccionId === '3.1.4.B' || this.seccionId === '3.1.4.B.1' || this.seccionId === '3.1.4.B.2') {
+      return {};
+    }
+    if (this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1' || this.seccionId === '3.1.4.A.2') {
+      return { seccionId: this.seccionId, modoFormulario: false };
+    }
+    return { seccionId: this.seccionId };
+  }
+
   actualizarComponenteSeccion() {
     const componentIdMap: { [key: string]: string } = {
       '3.1.1': 'seccion1',
@@ -494,113 +573,24 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  private normalizarSeccionId(seccionId: string): string {
-    if (seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A') {
-      return '3.1.4.A';
-    }
-    return seccionId;
-  }
-
-  private obtenerTodasLasSecciones(): string[] {
-    const secciones: string[] = [
-      '3.1.1',
-      '3.1.2.A',
-      '3.1.3.A',
-      '3.1.4.A'
-    ];
-
-    const datos = this.formularioService.obtenerDatos();
-    const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-    const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
-
-    for (let i = 1; i <= numComunidades; i++) {
-      for (let j = 1; j <= 16; j++) {
-        secciones.push(`3.1.4.A.${i}.${j}`);
-      }
-    }
-
-    const distritosSeleccionadosAISI = datos['distritosSeleccionadosAISI'] || [];
-    const numDistritos = distritosSeleccionadosAISI.length > 0 ? distritosSeleccionadosAISI.length : 1;
-
-    for (let i = 1; i <= numDistritos; i++) {
-      for (let j = 1; j <= 9; j++) {
-        secciones.push(`3.1.4.B.${i}.${j}`);
-      }
-    }
-
-    return secciones;
-  }
-
   actualizarEstadoNavegacion() {
-    if (this.seccionId === '3.1.3.B') {
-      this.puedeIrAnterior = true;
-      this.puedeIrSiguiente = true;
-      this.esUltimaSeccion = false;
-      return;
-    }
-    const seccionNormalizada = this.normalizarSeccionId(this.seccionId);
-    const secciones = this.obtenerTodasLasSecciones();
-    const index = secciones.indexOf(seccionNormalizada);
-    this.puedeIrAnterior = index > 0;
-    this.puedeIrSiguiente = index < secciones.length - 1;
-    this.esUltimaSeccion = index === secciones.length - 1;
+    const estado = this.navigationService.actualizarEstadoNavegacion(this.seccionId, this.datos);
+    this.puedeIrAnterior = estado.puedeIrAnterior;
+    this.puedeIrSiguiente = estado.puedeIrSiguiente;
+    this.esUltimaSeccion = estado.esUltimaSeccion;
   }
 
   seccionAnterior() {
-    if (this.seccionId === '3.1.3.B') {
-      this.router.navigate(['/seccion', '3.1.3.A']);
-      return;
-    }
-    if (this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1') {
-      this.router.navigate(['/seccion', '3.1.3.A']);
-      return;
-    }
-    const seccionNormalizada = this.normalizarSeccionId(this.seccionId);
-    const secciones = this.obtenerTodasLasSecciones();
-    let index = secciones.indexOf(seccionNormalizada);
-    
-    if (index === -1) {
-      index = secciones.indexOf(this.seccionId);
-    }
-    
-    if (index > 0) {
-      const seccionAnterior = secciones[index - 1];
-      if (seccionAnterior === '3.1.4.A') {
-        this.router.navigate(['/seccion', '3.1.4.A']);
-      } else {
-        this.router.navigate(['/seccion', seccionAnterior]);
-      }
+    const seccionAnterior = this.navigationService.obtenerSeccionAnterior(this.seccionId, this.datos);
+    if (seccionAnterior) {
+      this.router.navigate(['/seccion', seccionAnterior]);
     }
   }
 
   seccionSiguiente() {
-    if (this.seccionId === '3.1.3.A') {
-      this.router.navigate(['/seccion', '3.1.4.A']);
-      return;
-    }
-    if (this.seccionId === '3.1.3.B') {
-      this.router.navigate(['/seccion', '3.1.4.A']);
-      return;
-    }
-    if (this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1') {
-      const datos = this.formularioService.obtenerDatos();
-      const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-      const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
-      if (numComunidades >= 1) {
-        this.router.navigate(['/seccion', '3.1.4.A.1.1']);
-        return;
-      }
-    }
-    const seccionNormalizada = this.normalizarSeccionId(this.seccionId);
-    const secciones = this.obtenerTodasLasSecciones();
-    let index = secciones.indexOf(seccionNormalizada);
-    
-    if (index === -1) {
-      index = secciones.indexOf(this.seccionId);
-    }
-    
-    if (index < secciones.length - 1) {
-      this.router.navigate(['/seccion', secciones[index + 1]]);
+    const seccionSiguiente = this.navigationService.obtenerSeccionSiguiente(this.seccionId, this.datos);
+    if (seccionSiguiente) {
+      this.router.navigate(['/seccion', seccionSiguiente]);
     }
   }
 

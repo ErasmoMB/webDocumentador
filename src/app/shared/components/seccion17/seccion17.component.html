@@ -82,118 +82,40 @@
     
     <div class="form-field">
       <label class="label">Tabla Índice de Desarrollo Humano</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th rowspan="2">Población</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2">IDH</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2">Esperanza de vida</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2">Educación Secundaria</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2">Años de educación</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2">Ingreso</th>
-              <th rowspan="2">Rank</th>
-              <th rowspan="2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['indiceDesarrolloHumanoTabla'] || []); let i = index">
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.poblacion || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'poblacion', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankIdh1 || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankIdh1', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.idh || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'idh', $any($event.target).value)"
-                  placeholder="0.000">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankEsperanza || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEsperanza', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.esperanzaVida || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'esperanzaVida', $any($event.target).value)"
-                  placeholder="0.0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankEducacion1 || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEducacion1', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.educacion || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'educacion', $any($event.target).value)"
-                  placeholder="0.0%">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankEducacion2 || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankEducacion2', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.anosEducacion || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'anosEducacion', $any($event.target).value)"
-                  placeholder="0.0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankAnios || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankAnios', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.ingreso || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'ingreso', $any($event.target).value)"
-                  placeholder="0.0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rankIngreso || item.rankIngresoFinal || ''"
-                  (input)="actualizarIndiceDesarrolloHumano(i, 'rankIngreso', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarIndiceDesarrolloHumano(i)" *ngIf="(datos['indiceDesarrolloHumanoTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['indiceDesarrolloHumanoTabla'] || datos['indiceDesarrolloHumanoTabla'].length === 0">
-              <td colspan="13" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarIndiceDesarrolloHumano()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarIndiceDesarrolloHumano()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="indiceDesarrolloHumanoConfig"
+        [columns]="[
+          { field: 'poblacion', label: 'Población', type: 'number', placeholder: '0' },
+          { field: 'rankIdh1', label: 'Rank IDH', type: 'number', placeholder: '0' },
+          { field: 'idh', label: 'IDH', type: 'text', placeholder: '0.000' },
+          { field: 'rankEsperanza', label: 'Rank Esperanza', type: 'number', placeholder: '0' },
+          { field: 'esperanzaVida', label: 'Esperanza de vida', type: 'text', placeholder: '0.0' },
+          { field: 'rankEducacion1', label: 'Rank Educación 1', type: 'number', placeholder: '0' },
+          { field: 'educacion', label: 'Educación Secundaria', type: 'text', placeholder: '0.0%' },
+          { field: 'rankEducacion2', label: 'Rank Educación 2', type: 'number', placeholder: '0' },
+          { field: 'anosEducacion', label: 'Años de educación', type: 'text', placeholder: '0.0' },
+          { field: 'rankAnios', label: 'Rank Años', type: 'number', placeholder: '0' },
+          { field: 'ingreso', label: 'Ingreso', type: 'text', placeholder: '0.0' },
+          { field: 'rankIngreso', label: 'Rank Ingreso', type: 'number', placeholder: '0' }
+        ]"
+        [tablaKey]="'indiceDesarrolloHumanoTabla'"
+        [totalKey]="'poblacion'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoIndiceDesarrolloHumano"
+        label="Índice de Desarrollo Humano - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoIndiceDesarrolloHumano()"
+        (valueChange)="onFieldChange('textoIndiceDesarrolloHumano', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

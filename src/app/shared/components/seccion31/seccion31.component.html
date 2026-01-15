@@ -60,14 +60,15 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
-<ng-container *ngIf="datos?.['fotografiasAspectosCulturales'] && (datos?.['fotografiasAspectosCulturales'] || []).length > 0">
-    <app-foto-info 
-        *ngFor="let foto of (datos?.['fotografiasAspectosCulturales'] || [])"
-        [autoNumber]="true"
-        [sectionId]="'3.1.4.B.1.10'"
-        [titulo]="foto.titulo"
-        [fuente]="foto.fuente"
-        [ruta]="foto.ruta || foto.imagen">
-    </app-foto-info>
-</ng-container>
+<app-image-upload
+    *ngIf="getFotografiasAspectosCulturalesParaImageUpload().length > 0"
+    [fotografias]="getFotografiasAspectosCulturalesParaImageUpload()"
+    [sectionId]="'3.1.4.B.1.10'"
+    [photoPrefix]="'fotografiasAspectosCulturales'"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 

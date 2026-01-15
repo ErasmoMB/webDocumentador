@@ -1,0 +1,129 @@
+<app-seccion7 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion7>
+
+<div class="form-group-section">
+  <h4 class="section-title">A.1.3. Aspectos Económicos - Campos Adicionales</h4>
+  
+  <div class="form-field">
+    <label class="label">Población Distrital</label>
+    <input type="text" class="input" placeholder="Ej: 610"
+      [value]="formData['poblacionDistritalCahuacho'] || ''"
+      (input)="onFieldChange('poblacionDistritalCahuacho', $any($event.target).value)"
+      readonly>
+    <small class="form-hint">Se carga automáticamente desde el backend</small>
+  </div>
+  
+  <div class="form-field">
+    <label class="label">PET Distrital (14 años a más)</label>
+    <input type="text" class="input" placeholder="Ej: 461"
+      [value]="formData['petDistritalCahuacho'] || ''"
+      (input)="onFieldChange('petDistritalCahuacho', $any($event.target).value)"
+      readonly>
+    <small class="form-hint">Se carga automáticamente desde el backend</small>
+  </div>
+  
+  <div class="form-field">
+    <label class="label">Ingreso Familiar Per Cápita (S/.)</label>
+    <input type="text" class="input" placeholder="Ej: 391,06"
+      [value]="formData['ingresoFamiliarPerCapita'] || ''"
+      (input)="onFieldChange('ingresoFamiliarPerCapita', $any($event.target).value)">
+  </div>
+  
+  <div class="form-field">
+    <label class="label">Ranking Ingreso Per Cápita</label>
+    <input type="text" class="input" placeholder="Ej: 1191"
+      [value]="formData['rankingIngresoPerCapita'] || ''"
+      (input)="onFieldChange('rankingIngresoPerCapita', $any($event.target).value)">
+  </div>
+  <div class="form-field">
+    <label class="label">Tabla PET según grupos de edad</label>
+    <div class="table-editor">
+      <p class="note">Esta tabla se gestiona a través del componente de fotografía institucional</p>
+    </div>
+  </div>
+  <div class="form-field">
+    <label class="label">Tabla PEA y No PEA según sexo</label>
+    <div class="table-editor">
+      <p class="note">Esta tabla se gestiona a través del componente de fotografía institucional</p>
+    </div>
+  </div>
+  <div class="form-field">
+    <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
+    <div class="table-editor">
+      <table class="editor-table">
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Hombres</th>
+            <th>% Hombres</th>
+            <th>Mujeres</th>
+            <th>% Mujeres</th>
+            <th>Casos</th>
+            <th>Porcentaje</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of (datos['peaOcupadaTabla'] || []); let i = index">
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.categoria || ''"
+                (input)="actualizarPEAOcupada(i, 'categoria', $any($event.target).value)"
+                placeholder="PEA Ocupada/Desocupada">
+            </td>
+            <td>
+              <input type="number" class="table-input" 
+                [value]="item.hombres || ''"
+                (input)="actualizarPEAOcupada(i, 'hombres', $any($event.target).value)"
+                placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.porcentajeHombres || ''"
+                (input)="actualizarPEAOcupada(i, 'porcentajeHombres', $any($event.target).value)"
+                placeholder="0%">
+            </td>
+            <td>
+              <input type="number" class="table-input" 
+                [value]="item.mujeres || ''"
+                (input)="actualizarPEAOcupada(i, 'mujeres', $any($event.target).value)"
+                placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.porcentajeMujeres || ''"
+                (input)="actualizarPEAOcupada(i, 'porcentajeMujeres', $any($event.target).value)"
+                placeholder="0%">
+            </td>
+            <td>
+              <input type="number" class="table-input" 
+                [value]="item.casos || ''"
+                (input)="actualizarPEAOcupada(i, 'casos', $any($event.target).value)"
+                placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.porcentaje || ''"
+                (input)="actualizarPEAOcupada(i, 'porcentaje', $any($event.target).value)"
+                placeholder="0%">
+            </td>
+            <td>
+              <button type="button" class="btn-icon" (click)="eliminarPEAOcupada(i)" *ngIf="(datos['peaOcupadaTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
+                ×
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!datos['peaOcupadaTabla'] || datos['peaOcupadaTabla'].length === 0">
+            <td colspan="8" style="text-align: center; padding: 10px;">
+              <button type="button" class="btn btn-secondary" (click)="inicializarPEAOcupada()">
+                Agregar Filas
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupada()" style="margin-top: 10px;">
+      + Agregar Fila
+    </button>
+  </div>
+</div>

@@ -1,0 +1,141 @@
+<app-seccion14 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion14>
+
+<div class="form-group-section">
+  <h4 class="section-title">A.1.10. Indicadores de educación</h4>
+  <div class="form-field">
+    <label class="label">Tabla Nivel Educativo de la Población</label>
+    <div class="table-editor">
+      <table class="editor-table">
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Casos</th>
+            <th>Porcentaje</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of (datos['nivelEducativoTabla'] || []); let i = index">
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.categoria || ''"
+                (input)="actualizarNivelEducativo(i, 'categoria', $any($event.target).value)"
+                placeholder="Sin nivel o Inicial">
+            </td>
+            <td>
+              <input type="number" class="table-input" 
+                [value]="item.casos || ''"
+                (input)="actualizarNivelEducativo(i, 'casos', $any($event.target).value)"
+                placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.porcentaje || ''"
+                (input)="actualizarNivelEducativo(i, 'porcentaje', $any($event.target).value)"
+                placeholder="0%">
+            </td>
+            <td>
+              <button type="button" class="btn-icon" (click)="eliminarNivelEducativo(i)" *ngIf="((datos['nivelEducativoTabla'] || []).length > 1) && item.categoria !== 'Total'" title="Eliminar fila">
+                ×
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!datos['nivelEducativoTabla'] || datos['nivelEducativoTabla'].length === 0">
+            <td colspan="4" style="text-align: center; padding: 10px;">
+              <button type="button" class="btn btn-secondary" (click)="inicializarNivelEducativo()">
+                Agregar Primera Fila
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="agregarNivelEducativo()" style="margin-top: 10px;">
+      + Agregar Fila
+    </button>
+  </div>
+  <div class="form-field">
+    <label class="label">Tabla Tasa de Analfabetismo</label>
+    <div class="table-editor">
+      <table class="editor-table">
+        <thead>
+          <tr>
+            <th>Indicador</th>
+            <th>Casos</th>
+            <th>Porcentaje</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of (datos['tasaAnalfabetismoTabla'] || []); let i = index">
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.indicador || ''"
+                (input)="actualizarTasaAnalfabetismo(i, 'indicador', $any($event.target).value)"
+                placeholder="Sabe leer y escribir">
+            </td>
+            <td>
+              <input type="number" class="table-input" 
+                [value]="item.casos || ''"
+                (input)="actualizarTasaAnalfabetismo(i, 'casos', $any($event.target).value)"
+                placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="table-input" 
+                [value]="item.porcentaje || ''"
+                (input)="actualizarTasaAnalfabetismo(i, 'porcentaje', $any($event.target).value)"
+                placeholder="0%">
+            </td>
+            <td>
+              <button type="button" class="btn-icon" (click)="eliminarTasaAnalfabetismo(i)" *ngIf="((datos['tasaAnalfabetismoTabla'] || []).length > 1) && item.indicador !== 'Total'" title="Eliminar fila">
+                ×
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!datos['tasaAnalfabetismoTabla'] || datos['tasaAnalfabetismoTabla'].length === 0">
+            <td colspan="4" style="text-align: center; padding: 10px;">
+              <button type="button" class="btn btn-secondary" (click)="inicializarTasaAnalfabetismo()">
+                Agregar Primera Fila
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="agregarTasaAnalfabetismo()" style="margin-top: 10px;">
+      + Agregar Fila
+    </button>
+  </div>
+
+  <div class="form-field">
+    <label class="label">Fotografías de Indicadores de Educación</label>
+    <app-image-upload
+      [fotografias]="fotografiasEducacionIndicadoresFormMulti"
+      [sectionId]="seccionId"
+      [photoPrefix]="'fotografiaEducacionIndicadores'"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Indicadores de educación en la CC Ayroca"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Indicadores de educación"
+      fuenteDefault="GEADES, 2024"
+      (fotografiasChange)="onFotografiasEducacionIndicadoresChange($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-group-section">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <div class="form-field">
+      <label class="label">Introducción - Indicadores de Educación</label>
+      <textarea 
+        class="textarea" 
+        rows="4"
+        [value]="obtenerTextoSeccion14IndicadoresEducacionIntro()"
+        (input)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $any($event.target).value)"></textarea>
+      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
+    </div>
+  </div>
+</div>

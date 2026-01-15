@@ -81,72 +81,39 @@
 
     <div class="form-field">
       <label class="label">Tabla Servicios de Telecomunicaciones</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Medio de comunicación</th>
-              <th>Descripción</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['telecomunicacionesTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.medio || ''"
-                  (input)="actualizarTelecomunicaciones(i, 'medio', $any($event.target).value)"
-                  placeholder="Emisoras de radio">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.descripcion || ''"
-                  (input)="actualizarTelecomunicaciones(i, 'descripcion', $any($event.target).value)"
-                  placeholder="--">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarTelecomunicaciones(i)" *ngIf="(datos['telecomunicacionesTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['telecomunicacionesTabla'] || datos['telecomunicacionesTabla'].length === 0">
-              <td colspan="3" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarTelecomunicaciones()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarTelecomunicaciones()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="telecomunicacionesConfig"
+        [columns]="[
+          { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Emisoras de radio' },
+          { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: '--' }
+        ]"
+        [tablaKey]="'telecomunicacionesTabla'"
+        [totalKey]="'medio'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Transporte - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion11TransporteCompleto()"
-          (input)="onFieldChange('parrafoSeccion11_transporte_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre transporte. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion11_transporte_completo"
+        label="Transporte - Texto Completo"
+        hint="Edite todo el bloque de texto sobre transporte. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion11TransporteCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion11_transporte_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Telecomunicaciones - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion11TelecomunicacionesCompleto()"
-          (input)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre telecomunicaciones. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion11_telecomunicaciones_completo"
+        label="Telecomunicaciones - Texto Completo"
+        hint="Edite todo el bloque de texto sobre telecomunicaciones. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion11TelecomunicacionesCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -3,6 +3,7 @@ import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -27,12 +28,49 @@ export class Seccion23Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = '';
 
+  petGruposEdadConfig: TableConfig = {
+    tablaKey: 'petGruposEdadAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { categoria: '', casos: 0, porcentaje: '0,00 %' }
+    ],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  peaDistritoSexoConfig: TableConfig = {
+    tablaKey: 'peaDistritoSexoTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+    ],
+    calcularPorcentajes: false,
+    camposParaCalcular: []
+  };
+
+  peaOcupadaDesocupadaConfig: TableConfig = {
+    tablaKey: 'peaOcupadaDesocupadaTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+    ],
+    calcularPorcentajes: false,
+    camposParaCalcular: []
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -166,6 +204,10 @@ export class Seccion23Component extends BaseSectionComponent {
 
   getPoblacionDistrital(): string {
     return this.datos?.poblacionDistritalAISI || '610';
+  }
+
+  obtenerTextoPEAAISI(): string {
+    return this.datos.textoPEAAISI || '';
   }
 
   getPETDistrital(): string {
@@ -343,52 +385,37 @@ export class Seccion23Component extends BaseSectionComponent {
   }
 
   inicializarPEADistritoSexo() {
-    if (!this.datos['peaDistritoSexoTabla'] || this.datos['peaDistritoSexoTabla'].length === 0) {
-      this.datos['peaDistritoSexoTabla'] = [
-        { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
-      this.cdRef.detectChanges();
-    }
+    this.tableService.inicializarTabla(this.datos, this.peaDistritoSexoConfig);
+    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.cdRef.detectChanges();
   }
 
   agregarPEADistritoSexo() {
-    if (!this.datos['peaDistritoSexoTabla']) {
-      this.inicializarPEADistritoSexo();
-    }
-    this.datos['peaDistritoSexoTabla'].push({ categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.tableService.agregarFila(this.datos, this.peaDistritoSexoConfig);
     this.calcularPorcentajesPEADistritoSexo();
+    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarPEADistritoSexo(index: number) {
-    if (this.datos['peaDistritoSexoTabla'] && this.datos['peaDistritoSexoTabla'].length > 1) {
-      const item = this.datos['peaDistritoSexoTabla'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['peaDistritoSexoTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
-        this.calcularPorcentajesPEADistritoSexo();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarPEADistritoSexo(index: number, field: string, value: any) {
-    if (!this.datos['peaDistritoSexoTabla']) {
-      this.inicializarPEADistritoSexo();
-    }
-    if (this.datos['peaDistritoSexoTabla'][index]) {
-      this.datos['peaDistritoSexoTabla'][index][field] = value;
-      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
-        this.calcularPorcentajesPEADistritoSexo();
-      }
+    const deleted = this.tableService.eliminarFila(this.datos, this.peaDistritoSexoConfig, index);
+    if (deleted) {
+      this.calcularPorcentajesPEADistritoSexo();
       this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
+  }
+
+  actualizarPEADistritoSexo(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.peaDistritoSexoConfig, index, field, value, false);
+    if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+      this.calcularPorcentajesPEADistritoSexo();
+    }
+    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   calcularPorcentajesPEADistritoSexo() {
@@ -425,52 +452,37 @@ export class Seccion23Component extends BaseSectionComponent {
   }
 
   inicializarPEAOcupadaDesocupada() {
-    if (!this.datos['peaOcupadaDesocupadaTabla'] || this.datos['peaOcupadaDesocupadaTabla'].length === 0) {
-      this.datos['peaOcupadaDesocupadaTabla'] = [
-        { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
-      this.cdRef.detectChanges();
-    }
+    this.tableService.inicializarTabla(this.datos, this.peaOcupadaDesocupadaConfig);
+    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.cdRef.detectChanges();
   }
 
   agregarPEAOcupadaDesocupada() {
-    if (!this.datos['peaOcupadaDesocupadaTabla']) {
-      this.inicializarPEAOcupadaDesocupada();
-    }
-    this.datos['peaOcupadaDesocupadaTabla'].push({ categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.tableService.agregarFila(this.datos, this.peaOcupadaDesocupadaConfig);
     this.calcularPorcentajesPEAOcupadaDesocupada();
+    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarPEAOcupadaDesocupada(index: number) {
-    if (this.datos['peaOcupadaDesocupadaTabla'] && this.datos['peaOcupadaDesocupadaTabla'].length > 1) {
-      const item = this.datos['peaOcupadaDesocupadaTabla'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['peaOcupadaDesocupadaTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
-        this.calcularPorcentajesPEAOcupadaDesocupada();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarPEAOcupadaDesocupada(index: number, field: string, value: any) {
-    if (!this.datos['peaOcupadaDesocupadaTabla']) {
-      this.inicializarPEAOcupadaDesocupada();
-    }
-    if (this.datos['peaOcupadaDesocupadaTabla'][index]) {
-      this.datos['peaOcupadaDesocupadaTabla'][index][field] = value;
-      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
-        this.calcularPorcentajesPEAOcupadaDesocupada();
-      }
+    const deleted = this.tableService.eliminarFila(this.datos, this.peaOcupadaDesocupadaConfig, index);
+    if (deleted) {
+      this.calcularPorcentajesPEAOcupadaDesocupada();
       this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
+  }
+
+  actualizarPEAOcupadaDesocupada(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.peaOcupadaDesocupadaConfig, index, field, value, false);
+    if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+      this.calcularPorcentajesPEAOcupadaDesocupada();
+    }
+    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   calcularPorcentajesPEAOcupadaDesocupada() {

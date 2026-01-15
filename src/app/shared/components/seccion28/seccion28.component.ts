@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -22,12 +23,31 @@ export class Seccion28Component extends BaseSectionComponent {
   
   fotografiasInstitucionalidadCache: any[] = [];
 
+  puestoSaludConfig: TableConfig = {
+    tablaKey: 'puestoSaludCpTabla',
+    totalKey: 'categoria',
+    campoTotal: 'categoria',
+    campoPorcentaje: 'descripcion',
+    estructuraInicial: [{ categoria: '', descripcion: '' }]
+  };
+
+  educacionConfig: TableConfig = {
+    tablaKey: 'educacionCpTabla',
+    totalKey: 'nombreIE',
+    campoTotal: 'cantidadEstudiantes',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ nombreIE: '', nivel: '', tipoGestion: '', cantidadEstudiantes: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['cantidadEstudiantes']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -88,6 +108,18 @@ export class Seccion28Component extends BaseSectionComponent {
     };
   }
 
+  getFotoSaludParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoSalud();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
+  }
+
   getFotografiasEducacion(): any[] {
     const fotos: any[] = [];
     const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
@@ -122,6 +154,14 @@ export class Seccion28Component extends BaseSectionComponent {
     return fotos;
   }
 
+  getFotografiasEducacionParaImageUpload(): FotoItem[] {
+    return this.getFotografiasEducacion().map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.ruta
+    }));
+  }
+
   getFotoRecreacion(): any {
     const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
     const titulo = this.datos?.['fotografiaRecreacionAISITitulo'] || 'Plaza de toros del CP ' + centroPobladoAISI;
@@ -136,6 +176,18 @@ export class Seccion28Component extends BaseSectionComponent {
     };
   }
 
+  getFotoRecreacionParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoRecreacion();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
+  }
+
   getFotoDeporte(): any {
     const centroPobladoAISI = this.datos.centroPobladoAISI || '____';
     const titulo = this.datos?.['fotografiaDeporteAISITitulo'] || 'Losa deportiva en el CP ' + centroPobladoAISI;
@@ -148,6 +200,18 @@ export class Seccion28Component extends BaseSectionComponent {
       fuente: fuente,
       ruta: imagen
     };
+  }
+
+  getFotoDeporteParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoDeporte();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
   }
 
   override actualizarFotografiasCache() {
@@ -191,114 +255,20 @@ export class Seccion28Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarPuestoSaludCP() {
-    if (!this.datos['puestoSaludCpTabla'] || this.datos['puestoSaludCpTabla'].length === 0) {
-      this.datos['puestoSaludCpTabla'] = [
-        { categoria: '', descripcion: '' }
-      ];
-      this.formularioService.actualizarDato('puestoSaludCpTabla', this.datos['puestoSaludCpTabla']);
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoSaludCP(): string {
+    return this.datos.textoSaludCP || '';
   }
 
-  agregarPuestoSaludCP() {
-    if (!this.datos['puestoSaludCpTabla']) {
-      this.inicializarPuestoSaludCP();
-    }
-    this.datos['puestoSaludCpTabla'].push({ categoria: '', descripcion: '' });
-    this.formularioService.actualizarDato('puestoSaludCpTabla', this.datos['puestoSaludCpTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  obtenerTextoEducacionCP(): string {
+    return this.datos.textoEducacionCP || '';
   }
 
-  eliminarPuestoSaludCP(index: number) {
-    if (this.datos['puestoSaludCpTabla'] && this.datos['puestoSaludCpTabla'].length > 1) {
-      this.datos['puestoSaludCpTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('puestoSaludCpTabla', this.datos['puestoSaludCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoRecreacionCP1(): string {
+    return this.datos.textoRecreacionCP1 || '';
   }
 
-  actualizarPuestoSaludCP(index: number, field: string, value: any) {
-    if (!this.datos['puestoSaludCpTabla']) {
-      this.inicializarPuestoSaludCP();
-    }
-    if (this.datos['puestoSaludCpTabla'][index]) {
-      this.datos['puestoSaludCpTabla'][index][field] = value;
-      this.formularioService.actualizarDato('puestoSaludCpTabla', this.datos['puestoSaludCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarEducacionCP() {
-    if (!this.datos['educacionCpTabla'] || this.datos['educacionCpTabla'].length === 0) {
-      this.datos['educacionCpTabla'] = [
-        { nombreIE: '', nivel: '', tipoGestion: '', cantidadEstudiantes: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('educacionCpTabla', this.datos['educacionCpTabla']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarEducacionCP() {
-    if (!this.datos['educacionCpTabla']) {
-      this.inicializarEducacionCP();
-    }
-    this.datos['educacionCpTabla'].push({ nombreIE: '', nivel: '', tipoGestion: '', cantidadEstudiantes: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('educacionCpTabla', this.datos['educacionCpTabla']);
-    this.calcularPorcentajesEducacionCP();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarEducacionCP(index: number) {
-    if (this.datos['educacionCpTabla'] && this.datos['educacionCpTabla'].length > 1) {
-      const item = this.datos['educacionCpTabla'][index];
-      if (!item.nombreIE || !item.nombreIE.toLowerCase().includes('total')) {
-        this.datos['educacionCpTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('educacionCpTabla', this.datos['educacionCpTabla']);
-        this.calcularPorcentajesEducacionCP();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarEducacionCP(index: number, field: string, value: any) {
-    if (!this.datos['educacionCpTabla']) {
-      this.inicializarEducacionCP();
-    }
-    if (this.datos['educacionCpTabla'][index]) {
-      this.datos['educacionCpTabla'][index][field] = value;
-      if (field === 'cantidadEstudiantes') {
-        this.calcularPorcentajesEducacionCP();
-      }
-      this.formularioService.actualizarDato('educacionCpTabla', this.datos['educacionCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  calcularPorcentajesEducacionCP() {
-    if (!this.datos['educacionCpTabla'] || this.datos['educacionCpTabla'].length === 0) {
-      return;
-    }
-    const totalItem = this.datos['educacionCpTabla'].find((item: any) => 
-      item.nombreIE && item.nombreIE.toLowerCase().includes('total')
-    );
-    const total = totalItem ? parseFloat(totalItem.cantidadEstudiantes) || 0 : 0;
-    
-    if (total > 0) {
-      this.datos['educacionCpTabla'].forEach((item: any) => {
-        if (!item.nombreIE || !item.nombreIE.toLowerCase().includes('total')) {
-          const cantidad = parseFloat(item.cantidadEstudiantes) || 0;
-          const porcentaje = ((cantidad / total) * 100).toFixed(2);
-          item.porcentaje = porcentaje + ' %';
-        }
-      });
-    }
+  obtenerTextoDeporteCP1(): string {
+    return this.datos.textoDeporteCP1 || '';
   }
 }
 

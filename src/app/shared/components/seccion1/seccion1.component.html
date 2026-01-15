@@ -64,45 +64,41 @@
   <div class="form-group-section">
     <h4 class="section-title">Editar Párrafos</h4>
     
-    <div class="form-field">
-      <label class="label">Párrafo Principal</label>
-      <textarea 
-        class="textarea" 
-        rows="8"
-        [value]="obtenerTextoParrafoPrincipal()"
-        (input)="onFieldChange('parrafoSeccion1_principal', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion1_principal"
+      label="Párrafo Principal"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="8"
+      [value]="obtenerTextoParrafoPrincipal()"
+      (valueChange)="onFieldChange('parrafoSeccion1_principal', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-field">
-      <label class="label">Introducción a Objetivos</label>
-      <textarea 
-        class="textarea" 
-        rows="2"
-        [value]="obtenerTextoIntroduccionObjetivos()"
-        (input)="onFieldChange('parrafoSeccion1_4', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion1_4"
+      label="Introducción a Objetivos"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="2"
+      [value]="obtenerTextoIntroduccionObjetivos()"
+      (valueChange)="onFieldChange('parrafoSeccion1_4', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-field">
-      <label class="label">Objetivo 1</label>
-      <textarea 
-        class="textarea" 
-        rows="3"
-        [value]="obtenerTextoObjetivo1()"
-        (input)="onFieldChange('objetivoSeccion1_1', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="objetivoSeccion1_1"
+      label="Objetivo 1"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="3"
+      [value]="obtenerTextoObjetivo1()"
+      (valueChange)="onFieldChange('objetivoSeccion1_1', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-field">
-      <label class="label">Objetivo 2</label>
-      <textarea 
-        class="textarea" 
-        rows="4"
-        [value]="obtenerTextoObjetivo2()"
-        (input)="onFieldChange('objetivoSeccion1_2', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="objetivoSeccion1_2"
+      label="Objetivo 2"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="4"
+      [value]="obtenerTextoObjetivo2()"
+      (valueChange)="onFieldChange('objetivoSeccion1_2', $event)">
+    </app-paragraph-editor>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías</label>

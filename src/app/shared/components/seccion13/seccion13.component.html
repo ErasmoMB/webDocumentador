@@ -129,213 +129,77 @@
     
     <div class="form-field">
       <label class="label">Tabla Natalidad y Mortalidad</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Año</th>
-              <th>Natalidad</th>
-              <th>Mortalidad</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['natalidadMortalidadTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.anio || ''"
-                  (input)="actualizarNatalidadMortalidad(i, 'anio', $any($event.target).value)"
-                  placeholder="2023">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.natalidad || ''"
-                  (input)="actualizarNatalidadMortalidad(i, 'natalidad', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.mortalidad || ''"
-                  (input)="actualizarNatalidadMortalidad(i, 'mortalidad', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarNatalidadMortalidad(i)" *ngIf="(datos['natalidadMortalidadTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['natalidadMortalidadTabla'] || datos['natalidadMortalidadTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarNatalidadMortalidad()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarNatalidadMortalidad()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="natalidadMortalidadConfig"
+        [columns]="[
+          { field: 'anio', label: 'Año', type: 'text', placeholder: '2023' },
+          { field: 'natalidad', label: 'Natalidad', type: 'number', placeholder: '0' },
+          { field: 'mortalidad', label: 'Mortalidad', type: 'number', placeholder: '0' }
+        ]"
+        [tablaKey]="'natalidadMortalidadTabla'"
+        [totalKey]="'anio'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Morbilidad</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Grupo de Morbilidad</th>
-              <th>0 – 11</th>
-              <th>12 – 17</th>
-              <th>18 – 29</th>
-              <th>30 – 59</th>
-              <th>60 -></th>
-              <th>Casos Totales</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['morbilidadTabla'] || datos['morbiliadTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.grupo || ''"
-                  (input)="actualizarMorbilidad(i, 'grupo', $any($event.target).value)"
-                  placeholder="Infecciones agudas">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rango0_11 || ''"
-                  (input)="actualizarMorbilidad(i, 'rango0_11', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rango12_17 || ''"
-                  (input)="actualizarMorbilidad(i, 'rango12_17', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rango18_29 || ''"
-                  (input)="actualizarMorbilidad(i, 'rango18_29', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rango30_59 || ''"
-                  (input)="actualizarMorbilidad(i, 'rango30_59', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.rango60 || ''"
-                  (input)="actualizarMorbilidad(i, 'rango60', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarMorbilidad(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarMorbilidad(i)" *ngIf="((datos['morbilidadTabla'] || datos['morbiliadTabla'] || []).length > 1)" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="(!datos['morbilidadTabla'] || datos['morbilidadTabla'].length === 0) && (!datos['morbiliadTabla'] || datos['morbiliadTabla'].length === 0)">
-              <td colspan="8" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarMorbilidad()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarMorbilidad()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="morbilidadConfig"
+        [columns]="[
+          { field: 'grupo', label: 'Grupo de Morbilidad', type: 'text', placeholder: 'Infecciones agudas' },
+          { field: 'rango0_11', label: '0 – 11', type: 'number', placeholder: '0' },
+          { field: 'rango12_17', label: '12 – 17', type: 'number', placeholder: '0' },
+          { field: 'rango18_29', label: '18 – 29', type: 'number', placeholder: '0' },
+          { field: 'rango30_59', label: '30 – 59', type: 'number', placeholder: '0' },
+          { field: 'rango60', label: '60 ->', type: 'number', placeholder: '0' },
+          { field: 'casos', label: 'Casos Totales', type: 'number', placeholder: '0', readonly: true }
+        ]"
+        [tablaKey]="'morbilidadTabla'"
+        [totalKey]="'grupo'"
+        [customFieldChangeHandler]="onMorbilidadFieldChange.bind(this)"
+        (tableUpdated)="onMorbilidadTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Afiliación a Seguros de Salud</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['afiliacionSaludTabla'] || datos['seguroSaludTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarAfiliacionSalud(i, 'categoria', $any($event.target).value)"
-                  placeholder="SIS">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarAfiliacionSalud(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarAfiliacionSalud(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarAfiliacionSalud(i)" *ngIf="((datos['afiliacionSaludTabla'] || datos['seguroSaludTabla'] || []).length > 1) && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="(!datos['afiliacionSaludTabla'] || datos['afiliacionSaludTabla'].length === 0) && (!datos['seguroSaludTabla'] || datos['seguroSaludTabla'].length === 0)">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarAfiliacionSalud()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarAfiliacionSalud()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="afiliacionSaludConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'SIS' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'afiliacionSaludTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Natalidad y Mortalidad - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
-          (input)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion13_natalidad_mortalidad_completo"
+        label="Natalidad y Mortalidad - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Morbilidad - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion13MorbilidadCompleto()"
-          (input)="onFieldChange('parrafoSeccion13_morbilidad_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion13_morbilidad_completo"
+        label="Morbilidad - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion13MorbilidadCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion13_morbilidad_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

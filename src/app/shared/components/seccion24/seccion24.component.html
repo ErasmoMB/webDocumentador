@@ -30,28 +30,34 @@
 <p class="text-justify" *ngIf="datos.textoActividadesEconomicasAISI && datos.textoActividadesEconomicasAISI !== '____'">{{ datos.textoActividadesEconomicasAISI }}</p>
 <p class="text-justify" *ngIf="!datos.textoActividadesEconomicasAISI || datos.textoActividadesEconomicasAISI === '____'">Del cuadro anterior, se aprecia que la actividad económica más frecuente dentro del CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> es el grupo "Agricultura, ganadería, silvicultura y pesca" con un <span [appDataSource]="'automatic'">{{ getPorcentajeAgricultura() }}</span>. Esto se condice con las entrevistas aplicadas en campo, pues los informantes y autoridades declararon que la mayoría de la población se dedica principalmente a la agricultura y a la ganadería. La segunda actividad más frecuente dentro de esta localidad es la de "Administración pública y defensa; planes de seguridad social de afiliación obligatoria" con <span [appDataSource]="'automatic'">{{ getPorcentajeAdministracion() }}</span>.</p>
 
-<app-foto-info 
-    *ngFor="let foto of fotografiasActividadesEconomicasCache"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="fotografiasActividadesEconomicasCache.length > 0"
+    [fotografias]="getFotografiasActividadesEconomicasParaImageUpload()"
     [sectionId]="'3.1.4.B.1.3'"
-    [titulo]="foto.titulo"
-    [fuente]="foto.fuente"
-    [ruta]="foto.ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaActividadesEconomicas'"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Mercado y comercialización de productos</strong></p>
 <p class="text-justify" *ngIf="datos.textoMercadoProductos && datos.textoMercadoProductos !== '____'">{{ datos.textoMercadoProductos }}</p>
 <p class="text-justify" *ngIf="!datos.textoMercadoProductos || datos.textoMercadoProductos === '____'">El CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> no cuenta con un mercado formal que centralice las actividades comerciales de la localidad. El comercio en este lugar es incipiente y se lleva a cabo principalmente a través de pequeñas bodegas. Estas bodegas atienden la demanda cotidiana en la localidad, pero la oferta sigue siendo limitada y gran parte de los productos llega desde <span [appDataSource]="'manual'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>.</p>
 <p class="text-justify" *ngIf="!datos.textoMercadoProductos || datos.textoMercadoProductos === '____'">Además, la comercialización de productos en <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se complementa con la presencia de comerciantes mayoristas que viajan hacia la localidad para comprar y vender productos. La mayoría de estos comerciantes provienen de la ciudad de <span [appDataSource]="'manual'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, desde donde abastecen las bodegas locales con mercancías diversas. Este sistema de intermediación permite que los pobladores de <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> accedan a una variedad más amplia de productos, aunque la oferta sigue siendo limitada en comparación con las zonas urbanas más grandes. La falta de un mercado formal y de una infraestructura de comercio mayor limita el desarrollo del intercambio comercial en la localidad, pero el dinamismo de las pequeñas bodegas y la llegada de comerciantes externos contribuyen a mantener un flujo de productos que satisface las necesidades básicas de la población.</p>
 
-<app-foto-info 
-    *ngFor="let foto of fotografiasMercadoCache"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="fotografiasMercadoCache.length > 0"
+    [fotografias]="getFotografiasMercadoParaImageUpload()"
     [sectionId]="'3.1.4.B.1.3'"
-    [titulo]="foto.titulo"
-    [fuente]="foto.fuente"
-    [ruta]="foto.ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaMercado'"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Hábitos de consumo</strong></p>
 <p class="text-justify" *ngIf="datos.textoHabitosConsumo && datos.textoHabitosConsumo !== '____'">{{ datos.textoHabitosConsumo }}</p>
@@ -83,56 +89,31 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla PEA Ocupada según actividad económica</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Actividad Económica</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['actividadesEconomicasAISI'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.actividad || ''"
-                  (input)="actualizarActividadesEconomicasAISI(i, 'actividad', $any($event.target).value)"
-                  placeholder="Ej: Agricultura, ganadería, silvicultura y pesca">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarActividadesEconomicasAISI(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarActividadesEconomicasAISI(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarActividadesEconomicasAISI(i)" *ngIf="(datos['actividadesEconomicasAISI'] || []).length > 1 && !item.actividad?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['actividadesEconomicasAISI'] || datos['actividadesEconomicasAISI'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarActividadesEconomicasAISI()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarActividadesEconomicasAISI()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="actividadesEconomicasConfig"
+        [columns]="[
+          { field: 'actividad', label: 'Actividad Económica', type: 'text', placeholder: 'Ej: Agricultura, ganadería, silvicultura y pesca' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'actividadesEconomicasAISI'"
+        [totalKey]="'actividad'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoActividadesEconomicasAISI"
+        label="Actividades Económicas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoActividadesEconomicasAISI()"
+        (valueChange)="onFieldChange('textoActividadesEconomicasAISI', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -23,12 +24,24 @@ export class Seccion24Component extends BaseSectionComponent {
   fotografiasActividadesEconomicasCache: any[] = [];
   fotografiasMercadoCache: any[] = [];
   fotografiasInstitucionalidadCache: any[] = [];
+
+  actividadesEconomicasConfig: TableConfig = {
+    tablaKey: 'actividadesEconomicasAISI',
+    totalKey: 'actividad',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ actividad: '', casos: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -133,6 +146,22 @@ export class Seccion24Component extends BaseSectionComponent {
     }
     
     return fotografias;
+  }
+
+  getFotografiasActividadesEconomicasParaImageUpload(): FotoItem[] {
+    return this.fotografiasActividadesEconomicasCache.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.ruta
+    }));
+  }
+
+  getFotografiasMercadoParaImageUpload(): FotoItem[] {
+    return this.fotografiasMercadoCache.map(f => ({
+      titulo: f.titulo,
+      fuente: f.fuente,
+      imagen: f.ruta
+    }));
   }
 
   getFotografiasMercado(): any[] {
@@ -251,73 +280,8 @@ export class Seccion24Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarActividadesEconomicasAISI() {
-    if (!this.datos['actividadesEconomicasAISI'] || this.datos['actividadesEconomicasAISI'].length === 0) {
-      this.datos['actividadesEconomicasAISI'] = [
-        { actividad: '', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarActividadesEconomicasAISI() {
-    if (!this.datos['actividadesEconomicasAISI']) {
-      this.inicializarActividadesEconomicasAISI();
-    }
-    this.datos['actividadesEconomicasAISI'].push({ actividad: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
-    this.calcularPorcentajesActividadesEconomicasAISI();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarActividadesEconomicasAISI(index: number) {
-    if (this.datos['actividadesEconomicasAISI'] && this.datos['actividadesEconomicasAISI'].length > 1) {
-      const item = this.datos['actividadesEconomicasAISI'][index];
-      if (!item.actividad || !item.actividad.toLowerCase().includes('total')) {
-        this.datos['actividadesEconomicasAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
-        this.calcularPorcentajesActividadesEconomicasAISI();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarActividadesEconomicasAISI(index: number, field: string, value: any) {
-    if (!this.datos['actividadesEconomicasAISI']) {
-      this.inicializarActividadesEconomicasAISI();
-    }
-    if (this.datos['actividadesEconomicasAISI'][index]) {
-      this.datos['actividadesEconomicasAISI'][index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesActividadesEconomicasAISI();
-      }
-      this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  calcularPorcentajesActividadesEconomicasAISI() {
-    if (!this.datos['actividadesEconomicasAISI'] || this.datos['actividadesEconomicasAISI'].length === 0) {
-      return;
-    }
-    const totalItem = this.datos['actividadesEconomicasAISI'].find((item: any) => 
-      item.actividad && item.actividad.toLowerCase().includes('total')
-    );
-    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
-    
-    if (total > 0) {
-      this.datos['actividadesEconomicasAISI'].forEach((item: any) => {
-        if (!item.actividad || !item.actividad.toLowerCase().includes('total')) {
-          const casos = parseFloat(item.casos) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2);
-          item.porcentaje = porcentaje + ' %';
-        }
-      });
-    }
+  obtenerTextoActividadesEconomicasAISI(): string {
+    return this.datos.textoActividadesEconomicasAISI || '';
   }
 }
 

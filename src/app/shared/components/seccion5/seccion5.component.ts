@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -28,13 +29,22 @@ export class Seccion5Component extends BaseSectionComponent {
     'tablepagina6'
   ];
 
+  institucionesConfig: TableConfig = {
+    tablaKey: 'tablepagina6',
+    totalKey: 'categoria',
+    campoTotal: 'categoria',
+    campoPorcentaje: 'respuesta',
+    estructuraInicial: [{ categoria: '', respuesta: '', nombre: '', comentario: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -206,46 +216,44 @@ export class Seccion5Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarInstituciones() {
-    if (!this.datos.tablepagina6 || this.datos.tablepagina6.length === 0) {
-      this.datos.tablepagina6 = [
-        { categoria: '', respuesta: '', nombre: '', comentario: '' }
-      ];
-      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarInstitucion() {
-    if (!this.datos.tablepagina6) {
-      this.inicializarInstituciones();
-    }
-    this.datos.tablepagina6.push({ categoria: '', respuesta: '', nombre: '', comentario: '' });
-    this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+  onInstitucionFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.institucionesConfig, index, field, value, false);
+    this.formularioService.actualizarDato('tablepagina6', this.datos['tablepagina6']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
+  onInstitucionesTableUpdated() {
+    this.formularioService.actualizarDato('tablepagina6', this.datos['tablepagina6']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  actualizarInstitucion(index: number, field: string, value: any) {
+    this.onInstitucionFieldChange(index, field, value);
+  }
+
   eliminarInstitucion(index: number) {
-    if (this.datos.tablepagina6 && this.datos.tablepagina6.length > 1) {
-      this.datos.tablepagina6.splice(index, 1);
-      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
+    const deleted = this.tableService.eliminarFila(this.datos, this.institucionesConfig, index);
+    if (deleted) {
+      this.formularioService.actualizarDato('tablepagina6', this.datos['tablepagina6']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
-  actualizarInstitucion(index: number, field: string, value: any) {
-    if (!this.datos.tablepagina6) {
-      this.inicializarInstituciones();
-    }
-    if (this.datos.tablepagina6[index]) {
-      this.datos.tablepagina6[index][field] = value;
-      this.formularioService.actualizarDato('tablepagina6', this.datos.tablepagina6);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  inicializarInstituciones() {
+    this.tableService.inicializarTabla(this.datos, this.institucionesConfig);
+    this.formularioService.actualizarDato('tablepagina6', this.datos['tablepagina6']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  agregarInstitucion() {
+    this.tableService.agregarFila(this.datos, this.institucionesConfig);
+    this.formularioService.actualizarDato('tablepagina6', this.datos['tablepagina6']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   getUbicacionTexto(): string {

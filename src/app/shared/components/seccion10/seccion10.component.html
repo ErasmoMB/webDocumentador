@@ -141,55 +141,19 @@
     
     <div class="form-field">
       <label class="label">Tabla Abastecimiento de Agua</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['abastecimientoAguaTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarAbastecimientoAgua(i, 'categoria', $any($event.target).value)"
-                  placeholder="Viviendas con abastecimiento de agua por red pública">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarAbastecimientoAgua(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarAbastecimientoAgua(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarAbastecimientoAgua(i)" *ngIf="(datos['abastecimientoAguaTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['abastecimientoAguaTabla'] || datos['abastecimientoAguaTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarAbastecimientoAgua()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarAbastecimientoAgua()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="abastecimientoAguaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con abastecimiento de agua por red pública' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'abastecimientoAguaTabla'"
+        [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)"
+        (tableUpdated)="onAbastecimientoAguaTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
@@ -201,108 +165,36 @@
 
     <div class="form-field">
       <label class="label">Tabla Tipos de Saneamiento</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['tiposSaneamientoTabla'] || datos['saneamientoTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarTiposSaneamiento(i, 'categoria', $any($event.target).value)"
-                  placeholder="Viviendas con saneamiento vía red pública">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarTiposSaneamiento(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarTiposSaneamiento(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarTiposSaneamiento(i)" *ngIf="((datos['tiposSaneamientoTabla'] || datos['saneamientoTabla'] || []).length > 1) && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="(!datos['tiposSaneamientoTabla'] || datos['tiposSaneamientoTabla'].length === 0) && (!datos['saneamientoTabla'] || datos['saneamientoTabla'].length === 0)">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarTiposSaneamiento()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarTiposSaneamiento()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="tiposSaneamientoConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con saneamiento vía red pública' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="(datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla')"
+        [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onTiposSaneamientoFieldChange.bind(this)"
+        (tableUpdated)="onTiposSaneamientoTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Cobertura Eléctrica</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['coberturaElectricaTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarCoberturaElectrica(i, 'categoria', $any($event.target).value)"
-                  placeholder="Viviendas con acceso a electricidad">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarCoberturaElectrica(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarCoberturaElectrica(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarCoberturaElectrica(i)" *ngIf="(datos['coberturaElectricaTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['coberturaElectricaTabla'] || datos['coberturaElectricaTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarCoberturaElectrica()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarCoberturaElectrica()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="coberturaElectricaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con acceso a electricidad' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'coberturaElectricaTabla'"
+        [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)"
+        (tableUpdated)="onCoberturaElectricaTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
@@ -330,15 +222,14 @@
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Introducción - Servicios Básicos</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion10ServiciosBasicosIntro()"
-          (input)="onFieldChange('parrafoSeccion10_servicios_basicos_intro', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion10_servicios_basicos_intro"
+        label="Introducción - Servicios Básicos"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion10ServiciosBasicosIntro()"
+        (valueChange)="onFieldChange('parrafoSeccion10_servicios_basicos_intro', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

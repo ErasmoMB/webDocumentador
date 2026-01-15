@@ -52,25 +52,23 @@
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Situación del Empleo - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
-          (input)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre situación del empleo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion7_situacion_empleo_completo"
+        label="Situación del Empleo - Texto Completo"
+        hint="Edite todo el bloque de texto sobre situación del empleo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Ingresos de la Población - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="8"
-          [value]="obtenerTextoSeccion7IngresosCompleto()"
-          (input)="onFieldChange('parrafoSeccion7_ingresos_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite todo el bloque de texto sobre ingresos. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion7_ingresos_completo"
+        label="Ingresos de la Población - Texto Completo"
+        hint="Edite todo el bloque de texto sobre ingresos. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoSeccion7IngresosCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo', $event)">
+      </app-paragraph-editor>
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de PEA y Empleo</label>

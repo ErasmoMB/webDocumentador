@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,45 @@ export class Seccion14Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaEducacionIndicadores';
 
+  nivelEducativoConfig: TableConfig = {
+    tablaKey: 'nivelEducativoTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { categoria: 'Sin nivel o Inicial', casos: 0, porcentaje: '0%' },
+      { categoria: 'Primaria', casos: 0, porcentaje: '0%' },
+      { categoria: 'Secundaria', casos: 0, porcentaje: '0%' },
+      { categoria: 'Superior no Universitaria', casos: 0, porcentaje: '0%' },
+      { categoria: 'Superior Universitaria', casos: 0, porcentaje: '0%' },
+      { categoria: 'Total', casos: 0, porcentaje: '100,00%' }
+    ],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  tasaAnalfabetismoConfig: TableConfig = {
+    tablaKey: 'tasaAnalfabetismoTabla',
+    totalKey: 'indicador',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { indicador: 'Sabe leer y escribir', casos: 0, porcentaje: '0%' },
+      { indicador: 'No sabe leer ni escribir', casos: 0, porcentaje: '0%' },
+      { indicador: 'Total', casos: 0, porcentaje: '100,00%' }
+    ],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -85,53 +118,48 @@ export class Seccion14Component extends BaseSectionComponent {
   }
 
   getPorcentajePrimaria(): string {
-    if (!this.datos?.nivelEducativoTabla || !Array.isArray(this.datos.nivelEducativoTabla)) {
-      return '____';
-    }
-    const primaria = this.datos.nivelEducativoTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('primaria')
+    return this.tableService.obtenerValorDeTablaPorCategoria(
+      this.datos,
+      'nivelEducativoTabla',
+      'primaria',
+      'porcentaje'
     );
-    return primaria?.porcentaje || '____';
   }
 
   getPorcentajeSecundaria(): string {
-    if (!this.datos?.nivelEducativoTabla || !Array.isArray(this.datos.nivelEducativoTabla)) {
-      return '____';
-    }
-    const secundaria = this.datos.nivelEducativoTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('secundaria')
+    return this.tableService.obtenerValorDeTablaPorCategoria(
+      this.datos,
+      'nivelEducativoTabla',
+      'secundaria',
+      'porcentaje'
     );
-    return secundaria?.porcentaje || '____';
   }
 
   getPorcentajeSuperiorNoUniversitaria(): string {
-    if (!this.datos?.nivelEducativoTabla || !Array.isArray(this.datos.nivelEducativoTabla)) {
-      return '____';
-    }
-    const superiorNoUniv = this.datos.nivelEducativoTabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('superior no universitaria') || item.categoria.toLowerCase().includes('superior no universitaria'))
+    return this.tableService.obtenerValorDeTablaPorCategoria(
+      this.datos,
+      'nivelEducativoTabla',
+      'superior no universitaria',
+      'porcentaje'
     );
-    return superiorNoUniv?.porcentaje || '____';
   }
 
   getTasaAnalfabetismo(): string {
-    if (!this.datos?.tasaAnalfabetismoTabla || !Array.isArray(this.datos.tasaAnalfabetismoTabla)) {
-      return '____';
-    }
-    const noSabeLeer = this.datos.tasaAnalfabetismoTabla.find((item: any) => 
-      item.indicador && (item.indicador.toLowerCase().includes('no sabe') || item.indicador.toLowerCase().includes('no puede'))
+    return this.tableService.obtenerValorDeTablaPorIndicador(
+      this.datos,
+      'tasaAnalfabetismoTabla',
+      'no sabe',
+      'porcentaje'
     );
-    return noSabeLeer?.porcentaje || '____';
   }
 
   getCasosAnalfabetismo(): string {
-    if (!this.datos?.tasaAnalfabetismoTabla || !Array.isArray(this.datos.tasaAnalfabetismoTabla)) {
-      return '____';
-    }
-    const noSabeLeer = this.datos.tasaAnalfabetismoTabla.find((item: any) => 
-      item.indicador && (item.indicador.toLowerCase().includes('no sabe') || item.indicador.toLowerCase().includes('no puede'))
+    return this.tableService.obtenerValorDeTablaPorIndicador(
+      this.datos,
+      'tasaAnalfabetismoTabla',
+      'no sabe',
+      'casos'
     );
-    return noSabeLeer?.casos || '____';
   }
 
   getFotografiasEducacionIndicadoresVista(): FotoItem[] {
@@ -160,110 +188,63 @@ export class Seccion14Component extends BaseSectionComponent {
   }
 
   inicializarNivelEducativo() {
-    if (!this.datos['nivelEducativoTabla'] || this.datos['nivelEducativoTabla'].length === 0) {
-      this.datos['nivelEducativoTabla'] = [
-        { categoria: 'Sin nivel o Inicial', casos: 0, porcentaje: '0%' },
-        { categoria: 'Primaria', casos: 0, porcentaje: '0%' },
-        { categoria: 'Secundaria', casos: 0, porcentaje: '0%' },
-        { categoria: 'Superior no Universitaria', casos: 0, porcentaje: '0%' },
-        { categoria: 'Superior Universitaria', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '100,00%' }
-      ];
-      this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+    this.tableService.inicializarTabla(this.datos, this.nivelEducativoConfig);
+    this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   agregarNivelEducativo() {
-    if (!this.datos['nivelEducativoTabla']) {
-      this.inicializarNivelEducativo();
-    }
-    const totalIndex = this.datos['nivelEducativoTabla'].findIndex((item: any) => item.categoria === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['nivelEducativoTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['nivelEducativoTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
-    }
+    this.tableService.agregarFila(this.datos, this.nivelEducativoConfig);
     this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarNivelEducativo(index: number) {
-    if (this.datos['nivelEducativoTabla'] && this.datos['nivelEducativoTabla'].length > 1) {
-      const item = this.datos['nivelEducativoTabla'][index];
-      if (item.categoria !== 'Total') {
-        this.datos['nivelEducativoTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarNivelEducativo(index: number, field: string, value: any) {
-    if (!this.datos['nivelEducativoTabla']) {
-      this.inicializarNivelEducativo();
-    }
-    if (this.datos['nivelEducativoTabla'][index]) {
-      this.datos['nivelEducativoTabla'][index][field] = value;
+    const deleted = this.tableService.eliminarFila(this.datos, this.nivelEducativoConfig, index);
+    if (deleted) {
       this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
+  actualizarNivelEducativo(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.nivelEducativoConfig, index, field, value);
+    this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
   inicializarTasaAnalfabetismo() {
-    if (!this.datos['tasaAnalfabetismoTabla'] || this.datos['tasaAnalfabetismoTabla'].length === 0) {
-      this.datos['tasaAnalfabetismoTabla'] = [
-        { indicador: 'Sabe leer y escribir', casos: 0, porcentaje: '0%' },
-        { indicador: 'No sabe leer ni escribir', casos: 0, porcentaje: '0%' },
-        { indicador: 'Total', casos: 0, porcentaje: '100,00%' }
-      ];
-      this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+    this.tableService.inicializarTabla(this.datos, this.tasaAnalfabetismoConfig);
+    this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   agregarTasaAnalfabetismo() {
-    if (!this.datos['tasaAnalfabetismoTabla']) {
-      this.inicializarTasaAnalfabetismo();
-    }
-    const totalIndex = this.datos['tasaAnalfabetismoTabla'].findIndex((item: any) => item.indicador === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['tasaAnalfabetismoTabla'].splice(totalIndex, 0, { indicador: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['tasaAnalfabetismoTabla'].push({ indicador: '', casos: 0, porcentaje: '0%' });
-    }
+    this.tableService.agregarFila(this.datos, this.tasaAnalfabetismoConfig);
     this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarTasaAnalfabetismo(index: number) {
-    if (this.datos['tasaAnalfabetismoTabla'] && this.datos['tasaAnalfabetismoTabla'].length > 1) {
-      const item = this.datos['tasaAnalfabetismoTabla'][index];
-      if (item.indicador !== 'Total') {
-        this.datos['tasaAnalfabetismoTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarTasaAnalfabetismo(index: number, field: string, value: any) {
-    if (!this.datos['tasaAnalfabetismoTabla']) {
-      this.inicializarTasaAnalfabetismo();
-    }
-    if (this.datos['tasaAnalfabetismoTabla'][index]) {
-      this.datos['tasaAnalfabetismoTabla'][index][field] = value;
+    const deleted = this.tableService.eliminarFila(this.datos, this.tasaAnalfabetismoConfig, index);
+    if (deleted) {
       this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
+  }
+
+  actualizarTasaAnalfabetismo(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.tasaAnalfabetismoConfig, index, field, value);
+    this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 }
 

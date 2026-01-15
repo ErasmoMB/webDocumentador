@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -27,13 +28,22 @@ export class Seccion11Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = '';
 
+  telecomunicacionesConfig: TableConfig = {
+    tablaKey: 'telecomunicacionesTabla',
+    totalKey: 'medio',
+    campoTotal: 'medio',
+    campoPorcentaje: 'descripcion',
+    estructuraInicial: [{ medio: '', descripcion: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -177,49 +187,5 @@ export class Seccion11Component extends BaseSectionComponent {
     return `En la CC ${grupoAISD}, la infraestructura en telecomunicaciones presenta algunas limitaciones, aunque existen servicios disponibles para la población. En cuanto a radiodifusión, no es posible captar señal de emisoras provinciales o nacionales. Respecto a la señal de televisión, la comunidad cuenta con acceso a América TV (canal 4) a través de señal abierta, gracias a una antena de la municipalidad que retransmite este canal, lo que garantiza una opción de entretenimiento y noticias. Adicionalmente, algunas familias tienen contratado el servicio de DIRECTV, el cual brinda acceso a televisión satelital.\n\nEn lo que respecta a la telefonía móvil, la cobertura es restringida y solo las operadoras de Movistar y Entel logran captar señal en la comunidad, lo cual limita las opciones de comunicación para los habitantes. Por otro lado, el acceso a internet depende únicamente de Movistar, ya que los comuneros solo pueden conectarse a través de los datos móviles proporcionados por esta empresa. Además, cabe mencionar que, si bien existe acceso a internet, la calidad y estabilidad de la conexión pueden ser deficientes, especialmente en las zonas más alejadas dentro de la comunidad.`;
   }
 
-  inicializarTelecomunicaciones() {
-    if (!this.datos['telecomunicacionesTabla'] || this.datos['telecomunicacionesTabla'].length === 0) {
-      this.datos['telecomunicacionesTabla'] = [
-        { medio: 'Emisoras de radio', descripcion: '--' },
-        { medio: 'Señales de televisión', descripcion: 'América TV\nDIRECTV' },
-        { medio: 'Señales de telefonía móvil', descripcion: 'Movistar\nEntel' },
-        { medio: 'Señal de Internet', descripcion: 'Movistar' }
-      ];
-      this.formularioService.actualizarDato('telecomunicacionesTabla', this.datos['telecomunicacionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarTelecomunicaciones() {
-    if (!this.datos['telecomunicacionesTabla']) {
-      this.inicializarTelecomunicaciones();
-    }
-    this.datos['telecomunicacionesTabla'].push({ medio: '', descripcion: '' });
-    this.formularioService.actualizarDato('telecomunicacionesTabla', this.datos['telecomunicacionesTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarTelecomunicaciones(index: number) {
-    if (this.datos['telecomunicacionesTabla'] && this.datos['telecomunicacionesTabla'].length > 1) {
-      this.datos['telecomunicacionesTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('telecomunicacionesTabla', this.datos['telecomunicacionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarTelecomunicaciones(index: number, field: string, value: any) {
-    if (!this.datos['telecomunicacionesTabla']) {
-      this.inicializarTelecomunicaciones();
-    }
-    if (this.datos['telecomunicacionesTabla'][index]) {
-      this.datos['telecomunicacionesTabla'][index][field] = value;
-      this.formularioService.actualizarDato('telecomunicacionesTabla', this.datos['telecomunicacionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
 }
 

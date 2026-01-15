@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,51 @@ export class Seccion13Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
 
+  natalidadMortalidadConfig: TableConfig = {
+    tablaKey: 'natalidadMortalidadTabla',
+    totalKey: 'anio',
+    campoTotal: 'natalidad',
+    campoPorcentaje: 'mortalidad',
+    estructuraInicial: [
+      { anio: '2023', natalidad: 0, mortalidad: 0 },
+      { anio: '2024 (hasta 13/11)', natalidad: 0, mortalidad: 0 }
+    ]
+  };
+
+  morbilidadConfig: TableConfig = {
+    tablaKey: 'morbilidadTabla',
+    totalKey: 'grupo',
+    campoTotal: 'casos',
+    campoPorcentaje: 'casos',
+    estructuraInicial: [
+      { grupo: 'Infecciones agudas de las vías respiratorias superiores', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 },
+      { grupo: 'Obesidad y otros de hiperalimentación', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
+    ]
+  };
+
+  afiliacionSaludConfig: TableConfig = {
+    tablaKey: 'afiliacionSaludTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [
+      { categoria: 'SIS', casos: 0, porcentaje: '0%' },
+      { categoria: 'ESSALUD', casos: 0, porcentaje: '0%' },
+      { categoria: 'Sin seguro', casos: 0, porcentaje: '0%' },
+      { categoria: 'Total', casos: 0, porcentaje: '0%' }
+    ],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -127,159 +166,43 @@ export class Seccion13Component extends BaseSectionComponent {
     return `De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC ${grupoAISD} son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.\n\nEn cuanto a los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca a los poblados de la CC ${grupoAISD}) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.`;
   }
 
-  inicializarNatalidadMortalidad() {
-    if (!this.datos['natalidadMortalidadTabla'] || this.datos['natalidadMortalidadTabla'].length === 0) {
-      this.datos['natalidadMortalidadTabla'] = [
-        { anio: '2023', natalidad: 0, mortalidad: 0 },
-        { anio: '2024 (hasta 13/11)', natalidad: 0, mortalidad: 0 }
-      ];
-      this.formularioService.actualizarDato('natalidadMortalidadTabla', this.datos['natalidadMortalidadTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
+  onMorbilidadFieldChange(index: number, field: string, value: any) {
+    if (!this.datos['morbilidadTabla'] && !this.datos['morbiliadTabla']) {
+      this.tableService.inicializarTabla(this.datos, this.morbilidadConfig);
+    }
+    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
+    if (tabla && tabla[index]) {
+      tabla[index][field] = value;
+      if (field !== 'casos' && field !== 'grupo') {
+        this.calcularTotalesMorbilidad();
+      }
+      const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
+      this.formularioService.actualizarDato(key, tabla);
     }
   }
 
-  agregarNatalidadMortalidad() {
-    if (!this.datos['natalidadMortalidadTabla']) {
-      this.inicializarNatalidadMortalidad();
-    }
-    this.datos['natalidadMortalidadTabla'].push({ anio: '', natalidad: 0, mortalidad: 0 });
-    this.formularioService.actualizarDato('natalidadMortalidadTabla', this.datos['natalidadMortalidadTabla']);
+  onMorbilidadTableUpdated() {
+    this.calcularTotalesMorbilidad();
+    const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
+    this.formularioService.actualizarDato(key, this.datos[key]);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  eliminarNatalidadMortalidad(index: number) {
-    if (this.datos['natalidadMortalidadTabla'] && this.datos['natalidadMortalidadTabla'].length > 1) {
-      this.datos['natalidadMortalidadTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('natalidadMortalidadTabla', this.datos['natalidadMortalidadTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarNatalidadMortalidad(index: number, field: string, value: any) {
-    if (!this.datos['natalidadMortalidadTabla']) {
-      this.inicializarNatalidadMortalidad();
-    }
-    if (this.datos['natalidadMortalidadTabla'][index]) {
-      this.datos['natalidadMortalidadTabla'][index][field] = value;
-      this.formularioService.actualizarDato('natalidadMortalidadTabla', this.datos['natalidadMortalidadTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarMorbilidad() {
-    if ((!this.datos['morbilidadTabla'] || this.datos['morbilidadTabla'].length === 0) && (!this.datos['morbiliadTabla'] || this.datos['morbiliadTabla'].length === 0)) {
-      this.datos['morbilidadTabla'] = [
-        { grupo: 'Infecciones agudas de las vías respiratorias superiores', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 },
-        { grupo: 'Obesidad y otros de hiperalimentación', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
-      ];
-      this.formularioService.actualizarDato('morbilidadTabla', this.datos['morbilidadTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarMorbilidad() {
-    if (!this.datos['morbilidadTabla'] && !this.datos['morbiliadTabla']) {
-      this.inicializarMorbilidad();
-    }
+  calcularTotalesMorbilidad() {
     const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
-    if (tabla) {
-      tabla.push({ grupo: '', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 });
-      const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
+    if (!tabla || tabla.length === 0) {
+      return;
     }
-  }
-
-  eliminarMorbilidad(index: number) {
-    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
-    if (tabla && tabla.length > 1) {
-      tabla.splice(index, 1);
-      const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarMorbilidad(index: number, field: string, value: any) {
-    if (!this.datos['morbilidadTabla'] && !this.datos['morbiliadTabla']) {
-      this.inicializarMorbilidad();
-    }
-    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
-    if (tabla && tabla[index]) {
-      tabla[index][field] = value;
-      const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarAfiliacionSalud() {
-    if ((!this.datos['afiliacionSaludTabla'] || this.datos['afiliacionSaludTabla'].length === 0) && (!this.datos['seguroSaludTabla'] || this.datos['seguroSaludTabla'].length === 0)) {
-      this.datos['afiliacionSaludTabla'] = [
-        { categoria: 'SIS', casos: 0, porcentaje: '0%' },
-        { categoria: 'ESSALUD', casos: 0, porcentaje: '0%' },
-        { categoria: 'Sin seguro', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarAfiliacionSalud() {
-    if (!this.datos['afiliacionSaludTabla'] && !this.datos['seguroSaludTabla']) {
-      this.inicializarAfiliacionSalud();
-    }
-    const tabla = this.datos['afiliacionSaludTabla'] || this.datos['seguroSaludTabla'];
-    if (tabla) {
-      const totalIndex = tabla.findIndex((item: any) => item.categoria === 'Total');
-      if (totalIndex >= 0) {
-        tabla.splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-      } else {
-        tabla.push({ categoria: '', casos: 0, porcentaje: '0%' });
-      }
-      const key = this.datos['afiliacionSaludTabla'] ? 'afiliacionSaludTabla' : 'seguroSaludTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  eliminarAfiliacionSalud(index: number) {
-    const tabla = this.datos['afiliacionSaludTabla'] || this.datos['seguroSaludTabla'];
-    if (tabla && tabla.length > 1) {
-      const item = tabla[index];
-      if (item.categoria !== 'Total') {
-        tabla.splice(index, 1);
-        const key = this.datos['afiliacionSaludTabla'] ? 'afiliacionSaludTabla' : 'seguroSaludTabla';
-        this.formularioService.actualizarDato(key, tabla);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarAfiliacionSalud(index: number, field: string, value: any) {
-    if (!this.datos['afiliacionSaludTabla'] && !this.datos['seguroSaludTabla']) {
-      this.inicializarAfiliacionSalud();
-    }
-    const tabla = this.datos['afiliacionSaludTabla'] || this.datos['seguroSaludTabla'];
-    if (tabla && tabla[index]) {
-      tabla[index][field] = value;
-      const key = this.datos['afiliacionSaludTabla'] ? 'afiliacionSaludTabla' : 'seguroSaludTabla';
-      this.formularioService.actualizarDato(key, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+    tabla.forEach((item: any) => {
+      const rango0_11 = parseFloat(item.rango0_11) || 0;
+      const rango12_17 = parseFloat(item.rango12_17) || 0;
+      const rango18_29 = parseFloat(item.rango18_29) || 0;
+      const rango30_59 = parseFloat(item.rango30_59) || 0;
+      const rango60 = parseFloat(item.rango60) || 0;
+      const total = rango0_11 + rango12_17 + rango18_29 + rango30_59 + rango60;
+      item.casos = total;
+    });
   }
 }
 

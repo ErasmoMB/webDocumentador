@@ -56,15 +56,14 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.1. Institucionalidad local</h4>
     
-    <div class="form-field">
-      <label class="label">Párrafo de Institucionalidad</label>
-      <textarea 
-        class="textarea" 
-        rows="4"
-        [value]="obtenerParrafoInstitucionalidad()"
-        (input)="onFieldChange('parrafoSeccion5_institucionalidad', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion5_institucionalidad"
+      label="Párrafo de Institucionalidad"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="4"
+      [value]="obtenerParrafoInstitucionalidad()"
+      (valueChange)="onFieldChange('parrafoSeccion5_institucionalidad', $event)">
+    </app-paragraph-editor>
 
     <div class="form-field">
       <label class="label">Título de la Tabla</label>

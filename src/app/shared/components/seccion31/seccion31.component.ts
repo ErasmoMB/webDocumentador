@@ -2,6 +2,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDete
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FormularioDatos } from 'src/app/core/models/formulario.model';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion31',
@@ -53,6 +54,15 @@ export class Seccion31Component implements OnInit, OnChanges, DoCheck {
       (this.datos as any).centroPobladoAISI = centroPobladoAISI || null;
       this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
     }
+  }
+
+  getFotografiasAspectosCulturalesParaImageUpload(): FotoItem[] {
+    const fotografias = this.datos?.['fotografiasAspectosCulturales'] || [];
+    return fotografias.map((f: any) => ({
+      titulo: f.titulo || '',
+      fuente: f.fuente || '',
+      imagen: f.ruta || f.imagen || ''
+    })).filter((f: FotoItem) => f.imagen && f.imagen.trim() !== '');
   }
 }
 

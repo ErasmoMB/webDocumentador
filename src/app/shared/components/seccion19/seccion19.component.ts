@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,22 @@ export class Seccion19Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaOrganizacionSocial';
 
+  autoridadesConfig: TableConfig = {
+    tablaKey: 'autoridades',
+    totalKey: 'organizacion',
+    campoTotal: 'organizacion',
+    campoPorcentaje: 'cargo',
+    estructuraInicial: [{ organizacion: '', cargo: '', nombre: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -97,48 +107,6 @@ export class Seccion19Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarAutoridades() {
-    if (!this.datos['autoridades'] || this.datos['autoridades'].length === 0) {
-      this.datos['autoridades'] = [
-        { organizacion: 'CC Ayroca', cargo: 'Presidente', nombre: '' },
-        { organizacion: 'CC Ayroca', cargo: 'Secretario', nombre: '' }
-      ];
-      this.formularioService.actualizarDato('autoridades', this.datos['autoridades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarAutoridades() {
-    if (!this.datos['autoridades']) {
-      this.inicializarAutoridades();
-    }
-    this.datos['autoridades'].push({ organizacion: '', cargo: '', nombre: '' });
-    this.formularioService.actualizarDato('autoridades', this.datos['autoridades']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarAutoridades(index: number) {
-    if (this.datos['autoridades'] && this.datos['autoridades'].length > 1) {
-      this.datos['autoridades'].splice(index, 1);
-      this.formularioService.actualizarDato('autoridades', this.datos['autoridades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarAutoridades(index: number, field: string, value: any) {
-    if (!this.datos['autoridades']) {
-      this.inicializarAutoridades();
-    }
-    if (this.datos['autoridades'][index]) {
-      this.datos['autoridades'][index][field] = value;
-      this.formularioService.actualizarDato('autoridades', this.datos['autoridades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
 
   shouldShowOrgCell(index: number, autoridades: any[]): boolean {
     if (!autoridades || index === 0) {
@@ -152,6 +120,10 @@ export class Seccion19Component extends BaseSectionComponent {
       return 1;
     }
     return autoridades.filter((item: any) => item.organizacion === organizacion).length;
+  }
+
+  obtenerTextoOrganizacionSocial(): string {
+    return this.datos.textoOrganizacionSocial || '';
   }
 }
 

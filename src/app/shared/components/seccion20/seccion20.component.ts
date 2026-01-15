@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,22 @@ export class Seccion20Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaFestividades';
 
+  festividadesConfig: TableConfig = {
+    tablaKey: 'festividades',
+    totalKey: 'festividad',
+    campoTotal: 'festividad',
+    campoPorcentaje: 'fecha',
+    estructuraInicial: [{ festividad: '', fecha: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -97,46 +107,8 @@ export class Seccion20Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarFestividades() {
-    if (!this.datos['festividades'] || this.datos['festividades'].length === 0) {
-      this.datos['festividades'] = [
-        { festividad: '', fecha: '' }
-      ];
-      this.formularioService.actualizarDato('festividades', this.datos['festividades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarFestividades() {
-    if (!this.datos['festividades']) {
-      this.inicializarFestividades();
-    }
-    this.datos['festividades'].push({ festividad: '', fecha: '' });
-    this.formularioService.actualizarDato('festividades', this.datos['festividades']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarFestividades(index: number) {
-    if (this.datos['festividades'] && this.datos['festividades'].length > 1) {
-      this.datos['festividades'].splice(index, 1);
-      this.formularioService.actualizarDato('festividades', this.datos['festividades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarFestividades(index: number, field: string, value: any) {
-    if (!this.datos['festividades']) {
-      this.inicializarFestividades();
-    }
-    if (this.datos['festividades'][index]) {
-      this.datos['festividades'][index][field] = value;
-      this.formularioService.actualizarDato('festividades', this.datos['festividades']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoFestividades(): string {
+    return this.datos.textoFestividades || '';
   }
 }
 

@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -20,13 +21,22 @@ export class Seccion17Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaIDH';
 
+  indiceDesarrolloHumanoConfig: TableConfig = {
+    tablaKey: 'indiceDesarrolloHumanoTabla',
+    totalKey: 'poblacion',
+    campoTotal: 'poblacion',
+    campoPorcentaje: 'idh',
+    estructuraInicial: [{ poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -97,46 +107,8 @@ export class Seccion17Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarIndiceDesarrolloHumano() {
-    if (!this.datos['indiceDesarrolloHumanoTabla'] || this.datos['indiceDesarrolloHumanoTabla'].length === 0) {
-      this.datos['indiceDesarrolloHumanoTabla'] = [
-        { poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 }
-      ];
-      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarIndiceDesarrolloHumano() {
-    if (!this.datos['indiceDesarrolloHumanoTabla']) {
-      this.inicializarIndiceDesarrolloHumano();
-    }
-    this.datos['indiceDesarrolloHumanoTabla'].push({ poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 });
-    this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarIndiceDesarrolloHumano(index: number) {
-    if (this.datos['indiceDesarrolloHumanoTabla'] && this.datos['indiceDesarrolloHumanoTabla'].length > 1) {
-      this.datos['indiceDesarrolloHumanoTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarIndiceDesarrolloHumano(index: number, field: string, value: any) {
-    if (!this.datos['indiceDesarrolloHumanoTabla']) {
-      this.inicializarIndiceDesarrolloHumano();
-    }
-    if (this.datos['indiceDesarrolloHumanoTabla'][index]) {
-      this.datos['indiceDesarrolloHumanoTabla'][index][field] = value;
-      this.formularioService.actualizarDato('indiceDesarrolloHumanoTabla', this.datos['indiceDesarrolloHumanoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoIndiceDesarrolloHumano(): string {
+    return this.datos.textoIndiceDesarrolloHumano || '';
   }
 }
 

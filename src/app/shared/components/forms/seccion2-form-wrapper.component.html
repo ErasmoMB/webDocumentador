@@ -1,0 +1,132 @@
+<div class="form-group-section">
+  <h4 class="section-title">Delimitación de Áreas de Influencia Social</h4>
+  
+  <div *ngFor="let comunidad of comunidadesCampesinas; let i = index" 
+       style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h5 style="margin: 0; color: #333;">Comunidad Campesina {{ i + 1 }}</h5>
+      <button 
+        type="button" 
+        class="btn btn-danger" 
+        (click)="eliminarComunidadCampesina(comunidad.id)"
+        style="font-size: 12px; padding: 5px 10px;"
+        *ngIf="comunidadesCampesinas.length > 1">
+        Eliminar
+      </button>
+    </div>
+
+    <div class="form-field" *ngIf="centrosPobladosJSON.length > 0">
+      <label class="label">Seleccionar Centros Poblados para AISD <span class="required">*</span></label>
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="seleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
+          style="font-size: 12px; padding: 5px 10px;">
+          Seleccionar Todos
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="deseleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
+          style="font-size: 12px; padding: 5px 10px;">
+          Deseleccionar Todos
+        </button>
+      </div>
+      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white;">
+        <div *ngFor="let cp of centrosPobladosJSON" 
+             style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
+          <input 
+            type="checkbox" 
+            [checked]="estaCentroPobladoSeleccionadoComunidad(comunidad.id, cp.CODIGO?.toString() || '')"
+            (change)="toggleCentroPobladoComunidad(comunidad.id, cp.CODIGO?.toString() || '')"
+            style="margin-right: 8px;">
+          <span style="flex: 1;">{{ cp.CCPP }}</span>
+        </div>
+      </div>
+      <small class="form-hint">Seleccione los centros poblados que formarán parte del AISD. Debe seleccionar al menos uno.</small>
+    </div>
+
+    <div class="form-field">
+      <label class="label">Comunidad Campesina (CC) AISD <span class="required">*</span></label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ingrese el nombre de la comunidad campesina"
+        [value]="comunidad.nombre"
+        (input)="actualizarNombreComunidad(comunidad.id, $any($event.target).value)"
+        [disabled]="obtenerCentrosPobladosSeleccionadosComunidad(comunidad.id).length === 0">
+      <small class="form-hint">Asigne un nombre a la Comunidad Campesina. Primero seleccione los centros poblados.</small>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <button 
+      type="button" 
+      class="btn btn-primary" 
+      (click)="agregarComunidadCampesina()"
+      style="font-size: 14px; padding: 10px 20px;">
+      + Agregar Otra Comunidad Campesina
+    </button>
+  </div>
+
+  <div class="form-row">
+    <div class="form-field">
+      <label class="label">Distrito Adicional 1</label>
+      <div class="autocomplete-wrapper">
+        <input 
+          type="text" 
+          class="input" 
+          placeholder="Buscar distrito adicional..."
+          [value]="((autocompleteData['aisdComponente1'] && autocompleteData['aisdComponente1'].buscado) || formData['aisdComponente1'] || '')"
+          (input)="onAutocompleteInput('aisdComponente1', $any($event.target).value)"
+          (focus)="onFocusDistritoAdicional('aisdComponente1')"
+          [disabled]="false">
+        
+        <div *ngIf="autocompleteData['aisdComponente1'] && autocompleteData['aisdComponente1'].mostrar && autocompleteData['aisdComponente1'].sugerencias.length > 0" 
+             class="autocomplete-dropdown"
+             (mouseenter)="autocompleteData['aisdComponente1'].mostrar = true"
+             (mouseleave)="cerrarSugerenciasAutocomplete('aisdComponente1')">
+          <div 
+            *ngFor="let sugerencia of autocompleteData['aisdComponente1'].sugerencias" 
+            class="autocomplete-item"
+            (mousedown)="seleccionarSugerencia('aisdComponente1', sugerencia)"
+            (click)="seleccionarSugerencia('aisdComponente1', sugerencia)">
+            {{ sugerencia }}
+          </div>
+        </div>
+      </div>
+      <small class="form-hint">Busca distritos de la provincia seleccionada</small>
+    </div>
+    <div class="form-field">
+      <label class="label">Distrito Adicional 2</label>
+      <div class="autocomplete-wrapper">
+        <input 
+          type="text" 
+          class="input" 
+          placeholder="Buscar distrito adicional..."
+          [value]="((autocompleteData['aisdComponente2'] && autocompleteData['aisdComponente2'].buscado) || formData['aisdComponente2'] || '')"
+          (input)="onAutocompleteInput('aisdComponente2', $any($event.target).value)"
+          (focus)="onFocusDistritoAdicional('aisdComponente2')"
+          [disabled]="false">
+        
+        <div *ngIf="autocompleteData['aisdComponente2'] && autocompleteData['aisdComponente2'].mostrar && autocompleteData['aisdComponente2'].sugerencias.length > 0" 
+             class="autocomplete-dropdown"
+             (mouseenter)="autocompleteData['aisdComponente2'].mostrar = true"
+             (mouseleave)="cerrarSugerenciasAutocomplete('aisdComponente2')">
+          <div 
+            *ngFor="let sugerencia of autocompleteData['aisdComponente2'].sugerencias" 
+            class="autocomplete-item"
+            (mousedown)="seleccionarSugerencia('aisdComponente2', sugerencia)"
+            (click)="seleccionarSugerencia('aisdComponente2', sugerencia)">
+            {{ sugerencia }}
+          </div>
+        </div>
+      </div>
+      <small class="form-hint">Busca distritos de la provincia seleccionada</small>
+    </div>
+  </div>
+</div>
+
+<app-seccion2 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion2>

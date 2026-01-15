@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -32,18 +33,27 @@ export class Seccion3Component extends BaseSectionComponent {
     'fuentesSecundariasLista'
   ];
 
+  entrevistadosConfig: TableConfig = {
+    tablaKey: 'entrevistados',
+    totalKey: 'nombre',
+    campoTotal: 'nombre',
+    campoPorcentaje: 'cargo',
+    estructuraInicial: [{ nombre: '', cargo: '', organizacion: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
-  protected detectarCambios(): boolean {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     let hayCambios = false;
     
@@ -59,7 +69,7 @@ export class Seccion3Component extends BaseSectionComponent {
     return hayCambios;
   }
 
-  protected actualizarValoresConPrefijo(): void {
+  protected override actualizarValoresConPrefijo(): void {
     this.watchedFields.forEach(campo => {
       this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
     });
@@ -159,36 +169,5 @@ export class Seccion3Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  agregarEntrevistado() {
-    if (!this.datos.entrevistados) {
-      this.datos.entrevistados = [];
-    }
-    this.datos.entrevistados.push({ nombre: '', cargo: '', organizacion: '' });
-    this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarEntrevistado(index: number) {
-    if (this.datos.entrevistados && this.datos.entrevistados.length > 0) {
-      this.datos.entrevistados.splice(index, 1);
-      this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarEntrevistado(index: number, campo: string, value: string) {
-    if (!this.datos.entrevistados) {
-      this.datos.entrevistados = [];
-    }
-    if (!this.datos.entrevistados[index]) {
-      this.datos.entrevistados[index] = { nombre: '', cargo: '', organizacion: '' };
-    }
-    (this.datos.entrevistados[index] as any)[campo] = value;
-    this.formularioService.actualizarDato('entrevistados', this.datos.entrevistados);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
 }
 

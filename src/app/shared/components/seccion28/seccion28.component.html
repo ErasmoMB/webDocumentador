@@ -27,14 +27,17 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
-<app-foto-info 
-    *ngIf="getFotoSalud().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoSaludParaImageUpload().length > 0"
+    [fotografias]="getFotoSaludParaImageUpload()"
     [sectionId]="'3.1.4.B.1.7'"
-    [titulo]="getFotoSalud().titulo"
-    [fuente]="getFotoSalud().fuente"
-    [ruta]="getFotoSalud().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaSaludAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
 <p class="text-justify" *ngIf="datos.textoEducacionCP && datos.textoEducacionCP !== '____'">{{ datos.textoEducacionCP }}</p>
@@ -71,16 +74,17 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
 
-<div class="image-gallery">
-    <app-foto-info 
-        *ngFor="let foto of getFotografiasEducacion()"
-        [autoNumber]="true"
-        [sectionId]="'3.1.4.B.1.7'"
-        [titulo]="foto.titulo"
-        [fuente]="foto.fuente"
-        [ruta]="foto.ruta">
-    </app-foto-info>
-</div>
+<app-image-upload
+    *ngIf="getFotografiasEducacionParaImageUpload().length > 0"
+    [fotografias]="getFotografiasEducacionParaImageUpload()"
+    [sectionId]="'3.1.4.B.1.7'"
+    [photoPrefix]="'fotografiaEducacionAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
 <p class="text-justify" *ngIf="datos.textoRecreacionCP1 && datos.textoRecreacionCP1 !== '____'">{{ datos.textoRecreacionCP1 }}</p>
@@ -90,14 +94,17 @@
 <p class="text-justify" *ngIf="datos.textoRecreacionCP3 && datos.textoRecreacionCP3 !== '____'">{{ datos.textoRecreacionCP3 }}</p>
 <p class="text-justify" *ngIf="!datos.textoRecreacionCP3 || datos.textoRecreacionCP3 === '____'">Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.</p>
 
-<app-foto-info 
-    *ngIf="getFotoRecreacion().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoRecreacionParaImageUpload().length > 0"
+    [fotografias]="getFotoRecreacionParaImageUpload()"
     [sectionId]="'3.1.4.B.1.7'"
-    [titulo]="getFotoRecreacion().titulo"
-    [fuente]="getFotoRecreacion().fuente"
-    [ruta]="getFotoRecreacion().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaRecreacionAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
 <p class="text-justify" *ngIf="datos.textoDeporteCP1 && datos.textoDeporteCP1 !== '____'">{{ datos.textoDeporteCP1 }}</p>
@@ -105,14 +112,17 @@
 <p class="text-justify" *ngIf="datos.textoDeporteCP2 && datos.textoDeporteCP2 !== '____'">{{ datos.textoDeporteCP2 }}</p>
 <p class="text-justify" *ngIf="!datos.textoDeporteCP2 || datos.textoDeporteCP2 === '____'">Asimismo, cabe mencionar que en <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.</p>
 
-<app-foto-info 
-    *ngIf="getFotoDeporte().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoDeporteParaImageUpload().length > 0"
+    [fotografias]="getFotoDeporteParaImageUpload()"
     [sectionId]="'3.1.4.B.1.7'"
-    [titulo]="getFotoDeporte().titulo"
-    [fuente]="getFotoDeporte().fuente"
-    [ruta]="getFotoDeporte().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaDeporteAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <app-image-upload
     [modoVista]="true"
@@ -130,48 +140,17 @@
   <div class="form-group-section">
     <div class="form-field">
       <label class="label">Tabla Principales características del Puesto de Salud</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Descripción</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['puestoSaludCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarPuestoSaludCP(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: Nombre">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.descripcion || ''"
-                  (input)="actualizarPuestoSaludCP(i, 'descripcion', $any($event.target).value)"
-                  placeholder="Ej: Puesto de Salud Cahuacho">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPuestoSaludCP(i)" *ngIf="(datos['puestoSaludCpTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['puestoSaludCpTabla'] || datos['puestoSaludCpTabla'].length === 0">
-              <td colspan="3" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPuestoSaludCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPuestoSaludCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="puestoSaludConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Nombre' },
+          { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Puesto de Salud Cahuacho' }
+        ]"
+        [tablaKey]="'puestoSaludCpTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
@@ -192,70 +171,60 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla Infraestructura educativa</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Nombre de IE</th>
-              <th>Nivel</th>
-              <th>Tipo de Gestión</th>
-              <th>Cantidad de estudiantes</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['educacionCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.nombreIE || ''"
-                  (input)="actualizarEducacionCP(i, 'nombreIE', $any($event.target).value)"
-                  placeholder="Ej: IE Cahuacho">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.nivel || ''"
-                  (input)="actualizarEducacionCP(i, 'nivel', $any($event.target).value)"
-                  placeholder="Ej: Inicial - Jardín">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.tipoGestion || ''"
-                  (input)="actualizarEducacionCP(i, 'tipoGestion', $any($event.target).value)"
-                  placeholder="Ej: Pública de gestión directa">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.cantidadEstudiantes || ''"
-                  (input)="actualizarEducacionCP(i, 'cantidadEstudiantes', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarEducacionCP(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarEducacionCP(i)" *ngIf="(datos['educacionCpTabla'] || []).length > 1 && !item.nombreIE?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['educacionCpTabla'] || datos['educacionCpTabla'].length === 0">
-              <td colspan="6" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarEducacionCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarEducacionCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="educacionConfig"
+        [columns]="[
+          { field: 'nombreIE', label: 'Nombre de IE', type: 'text', placeholder: 'Ej: IE Cahuacho' },
+          { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Ej: Inicial - Jardín' },
+          { field: 'tipoGestion', label: 'Tipo de Gestión', type: 'text', placeholder: 'Ej: Pública de gestión directa' },
+          { field: 'cantidadEstudiantes', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'educacionCpTabla'"
+        [totalKey]="'nombreIE'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoSaludCP"
+        label="Infraestructura en Salud - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSaludCP()"
+        (valueChange)="onFieldChange('textoSaludCP', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoEducacionCP"
+        label="Infraestructura en Educación - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoEducacionCP()"
+        (valueChange)="onFieldChange('textoEducacionCP', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoRecreacionCP1"
+        label="Infraestructura en Recreación - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoRecreacionCP1()"
+        (valueChange)="onFieldChange('textoRecreacionCP1', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoDeporteCP1"
+        label="Infraestructura en Deporte - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoDeporteCP1()"
+        (valueChange)="onFieldChange('textoDeporteCP1', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

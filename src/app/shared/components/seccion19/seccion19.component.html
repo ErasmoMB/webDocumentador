@@ -58,55 +58,31 @@
 
     <div class="form-field">
       <label class="label">Tabla Autoridades y Líderes Sociales</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Organización</th>
-              <th>Cargo</th>
-              <th>Nombres y Apellidos</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['autoridades'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.organizacion || ''"
-                  (input)="actualizarAutoridades(i, 'organizacion', $any($event.target).value)"
-                  placeholder="CC Ayroca">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.cargo || ''"
-                  (input)="actualizarAutoridades(i, 'cargo', $any($event.target).value)"
-                  placeholder="Presidente">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.nombre || ''"
-                  (input)="actualizarAutoridades(i, 'nombre', $any($event.target).value)"
-                  placeholder="Nombres y Apellidos">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarAutoridades(i)" *ngIf="(datos['autoridades'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['autoridades'] || datos['autoridades'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarAutoridades()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarAutoridades()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="autoridadesConfig"
+        [columns]="[
+          { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'CC Ayroca' },
+          { field: 'cargo', label: 'Cargo', type: 'text', placeholder: 'Presidente' },
+          { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Nombres y Apellidos' }
+        ]"
+        [tablaKey]="'autoridades'"
+        [totalKey]="'organizacion'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoOrganizacionSocial"
+        label="Organización Social y Liderazgo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoOrganizacionSocial()"
+        (valueChange)="onFieldChange('textoOrganizacionSocial', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -70,7 +70,7 @@ export class WordGeneratorService {
     const tagName = elem.tagName.toLowerCase();
     const text = elem.innerText?.trim();
 
-    if (tagName === 'app-foto-info') {
+    if (tagName === 'app-foto-info' || tagName === 'app-image-upload') {
       return await this.procesarFotoInfo(elem);
     }
 
@@ -106,7 +106,7 @@ export class WordGeneratorService {
         if (elem.classList.contains('image-gallery')) {
           return await this.procesarGaleriaImagenes(elem);
         }
-        if (elem.classList.contains('foto-info')) {
+        if (elem.classList.contains('foto-info') || elem.classList.contains('foto-item')) {
           return await this.procesarFotoInfo(elem);
         }
         return await this.procesarContenidoDiv(elem);

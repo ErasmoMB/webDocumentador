@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -29,13 +30,40 @@ export class Seccion8Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = '';
 
+  peaOcupacionesConfig: TableConfig = {
+    tablaKey: 'peaOcupacionesTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  poblacionPecuariaConfig: TableConfig = {
+    tablaKey: 'poblacionPecuariaTabla',
+    totalKey: 'especie',
+    campoTotal: 'especie',
+    campoPorcentaje: 'cantidadPromedio',
+    estructuraInicial: [{ especie: '', cantidadPromedio: '', ventaUnidad: '' }]
+  };
+
+  caracteristicasAgriculturaConfig: TableConfig = {
+    tablaKey: 'caracteristicasAgriculturaTabla',
+    totalKey: 'categoria',
+    campoTotal: 'categoria',
+    campoPorcentaje: 'detalle',
+    estructuraInicial: [{ categoria: '', detalle: '' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -186,137 +214,6 @@ export class Seccion8Component extends BaseSectionComponent {
     return `En la CC ${grupoAISD}, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 95 % según los entrevistados, se destina al autoconsumo, mientras que solo un 5 % se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectárea de tierra.\n\nEl sistema de riego utilizado en la comunidad es principalmente por gravedad, aprovechando las fuentes de agua disponibles en la zona. Sin embargo, la actividad agrícola enfrenta serios desafíos, como las heladas, que dañan los cultivos durante las temporadas frías, y las sequías, que disminuyen la disponibilidad de agua, afectando la capacidad productiva de las familias. Adicionalmente, se enfrentan plagas y enfermedades como roedores y el gusano blanco. Estas problemáticas, recurrentes en el ciclo agrícola, limitan tanto la cantidad como la calidad de los productos cosechados.`;
   }
 
-  inicializarPEAOcupaciones() {
-    if (!this.datos['peaOcupacionesTabla'] || this.datos['peaOcupacionesTabla'].length === 0) {
-      this.datos['peaOcupacionesTabla'] = [
-        { categoria: 'Trabajador independiente o por cuenta propia', casos: 0, porcentaje: '0%' },
-        { categoria: 'Obrero', casos: 0, porcentaje: '0%' },
-        { categoria: 'Empleado', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total', casos: 0, porcentaje: '100%' }
-      ];
-      this.formularioService.actualizarDato('peaOcupacionesTabla', this.datos['peaOcupacionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarPEAOcupaciones() {
-    if (!this.datos['peaOcupacionesTabla']) {
-      this.inicializarPEAOcupaciones();
-    }
-    this.datos['peaOcupacionesTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
-    this.formularioService.actualizarDato('peaOcupacionesTabla', this.datos['peaOcupacionesTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarPEAOcupaciones(index: number) {
-    if (this.datos['peaOcupacionesTabla'] && this.datos['peaOcupacionesTabla'].length > 1) {
-      const item = this.datos['peaOcupacionesTabla'][index];
-      if (item.categoria !== 'Total') {
-        this.datos['peaOcupacionesTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('peaOcupacionesTabla', this.datos['peaOcupacionesTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarPEAOcupaciones(index: number, field: string, value: any) {
-    if (!this.datos['peaOcupacionesTabla']) {
-      this.inicializarPEAOcupaciones();
-    }
-    if (this.datos['peaOcupacionesTabla'][index]) {
-      this.datos['peaOcupacionesTabla'][index][field] = value;
-      this.formularioService.actualizarDato('peaOcupacionesTabla', this.datos['peaOcupacionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarPoblacionPecuaria() {
-    if (!this.datos['poblacionPecuariaTabla'] || this.datos['poblacionPecuariaTabla'].length === 0) {
-      this.datos['poblacionPecuariaTabla'] = [
-        { especie: 'Vacuno', cantidadPromedio: '', ventaUnidad: '' }
-      ];
-      this.formularioService.actualizarDato('poblacionPecuariaTabla', this.datos['poblacionPecuariaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarPoblacionPecuaria() {
-    if (!this.datos['poblacionPecuariaTabla']) {
-      this.inicializarPoblacionPecuaria();
-    }
-    this.datos['poblacionPecuariaTabla'].push({ especie: '', cantidadPromedio: '', ventaUnidad: '' });
-    this.formularioService.actualizarDato('poblacionPecuariaTabla', this.datos['poblacionPecuariaTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarPoblacionPecuaria(index: number) {
-    if (this.datos['poblacionPecuariaTabla'] && this.datos['poblacionPecuariaTabla'].length > 1) {
-      this.datos['poblacionPecuariaTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('poblacionPecuariaTabla', this.datos['poblacionPecuariaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarPoblacionPecuaria(index: number, field: string, value: any) {
-    if (!this.datos['poblacionPecuariaTabla']) {
-      this.inicializarPoblacionPecuaria();
-    }
-    if (this.datos['poblacionPecuariaTabla'][index]) {
-      this.datos['poblacionPecuariaTabla'][index][field] = value;
-      this.formularioService.actualizarDato('poblacionPecuariaTabla', this.datos['poblacionPecuariaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarCaracteristicasAgricultura() {
-    if (!this.datos['caracteristicasAgriculturaTabla'] || this.datos['caracteristicasAgriculturaTabla'].length === 0) {
-      this.datos['caracteristicasAgriculturaTabla'] = [
-        { categoria: '', detalle: '' }
-      ];
-      this.formularioService.actualizarDato('caracteristicasAgriculturaTabla', this.datos['caracteristicasAgriculturaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarCaracteristicasAgricultura() {
-    if (!this.datos['caracteristicasAgriculturaTabla']) {
-      this.inicializarCaracteristicasAgricultura();
-    }
-    this.datos['caracteristicasAgriculturaTabla'].push({ categoria: '', detalle: '' });
-    this.formularioService.actualizarDato('caracteristicasAgriculturaTabla', this.datos['caracteristicasAgriculturaTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarCaracteristicasAgricultura(index: number) {
-    if (this.datos['caracteristicasAgriculturaTabla'] && this.datos['caracteristicasAgriculturaTabla'].length > 1) {
-      this.datos['caracteristicasAgriculturaTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('caracteristicasAgriculturaTabla', this.datos['caracteristicasAgriculturaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarCaracteristicasAgricultura(index: number, field: string, value: any) {
-    if (!this.datos['caracteristicasAgriculturaTabla']) {
-      this.inicializarCaracteristicasAgricultura();
-    }
-    if (this.datos['caracteristicasAgriculturaTabla'][index]) {
-      this.datos['caracteristicasAgriculturaTabla'][index][field] = value;
-      this.formularioService.actualizarDato('caracteristicasAgriculturaTabla', this.datos['caracteristicasAgriculturaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
 
   getFotografiasGanaderiaVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);

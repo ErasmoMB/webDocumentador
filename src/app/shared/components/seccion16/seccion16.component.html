@@ -76,25 +76,23 @@
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Agua - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion16AguaCompleto()"
-          (input)="onFieldChange('parrafoSeccion16_agua_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion16_agua_completo"
+        label="Agua - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion16AguaCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion16_agua_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Recursos Naturales - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="6"
-          [value]="obtenerTextoSeccion16RecursosNaturalesCompleto()"
-          (input)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion16_recursos_naturales_completo"
+        label="Recursos Naturales - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion16RecursosNaturalesCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -191,224 +191,71 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla PET según grupos de edad</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['petGruposEdadAISI'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarPETGruposEdadAISI(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: 14 a 29 años">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarPETGruposEdadAISI(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarPETGruposEdadAISI(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPETGruposEdadAISI(i)" *ngIf="(datos['petGruposEdadAISI'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['petGruposEdadAISI'] || datos['petGruposEdadAISI'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPETGruposEdadAISI()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPETGruposEdadAISI()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="petGruposEdadConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: 14 a 29 años' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'petGruposEdadAISI'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla PEA y No PEA según sexo</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categorías</th>
-              <th>Hombres</th>
-              <th>Porcentaje</th>
-              <th>Mujeres</th>
-              <th>Porcentaje</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['peaDistritoSexoTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: PEA">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.hombres || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'hombres', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentajeHombres || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'porcentajeHombres', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.mujeres || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'mujeres', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentajeMujeres || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'porcentajeMujeres', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarPEADistritoSexo(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPEADistritoSexo(i)" *ngIf="(datos['peaDistritoSexoTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['peaDistritoSexoTabla'] || datos['peaDistritoSexoTabla'].length === 0">
-              <td colspan="8" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPEADistritoSexo()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPEADistritoSexo()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="peaDistritoSexoConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA' },
+          { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
+          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+          { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
+          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'peaDistritoSexoTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="calcularPorcentajesPEADistritoSexo(); cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categorías</th>
-              <th>Hombres</th>
-              <th>Porcentaje</th>
-              <th>Mujeres</th>
-              <th>Porcentaje</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['peaOcupadaDesocupadaTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: PEA Ocupada">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.hombres || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'hombres', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentajeHombres || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentajeHombres', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.mujeres || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'mujeres', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentajeMujeres || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentajeMujeres', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarPEAOcupadaDesocupada(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarPEAOcupadaDesocupada(i)" *ngIf="(datos['peaOcupadaDesocupadaTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['peaOcupadaDesocupadaTabla'] || datos['peaOcupadaDesocupadaTabla'].length === 0">
-              <td colspan="8" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarPEAOcupadaDesocupada()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupadaDesocupada()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="peaOcupadaDesocupadaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA Ocupada' },
+          { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
+          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+          { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
+          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'peaOcupadaDesocupadaTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="calcularPorcentajesPEAOcupadaDesocupada(); cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoPEAAISI"
+        label="PEA Ocupada y Desocupada - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoPEAAISI()"
+        (valueChange)="onFieldChange('textoPEAAISI', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

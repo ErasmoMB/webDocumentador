@@ -11,7 +11,6 @@ import { SeccionComponent } from './pages/seccion/seccion.component';
 import { PlantillaViewComponent } from './pages/plantilla/plantilla-view.component';
 import { ResumenComponent } from './pages/plantilla/plantilla.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
-import { FotoInfoComponent } from './shared/components/foto-info/foto-info.component';
 import { Seccion1Component } from './shared/components/seccion1/seccion1.component';
 import { Seccion2Component } from './shared/components/seccion2/seccion2.component';
 import { Seccion3Component } from './shared/components/seccion3/seccion3.component';
@@ -50,6 +49,17 @@ import { Seccion35Component } from './shared/components/seccion35/seccion35.comp
 import { Seccion36Component } from './shared/components/seccion36/seccion36.component';
 import { ImageUploadComponent } from './shared/components/image-upload/image-upload.component';
 import { TableWrapperComponent } from './shared/components/table-wrapper/table-wrapper.component';
+import { Seccion1FormWrapperComponent } from './shared/components/forms/seccion1-form-wrapper.component';
+import { Seccion2FormWrapperComponent } from './shared/components/forms/seccion2-form-wrapper.component';
+import { Seccion4FormWrapperComponent } from './shared/components/forms/seccion4-form-wrapper.component';
+import { Seccion7FormWrapperComponent } from './shared/components/forms/seccion7-form-wrapper.component';
+import { Seccion14FormWrapperComponent } from './shared/components/forms/seccion14-form-wrapper.component';
+import { Seccion15FormWrapperComponent } from './shared/components/forms/seccion15-form-wrapper.component';
+import { Seccion16FormWrapperComponent } from './shared/components/forms/seccion16-form-wrapper.component';
+import { Seccion17FormWrapperComponent } from './shared/components/forms/seccion17-18-form-wrapper.component';
+import { Seccion30FormWrapperComponent } from './shared/components/forms/seccion30-form-wrapper.component';
+import { DynamicTableComponent } from './shared/components/dynamic-table/dynamic-table.component';
+import { ParagraphEditorComponent } from './shared/components/paragraph-editor/paragraph-editor.component';
 import { LoadingDirective } from './core/directives/loading.directive';
 import { DataSourceDirective } from './shared/directives/data-source.directive';
 import { TableNumberDirective } from './shared/directives/table-number.directive';
@@ -69,7 +79,6 @@ import { CacheService } from './core/services/cache.service';
     PlantillaViewComponent,
     ResumenComponent,
     SidebarComponent,
-    FotoInfoComponent,
     Seccion1Component,
     Seccion2Component,
     Seccion3Component,
@@ -113,6 +122,17 @@ import { CacheService } from './core/services/cache.service';
     TableNumberDirective,
     PhotoNumberDirective,
     DataSourcePipe,
+    Seccion1FormWrapperComponent,
+    Seccion2FormWrapperComponent,
+    Seccion4FormWrapperComponent,
+    Seccion7FormWrapperComponent,
+    Seccion14FormWrapperComponent,
+    Seccion15FormWrapperComponent,
+    Seccion16FormWrapperComponent,
+    Seccion17FormWrapperComponent,
+    Seccion30FormWrapperComponent,
+    DynamicTableComponent,
+    ParagraphEditorComponent,
   ],
   imports: [
     BrowserModule,

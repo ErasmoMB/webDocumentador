@@ -131,7 +131,7 @@ export class NumberingService {
   }
 
   getGlobalPhotoIndex(sectionId: string, localIndex: number, element: Element): number {
-    const allPhotos = Array.from(document.querySelectorAll('app-foto-info[autoNumber="true"]'));
+    const allPhotos = Array.from(document.querySelectorAll('app-foto-info[autoNumber="true"], app-image-upload[mostrarNumero="true"]'));
     const currentSectionIndex = this.sectionOrder.indexOf(sectionId);
     
     if (allPhotos.length > 20) {

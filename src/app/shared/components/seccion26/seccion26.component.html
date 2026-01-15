@@ -62,14 +62,17 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
-<app-foto-info 
-    *ngIf="getFotoDesechosSolidos().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoDesechosSolidosParaImageUpload().length > 0"
+    [fotografias]="getFotoDesechosSolidosParaImageUpload()"
     [sectionId]="'3.1.4.B.1.5'"
-    [titulo]="getFotoDesechosSolidos().titulo"
-    [fuente]="getFotoDesechosSolidos().fuente"
-    [ruta]="getFotoDesechosSolidos().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaDesechosSolidosAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
 <p class="text-justify" *ngIf="datos.textoDesechosSolidosCP && datos.textoDesechosSolidosCP !== '____'">{{ datos.textoDesechosSolidosCP }}</p>
@@ -105,14 +108,17 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
-<app-foto-info 
-    *ngIf="getFotoElectricidad().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoElectricidadParaImageUpload().length > 0"
+    [fotografias]="getFotoElectricidadParaImageUpload()"
     [sectionId]="'3.1.4.B.1.5'"
-    [titulo]="getFotoElectricidad().titulo"
-    [fuente]="getFotoElectricidad().fuente"
-    [ruta]="getFotoElectricidad().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaElectricidadAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
 <p class="text-justify" *ngIf="datos.textoEnergiaCocinarCP && datos.textoEnergiaCocinarCP !== '____'">{{ datos.textoEnergiaCocinarCP }}</p>
@@ -159,218 +165,97 @@
   <div class="form-group-section">
     <div class="form-field">
       <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['abastecimientoAguaCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarAbastecimientoAguaCP(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: Red pública dentro de la vivienda">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarAbastecimientoAguaCP(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarAbastecimientoAguaCP(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarAbastecimientoAguaCP(i)" *ngIf="(datos['abastecimientoAguaCpTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['abastecimientoAguaCpTabla'] || datos['abastecimientoAguaCpTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarAbastecimientoAguaCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarAbastecimientoAguaCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="abastecimientoAguaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública dentro de la vivienda' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'abastecimientoAguaCpTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['saneamientoCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarSaneamientoCP(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: Red pública de desagüe dentro de la vivienda">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarSaneamientoCP(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarSaneamientoCP(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarSaneamientoCP(i)" *ngIf="(datos['saneamientoCpTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['saneamientoCpTabla'] || datos['saneamientoCpTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarSaneamientoCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarSaneamientoCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="saneamientoConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública de desagüe dentro de la vivienda' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'saneamientoCpTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['coberturaElectricaCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarCoberturaElectricaCP(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: Si tiene alumbrado eléctrico">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarCoberturaElectricaCP(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarCoberturaElectricaCP(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarCoberturaElectricaCP(i)" *ngIf="(datos['coberturaElectricaCpTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['coberturaElectricaCpTabla'] || datos['coberturaElectricaCpTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarCoberturaElectricaCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarCoberturaElectricaCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="coberturaElectricaConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Si tiene alumbrado eléctrico' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'coberturaElectricaCpTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Combustibles para cocción en los hogares</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['combustiblesCocinarCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarCombustiblesCocinarCP(i, 'categoria', $any($event.target).value)"
-                  placeholder="Ej: Leña">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarCombustiblesCocinarCP(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarCombustiblesCocinarCP(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0,00 %"
-                  readonly>
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarCombustiblesCocinarCP(i)" *ngIf="(datos['combustiblesCocinarCpTabla'] || []).length > 1 && !item.categoria?.toLowerCase().includes('total')" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['combustiblesCocinarCpTabla'] || datos['combustiblesCocinarCpTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarCombustiblesCocinarCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarCombustiblesCocinarCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="combustiblesCocinarConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Leña' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+        ]"
+        [tablaKey]="'combustiblesCocinarCpTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoServiciosAguaAISI"
+        label="Servicios de Agua - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoServiciosAguaAISI()"
+        (valueChange)="onFieldChange('textoServiciosAguaAISI', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoDesechosSolidosCP"
+        label="Gestión y Destino de Desechos Sólidos - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoDesechosSolidosCP()"
+        (valueChange)="onFieldChange('textoDesechosSolidosCP', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoEnergiaCocinarCP"
+        label="Energía para Cocinar - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoEnergiaCocinarCP()"
+        (valueChange)="onFieldChange('textoEnergiaCocinarCP', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

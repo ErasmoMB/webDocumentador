@@ -1,0 +1,48 @@
+<div class="table-editor">
+  <table class="editor-table">
+    <thead>
+      <tr>
+        <th *ngFor="let col of columns">{{ col.label }}</th>
+        <th *ngIf="showDeleteButton"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of getTableData(); let i = index">
+        <td *ngFor="let col of columns">
+          <input 
+            [type]="col.type || 'text'"
+            class="table-input"
+            [value]="item[col.field] || ''"
+            (input)="onFieldChange(i, col.field, $any($event.target).value)"
+            [placeholder]="col.placeholder || ''"
+            [readonly]="col.readonly || false">
+        </td>
+        <td *ngIf="showDeleteButton">
+          <button 
+            type="button" 
+            class="btn-icon" 
+            (click)="onDelete(i)" 
+            *ngIf="canDelete(i)"
+            title="Eliminar fila">
+            ×
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="!getTableData() || getTableData().length === 0">
+        <td [attr.colspan]="columns.length + (showDeleteButton ? 1 : 0)" style="text-align: center; padding: 10px;">
+          <button type="button" class="btn btn-secondary" (click)="initializeTable()">
+            Agregar Filas
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <button 
+    *ngIf="showAddButton && (getTableData() && getTableData().length > 0)"
+    type="button" 
+    class="btn btn-secondary" 
+    (click)="onAdd()" 
+    style="margin-top: 10px;">
+    + Agregar Fila
+  </button>
+</div>

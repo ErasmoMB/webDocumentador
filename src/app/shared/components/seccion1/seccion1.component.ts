@@ -53,7 +53,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  protected detectarCambios(): boolean {
+  protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
     let hayCambios = false;
     let necesitaRecargar = false;
@@ -78,7 +78,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     return hayCambios;
   }
 
-  protected actualizarValoresConPrefijo(): void {
+  protected override actualizarValoresConPrefijo(): void {
     this.watchedFields.forEach(campo => {
       this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
     });
@@ -128,8 +128,12 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
       this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
       this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
     });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    
+    this.fotografiasSeccion1 = [...fotografias];
+    this.fotografiasCache = [...fotografias];
+    this.fotografiasFormMulti = [...fotografias];
+    
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoParrafoPrincipal(): string {
@@ -170,6 +174,120 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     }
     
     return 'Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.';
+  }
+
+  onJSONFileSelected(event: any) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const jsonContent = JSON.parse(e.target.result);
+        const { data, geoInfo, fileName } = this.procesarJSON(jsonContent, file.name);
+        
+        this.formularioService.guardarJSON(data);
+        this.formularioService.actualizarDato('centrosPobladosJSON', data);
+        this.formularioService.actualizarDato('geoInfo', geoInfo);
+        this.formularioService.actualizarDato('jsonFileName', fileName);
+        
+        if (geoInfo.DPTO) {
+          this.formularioService.actualizarDato('departamentoSeleccionado', geoInfo.DPTO);
+        }
+        if (geoInfo.PROV) {
+          this.formularioService.actualizarDato('provinciaSeleccionada', geoInfo.PROV);
+        }
+        if (geoInfo.DIST) {
+          this.formularioService.actualizarDato('distritoSeleccionado', geoInfo.DIST);
+        }
+        
+        this.actualizarDatos();
+        this.cdRef.detectChanges();
+        
+      } catch (error) {
+        console.error('Error al procesar JSON:', error);
+        alert('Error al procesar el archivo JSON. Verifique el formato.');
+      }
+    };
+    
+    reader.readAsText(file);
+  }
+
+  selectJSONFile() {
+    const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  private procesarJSON(jsonContent: any, fileName: string): { data: any[], geoInfo: any, fileName: string } {
+    let centrosPoblados: any[] = [];
+    let geoInfo: any = {};
+    
+    if (Array.isArray(jsonContent)) {
+      centrosPoblados = jsonContent;
+    } else if (typeof jsonContent === 'object') {
+      const keys = Object.keys(jsonContent);
+      if (keys.length > 0) {
+        const firstKey = keys[0];
+        if (Array.isArray(jsonContent[firstKey])) {
+          centrosPoblados = jsonContent[firstKey];
+        }
+      }
+    }
+    
+    if (centrosPoblados.length > 0) {
+      const primer = centrosPoblados[0];
+      if (primer.DPTO) geoInfo.DPTO = primer.DPTO;
+      if (primer.PROV) geoInfo.PROV = primer.PROV;
+      if (primer.DIST) geoInfo.DIST = primer.DIST;
+    }
+    
+    return { data: centrosPoblados, geoInfo, fileName };
+  }
+
+  llenarDatosPrueba() {
+    const datosPrueba = {
+      projectName: 'Paka',
+      departamentoSeleccionado: 'Arequipa',
+      provinciaSeleccionada: 'Caravelí',
+      distritoSeleccionado: 'Cahuacho'
+    };
+    
+    Object.keys(datosPrueba).forEach(key => {
+      this.formularioService.actualizarDato(key as any, (datosPrueba as any)[key]);
+    });
+    
+    const jsonPrueba = [
+      {
+        "ITEM": 1,
+        "UBIGEO": 40306,
+        "CODIGO": 403060001,
+        "CCPP": "Cahuacho",
+        "CATEGORIA": "Capital distrital",
+        "POBLACION": 160,
+        "DPTO": "Arequipa",
+        "PROV": "Caravelí",
+        "DIST": "Cahuacho",
+        "ESTE": 663078,
+        "NORTE": 8285498,
+        "ALTITUD": 3423
+      }
+    ];
+    
+    this.formularioService.guardarJSON(jsonPrueba);
+    this.formularioService.actualizarDato('centrosPobladosJSON', jsonPrueba);
+    this.formularioService.actualizarDato('geoInfo', {
+      DPTO: 'Arequipa',
+      PROV: 'Caravelí',
+      DIST: 'Cahuacho'
+    });
+    this.formularioService.actualizarDato('jsonFileName', 'datos_prueba.json');
+    
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 }
 

@@ -55,122 +55,47 @@
     
     <div class="form-field">
       <label class="label">Tabla Lenguas Maternas</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['lenguasMaternasTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarLenguasMaternas(i, 'categoria', $any($event.target).value)"
-                  placeholder="Castellano">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarLenguasMaternas(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarLenguasMaternas(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarLenguasMaternas(i)" *ngIf="(datos['lenguasMaternasTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['lenguasMaternasTabla'] || datos['lenguasMaternasTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarLenguasMaternas()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarLenguasMaternas()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="lenguasMaternasConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'lenguasMaternasTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Religiones</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['religionesTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarReligiones(i, 'categoria', $any($event.target).value)"
-                  placeholder="Católica">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarReligiones(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarReligiones(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarReligiones(i)" *ngIf="(datos['religionesTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['religionesTabla'] || datos['religionesTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarReligiones()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarReligiones()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="religionesConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'religionesTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Religión - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion15ReligionCompleto()"
-          (input)="onFieldChange('parrafoSeccion15_religion_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion15_religion_completo"
+        label="Religión - Texto Completo"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion15ReligionCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

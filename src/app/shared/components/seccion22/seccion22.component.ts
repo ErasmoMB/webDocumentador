@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -25,12 +26,29 @@ export class Seccion22Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = '';
 
+  poblacionSexoAISIConfig: TableConfig = {
+    tablaKey: 'poblacionSexoAISI',
+    totalKey: 'sexo',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ sexo: '', casos: 0, porcentaje: '0,00 %' }]
+  };
+
+  poblacionEtarioAISIConfig: TableConfig = {
+    tablaKey: 'poblacionEtarioAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0,00 %' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -159,111 +177,8 @@ export class Seccion22Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarPoblacionSexoAISI() {
-    if (!this.datos['poblacionSexoAISI'] || this.datos['poblacionSexoAISI'].length === 0) {
-      this.datos['poblacionSexoAISI'] = [
-        { sexo: 'Hombre', casos: 0, porcentaje: '0,00 %' },
-        { sexo: 'Mujer', casos: 0, porcentaje: '0,00 %' },
-        { sexo: 'Total', casos: 0, porcentaje: '100,00 %' }
-      ];
-      this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarPoblacionSexoAISI() {
-    if (!this.datos['poblacionSexoAISI']) {
-      this.inicializarPoblacionSexoAISI();
-    }
-    const totalIndex = this.datos['poblacionSexoAISI'].findIndex((item: any) => item.sexo === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['poblacionSexoAISI'].splice(totalIndex, 0, { sexo: '', casos: 0, porcentaje: '0,00 %' });
-    } else {
-      this.datos['poblacionSexoAISI'].push({ sexo: '', casos: 0, porcentaje: '0,00 %' });
-    }
-    this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarPoblacionSexoAISI(index: number) {
-    if (this.datos['poblacionSexoAISI'] && this.datos['poblacionSexoAISI'].length > 1) {
-      const item = this.datos['poblacionSexoAISI'][index];
-      if (!item.sexo || !item.sexo.toLowerCase().includes('total')) {
-        this.datos['poblacionSexoAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarPoblacionSexoAISI(index: number, field: string, value: any) {
-    if (!this.datos['poblacionSexoAISI']) {
-      this.inicializarPoblacionSexoAISI();
-    }
-    if (this.datos['poblacionSexoAISI'][index]) {
-      this.datos['poblacionSexoAISI'][index][field] = value;
-      this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarPoblacionEtarioAISI() {
-    if (!this.datos['poblacionEtarioAISI'] || this.datos['poblacionEtarioAISI'].length === 0) {
-      this.datos['poblacionEtarioAISI'] = [
-        { categoria: '0 a 14 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
-      ];
-      this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarPoblacionEtarioAISI() {
-    if (!this.datos['poblacionEtarioAISI']) {
-      this.inicializarPoblacionEtarioAISI();
-    }
-    const totalIndex = this.datos['poblacionEtarioAISI'].findIndex((item: any) => item.categoria === 'Total');
-    if (totalIndex >= 0) {
-      this.datos['poblacionEtarioAISI'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0,00 %' });
-    } else {
-      this.datos['poblacionEtarioAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
-    }
-    this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarPoblacionEtarioAISI(index: number) {
-    if (this.datos['poblacionEtarioAISI'] && this.datos['poblacionEtarioAISI'].length > 1) {
-      const item = this.datos['poblacionEtarioAISI'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['poblacionEtarioAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarPoblacionEtarioAISI(index: number, field: string, value: any) {
-    if (!this.datos['poblacionEtarioAISI']) {
-      this.inicializarPoblacionEtarioAISI();
-    }
-    if (this.datos['poblacionEtarioAISI'][index]) {
-      this.datos['poblacionEtarioAISI'][index][field] = value;
-      this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoDemografiaAISI(): string {
+    return this.datos.textoDemografiaAISI || '';
   }
 }
 

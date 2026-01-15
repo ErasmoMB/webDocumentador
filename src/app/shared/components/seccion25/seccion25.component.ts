@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -22,12 +23,43 @@ export class Seccion25Component extends BaseSectionComponent {
   
   fotografiasInstitucionalidadCache: any[] = [];
 
+  tiposViviendaConfig: TableConfig = {
+    tablaKey: 'tiposViviendaAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  condicionOcupacionConfig: TableConfig = {
+    tablaKey: 'condicionOcupacionAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  materialesViviendaConfig: TableConfig = {
+    tablaKey: 'materialesViviendaAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -140,6 +172,18 @@ export class Seccion25Component extends BaseSectionComponent {
     };
   }
 
+  getFotoEstructuraParaImageUpload(): FotoItem[] {
+    const foto = this.getFotoEstructura();
+    if (!foto.ruta) {
+      return [];
+    }
+    return [{
+      titulo: foto.titulo,
+      fuente: foto.fuente,
+      imagen: foto.ruta
+    }];
+  }
+
   override actualizarFotografiasCache() {
     this.fotografiasInstitucionalidadCache = this.getFotografiasVista();
   }
@@ -181,188 +225,19 @@ export class Seccion25Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarTiposViviendaAISI() {
-    if (!this.datos['tiposViviendaAISI'] || this.datos['tiposViviendaAISI'].length === 0) {
-      this.datos['tiposViviendaAISI'] = [
-        { categoria: '', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('tiposViviendaAISI', this.datos['tiposViviendaAISI']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarTiposViviendaAISI() {
-    if (!this.datos['tiposViviendaAISI']) {
-      this.inicializarTiposViviendaAISI();
-    }
-    this.datos['tiposViviendaAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('tiposViviendaAISI', this.datos['tiposViviendaAISI']);
-    this.calcularPorcentajesTiposViviendaAISI();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarTiposViviendaAISI(index: number) {
-    if (this.datos['tiposViviendaAISI'] && this.datos['tiposViviendaAISI'].length > 1) {
-      const item = this.datos['tiposViviendaAISI'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['tiposViviendaAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('tiposViviendaAISI', this.datos['tiposViviendaAISI']);
-        this.calcularPorcentajesTiposViviendaAISI();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarTiposViviendaAISI(index: number, field: string, value: any) {
-    if (!this.datos['tiposViviendaAISI']) {
-      this.inicializarTiposViviendaAISI();
-    }
-    if (this.datos['tiposViviendaAISI'][index]) {
-      this.datos['tiposViviendaAISI'][index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesTiposViviendaAISI();
-      }
-      this.formularioService.actualizarDato('tiposViviendaAISI', this.datos['tiposViviendaAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  calcularPorcentajesTiposViviendaAISI() {
-    if (!this.datos['tiposViviendaAISI'] || this.datos['tiposViviendaAISI'].length === 0) {
-      return;
-    }
-    const totalItem = this.datos['tiposViviendaAISI'].find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total')
-    );
-    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
-    
-    if (total > 0) {
-      this.datos['tiposViviendaAISI'].forEach((item: any) => {
-        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-          const casos = parseFloat(item.casos) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2);
-          item.porcentaje = porcentaje + ' %';
-        }
-      });
-    }
-  }
-
-  inicializarCondicionOcupacionAISI() {
-    if (!this.datos['condicionOcupacionAISI'] || this.datos['condicionOcupacionAISI'].length === 0) {
-      this.datos['condicionOcupacionAISI'] = [
-        { categoria: '', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('condicionOcupacionAISI', this.datos['condicionOcupacionAISI']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarCondicionOcupacionAISI() {
-    if (!this.datos['condicionOcupacionAISI']) {
-      this.inicializarCondicionOcupacionAISI();
-    }
-    this.datos['condicionOcupacionAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('condicionOcupacionAISI', this.datos['condicionOcupacionAISI']);
-    this.calcularPorcentajesCondicionOcupacionAISI();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarCondicionOcupacionAISI(index: number) {
-    if (this.datos['condicionOcupacionAISI'] && this.datos['condicionOcupacionAISI'].length > 1) {
-      const item = this.datos['condicionOcupacionAISI'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['condicionOcupacionAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('condicionOcupacionAISI', this.datos['condicionOcupacionAISI']);
-        this.calcularPorcentajesCondicionOcupacionAISI();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarCondicionOcupacionAISI(index: number, field: string, value: any) {
-    if (!this.datos['condicionOcupacionAISI']) {
-      this.inicializarCondicionOcupacionAISI();
-    }
-    if (this.datos['condicionOcupacionAISI'][index]) {
-      this.datos['condicionOcupacionAISI'][index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesCondicionOcupacionAISI();
-      }
-      this.formularioService.actualizarDato('condicionOcupacionAISI', this.datos['condicionOcupacionAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  calcularPorcentajesCondicionOcupacionAISI() {
-    if (!this.datos['condicionOcupacionAISI'] || this.datos['condicionOcupacionAISI'].length === 0) {
-      return;
-    }
-    const totalItem = this.datos['condicionOcupacionAISI'].find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total')
-    );
-    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
-    
-    if (total > 0) {
-      this.datos['condicionOcupacionAISI'].forEach((item: any) => {
-        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-          const casos = parseFloat(item.casos) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2);
-          item.porcentaje = porcentaje + ' %';
-        }
-      });
-    }
-  }
-
-  inicializarMaterialesViviendaAISI() {
-    if (!this.datos['materialesViviendaAISI'] || this.datos['materialesViviendaAISI'].length === 0) {
-      this.datos['materialesViviendaAISI'] = [
-        { categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarMaterialesViviendaAISI() {
-    if (!this.datos['materialesViviendaAISI']) {
-      this.inicializarMaterialesViviendaAISI();
-    }
-    this.datos['materialesViviendaAISI'].push({ categoria: '', tipoMaterial: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
-    this.calcularPorcentajesMaterialesViviendaAISI();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarMaterialesViviendaAISI(index: number) {
-    if (this.datos['materialesViviendaAISI'] && this.datos['materialesViviendaAISI'].length > 1) {
-      this.datos['materialesViviendaAISI'].splice(index, 1);
-      this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
+  onMaterialesViviendaFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.materialesViviendaConfig, index, field, value, false);
+    if (field === 'casos') {
       this.calcularPorcentajesMaterialesViviendaAISI();
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
     }
+    this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
   }
 
-  actualizarMaterialesViviendaAISI(index: number, field: string, value: any) {
-    if (!this.datos['materialesViviendaAISI']) {
-      this.inicializarMaterialesViviendaAISI();
-    }
-    if (this.datos['materialesViviendaAISI'][index]) {
-      this.datos['materialesViviendaAISI'][index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesMaterialesViviendaAISI();
-      }
-      this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  onMaterialesViviendaTableUpdated() {
+    this.calcularPorcentajesMaterialesViviendaAISI();
+    this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   calcularPorcentajesMaterialesViviendaAISI() {
@@ -391,6 +266,10 @@ export class Seccion25Component extends BaseSectionComponent {
         }
       }
     });
+  }
+
+  obtenerTextoViviendaAISI(): string {
+    return this.datos.textoViviendaAISI || '';
   }
 }
 

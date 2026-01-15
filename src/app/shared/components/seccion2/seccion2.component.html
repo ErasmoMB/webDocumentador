@@ -70,35 +70,32 @@
 
     <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
     
-    <div class="form-field">
-      <label class="label">Introducción - Delimitación de Áreas</label>
-      <textarea 
-        class="textarea" 
-        rows="6"
-        [value]="obtenerTextoSeccion2Introduccion()"
-        (input)="onFieldChange('parrafoSeccion2_introduccion', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_introduccion"
+      label="Introducción - Delimitación de Áreas"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="6"
+      [value]="obtenerTextoSeccion2Introduccion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-field">
-      <label class="label">A. Áreas de influencia social directa (AISD) - Texto Completo</label>
-      <textarea 
-        class="textarea" 
-        rows="10"
-        [value]="obtenerTextoSeccion2AISDCompleto()"
-        (input)="onFieldChange('parrafoSeccion2_aisd_completo', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisd_completo"
+      label="A. Áreas de influencia social directa (AISD) - Texto Completo"
+      hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="10"
+      [value]="obtenerTextoSeccion2AISDCompleto()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-field">
-      <label class="label">B. Áreas de influencia social indirecta (AISI) - Texto Completo</label>
-      <textarea 
-        class="textarea" 
-        rows="8"
-        [value]="obtenerTextoSeccion2AISICompleto()"
-        (input)="onFieldChange('parrafoSeccion2_aisi_completo', $any($event.target).value)"></textarea>
-      <small class="form-hint">Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.</small>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisi_completo"
+      label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
+      hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="8"
+      [value]="obtenerTextoSeccion2AISICompleto()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
+    </app-paragraph-editor>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías</label>

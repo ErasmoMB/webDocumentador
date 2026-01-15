@@ -80,115 +80,49 @@
     
     <div class="form-field">
       <label class="label">Tabla Condición de Ocupación</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Condición de ocupación</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['condicionOcupacionTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarCondicionOcupacion(i, 'categoria', $any($event.target).value)"
-                  placeholder="Viviendas ocupadas">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarCondicionOcupacion(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarCondicionOcupacion(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarCondicionOcupacion(i)" *ngIf="(datos['condicionOcupacionTabla'] || []).length > 1 && item.categoria !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['condicionOcupacionTabla'] || datos['condicionOcupacionTabla'].length === 0">
-              <td colspan="4" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarCondicionOcupacion()">
-                  Agregar Filas
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarCondicionOcupacion()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="condicionOcupacionConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Condición de ocupación', type: 'text', placeholder: 'Viviendas ocupadas' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'condicionOcupacionTabla'"
+        [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onCondicionOcupacionFieldChange.bind(this)"
+        (tableUpdated)="onCondicionOcupacionTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field">
       <label class="label">Tabla Tipos de Materiales</label>
-      <div class="table-editor">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Categorías</th>
-              <th>Tipos de materiales</th>
-              <th>Casos</th>
-              <th>Porcentaje</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['tiposMaterialesTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.categoria || ''"
-                  (input)="actualizarTiposMateriales(i, 'categoria', $any($event.target).value)"
-                  placeholder="Materiales de las paredes">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.tipoMaterial || ''"
-                  (input)="actualizarTiposMateriales(i, 'tipoMaterial', $any($event.target).value)"
-                  placeholder="Adobe">
-              </td>
-              <td>
-                <input type="number" class="table-input" 
-                  [value]="item.casos || ''"
-                  (input)="actualizarTiposMateriales(i, 'casos', $any($event.target).value)"
-                  placeholder="0">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.porcentaje || ''"
-                  (input)="actualizarTiposMateriales(i, 'porcentaje', $any($event.target).value)"
-                  placeholder="0%">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarTiposMateriales(i)" *ngIf="(datos['tiposMaterialesTabla'] || []).length > 1 && item.tipoMaterial !== 'Total'" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['tiposMaterialesTabla'] || datos['tiposMaterialesTabla'].length === 0">
-              <td colspan="5" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarTiposMateriales()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarTiposMateriales()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="tiposMaterialesConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Materiales de las paredes' },
+          { field: 'tipoMaterial', label: 'Tipos de materiales', type: 'text', placeholder: 'Adobe' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+        ]"
+        [tablaKey]="'tiposMaterialesTabla'"
+        [totalKey]="'categoria'"
+        (tableUpdated)="onTiposMaterialesTableUpdated()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoViviendas"
+        label="Viviendas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoViviendas()"
+        (valueChange)="onFieldChange('textoViviendas', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

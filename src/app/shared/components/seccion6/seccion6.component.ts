@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,30 @@ export class Seccion6Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaDemografia';
 
+  poblacionSexoConfig: TableConfig = {
+    tablaKey: 'poblacionSexoAISD',
+    totalKey: 'sexo',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ sexo: '', casos: 0, porcentaje: '0%' }]
+  };
+
+  poblacionEtarioConfig: TableConfig = {
+    tablaKey: 'poblacionEtarioAISD',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }]
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -226,71 +244,54 @@ export class Seccion6Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarPoblacionSexo() {
-    if (!this.datos['poblacionSexoAISD'] || this.datos['poblacionSexoAISD'].length === 0) {
-      this.datos['poblacionSexoAISD'] = [
-        { sexo: 'Hombres', casos: 0, porcentaje: '0%' },
-        { sexo: 'Mujeres', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarPoblacionEtario() {
-    if (!this.datos['poblacionEtarioAISD'] || this.datos['poblacionEtarioAISD'].length === 0) {
-      this.datos['poblacionEtarioAISD'] = [
-        { categoria: '0 a 14 años', casos: 0, porcentaje: '0%' },
-        { categoria: '15 a 29 años', casos: 0, porcentaje: '0%' },
-        { categoria: '30 a 44 años', casos: 0, porcentaje: '0%' },
-        { categoria: '45 a 64 años', casos: 0, porcentaje: '0%' },
-        { categoria: '65 años a más', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarPoblacionSexo(index: number, field: string, value: any) {
-    if (!this.datos['poblacionSexoAISD']) {
-      this.inicializarPoblacionSexo();
-    }
-    if (this.datos['poblacionSexoAISD'][index]) {
-      this.datos['poblacionSexoAISD'][index][field] = value;
-      if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
-        const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
-        if (total > 0) {
-          const casos = parseInt(value) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
-          this.datos['poblacionSexoAISD'][index].porcentaje = porcentaje;
-        }
+  onPoblacionSexoFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.poblacionSexoConfig, index, field, value, false);
+    if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
+      const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
+      if (total > 0) {
+        const casos = parseInt(value) || 0;
+        const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
+        this.datos['poblacionSexoAISD'][index].porcentaje = porcentaje;
       }
-      this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
     }
+    this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
-  actualizarPoblacionEtario(index: number, field: string, value: any) {
-    if (!this.datos['poblacionEtarioAISD']) {
-      this.inicializarPoblacionEtario();
-    }
-    if (this.datos['poblacionEtarioAISD'][index]) {
-      this.datos['poblacionEtarioAISD'][index][field] = value;
-      if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
-        const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
-        if (total > 0) {
-          const casos = parseInt(value) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
-          this.datos['poblacionEtarioAISD'][index].porcentaje = porcentaje;
-        }
+  onPoblacionEtarioFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.poblacionEtarioConfig, index, field, value, false);
+    if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
+      const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
+      if (total > 0) {
+        const casos = parseInt(value) || 0;
+        const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
+        this.datos['poblacionEtarioAISD'][index].porcentaje = porcentaje;
       }
-      this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
     }
+    this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPoblacionSexoTableUpdated() {
+    this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPoblacionEtarioTableUpdated() {
+    this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  obtenerTextoPoblacionSexoAISD(): string {
+    return this.datos.textoPoblacionSexoAISD || '';
+  }
+
+  obtenerTextoPoblacionEtarioAISD(): string {
+    return this.datos.textoPoblacionEtarioAISD || '';
   }
 }
 

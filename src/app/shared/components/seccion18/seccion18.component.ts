@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -21,13 +22,34 @@ export class Seccion18Component extends BaseSectionComponent {
   
   override readonly PHOTO_PREFIX = 'fotografiaNBI';
 
+  nbiCCAyrocaConfig: TableConfig = {
+    tablaKey: 'nbiCCAyrocaTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  nbiDistritoCahuachoConfig: TableConfig = {
+    tablaKey: 'nbiDistritoCahuachoTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -102,6 +124,10 @@ export class Seccion18Component extends BaseSectionComponent {
     return totalItem?.casos || '____';
   }
 
+  obtenerTextoNecesidadesBasicasInsatisfechas(): string {
+    return this.datos.textoNecesidadesBasicasInsatisfechas || '';
+  }
+
   getPorcentajeSinServiciosDistrito(): string {
     if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
       return '____';
@@ -153,108 +179,5 @@ export class Seccion18Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarNBICCAyroca() {
-    if (!this.datos['nbiCCAyrocaTabla'] || this.datos['nbiCCAyrocaTabla'].length === 0) {
-      this.datos['nbiCCAyrocaTabla'] = [
-        { categoria: 'Viviendas con hacinamiento', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas sin servicios higiénicos', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total referencial', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarNBICCAyroca() {
-    if (!this.datos['nbiCCAyrocaTabla']) {
-      this.inicializarNBICCAyroca();
-    }
-    const totalIndex = this.datos['nbiCCAyrocaTabla'].findIndex((item: any) => item.categoria === 'Total referencial');
-    if (totalIndex >= 0) {
-      this.datos['nbiCCAyrocaTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['nbiCCAyrocaTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
-    }
-    this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarNBICCAyroca(index: number) {
-    if (this.datos['nbiCCAyrocaTabla'] && this.datos['nbiCCAyrocaTabla'].length > 1) {
-      const item = this.datos['nbiCCAyrocaTabla'][index];
-      if (item.categoria !== 'Total referencial') {
-        this.datos['nbiCCAyrocaTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarNBICCAyroca(index: number, field: string, value: any) {
-    if (!this.datos['nbiCCAyrocaTabla']) {
-      this.inicializarNBICCAyroca();
-    }
-    if (this.datos['nbiCCAyrocaTabla'][index]) {
-      this.datos['nbiCCAyrocaTabla'][index][field] = value;
-      this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarNBIDistritoCahuacho() {
-    if (!this.datos['nbiDistritoCahuachoTabla'] || this.datos['nbiDistritoCahuachoTabla'].length === 0) {
-      this.datos['nbiDistritoCahuachoTabla'] = [
-        { categoria: 'Viviendas sin servicios higiénicos', casos: 0, porcentaje: '0%' },
-        { categoria: 'Viviendas con hacinamiento', casos: 0, porcentaje: '0%' },
-        { categoria: 'Total referencial', casos: 0, porcentaje: '0%' }
-      ];
-      this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarNBIDistritoCahuacho() {
-    if (!this.datos['nbiDistritoCahuachoTabla']) {
-      this.inicializarNBIDistritoCahuacho();
-    }
-    const totalIndex = this.datos['nbiDistritoCahuachoTabla'].findIndex((item: any) => item.categoria === 'Total referencial');
-    if (totalIndex >= 0) {
-      this.datos['nbiDistritoCahuachoTabla'].splice(totalIndex, 0, { categoria: '', casos: 0, porcentaje: '0%' });
-    } else {
-      this.datos['nbiDistritoCahuachoTabla'].push({ categoria: '', casos: 0, porcentaje: '0%' });
-    }
-    this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarNBIDistritoCahuacho(index: number) {
-    if (this.datos['nbiDistritoCahuachoTabla'] && this.datos['nbiDistritoCahuachoTabla'].length > 1) {
-      const item = this.datos['nbiDistritoCahuachoTabla'][index];
-      if (item.categoria !== 'Total referencial') {
-        this.datos['nbiDistritoCahuachoTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarNBIDistritoCahuacho(index: number, field: string, value: any) {
-    if (!this.datos['nbiDistritoCahuachoTabla']) {
-      this.inicializarNBIDistritoCahuacho();
-    }
-    if (this.datos['nbiDistritoCahuachoTabla'][index]) {
-      this.datos['nbiDistritoCahuachoTabla'][index][field] = value;
-      this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
 }
 

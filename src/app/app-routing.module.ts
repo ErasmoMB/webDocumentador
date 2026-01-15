@@ -12,7 +12,6 @@ const routes: Routes = [
       { path: '', redirectTo: 'plantilla', pathMatch: 'full' },
       { path: 'seccion/:id', component: SeccionComponent },
       { path: 'plantilla', component: PlantillaViewComponent },
-      { path: 'api-test', loadChildren: () => import('./shared/components/api-test/api-test.module').then(m => m.ApiTestModule) },
     ]
   }
 ];

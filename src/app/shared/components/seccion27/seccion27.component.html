@@ -7,14 +7,17 @@
 <p class="text-justify" *ngIf="datos.textoTransporteCP2 && datos.textoTransporteCP2 !== '____'">{{ datos.textoTransporteCP2 }}</p>
 <p class="text-justify" *ngIf="!datos.textoTransporteCP2 || datos.textoTransporteCP2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span [appDataSource]="'manual'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.</p>
 
-<app-foto-info 
-    *ngIf="getFotoTransporte().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoTransporteParaImageUpload().length > 0"
+    [fotografias]="getFotoTransporteParaImageUpload()"
     [sectionId]="'3.1.4.B.1.6'"
-    [titulo]="getFotoTransporte().titulo"
-    [fuente]="getFotoTransporte().fuente"
-    [ruta]="getFotoTransporte().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaTransporteAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
 <p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP1 && datos.textoTelecomunicacionesCP1 !== '____'">{{ datos.textoTelecomunicacionesCP1 }}</p>
@@ -47,14 +50,17 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
-<app-foto-info 
-    *ngIf="getFotoTelecomunicaciones().ruta"
-    [autoNumber]="true"
+<app-image-upload
+    *ngIf="getFotoTelecomunicacionesParaImageUpload().length > 0"
+    [fotografias]="getFotoTelecomunicacionesParaImageUpload()"
     [sectionId]="'3.1.4.B.1.6'"
-    [titulo]="getFotoTelecomunicaciones().titulo"
-    [fuente]="getFotoTelecomunicaciones().fuente"
-    [ruta]="getFotoTelecomunicaciones().ruta">
-</app-foto-info>
+    [photoPrefix]="'fotografiaTelecomunicacionesAISI'"
+    [modoVista]="true"
+    [permitirMultiples]="false"
+    [mostrarNumero]="true"
+    [mostrarTitulo]="true"
+    [mostrarFuente]="true">
+</app-image-upload>
 
 <app-image-upload
     [modoVista]="true"
@@ -88,48 +94,66 @@
 
     <div class="form-field" style="margin-top: 30px;">
       <label class="label">Tabla Servicios de telecomunicaciones</label>
-      <div class="table-editor" style="overflow-x: auto;">
-        <table class="editor-table">
-          <thead>
-            <tr>
-              <th>Medio de comunicación</th>
-              <th>Descripción</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of (datos['telecomunicacionesCpTabla'] || []); let i = index">
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.medio || ''"
-                  (input)="actualizarTelecomunicacionesCP(i, 'medio', $any($event.target).value)"
-                  placeholder="Ej: Emisoras de radio">
-              </td>
-              <td>
-                <input type="text" class="table-input" 
-                  [value]="item.descripcion || ''"
-                  (input)="actualizarTelecomunicacionesCP(i, 'descripcion', $any($event.target).value)"
-                  placeholder="Ej: RPP, Nacional, Unión">
-              </td>
-              <td>
-                <button type="button" class="btn-icon" (click)="eliminarTelecomunicacionesCP(i)" *ngIf="(datos['telecomunicacionesCpTabla'] || []).length > 1" title="Eliminar fila">
-                  ×
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="!datos['telecomunicacionesCpTabla'] || datos['telecomunicacionesCpTabla'].length === 0">
-              <td colspan="3" style="text-align: center; padding: 10px;">
-                <button type="button" class="btn btn-secondary" (click)="inicializarTelecomunicacionesCP()">
-                  Agregar Primera Fila
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-secondary" (click)="agregarTelecomunicacionesCP()" style="margin-top: 10px;">
-        + Agregar Fila
-      </button>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="telecomunicacionesConfig"
+        [columns]="[
+          { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Ej: Emisoras de radio' },
+          { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: RPP, Nacional, Unión' }
+        ]"
+        [tablaKey]="'telecomunicacionesCpTabla'"
+        [totalKey]="'medio'"
+        (tableUpdated)="cdRef.detectChanges()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoTransporteCP1"
+        label="Transporte - Párrafo 1"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTransporteCP1()"
+        (valueChange)="onFieldChange('textoTransporteCP1', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTransporteCP2"
+        label="Transporte - Párrafo 2"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTransporteCP2()"
+        (valueChange)="onFieldChange('textoTransporteCP2', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTelecomunicacionesCP1"
+        label="Telecomunicaciones - Párrafo 1"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTelecomunicacionesCP1()"
+        (valueChange)="onFieldChange('textoTelecomunicacionesCP1', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTelecomunicacionesCP2"
+        label="Telecomunicaciones - Párrafo 2"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTelecomunicacionesCP2()"
+        (valueChange)="onFieldChange('textoTelecomunicacionesCP2', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTelecomunicacionesCP3"
+        label="Telecomunicaciones - Párrafo 3"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoTelecomunicacionesCP3()"
+        (valueChange)="onFieldChange('textoTelecomunicacionesCP3', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -4,6 +4,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -22,12 +23,39 @@ export class Seccion29Component extends BaseSectionComponent {
   
   fotografiasInstitucionalidadCache: any[] = [];
 
+  natalidadMortalidadConfig: TableConfig = {
+    tablaKey: 'natalidadMortalidadCpTabla',
+    totalKey: 'anio',
+    campoTotal: 'natalidad',
+    campoPorcentaje: 'mortalidad',
+    estructuraInicial: [{ anio: '', natalidad: 0, mortalidad: 0 }]
+  };
+
+  morbilidadConfig: TableConfig = {
+    tablaKey: 'morbilidadCpTabla',
+    totalKey: 'grupo',
+    campoTotal: 'casos',
+    campoPorcentaje: 'casos',
+    estructuraInicial: [{ grupo: '', edad0_11: 0, edad12_17: 0, edad18_29: 0, edad30_59: 0, edad60_mas: 0, casos: 0 }]
+  };
+
+  afiliacionSaludConfig: TableConfig = {
+    tablaKey: 'afiliacionSaludTabla',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0,00 %' }],
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private tableService: TableManagementService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -205,91 +233,19 @@ export class Seccion29Component extends BaseSectionComponent {
     this.actualizarDatos();
   }
 
-  inicializarNatalidadMortalidadCP() {
-    if (!this.datos['natalidadMortalidadCpTabla'] || this.datos['natalidadMortalidadCpTabla'].length === 0) {
-      this.datos['natalidadMortalidadCpTabla'] = [
-        { anio: '', natalidad: 0, mortalidad: 0 }
-      ];
-      this.formularioService.actualizarDato('natalidadMortalidadCpTabla', this.datos['natalidadMortalidadCpTabla']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarNatalidadMortalidadCP() {
-    if (!this.datos['natalidadMortalidadCpTabla']) {
-      this.inicializarNatalidadMortalidadCP();
-    }
-    this.datos['natalidadMortalidadCpTabla'].push({ anio: '', natalidad: 0, mortalidad: 0 });
-    this.formularioService.actualizarDato('natalidadMortalidadCpTabla', this.datos['natalidadMortalidadCpTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarNatalidadMortalidadCP(index: number) {
-    if (this.datos['natalidadMortalidadCpTabla'] && this.datos['natalidadMortalidadCpTabla'].length > 1) {
-      this.datos['natalidadMortalidadCpTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('natalidadMortalidadCpTabla', this.datos['natalidadMortalidadCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  actualizarNatalidadMortalidadCP(index: number, field: string, value: any) {
-    if (!this.datos['natalidadMortalidadCpTabla']) {
-      this.inicializarNatalidadMortalidadCP();
-    }
-    if (this.datos['natalidadMortalidadCpTabla'][index]) {
-      this.datos['natalidadMortalidadCpTabla'][index][field] = value;
-      this.formularioService.actualizarDato('natalidadMortalidadCpTabla', this.datos['natalidadMortalidadCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  inicializarMorbilidadCP() {
-    if (!this.datos['morbilidadCpTabla'] || this.datos['morbilidadCpTabla'].length === 0) {
-      this.datos['morbilidadCpTabla'] = [
-        { grupo: '', edad0_11: 0, edad12_17: 0, edad18_29: 0, edad30_59: 0, edad60_mas: 0, casos: 0 }
-      ];
-      this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
-      this.cdRef.detectChanges();
-    }
-  }
-
-  agregarMorbilidadCP() {
-    if (!this.datos['morbilidadCpTabla']) {
-      this.inicializarMorbilidadCP();
-    }
-    this.datos['morbilidadCpTabla'].push({ grupo: '', edad0_11: 0, edad12_17: 0, edad18_29: 0, edad30_59: 0, edad60_mas: 0, casos: 0 });
-    this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
-    this.calcularTotalesMorbilidadCP();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarMorbilidadCP(index: number) {
-    if (this.datos['morbilidadCpTabla'] && this.datos['morbilidadCpTabla'].length > 1) {
-      this.datos['morbilidadCpTabla'].splice(index, 1);
-      this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
+  onMorbilidadFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.morbilidadConfig, index, field, value, false);
+    if (field !== 'casos' && field !== 'grupo') {
       this.calcularTotalesMorbilidadCP();
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
     }
+    this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
   }
 
-  actualizarMorbilidadCP(index: number, field: string, value: any) {
-    if (!this.datos['morbilidadCpTabla']) {
-      this.inicializarMorbilidadCP();
-    }
-    if (this.datos['morbilidadCpTabla'][index]) {
-      this.datos['morbilidadCpTabla'][index][field] = value;
-      if (field !== 'casos' && field !== 'grupo') {
-        this.calcularTotalesMorbilidadCP();
-      }
-      this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
+  onMorbilidadTableUpdated() {
+    this.calcularTotalesMorbilidadCP();
+    this.formularioService.actualizarDato('morbilidadCpTabla', this.datos['morbilidadCpTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   calcularTotalesMorbilidadCP() {
@@ -307,73 +263,16 @@ export class Seccion29Component extends BaseSectionComponent {
     });
   }
 
-  inicializarAfiliacionSaludTabla() {
-    if (!this.datos['afiliacionSaludTabla'] || this.datos['afiliacionSaludTabla'].length === 0) {
-      this.datos['afiliacionSaludTabla'] = [
-        { categoria: '', casos: 0, porcentaje: '0,00 %' }
-      ];
-      this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-      this.cdRef.detectChanges();
-    }
+  obtenerTextoNatalidadCP1(): string {
+    return this.datos.textoNatalidadCP1 || '';
   }
 
-  agregarAfiliacionSaludTabla() {
-    if (!this.datos['afiliacionSaludTabla']) {
-      this.inicializarAfiliacionSaludTabla();
-    }
-    this.datos['afiliacionSaludTabla'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-    this.calcularPorcentajesAfiliacionSaludTabla();
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  obtenerTextoNatalidadCP2(): string {
+    return this.datos.textoNatalidadCP2 || '';
   }
 
-  eliminarAfiliacionSaludTabla(index: number) {
-    if (this.datos['afiliacionSaludTabla'] && this.datos['afiliacionSaludTabla'].length > 1) {
-      const item = this.datos['afiliacionSaludTabla'][index];
-      if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-        this.datos['afiliacionSaludTabla'].splice(index, 1);
-        this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-        this.calcularPorcentajesAfiliacionSaludTabla();
-        this.actualizarDatos();
-        this.cdRef.detectChanges();
-      }
-    }
-  }
-
-  actualizarAfiliacionSaludTabla(index: number, field: string, value: any) {
-    if (!this.datos['afiliacionSaludTabla']) {
-      this.inicializarAfiliacionSaludTabla();
-    }
-    if (this.datos['afiliacionSaludTabla'][index]) {
-      this.datos['afiliacionSaludTabla'][index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesAfiliacionSaludTabla();
-      }
-      this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
-
-  calcularPorcentajesAfiliacionSaludTabla() {
-    if (!this.datos['afiliacionSaludTabla'] || this.datos['afiliacionSaludTabla'].length === 0) {
-      return;
-    }
-    const totalItem = this.datos['afiliacionSaludTabla'].find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total')
-    );
-    const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
-    
-    if (total > 0) {
-      this.datos['afiliacionSaludTabla'].forEach((item: any) => {
-        if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-          const casos = parseFloat(item.casos) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2);
-          item.porcentaje = porcentaje + ' %';
-        }
-      });
-    }
+  obtenerTextoMorbilidadCP(): string {
+    return this.datos.textoMorbilidadCP || '';
   }
 }
 

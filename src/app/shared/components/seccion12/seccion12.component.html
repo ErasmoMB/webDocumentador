@@ -314,25 +314,23 @@
     <div class="form-group-section" style="margin-top: 20px;">
       <h4 class="section-title">Editar Párrafos</h4>
       
-      <div class="form-field">
-        <label class="label">Salud - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion12SaludCompleto()"
-          (input)="onFieldChange('parrafoSeccion12_salud_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion12_salud_completo"
+        label="Salud - Texto Completo"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion12SaludCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)">
+      </app-paragraph-editor>
 
-      <div class="form-field">
-        <label class="label">Educación - Texto Completo</label>
-        <textarea 
-          class="textarea" 
-          rows="4"
-          [value]="obtenerTextoSeccion12EducacionCompleto()"
-          (input)="onFieldChange('parrafoSeccion12_educacion_completo', $any($event.target).value)"></textarea>
-        <small class="form-hint">Edite el texto completo. Deje vacío para usar el texto por defecto.</small>
-      </div>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion12_educacion_completo"
+        label="Educación - Texto Completo"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion12EducacionCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion12_educacion_completo', $event)">
+      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
