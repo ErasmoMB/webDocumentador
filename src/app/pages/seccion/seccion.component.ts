@@ -181,12 +181,6 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   fotografiasAISDFormMulti: FotoItem[] = [];
-  fotografiasEducacionIndicadoresFormMulti: FotoItem[] = [];
-  fotografiasIglesiaFormMulti: FotoItem[] = [];
-  fotografiasReservorioFormMulti: FotoItem[] = [];
-  fotografiasUsoSuelosFormMulti: FotoItem[] = [];
-  fotografiasIDHFormMulti: FotoItem[] = [];
-  fotografiasNBIFormMulti: FotoItem[] = [];
   filasTablaAISD2: number = 1;
   jsonFileName: string = '';
   centrosPobladosJSON: any[] = [];

@@ -106,24 +106,6 @@
       + Agregar Fila
     </button>
   </div>
-  <div class="form-field">
-    <label class="label">Fotografías de la Iglesia</label>
-    <app-image-upload
-      [fotografias]="fotografiasIglesiaFormMulti"
-      [sectionId]="seccionId"
-      [photoPrefix]="'fotografiaIglesia'"
-      [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Iglesia Matriz del anexo Ayroca"
-      fuenteDefault="GEADES, 2024"
-      [requerido]="true"
-      (fotografiasChange)="onFotografiasIglesiaChange($event)">
-    </app-image-upload>
-  </div>
 
   <div class="form-group-section">
     <h4 class="section-title">Editar Párrafos</h4>

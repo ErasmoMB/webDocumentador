@@ -1,9 +1,12 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
+import { Subscription } from 'rxjs';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -13,20 +16,17 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion23.component.html',
   styleUrls: ['./seccion23.component.css']
 })
-export class Seccion23Component extends BaseSectionComponent {
+export class Seccion23Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
+  private stateSubscription?: Subscription;
+  
   override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI'];
   
-  readonly PHOTO_PREFIX_DEMOGRAFIA = 'fotografiaCahuachoB12';
-  readonly PHOTO_PREFIX_PEA = 'fotografiaPEA';
+  override readonly PHOTO_PREFIX = 'fotografiaPEA';
   
-  fotografiasDemografiaFormMulti: FotoItem[] = [];
-  fotografiasPEAFormMulti: FotoItem[] = [];
   fotografiasInstitucionalidadCache: any[] = [];
-  
-  override readonly PHOTO_PREFIX = '';
 
   petGruposEdadConfig: TableConfig = {
     tablaKey: 'petGruposEdadAISI',
@@ -69,15 +69,41 @@ export class Seccion23Component extends BaseSectionComponent {
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
-    this.actualizarFotografiasFormMulti();
+    if (this.modoFormulario) {
+      if (this.seccionId) {
+        setTimeout(() => {
+          this.actualizarFotografiasFormMulti();
+          this.cdRef.detectChanges();
+        }, 0);
+      }
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        if (this.seccionId) {
+          this.actualizarFotografiasFormMulti();
+          this.cdRef.detectChanges();
+        }
+      });
+    } else {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override detectarCambios(): boolean {
@@ -105,6 +131,7 @@ export class Seccion23Component extends BaseSectionComponent {
   }
 
   protected override actualizarDatosCustom(): void {
+    this.cargarFotografias();
     this.actualizarFotografiasCache();
   }
 
@@ -115,7 +142,7 @@ export class Seccion23Component extends BaseSectionComponent {
   }
 
   protected override tieneFotografias(): boolean {
-    return false;
+    return true;
   }
 
   override actualizarFotografiasCache() {
@@ -124,16 +151,9 @@ export class Seccion23Component extends BaseSectionComponent {
 
   override actualizarFotografiasFormMulti() {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    
-    this.fotografiasDemografiaFormMulti = this.imageService.loadImages(
+    this.fotografiasFormMulti = this.imageService.loadImages(
       this.seccionId,
-      this.PHOTO_PREFIX_DEMOGRAFIA,
-      groupPrefix
-    );
-    
-    this.fotografiasPEAFormMulti = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_PEA,
+      this.PHOTO_PREFIX,
       groupPrefix
     );
   }
@@ -144,30 +164,21 @@ export class Seccion23Component extends BaseSectionComponent {
     }
   }
 
-  onFotografiasDemografiaChange(fotografias: FotoItem[]) {
+  cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DEMOGRAFIA}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
   }
 
   onFotografiasPEAChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_PEA}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasCache = [...fotografias];
   }
 
 
@@ -294,26 +305,15 @@ export class Seccion23Component extends BaseSectionComponent {
 
   // Eliminar métodos de cache y eventos de cambio de fotos
 
-  getFotografiasVista(): FotoItem[] {
-    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.2');
+  override getFotografiasVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
-      '3.1.4.B.1.2',
-      'fotografiaCahuachoB12',
+      this.seccionId,
+      this.PHOTO_PREFIX,
       groupPrefix
     );
   }
 
-  // Copia local de la validación de imagen para evitar acceso a método privado
-  isValidImage(imagen: any): boolean {
-    if (!imagen) return false;
-    if (typeof imagen === 'string') {
-      return imagen.startsWith('data:image');
-    }
-    if (imagen instanceof File) {
-      return imagen.type.startsWith('image/');
-    }
-    return false;
-  }
 
   inicializarPETGruposEdadAISI() {
     if (!this.datos['petGruposEdadAISI'] || this.datos['petGruposEdadAISI'].length === 0) {

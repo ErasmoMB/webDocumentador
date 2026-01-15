@@ -1,9 +1,12 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
-import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
@@ -12,28 +15,44 @@ import { Subscription } from 'rxjs';
   templateUrl: './seccion4-form-wrapper.component.html',
   styleUrls: ['./seccion4-form-wrapper.component.css']
 })
-export class Seccion4FormWrapperComponent implements OnInit, OnDestroy {
-  @Input() seccionId: string = '';
-  @Input() fotografiasAISDFormMulti: FotoItem[] = [];
+export class Seccion4FormWrapperComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '';
+  
+  fotografiasUbicacionFormMulti: FotoItem[] = [];
+  fotografiasPoblacionFormMulti: FotoItem[] = [];
   
   formData: any = {};
-  datos: any = {};
   autocompleteData: any = {};
   filasTablaAISD2: number = 1;
-  private subscription?: Subscription;
+  private stateSubscription?: Subscription;
+
+  override watchedFields: string[] = [
+    'distritoSeleccionado',
+    'coordenadasAISD',
+    'altitudAISD',
+    'cuadroTituloAISD1',
+    'cuadroFuenteAISD1',
+    'cuadroTituloAISD2',
+    'cuadroFuenteAISD2'
+  ];
 
   constructor(
-    private formularioService: FormularioService,
-    private stateService: StateService,
-    private imageService: ImageManagementService
-  ) {}
+    formularioService: FormularioService,
+    fieldMapping: FieldMappingService,
+    sectionDataLoader: SectionDataLoaderService,
+    imageService: ImageManagementService,
+    photoNumberingService: PhotoNumberingService,
+    cdRef: ChangeDetectorRef,
+    private stateService: StateService
+  ) {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+  }
 
-  ngOnInit() {
-    this.actualizarDatos();
-    this.subscription = this.stateService.datos$.subscribe(datos => {
-      if (datos) {
-        this.actualizarDatos();
-      }
+  protected override onInitCustom(): void {
+    this.cargarFotografias();
+    this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.cargarFotografias();
+      this.cdRef.detectChanges();
     });
     setTimeout(() => {
       const seccion4 = ViewChildHelper.getComponent('seccion4');
@@ -43,25 +62,66 @@ export class Seccion4FormWrapperComponent implements OnInit, OnDestroy {
     }, 100);
   }
 
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
+  protected override onChangesCustom(changes: SimpleChanges): void {
+    if (changes['seccionId']) {
+      this.cargarFotografias();
     }
   }
 
-  actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+  protected override actualizarDatosCustom(): void {
     this.formData = { ...this.datos };
+    this.cargarFotografias();
   }
 
-  onFieldChange(fieldId: string, value: any) {
+  protected override detectarCambios(): boolean {
+    const datosActuales = this.formularioService.obtenerDatos();
+    let hayCambios = false;
+    
+    for (const campo of this.watchedFields) {
+      const valorActual = (datosActuales as any)[campo] || null;
+      const valorAnterior = this.datosAnteriores[campo] || null;
+      if (valorActual !== valorAnterior) {
+        hayCambios = true;
+        this.datosAnteriores[campo] = valorActual;
+      }
+    }
+
+    return hayCambios;
+  }
+
+  protected override actualizarValoresConPrefijo(): void {
+    this.watchedFields.forEach(campo => {
+      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
+  }
+
+  cargarFotografias() {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasUbicacionFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaUbicacionReferencial',
+      groupPrefix
+    );
+    this.fotografiasPoblacionFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      'fotografiaPoblacionViviendas',
+      groupPrefix
+    );
+  }
+
+  override onFieldChange(fieldId: string, value: any) {
     let valorLimpio = '';
     if (value !== undefined && value !== null && value !== 'undefined') {
       valorLimpio = value;
     }
     this.formData[fieldId] = valorLimpio;
-    this.formularioService.actualizarDato(fieldId as any, valorLimpio);
-    this.actualizarDatos();
+    super.onFieldChange(fieldId, valorLimpio);
   }
 
   obtenerDistritosDeComunidad(): string[] {
@@ -90,8 +150,9 @@ export class Seccion4FormWrapperComponent implements OnInit, OnDestroy {
     }
   }
 
-  obtenerValorConPrefijo(campo: string): any {
-    return PrefijoHelper.obtenerValorConPrefijo(this.datos, campo, this.seccionId);
+
+  override obtenerValorConPrefijo(campo: string): any {
+    return super.obtenerValorConPrefijo(campo);
   }
 
   onTablaFieldChange(fieldId: string, value: any) {
@@ -157,14 +218,13 @@ export class Seccion4FormWrapperComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFotografiasAISDChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
+  onFotografiasUbicacionChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange('fotografiaUbicacionReferencial', fotografias);
+    this.fotografiasUbicacionFormMulti = [...fotografias];
+  }
+
+  onFotografiasPoblacionChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange('fotografiaPoblacionViviendas', fotografias);
+    this.fotografiasPoblacionFormMulti = [...fotografias];
   }
 }

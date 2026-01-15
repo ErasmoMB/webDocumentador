@@ -30,42 +30,6 @@
         (input)="onFieldChange('quebradaAgricola', $any($event.target).value)">
     </div>
   </div>
-  <div class="form-field">
-    <label class="label">Fotografías del Reservorio</label>
-    <app-image-upload
-      [fotografias]="fotografiasReservorioFormMulti"
-      [sectionId]="seccionId"
-      [photoPrefix]="'fotografiaReservorio'"
-      [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Reservorio del anexo Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Reservorio del anexo Ayroca"
-      fuenteDefault="GEADES, 2024"
-      [requerido]="true"
-      (fotografiasChange)="onFotografiasReservorioChange($event)">
-    </app-image-upload>
-  </div>
-  <div class="form-field">
-    <label class="label">Fotografías de Uso de Suelos</label>
-    <app-image-upload
-      [fotografias]="fotografiasUsoSuelosFormMulti"
-      [sectionId]="seccionId"
-      [photoPrefix]="'fotografiaUsoSuelos'"
-      [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Uso de los suelos en el anexo Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Uso de los suelos en el anexo Ayroca"
-      fuenteDefault="GEADES, 2024"
-      [requerido]="true"
-      (fotografiasChange)="onFotografiasUsoSuelosChange($event)">
-    </app-image-upload>
-  </div>
 
   <div class="form-group-section">
     <h4 class="section-title">Editar Párrafos</h4>

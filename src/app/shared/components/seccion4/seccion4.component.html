@@ -41,6 +41,17 @@
 </app-table-wrapper>
 <p class="text-justify">FUENTE: <span [appDataSource]="'manual'">{{ datos.cuadroFuenteAISD1 || 'GEADES (2024)' }}</span></p>
 
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasUbicacionVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_UBICACION"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
 <div *ngIf="datos.parrafoSeccion4_caracterizacion_indicadores; else caracterizacionIndicadoresDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_caracterizacion_indicadores)"></div>
 <ng-template #caracterizacionIndicadoresDefault>
     <p class="text-justify">Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.</p>
@@ -76,27 +87,12 @@
 </app-table-wrapper>
 <p class="text-justify">FUENTE: <span *ngIf="datos.cuadroFuenteAISD2 && datos.cuadroFuenteAISD2 !== '____'" [appDataSource]="'manual'">{{ datos.cuadroFuenteAISD2 }}</span><span *ngIf="!datos.cuadroFuenteAISD2" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span><span *ngIf="datos.cuadroFuenteAISD2 === '____'">____</span></p>
 
-<!-- Mostrar galería AISD para subsecciones AISD o sección 3.1.4 -->
 <app-image-upload
-    *ngIf="(esSubseccionAISD() || seccionId.startsWith('3.1.4'))"
     [modoVista]="true"
     [permitirMultiples]="true"
-    [fotografias]="fotografiasAISD"
+    [fotografias]="getFotografiasPoblacionVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
-</app-image-upload>
-
-<!-- Mostrar galería Sección 4 solo para otras secciones -->
-<app-image-upload
-    *ngIf="!esSubseccionAISD() && !seccionId.startsWith('3.1.4')"
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="fotografiasSeccion4"
-    [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaSeccion4'"
+    [photoPrefix]="PHOTO_PREFIX_POBLACION"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -133,24 +129,5 @@
       [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
       (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
     </app-paragraph-editor>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Fotografía de la sección 4"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Sección 4"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
-    </div>
   </div>
 </div>

@@ -240,16 +240,8 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   onFotografiasChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    this.fotografiasFormMulti = [...fotografias];
   }
 
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {

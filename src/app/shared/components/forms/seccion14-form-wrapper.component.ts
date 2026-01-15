@@ -12,7 +12,6 @@ import { Subscription } from 'rxjs';
 })
 export class Seccion14FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
-  @Input() fotografiasEducacionIndicadoresFormMulti: FotoItem[] = [];
   
   formData: any = {};
   datos: any = {};
@@ -114,13 +113,6 @@ export class Seccion14FormWrapperComponent implements OnInit, OnDestroy {
     if (component && component['agregarTasaAnalfabetismo']) {
       component['agregarTasaAnalfabetismo']();
       this.actualizarDatos();
-    }
-  }
-
-  onFotografiasEducacionIndicadoresChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['onFotografiasEducacionIndicadoresChange']) {
-      component['onFotografiasEducacionIndicadoresChange'](fotografias);
     }
   }
 

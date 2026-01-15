@@ -128,8 +128,8 @@
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="getFotografiasVista()"
-    [sectionId]="'3.1.4.B.1.2'"
-    [photoPrefix]="'fotografiaCahuachoB12'"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -138,25 +138,6 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <div class="form-field">
-      <label class="label">Fotografías de Aspectos Demográficos</label>
-      <app-image-upload
-        [fotografias]="fotografiasDemografiaFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_DEMOGRAFIA"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Población del CP"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Población del CP"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasDemografiaChange($event)">
-      </app-image-upload>
-    </div>
-
     <div class="form-field">
       <label class="label">Población distrital</label>
       <input type="number" class="form-control" 
@@ -261,9 +242,9 @@
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías de PEA</label>
       <app-image-upload
-        [fotografias]="fotografiasPEAFormMulti"
+        [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_PEA"
+        [photoPrefix]="PHOTO_PREFIX"
         [permitirMultiples]="true"
         labelTitulo="Título de la fotografía"
         labelFuente="Fuente de la fotografía"

@@ -58,6 +58,24 @@
 </div>
 
 <div class="form-group-section">
+  <h4 class="section-title">Fotografías después de Tabla Ubicación Referencial</h4>
+  <app-image-upload
+    [fotografias]="fotografiasUbicacionFormMulti"
+    [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaUbicacionReferencial'"
+    [permitirMultiples]="true"
+    labelTitulo="Título de la fotografía"
+    labelFuente="Fuente de la fotografía"
+    labelImagen="Fotografía - Imagen"
+    placeholderTitulo="Ej: Ubicación referencial de la CC"
+    placeholderFuente="Ej: GEADES, 2024"
+    tituloDefault="Ubicación Referencial"
+    fuenteDefault="GEADES, 2024"
+    (fotografiasChange)="onFotografiasUbicacionChange($event)">
+  </app-image-upload>
+</div>
+
+<div class="form-group-section">
   <h4 class="section-title">Cuadro 2: Población y viviendas</h4>
   <div class="form-field">
     <label class="label">Título <span class="required">*</span></label>
@@ -169,18 +187,20 @@
 </div>
 
 <div class="form-group-section">
-  <h4 class="section-title">Fotografías de Sección 4</h4>
+  <h4 class="section-title">Fotografías después de Tabla Población y Viviendas</h4>
   <app-image-upload
-    [fotografias]="fotografiasAISDFormMulti"
+    [fotografias]="fotografiasPoblacionFormMulti"
     [sectionId]="seccionId"
+    [photoPrefix]="'fotografiaPoblacionViviendas'"
     [permitirMultiples]="true"
     labelTitulo="Título de la fotografía"
     labelFuente="Fuente de la fotografía"
     labelImagen="Fotografía - Imagen"
-    placeholderTitulo="Ej: Fotografía de la sección 4"
+    placeholderTitulo="Ej: Población y viviendas de la CC"
     placeholderFuente="Ej: GEADES, 2024"
-    tituloDefault="Sección 4"
+    tituloDefault="Población y Viviendas"
     fuenteDefault="GEADES, 2024"
-    (fotografiasChange)="onFotografiasAISDChange($event)">
+    (fotografiasChange)="onFotografiasPoblacionChange($event)">
   </app-image-upload>
 </div>
+

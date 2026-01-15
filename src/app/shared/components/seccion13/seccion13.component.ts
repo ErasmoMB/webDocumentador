@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -6,21 +6,24 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-seccion13',
   templateUrl: './seccion13.component.html',
   styleUrls: ['./seccion13.component.css']
 })
-export class Seccion13Component extends BaseSectionComponent {
+export class Seccion13Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
   override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion13_natalidad_mortalidad_completo', 'parrafoSeccion13_morbilidad_completo', 'natalidadMortalidadTabla', 'morbilidadTabla', 'porcentajeSIS', 'porcentajeESSALUD', 'porcentajeSinSeguro', 'afiliacionSaludTabla'];
   
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
+  private stateSubscription?: Subscription;
 
   natalidadMortalidadConfig: TableConfig = {
     tablaKey: 'natalidadMortalidadTabla',
@@ -66,7 +69,8 @@ export class Seccion13Component extends BaseSectionComponent {
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -136,17 +140,44 @@ export class Seccion13Component extends BaseSectionComponent {
     );
   }
 
+  protected override onInitCustom(): void {
+    this.actualizarFotografiasFormMulti();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
+  }
+
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      fotografias,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotografias];
+    this.fotografiasFormMulti = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion13NatalidadMortalidadCompleto(): string {

@@ -38,6 +38,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   @Input() mostrarNumero: boolean = true;
   @Input() sectionId: string = '3.1.1'; // Sección para numeración global
   @Input() photoPrefix: string = ''; // Prefijo de foto (fotografiaGanaderia, fotografiaAgricultura, etc.)
+  @Input() key: number = 0; // Clave para forzar actualización del componente
 
   @Output() tituloChange = new EventEmitter<string>();
   @Output() fuenteChange = new EventEmitter<string>();
@@ -69,11 +70,13 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       return '';
     }
     
+    const groupPrefix = this.photoNumberingService.getGroupPrefix(this.sectionId);
+    
     return this.photoNumberingService.getGlobalPhotoNumber(
       this.sectionId,
       index + 1,
       this.photoPrefix,
-      ''
+      groupPrefix
     );
   }
 
@@ -116,16 +119,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   private logSectionPhotos(): void {
-    if (!this.hasLoggedPhotos && this.sectionId && this.hasFotos()) {
-      const sectionName = this.getSectionName();
-      console.log(`✅ PUNTO 2: [sectionId] presente en ${sectionName} | ID: ${this.sectionId} | Fotos: ${this._fotografias.filter(f => f?.imagen).length}`);
-      this.hasLoggedPhotos = true;
-    }
+    // Log deshabilitado para mantener consola limpia
   }
 
   ngOnInit() {
     if (this.modoVista) {
-      this._fotografias = (this.fotografias || []).filter(f => !!f);
+      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen);
       this.cdRef.markForCheck();
       this.logSectionPhotos();
       return;
@@ -140,10 +139,16 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     }
 
     if (this.modoVista) {
-      this._fotografias = (this.fotografias || []).filter(f => !!f);
-      this.cdRef.markForCheck();
-      this.logSectionPhotos();
+      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen);
+      this.cdRef.detectChanges();
       return;
+    }
+
+    if (changes['key']) {
+      setTimeout(() => {
+        this.inicializarFotografias(false);
+        this.cdRef.markForCheck();
+      }, 0);
     }
 
     if (changes['previewInicial']) {
@@ -180,7 +185,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       )) {
         this.hasLoggedPhotos = false;
         this.inicializarFotografias(false);
-        // Forzar recalculación de números después de un pequeño delay
         setTimeout(() => {
           this.cdRef.markForCheck();
           this.logSectionPhotos();
@@ -190,8 +194,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       }
     }
     
-    // Detectar cambios en otras secciones y recalcular números
-    if (changes['sectionId']) {
+    if (changes['photoPrefix'] || changes['sectionId']) {
       setTimeout(() => {
         this.cdRef.markForCheck();
       }, 0);
@@ -408,8 +411,13 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         this._fotografias.splice(index, 1);
         this.emitirCambios();
       } else if (this._fotografias.length === 1) {
-        this._fotografias[0].imagen = null;
-        this.emitirCambios();
+        this._fotografias = [{
+          titulo: this.tituloDefault,
+          fuente: this.fuenteDefault,
+          imagen: null,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+        }];
+        this.emitirCambiosConVacio();
       }
     } else {
       this.preview = null;
@@ -417,6 +425,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this.imagenEliminada.emit();
     }
     this.cdRef.markForCheck();
+  }
+
+  private emitirCambiosConVacio() {
+    this.lastEmittedValue = '';
+    this.fotografiasChange.emit([]);
+    this.cdRef.detectChanges();
   }
 
   agregarFoto() {

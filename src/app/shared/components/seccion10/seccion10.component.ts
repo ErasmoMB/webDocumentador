@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -6,6 +6,8 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
+import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -14,9 +16,11 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion10.component.html',
   styleUrls: ['./seccion10.component.css']
 })
-export class Seccion10Component extends BaseSectionComponent {
+export class Seccion10Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
+  
+  private stateSubscription?: Subscription;
   
   override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'coberturaElectricaTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo'];
   
@@ -65,7 +69,8 @@ export class Seccion10Component extends BaseSectionComponent {
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -222,7 +227,18 @@ export class Seccion10Component extends BaseSectionComponent {
   }
 
   protected override onInitCustom(): void {
-    this.actualizarFotografiasFormMulti();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override onChangesCustom(changes: any): void {
@@ -231,30 +247,25 @@ export class Seccion10Component extends BaseSectionComponent {
     }
   }
 
-  onFotografiasDesechosSolidosChange(fotografias: FotoItem[]) {
+  cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DESECHOS}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DESECHOS}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_DESECHOS}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
+  onFotografiasDesechosSolidosChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_DESECHOS, fotografias);
+    this.fotografiasDesechosSolidosFormMulti = [...fotografias];
   }
 
   onFotografiasElectricidadChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_ELECTRICIDAD}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_ELECTRICIDAD}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_ELECTRICIDAD}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_ELECTRICIDAD, fotografias);
+    this.fotografiasElectricidadFormMulti = [...fotografias];
   }
 
   obtenerTextoSeccion10ServiciosBasicosIntro(): string {

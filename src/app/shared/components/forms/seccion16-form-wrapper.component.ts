@@ -12,8 +12,6 @@ import { Subscription } from 'rxjs';
 })
 export class Seccion16FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
-  @Input() fotografiasReservorioFormMulti: FotoItem[] = [];
-  @Input() fotografiasUsoSuelosFormMulti: FotoItem[] = [];
   
   formData: any = {};
   datos: any = {};
@@ -52,20 +50,6 @@ export class Seccion16FormWrapperComponent implements OnInit, OnDestroy {
     this.formData[fieldId] = valorLimpio;
     this.formularioService.actualizarDato(fieldId as any, valorLimpio);
     this.actualizarDatos();
-  }
-
-  onFotografiasReservorioChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion16');
-    if (component && component['onFotografiasReservorioChange']) {
-      component['onFotografiasReservorioChange'](fotografias);
-    }
-  }
-
-  onFotografiasUsoSuelosChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion16');
-    if (component && component['onFotografiasUsoSuelosChange']) {
-      component['onFotografiasUsoSuelosChange'](fotografias);
-    }
   }
 
   obtenerTextoSeccion16AguaCompleto(): string {

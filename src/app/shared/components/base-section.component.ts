@@ -6,6 +6,7 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { FotoItem } from './image-upload/image-upload.component';
+import { PhotoGroupConfig } from '../utils/photo-group-config';
 
 @Directive()
 export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck {
@@ -19,6 +20,9 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   fotografiasCache: FotoItem[] = [];
   fotografiasFormMulti: FotoItem[] = [];
   readonly PHOTO_PREFIX: string = '';
+  
+  protected photoGroups: Map<string, FotoItem[]> = new Map();
+  protected photoGroupsConfig: PhotoGroupConfig[] = [];
 
   protected constructor(
     protected formularioService: FormularioService,
@@ -46,6 +50,13 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         this.actualizarFotografiasFormMulti();
       }
     }
+    if (changes['modoFormulario'] && !this.modoFormulario) {
+      if (this.tieneFotografias()) {
+        this.actualizarFotografiasCache();
+        this.actualizarFotografiasFormMulti();
+      }
+      this.cdRef.detectChanges();
+    }
     this.onChangesCustom(changes);
   }
 
@@ -54,6 +65,9 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.actualizarDatos();
       if (this.tieneFotografias()) {
         this.actualizarFotografiasCache();
+        if (this.modoFormulario) {
+          this.actualizarFotografiasFormMulti();
+        }
       }
       this.cdRef.markForCheck();
     }
@@ -132,5 +146,88 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
 
   protected actualizarDatosCustom(): void {
     // Hook para lógica personalizada en actualizarDatos
+  }
+
+  protected getPhotoGroup(prefix: string): FotoItem[] {
+    if (!this.photoGroups.has(prefix)) {
+      this.photoGroups.set(prefix, []);
+    }
+    return this.photoGroups.get(prefix)!;
+  }
+
+  protected setPhotoGroup(prefix: string, fotografias: FotoItem[]): void {
+    this.photoGroups.set(prefix, [...fotografias]);
+  }
+
+  protected cargarGrupoFotografias(prefix: string): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      prefix,
+      groupPrefix
+    );
+    return fotos;
+  }
+
+  protected guardarGrupoFotografias(prefix: string, fotografias: FotoItem[]): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    
+    const fotosConNumeros = fotografias.map((foto, index) => {
+      if (!foto.numero || foto.numero === '') {
+        const numeroGlobal = this.photoNumberingService?.getGlobalPhotoNumber(
+          this.seccionId,
+          index + 1,
+          prefix,
+          groupPrefix
+        ) || '';
+        return { ...foto, numero: numeroGlobal };
+      }
+      return foto;
+    });
+    
+    this.imageService.saveImages(
+      this.seccionId,
+      prefix,
+      fotosConNumeros,
+      groupPrefix
+    );
+    this.setPhotoGroup(prefix, fotosConNumeros);
+  }
+
+  protected cargarTodosLosGrupos(): void {
+    if (this.photoGroupsConfig.length === 0) {
+      return;
+    }
+    this.photoGroupsConfig.forEach(config => {
+      try {
+        const fotos = this.cargarGrupoFotografias(config.prefix);
+        this.setPhotoGroup(config.prefix, fotos);
+      } catch (error) {
+        console.error(`[BaseSection] ❌ Error cargando grupo "${config.prefix}":`, error);
+      }
+    });
+  }
+
+  protected onGrupoFotografiasChange(prefix: string, fotografias: FotoItem[]): void {
+    try {
+      this.guardarGrupoFotografias(prefix, fotografias);
+      this.cdRef.detectChanges();
+    } catch (error) {
+      console.error(`[BaseSection] ❌ Error actualizando grupo "${prefix}":`, error);
+    }
+  }
+
+  protected getFotografiasVista(prefix: string): FotoItem[] {
+    const fotos = this.getPhotoGroup(prefix);
+    if (fotos.length === 0 && !this.modoFormulario) {
+      const fotosCargadas = this.cargarGrupoFotografias(prefix);
+      this.setPhotoGroup(prefix, fotosCargadas);
+      return fotosCargadas;
+    }
+    return fotos;
+  }
+
+  protected getFotografiasFormMulti(prefix: string): FotoItem[] {
+    return this.getPhotoGroup(prefix);
   }
 }

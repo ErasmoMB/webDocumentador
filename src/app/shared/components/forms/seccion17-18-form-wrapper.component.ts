@@ -9,20 +9,4 @@ import { FotoItem } from '../image-upload/image-upload.component';
 })
 export class Seccion17FormWrapperComponent {
   @Input() seccionId: string = '';
-  @Input() fotografiasIDHFormMulti: FotoItem[] = [];
-  @Input() fotografiasNBIFormMulti: FotoItem[] = [];
-
-  onFotografiasIDHChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion17');
-    if (component && component['onFotografiasIDHChange']) {
-      component['onFotografiasIDHChange'](fotografias);
-    }
-  }
-
-  onFotografiasNBIChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion18');
-    if (component && component['onFotografiasNBIChange']) {
-      component['onFotografiasNBIChange'](fotografias);
-    }
-  }
 }

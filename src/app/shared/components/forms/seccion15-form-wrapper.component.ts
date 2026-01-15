@@ -12,7 +12,6 @@ import { Subscription } from 'rxjs';
 })
 export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
-  @Input() fotografiasIglesiaFormMulti: FotoItem[] = [];
   
   formData: any = {};
   datos: any = {};
@@ -114,13 +113,6 @@ export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
     if (component && component['agregarReligiones']) {
       component['agregarReligiones']();
       this.actualizarDatos();
-    }
-  }
-
-  onFotografiasIglesiaChange(fotografias: FotoItem[]) {
-    const component = ViewChildHelper.getComponent('seccion15');
-    if (component && component['onFotografiasIglesiaChange']) {
-      component['onFotografiasIglesiaChange'](fotografias);
     }
   }
 

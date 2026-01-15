@@ -1,10 +1,12 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
+import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -13,9 +15,11 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion5.component.html',
   styleUrls: ['./seccion5.component.css']
 })
-export class Seccion5Component extends BaseSectionComponent {
+export class Seccion5Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
+  
+  private stateSubscription?: Subscription;
   
   override readonly PHOTO_PREFIX = 'fotografiaInstitucionalidad';
   
@@ -44,16 +48,25 @@ export class Seccion5Component extends BaseSectionComponent {
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
-    setTimeout(() => {
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }, 150);
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografiasVista();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override detectarCambios(): boolean {
@@ -204,16 +217,8 @@ export class Seccion5Component extends BaseSectionComponent {
   }
 
   onFotografiasChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    this.fotografiasFormMulti = [...fotografias];
   }
 
   onInstitucionFieldChange(index: number, field: string, value: any) {

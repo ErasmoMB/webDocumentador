@@ -1,10 +1,12 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
+import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
@@ -13,9 +15,11 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion24.component.html',
   styleUrls: ['./seccion24.component.css']
 })
-export class Seccion24Component extends BaseSectionComponent {
+export class Seccion24Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
+  
+  private stateSubscription?: Subscription;
   
   override watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI', 'ciudadOrigenComercio'];
   
@@ -41,13 +45,26 @@ export class Seccion24Component extends BaseSectionComponent {
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override detectarCambios(): boolean {
@@ -243,7 +260,7 @@ export class Seccion24Component extends BaseSectionComponent {
     };
   }
 
-  getFotografiasVista(): FotoItem[] {
+  override getFotografiasVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
@@ -267,17 +284,20 @@ export class Seccion24Component extends BaseSectionComponent {
     }
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
+  onFotografiasChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    this.fotografiasFormMulti = [...fotografias];
   }
 
   obtenerTextoActividadesEconomicasAISI(): string {

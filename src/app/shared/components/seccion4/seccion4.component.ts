@@ -1,28 +1,34 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, SimpleChanges } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { StateService } from 'src/app/core/services/state.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-seccion4',
   templateUrl: './seccion4.component.html',
   styleUrls: ['./seccion4.component.css']
 })
-export class Seccion4Component extends BaseSectionComponent {
+export class Seccion4Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
   private filasCache: any[] | null = null;
   private ultimoPrefijoCache: string | null = null;
   
-  override readonly PHOTO_PREFIX = 'fotografiaAISD';
+  readonly PHOTO_PREFIX_UBICACION = 'fotografiaUbicacionReferencial';
+  readonly PHOTO_PREFIX_POBLACION = 'fotografiaPoblacionViviendas';
   
-  fotografiasSeccion4: FotoItem[] = [];
-  fotografiasAISD: FotoItem[] = [];
+  fotografiasUbicacionFormMulti: FotoItem[] = [];
+  fotografiasPoblacionFormMulti: FotoItem[] = [];
+  private stateSubscription?: Subscription;
+  
+  override readonly PHOTO_PREFIX = '';
   
   override watchedFields: string[] = [
     'parrafoSeccion4_introduccion_aisd',
@@ -48,18 +54,14 @@ export class Seccion4Component extends BaseSectionComponent {
     'cuadroFuenteAISD2'
   ];
 
-  // Helper para identificar subsecciones AISD
-  esSubseccionAISD(): boolean {
-    return !!this.seccionId.match(/^3\.1\.4\.A\.\d+\.\d+$/);
-  }
-
   constructor(
     formularioService: FormularioService,
     fieldMapping: FieldMappingService,
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -67,12 +69,40 @@ export class Seccion4Component extends BaseSectionComponent {
   protected override onInitCustom(): void {
     this.llenarTablaAutomaticamenteSiNecesario();
     this.calcularCoordenadasYAltitudReferenciales();
+    
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+    
+    if (this.modoFormulario) {
+      this.actualizarFotografiasFormMulti();
+    } else {
+      this.cargarFotografias();
+    }
   }
 
-  protected override onChangesCustom(changes: any): void {
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+      this.stateSubscription = undefined;
+    }
+  }
+
+  protected override onChangesCustom(changes: SimpleChanges): void {
     if (changes['seccionId']) {
       this.llenarTablaAutomaticamenteSiNecesario();
       this.calcularCoordenadasYAltitudReferenciales();
+      this.actualizarFotografiasFormMulti();
+    }
+    
+    if (changes['modoFormulario'] && !this.modoFormulario) {
+      setTimeout(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      }, 0);
     }
   }
 
@@ -401,63 +431,61 @@ export class Seccion4Component extends BaseSectionComponent {
   }
 
   cargarFotografias(): void {
-    if (this.seccionId.startsWith('3.1.4')) {
-      const groupPrefix = this.obtenerPrefijoGrupo();
-      
-      this.fotografiasAISD = this.imageService.loadImages(
-        this.seccionId,
-        this.PHOTO_PREFIX,
-        groupPrefix
-      );
-      
-      this.fotografiasSeccion4 = [];
-    } else {
-      this.fotografiasSeccion4 = this.imageService.loadImages(
-        this.seccionId,
-        'fotografiaSeccion4'
-      );
-      
-      this.fotografiasAISD = [];
-    }
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotosUbicacion = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_UBICACION,
+      groupPrefix
+    );
+    const fotosPoblacion = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_POBLACION,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotosUbicacion, ...fotosPoblacion];
+    this.cdRef.markForCheck();
   }
 
   protected override actualizarFotografiasFormMulti(): void {
-    if (this.seccionId.startsWith('3.1.4')) {
-      const groupPrefix = this.obtenerPrefijoGrupo();
-      this.fotografiasFormMulti = this.imageService.loadImages(
-        this.seccionId,
-        this.PHOTO_PREFIX,
-        groupPrefix
-      );
-    } else {
-      this.fotografiasFormMulti = this.imageService.loadImages(
-        this.seccionId,
-        'fotografiaSeccion4'
-      );
-    }
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.fotografiasUbicacionFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_UBICACION,
+      groupPrefix
+    );
+    this.fotografiasPoblacionFormMulti = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_POBLACION,
+      groupPrefix
+    );
   }
 
+  getFotografiasUbicacionVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_UBICACION,
+      groupPrefix
+    );
+  }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
-    if (this.seccionId.startsWith('3.1.4')) {
-      const groupPrefix = this.obtenerPrefijoGrupo();
-      fotografias.forEach((foto, index) => {
-        const num = index + 1;
-        const suffix = groupPrefix ? groupPrefix : '';
-        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Titulo${suffix}` as any, foto.titulo || '');
-        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Fuente${suffix}` as any, foto.fuente || '');
-        this.formularioService.actualizarDato(`${this.PHOTO_PREFIX}${num}Imagen${suffix}` as any, foto.imagen || '');
-      });
-    } else {
-      fotografias.forEach((foto, index) => {
-        const num = index + 1;
-        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Titulo` as any, foto.titulo || '');
-        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Fuente` as any, foto.fuente || '');
-        this.formularioService.actualizarDato(`fotografiaSeccion4${num}Imagen` as any, foto.imagen || '');
-      });
-    }
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+  getFotografiasPoblacionVista(): FotoItem[] {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    return this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_POBLACION,
+      groupPrefix
+    );
+  }
+
+  onFotografiasUbicacionChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_UBICACION, fotografias);
+    this.fotografiasUbicacionFormMulti = [...fotografias];
+  }
+
+  onFotografiasPoblacionChange(fotografias: FotoItem[]) {
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_POBLACION, fotografias);
+    this.fotografiasPoblacionFormMulti = [...fotografias];
   }
 
   obtenerTextoSeccion4IntroduccionAISD(): string {
@@ -509,26 +537,5 @@ export class Seccion4Component extends BaseSectionComponent {
     }).join('');
   }
 
-  onFotografiasAISDChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.obtenerPrefijoGrupo();
-    this.imageService.saveImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      fotografias,
-      groupPrefix
-    );
-    this.fotografiasAISD = fotografias;
-    this.actualizarFotografiasFormMulti();
-  }
-
-  onFotografiasSeccion4Change(fotografias: FotoItem[]) {
-    this.imageService.saveImages(
-      this.seccionId,
-      'fotografiaSeccion4',
-      fotografias
-    );
-    this.fotografiasSeccion4 = fotografias;
-    this.actualizarFotografiasFormMulti();
-  }
 }
 

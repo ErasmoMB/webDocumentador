@@ -64,9 +64,7 @@
 
       <ng-container *ngIf="seccionId?.includes('3.1.4.A.1.13') || seccionId?.includes('3.1.4.A.2.13') || seccionId?.includes('3.1.4.B.1.13') || seccionId?.includes('3.1.4.B.2.13') || seccionId?.includes('3.1.4.A.1.14') || seccionId?.includes('3.1.4.A.2.14') || seccionId?.includes('3.1.4.B.1.14') || seccionId?.includes('3.1.4.B.2.14')">
         <app-seccion17-18-form-wrapper 
-          [seccionId]="seccionId"
-          [fotografiasIDHFormMulti]="fotografiasIDHFormMulti"
-          [fotografiasNBIFormMulti]="fotografiasNBIFormMulti">
+          [seccionId]="seccionId">
         </app-seccion17-18-form-wrapper>
       </ng-container>
 
@@ -83,8 +81,7 @@
       <!-- Formulario especializado para 3.1.4, 3.1.4.A y 3.1.4.A.1 -->
       <ng-container *ngIf="seccionId === '3.1.4' || seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A.2'">
         <app-seccion4-form-wrapper 
-          [seccionId]="seccionId"
-          [fotografiasAISDFormMulti]="fotografiasAISDFormMulti">
+          [seccionId]="seccionId">
         </app-seccion4-form-wrapper>
       </ng-container>
 
@@ -126,23 +123,19 @@
 
       <ng-container *ngIf="esSubseccionAISD(seccionId, 10)">
         <app-seccion14-form-wrapper 
-          [seccionId]="seccionId"
-          [fotografiasEducacionIndicadoresFormMulti]="fotografiasEducacionIndicadoresFormMulti">
+          [seccionId]="seccionId">
         </app-seccion14-form-wrapper>
       </ng-container>
 
       <ng-container *ngIf="esSubseccionAISD(seccionId, 11)">
         <app-seccion15-form-wrapper 
-          [seccionId]="seccionId"
-          [fotografiasIglesiaFormMulti]="fotografiasIglesiaFormMulti">
+          [seccionId]="seccionId">
         </app-seccion15-form-wrapper>
       </ng-container>
 
       <ng-container *ngIf="esSubseccionAISD(seccionId, 12)">
         <app-seccion16-form-wrapper 
-          [seccionId]="seccionId"
-          [fotografiasReservorioFormMulti]="fotografiasReservorioFormMulti"
-          [fotografiasUsoSuelosFormMulti]="fotografiasUsoSuelosFormMulti">
+          [seccionId]="seccionId">
         </app-seccion16-form-wrapper>
       </ng-container>
 

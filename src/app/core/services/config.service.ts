@@ -20,9 +20,6 @@ export class ConfigService {
 
   constructor() {
     this.initializeConfig();
-    if (!this.config.useMockData) {
-      console.log('🔌 MODO BACKEND ACTIVADO - Conectando a:', this.config.apiUrl);
-    }
   }
 
   private initializeConfig(): void {

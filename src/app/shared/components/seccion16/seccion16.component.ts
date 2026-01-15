@@ -1,19 +1,21 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { StateService } from 'src/app/core/services/state.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-seccion16',
   templateUrl: './seccion16.component.html',
   styleUrls: ['./seccion16.component.css']
 })
-export class Seccion16Component extends BaseSectionComponent {
+export class Seccion16Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -26,6 +28,7 @@ export class Seccion16Component extends BaseSectionComponent {
   fotografiasUsoSuelosFormMulti: FotoItem[] = [];
   
   override readonly PHOTO_PREFIX = '';
+  private stateSubscription?: Subscription;
 
   constructor(
     formularioService: FormularioService,
@@ -33,7 +36,8 @@ export class Seccion16Component extends BaseSectionComponent {
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -120,6 +124,18 @@ export class Seccion16Component extends BaseSectionComponent {
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override onChangesCustom(changes: any): void {
@@ -128,30 +144,39 @@ export class Seccion16Component extends BaseSectionComponent {
     }
   }
 
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasReservorioChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_RESERVORIO}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_RESERVORIO}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_RESERVORIO}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_RESERVORIO,
+      fotografias,
+      groupPrefix
+    );
+    this.fotografiasReservorioFormMulti = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   onFotografiasUsoSuelosChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_USO_SUELOS}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_USO_SUELOS}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_USO_SUELOS}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_USO_SUELOS,
+      fotografias,
+      groupPrefix
+    );
+    this.fotografiasUsoSuelosFormMulti = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion16AguaCompleto(): string {

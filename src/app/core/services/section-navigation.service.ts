@@ -33,6 +33,8 @@ export class SectionNavigationService {
     const distritosSeleccionadosAISI = datos['distritosSeleccionadosAISI'] || [];
     const numDistritos = distritosSeleccionadosAISI.length > 0 ? distritosSeleccionadosAISI.length : 1;
 
+    secciones.push('3.1.4.B.1');
+
     for (let i = 1; i <= numDistritos; i++) {
       for (let j = 1; j <= 9; j++) {
         secciones.push(`3.1.4.B.${i}.${j}`);
@@ -81,6 +83,16 @@ export class SectionNavigationService {
       const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
       if (numComunidades >= 1) {
         return '3.1.4.A.1.1';
+      }
+    }
+    
+    if (seccionId === '3.1.4.A.1.16') {
+      const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
+      const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
+      if (numComunidades > 1) {
+        return '3.1.4.A.2.1';
+      } else {
+        return '3.1.4.B.1';
       }
     }
     

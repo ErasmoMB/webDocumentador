@@ -1,19 +1,21 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { StateService } from 'src/app/core/services/state.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-seccion12',
   templateUrl: './seccion12.component.html',
   styleUrls: ['./seccion12.component.css']
 })
-export class Seccion12Component extends BaseSectionComponent {
+export class Seccion12Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -32,6 +34,7 @@ export class Seccion12Component extends BaseSectionComponent {
   fotografiasDeporteFormMulti: FotoItem[] = [];
   
   override readonly PHOTO_PREFIX = '';
+  private stateSubscription?: Subscription;
 
   constructor(
     formularioService: FormularioService,
@@ -39,7 +42,8 @@ export class Seccion12Component extends BaseSectionComponent {
     sectionDataLoader: SectionDataLoaderService,
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
-    cdRef: ChangeDetectorRef
+    cdRef: ChangeDetectorRef,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -147,6 +151,18 @@ export class Seccion12Component extends BaseSectionComponent {
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override onChangesCustom(changes: any): void {
@@ -155,17 +171,27 @@ export class Seccion12Component extends BaseSectionComponent {
     }
   }
 
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasChange(prefix: string, fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${prefix}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${prefix}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${prefix}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
+    this.imageService.saveImages(
+      this.seccionId,
+      prefix,
+      fotografias,
+      groupPrefix
+    );
     this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion12SaludCompleto(): string {

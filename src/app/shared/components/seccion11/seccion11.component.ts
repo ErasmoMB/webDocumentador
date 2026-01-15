@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -6,15 +6,17 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { StateService } from 'src/app/core/services/state.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-seccion11',
   templateUrl: './seccion11.component.html',
   styleUrls: ['./seccion11.component.css']
 })
-export class Seccion11Component extends BaseSectionComponent {
+export class Seccion11Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -27,6 +29,7 @@ export class Seccion11Component extends BaseSectionComponent {
   fotografiasTelecomunicacionesFormMulti: FotoItem[] = [];
   
   override readonly PHOTO_PREFIX = '';
+  private stateSubscription?: Subscription;
 
   telecomunicacionesConfig: TableConfig = {
     tablaKey: 'telecomunicacionesTabla',
@@ -43,7 +46,8 @@ export class Seccion11Component extends BaseSectionComponent {
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService
+    private tableService: TableManagementService,
+    private stateService: StateService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -129,6 +133,18 @@ export class Seccion11Component extends BaseSectionComponent {
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override onChangesCustom(changes: any): void {
@@ -137,30 +153,39 @@ export class Seccion11Component extends BaseSectionComponent {
     }
   }
 
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasTransporteChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TRANSPORTE}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TRANSPORTE}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TRANSPORTE}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TRANSPORTE,
+      fotografias,
+      groupPrefix
+    );
+    this.fotografiasTransporteFormMulti = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   onFotografiasTelecomunicacionesChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    fotografias.forEach((foto, index) => {
-      const num = index + 1;
-      const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TELECOMUNICACIONES}${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TELECOMUNICACIONES}${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`${this.PHOTO_PREFIX_TELECOMUNICACIONES}${num}Imagen${suffix}` as any, foto.imagen || '');
-    });
-    this.actualizarFotografiasFormMulti();
-    this.actualizarDatos();
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_TELECOMUNICACIONES,
+      fotografias,
+      groupPrefix
+    );
+    this.fotografiasTelecomunicacionesFormMulti = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion11TransporteCompleto(): string {

@@ -107,24 +107,6 @@
     </button>
   </div>
 
-  <div class="form-field">
-    <label class="label">Fotografías de Indicadores de Educación</label>
-    <app-image-upload
-      [fotografias]="fotografiasEducacionIndicadoresFormMulti"
-      [sectionId]="seccionId"
-      [photoPrefix]="'fotografiaEducacionIndicadores'"
-      [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Indicadores de educación en la CC Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Indicadores de educación"
-      fuenteDefault="GEADES, 2024"
-      (fotografiasChange)="onFotografiasEducacionIndicadoresChange($event)">
-    </app-image-upload>
-  </div>
-
   <div class="form-group-section">
     <h4 class="section-title">Editar Párrafos</h4>
     
