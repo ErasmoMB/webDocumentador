@@ -189,12 +189,79 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private eliminarFilasTotal(): void {
+    // Eliminar filas Total de nivelEducativoTabla
+    if (this.datos['nivelEducativoTabla'] && Array.isArray(this.datos['nivelEducativoTabla'])) {
+      const longitudOriginal = this.datos['nivelEducativoTabla'].length;
+      this.datos['nivelEducativoTabla'] = this.datos['nivelEducativoTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['nivelEducativoTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('nivelEducativoTabla', this.datos['nivelEducativoTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de tasaAnalfabetismoTabla
+    if (this.datos['tasaAnalfabetismoTabla'] && Array.isArray(this.datos['tasaAnalfabetismoTabla'])) {
+      const longitudOriginal = this.datos['tasaAnalfabetismoTabla'].length;
+      this.datos['tasaAnalfabetismoTabla'] = this.datos['tasaAnalfabetismoTabla'].filter((item: any) => {
+        const indicador = item.indicador?.toString().toLowerCase() || '';
+        return !indicador.includes('total');
+      });
+      if (this.datos['tasaAnalfabetismoTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('tasaAnalfabetismoTabla', this.datos['tasaAnalfabetismoTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  getNivelEducativoSinTotal(): any[] {
+    if (!this.datos?.nivelEducativoTabla || !Array.isArray(this.datos.nivelEducativoTabla)) {
+      return [];
+    }
+    return this.datos.nivelEducativoTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalNivelEducativo(): string {
+    const filtered = this.getNivelEducativoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTasaAnalfabetismoSinTotal(): any[] {
+    if (!this.datos?.tasaAnalfabetismoTabla || !Array.isArray(this.datos.tasaAnalfabetismoTabla)) {
+      return [];
+    }
+    return this.datos.tasaAnalfabetismoTabla.filter((item: any) => {
+      const indicador = item.indicador?.toString().toLowerCase() || '';
+      return !indicador.includes('total');
+    });
+  }
+
+  getTotalTasaAnalfabetismo(): string {
+    const filtered = this.getTasaAnalfabetismoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   ngOnDestroy() {

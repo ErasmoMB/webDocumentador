@@ -14,12 +14,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.petGruposEdadAISI || [])">
+        <tr *ngFor="let item of getPetGruposEdadSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.petGruposEdadAISI || datos.petGruposEdadAISI.length === 0">
+        <tr *ngIf="getPetGruposEdadSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPetGruposEdad() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getPetGruposEdadSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -49,7 +54,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.peaDistritoSexoTabla || [])">
+        <tr *ngFor="let item of getPeaDistritoSexoSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeHombres'">{{ item.porcentajeHombres || '____' }}</td>
@@ -58,7 +63,16 @@
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.peaDistritoSexoTabla || datos.peaDistritoSexoTabla.length === 0">
+        <tr *ngIf="getPeaDistritoSexoSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaDistritoSexoHombres() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaDistritoSexoMujeres() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaDistritoSexo() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getPeaDistritoSexoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -99,7 +113,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.peaOcupadaDesocupadaTabla || [])">
+        <tr *ngFor="let item of getPeaOcupadaDesocupadaSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeHombres'">{{ item.porcentajeHombres || '____' }}</td>
@@ -108,7 +122,16 @@
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.peaOcupadaDesocupadaTabla || datos.peaOcupadaDesocupadaTabla.length === 0">
+        <tr *ngIf="getPeaOcupadaDesocupadaSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaOcupadaDesocupadaHombres() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaOcupadaDesocupadaMujeres() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPeaOcupadaDesocupada() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getPeaOcupadaDesocupadaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -170,6 +193,23 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalPetGruposEdad()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
@@ -220,6 +260,39 @@
           [totalKey]="'categoria'"
           (tableUpdated)="calcularPorcentajesPEADistritoSexo(); cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categorías</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Hombres</label>
+              <input type="text" class="input" [value]="getTotalPeaDistritoSexoHombres()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Mujeres</label>
+              <input type="text" class="input" [value]="getTotalPeaDistritoSexoMujeres()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalPeaDistritoSexo()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
@@ -304,6 +377,39 @@
           [totalKey]="'categoria'"
           (tableUpdated)="calcularPorcentajesPEAOcupadaDesocupada(); cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categorías</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Hombres</label>
+              <input type="text" class="input" [value]="getTotalPeaOcupadaDesocupadaHombres()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Mujeres</label>
+              <input type="text" class="input" [value]="getTotalPeaOcupadaDesocupadaMujeres()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalPeaOcupadaDesocupada()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">

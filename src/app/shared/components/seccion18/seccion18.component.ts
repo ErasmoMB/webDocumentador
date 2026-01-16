@@ -60,12 +60,79 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private eliminarFilasTotal(): void {
+    // Eliminar filas Total de nbiCCAyrocaTabla
+    if (this.datos['nbiCCAyrocaTabla'] && Array.isArray(this.datos['nbiCCAyrocaTabla'])) {
+      const longitudOriginal = this.datos['nbiCCAyrocaTabla'].length;
+      this.datos['nbiCCAyrocaTabla'] = this.datos['nbiCCAyrocaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['nbiCCAyrocaTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de nbiDistritoCahuachoTabla
+    if (this.datos['nbiDistritoCahuachoTabla'] && Array.isArray(this.datos['nbiDistritoCahuachoTabla'])) {
+      const longitudOriginal = this.datos['nbiDistritoCahuachoTabla'].length;
+      this.datos['nbiDistritoCahuachoTabla'] = this.datos['nbiDistritoCahuachoTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['nbiDistritoCahuachoTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  getNbiCCAyrocaSinTotal(): any[] {
+    if (!this.datos?.nbiCCAyrocaTabla || !Array.isArray(this.datos.nbiCCAyrocaTabla)) {
+      return [];
+    }
+    return this.datos.nbiCCAyrocaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalNbiCCAyroca(): string {
+    const filtered = this.getNbiCCAyrocaSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getNbiDistritoCahuachoSinTotal(): any[] {
+    if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
+      return [];
+    }
+    return this.datos.nbiDistritoCahuachoTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalNbiDistritoCahuacho(): string {
+    const filtered = this.getNbiDistritoCahuachoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   ngOnDestroy() {

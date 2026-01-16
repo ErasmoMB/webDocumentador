@@ -61,12 +61,79 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     this.actualizarFotografiasFormMulti();
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private eliminarFilasTotal(): void {
+    // Eliminar filas Total de poblacionSexoAISI
+    if (this.datos['poblacionSexoAISI'] && Array.isArray(this.datos['poblacionSexoAISI'])) {
+      const longitudOriginal = this.datos['poblacionSexoAISI'].length;
+      this.datos['poblacionSexoAISI'] = this.datos['poblacionSexoAISI'].filter((item: any) => {
+        const sexo = item.sexo?.toString().toLowerCase() || '';
+        return !sexo.includes('total');
+      });
+      if (this.datos['poblacionSexoAISI'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('poblacionSexoAISI', this.datos['poblacionSexoAISI']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de poblacionEtarioAISI
+    if (this.datos['poblacionEtarioAISI'] && Array.isArray(this.datos['poblacionEtarioAISI'])) {
+      const longitudOriginal = this.datos['poblacionEtarioAISI'].length;
+      this.datos['poblacionEtarioAISI'] = this.datos['poblacionEtarioAISI'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['poblacionEtarioAISI'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('poblacionEtarioAISI', this.datos['poblacionEtarioAISI']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  getPoblacionSexoSinTotal(): any[] {
+    if (!this.datos?.poblacionSexoAISI || !Array.isArray(this.datos.poblacionSexoAISI)) {
+      return [];
+    }
+    return this.datos.poblacionSexoAISI.filter((item: any) => {
+      const sexo = item.sexo?.toString().toLowerCase() || '';
+      return !sexo.includes('total');
+    });
+  }
+
+  getTotalPoblacionSexo(): string {
+    const filtered = this.getPoblacionSexoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getPoblacionEtarioSinTotal(): any[] {
+    if (!this.datos?.poblacionEtarioAISI || !Array.isArray(this.datos.poblacionEtarioAISI)) {
+      return [];
+    }
+    return this.datos.poblacionEtarioAISI.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPoblacionEtario(): string {
+    const filtered = this.getPoblacionEtarioSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   ngOnDestroy() {

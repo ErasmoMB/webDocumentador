@@ -184,12 +184,79 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private eliminarFilasTotal(): void {
+    // Eliminar filas Total de lenguasMaternasTabla
+    if (this.datos['lenguasMaternasTabla'] && Array.isArray(this.datos['lenguasMaternasTabla'])) {
+      const longitudOriginal = this.datos['lenguasMaternasTabla'].length;
+      this.datos['lenguasMaternasTabla'] = this.datos['lenguasMaternasTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['lenguasMaternasTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de religionesTabla
+    if (this.datos['religionesTabla'] && Array.isArray(this.datos['religionesTabla'])) {
+      const longitudOriginal = this.datos['religionesTabla'].length;
+      this.datos['religionesTabla'] = this.datos['religionesTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['religionesTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  getLenguasMaternaSinTotal(): any[] {
+    if (!this.datos?.lenguasMaternasTabla || !Array.isArray(this.datos.lenguasMaternasTabla)) {
+      return [];
+    }
+    return this.datos.lenguasMaternasTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalLenguasMaternas(): string {
+    const filtered = this.getLenguasMaternaSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getReligionesSinTotal(): any[] {
+    if (!this.datos?.religionesTabla || !Array.isArray(this.datos.religionesTabla)) {
+      return [];
+    }
+    return this.datos.religionesTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalReligiones(): string {
+    const filtered = this.getReligionesSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   ngOnDestroy() {

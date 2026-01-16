@@ -54,14 +54,19 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.educacionCpTabla || [])">
+        <tr *ngFor="let item of getEducacionSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'nombreIE'">{{ item.nombreIE || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'nivel'">{{ item.nivel || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'tipoGestion'">{{ item.tipoGestion || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'cantidadEstudiantes'">{{ item.cantidadEstudiantes || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.educacionCpTabla || datos.educacionCpTabla.length === 0">
+        <tr *ngIf="getEducacionSinTotal().length > 0">
+            <td class="table-cell" colspan="3"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalEducacion() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getEducacionSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -237,6 +242,23 @@
           [totalKey]="'nombreIE'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Total</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Cantidad de estudiantes</label>
+              <input type="text" class="input" [value]="getTotalEducacion()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">

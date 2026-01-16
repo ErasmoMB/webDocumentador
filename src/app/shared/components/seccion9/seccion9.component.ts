@@ -60,11 +60,40 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
+    }
+  }
+
+  private eliminarFilasTotal(): void {
+    const datos = this.formularioService.obtenerDatos();
+    
+    if (datos['condicionOcupacionTabla'] && Array.isArray(datos['condicionOcupacionTabla'])) {
+      const longitudOriginal = datos['condicionOcupacionTabla'].length;
+      const datosFiltrados = datos['condicionOcupacionTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['condicionOcupacionTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('condicionOcupacionTabla', datos['condicionOcupacionTabla']);
+      }
+    }
+    
+    if (datos['tiposMaterialesTabla'] && Array.isArray(datos['tiposMaterialesTabla'])) {
+      const longitudOriginal = datos['tiposMaterialesTabla'].length;
+      const datosFiltrados = datos['tiposMaterialesTabla'].filter((item: any) => {
+        const tipoMaterial = item.tipoMaterial?.toString().toLowerCase() || '';
+        return !tipoMaterial.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['tiposMaterialesTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('tiposMaterialesTabla', datos['tiposMaterialesTabla']);
+      }
     }
   }
 
@@ -135,6 +164,56 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
       item.tipoMaterial && item.tipoMaterial.toLowerCase().includes(tipoMaterial.toLowerCase())
     );
     return item?.porcentaje || '____';
+  }
+
+  getCondicionOcupacionSinTotal(): any[] {
+    if (!this.datos?.condicionOcupacionTabla || !Array.isArray(this.datos.condicionOcupacionTabla)) {
+      return [];
+    }
+    return this.datos.condicionOcupacionTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalCondicionOcupacion(): string {
+    if (!this.datos?.condicionOcupacionTabla || !Array.isArray(this.datos.condicionOcupacionTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.condicionOcupacionTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTiposMaterialesSinTotal(): any[] {
+    if (!this.datos?.tiposMaterialesTabla || !Array.isArray(this.datos.tiposMaterialesTabla)) {
+      return [];
+    }
+    return this.datos.tiposMaterialesTabla.filter((item: any) => {
+      const tipoMaterial = item.tipoMaterial?.toString().toLowerCase() || '';
+      return !tipoMaterial.includes('total');
+    });
+  }
+
+  getTotalTiposMateriales(): string {
+    if (!this.datos?.tiposMaterialesTabla || !Array.isArray(this.datos.tiposMaterialesTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.tiposMaterialesTabla.filter((item: any) => {
+      const tipoMaterial = item.tipoMaterial?.toString().toLowerCase() || '';
+      return !tipoMaterial.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   override obtenerPrefijoGrupo(): string {

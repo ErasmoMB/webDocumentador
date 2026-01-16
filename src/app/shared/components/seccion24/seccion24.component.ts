@@ -53,6 +53,7 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -346,5 +347,37 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     
     return `En la capital distrital de ${distrito}, los hábitos de consumo están basados principalmente en alimentos tradicionales y accesibles dentro de la comunidad. Los productos más consumidos incluyen tubérculos (como papa y oca) y verduras, los cuales son esenciales en la dieta diaria de los hogares. Estos productos se adquieren tanto a través de la producción local, como es el caso de la papa y la oca, como de compras a pequeños comerciantes que llegan a la capital distrital desde ${ciudadOrigen}. La papa, por ser uno de los cultivos más abundantes en la zona, tiene un rol fundamental en la alimentación, acompañando la mayoría de las comidas junto a otros carbohidratos.\n\nEn cuanto al consumo de proteínas, los habitantes del pueblo suelen recurrir a la carne de animales menores como las gallinas y los cuyes, así como de vacuno, los cuales son criados en sus propias viviendas. Estas carnes son un complemento importante en la dieta y una fuente de nutrientes esenciales, especialmente en eventos familiares o festividades. Si bien se consumen otros tipos de carne en menor proporción, como ovino, estas son generalmente reservadas para ocasiones especiales. Los hábitos de consumo en esta localidad reflejan una combinación de autosuficiencia en algunos alimentos, y la dependencia de productos traídos por comerciantes para completar la dieta diaria.\n\nPor otra parte, cabe mencionar que en el CP ${centroPoblado} se preparan diversos platos tradicionales, comúnmente durante las festividades o en ocasiones especiales. Entre ellos destacan el cuy chactado, el picante de cuy, sopa de morón con charqui, picante de quinua, mazamorra de quinua y chicha de cebada.`;
   }
-}
 
+  getActividadesEconomicasSinTotal(): any[] {
+    if (!this.datos?.actividadesEconomicasAISI || !Array.isArray(this.datos.actividadesEconomicasAISI)) {
+      return [];
+    }
+    return this.datos.actividadesEconomicasAISI.filter((item: any) => {
+      const actividad = item.actividad?.toString().toLowerCase() || '';
+      return !actividad.includes('total');
+    });
+  }
+
+  getTotalActividadesEconomicas(): string {
+    const filtered = this.getActividadesEconomicasSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  private eliminarFilasTotal(): void {
+    if (this.datos['actividadesEconomicasAISI'] && Array.isArray(this.datos['actividadesEconomicasAISI'])) {
+      const longitudOriginal = this.datos['actividadesEconomicasAISI'].length;
+      this.datos['actividadesEconomicasAISI'] = this.datos['actividadesEconomicasAISI'].filter((item: any) => {
+        const actividad = item.actividad?.toString().toLowerCase() || '';
+        return !actividad.includes('total');
+      });
+      if (this.datos['actividadesEconomicasAISI'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+}

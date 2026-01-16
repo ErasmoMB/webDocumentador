@@ -14,10 +14,15 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.poblacionSexoAISI || [])">
+        <tr *ngFor="let item of getPoblacionSexoSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'sexo'">{{ item.sexo || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr class="total-row" *ngIf="getPoblacionSexoSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPoblacionSexo() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.poblacionSexoAISI || datos.poblacionSexoAISI.length === 0">
             <td class="table-cell">____</td>
@@ -43,10 +48,15 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.poblacionEtarioAISI || [])">
+        <tr *ngFor="let item of getPoblacionEtarioSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+        </tr>
+        <tr class="total-row" *ngIf="getPoblacionEtarioSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPoblacionEtario() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.poblacionEtarioAISI || datos.poblacionEtarioAISI.length === 0">
             <td class="table-cell">____</td>
@@ -104,6 +114,18 @@
           [totalKey]="'sexo'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" *ngIf="datos['poblacionSexoAISI'] && datos['poblacionSexoAISI'].length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" [value]="getTotalPoblacionSexo()" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -137,6 +159,18 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" *ngIf="datos['poblacionEtarioAISI'] && datos['poblacionEtarioAISI'].length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" [value]="getTotalPoblacionEtario()" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

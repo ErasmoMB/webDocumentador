@@ -98,9 +98,43 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    this.eliminarFilasTotal();
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
+  }
+
+  private eliminarFilasTotal(): void {
+    if (this.datos.peaOcupacionesTabla && Array.isArray(this.datos.peaOcupacionesTabla)) {
+      const longitudOriginal = this.datos.peaOcupacionesTabla.length;
+      const datosFiltrados = this.datos.peaOcupacionesTabla.filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.datos.peaOcupacionesTabla = datosFiltrados;
+      }
+    }
+  }
+
+  getPEAOcupacionesSinTotal(): any[] {
+    if (!this.datos?.peaOcupacionesTabla || !Array.isArray(this.datos.peaOcupacionesTabla)) {
+      return [];
+    }
+    return this.datos.peaOcupacionesTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPEAOcupaciones(): string {
+    const datosSinTotal = this.getPEAOcupacionesSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   protected override tieneFotografias(): boolean {
@@ -124,6 +158,13 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
       item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase())
     );
     return item?.porcentaje || '____';
+  }
+
+  onPEAOcupacionesTableUpdated() {
+    this.eliminarFilasTotal();
+    this.formularioService.actualizarDato('peaOcupacionesTabla', this.datos['peaOcupacionesTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   override obtenerPrefijoGrupo(): string {
@@ -225,16 +266,6 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
     
     return `Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describe las ocupaciones principales existentes en los poblados de la CC ${grupoAISD}, que forma parte del AISD.`;
-  }
-
-  obtenerTextoFuentesActividadesEconomicas(): string {
-    if (this.datos.textoFuentesActividadesEconomicas && this.datos.textoFuentesActividadesEconomicas !== '____') {
-      return this.datos.textoFuentesActividadesEconomicas;
-    }
-    
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
-    
-    return `A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC ${grupoAISD}. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.`;
   }
 
   obtenerTextoAnalisisCuadro310(): string {

@@ -69,6 +69,7 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
@@ -469,6 +470,35 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
     
     return `Asimismo, cabe mencionar que en ${centroPoblado} se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.`;
+  }
+
+  // Métodos para filtrar filas Total de educación
+  getEducacionSinTotal(): any[] {
+    if (!this.datos?.educacionCpTabla || !Array.isArray(this.datos.educacionCpTabla)) {
+      return [];
+    }
+    return this.datos.educacionCpTabla.filter((item: any) => 
+      !item.nombreIE || !item.nombreIE.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalEducacion(): number {
+    const filtered = this.getEducacionSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.cantidadEstudiantes) || 0), 0);
+  }
+
+  // Eliminar filas Total al cargar datos
+  eliminarFilasTotal(): void {
+    // Educación
+    if (this.datos?.educacionCpTabla && Array.isArray(this.datos.educacionCpTabla)) {
+      const filtered = this.datos.educacionCpTabla.filter((item: any) => 
+        !item.nombreIE || !item.nombreIE.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.educacionCpTabla.length) {
+        this.datos.educacionCpTabla = filtered;
+        this.formularioService.actualizarDato('educacionCpTabla', filtered);
+      }
+    }
   }
 }
 

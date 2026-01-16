@@ -59,8 +59,130 @@ export class Seccion7FormWrapperComponent implements OnInit, OnDestroy {
   }
 
   actualizarDatos() {
+    this.eliminarFilasTotal();
     this.datos = this.formularioService.obtenerDatos();
     this.formData = { ...this.datos };
+  }
+
+  private eliminarFilasTotal(): void {
+    const datos = this.formularioService.obtenerDatos();
+    let huboaCambios = false;
+    
+    if (datos['petTabla'] && Array.isArray(datos['petTabla'])) {
+      const longitudOriginal = datos['petTabla'].length;
+      const datosFiltrados = datos['petTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['petTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('petTabla', datos['petTabla']);
+        huboaCambios = true;
+      }
+    }
+    
+    if (datos['peaTabla'] && Array.isArray(datos['peaTabla'])) {
+      const longitudOriginal = datos['peaTabla'].length;
+      const datosFiltrados = datos['peaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['peaTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('peaTabla', datos['peaTabla']);
+        huboaCambios = true;
+      }
+    }
+    
+    if (datos['peaOcupadaTabla'] && Array.isArray(datos['peaOcupadaTabla'])) {
+      const longitudOriginal = datos['peaOcupadaTabla'].length;
+      const datosFiltrados = datos['peaOcupadaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['peaOcupadaTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('peaOcupadaTabla', datos['peaOcupadaTabla']);
+        huboaCambios = true;
+      }
+    }
+  }
+
+  onPETFieldChange(index: number, field: string, value: any) {
+    this.tableService.actualizarFila(this.datos, this.petConfig, index, field, value, false);
+    this.eliminarFilasTotal();
+    this.formularioService.actualizarDato('petTabla', this.datos['petTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPETTableUpdated() {
+    this.eliminarFilasTotal();
+    this.formularioService.actualizarDato('petTabla', this.datos['petTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  getTotalPET(): string {
+    if (!this.datos?.petTabla || !Array.isArray(this.datos.petTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.petTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  onPEATableUpdated() {
+    this.eliminarFilasTotal();
+    this.formularioService.actualizarDato('peaTabla', this.datos['peaTabla']);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  getTotalPEA(): string {
+    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.peaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getPEAOcupadaSinTotal(): any[] {
+    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+      return [];
+    }
+    return this.datos.peaOcupadaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPEAOcupada(): string {
+    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.peaOcupadaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
   }
 
   onFieldChange(fieldId: string, value: any) {

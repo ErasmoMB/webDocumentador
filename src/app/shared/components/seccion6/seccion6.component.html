@@ -15,17 +15,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.poblacionSexoAISD || [])">
-            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" [appDataSource]="'section'" [fieldName]="'sexo'">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        <tr *ngFor="let item of getPoblacionSexoSinTotal()">
+            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
-        <tr class="total-row" *ngIf="datos.poblacionSexoAISD && datos.poblacionSexoAISD.length > 0">
+        <tr class="total-row" *ngIf="getPoblacionSexoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><span [appDataSource]="'section'" [fieldName]="'poblacionSexoAISD'">{{ getTotalPoblacionSexo() }}</span></td>
-            <td class="table-cell"><span [appDataSource]="'section'" [fieldName]="'poblacionSexoAISD'">100,00 %</span></td>
+            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ getTotalPoblacionSexo() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">100,00 %</span></td>
         </tr>
-        <tr *ngIf="!datos.poblacionSexoAISD || datos.poblacionSexoAISD.length === 0">
+        <tr *ngIf="getPoblacionSexoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -49,17 +49,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.poblacionEtarioAISD || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        <tr *ngFor="let item of getPoblacionEtarioSinTotal()">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
-        <tr class="total-row" *ngIf="datos.poblacionEtarioAISD && datos.poblacionEtarioAISD.length > 0">
+        <tr class="total-row" *ngIf="getPoblacionEtarioSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><span [appDataSource]="'section'" [fieldName]="'poblacionEtarioAISD'">{{ getTotalPoblacionEtario() }}</span></td>
-            <td class="table-cell"><span [appDataSource]="'section'" [fieldName]="'poblacionEtarioAISD'">100,00 %</span></td>
+            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ getTotalPoblacionEtario() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">100,00 %</span></td>
         </tr>
-        <tr *ngIf="!datos.poblacionEtarioAISD || datos.poblacionEtarioAISD.length === 0">
+        <tr *ngIf="getPoblacionEtarioSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>

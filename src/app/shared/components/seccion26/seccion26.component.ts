@@ -89,6 +89,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
@@ -451,6 +452,113 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     const porcentajeElectricidad = this.getPorcentajeElectricidadCocinar();
     
     return `Según los Censos Nacionales 2017, de un total de ${totalHogares} hogares en el CP ${centroPoblado}, se obtiene que un ${porcentajeLena} emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un ${porcentajeGas}, la bosta o estiércol en un ${porcentajeBosta} y la electricidad con un ${porcentajeElectricidad}. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.`;
+  }
+
+  // Métodos para filtrar filas Total de abastecimiento de agua
+  getAbastecimientoAguaSinTotal(): any[] {
+    if (!this.datos?.abastecimientoAguaCpTabla || !Array.isArray(this.datos.abastecimientoAguaCpTabla)) {
+      return [];
+    }
+    return this.datos.abastecimientoAguaCpTabla.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalAbastecimientoAgua(): number {
+    const filtered = this.getAbastecimientoAguaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Métodos para filtrar filas Total de saneamiento
+  getSaneamientoSinTotal(): any[] {
+    if (!this.datos?.saneamientoCpTabla || !Array.isArray(this.datos.saneamientoCpTabla)) {
+      return [];
+    }
+    return this.datos.saneamientoCpTabla.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalSaneamiento(): number {
+    const filtered = this.getSaneamientoSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Métodos para filtrar filas Total de cobertura eléctrica
+  getCoberturaElectricaSinTotal(): any[] {
+    if (!this.datos?.coberturaElectricaCpTabla || !Array.isArray(this.datos.coberturaElectricaCpTabla)) {
+      return [];
+    }
+    return this.datos.coberturaElectricaCpTabla.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalCoberturaElectrica(): number {
+    const filtered = this.getCoberturaElectricaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Métodos para filtrar filas Total de combustibles para cocinar
+  getCombustiblesCocinarSinTotal(): any[] {
+    if (!this.datos?.combustiblesCocinarCpTabla || !Array.isArray(this.datos.combustiblesCocinarCpTabla)) {
+      return [];
+    }
+    return this.datos.combustiblesCocinarCpTabla.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalCombustiblesCocinar(): number {
+    const filtered = this.getCombustiblesCocinarSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Eliminar filas Total al cargar datos
+  eliminarFilasTotal(): void {
+    // Abastecimiento de Agua
+    if (this.datos?.abastecimientoAguaCpTabla && Array.isArray(this.datos.abastecimientoAguaCpTabla)) {
+      const filtered = this.datos.abastecimientoAguaCpTabla.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.abastecimientoAguaCpTabla.length) {
+        this.datos.abastecimientoAguaCpTabla = filtered;
+        this.formularioService.actualizarDato('abastecimientoAguaCpTabla', filtered);
+      }
+    }
+
+    // Saneamiento
+    if (this.datos?.saneamientoCpTabla && Array.isArray(this.datos.saneamientoCpTabla)) {
+      const filtered = this.datos.saneamientoCpTabla.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.saneamientoCpTabla.length) {
+        this.datos.saneamientoCpTabla = filtered;
+        this.formularioService.actualizarDato('saneamientoCpTabla', filtered);
+      }
+    }
+
+    // Cobertura Eléctrica
+    if (this.datos?.coberturaElectricaCpTabla && Array.isArray(this.datos.coberturaElectricaCpTabla)) {
+      const filtered = this.datos.coberturaElectricaCpTabla.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.coberturaElectricaCpTabla.length) {
+        this.datos.coberturaElectricaCpTabla = filtered;
+        this.formularioService.actualizarDato('coberturaElectricaCpTabla', filtered);
+      }
+    }
+
+    // Combustibles para Cocinar
+    if (this.datos?.combustiblesCocinarCpTabla && Array.isArray(this.datos.combustiblesCocinarCpTabla)) {
+      const filtered = this.datos.combustiblesCocinarCpTabla.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.combustiblesCocinarCpTabla.length) {
+        this.datos.combustiblesCocinarCpTabla = filtered;
+        this.formularioService.actualizarDato('combustiblesCocinarCpTabla', filtered);
+      }
+    }
   }
 }
 

@@ -79,6 +79,7 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    this.eliminarFilasTotal();
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -98,6 +99,140 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private eliminarFilasTotal(): void {
+    // Eliminar filas Total de petGruposEdadAISI
+    if (this.datos['petGruposEdadAISI'] && Array.isArray(this.datos['petGruposEdadAISI'])) {
+      const longitudOriginal = this.datos['petGruposEdadAISI'].length;
+      this.datos['petGruposEdadAISI'] = this.datos['petGruposEdadAISI'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['petGruposEdadAISI'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de peaDistritoSexoTabla
+    if (this.datos['peaDistritoSexoTabla'] && Array.isArray(this.datos['peaDistritoSexoTabla'])) {
+      const longitudOriginal = this.datos['peaDistritoSexoTabla'].length;
+      this.datos['peaDistritoSexoTabla'] = this.datos['peaDistritoSexoTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['peaDistritoSexoTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+
+    // Eliminar filas Total de peaOcupadaDesocupadaTabla
+    if (this.datos['peaOcupadaDesocupadaTabla'] && Array.isArray(this.datos['peaOcupadaDesocupadaTabla'])) {
+      const longitudOriginal = this.datos['peaOcupadaDesocupadaTabla'].length;
+      this.datos['peaOcupadaDesocupadaTabla'] = this.datos['peaOcupadaDesocupadaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (this.datos['peaOcupadaDesocupadaTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+        this.cdRef.detectChanges();
+      }
+    }
+  }
+
+  getPetGruposEdadSinTotal(): any[] {
+    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
+      return [];
+    }
+    return this.datos.petGruposEdadAISI.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPetGruposEdad(): string {
+    const filtered = this.getPetGruposEdadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getPeaDistritoSexoSinTotal(): any[] {
+    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
+      return [];
+    }
+    return this.datos.peaDistritoSexoTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPeaDistritoSexo(): string {
+    const filtered = this.getPeaDistritoSexoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPeaDistritoSexoHombres(): string {
+    const filtered = this.getPeaDistritoSexoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const hombres = typeof item.hombres === 'number' ? item.hombres : parseInt(item.hombres) || 0;
+      return sum + hombres;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPeaDistritoSexoMujeres(): string {
+    const filtered = this.getPeaDistritoSexoSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const mujeres = typeof item.mujeres === 'number' ? item.mujeres : parseInt(item.mujeres) || 0;
+      return sum + mujeres;
+    }, 0);
+    return total.toString();
+  }
+
+  getPeaOcupadaDesocupadaSinTotal(): any[] {
+    if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) {
+      return [];
+    }
+    return this.datos.peaOcupadaDesocupadaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPeaOcupadaDesocupada(): string {
+    const filtered = this.getPeaOcupadaDesocupadaSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPeaOcupadaDesocupadaHombres(): string {
+    const filtered = this.getPeaOcupadaDesocupadaSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const hombres = typeof item.hombres === 'number' ? item.hombres : parseInt(item.hombres) || 0;
+      return sum + hombres;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPeaOcupadaDesocupadaMujeres(): string {
+    const filtered = this.getPeaOcupadaDesocupadaSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const mujeres = typeof item.mujeres === 'number' ? item.mujeres : parseInt(item.mujeres) || 0;
+      return sum + mujeres;
+    }, 0);
+    return total.toString();
   }
 
   ngOnDestroy() {

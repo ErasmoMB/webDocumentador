@@ -14,12 +14,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.peaOcupacionesTabla || [])">
+        <tr *ngFor="let item of getPEAOcupacionesSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'manual'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
-        <tr *ngIf="!datos.peaOcupacionesTabla || datos.peaOcupacionesTabla.length === 0">
+        <tr class="total-row" *ngIf="getPEAOcupacionesSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalPEAOcupaciones() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getPEAOcupacionesSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -153,16 +158,6 @@
         [value]="obtenerTextoActividadesEconomicas()"
         (valueChange)="onFieldChange('textoActividadesEconomicas', $event)">
       </app-paragraph-editor>
-      
-      <app-paragraph-editor
-        fieldId="textoFuentesActividadesEconomicas"
-        label="Fuentes Actividades Económicas - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-        [rows]="2"
-        [value]="obtenerTextoFuentesActividadesEconomicas()"
-        (valueChange)="onFieldChange('textoFuentesActividadesEconomicas', $event)"
-        style="margin-top: 15px;">
-      </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
@@ -177,8 +172,29 @@
         ]"
         [tablaKey]="'peaOcupacionesTabla'"
         [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
+        (tableUpdated)="onPEAOcupacionesTableUpdated()">
       </app-dynamic-table>
+      <div class="table-editor" *ngIf="datos['peaOcupacionesTabla'] && datos['peaOcupacionesTabla'].length > 0" style="margin-top: 10px;">
+        <table class="editor-table">
+          <tbody>
+            <tr class="total-row">
+              <td><strong>Total</strong></td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="getTotalPEAOcupaciones()"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  value="100,00 %"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">

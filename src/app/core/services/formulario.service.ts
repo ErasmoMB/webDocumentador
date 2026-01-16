@@ -549,6 +549,163 @@ export class FormularioService {
     this.stateService.setDatos(this.datos);
   }
 
+  aplicarTransformacionesMock(datos: any): any {
+    const datosTransformados = { ...datos };
+
+    if (datosTransformados.fotografias && Array.isArray(datosTransformados.fotografias)) {
+      datosTransformados.fotografias.forEach((foto: any, index: number) => {
+        const numero = foto.numero || `${index + 1}`;
+        const partes = numero.split('.');
+        if (partes.length >= 2) {
+          const numFoto = parseInt(partes[1].trim());
+          if (!isNaN(numFoto) && numFoto >= 1 && numFoto <= 10) {
+            datosTransformados[`fotografiaAISD${numFoto}Titulo`] = foto.titulo || '';
+            datosTransformados[`fotografiaAISD${numFoto}Fuente`] = foto.fuente || '';
+            datosTransformados[`fotografiaAISD${numFoto}Imagen`] = foto.ruta || '';
+          }
+        }
+      });
+    }
+
+    const aliasPairs: Array<[string, string]> = [
+      ['textoPoblacionSexoAISD', 'textoPoblacionSexo'],
+      ['poblacionSexoAISD', 'poblacionSexoTabla'],
+      ['textoPoblacionEtarioAISD', 'textoPoblacionEtario'],
+      ['poblacionEtarioAISD', 'poblacionEtarioTabla']
+    ];
+
+    aliasPairs.forEach(([dest, src]) => {
+      if (datosTransformados[dest] === undefined && datosTransformados[src] !== undefined) {
+        datosTransformados[dest] = datosTransformados[src];
+      }
+    });
+
+    if (datosTransformados.tablaAISD2TotalPoblacion === undefined && Array.isArray(datosTransformados.poblacionSexoAISD)) {
+      const total = datosTransformados.poblacionSexoAISD.reduce((sum: number, item: any) => {
+        const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+        return sum + casos;
+      }, 0);
+      datosTransformados.tablaAISD2TotalPoblacion = total;
+    }
+
+    if (!datosTransformados.parrafoSeccion13_natalidad_mortalidad_completo && datosTransformados.textoNatalidadMortalidad) {
+      datosTransformados.parrafoSeccion13_natalidad_mortalidad_completo = datosTransformados.textoNatalidadMortalidad;
+    }
+
+    if (!datosTransformados.parrafoSeccion13_morbilidad_completo && datosTransformados.textoMorbilidad) {
+      datosTransformados.parrafoSeccion13_morbilidad_completo = datosTransformados.textoMorbilidad;
+    }
+
+    const fuenteMorbilidad = datosTransformados.morbilidadCpTabla || datosTransformados.morbiliadTabla || datosTransformados.morbilidadTabla;
+    if (Array.isArray(fuenteMorbilidad) && fuenteMorbilidad.length > 0) {
+      const toInt = (valor: any): number => parseInt(String(valor ?? '0').replace(/\s+/g, '')) || 0;
+      const tablaTransformada = fuenteMorbilidad.map((item: any) => ({
+        grupo: item.grupo || '____',
+        rango0_11: toInt(item.rango0_11 ?? item.edad0_11 ?? '0'),
+        rango12_17: toInt(item.rango12_17 ?? item.edad12_17 ?? '0'),
+        rango18_29: toInt(item.rango18_29 ?? item.edad18_29 ?? '0'),
+        rango30_59: toInt(item.rango30_59 ?? item.edad30_59 ?? '0'),
+        rango60: toInt(item.rango60 ?? item.edad60_mas ?? '0'),
+        casos: toInt(item.casos ?? '0')
+      }));
+      datosTransformados.morbilidadTabla = tablaTransformada;
+      datosTransformados.morbiliadTabla = tablaTransformada;
+    }
+
+    if (Array.isArray(datosTransformados.natalidadMortalidadTabla) && datosTransformados.natalidadMortalidadTabla.length > 0) {
+      datosTransformados.natalidadMortalidadTabla = datosTransformados.natalidadMortalidadTabla.map((item: any) => ({
+        anio: item.anio || '____',
+        natalidad: parseInt(String(item.natalidad ?? '0')) || 0,
+        mortalidad: parseInt(String(item.mortalidad ?? '0')) || 0
+      }));
+    }
+
+    if (Array.isArray(datosTransformados.afiliacionSaludTabla) && datosTransformados.afiliacionSaludTabla.length > 0) {
+      datosTransformados.afiliacionSaludTabla = datosTransformados.afiliacionSaludTabla.map((item: any) => ({
+        categoria: item.categoria || '____',
+        casos: parseInt(String(item.casos ?? '0')) || 0,
+        porcentaje: item.porcentaje || '0%'
+      }));
+      
+      datosTransformados.afiliacionSaludTabla.forEach((item: any) => {
+        if (item.categoria?.includes('SIS') && !item.categoria?.includes('ESSALUD')) {
+          datosTransformados.porcentajeSIS = item.porcentaje?.replace(/[^0-9,]/g, '') || '84,44';
+        } else if (item.categoria?.includes('ESSALUD')) {
+          datosTransformados.porcentajeESSALUD = item.porcentaje?.replace(/[^0-9,]/g, '') || '3,56';
+        } else if (item.categoria?.includes('sin seguro') || item.categoria?.includes('Ningún')) {
+          datosTransformados.porcentajeSinSeguro = item.porcentaje?.replace(/[^0-9,]/g, '') || '12,00';
+        }
+      });
+    }
+
+    const normalizarTablaVivienda = (tabla: any[]) => tabla.map((item: any) => ({
+      categoria: item.categoria || '____',
+      casos: parseInt(String(item.casos ?? '0')) || 0,
+      porcentaje: item.porcentaje || '0%'
+    }));
+
+    if (Array.isArray(datosTransformados.tiposViviendaCpTabla) && datosTransformados.tiposViviendaCpTabla.length > 0) {
+      const tablaTransformada = normalizarTablaVivienda(datosTransformados.tiposViviendaCpTabla);
+      datosTransformados.tiposViviendaCpTabla = tablaTransformada;
+      datosTransformados.tiposViviendaAISI = tablaTransformada;
+    }
+
+    if (Array.isArray(datosTransformados.condicionOcupacionCpTabla) && datosTransformados.condicionOcupacionCpTabla.length > 0) {
+      const tablaTransformada = normalizarTablaVivienda(datosTransformados.condicionOcupacionCpTabla);
+      datosTransformados.condicionOcupacionCpTabla = tablaTransformada;
+      datosTransformados.condicionOcupacionAISI = tablaTransformada;
+    }
+
+    if (Array.isArray(datosTransformados.tiposMaterialesTabla) && datosTransformados.tiposMaterialesTabla.length > 0) {
+      const materialesTransformada = datosTransformados.tiposMaterialesTabla.map((item: any) => ({
+        categoria: item.categoria || '____',
+        tipoMaterial: item.tipoMaterial || '____',
+        casos: parseInt(String(item.casos ?? '0')) || 0,
+        porcentaje: item.porcentaje || '0%'
+      }));
+      datosTransformados.tiposMaterialesTabla = materialesTransformada;
+      datosTransformados.materialesViviendaAISI = materialesTransformada;
+    }
+
+    if (datosTransformados.textoViviendas && !datosTransformados.textoViviendaAISI) {
+      datosTransformados.textoViviendaAISI = datosTransformados.textoViviendas;
+    }
+
+    if (datosTransformados.textoEstructura && !datosTransformados.textoEstructuraAISI) {
+      datosTransformados.textoEstructuraAISI = datosTransformados.textoEstructura;
+    }
+
+    if (!datosTransformados.textoEstructuraAISI && Array.isArray(datosTransformados.tiposMaterialesTabla) && datosTransformados.tiposMaterialesTabla.length > 0) {
+      const pisosTierra = datosTransformados.tiposMaterialesTabla.find((item: any) => 
+        item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Tierra')
+      );
+      const pisosCemento = datosTransformados.tiposMaterialesTabla.find((item: any) => 
+        item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Cemento')
+      );
+      const porcTierra = pisosTierra?.porcentaje || '79,59 %';
+      const porcCemento = pisosCemento?.porcentaje || '20,41 %';
+      const distrito = datosTransformados.distritoSeleccionado || 'Cahuacho';
+      
+      datosTransformados.textoEstructuraAISI = `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${distrito}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcTierra}). El porcentaje restante, que consta del ${porcCemento}, cuentan con pisos elaborados a base de cemento.`;
+    }
+
+    if (!datosTransformados.centroPobladoAISI && datosTransformados.distritoSeleccionado) {
+      datosTransformados.centroPobladoAISI = datosTransformados.distritoSeleccionado;
+    }
+
+    if (!datosTransformados.textoOcupacionViviendaAISI && datosTransformados.condicionOcupacionCpTabla) {
+      const ocupadasPresentes = datosTransformados.condicionOcupacionCpTabla.find((item: any) => 
+        item.categoria?.includes('presentes')
+      );
+      const porcentaje = ocupadasPresentes?.porcentaje || '29,88 %';
+      const casos = ocupadasPresentes?.casos || '49';
+      const distrito = datosTransformados.distritoSeleccionado || 'Cahuacho';
+      datosTransformados.textoOcupacionViviendaAISI = `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${casos}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentaje} del conjunto analizado.`;
+    }
+
+    return datosTransformados;
+  }
+
   async cargarMockCapitulo3(): Promise<boolean> {
     const timestamp = new Date().getTime();
     const url = `/assets/mockData/capitulo3.json?v=${timestamp}`;
@@ -566,176 +723,9 @@ export class FormularioService {
         return false;
       }
       
-      if (data.datos.fotografias && Array.isArray(data.datos.fotografias)) {
-        data.datos.fotografias.forEach((foto: any, index: number) => {
-          const numero = foto.numero || `${index + 1}`;
-          const partes = numero.split('.');
-          if (partes.length >= 2) {
-            const numFoto = parseInt(partes[1].trim());
-            if (!isNaN(numFoto) && numFoto >= 1 && numFoto <= 10) {
-              data.datos[`fotografiaAISD${numFoto}Titulo`] = foto.titulo || '';
-              data.datos[`fotografiaAISD${numFoto}Fuente`] = foto.fuente || '';
-              data.datos[`fotografiaAISD${numFoto}Imagen`] = foto.ruta || '';
-            }
-          }
-        });
-      }
-
-      // Mapear alias de demografía para que secciones A.1.2 usen los datos del mock
-      const aliasPairs: Array<[string, string]> = [
-        ['textoPoblacionSexoAISD', 'textoPoblacionSexo'],
-        ['poblacionSexoAISD', 'poblacionSexoTabla'],
-        ['textoPoblacionEtarioAISD', 'textoPoblacionEtario'],
-        ['poblacionEtarioAISD', 'poblacionEtarioTabla']
-      ];
-
-      aliasPairs.forEach(([dest, src]) => {
-        if (data.datos[dest] === undefined && data.datos[src] !== undefined) {
-          data.datos[dest] = data.datos[src];
-        }
-      });
-
-      // Calcular total de población (tablaAISD2TotalPoblacion) si no existe
-      if (data.datos.tablaAISD2TotalPoblacion === undefined && Array.isArray(data.datos.poblacionSexoAISD)) {
-        const total = data.datos.poblacionSexoAISD.reduce((sum: number, item: any) => {
-          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
-          return sum + casos;
-        }, 0);
-        data.datos.tablaAISD2TotalPoblacion = total;
-      }
-
-      // Alias y normalización para indicadores de salud (A.1.9)
-      if (!data.datos.parrafoSeccion13_natalidad_mortalidad_completo && data.datos.textoNatalidadMortalidad) {
-        data.datos.parrafoSeccion13_natalidad_mortalidad_completo = data.datos.textoNatalidadMortalidad;
-      }
-
-      if (!data.datos.parrafoSeccion13_morbilidad_completo && data.datos.textoMorbilidad) {
-        data.datos.parrafoSeccion13_morbilidad_completo = data.datos.textoMorbilidad;
-      }
-
-      // Normalizar tabla de morbilidad desde mock
-      const fuenteMorbilidad = data.datos.morbilidadCpTabla || data.datos.morbiliadTabla || data.datos.morbilidadTabla;
-      if (Array.isArray(fuenteMorbilidad) && fuenteMorbilidad.length > 0) {
-        const toInt = (valor: any): number => parseInt(String(valor ?? '0').replace(/\s+/g, '')) || 0;
-        const tablaTransformada = fuenteMorbilidad.map((item: any) => ({
-          grupo: item.grupo || '____',
-          rango0_11: toInt(item.rango0_11 ?? item.edad0_11 ?? '0'),
-          rango12_17: toInt(item.rango12_17 ?? item.edad12_17 ?? '0'),
-          rango18_29: toInt(item.rango18_29 ?? item.edad18_29 ?? '0'),
-          rango30_59: toInt(item.rango30_59 ?? item.edad30_59 ?? '0'),
-          rango60: toInt(item.rango60 ?? item.edad60_mas ?? '0'),
-          casos: toInt(item.casos ?? '0')
-        }));
-        data.datos.morbilidadTabla = tablaTransformada;
-        data.datos.morbiliadTabla = tablaTransformada; // Alias para typo
-      }
-
-      // Llenar tabla de natalidad y mortalidad si existe en mock
-      if (Array.isArray(data.datos.natalidadMortalidadTabla) && data.datos.natalidadMortalidadTabla.length > 0) {
-        data.datos.natalidadMortalidadTabla = data.datos.natalidadMortalidadTabla.map((item: any) => ({
-          anio: item.anio || '____',
-          natalidad: parseInt(String(item.natalidad ?? '0')) || 0,
-          mortalidad: parseInt(String(item.mortalidad ?? '0')) || 0
-        }));
-      }
-
-      // Llenar tabla de afiliación a seguros de salud
-      if (Array.isArray(data.datos.afiliacionSaludTabla) && data.datos.afiliacionSaludTabla.length > 0) {
-        data.datos.afiliacionSaludTabla = data.datos.afiliacionSaludTabla.map((item: any) => ({
-          categoria: item.categoria || '____',
-          casos: parseInt(String(item.casos ?? '0')) || 0,
-          porcentaje: item.porcentaje || '0%'
-        }));
-        
-        // Extraer porcentajes de SIS, ESSALUD y Sin Seguro para el texto
-        data.datos.afiliacionSaludTabla.forEach((item: any) => {
-          if (item.categoria?.includes('SIS') && !item.categoria?.includes('ESSALUD')) {
-            data.datos.porcentajeSIS = item.porcentaje?.replace(/[^0-9,]/g, '') || '84,44';
-          } else if (item.categoria?.includes('ESSALUD')) {
-            data.datos.porcentajeESSALUD = item.porcentaje?.replace(/[^0-9,]/g, '') || '3,56';
-          } else if (item.categoria?.includes('sin seguro') || item.categoria?.includes('Ningún')) {
-            data.datos.porcentajeSinSeguro = item.porcentaje?.replace(/[^0-9,]/g, '') || '12,00';
-          }
-        });
-      }
-
-      // Llenar tablas de vivienda para Centro Poblado (CP)
-      const normalizarTablaVivienda = (tabla: any[]) => tabla.map((item: any) => ({
-        categoria: item.categoria || '____',
-        casos: parseInt(String(item.casos ?? '0')) || 0,
-        porcentaje: item.porcentaje || '0%'
-      }));
-
-      if (Array.isArray(data.datos.tiposViviendaCpTabla) && data.datos.tiposViviendaCpTabla.length > 0) {
-        const tablaTransformada = normalizarTablaVivienda(data.datos.tiposViviendaCpTabla);
-        data.datos.tiposViviendaCpTabla = tablaTransformada;
-        // Mapear a tiposViviendaAISI para sección B.1.4
-        data.datos.tiposViviendaAISI = tablaTransformada;
-      }
-
-      if (Array.isArray(data.datos.condicionOcupacionCpTabla) && data.datos.condicionOcupacionCpTabla.length > 0) {
-        const tablaTransformada = normalizarTablaVivienda(data.datos.condicionOcupacionCpTabla);
-        data.datos.condicionOcupacionCpTabla = tablaTransformada;
-        // Mapear a condicionOcupacionAISI para sección B.1.4
-        data.datos.condicionOcupacionAISI = tablaTransformada;
-      }
-
-      // Llenar tabla de materiales de vivienda para CP
-      if (Array.isArray(data.datos.tiposMaterialesTabla) && data.datos.tiposMaterialesTabla.length > 0) {
-        const materialesTransformada = data.datos.tiposMaterialesTabla.map((item: any) => ({
-          categoria: item.categoria || '____',
-          tipoMaterial: item.tipoMaterial || '____',
-          casos: parseInt(String(item.casos ?? '0')) || 0,
-          porcentaje: item.porcentaje || '0%'
-        }));
-        data.datos.tiposMaterialesTabla = materialesTransformada;
-        // Mapear a materialesViviendaAISI para sección B.1.4
-        data.datos.materialesViviendaAISI = materialesTransformada;
-      }
-
-      // Llenar textos de vivienda para CP si existen en el mock
-      if (data.datos.textoViviendas && !data.datos.textoViviendaAISI) {
-        data.datos.textoViviendaAISI = data.datos.textoViviendas;
-      }
-
-      if (data.datos.textoEstructura && !data.datos.textoEstructuraAISI) {
-        data.datos.textoEstructuraAISI = data.datos.textoEstructura;
-      }
-
-      // Generar texto de estructura automático si no existe, basado en datos de materiales
-      if (!data.datos.textoEstructuraAISI && Array.isArray(data.datos.tiposMaterialesTabla) && data.datos.tiposMaterialesTabla.length > 0) {
-        // Extraer porcentajes de pisos de tierra y cemento
-        const pisosTierra = data.datos.tiposMaterialesTabla.find((item: any) => 
-          item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Tierra')
-        );
-        const pisosCemento = data.datos.tiposMaterialesTabla.find((item: any) => 
-          item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Cemento')
-        );
-        const porcTierra = pisosTierra?.porcentaje || '79,59 %';
-        const porcCemento = pisosCemento?.porcentaje || '20,41 %';
-        const distrito = data.datos.distritoSeleccionado || 'Cahuacho';
-        
-        data.datos.textoEstructuraAISI = `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${distrito}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcTierra}). El porcentaje restante, que consta del ${porcCemento}, cuentan con pisos elaborados a base de cemento.`;
-      }
-
-      // Asegurar que centroPobladoAISI esté lleno (usar el distritoSeleccionado como fallback)
-      if (!data.datos.centroPobladoAISI && data.datos.distritoSeleccionado) {
-        data.datos.centroPobladoAISI = data.datos.distritoSeleccionado;
-      }
-
-      // Mapear alias para textoOcupacionViviendaAISI si no existe
-      if (!data.datos.textoOcupacionViviendaAISI && data.datos.condicionOcupacionCpTabla) {
-        // Generar texto automáticamente desde los datos de la tabla
-        const ocupadasPresentes = data.datos.condicionOcupacionCpTabla.find((item: any) => 
-          item.categoria?.includes('presentes')
-        );
-        const porcentaje = ocupadasPresentes?.porcentaje || '29,88 %';
-        const casos = ocupadasPresentes?.casos || '49';
-        const distrito = data.datos.distritoSeleccionado || 'Cahuacho';
-        data.datos.textoOcupacionViviendaAISI = `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${casos}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentaje} del conjunto analizado.`;
-      }
+      const datosTransformados = this.aplicarTransformacionesMock(data.datos);
       
-      this.actualizarDatos(data.datos);
+      this.actualizarDatos(datosTransformados);
       
       if (data?.json) {
         this.guardarJSON(data.json);

@@ -20,12 +20,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.abastecimientoAguaCpTabla || [])">
+        <tr *ngFor="let item of getAbastecimientoAguaSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.abastecimientoAguaCpTabla || datos.abastecimientoAguaCpTabla.length === 0">
+        <tr *ngIf="getAbastecimientoAguaSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalAbastecimientoAgua() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getAbastecimientoAguaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -50,12 +55,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.saneamientoCpTabla || [])">
+        <tr *ngFor="let item of getSaneamientoSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.saneamientoCpTabla || datos.saneamientoCpTabla.length === 0">
+        <tr *ngIf="getSaneamientoSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalSaneamiento() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getSaneamientoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -95,12 +105,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.coberturaElectricaCpTabla || [])">
+        <tr *ngFor="let item of getCoberturaElectricaSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.coberturaElectricaCpTabla || datos.coberturaElectricaCpTabla.length === 0">
+        <tr *ngIf="getCoberturaElectricaSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalCoberturaElectrica() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getCoberturaElectricaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -135,12 +150,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.combustiblesCocinarCpTabla || [])">
+        <tr *ngFor="let item of getCombustiblesCocinarSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.combustiblesCocinarCpTabla || datos.combustiblesCocinarCpTabla.length === 0">
+        <tr *ngIf="getCombustiblesCocinarSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalCombustiblesCocinar() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getCombustiblesCocinarSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -209,6 +229,23 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalAbastecimientoAgua()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -242,6 +279,23 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalSaneamiento()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
@@ -311,6 +365,23 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalCoberturaElectrica()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
@@ -363,6 +434,23 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalCombustiblesCocinar()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">

@@ -10,7 +10,7 @@ export interface FieldMapping {
   endpoint?: string;
   endpointParams?: (seccionId: string, datos: any) => any;
   transform?: (data: any) => any;
-  dataSource: 'manual' | 'section';
+  dataSource: 'manual' | 'section' | 'backend';
 }
 
 @Injectable({
@@ -74,13 +74,40 @@ export class FieldMappingService {
     this.fieldMappings.set('tituloInstituciones', { fieldName: 'tituloInstituciones', dataSource: 'manual' });
     this.fieldMappings.set('fuenteInstituciones', { fieldName: 'fuenteInstituciones', dataSource: 'manual' });
     this.fieldMappings.set('tablepagina6', { fieldName: 'tablepagina6', dataSource: 'manual' });
+
+    this.fieldMappings.set('ubigeoAISD', { fieldName: 'ubigeoAISD', dataSource: 'backend' });
+    this.fieldMappings.set('distritoAISD', { fieldName: 'distritoAISD', dataSource: 'backend' });
+    this.fieldMappings.set('provinciaAISD', { fieldName: 'provinciaAISD', dataSource: 'backend' });
+    this.fieldMappings.set('departamentoAISD', { fieldName: 'departamentoAISD', dataSource: 'backend' });
+    this.fieldMappings.set('componentesCC', { fieldName: 'componentesCC', dataSource: 'backend' });
+    this.fieldMappings.set('poblacionSexoAISD', { fieldName: 'poblacionSexoAISD', dataSource: 'backend' });
+    this.fieldMappings.set('poblacionEtarioAISD', { fieldName: 'poblacionEtarioAISD', dataSource: 'backend' });
+    this.fieldMappings.set('petAISD', { fieldName: 'petAISD', dataSource: 'backend' });
+    this.fieldMappings.set('tablaAISD2Punto', { fieldName: 'tablaAISD2Punto', dataSource: 'backend' });
+    this.fieldMappings.set('tablaAISD2Codigo', { fieldName: 'tablaAISD2Codigo', dataSource: 'backend' });
+    this.fieldMappings.set('tablaAISD2Poblacion', { fieldName: 'tablaAISD2Poblacion', dataSource: 'backend' });
+    this.fieldMappings.set('materialesConstruccionAISD', { fieldName: 'materialesConstruccionAISD', dataSource: 'backend' });
+    this.fieldMappings.set('serviciosBasicosAISD', { fieldName: 'serviciosBasicosAISD', dataSource: 'backend' });
+
+    this.fieldMappings.set('ubigeoAISI', { fieldName: 'ubigeoAISI', dataSource: 'backend' });
+    this.fieldMappings.set('distritoAISI', { fieldName: 'distritoAISI', dataSource: 'backend' });
+    this.fieldMappings.set('provinciaAISI', { fieldName: 'provinciaAISI', dataSource: 'backend' });
+    this.fieldMappings.set('departamentoAISI', { fieldName: 'departamentoAISI', dataSource: 'backend' });
+    this.fieldMappings.set('centroPobladoCapitalAISI', { fieldName: 'centroPobladoCapitalAISI', dataSource: 'backend' });
+    this.fieldMappings.set('poblacionSexoAISI', { fieldName: 'poblacionSexoAISI', dataSource: 'backend' });
+    this.fieldMappings.set('poblacionEtarioAISI', { fieldName: 'poblacionEtarioAISI', dataSource: 'backend' });
+    this.fieldMappings.set('petAISI', { fieldName: 'petAISI', dataSource: 'backend' });
+    this.fieldMappings.set('peaDistritalAISI', { fieldName: 'peaDistritalAISI', dataSource: 'backend' });
+    this.fieldMappings.set('actividadesEconomicasAISI', { fieldName: 'actividadesEconomicasAISI', dataSource: 'backend' });
+    this.fieldMappings.set('materialesConstruccionAISI', { fieldName: 'materialesConstruccionAISI', dataSource: 'backend' });
+    this.fieldMappings.set('serviciosBasicosAISI', { fieldName: 'serviciosBasicosAISI', dataSource: 'backend' });
   }
 
   getMapping(fieldName: string): FieldMapping | undefined {
     return this.fieldMappings.get(fieldName);
   }
 
-  getDataSourceType(fieldName: string): 'manual' | 'section' {
+  getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
     if (this.testDataFields.has(fieldName)) {
       return 'manual';
     }
@@ -112,6 +139,66 @@ export class FieldMappingService {
 
     if (mapping.endpoint === '/demograficos/datos') {
       return this.backendApi.getDatosDemograficos(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/informacion-referencial') {
+      return this.backendApi.getInformacionReferencialAISD(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/centros-poblados') {
+      return this.backendApi.getCentrosPobladosAISD(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/poblacion-sexo') {
+      return this.backendApi.getPoblacionPorSexo(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/poblacion-etario') {
+      return this.backendApi.getPoblacionPorGrupoEtario(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/pet') {
+      return this.backendApi.getPET(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisd/materiales-construccion') {
+      return this.backendApi.getMaterialesConstruccion(params.id_ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisi/informacion-referencial') {
+      return this.backendApi.getInformacionReferencialAISI(params.ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisi/centros-poblados') {
+      return this.backendApi.getCentrosPobladosAISI(params.ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisi/pea-distrital') {
+      return this.backendApi.getPEADistrital(params.ubigeo).pipe(
+        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      );
+    }
+
+    if (mapping.endpoint === '/aisi/viviendas-censo') {
+      return this.backendApi.getViviendasCenso(params.ubigeo).pipe(
         map(response => mapping.transform ? mapping.transform(response.data) : response.data)
       );
     }
@@ -267,6 +354,33 @@ export class FieldMappingService {
         'tablaAISD1Distrito',
         'tablaAISD1Provincia',
         'tablaAISD1Departamento',
+        'tablaAISD1Fila1Localidad',
+        'tablaAISD1Fila1Coordenadas',
+        'tablaAISD1Fila1Altitud',
+        'tablaAISD1Fila1Distrito',
+        'tablaAISD1Fila1Provincia',
+        'tablaAISD1Fila1Departamento',
+        'tablaAISD2Fila1Punto',
+        'tablaAISD2Fila1Codigo',
+        'tablaAISD2Fila1Poblacion',
+        'tablaAISD2Fila1ViviendasEmpadronadas',
+        'tablaAISD2Fila1ViviendasOcupadas',
+        'tablaAISD2Fila2Punto',
+        'tablaAISD2Fila2Codigo',
+        'tablaAISD2Fila2Poblacion',
+        'tablaAISD2Fila2ViviendasEmpadronadas',
+        'tablaAISD2Fila2ViviendasOcupadas',
+        'tablaAISD2Fila3Punto',
+        'tablaAISD2Fila3Codigo',
+        'tablaAISD2Fila3Poblacion',
+        'tablaAISD2Fila3ViviendasEmpadronadas',
+        'tablaAISD2Fila3ViviendasOcupadas',
+        'tablaAISD2Fila4Punto',
+        'tablaAISD2Fila4Codigo',
+        'tablaAISD2Fila4Poblacion',
+        'tablaAISD2Fila4ViviendasEmpadronadas',
+        'tablaAISD2Fila4ViviendasOcupadas',
+        'tablaAISD2TotalPoblacion',
         'cuadroTituloAISD1',
         'cuadroFuenteAISD1',
         'cuadroTituloAISD2',
@@ -334,7 +448,231 @@ export class FieldMappingService {
         'grupoAISD',
         'tituloInstituciones',
         'fuenteInstituciones',
+        'tablepagina6',
+        'textoInstitucionalidad'
+      ],
+      '3.1.4.A.1.1': [
+        'grupoAISD',
+        'textoInstitucionalidad',
+        'tituloInstituciones',
+        'fuenteInstituciones',
         'tablepagina6'
+      ],
+      '3.1.4.A.1.3': [
+        'grupoAISD',
+        'textoDefinicionPEA',
+        'textoDetalePEA',
+        'textoAnalisisPEA',
+        'peaTabla',
+        'textoIndiceDesempleo',
+        'textoAnalisisOcupacion',
+        'peaOcupadaTabla',
+        'textoSituacionEmpleo',
+        'textoIngresosPoblacion',
+        'peaOcupacionesTabla',
+        'textoAnalisisCuadro310'
+      ],
+      '3.1.4.A.1.4': [
+        'grupoAISD',
+        'textoActividadesEconomicas',
+        'textoFuentesActividadesEconomicas',
+        'textoGanaderia1',
+        'textoGanaderia2',
+        'textoGanaderia3',
+        'poblacionPecuariaTabla',
+        'textoAgricultura1',
+        'textoAgricultura2',
+        'caracteristicasAgriculturaTabla',
+        'textoMercadoComercializacion1',
+        'textoMercadoComercializacion2',
+        'textoHabitosConsumo1',
+        'textoHabitosConsumo2'
+      ],
+      '3.1.4.A.1.5': [
+        'grupoAISD',
+        'textoViviendas',
+        'condicionOcupacionTabla',
+        'textoEstructura',
+        'tiposMaterialesTabla'
+      ],
+      '3.1.4.A.1.6': [
+        'grupoAISD',
+        'textoServiciosBasicos',
+        'textoServiciosAgua',
+        'abastecimientoAguaTabla',
+        'textoServiciosAguaDetalle',
+        'textoServiciosDesague',
+        'tiposSaneamientoTabla',
+        'textoServiciosDesagueDetalle',
+        'textoDesechosSolidos1',
+        'textoDesechosSolidos2',
+        'textoDesechosSolidos3',
+        'textoElectricidad1',
+        'coberturaElectricaTabla',
+        'textoElectricidad2',
+        'textoEnergiaParaCocinar'
+      ],
+      '3.1.4.A.1.7': [
+        'grupoAISD',
+        'textoTransporte1',
+        'textoTransporte2',
+        'textoTelecomunicaciones1',
+        'textoTelecomunicaciones2',
+        'telecomunicacionesTabla'
+      ],
+      '3.1.4.A.1.8': [
+        'grupoAISD',
+        'textoInfraestructuraSalud',
+        'textoInfraestructuraSaludDetalle',
+        'caracteristicasSaludTabla',
+        'textoInfraestructuraEducacion',
+        'textoInfraestructuraEducacionPost',
+        'cantidadEstudiantesEducacionTabla',
+        'ieAyrocaTabla',
+        'ie40270Tabla',
+        'textoAlumnosPorSexoGrado',
+        'alumnosIEAyrocaTabla',
+        'alumnosIE40270Tabla',
+        'textoInfraestructuraRecreacion',
+        'textoInfraestructuraRecreacionDetalle',
+        'textoInfraestructuraDeporte',
+        'textoInfraestructuraDeportDetalle'
+      ],
+      '3.1.4.A.1.10': [
+        'grupoAISD',
+        'textoEducacion',
+        'textoNivelEducativo',
+        'nivelEducativoTabla',
+        'textoAnalfabetismo',
+        'tasaAnalfabetismoTabla',
+        'cantidadEstudiantesGeneroTabla'
+      ],
+      '3.1.4.A.1.11': [
+        'grupoAISD',
+        'textoAspectosCulturales',
+        'textoIdioma',
+        'lenguasMaternasTabla',
+        'textoReligion',
+        'religionesTabla'
+      ],
+      '3.1.4.A.1.12': [
+        'grupoAISD',
+        'textoAgua',
+        'textoUsosSuelos',
+        'textoRecursosNaturalesZona',
+        'textoTenenciaDelTierra'
+      ],
+      '3.1.4.A.1.13': [
+        'grupoAISD',
+        'textoIndiceDesarrolloHumano',
+        'indiceDesarrolloHumanoTabla'
+      ],
+      '3.1.4.A.1.14': [
+        'grupoAISD',
+        'textoNecesidadesBasicasInsatisfechas',
+        'nbiCCAyrocaTabla',
+        'nbiDistritoCahuachoTabla'
+      ],
+      '3.1.4.A.1.15': [
+        'grupoAISD',
+        'textoOrganizacionSocial',
+        'autoridades'
+      ],
+      '3.1.4.A.1.16': [
+        'grupoAISD',
+        'textoFestividades',
+        'festividades'
+      ],
+      '3.1.4.B.1.1': [
+        'centroPobladoAISI',
+        'distritoSeleccionado',
+        'provinciaSeleccionada',
+        'departamentoSeleccionado',
+        'textoAISIIntro',
+        'textoCentroPoblado',
+        'ubicacionCpTabla'
+      ],
+      '3.1.4.B.1.2': [
+        'centroPobladoAISI',
+        'distritoSeleccionado',
+        'textoDemografiaAISI',
+        'poblacionSexoAISI',
+        'poblacionEtarioAISI'
+      ],
+      '3.1.4.B.1.3': [
+        'centroPobladoAISI',
+        'distritoSeleccionado',
+        'textoPEA_AISI',
+        'petGruposEdadAISI',
+        'peaDistritoSexoTabla',
+        'peaOcupadaDesocupadaTabla'
+      ],
+      '3.1.4.B.1.4': [
+        'centroPobladoAISI',
+        'textoActividadesEconomicasAISI',
+        'actividadesEconomicasAISI',
+        'textoMercadoProductos',
+        'textoHabitosConsumo'
+      ],
+      '3.1.4.B.1.5': [
+        'centroPobladoAISI',
+        'tiposViviendaCpTabla',
+        'condicionOcupacionCpTabla',
+        'abastecimientoAguaCpTabla',
+        'textoDesagueCP',
+        'saneamientoCpTabla',
+        'textoDesechosSolidosCP',
+        'textoElectricidadCP',
+        'coberturaElectricaCpTabla',
+        'textoEnergiaCocinarCP',
+        'combustiblesCocinarCpTabla'
+      ],
+      '3.1.4.B.1.6': [
+        'centroPobladoAISI',
+        'textoTransporteCP1',
+        'textoTransporteCP2',
+        'textoTelecomunicacionesCP1',
+        'textoTelecomunicacionesCP2',
+        'textoTelecomunicacionesCP3',
+        'telecomunicacionesCpTabla'
+      ],
+      '3.1.4.B.1.7': [
+        'centroPobladoAISI',
+        'textoSaludCP',
+        'puestoSaludCpTabla',
+        'textoEducacionCP',
+        'educacionCpTabla',
+        'textoRecreacionCP1',
+        'textoRecreacionCP2',
+        'textoRecreacionCP3',
+        'textoDeporteCP1',
+        'textoDeporteCP2'
+      ],
+      '3.1.4.B.1.8': [
+        'centroPobladoAISI',
+        'textoNatalidadCP1',
+        'textoNatalidadCP2',
+        'natalidadMortalidadCpTabla',
+        'textoMorbilidadCP',
+        'morbilidadCpTabla',
+        'textoAfiliacionSalud',
+        'afiliacionSaludTabla'
+      ],
+      '3.1.4.B.1.9': [
+        'centroPobladoAISI',
+        'textoEducacion',
+        'textoNivelEducativo',
+        'nivelEducativoTabla',
+        'textoAnalfabetismo',
+        'tasaAnalfabetismoTabla',
+        'textoAspectosCulturales',
+        'textoIdioma',
+        'lenguasMaternasTabla',
+        'textoReligion',
+        'religionesTabla',
+        'textoFuentesAgua',
+        'textoUsosSuelos',
+        'textoRecursosNaturalesZona'
       ]
     };
 

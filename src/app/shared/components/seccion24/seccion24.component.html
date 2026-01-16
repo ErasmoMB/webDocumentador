@@ -13,12 +13,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.actividadesEconomicasAISI || [])">
+        <tr *ngFor="let item of getActividadesEconomicasSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'actividad'">{{ item.actividad || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.actividadesEconomicasAISI || datos.actividadesEconomicasAISI.length === 0">
+        <tr *ngIf="getActividadesEconomicasSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalActividadesEconomicas() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getActividadesEconomicasSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -108,6 +113,23 @@
         [totalKey]="'actividad'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
+
+      <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+          <div>
+            <label class="label">Actividad Económica</label>
+            <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Casos</label>
+            <input type="text" class="input" [value]="getTotalActividadesEconomicas()" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Porcentaje</label>
+            <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">

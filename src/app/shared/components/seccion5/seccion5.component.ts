@@ -90,10 +90,18 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     const imagenAnteriorStr = fotoImagenAnterior ? String(fotoImagenAnterior).trim() : '';
     const hayCambioImagen = imagenActualStr !== imagenAnteriorStr && (imagenActualStr || imagenAnteriorStr);
     
+    const tablaActual = datosActuales['tablepagina6'] || [];
+    const tablaAnterior = this.datosAnteriores.tablepagina6 || [];
+    const hayCambioTabla = JSON.stringify(tablaActual) !== JSON.stringify(tablaAnterior);
+    
     if (grupoAISDActual !== grupoAISDAnterior || 
         grupoAISDActual !== grupoAISDEnDatos || 
         parrafoActual !== parrafoAnterior ||
-        hayCambioImagen) {
+        hayCambioImagen ||
+        hayCambioTabla) {
+      if (hayCambioTabla) {
+        this.datosAnteriores.tablepagina6 = JSON.parse(JSON.stringify(tablaActual));
+      }
       return true;
     }
     
@@ -106,6 +114,12 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     const fotoImagen = fotoImagenAISDBaseCon || fotoImagenAISDBase || null;
     
     this.datosAnteriores.fotoImagen = fotoImagen;
+    
+    if (this.datos.tablepagina6 && Array.isArray(this.datos.tablepagina6)) {
+      this.datosAnteriores.tablepagina6 = JSON.parse(JSON.stringify(this.datos.tablepagina6));
+    } else {
+      this.datosAnteriores.tablepagina6 = [];
+    }
     
     this.fotografiasVista = this.cargarFotografiasVista();
   }

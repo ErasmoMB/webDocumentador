@@ -107,6 +107,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    this.eliminarFilasTotal();
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
@@ -122,6 +123,140 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     if (!Array.isArray(this.datos.peaOcupadaTabla)) {
       this.datos.peaOcupadaTabla = [];
     }
+    this.eliminarFilasTotal();
+  }
+
+  private eliminarFilasTotal(): void {
+    if (this.datos.petTabla && Array.isArray(this.datos.petTabla)) {
+      const longitudOriginal = this.datos.petTabla.length;
+      const datosFiltrados = this.datos.petTabla.filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.datos.petTabla = datosFiltrados;
+      }
+    }
+    if (this.datos.peaTabla && Array.isArray(this.datos.peaTabla)) {
+      const longitudOriginal = this.datos.peaTabla.length;
+      const datosFiltrados = this.datos.peaTabla.filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.datos.peaTabla = datosFiltrados;
+      }
+    }
+    if (this.datos.peaOcupadaTabla && Array.isArray(this.datos.peaOcupadaTabla)) {
+      const longitudOriginal = this.datos.peaOcupadaTabla.length;
+      const datosFiltrados = this.datos.peaOcupadaTabla.filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.datos.peaOcupadaTabla = datosFiltrados;
+      }
+    }
+  }
+
+  getPETTablaSinTotal(): any[] {
+    if (!this.datos?.petTabla || !Array.isArray(this.datos.petTabla)) {
+      return [];
+    }
+    return this.datos.petTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPET(): string {
+    const datosSinTotal = this.getPETTablaSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getPEATableSinTotal(): any[] {
+    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+      return [];
+    }
+    return this.datos.peaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPEA(): string {
+    const datosSinTotal = this.getPEATableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPEAHombres(): string {
+    const datosSinTotal = this.getPEATableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const hombres = typeof item.hombres === 'number' ? item.hombres : parseInt(item.hombres) || 0;
+      return sum + hombres;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPEAMujeres(): string {
+    const datosSinTotal = this.getPEATableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const mujeres = typeof item.mujeres === 'number' ? item.mujeres : parseInt(item.mujeres) || 0;
+      return sum + mujeres;
+    }, 0);
+    return total.toString();
+  }
+
+  getPEAOcupadaTableSinTotal(): any[] {
+    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+      return [];
+    }
+    return this.datos.peaOcupadaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalPEAOcupada(): string {
+    const datosSinTotal = this.getPEAOcupadaTableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPEAOcupadaHombres(): string {
+    const datosSinTotal = this.getPEAOcupadaTableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const hombres = typeof item.hombres === 'number' ? item.hombres : parseInt(item.hombres) || 0;
+      return sum + hombres;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalPEAOcupadaMujeres(): string {
+    const datosSinTotal = this.getPEAOcupadaTableSinTotal();
+    if (datosSinTotal.length === 0) return '0';
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const mujeres = typeof item.mujeres === 'number' ? item.mujeres : parseInt(item.mujeres) || 0;
+      return sum + mujeres;
+    }, 0);
+    return total.toString();
   }
 
   formatearParrafo(texto: string): string {
@@ -134,11 +269,15 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   getPorcentajePET(): string {
-    if (!this.datos?.petTabla || !Array.isArray(this.datos.petTabla)) {
+    if (!this.datos?.tablaAISD2TotalPoblacion) {
       return '____';
     }
-    const total = this.datos.petTabla.find((item: any) => item.categoria === 'Total');
-    return total?.porcentaje || '____';
+    const totalPoblacion = parseInt(this.datos.tablaAISD2TotalPoblacion) || 0;
+    if (totalPoblacion === 0) return '____';
+    
+    const totalPET = parseInt(this.getTotalPET()) || 0;
+    const porcentaje = ((totalPET / totalPoblacion) * 100).toFixed(2);
+    return porcentaje.replace('.', ',') + ' %';
   }
 
   getPorcentajePETGrupo(categoria: string): string {

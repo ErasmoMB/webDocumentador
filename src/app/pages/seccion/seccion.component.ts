@@ -9,6 +9,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
 import { MockDataService } from 'src/app/core/services/mock-data.service';
+import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Subscription } from 'rxjs';
@@ -202,7 +203,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     private fieldMapping: FieldMappingService,
     private imageService: ImageManagementService,
     private navigationService: SectionNavigationService,
-    private mockDataService: MockDataService
+    private mockDataService: MockDataService,
+    private tableService: TableManagementService
   ) {}
 
   ngOnInit() {
@@ -891,60 +893,348 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     return '';
   }
 
+  private esCampoVacio(valor: any): boolean {
+    if (valor === null || valor === undefined) {
+      return true;
+    }
+    
+    if (typeof valor === 'string') {
+      const trimmed = valor.trim();
+      return trimmed === '' || trimmed === '____' || trimmed === '-' || trimmed === 'N/A' || trimmed === 'n/a';
+    }
+    
+    if (Array.isArray(valor)) {
+      if (valor.length === 0) {
+        return true;
+      }
+      return valor.every(item => this.esCampoVacio(item));
+    }
+    
+    if (typeof valor === 'object') {
+      return Object.keys(valor).length === 0 || Object.values(valor).every(v => this.esCampoVacio(v));
+    }
+    
+    return false;
+  }
+
+  private esFilaTablaVacia(datos: any, campoBase: string, numeroFila: number, camposFila: string[], prefijos: string[] = ['']): boolean {
+    for (const prefijo of prefijos) {
+      let tieneAlgunDato = false;
+      
+      for (const campo of camposFila) {
+        const campoCompleto = prefijo 
+          ? `${campoBase}Fila${numeroFila}${campo}${prefijo}`
+          : `${campoBase}Fila${numeroFila}${campo}`;
+        
+        const valor = datos[campoCompleto];
+        if (!this.esCampoVacio(valor)) {
+          tieneAlgunDato = true;
+          break;
+        }
+      }
+      
+      if (tieneAlgunDato) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private obtenerPrefijosParaCampo(campo: string, datos: any, mockData?: any): string[] {
+    const prefijos: string[] = [''];
+    
+    if (campo.startsWith('tablaAISD2Fila') || campo.startsWith('tablaAISD1Fila')) {
+      const prefijosEncontrados = new Set<string>();
+      const tablaBase = campo.split('Fila')[0];
+      const camposFila = campo.startsWith('tablaAISD2') 
+        ? ['Punto', 'Codigo', 'Poblacion', 'ViviendasEmpadronadas', 'ViviendasOcupadas']
+        : ['Localidad', 'Coordenadas', 'Altitud', 'Distrito', 'Provincia', 'Departamento'];
+      
+      const fuentes = [datos];
+      if (mockData) {
+        fuentes.push(mockData);
+      }
+      
+      fuentes.forEach(fuente => {
+        Object.keys(fuente).forEach(key => {
+          if (key.startsWith(tablaBase + 'Fila')) {
+            for (const campoFila of camposFila) {
+              if (key.endsWith(campoFila)) {
+                const match = key.match(new RegExp(`Fila\\d+${campoFila}(.*)$`));
+                if (match && match[1] && match[1] !== '') {
+                  prefijosEncontrados.add(match[1]);
+                }
+              }
+            }
+          }
+        });
+      });
+      
+      if (prefijosEncontrados.size === 0) {
+        prefijos.push('_A1', '_A2', '_B1', '_B2');
+      } else {
+        prefijos.push(...Array.from(prefijosEncontrados));
+      }
+    }
+    
+    return prefijos;
+  }
+
   async llenarDatosPrueba() {
     try {
       const mock = await this.mockDataService.getCapitulo3Datos();
       const datosMock = mock?.datos || {};
       const seccionFields = this.fieldMapping.getFieldsForSection(this.seccionId);
+      const datosActuales = this.formularioService.obtenerDatos();
 
-      // Enriquecer mock con valores derivados
-      const enrichedMock: any = { ...datosMock };
+      const enrichedMock = this.formularioService.aplicarTransformacionesMock(datosMock);
 
-      // Calcular total de población si no existe
-      if (!enrichedMock.tablaAISD2TotalPoblacion && Array.isArray(enrichedMock.poblacionSexoTabla)) {
-        enrichedMock.tablaAISD2TotalPoblacion = enrichedMock.poblacionSexoTabla.reduce((sum: number, item: any) => {
-          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
-          return sum + casos;
-        }, 0);
-      }
-
-      // Alias de campos para secciones específicas (ej. 3.1.4.A.1.2)
       const aliasMap: Record<string, string[]> = {
         textoPoblacionSexoAISD: ['textoPoblacionSexo'],
         poblacionSexoAISD: ['poblacionSexoTabla'],
         textoPoblacionEtarioAISD: ['textoPoblacionEtario'],
-        poblacionEtarioAISD: ['poblacionEtarioTabla']
+        poblacionEtarioAISD: ['poblacionEtarioTabla'],
+        textoPET: ['textoPET'],
+        petAISD: ['petTabla'],
+        parrafoSeccion13_natalidad_mortalidad_completo: ['textoNatalidadMortalidad'],
+        parrafoSeccion13_morbilidad_completo: ['textoMorbilidad'],
+        natalidadMortalidadTabla: ['natalidadMortalidadTabla'],
+        morbilidadTabla: ['morbilidadCpTabla', 'morbiliadTabla'],
+        textoAfiliacionSalud: ['textoAfiliacionSalud'],
+        afiliacionSaludTabla: ['afiliacionSaludTabla']
       };
 
       const fieldsConDatos: string[] = [];
+      const camposTablaProcesados = new Set<string>();
+
+      const prefijoSeccion = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const camposConPrefijos = ['textoPoblacionSexoAISD', 'poblacionSexoAISD', 'textoPoblacionEtarioAISD', 'poblacionEtarioAISD', 'tablaAISD2TotalPoblacion', 'grupoAISD'];
 
       seccionFields.forEach(field => {
+        const campoFinal = (prefijoSeccion && camposConPrefijos.includes(field)) ? `${field}${prefijoSeccion}` : field;
+        const valorActual = (datosActuales as any)[campoFinal] || (datosActuales as any)[field];
+        
+        if (!this.esCampoVacio(valorActual)) {
+          return;
+        }
+
         let value = enrichedMock[field];
+        
         if (value === undefined && aliasMap[field]) {
-          const altKey = aliasMap[field].find(k => enrichedMock[k] !== undefined);
-          if (altKey) {
-            value = enrichedMock[altKey];
+          for (const altKey of aliasMap[field]) {
+            if (enrichedMock[altKey] !== undefined) {
+              value = enrichedMock[altKey];
+              break;
+            }
           }
         }
 
-        // Fallback específico: total de población
-        if (value === undefined && field === 'tablaAISD2TotalPoblacion' && enrichedMock.poblacionSexoTabla) {
-          value = enrichedMock.tablaAISD2TotalPoblacion;
+        if (value === undefined && prefijoSeccion && camposConPrefijos.includes(field)) {
+          const campoConPrefijo = `${field}${prefijoSeccion}`;
+          value = enrichedMock[campoConPrefijo];
+          
+          if (value === undefined && aliasMap[field]) {
+            for (const altKey of aliasMap[field]) {
+              if (enrichedMock[altKey] !== undefined) {
+                value = enrichedMock[altKey];
+                break;
+              }
+              const altKeyConPrefijo = `${altKey}${prefijoSeccion}`;
+              if (enrichedMock[altKeyConPrefijo] !== undefined) {
+                value = enrichedMock[altKeyConPrefijo];
+                break;
+              }
+            }
+          }
         }
 
-        if (value !== undefined) {
-          this.formularioService.actualizarDato(field as keyof FormularioDatos, value);
-          fieldsConDatos.push(field);
+        if (value === undefined && field === 'tablaAISD2TotalPoblacion') {
+          if (enrichedMock.tablaAISD2TotalPoblacion !== undefined) {
+            value = enrichedMock.tablaAISD2TotalPoblacion;
+          } else if (prefijoSeccion) {
+            const campoConPrefijo = `tablaAISD2TotalPoblacion${prefijoSeccion}`;
+            value = enrichedMock[campoConPrefijo];
+          }
+          if (value === undefined && Array.isArray(enrichedMock.poblacionSexoAISD)) {
+            value = enrichedMock.poblacionSexoAISD.reduce((sum: number, item: any) => {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              return sum + casos;
+            }, 0);
+          } else if (value === undefined && Array.isArray(enrichedMock.poblacionSexoTabla)) {
+            value = enrichedMock.poblacionSexoTabla.reduce((sum: number, item: any) => {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              return sum + casos;
+            }, 0);
+          }
+        }
+
+        if (value !== undefined && !this.esCampoVacio(value)) {
+          if (field.startsWith('tablaAISD2Fila') || field.startsWith('tablaAISD1Fila')) {
+            camposTablaProcesados.add(field);
+          }
+          let valorParaGuardar = value;
+          if (Array.isArray(value)) {
+            valorParaGuardar = JSON.parse(JSON.stringify(value));
+          } else if (typeof value === 'object' && value !== null) {
+            valorParaGuardar = JSON.parse(JSON.stringify(value));
+          }
+          
+          this.formularioService.actualizarDato(campoFinal as keyof FormularioDatos, valorParaGuardar);
+          fieldsConDatos.push(campoFinal);
         }
       });
 
+      const prefijosAISD2 = this.obtenerPrefijosParaCampo('tablaAISD2Fila1', datosActuales, enrichedMock);
+      const camposFilaAISD2 = ['Punto', 'Codigo', 'Poblacion', 'ViviendasEmpadronadas', 'ViviendasOcupadas'];
+      
+      for (let i = 1; i <= 20; i++) {
+        const filaYaProcesada = camposFilaAISD2.some(campo => {
+          const campoSinPrefijo = `tablaAISD2Fila${i}${campo}`;
+          return camposTablaProcesados.has(campoSinPrefijo) || 
+                 prefijosAISD2.some(pref => camposTablaProcesados.has(`tablaAISD2Fila${i}${campo}${pref}`));
+        });
+        
+        if (!filaYaProcesada && this.esFilaTablaVacia(datosActuales, 'tablaAISD2', i, camposFilaAISD2, prefijosAISD2)) {
+          for (const prefijo of prefijosAISD2) {
+            let filaTieneDatosMock = false;
+            
+            for (const campo of camposFilaAISD2) {
+              const campoMock = prefijo 
+                ? `tablaAISD2Fila${i}${campo}${prefijo}`
+                : `tablaAISD2Fila${i}${campo}`;
+              
+              const valorMock = enrichedMock[campoMock];
+              if (valorMock !== undefined && !this.esCampoVacio(valorMock)) {
+                filaTieneDatosMock = true;
+                const campoCompleto = prefijo 
+                  ? `tablaAISD2Fila${i}${campo}${prefijo}`
+                  : `tablaAISD2Fila${i}${campo}`;
+                
+                this.formularioService.actualizarDato(campoCompleto as keyof FormularioDatos, valorMock);
+                if (!fieldsConDatos.includes(campoCompleto)) {
+                  fieldsConDatos.push(campoCompleto);
+                }
+              }
+            }
+            
+            if (filaTieneDatosMock) {
+              break;
+            }
+          }
+        }
+      }
+
+      const prefijosAISD1 = this.obtenerPrefijosParaCampo('tablaAISD1Fila1', datosActuales, enrichedMock);
+      const camposFilaAISD1 = ['Localidad', 'Coordenadas', 'Altitud', 'Distrito', 'Provincia', 'Departamento'];
+      
+      for (let i = 1; i <= 20; i++) {
+        const filaYaProcesada = camposFilaAISD1.some(campo => {
+          const campoSinPrefijo = `tablaAISD1Fila${i}${campo}`;
+          return camposTablaProcesados.has(campoSinPrefijo) || 
+                 prefijosAISD1.some(pref => camposTablaProcesados.has(`tablaAISD1Fila${i}${campo}${pref}`));
+        });
+        
+        if (!filaYaProcesada && this.esFilaTablaVacia(datosActuales, 'tablaAISD1', i, camposFilaAISD1, prefijosAISD1)) {
+          for (const prefijo of prefijosAISD1) {
+            let filaTieneDatosMock = false;
+            
+            for (const campo of camposFilaAISD1) {
+              const campoMock = prefijo 
+                ? `tablaAISD1Fila${i}${campo}${prefijo}`
+                : `tablaAISD1Fila${i}${campo}`;
+              
+              const valorMock = enrichedMock[campoMock];
+              if (valorMock !== undefined && !this.esCampoVacio(valorMock)) {
+                filaTieneDatosMock = true;
+                const campoCompleto = prefijo 
+                  ? `tablaAISD1Fila${i}${campo}${prefijo}`
+                  : `tablaAISD1Fila${i}${campo}`;
+                
+                this.formularioService.actualizarDato(campoCompleto as keyof FormularioDatos, valorMock);
+                if (!fieldsConDatos.includes(campoCompleto)) {
+                  fieldsConDatos.push(campoCompleto);
+                }
+              }
+            }
+            
+            if (filaTieneDatosMock) {
+              break;
+            }
+          }
+        }
+      }
+
+      if (this.seccionId === '3.1.4.A.1.1' || this.seccionId === '3.1.4.A.2.1') {
+        if (enrichedMock.tablepagina6 && Array.isArray(enrichedMock.tablepagina6) && enrichedMock.tablepagina6.length > 0) {
+          const tablepagina6Actual = datosActuales['tablepagina6'];
+          if (this.esCampoVacio(tablepagina6Actual)) {
+            const tablepagina6Data = JSON.parse(JSON.stringify(enrichedMock.tablepagina6));
+            this.formularioService.actualizarDato('tablepagina6', tablepagina6Data);
+            if (!fieldsConDatos.includes('tablepagina6')) {
+              fieldsConDatos.push('tablepagina6');
+            }
+          }
+        }
+      }
+      
+      if ((this.seccionId === '3.1.3' || this.seccionId === '3.1.3.A' || this.seccionId === '3.1.3.B') && enrichedMock.entrevistados) {
+        if (Array.isArray(enrichedMock.entrevistados) && enrichedMock.entrevistados.length > 0) {
+          const entrevistadosActual = datosActuales['entrevistados'];
+          if (this.esCampoVacio(entrevistadosActual)) {
+            const entrevistadosData = JSON.parse(JSON.stringify(enrichedMock.entrevistados));
+            this.formularioService.actualizarDato('entrevistados', entrevistadosData);
+            if (!fieldsConDatos.includes('entrevistados')) {
+              fieldsConDatos.push('entrevistados');
+            }
+          }
+        }
+      }
+      
       this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
 
       this.datos = this.formularioService.obtenerDatos();
+
       this.stateService.setDatos(this.datos);
-      this.actualizarComponenteSeccion();
-      this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
-      this.cdRef.detectChanges();
+      
+      setTimeout(() => {
+        this.actualizarComponenteSeccion();
+        this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
+        this.cdRef.detectChanges();
+        
+        setTimeout(() => {
+          const componentIdMap: { [key: string]: string } = {
+            '3.1.3': 'seccion3',
+            '3.1.3.A': 'seccion3',
+            '3.1.3.B': 'seccion3',
+            '3.1.4': 'seccion4',
+            '3.1.4.A': 'seccion4',
+            '3.1.4.A.1': 'seccion4',
+            '3.1.4.A.1.1': 'seccion5',
+            '3.1.4.A.2.1': 'seccion5',
+            '3.1.4.A.1.2': 'seccion6',
+            '3.1.4.A.2.2': 'seccion6'
+          };
+          
+          const componentId = componentIdMap[this.seccionId];
+          if (componentId) {
+            const component = ViewChildHelper.getComponent(componentId);
+            if (component) {
+              if (component['actualizarDatos']) {
+                component['actualizarDatos']();
+              }
+              if (component['cdRef'] && component['cdRef']['detectChanges']) {
+                component['cdRef'].detectChanges();
+              }
+            }
+          }
+          
+          
+          this.datos = this.formularioService.obtenerDatos();
+          this.stateService.setDatos(this.datos);
+          this.cdRef.detectChanges();
+        }, 100);
+      }, 50);
     } catch (error) {
       console.error('Error al llenar datos de prueba:', error);
       alert('No se pudieron cargar los datos de prueba. Por favor, intenta nuevamente.');

@@ -13,10 +13,15 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.condicionOcupacionTabla || [])">
+        <tr *ngFor="let item of getCondicionOcupacionSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr class="total-row" *ngIf="getCondicionOcupacionSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalCondicionOcupacion() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.condicionOcupacionTabla || datos.condicionOcupacionTabla.length === 0">
             <td class="table-cell">____</td>
@@ -45,11 +50,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.tiposMaterialesTabla || [])" [class.table-row-total]="item.tipoMaterial === 'Total'">
+        <tr *ngFor="let item of getTiposMaterialesSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'section'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr class="total-row" *ngIf="getTiposMaterialesSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>____</strong></td>
+            <td class="table-cell"><strong>{{ getTotalTiposMateriales() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.tiposMaterialesTabla || datos.tiposMaterialesTabla.length === 0">
             <td class="table-cell">____</td>
@@ -106,6 +117,27 @@
         [customFieldChangeHandler]="onCondicionOcupacionFieldChange.bind(this)"
         (tableUpdated)="onCondicionOcupacionTableUpdated()">
       </app-dynamic-table>
+      <div class="table-editor" *ngIf="datos['condicionOcupacionTabla'] && datos['condicionOcupacionTabla'].length > 0" style="margin-top: 10px;">
+        <table class="editor-table">
+          <tbody>
+            <tr class="total-row">
+              <td><strong>Total</strong></td>
+              <td>
+                <input type="text" class="table-input" 
+                  [value]="getTotalCondicionOcupacion()"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+              <td>
+                <input type="text" class="table-input" 
+                  value="100,00 %"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
@@ -139,6 +171,28 @@
           [totalKey]="'categoria'"
           (tableUpdated)="onTiposMaterialesTableUpdated()">
         </app-dynamic-table>
+        <div class="table-editor" *ngIf="datos['tiposMaterialesTabla'] && datos['tiposMaterialesTabla'].length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td><strong>____</strong></td>
+                <td>
+                  <input type="text" class="table-input" 
+                    [value]="getTotalTiposMateriales()"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+                <td>
+                  <input type="text" class="table-input" 
+                    value="100,00 %"
+                    readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">

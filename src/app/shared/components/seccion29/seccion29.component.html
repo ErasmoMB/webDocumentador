@@ -17,12 +17,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.natalidadMortalidadCpTabla || [])">
+        <tr *ngFor="let item of getNatalidadMortalidadSinTotal()">
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'anio'">{{ item.anio || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'natalidad'">{{ item.natalidad || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'mortalidad'">{{ item.mortalidad || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.natalidadMortalidadCpTabla || datos.natalidadMortalidadCpTabla.length === 0">
+        <tr *ngIf="getNatalidadMortalidadSinTotal().length > 0">
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNatalidadMortalidad().anio }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNatalidadMortalidad().natalidad }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNatalidadMortalidad().mortalidad }}</td>
+        </tr>
+        <tr *ngIf="getNatalidadMortalidadSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -53,7 +58,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.morbilidadCpTabla || [])">
+        <tr *ngFor="let item of getMorbilidadSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'grupo'">{{ item.grupo || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad0_11'">{{ item.edad0_11 || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad12_17'">{{ item.edad12_17 || '____' }}</td>
@@ -62,7 +67,16 @@
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad60_mas'">{{ item.edad60_mas || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.morbilidadCpTabla || datos.morbilidadCpTabla.length === 0">
+        <tr *ngIf="getMorbilidadSinTotal().length > 0" style="font-weight: bold;">
+            <td class="table-cell">Total</td>
+            <td class="table-cell">{{ getTotalMorbilidadRango0_11() }}</td>
+            <td class="table-cell">{{ getTotalMorbilidadRango12_17() }}</td>
+            <td class="table-cell">{{ getTotalMorbilidadRango18_29() }}</td>
+            <td class="table-cell">{{ getTotalMorbilidadRango30_59() }}</td>
+            <td class="table-cell">{{ getTotalMorbilidadRango60_mas() }}</td>
+            <td class="table-cell">{{ getTotalMorbilidadCasos() }}</td>
+        </tr>
+        <tr *ngIf="getMorbilidadSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -90,12 +104,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.afiliacionSaludTabla || [])">
+        <tr *ngFor="let item of getAfiliacionSaludSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.afiliacionSaludTabla || datos.afiliacionSaludTabla.length === 0">
+        <tr *ngIf="getAfiliacionSaludSinTotal().length > 0">
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalAfiliacionSalud().categoria }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalAfiliacionSalud().casos }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalAfiliacionSalud().porcentaje }}</td>
+        </tr>
+        <tr *ngIf="getAfiliacionSaludSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -160,6 +179,13 @@
           [totalKey]="'anio'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+        <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getNatalidadMortalidadSinTotal().length > 0">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNatalidadMortalidad().anio }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNatalidadMortalidad().natalidad }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNatalidadMortalidad().mortalidad }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -198,6 +224,17 @@
           [customFieldChangeHandler]="onMorbilidadFieldChange.bind(this)"
           (tableUpdated)="onMorbilidadTableUpdated()">
         </app-dynamic-table>
+        <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getMorbilidadSinTotal().length > 0">
+          <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">Total</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadRango0_11() }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadRango12_17() }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadRango18_29() }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadRango30_59() }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadRango60_mas() }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalMorbilidadCasos() }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -231,6 +268,13 @@
           [totalKey]="'categoria'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
+        <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getAfiliacionSaludSinTotal().length > 0">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalAfiliacionSalud().categoria }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalAfiliacionSalud().casos }}</div>
+            <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalAfiliacionSalud().porcentaje }}</div>
+          </div>
+        </div>
       </div>
     </div>
 

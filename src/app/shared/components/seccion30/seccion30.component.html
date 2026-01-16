@@ -19,12 +19,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.nivelEducativoTabla || [])">
+        <tr *ngFor="let item of getNivelEducativoSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.nivelEducativoTabla || datos.nivelEducativoTabla.length === 0">
+        <tr *ngIf="getNivelEducativoSinTotal().length > 0">
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNivelEducativo().categoria }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNivelEducativo().casos }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalNivelEducativo().porcentaje }}</td>
+        </tr>
+        <tr *ngIf="getNivelEducativoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -48,12 +53,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.tasaAnalfabetismoTabla || [])">
+        <tr *ngFor="let item of getTasaAnalfabetismoSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'indicador'">{{ item.indicador || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.tasaAnalfabetismoTabla || datos.tasaAnalfabetismoTabla.length === 0">
+        <tr *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalTasaAnalfabetismo().indicador }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalTasaAnalfabetismo().casos }}</td>
+            <td class="table-cell" style="font-weight: bold;">{{ getTotalTasaAnalfabetismo().porcentaje }}</td>
+        </tr>
+        <tr *ngIf="getTasaAnalfabetismoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -124,6 +134,13 @@
         [totalKey]="'categoria'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
+      <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getNivelEducativoSinTotal().length > 0">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNivelEducativo().categoria }}</div>
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNivelEducativo().casos }}</div>
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalNivelEducativo().porcentaje }}</div>
+        </div>
+      </div>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
@@ -140,6 +157,13 @@
         [totalKey]="'indicador'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
+      <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalTasaAnalfabetismo().indicador }}</div>
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalTasaAnalfabetismo().casos }}</div>
+          <div style="padding: 8px; background-color: white; border: 1px solid #ddd; border-radius: 2px;">{{ getTotalTasaAnalfabetismo().porcentaje }}</div>
+        </div>
+      </div>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

@@ -70,6 +70,7 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
@@ -320,6 +321,87 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     const porcentajePisosCemento = this.getPorcentajePisosCemento();
     
     return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;
+  }
+
+  // Métodos para filtrar filas Total de tipos de vivienda
+  getTiposViviendaSinTotal(): any[] {
+    if (!this.datos?.tiposViviendaAISI || !Array.isArray(this.datos.tiposViviendaAISI)) {
+      return [];
+    }
+    return this.datos.tiposViviendaAISI.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalTiposVivienda(): number {
+    const filtered = this.getTiposViviendaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Métodos para filtrar filas Total de condición de ocupación
+  getCondicionOcupacionSinTotal(): any[] {
+    if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
+      return [];
+    }
+    return this.datos.condicionOcupacionAISI.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalCondicionOcupacion(): number {
+    const filtered = this.getCondicionOcupacionSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Métodos para filtrar filas Total de materiales de vivienda
+  getMaterialesViviendaSinTotal(): any[] {
+    if (!this.datos?.materialesViviendaAISI || !Array.isArray(this.datos.materialesViviendaAISI)) {
+      return [];
+    }
+    return this.datos.materialesViviendaAISI.filter((item: any) => 
+      !item.categoria || !item.categoria.toLowerCase().includes('total')
+    );
+  }
+
+  getTotalMaterialesVivienda(): number {
+    const filtered = this.getMaterialesViviendaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  // Eliminar filas Total al cargar datos
+  eliminarFilasTotal(): void {
+    // Tipos de Vivienda
+    if (this.datos?.tiposViviendaAISI && Array.isArray(this.datos.tiposViviendaAISI)) {
+      const filtered = this.datos.tiposViviendaAISI.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.tiposViviendaAISI.length) {
+        this.datos.tiposViviendaAISI = filtered;
+        this.formularioService.actualizarDato('tiposViviendaAISI', filtered);
+      }
+    }
+
+    // Condición de Ocupación
+    if (this.datos?.condicionOcupacionAISI && Array.isArray(this.datos.condicionOcupacionAISI)) {
+      const filtered = this.datos.condicionOcupacionAISI.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.condicionOcupacionAISI.length) {
+        this.datos.condicionOcupacionAISI = filtered;
+        this.formularioService.actualizarDato('condicionOcupacionAISI', filtered);
+      }
+    }
+
+    // Materiales de Vivienda
+    if (this.datos?.materialesViviendaAISI && Array.isArray(this.datos.materialesViviendaAISI)) {
+      const filtered = this.datos.materialesViviendaAISI.filter((item: any) => 
+        !item.categoria || !item.categoria.toLowerCase().includes('total')
+      );
+      if (filtered.length !== this.datos.materialesViviendaAISI.length) {
+        this.datos.materialesViviendaAISI = filtered;
+        this.formularioService.actualizarDato('materialesViviendaAISI', filtered);
+      }
+    }
   }
 }
 

@@ -10,7 +10,7 @@ export class DataSourcePipe implements PipeTransform {
 
   constructor(private injector: Injector) {}
 
-  transform(fieldName: string): 'manual' | 'section' {
+  transform(fieldName: string): 'manual' | 'section' | 'backend' {
     if (!this.fieldMappingService) {
       this.fieldMappingService = this.injector.get(FieldMappingService);
     }

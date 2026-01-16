@@ -166,7 +166,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.cargarFotografias();
   }
 
-  override getDataSourceType(fieldName: string): 'manual' | 'section' {
+  override getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
     return this.fieldMapping.getDataSourceType(fieldName);
   }
 

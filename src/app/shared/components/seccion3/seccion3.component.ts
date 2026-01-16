@@ -88,9 +88,25 @@ export class Seccion3Component extends BaseSectionComponent implements OnDestroy
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (valorActual !== valorAnterior) {
+      
+      let haCambiado = false;
+      if (Array.isArray(valorActual) || Array.isArray(valorAnterior)) {
+        haCambiado = JSON.stringify(valorActual) !== JSON.stringify(valorAnterior);
+      } else if (typeof valorActual === 'object' && valorActual !== null || typeof valorAnterior === 'object' && valorAnterior !== null) {
+        haCambiado = JSON.stringify(valorActual) !== JSON.stringify(valorAnterior);
+      } else {
+        haCambiado = valorActual !== valorAnterior;
+      }
+      
+      if (haCambiado) {
         hayCambios = true;
-        this.datosAnteriores[campo] = valorActual;
+        if (Array.isArray(valorActual)) {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        } else if (typeof valorActual === 'object' && valorActual !== null) {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        } else {
+          this.datosAnteriores[campo] = valorActual;
+        }
       }
     }
 
@@ -99,7 +115,14 @@ export class Seccion3Component extends BaseSectionComponent implements OnDestroy
 
   protected override actualizarValoresConPrefijo(): void {
     this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+      const valor = (this.datos as any)[campo] || null;
+      if (Array.isArray(valor)) {
+        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valor));
+      } else if (typeof valor === 'object' && valor !== null) {
+        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valor));
+      } else {
+        this.datosAnteriores[campo] = valor;
+      }
     });
   }
 
@@ -107,7 +130,7 @@ export class Seccion3Component extends BaseSectionComponent implements OnDestroy
     this.cargarFotografias();
   }
 
-  override getDataSourceType(fieldName: string): 'manual' | 'section' {
+  override getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
     return this.fieldMapping.getDataSourceType(fieldName);
   }
 

@@ -332,5 +332,125 @@ export class BackendApiService {
       catchError(this.handleError)
     );
   }
+
+  getInformacionReferencialAISD(idUbigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisd/informacion-referencial`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getCentrosPobladosAISD(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/centros-poblados`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPoblacionPorSexo(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/poblacion-sexo`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPoblacionPorGrupoEtario(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/poblacion-etario`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPET(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/pet`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getMaterialesConstruccion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/materiales-construccion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getInformacionReferencialAISI(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/informacion-referencial`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getCentrosPobladosAISI(ubigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisi/centros-poblados`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPEADistrital(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/pea-distrital`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getViviendasCenso(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/viviendas-censo`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
 }
 

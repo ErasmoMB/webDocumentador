@@ -116,7 +116,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     );
   }
 
-  protected getDataSourceType(fieldName: string): 'manual' | 'section' {
+  protected getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
     return this.fieldMapping.getDataSourceType(fieldName);
   }
 

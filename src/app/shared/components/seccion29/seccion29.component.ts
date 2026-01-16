@@ -68,6 +68,7 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
@@ -298,6 +299,105 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
       const total = edad0_11 + edad12_17 + edad18_29 + edad30_59 + edad60_mas;
       item.casos = total;
     });
+  }
+
+  // Métodos para natalidadMortalidadCpTabla
+  getNatalidadMortalidadSinTotal() {
+    if (!this.datos.natalidadMortalidadCpTabla || !Array.isArray(this.datos.natalidadMortalidadCpTabla)) {
+      return [];
+    }
+    return this.datos.natalidadMortalidadCpTabla.filter((item: any) => 
+      !item.anio || item.anio.toString().toLowerCase() !== 'total'
+    );
+  }
+
+  getTotalNatalidadMortalidad() {
+    const sinTotal = this.getNatalidadMortalidadSinTotal();
+    const totalNatalidad = sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.natalidad) || 0), 0);
+    const totalMortalidad = sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.mortalidad) || 0), 0);
+    return {
+      anio: 'Total',
+      natalidad: totalNatalidad,
+      mortalidad: totalMortalidad
+    };
+  }
+
+  // Métodos para morbilidadCpTabla
+  getMorbilidadSinTotal() {
+    if (!this.datos.morbilidadCpTabla || !Array.isArray(this.datos.morbilidadCpTabla)) {
+      return [];
+    }
+    return this.datos.morbilidadCpTabla.filter((item: any) => 
+      !item.grupo || item.grupo.toString().toLowerCase() !== 'total'
+    );
+  }
+
+  getTotalMorbilidadRango0_11() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.edad0_11) || 0), 0);
+  }
+
+  getTotalMorbilidadRango12_17() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.edad12_17) || 0), 0);
+  }
+
+  getTotalMorbilidadRango18_29() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.edad18_29) || 0), 0);
+  }
+
+  getTotalMorbilidadRango30_59() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.edad30_59) || 0), 0);
+  }
+
+  getTotalMorbilidadRango60_mas() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.edad60_mas) || 0), 0);
+  }
+
+  getTotalMorbilidadCasos() {
+    const sinTotal = this.getMorbilidadSinTotal();
+    return sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.casos) || 0), 0);
+  }
+
+  // Métodos para afiliacionSaludTabla
+  getAfiliacionSaludSinTotal() {
+    if (!this.datos.afiliacionSaludTabla || !Array.isArray(this.datos.afiliacionSaludTabla)) {
+      return [];
+    }
+    return this.datos.afiliacionSaludTabla.filter((item: any) => 
+      !item.categoria || item.categoria.toString().toLowerCase() !== 'total'
+    );
+  }
+
+  getTotalAfiliacionSalud() {
+    const sinTotal = this.getAfiliacionSaludSinTotal();
+    const totalCasos = sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.casos) || 0), 0);
+    return {
+      categoria: 'Total',
+      casos: totalCasos,
+      porcentaje: '100,00 %'
+    };
+  }
+
+  eliminarFilasTotal() {
+    if (this.datos.natalidadMortalidadCpTabla && Array.isArray(this.datos.natalidadMortalidadCpTabla)) {
+      this.datos.natalidadMortalidadCpTabla = this.datos.natalidadMortalidadCpTabla.filter((item: any) => 
+        !item.anio || item.anio.toString().toLowerCase() !== 'total'
+      );
+    }
+    if (this.datos.morbilidadCpTabla && Array.isArray(this.datos.morbilidadCpTabla)) {
+      this.datos.morbilidadCpTabla = this.datos.morbilidadCpTabla.filter((item: any) => 
+        !item.grupo || item.grupo.toString().toLowerCase() !== 'total'
+      );
+    }
+    if (this.datos.afiliacionSaludTabla && Array.isArray(this.datos.afiliacionSaludTabla)) {
+      this.datos.afiliacionSaludTabla = this.datos.afiliacionSaludTabla.filter((item: any) => 
+        !item.categoria || item.categoria.toString().toLowerCase() !== 'total'
+      );
+    }
   }
 
   obtenerTextoNatalidadCP1(): string {

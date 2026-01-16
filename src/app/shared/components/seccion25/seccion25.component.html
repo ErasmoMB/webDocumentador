@@ -13,12 +13,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.tiposViviendaAISI || [])">
+        <tr *ngFor="let item of getTiposViviendaSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.tiposViviendaAISI || datos.tiposViviendaAISI.length === 0">
+        <tr *ngIf="getTiposViviendaSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalTiposVivienda() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getTiposViviendaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -41,12 +46,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.condicionOcupacionAISI || [])">
+        <tr *ngFor="let item of getCondicionOcupacionSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.condicionOcupacionAISI || datos.condicionOcupacionAISI.length === 0">
+        <tr *ngIf="getCondicionOcupacionSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalCondicionOcupacion() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getCondicionOcupacionSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -72,13 +82,18 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.materialesViviendaAISI || [])">
+        <tr *ngFor="let item of getMaterialesViviendaSinTotal()">
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
             <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.materialesViviendaAISI || datos.materialesViviendaAISI.length === 0">
+        <tr *ngIf="getMaterialesViviendaSinTotal().length > 0">
+            <td class="table-cell" colspan="2"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalMaterialesVivienda() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getMaterialesViviendaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -144,6 +159,23 @@
         [totalKey]="'categoria'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
+
+      <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+          <div>
+            <label class="label">Categoría</label>
+            <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Casos</label>
+            <input type="text" class="input" [value]="getTotalTiposVivienda()" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Porcentaje</label>
+            <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
@@ -173,6 +205,23 @@
         [totalKey]="'categoria'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>
+
+      <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+          <div>
+            <label class="label">Categoría</label>
+            <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Casos</label>
+            <input type="text" class="input" [value]="getTotalCondicionOcupacion()" readonly style="background-color: #e8e8e8;">
+          </div>
+          <div>
+            <label class="label">Porcentaje</label>
+            <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
@@ -207,6 +256,23 @@
           [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
           (tableUpdated)="onMaterialesViviendaTableUpdated()">
         </app-dynamic-table>
+
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Categoría / Tipo de material</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Casos</label>
+              <input type="text" class="input" [value]="getTotalMaterialesVivienda()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">

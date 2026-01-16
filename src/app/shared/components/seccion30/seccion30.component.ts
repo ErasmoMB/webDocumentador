@@ -66,6 +66,7 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
@@ -131,6 +132,59 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
 
   protected override tieneFotografias(): boolean {
     return true;
+  }
+
+  // Métodos para nivelEducativoTabla
+  getNivelEducativoSinTotal() {
+    if (!this.datos.nivelEducativoTabla || !Array.isArray(this.datos.nivelEducativoTabla)) {
+      return [];
+    }
+    return this.datos.nivelEducativoTabla.filter((item: any) => 
+      !item.categoria || item.categoria.toString().toLowerCase() !== 'total'
+    );
+  }
+
+  getTotalNivelEducativo() {
+    const sinTotal = this.getNivelEducativoSinTotal();
+    const totalCasos = sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.casos) || 0), 0);
+    return {
+      categoria: 'Total',
+      casos: totalCasos,
+      porcentaje: '100,00 %'
+    };
+  }
+
+  // Métodos para tasaAnalfabetismoTabla
+  getTasaAnalfabetismoSinTotal() {
+    if (!this.datos.tasaAnalfabetismoTabla || !Array.isArray(this.datos.tasaAnalfabetismoTabla)) {
+      return [];
+    }
+    return this.datos.tasaAnalfabetismoTabla.filter((item: any) => 
+      !item.indicador || item.indicador.toString().toLowerCase() !== 'total'
+    );
+  }
+
+  getTotalTasaAnalfabetismo() {
+    const sinTotal = this.getTasaAnalfabetismoSinTotal();
+    const totalCasos = sinTotal.reduce((sum: number, item: any) => sum + (parseFloat(item.casos) || 0), 0);
+    return {
+      indicador: 'Total',
+      casos: totalCasos,
+      porcentaje: '100,00 %'
+    };
+  }
+
+  eliminarFilasTotal() {
+    if (this.datos.nivelEducativoTabla && Array.isArray(this.datos.nivelEducativoTabla)) {
+      this.datos.nivelEducativoTabla = this.datos.nivelEducativoTabla.filter((item: any) => 
+        !item.categoria || item.categoria.toString().toLowerCase() !== 'total'
+      );
+    }
+    if (this.datos.tasaAnalfabetismoTabla && Array.isArray(this.datos.tasaAnalfabetismoTabla)) {
+      this.datos.tasaAnalfabetismoTabla = this.datos.tasaAnalfabetismoTabla.filter((item: any) => 
+        !item.indicador || item.indicador.toString().toLowerCase() !== 'total'
+      );
+    }
   }
 
   formatearParrafo(texto: string): string {

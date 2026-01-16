@@ -190,6 +190,83 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     return sinElectricidad?.porcentaje || '____';
   }
 
+  getAbastecimientoAguaSinTotal(): any[] {
+    if (!this.datos?.abastecimientoAguaTabla || !Array.isArray(this.datos.abastecimientoAguaTabla)) {
+      return [];
+    }
+    return this.datos.abastecimientoAguaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalAbastecimientoAgua(): string {
+    if (!this.datos?.abastecimientoAguaTabla || !Array.isArray(this.datos.abastecimientoAguaTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.abastecimientoAguaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTiposSaneamientoSinTotal(): any[] {
+    const tabla = this.datos?.tiposSaneamientoTabla || this.datos?.saneamientoTabla;
+    if (!tabla || !Array.isArray(tabla)) {
+      return [];
+    }
+    return tabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalTiposSaneamiento(): string {
+    const tabla = this.datos?.tiposSaneamientoTabla || this.datos?.saneamientoTabla;
+    if (!tabla || !Array.isArray(tabla)) {
+      return '0';
+    }
+    const datosSinTotal = tabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getCoberturaElectricaSinTotal(): any[] {
+    if (!this.datos?.coberturaElectricaTabla || !Array.isArray(this.datos.coberturaElectricaTabla)) {
+      return [];
+    }
+    return this.datos.coberturaElectricaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+  }
+
+  getTotalCoberturaElectrica(): string {
+    if (!this.datos?.coberturaElectricaTabla || !Array.isArray(this.datos.coberturaElectricaTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.coberturaElectricaTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
   override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
@@ -227,11 +304,52 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
+    }
+  }
+
+  private eliminarFilasTotal(): void {
+    const datos = this.formularioService.obtenerDatos();
+    
+    if (datos['abastecimientoAguaTabla'] && Array.isArray(datos['abastecimientoAguaTabla'])) {
+      const longitudOriginal = datos['abastecimientoAguaTabla'].length;
+      const datosFiltrados = datos['abastecimientoAguaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['abastecimientoAguaTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('abastecimientoAguaTabla', datos['abastecimientoAguaTabla']);
+      }
+    }
+    
+    if (datos['tiposSaneamientoTabla'] && Array.isArray(datos['tiposSaneamientoTabla'])) {
+      const longitudOriginal = datos['tiposSaneamientoTabla'].length;
+      const datosFiltrados = datos['tiposSaneamientoTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['tiposSaneamientoTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('tiposSaneamientoTabla', datos['tiposSaneamientoTabla']);
+      }
+    }
+    
+    if (datos['coberturaElectricaTabla'] && Array.isArray(datos['coberturaElectricaTabla'])) {
+      const longitudOriginal = datos['coberturaElectricaTabla'].length;
+      const datosFiltrados = datos['coberturaElectricaTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['coberturaElectricaTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('coberturaElectricaTabla', datos['coberturaElectricaTabla']);
+      }
     }
   }
 

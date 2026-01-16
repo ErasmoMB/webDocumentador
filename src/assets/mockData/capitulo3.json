@@ -10,8 +10,14 @@
     "aisdComponente2": "Faldahuasi",
     "detalleProyecto": "el sur del Perú",
     "cantidadEntrevistas": 18,
-      "tablaAISD1Coordenadas": "15° 45' S, 73° 22' W",
-      "tablaAISD1Altitud": "3,600 m.s.n.m.",
+    "tablaAISD1Coordenadas": "15° 45' S, 73° 22' W",
+    "tablaAISD1Altitud": "3,600 m.s.n.m.",
+    "tablaAISD1Fila1Localidad": "CC Ayroca",
+    "tablaAISD1Fila1Coordenadas": "15° 45' S, 73° 22' W",
+    "tablaAISD1Fila1Altitud": "3,600 m.s.n.m.",
+    "tablaAISD1Fila1Distrito": "Cahuacho",
+    "tablaAISD1Fila1Provincia": "Caravelí",
+    "tablaAISD1Fila1Departamento": "Arequipa",
     "fechaTrabajoCampo": "noviembre de 2024",
     "consultora": "GEADES (2024)",
     "entrevistados": [
@@ -54,6 +60,12 @@
     "tablaAISD2Fila4Poblacion": 1,
     "tablaAISD2Fila4ViviendasEmpadronadas": 4,
     "tablaAISD2Fila4ViviendasOcupadas": 1,
+    "tablaAISD2Datos": [
+      { "punto": "Yuracranra", "codigo": "0403060004", "poblacion": 0, "viviendasEmpadronadas": 1, "viviendasOcupadas": 0 },
+      { "punto": "Ayroca", "codigo": "0403060005", "poblacion": 224, "viviendasEmpadronadas": 84, "viviendasOcupadas": 60 },
+      { "punto": "Tastanic", "codigo": "0403060008", "poblacion": 0, "viviendasEmpadronadas": 1, "viviendasOcupadas": 0 },
+      { "punto": "Faldahuasi", "codigo": "0403060014", "poblacion": 1, "viviendasEmpadronadas": 4, "viviendasOcupadas": 1 }
+    ],
     "puntosPoblacion": [
       { "nombre": "Yuracranra", "codigo": "0403060004", "poblacion": 0, "viviendasEmpadronadas": 1, "viviendasOcupadas": 0 },
       { "nombre": "Ayroca", "codigo": "0403060005", "poblacion": 224, "viviendasEmpadronadas": 84, "viviendasOcupadas": 60 },

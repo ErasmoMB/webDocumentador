@@ -141,6 +141,31 @@ export class Seccion12Component extends BaseSectionComponent implements OnDestro
     }).join('');
   }
 
+  getCantidadEstudiantesSinTotal(): any[] {
+    if (!this.datos?.cantidadEstudiantesEducacionTabla || !Array.isArray(this.datos.cantidadEstudiantesEducacionTabla)) {
+      return [];
+    }
+    return this.datos.cantidadEstudiantesEducacionTabla.filter((item: any) => {
+      const institucion = item.institucion?.toString().toLowerCase() || '';
+      return !institucion.includes('total');
+    });
+  }
+
+  getTotalCantidadEstudiantes(): string {
+    if (!this.datos?.cantidadEstudiantesEducacionTabla || !Array.isArray(this.datos.cantidadEstudiantesEducacionTabla)) {
+      return '0';
+    }
+    const datosSinTotal = this.datos.cantidadEstudiantesEducacionTabla.filter((item: any) => {
+      const institucion = item.institucion?.toString().toLowerCase() || '';
+      return !institucion.includes('total');
+    });
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const total = typeof item.total === 'number' ? item.total : parseInt(item.total) || 0;
+      return sum + total;
+    }, 0);
+    return total.toString();
+  }
+
   override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
@@ -200,12 +225,29 @@ export class Seccion12Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override onInitCustom(): void {
+    this.eliminarFilasTotal();
     this.actualizarFotografiasFormMulti();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
+    }
+  }
+
+  private eliminarFilasTotal(): void {
+    const datos = this.formularioService.obtenerDatos();
+    
+    if (datos['cantidadEstudiantesEducacionTabla'] && Array.isArray(datos['cantidadEstudiantesEducacionTabla'])) {
+      const longitudOriginal = datos['cantidadEstudiantesEducacionTabla'].length;
+      const datosFiltrados = datos['cantidadEstudiantesEducacionTabla'].filter((item: any) => {
+        const institucion = item.institucion?.toString().toLowerCase() || '';
+        return !institucion.includes('total');
+      });
+      if (datosFiltrados.length !== longitudOriginal) {
+        datos['cantidadEstudiantesEducacionTabla'] = datosFiltrados;
+        this.formularioService.actualizarDato('cantidadEstudiantesEducacionTabla', datos['cantidadEstudiantesEducacionTabla']);
+      }
     }
   }
 

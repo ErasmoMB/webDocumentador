@@ -1,0 +1,16 @@
+        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center;">
+            <div>
+              <label class="label">Total</label>
+              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Cantidad de estudiantes</label>
+              <input type="text" class="input" [value]="getTotalEducacion()" readonly style="background-color: #e8e8e8;">
+            </div>
+            <div>
+              <label class="label">Porcentaje</label>
+              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+            </div>
+          </div>
+        </div>

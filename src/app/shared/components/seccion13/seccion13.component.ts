@@ -142,11 +142,26 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    this.eliminarFilasTotal();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
+    }
+  }
+
+  private eliminarFilasTotal(): void {
+    if (this.datos['afiliacionSaludTabla'] && Array.isArray(this.datos['afiliacionSaludTabla'])) {
+      const longitudOriginal = this.datos['afiliacionSaludTabla'].length;
+      this.datos['afiliacionSaludTabla'] = this.datos['afiliacionSaludTabla'].filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return !categoria.includes('total') && !categoria.includes('referencial');
+      });
+      if (this.datos['afiliacionSaludTabla'].length !== longitudOriginal) {
+        this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
+        this.cdRef.detectChanges();
+      }
     }
   }
 
@@ -248,5 +263,90 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
       item.casos = total;
     });
   }
+
+  getAfiliacionSaludSinTotal(): any[] {
+    if (!this.datos?.afiliacionSaludTabla || !Array.isArray(this.datos.afiliacionSaludTabla)) {
+      return [];
+    }
+    return this.datos.afiliacionSaludTabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total') && !categoria.includes('referencial');
+    });
+  }
+
+  getTotalAfiliacionSalud(): string {
+    const filtered = this.getAfiliacionSaludSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getMorbilidadSinTotal(): any[] {
+    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
+    if (!tabla || !Array.isArray(tabla)) {
+      return [];
+    }
+    return tabla.filter((item: any) => {
+      const grupo = item.grupo?.toString().toLowerCase() || '';
+      return !grupo.includes('total');
+    });
+  }
+
+  getTotalMorbilidad(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalMorbilidadRango0_11(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const rango = typeof item.rango0_11 === 'number' ? item.rango0_11 : parseInt(item.rango0_11) || 0;
+      return sum + rango;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalMorbilidadRango12_17(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const rango = typeof item.rango12_17 === 'number' ? item.rango12_17 : parseInt(item.rango12_17) || 0;
+      return sum + rango;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalMorbilidadRango18_29(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const rango = typeof item.rango18_29 === 'number' ? item.rango18_29 : parseInt(item.rango18_29) || 0;
+      return sum + rango;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalMorbilidadRango30_59(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const rango = typeof item.rango30_59 === 'number' ? item.rango30_59 : parseInt(item.rango30_59) || 0;
+      return sum + rango;
+    }, 0);
+    return total.toString();
+  }
+
+  getTotalMorbilidadRango60(): string {
+    const filtered = this.getMorbilidadSinTotal();
+    const total = filtered.reduce((sum: number, item: any) => {
+      const rango = typeof item.rango60 === 'number' ? item.rango60 : parseInt(item.rango60) || 0;
+      return sum + rango;
+    }, 0);
+    return total.toString();
+  }
 }
+
 

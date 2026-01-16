@@ -132,8 +132,7 @@ export class DemografiaService {
                 { categoria: '15 a 29 años', casos: edad15_29, porcentaje: MathUtil.calcularPorcentajeConComa(edad15_29, petTotal) },
                 { categoria: '30 a 44 años', casos: edad30_44, porcentaje: MathUtil.calcularPorcentajeConComa(edad30_44, petTotal) },
                 { categoria: '45 a 64 años', casos: edad45_64, porcentaje: MathUtil.calcularPorcentajeConComa(edad45_64, petTotal) },
-                { categoria: '65 años a más', casos: edad65_mas, porcentaje: MathUtil.calcularPorcentajeConComa(edad65_mas, petTotal) },
-                { categoria: 'Total', casos: petTotal, porcentaje: '100,00 %' }
+                { categoria: '65 años a más', casos: edad65_mas, porcentaje: MathUtil.calcularPorcentajeConComa(edad65_mas, petTotal) }
               ];
             }
             
