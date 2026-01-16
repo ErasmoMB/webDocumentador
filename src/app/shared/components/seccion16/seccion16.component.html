@@ -2,11 +2,7 @@
 <h5>A.1.12. Uso de los suelos y de los recursos naturales</h5>
 
 <h5>a. Fuentes y usos del agua</h5>
-<div *ngIf="datos.parrafoSeccion16_agua_completo; else aguaCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion16_agua_completo)"></div>
-<ng-template #aguaCompletoDefault>
-    <p class="text-justify">Las fuentes de agua en la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> son diversas, dependiendo del uso que se les dé. Para el consumo humano, el agua se obtiene principalmente de los ojos de agua de <span [appDataSource]="'manual'">{{ datos.ojosAgua1 || 'Quinsa Rumi' }}</span> y <span [appDataSource]="'manual'">{{ datos.ojosAgua2 || 'Pallalli' }}</span>. En el caso del anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, esta agua es almacenada en un reservorio, desde donde se distribuye a las viviendas locales a través de una red básica de distribución. Aunque el abastecimiento cubre las necesidades esenciales de la población, existen desafíos relacionados con la calidad del agua y el mantenimiento de la infraestructura.</p>
-    <p class="text-justify">En cuanto al uso agrícola, el agua proviene del río <span [appDataSource]="'manual'" [fieldName]="'rioAgricola'">{{ datos.rioAgricola || 'Yuracyacu' }}</span> y la quebrada <span [appDataSource]="'manual'">{{ datos.quebradaAgricola || 'Pucaccocha' }}</span>, que sirven como una fuente importante de riego. Finalmente, para el uso ganadero, la comunidad se abastece de las diferentes quebradas que se hallan dentro del área de la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, las cuales proporcionan agua para el sustento del ganado local, principalmente vacunos y ovinos.</p>
-</ng-template>
+<div [innerHTML]="obtenerTextoSeccion16AguaConResaltado()"></div>
 
 <app-image-upload
     [modoVista]="true"
@@ -20,12 +16,7 @@
 </app-image-upload>
 
 <h5>b. Tenencia de la tierra, usos del suelo y de los recursos naturales</h5>
-<div *ngIf="datos.parrafoSeccion16_recursos_naturales_completo; else recursosNaturalesCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion16_recursos_naturales_completo)"></div>
-<ng-template #recursosNaturalesCompletoDefault>
-    <p class="text-justify">En la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span>, la tenencia de la tierra es comunal, lo que significa que la comunidad en su conjunto es la propietaria de los terrenos superficiales. Los comuneros no son propietarios individuales de la tierra, sino que la comunidad les cede los terrenos en calidad de posesión para que puedan vivir y trabajar en ellos. Este sistema de tenencia comunal busca asegurar el acceso equitativo a los recursos entre los miembros de la comunidad, aunque limita la posibilidad de transacciones privadas de terrenos.</p>
-    <p class="text-justify">En cuanto a los usos del suelo, la mayor parte del territorio está destinado a las actividades agrícolas y ganaderas, las cuales son el principal sustento económico de la población. La tierra es aprovechada para el cultivo de papa, haba y cebada, y para el pastoreo de vacunos y ovinos. Entre los recursos naturales que se aprovechan destacan la queñua, eucalipto, lloque y tola, que son utilizados como leña para la cocción de alimentos o en la construcción.</p>
-    <p class="text-justify">Además, según algunos comuneros, dentro del territorio de la comunidad existen diversas hierbas medicinales con efectos positivos para la salud. Entre ellas destacan la huamanripa, llantén, muña y salvia. Estas son utilizadas en un primer nivel de atención antes de acudir al establecimiento de salud local.</p>
-</ng-template>
+<div [innerHTML]="obtenerTextoSeccion16RecursosNaturalesConResaltado()"></div>
 
 <app-image-upload
     [modoVista]="true"
@@ -47,21 +38,21 @@
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
-        fieldId="parrafoSeccion16_agua_completo"
+        [fieldId]="getFieldIdAguaCompleto()"
         label="Agua - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="6"
         [value]="obtenerTextoSeccion16AguaCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion16_agua_completo', $event)">
+        (valueChange)="onFieldChange(getFieldIdAguaCompleto(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
-        fieldId="parrafoSeccion16_recursos_naturales_completo"
+        [fieldId]="getFieldIdRecursosNaturalesCompleto()"
         label="Recursos Naturales - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="6"
         [value]="obtenerTextoSeccion16RecursosNaturalesCompleto()"
-        (valueChange)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $event)">
+        (valueChange)="onFieldChange(getFieldIdRecursosNaturalesCompleto(), $event)">
       </app-paragraph-editor>
     </div>
 

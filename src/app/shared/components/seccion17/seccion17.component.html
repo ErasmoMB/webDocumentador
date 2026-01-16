@@ -1,8 +1,6 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.13. Índice de Desarrollo Humano distrital</h5>
-<p class="text-justify" *ngIf="datos.textoIndiceDesarrolloHumano && datos.textoIndiceDesarrolloHumano !== '____'">{{ datos.textoIndiceDesarrolloHumano }}</p>
-<p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">El Índice de Desarrollo Humano (IDH) mide el logro medio de un país (en nuestro país se mide también a niveles departamentales, provinciales y distritales) tratándose de un índice compuesto. El IDH contiene tres variables: la esperanza de vida al nacer, el logro educacional (alfabetización de adultos y la tasa bruta de matriculación primaria, secundaria y terciaria combinada) y el PIB real per cápita (PPA en dólares). El ingreso se considera en el IDH en representación de un nivel decente de vida y en reemplazo de todas las opciones humanas que no se reflejan en las otras dos dimensiones.</p>
-<p class="text-justify" *ngIf="!datos.textoIndiceDesarrolloHumano || datos.textoIndiceDesarrolloHumano === '____'">Según el informe del PNUD para el año 2019, el Índice de Desarrollo Humano del distrito de <span [appDataSource]="'section'" [fieldName]="'textoIndiceDesarrolloHumano'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> es de <span [appDataSource]="'section'">{{ getIDH() }}</span>. Es así que ocupa el puesto N°<span [appDataSource]="'section'">{{ getRankIDH() }}</span> en el país, siendo una de las divisiones políticas de nivel subnacional con uno de los IDH más bajos.</p>
+<div [innerHTML]="obtenerTextoIDHConResaltado()"></div>
 
 <app-table-wrapper title="Componentes del IDH – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2019)" sectionId="3.1.4.A.1.13">
 <table class="table-container">
@@ -31,21 +29,21 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.indiceDesarrolloHumanoTabla || [])">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'poblacion'">{{ item.poblacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankIdh1'">{{ item.rankIdh1 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'idh'">{{ item.idh || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankEsperanza'">{{ item.rankEsperanza || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'esperanzaVida'">{{ item.esperanzaVida || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankEducacion1'">{{ item.rankEducacion1 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'educacion'">{{ item.educacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankEducacion2'">{{ item.rankEducacion2 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'anosEducacion'">{{ item.anosEducacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankAnios'">{{ item.rankAnios || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'ingreso'">{{ item.ingreso || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankIngreso'">{{ item.rankIngreso || item.rankIngresoFinal || '____' }}</td>
+        <tr *ngFor="let item of getIndiceDesarrolloHumanoTabla()">
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'poblacion'">{{ item.poblacion || getTotalPoblacion() || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankIdh1'">{{ item.rankIdh1 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'idh'">{{ item.idh || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEsperanza'">{{ item.rankEsperanza || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'esperanzaVida'">{{ item.esperanzaVida || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEducacion1'">{{ item.rankEducacion1 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'educacion'">{{ item.educacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEducacion2'">{{ item.rankEducacion2 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'anosEducacion'">{{ item.anosEducacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankAnios'">{{ item.rankAnios || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'ingreso'">{{ item.ingreso || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankIngreso'">{{ item.rankIngreso || item.rankIngresoFinal || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.indiceDesarrolloHumanoTabla || datos.indiceDesarrolloHumanoTabla.length === 0">
+        <tr *ngIf="getIndiceDesarrolloHumanoTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -84,12 +82,12 @@
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
-        fieldId="textoIndiceDesarrolloHumano"
+        [fieldId]="getFieldIdTextoIDH()"
         label="Índice de Desarrollo Humano - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="6"
         [value]="obtenerTextoIndiceDesarrolloHumano()"
-        (valueChange)="onFieldChange('textoIndiceDesarrolloHumano', $event)">
+        (valueChange)="onFieldChange(getFieldIdTextoIDH(), $event)">
       </app-paragraph-editor>
     </div>
 
@@ -112,7 +110,7 @@
           { field: 'ingreso', label: 'Ingreso', type: 'text', placeholder: '0.0' },
           { field: 'rankIngreso', label: 'Rank Ingreso', type: 'number', placeholder: '0' }
         ]"
-        [tablaKey]="'indiceDesarrolloHumanoTabla'"
+        [tablaKey]="getTablaKeyIDH()"
         [totalKey]="'poblacion'"
         (tableUpdated)="cdRef.detectChanges()">
       </app-dynamic-table>

@@ -2,10 +2,7 @@
 <h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
-<div *ngIf="datos.parrafoSeccion12_salud_completo; else saludCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion12_salud_completo)"></div>
-<ng-template #saludCompletoDefault>
-    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de <span [appDataSource]="'section'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion12SaludCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Principales características del Puesto de Salud {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -16,11 +13,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.caracteristicasSaludTabla || [])">
+        <tr *ngFor="let item of getCaracteristicasSaludTabla()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
-        <tr *ngIf="!datos.caracteristicasSaludTabla || datos.caracteristicasSaludTabla.length === 0">
+        <tr *ngIf="!getCaracteristicasSaludTabla() || getCaracteristicasSaludTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
         </tr>
@@ -41,10 +38,7 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
-<div *ngIf="datos.parrafoSeccion12_educacion_completo; else educacionCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion12_educacion_completo)"></div>
-<ng-template #educacionCompletoDefault>
-    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion12EducacionCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Infraestructura educativa – CC {{ obtenerNombreComunidadActual() }} (2023)" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -72,7 +66,7 @@
             <td class="table-cell"><strong>{{ getTotalCantidadEstudiantes() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.cantidadEstudiantesEducacionTabla || datos.cantidadEstudiantesEducacionTabla.length === 0">
+        <tr *ngIf="getCantidadEstudiantesSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -84,8 +78,7 @@
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoInfraestructuraEducacionPost'">Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
 
-<p class="text-justify" *ngIf="datos.textoInfraestructuraEducacionPost && datos.textoInfraestructuraEducacionPost !== '____'">{{ datos.textoInfraestructuraEducacionPost }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraEducacionPost || datos.textoInfraestructuraEducacionPost === '____'">De las entrevistas aplicadas durante el trabajo de campo, se recopiló información de carácter cualitativo de las instituciones educativas de la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraEducacionPost'">{{ obtenerNombreComunidadActual() }}</span>. En los cuadros que se presentan a continuación se detallan características de cada una de ellas para el año 2024.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoInfraestructuraEducacionPostConResaltado()"></p>
 
 <app-table-wrapper title="Características y datos – IE {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -96,11 +89,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.ieAyrocaTabla || [])">
+        <tr *ngFor="let item of getIEAyrocaTabla()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
-        <tr *ngIf="!datos.ieAyrocaTabla || datos.ieAyrocaTabla.length === 0">
+        <tr *ngIf="!getIEAyrocaTabla() || getIEAyrocaTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
         </tr>
@@ -118,11 +111,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.ie40270Tabla || [])">
+        <tr *ngFor="let item of getIE40270Tabla()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
-        <tr *ngIf="!datos.ie40270Tabla || datos.ie40270Tabla.length === 0">
+        <tr *ngIf="!getIE40270Tabla() || getIE40270Tabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
         </tr>
@@ -131,8 +124,7 @@
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoAlumnosPorSexoGrado'">GEADES (2024)</span></p>
 
-<p class="text-justify" *ngIf="datos.textoAlumnosPorSexoGrado && datos.textoAlumnosPorSexoGrado !== '____'">{{ datos.textoAlumnosPorSexoGrado }}</p>
-<p class="text-justify" *ngIf="!datos.textoAlumnosPorSexoGrado || datos.textoAlumnosPorSexoGrado === '____'">De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoAlumnosPorSexoGrado'">{{ obtenerNombreComunidadActual() }}</span> según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoAlumnosPorSexoGradoConResaltado()"></p>
 
 <app-table-wrapper title="Cantidad de alumnos según grado de enseñanza y sexo – IE {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -157,7 +149,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.alumnosIEAyrocaTabla || [])">
+        <tr *ngFor="let item of getAlumnosIEAyrocaTabla()">
             <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'" [fieldName]="'totalH'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
@@ -169,7 +161,7 @@
             <td class="table-cell"><span *ngIf="item.cincoH !== undefined && item.cincoH !== '____'" [appDataSource]="'manual'" [fieldName]="'cincoH'">{{ item.cincoH }}</span><span *ngIf="item.cincoH === undefined || item.cincoH === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.cincoM !== undefined && item.cincoM !== '____'" [appDataSource]="'manual'" [fieldName]="'cincoM'">{{ item.cincoM }}</span><span *ngIf="item.cincoM === undefined || item.cincoM === '____'">____</span></td>
         </tr>
-        <tr *ngIf="!datos.alumnosIEAyrocaTabla || datos.alumnosIEAyrocaTabla.length === 0">
+        <tr *ngIf="!getAlumnosIEAyrocaTabla() || getAlumnosIEAyrocaTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -229,7 +221,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.alumnosIE40270Tabla || [])">
+        <tr *ngFor="let item of getAlumnosIE40270Tabla()">
             <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'" [fieldName]="'totalH'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
@@ -247,7 +239,7 @@
             <td class="table-cell"><span *ngIf="item.p6H !== undefined && item.p6H !== '____'" [appDataSource]="'manual'" [fieldName]="'p6H'">{{ item.p6H }}</span><span *ngIf="item.p6H === undefined || item.p6H === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.p6M !== undefined && item.p6M !== '____'" [appDataSource]="'manual'" [fieldName]="'p6M'">{{ item.p6M }}</span><span *ngIf="item.p6M === undefined || item.p6M === '____'">____</span></td>
         </tr>
-        <tr *ngIf="!datos.alumnosIE40270Tabla || datos.alumnosIE40270Tabla.length === 0">
+        <tr *ngIf="!getAlumnosIE40270Tabla() || getAlumnosIE40270Tabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -282,9 +274,8 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
-<p class="text-justify" *ngIf="datos.textoInfraestructuraRecreacion && datos.textoInfraestructuraRecreacion !== '____'">{{ datos.textoInfraestructuraRecreacion }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacion || datos.textoInfraestructuraRecreacion === '____'">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraRecreacion'">{{ obtenerNombreComunidadActual() }}</span> se cuenta con un espacio destinado a la recreación de la población. Este es el parque recreacional público, el cual se ubica entre el puesto de salud y el local comunal. Aquí la población puede reunirse y también cuenta con juegos recreativos destinados a los niños. La siguiente infraestructura es la plaza de toros, que se halla en la zona este del anexo, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales.</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacionDetalle || datos.textoInfraestructuraRecreacionDetalle === '____'">En adición a ello, otro espacio de reunión es la plaza central del anexo <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraRecreacionDetalle'">{{ obtenerNombreComunidadActual() }}</span>. Este lugar sirve ocasionalmente como punto de encuentro para los comuneros, quienes se reúnen allí de manera informal en momentos importantes o festivos.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoInfraestructuraRecreacionConResaltado()"></p>
+<p class="text-justify" [innerHTML]="obtenerTextoInfraestructuraRecreacionDetalleConResaltado()"></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -298,9 +289,8 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
-<p class="text-justify" *ngIf="datos.textoInfraestructuraDeporte && datos.textoInfraestructuraDeporte !== '____'">{{ datos.textoInfraestructuraDeporte }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeporte || datos.textoInfraestructuraDeporte === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraDeporte'">{{ obtenerNombreComunidadActual() }}</span>, la infraestructura deportiva es limitada. Los únicos espacios dedicados al deporte son una losa deportiva y un "estadio". Estas infraestructuras son utilizadas principalmente para partidos de fútbol y otros encuentros deportivos informales que se organizan entre los comuneros, especialmente durante festividades locales.</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeportDetalle || datos.textoInfraestructuraDeportDetalle === '____'">Respecto a la losa deportiva, esta se encuentra hecha a base de cemento. Por otra parte, el "estadio" es un campo de juego de pasto natural de un tamaño más extenso que la losa. No obstante, no cuenta con infraestructura adicional como gradas o servicios higiénicos.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoInfraestructuraDeporteConResaltado()"></p>
+<p class="text-justify" [innerHTML]="obtenerTextoInfraestructuraDeportDetalleConResaltado()"></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -343,9 +333,9 @@
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
             { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
           ]"
-          [tablaKey]="'caracteristicasSaludTabla'"
+          [tablaKey]="getTablaKeyCaracteristicasSalud()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onCaracteristicasSaludTableUpdated()">
         </app-dynamic-table>
       </div>
 
@@ -364,7 +354,7 @@
           tituloDefault="Puesto de Salud Ayroca"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_SALUD, $event)">
+          (fotografiasChange)="onFotografiasSaludChange($event)">
         </app-image-upload>
       </div>
     </div>
@@ -397,12 +387,13 @@
             { field: 'total', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'cantidadEstudiantesEducacionTabla'"
+          [tablaKey]="getTablaKeyCantidadEstudiantesEducacion()"
           [totalKey]="'institucion'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onCantidadEstudiantesFieldChange.bind(this)"
+          (tableUpdated)="onCantidadEstudiantesTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['cantidadEstudiantesEducacionTabla'] && datos['cantidadEstudiantesEducacionTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getCantidadEstudiantesSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
@@ -439,9 +430,9 @@
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
             { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
           ]"
-          [tablaKey]="'ieAyrocaTabla'"
+          [tablaKey]="getTablaKeyIEAyroca()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onIEAyrocaTableUpdated()">
         </app-dynamic-table>
       </div>
 
@@ -460,7 +451,7 @@
           tituloDefault="IE Ayroca"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_AYROCA, $event)">
+          (fotografiasChange)="onFotografiasIEAyrocaChange($event)">
         </app-image-upload>
       </div>
 
@@ -473,9 +464,9 @@
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Categoría' },
             { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Descripción' }
           ]"
-          [tablaKey]="'ie40270Tabla'"
+          [tablaKey]="getTablaKeyIE40270()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onIE40270TableUpdated()">
         </app-dynamic-table>
       </div>
 
@@ -509,9 +500,9 @@
             { field: 'cincoH', label: '5 años H', type: 'number', placeholder: '0' },
             { field: 'cincoM', label: '5 años M', type: 'number', placeholder: '0' }
           ]"
-          [tablaKey]="'alumnosIEAyrocaTabla'"
+          [tablaKey]="getTablaKeyAlumnosIEAyroca()"
           [totalKey]="'nombre'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onAlumnosIEAyrocaTableUpdated()">
         </app-dynamic-table>
       </div>
 
@@ -538,9 +529,9 @@
             { field: 'p6H', label: '6° H', type: 'number', placeholder: '0' },
             { field: 'p6M', label: '6° M', type: 'number', placeholder: '0' }
           ]"
-          [tablaKey]="'alumnosIE40270Tabla'"
+          [tablaKey]="getTablaKeyAlumnosIE40270()"
           [totalKey]="'nombre'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onAlumnosIE40270TableUpdated()">
         </app-dynamic-table>
       </div>
 
@@ -559,7 +550,7 @@
           tituloDefault="IE N°40270"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_IE_40270, $event)">
+          (fotografiasChange)="onFotografiasIE40270Change($event)">
         </app-image-upload>
       </div>
     </div>
@@ -605,7 +596,7 @@
           tituloDefault="Parque recreacional en el anexo Ayroca"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_RECREACION, $event)">
+          (fotografiasChange)="onFotografiasRecreacionChange($event)">
         </app-image-upload>
       </div>
     </div>
@@ -651,7 +642,7 @@
           tituloDefault="Losa deportiva en el anexo Ayroca"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange(PHOTO_PREFIX_DEPORTE, $event)">
+          (fotografiasChange)="onFotografiasDeporteChange($event)">
         </app-image-upload>
       </div>
     </div>

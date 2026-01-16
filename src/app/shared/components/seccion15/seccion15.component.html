@@ -1,10 +1,9 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h5>
-<p class="text-justify" *ngIf="datos.textoAspectosCulturales && datos.textoAspectosCulturales !== '____'">{{ datos.textoAspectosCulturales }}</p>
+<p class="text-justify" *ngIf="obtenerTextoAspectosCulturales() && obtenerTextoAspectosCulturales() !== '____'" [innerHTML]="obtenerTextoAspectosCulturalesConResaltado()"></p>
 
 <h5>a. Idioma</h5>
-<p class="text-justify" *ngIf="datos.textoIdioma && datos.textoIdioma !== '____'">{{ datos.textoIdioma }}</p>
-<p class="text-justify" *ngIf="!datos.textoIdioma || datos.textoIdioma === '____'">Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el <span [appDataSource]="'manual'" [fieldName]="'textoIdioma'">{{ getPorcentajeCastellano() }}</span> de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del <span [appDataSource]="'manual'">{{ getPorcentajeQuechua() }}</span> de los habitantes.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoIdiomaConResaltado()"></p>
 
 <app-table-wrapper title="Lenguas maternas en población de 3 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.11">
 <table class="table-container">
@@ -17,8 +16,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getLenguasMaternaSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getLenguasMaternaSinTotal().length > 0">
@@ -26,7 +25,7 @@
             <td class="table-cell"><strong>{{ getTotalLenguasMaternas() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.lenguasMaternasTabla || datos.lenguasMaternasTabla.length === 0">
+        <tr *ngIf="getLenguasMaternaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -37,10 +36,37 @@
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'parrafoSeccion15_religion_completo'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
 <h5>b. Religión</h5>
-<div *ngIf="datos.parrafoSeccion15_religion_completo; else religionCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion15_religion_completo)"></div>
-<ng-template #religionCompletoDefault>
-    <p class="text-justify">La confesión predominante dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion15ReligionCompletoConResaltado()"></p>
+
+<app-table-wrapper title="Religión – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.11">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of getReligionesSinTotal()">
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        </tr>
+        <tr class="total-row" *ngIf="getReligionesSinTotal().length > 0">
+            <td class="table-cell"><strong>Total</strong></td>
+            <td class="table-cell"><strong>{{ getTotalReligiones() }}</strong></td>
+            <td class="table-cell"><strong>100,00 %</strong></td>
+        </tr>
+        <tr *ngIf="getReligionesSinTotal().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">Fuente: <span [appDataSource]="'manual'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -65,12 +91,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="textoIdioma"
+          [fieldId]="getFieldIdIdioma()"
           label="Idioma - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="obtenerTextoIdioma()"
-          (valueChange)="onFieldChange('textoIdioma', $event)">
+          [value]="obtenerTextoIdiomaParaEditor()"
+          (valueChange)="onFieldChange(getFieldIdIdioma(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -84,12 +110,13 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'lenguasMaternasTabla'"
+          [tablaKey]="getTablaKeyLenguasMaternas()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onLenguasMaternasFieldChange.bind(this)"
+          (tableUpdated)="onLenguasMaternasTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['lenguasMaternasTabla'] && datos['lenguasMaternasTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getLenguasMaternaSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
@@ -110,13 +137,42 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="parrafoSeccion15_religion_completo"
+          [fieldId]="getFieldIdReligionCompleto()"
           label="Religión - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="obtenerTextoSeccion15ReligionCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
+          [value]="obtenerTextoSeccion15ReligionCompletoParaEditor()"
+          (valueChange)="onFieldChange(getFieldIdReligionCompleto(), $event)">
         </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Religiones</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="religionesConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [tablaKey]="getTablaKeyReligiones()"
+          [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onReligionesFieldChange.bind(this)"
+          (tableUpdated)="onReligionesTableUpdated()">
+        </app-dynamic-table>
+
+        <div class="table-editor" *ngIf="getReligionesSinTotal().length > 0" style="margin-top: 10px;">
+          <table class="editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" [value]="getTotalReligiones()" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">

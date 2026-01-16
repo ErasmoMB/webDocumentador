@@ -2,12 +2,11 @@
 <h5>A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h5>
 <div *ngIf="datos.parrafoSeccion10_servicios_basicos_intro; else serviciosBasicosIntroDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion10_servicios_basicos_intro)"></div>
 <ng-template #serviciosBasicosIntroDefault>
-    <p class="text-justify">Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento. En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia el total de viviendas con ocupantes presentes (<span [appDataSource]="'section'">{{ getViviendasOcupadas() }}</span>), tal como realiza el Censo Nacional 2017.</p>
+    <p class="text-justify" [innerHTML]="obtenerTextoSeccion10ServiciosBasicosIntroConResaltado()"></p>
 </ng-template>
 
 <p style="margin-bottom: 10px;"><strong>a. Servicios de agua</strong></p>
-<p class="text-justify" *ngIf="datos.textoServiciosAgua && datos.textoServiciosAgua !== '____'">{{ datos.textoServiciosAgua }}</p>
-<p class="text-justify" *ngIf="!datos.textoServiciosAgua || datos.textoServiciosAgua === '____'">Respecto al servicio de agua para consumo humano en la CC <span [appDataSource]="'section'" [fieldName]="'textoServiciosAgua'">{{ obtenerNombreComunidadActual() }}</span>, se cuenta con cobertura regular de dicho recurso en las viviendas. Es así que, según la plataforma REDINFORMA, un <span [appDataSource]="'section'">{{ getPorcentajeAguaRedPublica() }}</span> de las viviendas cuenta con abastecimiento de agua por red pública. Ninguna vivienda cuenta con abastecimiento por pilón, mientras que el <span [appDataSource]="'section'">{{ getPorcentajeAguaSinAbastecimiento() }}</span> restante no se abastece por ninguno de estos dos medios.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoServiciosAguaConResaltado()"></p>
 
 <app-table-wrapper title="Tipos de abastecimiento de agua en las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.6">
 <table class="table-container">
@@ -20,8 +19,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getAbastecimientoAguaSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getAbastecimientoAguaSinTotal().length > 0">
@@ -29,7 +28,7 @@
             <td class="table-cell"><strong>{{ getTotalAbastecimientoAgua() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.abastecimientoAguaTabla || datos.abastecimientoAguaTabla.length === 0">
+        <tr *ngIf="getAbastecimientoAguaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -39,12 +38,10 @@
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoServiciosAguaDetalle'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
-<p class="text-justify" *ngIf="datos.textoServiciosAguaDetalle && datos.textoServiciosAguaDetalle !== '____'">{{ datos.textoServiciosAguaDetalle }}</p>
-<p class="text-justify" *ngIf="!datos.textoServiciosAguaDetalle || datos.textoServiciosAguaDetalle === '____'">De las entrevistas aplicadas durante el trabajo de campo, se obtuvo la información de que la institución responsable de la administración del servicio de abastecimiento de agua y de su respectivo mantenimiento es la JASS <span [appDataSource]="'section'" [fieldName]="'textoServiciosAguaDetalle'">{{ obtenerNombreComunidadActual() }}</span>. Esta junta lleva a cabo una cloración del recurso hídrico para el consumo de las familias de la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> y también realiza el cobro de una cuota mensual de S/. <span [appDataSource]="'manual'">{{ datos.cuotaMensualAgua || '4' }}</span> para poder contar con recursos económicos y desarrollar sus actividades.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoServiciosAguaDetalleConResaltado()"></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Servicios básicos de desagüe</strong></p>
-<p class="text-justify" *ngIf="datos.textoServiciosDesague && datos.textoServiciosDesague !== '____'">{{ datos.textoServiciosDesague }}</p>
-<p class="text-justify" *ngIf="!datos.textoServiciosDesague || datos.textoServiciosDesague === '____'">Respecto al servicio de saneamiento en las viviendas de la CC <span [appDataSource]="'section'" [fieldName]="'textoServiciosDesague'">{{ obtenerNombreComunidadActual() }}</span>, se cuenta con cobertura regular. Es así que, según la plataforma REDINFORMA, un <span [appDataSource]="'section'">{{ getPorcentajeSaneamientoRedPublica() }}</span> de las viviendas cuenta con saneamiento vía red pública. Ninguna vivienda tiene saneamiento vía pozo séptico, mientras que el <span [appDataSource]="'section'">{{ getPorcentajeSaneamientoSinSaneamiento() }}</span> restante no posee saneamiento por vía de los dos medios mencionados.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoServiciosDesagueConResaltado()"></p>
 
 <app-table-wrapper title="Tipos de saneamiento en las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.6">
 <table class="table-container">
@@ -57,8 +54,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getTiposSaneamientoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getTiposSaneamientoSinTotal().length > 0">
@@ -66,7 +63,7 @@
             <td class="table-cell"><strong>{{ getTotalTiposSaneamiento() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="(!datos.tiposSaneamientoTabla || datos.tiposSaneamientoTabla.length === 0) && (!datos.saneamientoTabla || datos.saneamientoTabla.length === 0)">
+        <tr *ngIf="getTiposSaneamientoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -76,14 +73,12 @@
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoServiciosDesagueDetalle'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
-<p class="text-justify" *ngIf="datos.textoServiciosDesagueDetalle && datos.textoServiciosDesagueDetalle !== '____'">{{ datos.textoServiciosDesagueDetalle }}</p>
-<p class="text-justify" *ngIf="!datos.textoServiciosDesagueDetalle || datos.textoServiciosDesagueDetalle === '____'">Por medio de las entrevistas aplicadas, se recolectó la información de que la institución responsable de la administración del servicio de desagüe por red pública y de su mantenimiento es, al igual que con el agua, la JASS <span [appDataSource]="'section'" [fieldName]="'textoServiciosDesagueDetalle'">{{ obtenerNombreComunidadActual() }}</span>. Las excretas son destinadas a una poza de oxidación, ubicada fuera del entorno urbano del anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoServiciosDesagueDetalleConResaltado()"></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
-<p class="text-justify" *ngIf="datos.textoDesechosSolidos1 && datos.textoDesechosSolidos1 !== '____'">{{ datos.textoDesechosSolidos1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoDesechosSolidos1 || datos.textoDesechosSolidos1 === '____'">La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de <span [appDataSource]="'section'" [fieldName]="'textoDesechosSolidos1'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoDesechosSolidos1ConResaltado()"></p>
 <p class="text-justify" *ngIf="!datos.textoDesechosSolidos2 || datos.textoDesechosSolidos2 === '____'">Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.</p>
-<p class="text-justify" *ngIf="!datos.textoDesechosSolidos3 || datos.textoDesechosSolidos3 === '____'">Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del anexo <span [appDataSource]="'section'" [fieldName]="'textoDesechosSolidos3'">{{ obtenerNombreComunidadActual() }}</span> en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoDesechosSolidos3ConResaltado()"></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -97,8 +92,7 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Electricidad</strong></p>
-<p class="text-justify" *ngIf="datos.textoElectricidad1 && datos.textoElectricidad1 !== '____'">{{ datos.textoElectricidad1 }}</p>
-<p class="text-justify" *ngIf="!datos.textoElectricidad1 || datos.textoElectricidad1 === '____'">Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas de la comunidad campesina en cuestión. Según la plataforma REDINFORMA, se cuenta con los siguientes datos: el <span [appDataSource]="'section'" [fieldName]="'textoElectricidad1'">{{ getPorcentajeElectricidad() }}</span> de las viviendas cuenta con alumbrado eléctrico, mientras que el <span [appDataSource]="'section'">{{ getPorcentajeSinElectricidad() }}</span> restante no tiene el referido servicio.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoElectricidad1ConResaltado()"></p>
 
 <app-table-wrapper title="Cobertura de alumbrado eléctrico en las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.6">
 <table class="table-container">
@@ -111,8 +105,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getCoberturaElectricaSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getCoberturaElectricaSinTotal().length > 0">
@@ -120,7 +114,7 @@
             <td class="table-cell"><strong>{{ getTotalCoberturaElectrica() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.coberturaElectricaTabla || datos.coberturaElectricaTabla.length === 0">
+        <tr *ngIf="getCoberturaElectricaSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -130,8 +124,7 @@
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoElectricidad2'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
-<p class="text-justify" *ngIf="datos.textoElectricidad2 && datos.textoElectricidad2 !== '____'">{{ datos.textoElectricidad2 }}</p>
-<p class="text-justify" *ngIf="!datos.textoElectricidad2 || datos.textoElectricidad2 === '____'">Adicionalmente, con las entrevistas semiestructuradas se pudo validar que la empresa responsable de la provisión del servicio eléctrico y su respectivo mantenimiento es <span [appDataSource]="'manual'" [fieldName]="'textoElectricidad2'">{{ datos.empresaElectrica || 'ADINELSA' }}</span>. Asimismo, según los entrevistados, el costo promedio por este servicio ronda entre S/. <span [appDataSource]="'manual'">{{ datos.costoElectricidadMinimo || '20' }}</span> y S/. <span [appDataSource]="'manual'">{{ datos.costoElectricidadMaximo || '40' }}</span> de acuerdo al medidor de cada vivienda. Por otro lado, cabe mencionar que son pocas las familias dentro de la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> que cuentan con vale FISE.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoElectricidad2ConResaltado()"></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -145,9 +138,7 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
-<p class="text-justify" *ngIf="datos.textoEnergiaParaCocinar && datos.textoEnergiaParaCocinar !== '____'">{{ datos.textoEnergiaParaCocinar }}</p>
-<p class="text-justify" *ngIf="!datos.textoEnergiaParaCocinar || datos.textoEnergiaParaCocinar === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoEnergiaParaCocinar'">{{ obtenerNombreComunidadActual() }}</span>, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.</p>
-<p class="text-justify" *ngIf="!datos.textoEnergiaParaCocinar || datos.textoEnergiaParaCocinar === '____'">De manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoEnergiaParaCocinarConResaltado()"></p>
 </div>
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
@@ -193,7 +184,7 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'abastecimientoAguaTabla'"
+          [tablaKey]="getTablaKeyAbastecimientoAgua()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)"
           (tableUpdated)="onAbastecimientoAguaTableUpdated()">
@@ -268,7 +259,7 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="(datos['tiposSaneamientoTabla'] ? 'tiposSaneamientoTabla' : 'saneamientoTabla')"
+          [tablaKey]="getTablaKeyTiposSaneamiento()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onTiposSaneamientoFieldChange.bind(this)"
           (tableUpdated)="onTiposSaneamientoTableUpdated()">
@@ -392,7 +383,7 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'coberturaElectricaTabla'"
+          [tablaKey]="getTablaKeyCoberturaElectrica()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)"
           (tableUpdated)="onCoberturaElectricaTableUpdated()">

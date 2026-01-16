@@ -578,6 +578,8 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     
     if (campo.includes('Poblacion')) {
       this.guardarTotalPoblacion();
+    } else if (campo.includes('ViviendasEmpadronadas') || campo.includes('ViviendasOcupadas')) {
+      this.guardarTotalViviendas();
     }
     
     this.actualizarDatos();
@@ -589,23 +591,33 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     const totalPoblacion = typeof totalPoblacionRaw === 'number' ? totalPoblacionRaw : (totalPoblacionRaw === '____' ? 0 : parseInt(totalPoblacionRaw as any) || 0);
     const poblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
     
-    console.log('🔍 [Seccion4] guardarTotalPoblacion - Debug:', {
-      prefijo,
-      poblacionKey,
-      totalPoblacionRaw,
-      totalPoblacion,
-      tipo: typeof totalPoblacion,
-      esNumero: typeof totalPoblacion === 'number',
-      esMayorACero: typeof totalPoblacion === 'number' && totalPoblacion > 0,
-      filasTabla: this.getFilasTablaAISD2().length
-    });
-    
     if (typeof totalPoblacion === 'number' && totalPoblacion > 0) {
       this.formularioService.actualizarDato(poblacionKey as any, totalPoblacion);
       this.datos[poblacionKey] = totalPoblacion;
-      console.log('✅ [Seccion4] guardarTotalPoblacion - Guardado:', poblacionKey, '=', totalPoblacion);
-    } else {
-      console.warn('⚠️ [Seccion4] guardarTotalPoblacion - No se guardó (totalPoblacion no válido):', totalPoblacion);
+    }
+    
+    this.guardarTotalViviendas();
+  }
+
+  guardarTotalViviendas(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const totalViviendasEmpRaw = this.getTotalViviendasEmpadronadasAISD2();
+    const totalViviendasOcpRaw = this.getTotalViviendasOcupadasAISD2();
+    
+    const totalViviendasEmp = typeof totalViviendasEmpRaw === 'number' ? totalViviendasEmpRaw : (totalViviendasEmpRaw === '____' ? 0 : parseInt(totalViviendasEmpRaw as any) || 0);
+    const totalViviendasOcp = typeof totalViviendasOcpRaw === 'number' ? totalViviendasOcpRaw : (totalViviendasOcpRaw === '____' ? 0 : parseInt(totalViviendasOcpRaw as any) || 0);
+    
+    const viviendasEmpKey = prefijo ? `tablaAISD2TotalViviendasEmpadronadas${prefijo}` : 'tablaAISD2TotalViviendasEmpadronadas';
+    const viviendasOcpKey = prefijo ? `tablaAISD2TotalViviendasOcupadas${prefijo}` : 'tablaAISD2TotalViviendasOcupadas';
+    
+    if (typeof totalViviendasEmp === 'number') {
+      this.formularioService.actualizarDato(viviendasEmpKey as any, totalViviendasEmp);
+      this.datos[viviendasEmpKey] = totalViviendasEmp;
+    }
+    
+    if (typeof totalViviendasOcp === 'number') {
+      this.formularioService.actualizarDato(viviendasOcpKey as any, totalViviendasOcp);
+      this.datos[viviendasOcpKey] = totalViviendasOcp;
     }
   }
 

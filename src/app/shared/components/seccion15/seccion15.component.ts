@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -20,40 +21,34 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion15_religion_completo', 'lenguasMaternasTabla', 'religionesTabla', 'textoAspectosCulturales', 'textoIdioma'];
+  override watchedFields: string[] = ['grupoAISD', 'parrafoSeccion15_religion_completo', 'lenguasMaternasTabla', 'religionesTabla', 'textoAspectosCulturales', 'textoIdioma', 'fotografiaIglesia'];
   
   override readonly PHOTO_PREFIX = 'fotografiaIglesia';
+  override fotografiasCache: FotoItem[] = [];
+  override fotografiasFormMulti: FotoItem[] = [];
   private stateSubscription?: Subscription;
 
-  lenguasMaternasConfig: TableConfig = {
-    tablaKey: 'lenguasMaternasTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    estructuraInicial: [
-      { categoria: 'Castellano', casos: 0, porcentaje: '0%' },
-      { categoria: 'Quechua', casos: 0, porcentaje: '0%' },
-      { categoria: 'No sabe / No responde', casos: 0, porcentaje: '0%' },
-      { categoria: 'Total', casos: 0, porcentaje: '100,00%' }
-    ],
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
-  };
+  get lenguasMaternasConfig(): TableConfig {
+    return {
+      tablaKey: this.getTablaKeyLenguasMaternas(),
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      calcularPorcentajes: true,
+      camposParaCalcular: ['casos']
+    };
+  }
 
-  religionesConfig: TableConfig = {
-    tablaKey: 'religionesTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    estructuraInicial: [
-      { categoria: 'Católica', casos: 0, porcentaje: '0%' },
-      { categoria: 'Evangélica', casos: 0, porcentaje: '0%' },
-      { categoria: 'Otra', casos: 0, porcentaje: '0%' },
-      { categoria: 'Total', casos: 0, porcentaje: '100,00%' }
-    ],
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
-  };
+  get religionesConfig(): TableConfig {
+    return {
+      tablaKey: this.getTablaKeyReligiones(),
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      calcularPorcentajes: true,
+      camposParaCalcular: ['casos']
+    };
+  }
 
   constructor(
     formularioService: FormularioService,
@@ -63,7 +58,8 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -75,13 +71,30 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
     
     let hayCambios = false;
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    const tablasConPrefijo = ['lenguasMaternasTabla', 'religionesTabla'];
     
     for (const campo of this.watchedFields) {
-      const valorActual = (datosActuales as any)[campo] || null;
-      const valorAnterior = this.datosAnteriores[campo] || null;
+      let valorActual: any = null;
+      let valorAnterior: any = null;
+      
+      if (tablasConPrefijo.includes(campo)) {
+        const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+        valorActual = (datosActuales as any)[campoConPrefijo] || (datosActuales as any)[campo] || null;
+        valorAnterior = this.datosAnteriores[campoConPrefijo] || this.datosAnteriores[campo] || null;
+      } else {
+        valorActual = (datosActuales as any)[campo] || null;
+        valorAnterior = this.datosAnteriores[campo] || null;
+      }
+      
       if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        if (tablasConPrefijo.includes(campo) && prefijo) {
+          this.datosAnteriores[`${campo}${prefijo}`] = JSON.parse(JSON.stringify(valorActual));
+        } else {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        }
       }
     }
     
@@ -98,15 +111,6 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     this.datosAnteriores.grupoAISD = grupoAISD || null;
   }
 
-  formatearParrafo(texto: string): string {
-    if (!texto) return '';
-    const parrafos = texto.split(/\n\n+/);
-    return parrafos.map(p => {
-      const textoLimpio = p.trim().replace(/\n/g, '<br>');
-      return `<p class="text-justify">${textoLimpio}</p>`;
-    }).join('');
-  }
-
   cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
@@ -114,63 +118,69 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
       this.PHOTO_PREFIX,
       groupPrefix
     );
-    this.fotografiasCache = [...fotos];
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
     this.cdRef.markForCheck();
   }
 
   onFotografiasChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    this.imageService.saveImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      fotografias,
-      groupPrefix
-    );
-    this.fotografiasCache = [...fotografias];
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasCache = [...fotografias];
     this.cdRef.detectChanges();
   }
 
   getPorcentajeCastellano(): string {
-    if (!this.datos?.lenguasMaternasTabla || !Array.isArray(this.datos.lenguasMaternasTabla)) {
-      return '____';
-    }
-    const castellano = this.datos.lenguasMaternasTabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('castellano') || item.categoria.toLowerCase().includes('español'))
+    const tabla = this.getTablaLenguasMaternas();
+    const item = tabla.find((i: any) => 
+      i.categoria && (i.categoria.toLowerCase().includes('castellano') || i.categoria.toLowerCase().includes('español'))
     );
-    return castellano?.porcentaje || '____';
+    return item?.porcentaje || '____';
   }
 
   getPorcentajeQuechua(): string {
-    if (!this.datos?.lenguasMaternasTabla || !Array.isArray(this.datos.lenguasMaternasTabla)) {
-      return '____';
-    }
-    const quechua = this.datos.lenguasMaternasTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('quechua')
+    const tabla = this.getTablaLenguasMaternas();
+    const item = tabla.find((i: any) => 
+      i.categoria && i.categoria.toLowerCase().includes('quechua')
     );
-    return quechua?.porcentaje || '____';
+    return item?.porcentaje || '____';
   }
 
   override obtenerPrefijoGrupo(): string {
-    if (this.seccionId === '3.1.4.A.1.11' || this.seccionId.startsWith('3.1.4.A.1.')) {
-      return '_A1';
-    } else if (this.seccionId === '3.1.4.A.2.11' || this.seccionId.startsWith('3.1.4.A.2.')) {
-      return '_A2';
-    } else if (this.seccionId === '3.1.4.B.1.11' || this.seccionId.startsWith('3.1.4.B.1.')) {
-      return '_B1';
-    } else if (this.seccionId === '3.1.4.B.2.11' || this.seccionId.startsWith('3.1.4.B.2.')) {
-      return '_B2';
-    }
-    return '';
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyLenguasMaternas(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
+  }
+
+  getTablaLenguasMaternas(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'lenguasMaternasTabla', this.seccionId);
+    return pref || this.datos.lenguasMaternasTabla || [];
+  }
+
+  getTablaKeyReligiones(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
+  }
+
+  getTablaReligiones(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'religionesTabla', this.seccionId);
+    return pref || this.datos.religionesTabla || [];
   }
 
   getFotografiasIglesiaVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return [...this.fotografiasCache];
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(
+    const fotos = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
       groupPrefix
     );
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
+    return this.fotografiasCache;
   }
 
   protected override actualizarFotografiasFormMulti(): void {
@@ -184,7 +194,10 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    this.cargarFotografias();
     this.eliminarFilasTotal();
+    this.calcularPorcentajesLenguasMaternas();
+    this.calcularPorcentajesReligiones();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -194,38 +207,149 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
   }
 
   private eliminarFilasTotal(): void {
-    // Eliminar filas Total de lenguasMaternasTabla
-    if (this.datos['lenguasMaternasTabla'] && Array.isArray(this.datos['lenguasMaternasTabla'])) {
-      const longitudOriginal = this.datos['lenguasMaternasTabla'].length;
-      this.datos['lenguasMaternasTabla'] = this.datos['lenguasMaternasTabla'].filter((item: any) => {
+    const tablaKeyLenguas = this.getTablaKeyLenguasMaternas();
+    const tablaLenguas = this.getTablaLenguasMaternas();
+    
+    if (tablaLenguas && Array.isArray(tablaLenguas)) {
+      const longitudOriginal = tablaLenguas.length;
+      const datosFiltrados = tablaLenguas.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total');
       });
-      if (this.datos['lenguasMaternasTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
-        this.cdRef.detectChanges();
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.formularioService.actualizarDato(tablaKeyLenguas, datosFiltrados);
       }
     }
 
-    // Eliminar filas Total de religionesTabla
-    if (this.datos['religionesTabla'] && Array.isArray(this.datos['religionesTabla'])) {
-      const longitudOriginal = this.datos['religionesTabla'].length;
-      this.datos['religionesTabla'] = this.datos['religionesTabla'].filter((item: any) => {
+    const tablaKeyReligiones = this.getTablaKeyReligiones();
+    const tablaReligiones = this.getTablaReligiones();
+    
+    if (tablaReligiones && Array.isArray(tablaReligiones)) {
+      const longitudOriginal = tablaReligiones.length;
+      const datosFiltrados = tablaReligiones.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total');
       });
-      if (this.datos['religionesTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
-        this.cdRef.detectChanges();
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.formularioService.actualizarDato(tablaKeyReligiones, datosFiltrados);
       }
     }
   }
 
+  calcularPorcentajesLenguasMaternas(): void {
+    const tablaKey = this.getTablaKeyLenguasMaternas();
+    const tabla = this.getTablaLenguasMaternas();
+    if (!tabla || tabla.length === 0) return;
+    
+    const total = tabla.reduce((sum: number, item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      if (categoria.includes('total')) return sum;
+      const casos = typeof item.casos === 'number' ? item.casos : parseFloat(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    
+    if (total > 0) {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          const casos = typeof item.casos === 'number' ? item.casos : parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',');
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    } else {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          item.porcentaje = '0,00 %';
+        }
+      });
+    }
+    
+    this.datos[tablaKey] = tabla;
+    this.formularioService.actualizarDato(tablaKey, tabla);
+  }
+
+  calcularPorcentajesReligiones(): void {
+    const tablaKey = this.getTablaKeyReligiones();
+    const tabla = this.getTablaReligiones();
+    if (!tabla || tabla.length === 0) return;
+    
+    const total = tabla.reduce((sum: number, item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      if (categoria.includes('total')) return sum;
+      const casos = typeof item.casos === 'number' ? item.casos : parseFloat(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    
+    if (total > 0) {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          const casos = typeof item.casos === 'number' ? item.casos : parseFloat(item.casos) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',');
+          item.porcentaje = porcentaje + ' %';
+        }
+      });
+    } else {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          item.porcentaje = '0,00 %';
+        }
+      });
+    }
+    
+    this.datos[tablaKey] = tabla;
+    this.formularioService.actualizarDato(tablaKey, tabla);
+  }
+
+  onLenguasMaternasFieldChange(rowIndex: number, field: string, value: any) {
+    const tablaKey = this.getTablaKeyLenguasMaternas();
+    const tabla = this.getTablaLenguasMaternas();
+    if (tabla && tabla[rowIndex]) {
+      tabla[rowIndex][field] = value;
+      this.datos[tablaKey] = tabla;
+      this.formularioService.actualizarDato(tablaKey, tabla);
+      this.calcularPorcentajesLenguasMaternas();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onLenguasMaternasTableUpdated(): void {
+    const tablaKey = this.getTablaKeyLenguasMaternas();
+    const tabla = this.getTablaLenguasMaternas();
+    this.datos[tablaKey] = tabla;
+    this.calcularPorcentajesLenguasMaternas();
+    this.cdRef.detectChanges();
+  }
+
+  onReligionesFieldChange(rowIndex: number, field: string, value: any) {
+    const tablaKey = this.getTablaKeyReligiones();
+    const tabla = this.getTablaReligiones();
+    if (tabla && tabla[rowIndex]) {
+      tabla[rowIndex][field] = value;
+      this.datos[tablaKey] = tabla;
+      this.formularioService.actualizarDato(tablaKey, tabla);
+      this.calcularPorcentajesReligiones();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onReligionesTableUpdated(): void {
+    const tablaKey = this.getTablaKeyReligiones();
+    const tabla = this.getTablaReligiones();
+    this.datos[tablaKey] = tabla;
+    this.calcularPorcentajesReligiones();
+    this.cdRef.detectChanges();
+  }
+
   getLenguasMaternaSinTotal(): any[] {
-    if (!this.datos?.lenguasMaternasTabla || !Array.isArray(this.datos.lenguasMaternasTabla)) {
+    const tabla = this.getTablaLenguasMaternas();
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.lenguasMaternasTabla.filter((item: any) => {
+    return tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -241,10 +365,11 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
   }
 
   getReligionesSinTotal(): any[] {
-    if (!this.datos?.religionesTabla || !Array.isArray(this.datos.religionesTabla)) {
+    const tabla = this.getTablaReligiones();
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.religionesTabla.filter((item: any) => {
+    return tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -265,17 +390,85 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     }
   }
 
+  getFieldIdReligionCompleto(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion15_religion_completo${prefijo}` : 'parrafoSeccion15_religion_completo';
+  }
+
   obtenerTextoSeccion15ReligionCompleto(): string {
-    if (this.datos.parrafoSeccion15_religion_completo) {
-      return this.datos.parrafoSeccion15_religion_completo;
+    const fieldId = this.getFieldIdReligionCompleto();
+    const textoPersonalizado = this.datos[fieldId] || this.datos.parrafoSeccion15_religion_completo;
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    const textoPorDefecto = `La confesión predominante dentro de la CC ${grupoAISD} es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
+    
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
+        .replace(/Iglesia Matriz de\s*___/g, `Iglesia Matriz de ${grupoAISD}`)
+        .replace(/anexo\s*___/g, `anexo ${grupoAISD}`);
     }
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoSeccion15ReligionCompletoParaEditor(): string {
+    const fieldId = this.getFieldIdReligionCompleto();
+    const textoPersonalizado = this.datos[fieldId] || this.datos.parrafoSeccion15_religion_completo;
+    
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado;
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
     return `La confesión predominante dentro de la CC ${grupoAISD} es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
   }
 
+  obtenerTextoSeccion15ReligionCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion15ReligionCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD !== '____') {
+      html = html.replace(
+        new RegExp(this.escapeRegex(grupoAISD), 'g'), 
+        `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
+      );
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  getFieldIdIdioma(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoIdioma${prefijo}` : 'textoIdioma';
+  }
+
   obtenerTextoIdioma(): string {
-    if (this.datos.textoIdioma && this.datos.textoIdioma !== '____') {
-      return this.datos.textoIdioma;
+    const fieldId = this.getFieldIdIdioma();
+    const textoPersonalizado = this.datos[fieldId] || this.datos.textoIdioma;
+    
+    const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
+    const porcentajeQuechua = this.getPorcentajeQuechua() || '____';
+    
+    const textoPorDefecto = `Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el ${porcentajeCastellano} de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del ${porcentajeQuechua} de los habitantes.`;
+    
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado
+        .replace(/el\s*___\s*de la población/g, `el ${porcentajeCastellano} de la población`)
+        .replace(/del\s*___\s*de los habitantes/g, `del ${porcentajeQuechua} de los habitantes`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoIdiomaParaEditor(): string {
+    const fieldId = this.getFieldIdIdioma();
+    const textoPersonalizado = this.datos[fieldId] || this.datos.textoIdioma;
+    
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado;
     }
     
     const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
@@ -284,64 +477,58 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     return `Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el ${porcentajeCastellano} de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del ${porcentajeQuechua} de los habitantes.`;
   }
 
-  inicializarLenguasMaternas() {
-    this.tableService.inicializarTabla(this.datos, this.lenguasMaternasConfig);
-    this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
+  obtenerTextoIdiomaConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoIdioma();
+    const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
+    const porcentajeQuechua = this.getPorcentajeQuechua() || '____';
 
-  agregarLenguasMaternas() {
-    this.tableService.agregarFila(this.datos, this.lenguasMaternasConfig);
-    this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarLenguasMaternas(index: number) {
-    const deleted = this.tableService.eliminarFila(this.datos, this.lenguasMaternasConfig, index);
-    if (deleted) {
-      this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
+    let html = this.escapeHtml(texto);
+    if (porcentajeCastellano !== '____') {
+      html = html.replace(
+        new RegExp(this.escapeRegex(porcentajeCastellano), 'g'), 
+        `<span class="data-calculated">${this.escapeHtml(porcentajeCastellano)}</span>`
+      );
     }
-  }
-
-  actualizarLenguasMaternas(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.lenguasMaternasConfig, index, field, value);
-    this.formularioService.actualizarDato('lenguasMaternasTabla', this.datos['lenguasMaternasTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  inicializarReligiones() {
-    this.tableService.inicializarTabla(this.datos, this.religionesConfig);
-    this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  agregarReligiones() {
-    this.tableService.agregarFila(this.datos, this.religionesConfig);
-    this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
-
-  eliminarReligiones(index: number) {
-    const deleted = this.tableService.eliminarFila(this.datos, this.religionesConfig, index);
-    if (deleted) {
-      this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
+    if (porcentajeQuechua !== '____') {
+      html = html.replace(
+        new RegExp(this.escapeRegex(porcentajeQuechua), 'g'), 
+        `<span class="data-calculated">${this.escapeHtml(porcentajeQuechua)}</span>`
+      );
     }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  actualizarReligiones(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.religionesConfig, index, field, value);
-    this.formularioService.actualizarDato('religionesTabla', this.datos['religionesTabla']);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  getFieldIdAspectosCulturales(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoAspectosCulturales${prefijo}` : 'textoAspectosCulturales';
   }
+
+  obtenerTextoAspectosCulturales(): string {
+    const fieldId = this.getFieldIdAspectosCulturales();
+    const textoPersonalizado = this.datos[fieldId] || this.datos.textoAspectosCulturales;
+    
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado;
+    }
+    
+    return '';
+  }
+
+  obtenerTextoAspectosCulturalesConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoAspectosCulturales();
+    let html = this.escapeHtml(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
 }
 

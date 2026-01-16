@@ -98,6 +98,8 @@ export class SectionDataLoaderService {
       'petAISD',
       'petTabla',
       'peaOcupacionesTabla',
+      'lenguasMaternasTabla',
+      'religionesTabla',
       'materialesConstruccionAISD',
       'grupoAISD',
       'tablaAISD2TotalPoblacion'

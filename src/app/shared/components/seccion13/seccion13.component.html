@@ -2,11 +2,7 @@
 <h5>A.1.9. Indicadores de salud</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Natalidad y Mortalidad</strong></p>
-<div *ngIf="datos.parrafoSeccion13_natalidad_mortalidad_completo; else natalidadMortalidadCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion13_natalidad_mortalidad_completo)"></div>
-<ng-template #natalidadMortalidadCompletoDefault>
-    <p class="text-justify">El presente ítem proporciona una visión crucial sobre las dinámicas demográficas, reflejando las tendencias en el crecimiento poblacional. De los datos obtenidos en el Puesto de Salud <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> durante el trabajo de campo, se obtiene que en el año 2023 solo ocurrió un nacimiento, mientras que para el 2024 (hasta el 13 de noviembre) se dieron un total de tres (03) nacimientos.</p>
-    <p class="text-justify">Respecto a la mortalidad, según la misma fuente, se obtiene que en el año 2023 se registró un fallecimiento, por suicidio; mientras que para el 2024 no ocurrieron decesos dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span>, hasta la fecha indicada.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion13NatalidadMortalidadCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Indicadores de natalidad y mortalidad – CC {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.9">
 <table class="table-container">
@@ -18,12 +14,12 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.natalidadMortalidadTabla || [])">
+        <tr *ngFor="let item of getNatalidadMortalidadTabla()">
             <td class="table-cell"><span *ngIf="item.anio && item.anio !== '____'" [appDataSource]="'manual'" [fieldName]="'anio'">{{ item.anio }}</span><span *ngIf="!item.anio || item.anio === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.natalidad !== undefined && item.natalidad !== '____'" [appDataSource]="'manual'" [fieldName]="'natalidad'">{{ item.natalidad }}</span><span *ngIf="item.natalidad === undefined || item.natalidad === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.mortalidad !== undefined && item.mortalidad !== '____'" [appDataSource]="'manual'" [fieldName]="'mortalidad'">{{ item.mortalidad }}</span><span *ngIf="item.mortalidad === undefined || item.mortalidad === '____'">____</span></td>
         </tr>
-        <tr *ngIf="!datos.natalidadMortalidadTabla || datos.natalidadMortalidadTabla.length === 0">
+        <tr *ngIf="!getNatalidadMortalidadTabla() || getNatalidadMortalidadTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -34,11 +30,7 @@
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'parrafoSeccion13_morbilidad_completo'">GEADES (2024)</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Morbilidad</strong></p>
-<div *ngIf="datos.parrafoSeccion13_morbilidad_completo; else morbilidadCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion13_morbilidad_completo)"></div>
-<ng-template #morbilidadCompletoDefault>
-    <p class="text-justify">De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.</p>
-    <p class="text-justify">En cuanto a los grupos de morbilidad que se hallan a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca a los poblados de la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion13MorbilidadCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Casos por grupos de morbilidad – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2023)" sectionId="3.1.4.A.1.9">
 <table class="table-container">
@@ -60,13 +52,13 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getMorbilidadSinTotal()">
-            <td class="table-cell"><span *ngIf="item.grupo && item.grupo !== '____'" [appDataSource]="'section'" [fieldName]="'grupo'">{{ item.grupo }}</span><span *ngIf="!item.grupo || item.grupo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.rango0_11 !== undefined && item.rango0_11 !== '____'" [appDataSource]="'section'" [fieldName]="'rango0_11'">{{ item.rango0_11 }}</span><span *ngIf="item.rango0_11 === undefined || item.rango0_11 === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.rango12_17 !== undefined && item.rango12_17 !== '____'" [appDataSource]="'section'" [fieldName]="'rango12_17'">{{ item.rango12_17 }}</span><span *ngIf="item.rango12_17 === undefined || item.rango12_17 === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.rango18_29 !== undefined && item.rango18_29 !== '____'" [appDataSource]="'section'" [fieldName]="'rango18_29'">{{ item.rango18_29 }}</span><span *ngIf="item.rango18_29 === undefined || item.rango18_29 === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.rango30_59 !== undefined && item.rango30_59 !== '____'" [appDataSource]="'section'" [fieldName]="'rango30_59'">{{ item.rango30_59 }}</span><span *ngIf="item.rango30_59 === undefined || item.rango30_59 === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.rango60 !== undefined && item.rango60 !== '____'" [appDataSource]="'section'" [fieldName]="'rango60'">{{ item.rango60 }}</span><span *ngIf="item.rango60 === undefined || item.rango60 === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.grupo && item.grupo !== '____'" [appDataSource]="'manual'" [fieldName]="'grupo'">{{ item.grupo }}</span><span *ngIf="!item.grupo || item.grupo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango0_11 !== undefined && item.rango0_11 !== '____'" [appDataSource]="'manual'" [fieldName]="'rango0_11'">{{ item.rango0_11 }}</span><span *ngIf="item.rango0_11 === undefined || item.rango0_11 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango12_17 !== undefined && item.rango12_17 !== '____'" [appDataSource]="'manual'" [fieldName]="'rango12_17'">{{ item.rango12_17 }}</span><span *ngIf="item.rango12_17 === undefined || item.rango12_17 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango18_29 !== undefined && item.rango18_29 !== '____'" [appDataSource]="'manual'" [fieldName]="'rango18_29'">{{ item.rango18_29 }}</span><span *ngIf="item.rango18_29 === undefined || item.rango18_29 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango30_59 !== undefined && item.rango30_59 !== '____'" [appDataSource]="'manual'" [fieldName]="'rango30_59'">{{ item.rango30_59 }}</span><span *ngIf="item.rango30_59 === undefined || item.rango30_59 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.rango60 !== undefined && item.rango60 !== '____'" [appDataSource]="'manual'" [fieldName]="'rango60'">{{ item.rango60 }}</span><span *ngIf="item.rango60 === undefined || item.rango60 === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'calculated'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getMorbilidadSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -77,7 +69,7 @@
             <td class="table-cell"><strong>{{ getTotalMorbilidadRango60() }}</strong></td>
             <td class="table-cell"><strong>{{ getTotalMorbilidad() }}</strong></td>
         </tr>
-        <tr *ngIf="(!datos.morbiliadTabla || datos.morbiliadTabla.length === 0) && (!datos.morbilidadTabla || datos.morbilidadTabla.length === 0)">
+        <tr *ngIf="getMorbilidadSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -92,8 +84,7 @@
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoAfiliacionSalud'">REUNIS (2024)</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Población afiliada a Seguros de Salud</strong></p>
-<p class="text-justify" *ngIf="datos.textoAfiliacionSalud && datos.textoAfiliacionSalud !== '____'">{{ datos.textoAfiliacionSalud }}</p>
-<p class="text-justify" *ngIf="!datos.textoAfiliacionSalud || datos.textoAfiliacionSalud === '____'">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoAfiliacionSalud'">{{ obtenerNombreComunidadActual() }}</span>, la mayoría de habitantes se encuentran afiliados a algún tipo de seguro de salud. Es así que el Seguro Integral de Salud (SIS) se halla en primer lugar, al abarcar el <span [appDataSource]="'section'">{{ datos.porcentajeSIS || '84,44' }}</span> % de la población. A ello le sigue ESSALUD, con un <span [appDataSource]="'section'">{{ datos.porcentajeESSALUD || '3,56' }}</span> %. Por otro lado, el <span [appDataSource]="'section'">{{ datos.porcentajeSinSeguro || '12,00' }}</span> % de la población no cuenta con ningún tipo de seguro de salud.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoAfiliacionSaludConResaltado()"></p>
 
 <app-table-wrapper title="Población según tipo de seguro de salud afiliado – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.9">
 <table class="table-container">
@@ -106,8 +97,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getAfiliacionSaludSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getAfiliacionSaludSinTotal().length > 0">
@@ -115,7 +106,7 @@
             <td class="table-cell"><strong>{{ getTotalAfiliacionSalud() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.afiliacionSaludTabla || datos.afiliacionSaludTabla.length === 0">
+        <tr *ngIf="getAfiliacionSaludSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -167,9 +158,9 @@
             { field: 'natalidad', label: 'Natalidad', type: 'number', placeholder: '0' },
             { field: 'mortalidad', label: 'Mortalidad', type: 'number', placeholder: '0' }
           ]"
-          [tablaKey]="'natalidadMortalidadTabla'"
+          [tablaKey]="getTablaKeyNatalidadMortalidad()"
           [totalKey]="'anio'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onNatalidadMortalidadTableUpdated()">
         </app-dynamic-table>
       </div>
     </div>
@@ -204,13 +195,13 @@
             { field: 'rango60', label: '60 ->', type: 'number', placeholder: '0' },
             { field: 'casos', label: 'Casos Totales', type: 'number', placeholder: '0', readonly: true }
           ]"
-          [tablaKey]="'morbilidadTabla'"
+          [tablaKey]="getTablaKeyMorbilidad()"
           [totalKey]="'grupo'"
           [customFieldChangeHandler]="onMorbilidadFieldChange.bind(this)"
           (tableUpdated)="onMorbilidadTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['morbilidadTabla'] && datos['morbilidadTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getMorbilidadSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
@@ -254,12 +245,13 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'afiliacionSaludTabla'"
+          [tablaKey]="getTablaKeyAfiliacionSalud()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onAfiliacionSaludFieldChange.bind(this)"
+          (tableUpdated)="onAfiliacionSaludTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['afiliacionSaludTabla'] && datos['afiliacionSaludTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getAfiliacionSaludSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">

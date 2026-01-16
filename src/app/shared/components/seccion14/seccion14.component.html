@@ -1,13 +1,9 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.10. Indicadores de educación</h5>
-<div *ngIf="datos.parrafoSeccion14_indicadores_educacion_intro; else indicadoresEducacionIntroDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion14_indicadores_educacion_intro)"></div>
-<ng-template #indicadoresEducacionIntroDefault>
-    <p class="text-justify">La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.</p>
-</ng-template>
+<div class="text-justify" [innerHTML]="obtenerTextoSeccion14IndicadoresEducacionIntroConResaltado()"></div>
 
 <p style="margin-bottom: 10px;"><strong>a. Nivel Educativo de la población</strong></p>
-<p class="text-justify" *ngIf="datos.textoNivelEducativo && datos.textoNivelEducativo !== '____'">{{ datos.textoNivelEducativo }}</p>
-<p class="text-justify" *ngIf="!datos.textoNivelEducativo || datos.textoNivelEducativo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoNivelEducativo'">{{ obtenerNombreComunidadActual() }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el <span [appDataSource]="'section'">{{ getPorcentajePrimaria() }}</span>. En segundo lugar, se hallan aquellos que cuentan con secundaria (<span [appDataSource]="'section'">{{ getPorcentajeSecundaria() }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un <span [appDataSource]="'section'">{{ getPorcentajeSuperiorNoUniversitaria() }}</span>.</p>
+<div class="text-justify" [innerHTML]="obtenerTextoNivelEducativoConResaltado()"></div>
 
 <app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
 <table class="table-container">
@@ -20,8 +16,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getNivelEducativoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getNivelEducativoSinTotal().length > 0">
@@ -29,7 +25,7 @@
             <td class="table-cell"><strong>{{ getTotalNivelEducativo() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.nivelEducativoTabla || datos.nivelEducativoTabla.length === 0">
+        <tr *ngIf="getNivelEducativoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -51,8 +47,7 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tasa de analfabetismo</strong></p>
-<p class="text-justify" *ngIf="datos.textoTasaAnalfabetismo && datos.textoTasaAnalfabetismo !== '____'">{{ datos.textoTasaAnalfabetismo }}</p>
-<p class="text-justify" *ngIf="!datos.textoTasaAnalfabetismo || datos.textoTasaAnalfabetismo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoTasaAnalfabetismo'">{{ obtenerNombreComunidadActual() }}</span>, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de <span [appDataSource]="'section'">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span [appDataSource]="'section'">{{ getTasaAnalfabetismo() }}</span> en la comunidad.</p>
+<div class="text-justify" [innerHTML]="obtenerTextoTasaAnalfabetismoConResaltado()"></div>
 
 <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
 <table class="table-container">
@@ -65,8 +60,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getTasaAnalfabetismoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.indicador && item.indicador !== '____'" [appDataSource]="'section'" [fieldName]="'indicador'">{{ item.indicador }}</span><span *ngIf="!item.indicador || item.indicador === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.indicador && item.indicador !== '____'" [appDataSource]="'manual'">{{ item.indicador }}</span><span *ngIf="!item.indicador || item.indicador === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
@@ -74,7 +69,7 @@
             <td class="table-cell"><strong>{{ getTotalTasaAnalfabetismo() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.tasaAnalfabetismoTabla || datos.tasaAnalfabetismoTabla.length === 0">
+        <tr *ngIf="getTasaAnalfabetismoSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -93,12 +88,12 @@
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
-        fieldId="parrafoSeccion14_indicadores_educacion_intro"
+        [fieldId]="getFieldIdIndicadoresEducacionIntro()"
         label="Introducción - Indicadores de Educación"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
         [value]="obtenerTextoSeccion14IndicadoresEducacionIntro()"
-        (valueChange)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $event)">
+        (valueChange)="onFieldChange(getFieldIdIndicadoresEducacionIntro(), $event)">
       </app-paragraph-editor>
     </div>
 
@@ -109,12 +104,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="textoNivelEducativo"
+          [fieldId]="getFieldIdNivelEducativo()"
           label="Nivel Educativo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
           [value]="obtenerTextoNivelEducativo()"
-          (valueChange)="onFieldChange('textoNivelEducativo', $event)">
+          (valueChange)="onFieldChange(getFieldIdNivelEducativo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -128,12 +123,13 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'nivelEducativoTabla'"
+          [tablaKey]="getTablaKeyNivelEducativo()"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onNivelEducativoFieldChange.bind(this)"
+          (tableUpdated)="onNivelEducativoTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['nivelEducativoTabla'] && datos['nivelEducativoTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getNivelEducativoSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
@@ -173,12 +169,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="textoTasaAnalfabetismo"
+          [fieldId]="getFieldIdTasaAnalfabetismo()"
           label="Tasa de Analfabetismo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="2"
           [value]="obtenerTextoTasaAnalfabetismo()"
-          (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
+          (valueChange)="onFieldChange(getFieldIdTasaAnalfabetismo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -192,12 +188,13 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'tasaAnalfabetismoTabla'"
+          [tablaKey]="getTablaKeyTasaAnalfabetismo()"
           [totalKey]="'indicador'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onTasaAnalfabetismoFieldChange.bind(this)"
+          (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="datos['tasaAnalfabetismoTabla'] && datos['tasaAnalfabetismoTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getTasaAnalfabetismoSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">

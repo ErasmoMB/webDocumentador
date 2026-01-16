@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -23,44 +24,51 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion13_natalidad_mortalidad_completo', 'parrafoSeccion13_morbilidad_completo', 'natalidadMortalidadTabla', 'morbilidadTabla', 'porcentajeSIS', 'porcentajeESSALUD', 'porcentajeSinSeguro', 'afiliacionSaludTabla', 'textoAfiliacionSalud'];
   
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
+  override fotografiasCache: FotoItem[] = [];
+  override fotografiasFormMulti: FotoItem[] = [];
   private stateSubscription?: Subscription;
 
-  natalidadMortalidadConfig: TableConfig = {
-    tablaKey: 'natalidadMortalidadTabla',
-    totalKey: 'anio',
-    campoTotal: 'natalidad',
-    campoPorcentaje: 'mortalidad',
-    estructuraInicial: [
-      { anio: '2023', natalidad: 0, mortalidad: 0 },
-      { anio: '2024 (hasta 13/11)', natalidad: 0, mortalidad: 0 }
-    ]
-  };
+  get natalidadMortalidadConfig(): TableConfig {
+    return {
+      tablaKey: this.getTablaKeyNatalidadMortalidad(),
+      totalKey: 'anio',
+      campoTotal: 'natalidad',
+      campoPorcentaje: 'mortalidad',
+      estructuraInicial: [
+        { anio: '2023', natalidad: 0, mortalidad: 0 },
+        { anio: '2024 (hasta 13/11)', natalidad: 0, mortalidad: 0 }
+      ]
+    };
+  }
 
-  morbilidadConfig: TableConfig = {
-    tablaKey: 'morbilidadTabla',
-    totalKey: 'grupo',
-    campoTotal: 'casos',
-    campoPorcentaje: 'casos',
-    estructuraInicial: [
-      { grupo: 'Infecciones agudas de las vías respiratorias superiores', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 },
-      { grupo: 'Obesidad y otros de hiperalimentación', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
-    ]
-  };
+  get morbilidadConfig(): TableConfig {
+    return {
+      tablaKey: this.getTablaKeyMorbilidad(),
+      totalKey: 'grupo',
+      campoTotal: 'casos',
+      campoPorcentaje: 'casos',
+      estructuraInicial: [
+        { grupo: 'Infecciones agudas de las vías respiratorias superiores', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 },
+        { grupo: 'Obesidad y otros de hiperalimentación', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
+      ]
+    };
+  }
 
-  afiliacionSaludConfig: TableConfig = {
-    tablaKey: 'afiliacionSaludTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    estructuraInicial: [
-      { categoria: 'SIS', casos: 0, porcentaje: '0%' },
-      { categoria: 'ESSALUD', casos: 0, porcentaje: '0%' },
-      { categoria: 'Sin seguro', casos: 0, porcentaje: '0%' },
-      { categoria: 'Total', casos: 0, porcentaje: '0%' }
-    ],
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
-  };
+  get afiliacionSaludConfig(): TableConfig {
+    return {
+      tablaKey: this.getTablaKeyAfiliacionSalud(),
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      estructuraInicial: [
+        { categoria: 'SIS', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'ESSALUD', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'Sin seguro', casos: 0, porcentaje: '0,00 %' }
+      ],
+      calcularPorcentajes: true,
+      camposParaCalcular: ['casos']
+    };
+  }
 
   constructor(
     formularioService: FormularioService,
@@ -70,7 +78,8 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -82,13 +91,31 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
     
     let hayCambios = false;
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    const tablasConPrefijo = ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla'];
     
     for (const campo of this.watchedFields) {
-      const valorActual = (datosActuales as any)[campo] || null;
-      const valorAnterior = this.datosAnteriores[campo] || null;
+      let valorActual: any = null;
+      let valorAnterior: any = null;
+      
+      if (tablasConPrefijo.includes(campo)) {
+        valorActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, campo, this.seccionId) || null;
+        const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+        valorAnterior = this.datosAnteriores[campoConPrefijo] || this.datosAnteriores[campo] || null;
+      } else {
+        valorActual = (datosActuales as any)[campo] || null;
+        valorAnterior = this.datosAnteriores[campo] || null;
+      }
+      
       if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        if (tablasConPrefijo.includes(campo)) {
+          const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+        } else {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        }
       }
     }
     
@@ -115,20 +142,66 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   }
 
   override obtenerPrefijoGrupo(): string {
-    if (this.seccionId === '3.1.4.A.1.6' || this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
-    if (this.seccionId === '3.1.4.A.2.6' || this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
-    if (this.seccionId === '3.1.4.B.1.6' || this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
-    if (this.seccionId === '3.1.4.B.2.6' || this.seccionId.startsWith('3.1.4.B.2.')) return '_B2';
-    return '';
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  private getTablaNatalidadMortalidad(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'natalidadMortalidadTabla', this.seccionId) || this.datos.natalidadMortalidadTabla || [];
+    return tabla;
+  }
+
+  getTablaKeyNatalidadMortalidad(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `natalidadMortalidadTabla${prefijo}` : 'natalidadMortalidadTabla';
+  }
+
+  getNatalidadMortalidadTabla(): any[] {
+    return this.getTablaNatalidadMortalidad();
+  }
+
+  private getTablaMorbilidad(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'morbilidadTabla', this.seccionId) || this.datos.morbilidadTabla || this.datos.morbiliadTabla || [];
+    return tabla;
+  }
+
+  getTablaKeyMorbilidad(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `morbilidadTabla${prefijo}` : 'morbilidadTabla';
+  }
+
+  getMorbilidadTabla(): any[] {
+    return this.getTablaMorbilidad();
+  }
+
+  private getTablaAfiliacionSalud(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'afiliacionSaludTabla', this.seccionId) || this.datos.afiliacionSaludTabla || [];
+    return tabla;
+  }
+
+  getTablaKeyAfiliacionSalud(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+  }
+
+  getAfiliacionSaludTabla(): any[] {
+    return this.getTablaAfiliacionSalud();
   }
 
   getFotografiasSaludIndicadoresVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return [...this.fotografiasCache];
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(
+    const fotos = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
       groupPrefix
     );
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
+    return this.fotografiasCache;
   }
 
   protected override actualizarFotografiasFormMulti(): void {
@@ -142,7 +215,9 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
+    this.cargarFotografias();
     this.eliminarFilasTotal();
+    this.calcularPorcentajesAfiliacionSalud();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -152,15 +227,17 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   }
 
   private eliminarFilasTotal(): void {
-    if (this.datos['afiliacionSaludTabla'] && Array.isArray(this.datos['afiliacionSaludTabla'])) {
-      const longitudOriginal = this.datos['afiliacionSaludTabla'].length;
-      this.datos['afiliacionSaludTabla'] = this.datos['afiliacionSaludTabla'].filter((item: any) => {
+    const tablaKey = this.getTablaKeyAfiliacionSalud();
+    const tabla = this.getTablaAfiliacionSalud();
+    
+    if (tabla && Array.isArray(tabla)) {
+      const longitudOriginal = tabla.length;
+      const datosFiltrados = tabla.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total') && !categoria.includes('referencial');
       });
-      if (this.datos['afiliacionSaludTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('afiliacionSaludTabla', this.datos['afiliacionSaludTabla']);
-        this.cdRef.detectChanges();
+      if (datosFiltrados.length !== longitudOriginal) {
+        this.formularioService.actualizarDato(tablaKey, datosFiltrados);
       }
     }
   }
@@ -178,20 +255,14 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
       this.PHOTO_PREFIX,
       groupPrefix
     );
-    this.fotografiasCache = [...fotos];
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
     this.cdRef.markForCheck();
   }
 
   onFotografiasChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    this.imageService.saveImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      fotografias,
-      groupPrefix
-    );
-    this.fotografiasCache = [...fotografias];
+    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasCache = [...fotografias];
     this.cdRef.detectChanges();
   }
 
@@ -199,17 +270,41 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     if (this.datos.parrafoSeccion13_natalidad_mortalidad_completo) {
       return this.datos.parrafoSeccion13_natalidad_mortalidad_completo;
     }
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     return `El presente ítem proporciona una visión crucial sobre las dinámicas demográficas, reflejando las tendencias en el crecimiento poblacional. De los datos obtenidos en el Puesto de Salud ${grupoAISD} durante el trabajo de campo, se obtiene que en el año 2023 solo ocurrió un nacimiento, mientras que para el 2024 (hasta el 13 de noviembre) se dieron un total de tres (03) nacimientos.\n\nRespecto a la mortalidad, según la misma fuente, se obtiene que en el año 2023 se registró un fallecimiento, por suicidio; mientras que para el 2024 no ocurrieron decesos dentro de la CC ${grupoAISD}, hasta la fecha indicada.`;
+  }
+
+  obtenerTextoSeccion13NatalidadMortalidadCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion13NatalidadMortalidadCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let textoConResaltado = texto
+      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(/\n\n/g, '<br><br>');
+    
+    return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
 
   obtenerTextoSeccion13MorbilidadCompleto(): string {
     if (this.datos.parrafoSeccion13_morbilidad_completo) {
       return this.datos.parrafoSeccion13_morbilidad_completo;
     }
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const distrito = this.datos.distritoSeleccionado || '____';
     return `De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC ${grupoAISD} son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.\n\nEn cuanto a los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca a los poblados de la CC ${grupoAISD}) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.`;
+  }
+
+  obtenerTextoSeccion13MorbilidadCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion13MorbilidadCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const distrito = this.datos.distritoSeleccionado || '____';
+    
+    let textoConResaltado = texto
+      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
+      .replace(/\n\n/g, '<br><br>');
+    
+    return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
 
   obtenerTextoAfiliacionSalud(): string {
@@ -217,39 +312,96 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
       return this.datos.textoAfiliacionSalud;
     }
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
-    const porcentajeSIS = this.datos.porcentajeSIS || '84,44';
-    const porcentajeESSALUD = this.datos.porcentajeESSALUD || '3,56';
-    const porcentajeSinSeguro = this.datos.porcentajeSinSeguro || '12,00';
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const porcentajeSIS = this.getPorcentajeSIS() || '____';
+    const porcentajeESSALUD = this.getPorcentajeESSALUD() || '____';
+    const porcentajeSinSeguro = this.getPorcentajeSinSeguro() || '____';
     
     return `Dentro de la CC ${grupoAISD}, la mayoría de habitantes se encuentran afiliados a algún tipo de seguro de salud. Es así que el Seguro Integral de Salud (SIS) se halla en primer lugar, al abarcar el ${porcentajeSIS} % de la población. A ello le sigue ESSALUD, con un ${porcentajeESSALUD} %. Por otro lado, el ${porcentajeSinSeguro} % de la población no cuenta con ningún tipo de seguro de salud.`;
   }
 
-  onMorbilidadFieldChange(index: number, field: string, value: any) {
-    if (!this.datos['morbilidadTabla'] && !this.datos['morbiliadTabla']) {
-      this.tableService.inicializarTabla(this.datos, this.morbilidadConfig);
+  obtenerTextoAfiliacionSaludConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoAfiliacionSalud();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const porcentajeSIS = this.getPorcentajeSIS() || '____';
+    const porcentajeESSALUD = this.getPorcentajeESSALUD() || '____';
+    const porcentajeSinSeguro = this.getPorcentajeSinSeguro() || '____';
+    
+    let textoConResaltado = texto
+      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    
+    if (porcentajeSIS !== '____') {
+      textoConResaltado = textoConResaltado.replace(
+        new RegExp(`${this.escapeRegex(porcentajeSIS)}\\s*%`, 'g'),
+        `<span class="data-calculated">${this.escapeHtml(porcentajeSIS)} %</span>`
+      );
     }
-    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
-    if (tabla && tabla[index]) {
-      tabla[index][field] = value;
+    if (porcentajeESSALUD !== '____') {
+      textoConResaltado = textoConResaltado.replace(
+        new RegExp(`${this.escapeRegex(porcentajeESSALUD)}\\s*%`, 'g'),
+        `<span class="data-calculated">${this.escapeHtml(porcentajeESSALUD)} %</span>`
+      );
+    }
+    if (porcentajeSinSeguro !== '____') {
+      textoConResaltado = textoConResaltado.replace(
+        new RegExp(`${this.escapeRegex(porcentajeSinSeguro)}\\s*%`, 'g'),
+        `<span class="data-calculated">${this.escapeHtml(porcentajeSinSeguro)} %</span>`
+      );
+    }
+    
+    return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
+  }
+
+  getPorcentajeSIS(): string {
+    const tabla = this.getAfiliacionSaludSinTotal();
+    const itemSIS = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('sis'));
+    return itemSIS ? itemSIS.porcentaje || '____' : '____';
+  }
+
+  getPorcentajeESSALUD(): string {
+    const tabla = this.getAfiliacionSaludSinTotal();
+    const itemESSALUD = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('essalud'));
+    return itemESSALUD ? itemESSALUD.porcentaje || '____' : '____';
+  }
+
+  getPorcentajeSinSeguro(): string {
+    const tabla = this.getAfiliacionSaludSinTotal();
+    const itemSinSeguro = tabla.find((item: any) => item.categoria && (item.categoria.toString().toLowerCase().includes('sin seguro') || item.categoria.toString().toLowerCase().includes('sin seg')));
+    return itemSinSeguro ? itemSinSeguro.porcentaje || '____' : '____';
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  onMorbilidadFieldChange(rowIndex: number, field: string, value: any) {
+    const tablaKey = this.getTablaKeyMorbilidad();
+    const tabla = this.getTablaMorbilidad();
+    if (tabla && tabla[rowIndex]) {
+      tabla[rowIndex][field] = value;
       if (field !== 'casos' && field !== 'grupo') {
         this.calcularTotalesMorbilidad();
       }
-      const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
-      this.formularioService.actualizarDato(key, tabla);
+      this.formularioService.actualizarDato(tablaKey, tabla);
     }
   }
 
   onMorbilidadTableUpdated() {
     this.calcularTotalesMorbilidad();
-    const key = this.datos['morbilidadTabla'] ? 'morbilidadTabla' : 'morbiliadTabla';
-    this.formularioService.actualizarDato(key, this.datos[key]);
-    this.actualizarDatos();
+    const tablaKey = this.getTablaKeyMorbilidad();
+    const tabla = this.getTablaMorbilidad();
+    this.formularioService.actualizarDato(tablaKey, tabla);
     this.cdRef.detectChanges();
   }
 
   calcularTotalesMorbilidad() {
-    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
+    const tabla = this.getTablaMorbilidad();
     if (!tabla || tabla.length === 0) {
       return;
     }
@@ -262,13 +414,16 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
       const total = rango0_11 + rango12_17 + rango18_29 + rango30_59 + rango60;
       item.casos = total;
     });
+    const tablaKey = this.getTablaKeyMorbilidad();
+    this.formularioService.actualizarDato(tablaKey, tabla);
   }
 
   getAfiliacionSaludSinTotal(): any[] {
-    if (!this.datos?.afiliacionSaludTabla || !Array.isArray(this.datos.afiliacionSaludTabla)) {
+    const tabla = this.getTablaAfiliacionSalud();
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.afiliacionSaludTabla.filter((item: any) => {
+    return tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total') && !categoria.includes('referencial');
     });
@@ -284,7 +439,7 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   }
 
   getMorbilidadSinTotal(): any[] {
-    const tabla = this.datos['morbilidadTabla'] || this.datos['morbiliadTabla'];
+    const tabla = this.getTablaMorbilidad();
     if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
@@ -346,6 +501,57 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
       return sum + rango;
     }, 0);
     return total.toString();
+  }
+
+  onNatalidadMortalidadTableUpdated(): void {
+    const tablaKey = this.getTablaKeyNatalidadMortalidad();
+    const tabla = this.getTablaNatalidadMortalidad();
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.cdRef.detectChanges();
+  }
+
+  onAfiliacionSaludFieldChange(rowIndex: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyAfiliacionSalud();
+    const tabla = this.getTablaAfiliacionSalud();
+    if (tabla && tabla[rowIndex]) {
+      tabla[rowIndex][field] = value;
+      this.formularioService.actualizarDato(tablaKey, tabla);
+      this.calcularPorcentajesAfiliacionSalud();
+    }
+  }
+
+  onAfiliacionSaludTableUpdated(): void {
+    const tablaKey = this.getTablaKeyAfiliacionSalud();
+    const tabla = this.getTablaAfiliacionSalud();
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.calcularPorcentajesAfiliacionSalud();
+    this.cdRef.detectChanges();
+  }
+
+  private calcularPorcentajesAfiliacionSalud(): void {
+    const tabla = this.getTablaAfiliacionSalud();
+    if (!tabla || tabla.length === 0) return;
+
+    const datosSinTotal = tabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total') && !categoria.includes('referencial');
+    });
+
+    const total = datosSinTotal.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+
+    if (total > 0) {
+      datosSinTotal.forEach((item: any) => {
+        const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+        const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',');
+        item.porcentaje = porcentaje + ' %';
+      });
+      
+      const tablaKey = this.getTablaKeyAfiliacionSalud();
+      this.formularioService.actualizarDato(tablaKey, tabla);
+    }
   }
 }
 

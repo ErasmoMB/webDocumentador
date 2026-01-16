@@ -1,7 +1,7 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.5. Viviendas</h5>
-<p class="text-justify" *ngIf="datos.textoViviendas && datos.textoViviendas !== '____'">{{ datos.textoViviendas }}</p>
-<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span [appDataSource]="'section'" [fieldName]="'textoViviendas'">{{ obtenerNombreComunidadActual() }}</span> se hallan un total de <span [appDataSource]="'section'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span [appDataSource]="'section'">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span [appDataSource]="'section'">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
+<p class="text-justify" *ngIf="datos.textoViviendas && datos.textoViviendas !== '____'" [innerHTML]="obtenerTextoViviendasConResaltado()"></p>
+<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'" [innerHTML]="obtenerTextoViviendasConResaltado()"></p>
 
 <app-table-wrapper title="Condición de ocupación de las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
@@ -14,8 +14,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getCondicionOcupacionSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getCondicionOcupacionSinTotal().length > 0">
@@ -23,7 +23,7 @@
             <td class="table-cell"><strong>{{ getTotalCondicionOcupacion() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="!datos.condicionOcupacionTabla || datos.condicionOcupacionTabla.length === 0">
+        <tr *ngIf="getCondicionOcupacionSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -34,10 +34,8 @@
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoEstructura'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
-<p class="text-justify" *ngIf="datos.textoEstructura && datos.textoEstructura !== '____'">{{ datos.textoEstructura }}</p>
-    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ obtenerNombreComunidadActual() }}</span>, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el <span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'adobe') }}</span>. A ello le complementa el material de triplay / calamina / estera (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'triplay') }}</span>).</p>
-    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un <span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ getPorcentajeMaterial('techos', 'calamina') }}</span>. El porcentaje restante consiste en triplay / estera / carrizo (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('techos', 'triplay') }}</span>) y en tejas (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('techos', 'tejas') }}</span>).</p>
-    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ getPorcentajeMaterial('pisos', 'tierra') }}</span>). Por otra parte, el porcentaje restante (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('pisos', 'cemento') }}</span>) consiste en cemento.</p>
+<div *ngIf="datos.textoEstructura && datos.textoEstructura !== '____'" class="text-justify" [innerHTML]="obtenerTextoEstructuraConResaltado()"></div>
+<div *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'" class="text-justify" [innerHTML]="obtenerTextoEstructuraConResaltado()"></div>
 
 <app-table-wrapper title="Tipos de materiales de las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
@@ -50,19 +48,21 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getTiposMaterialesSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'section'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getTiposMaterialesSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>____</strong></td>
-            <td class="table-cell"><strong>{{ getTotalTiposMateriales() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="!datos.tiposMaterialesTabla || datos.tiposMaterialesTabla.length === 0">
+        <ng-container *ngFor="let categoria of getCategoriasMateriales()">
+            <tr *ngFor="let item of getItemsPorCategoria(categoria)">
+                <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+                <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'manual'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
+                <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+                <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            </tr>
+            <tr class="total-row" *ngIf="getItemsPorCategoria(categoria).length > 0">
+                <td class="table-cell"><strong>Total</strong></td>
+                <td class="table-cell"><strong>—</strong></td>
+                <td class="table-cell"><strong>{{ getTotalPorCategoria(categoria) }}</strong></td>
+                <td class="table-cell"><strong>100,00 %</strong></td>
+            </tr>
+        </ng-container>
+        <tr *ngIf="getCategoriasMateriales().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
@@ -112,12 +112,12 @@
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
-        [tablaKey]="'condicionOcupacionTabla'"
+        [tablaKey]="getTablaKeyCondicionOcupacion()"
         [totalKey]="'categoria'"
         [customFieldChangeHandler]="onCondicionOcupacionFieldChange.bind(this)"
         (tableUpdated)="onCondicionOcupacionTableUpdated()">
       </app-dynamic-table>
-      <div class="table-editor" *ngIf="datos['condicionOcupacionTabla'] && datos['condicionOcupacionTabla'].length > 0" style="margin-top: 10px;">
+      <div class="table-editor" *ngIf="getCondicionOcupacionSinTotal().length > 0" style="margin-top: 10px;">
         <table class="editor-table">
           <tbody>
             <tr class="total-row">
@@ -167,11 +167,12 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'tiposMaterialesTabla'"
+          [tablaKey]="getTablaKeyTiposMateriales()"
           [totalKey]="'categoria'"
+          [customFieldChangeHandler]="onTiposMaterialesFieldChange.bind(this)"
           (tableUpdated)="onTiposMaterialesTableUpdated()">
         </app-dynamic-table>
-        <div class="table-editor" *ngIf="datos['tiposMaterialesTabla'] && datos['tiposMaterialesTabla'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getTiposMaterialesSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">

@@ -103,6 +103,16 @@ export class FieldMappingService {
       dataSource: 'backend',
       endpoint: '/economicos/principales'
     });
+    this.fieldMappings.set('lenguasMaternasTabla', { 
+      fieldName: 'lenguasMaternasTabla', 
+      dataSource: 'backend',
+      endpoint: '/vistas/lenguas-ubicacion'
+    });
+    this.fieldMappings.set('religionesTabla', { 
+      fieldName: 'religionesTabla', 
+      dataSource: 'backend',
+      endpoint: '/vistas/religiones-ubicacion'
+    });
     this.fieldMappings.set('tablaAISD2Punto', { fieldName: 'tablaAISD2Punto', dataSource: 'backend' });
     this.fieldMappings.set('tablaAISD2Codigo', { fieldName: 'tablaAISD2Codigo', dataSource: 'backend' });
     this.fieldMappings.set('tablaAISD2Poblacion', { fieldName: 'tablaAISD2Poblacion', dataSource: 'backend' });
@@ -261,6 +271,54 @@ export class FieldMappingService {
             console.warn(`⚠️ [FieldMapping] PEA Ocupaciones: No hay datos válidos después de transformar`);
           }
           return transformado;
+        })
+      );
+    }
+
+    if (fieldName === 'lenguasMaternasTabla') {
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => {
+          return this.backendApi.getLenguasPorUbicacion(codigo).pipe(
+            map(response => {
+              const datos = response?.data || response || [];
+              const datosArray = Array.isArray(datos) ? datos : [];
+              
+              return datosArray.map((item: any) => ({
+                categoria: item.lengua || '',
+                casos: parseInt(item.total_hablantes || item.total_personas || '0') || 0
+              }));
+            })
+          );
+        },
+        this.agregarDatosDirectos.bind(this)
+      ).pipe(
+        map(datosAgregados => {
+          return this.calcularPorcentajesDirectos(datosAgregados);
+        })
+      );
+    }
+
+    if (fieldName === 'religionesTabla') {
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => {
+          return this.backendApi.getReligionesPorUbicacion(codigo).pipe(
+            map(response => {
+              const datos = response?.data || response || [];
+              const datosArray = Array.isArray(datos) ? datos : [];
+              
+              return datosArray.map((item: any) => ({
+                categoria: item.religion || '',
+                casos: parseInt(item.total_personas || '0') || 0
+              }));
+            })
+          );
+        },
+        this.agregarDatosDirectos.bind(this)
+      ).pipe(
+        map(datosAgregados => {
+          return this.calcularPorcentajesDirectos(datosAgregados);
         })
       );
     }
@@ -629,6 +687,48 @@ export class FieldMappingService {
     });
 
     return resultado;
+  }
+
+  private agregarDatosDirectos(acumulado: any[], nuevos: any[]): any[] {
+    if (!Array.isArray(nuevos) || nuevos.length === 0) {
+      return acumulado;
+    }
+
+    const resultado = [...acumulado];
+    
+    nuevos.forEach((nuevoItem: any) => {
+      if (!nuevoItem.categoria || nuevoItem.casos === 0) return;
+      
+      const existente = resultado.find((item: any) => item.categoria === nuevoItem.categoria);
+      if (existente) {
+        existente.casos = (existente.casos || 0) + (nuevoItem.casos || 0);
+      } else {
+        resultado.push({ ...nuevoItem });
+      }
+    });
+
+    return resultado;
+  }
+
+  private calcularPorcentajesDirectos(datos: any[]): any[] {
+    if (!Array.isArray(datos) || datos.length === 0) {
+      return [];
+    }
+
+    const total = datos.reduce((sum: number, item: any) => sum + (item.casos || 0), 0);
+    
+    if (total === 0) {
+      return [];
+    }
+
+    return datos
+      .filter((item: any) => item.categoria && item.casos > 0)
+      .sort((a: any, b: any) => b.casos - a.casos)
+      .map((item: any) => ({
+        categoria: item.categoria,
+        casos: item.casos,
+        porcentaje: ((item.casos / total) * 100).toFixed(2).replace('.', ',') + ' %'
+      }));
   }
 
   private obtenerPrefijoDeSeccionId(seccionId: string): string {

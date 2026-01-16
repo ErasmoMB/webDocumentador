@@ -2,11 +2,7 @@
 <h5>A.1.7. Infraestructura en transportes y comunicaciones</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Transporte</strong></p>
-<div *ngIf="datos.parrafoSeccion11_transporte_completo; else transporteCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion11_transporte_completo)"></div>
-<ng-template #transporteCompletoDefault>
-    <p class="text-justify">En la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span>, la infraestructura de transporte es limitada. Dentro de la comunidad solo se encuentran trochas carrozables que permiten llegar al anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro de la comunidad también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al anexo o centro administrativo comunal.</p>
-    <p class="text-justify">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la comunidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span [appDataSource]="'section'" [fieldName]="'provinciaSeleccionada'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span [appDataSource]="'section'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span [appDataSource]="'manual'">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los comuneros para desplazarse a ciudades más grandes.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion11TransporteCompletoConResaltado()"></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -20,11 +16,7 @@
 </app-image-upload>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
-<div *ngIf="datos.parrafoSeccion11_telecomunicaciones_completo; else telecomunicacionesCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion11_telecomunicaciones_completo)"></div>
-<ng-template #telecomunicacionesCompletoDefault>
-    <p class="text-justify">En la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span>, la infraestructura en telecomunicaciones presenta algunas limitaciones, aunque existen servicios disponibles para la población. En cuanto a radiodifusión, no es posible captar señal de emisoras provinciales o nacionales. Respecto a la señal de televisión, la comunidad cuenta con acceso a América TV (canal 4) a través de señal abierta, gracias a una antena de la municipalidad que retransmite este canal, lo que garantiza una opción de entretenimiento y noticias. Adicionalmente, algunas familias tienen contratado el servicio de DIRECTV, el cual brinda acceso a televisión satelital.</p>
-    <p class="text-justify">En lo que respecta a la telefonía móvil, la cobertura es restringida y solo las operadoras de Movistar y Entel logran captar señal en la comunidad, lo cual limita las opciones de comunicación para los habitantes. Por otro lado, el acceso a internet depende únicamente de Movistar, ya que los comuneros solo pueden conectarse a través de los datos móviles proporcionados por esta empresa. Además, cabe mencionar que, si bien existe acceso a internet, la calidad y estabilidad de la conexión pueden ser deficientes, especialmente en las zonas más alejadas dentro de la comunidad.</p>
-</ng-template>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion11TelecomunicacionesCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Servicios de telecomunicaciones – CC {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.7">
 <table class="table-container">
@@ -35,11 +27,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.telecomunicacionesTabla || [])">
-            <td class="table-cell"><span *ngIf="item.medio && item.medio !== '____'" [appDataSource]="'manual'" [fieldName]="'medio'">{{ item.medio }}</span><span *ngIf="!item.medio || item.medio === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.descripcion && item.descripcion !== '____'" [appDataSource]="'manual'" [fieldName]="'descripcion'">{{ item.descripcion }}</span><span *ngIf="!item.descripcion || item.descripcion === '____'">____</span></td>
+        <tr *ngFor="let item of getTelecomunicacionesTabla()">
+            <td class="table-cell"><span *ngIf="item.medio && item.medio !== '____'" [appDataSource]="'manual'">{{ item.medio }}</span><span *ngIf="!item.medio || item.medio === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.descripcion && item.descripcion !== '____'" [appDataSource]="'manual'">{{ item.descripcion }}</span><span *ngIf="!item.descripcion || item.descripcion === '____'">____</span></td>
         </tr>
-        <tr *ngIf="!datos.telecomunicacionesTabla || datos.telecomunicacionesTabla.length === 0">
+        <tr *ngIf="getTelecomunicacionesTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
         </tr>
@@ -140,7 +132,7 @@
             { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Emisoras de radio' },
             { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: '--' }
           ]"
-          [tablaKey]="'telecomunicacionesTabla'"
+          [tablaKey]="getTablaKeyTelecomunicaciones()"
           [totalKey]="'medio'"
           (tableUpdated)="cdRef.detectChanges()">
         </app-dynamic-table>
