@@ -35,15 +35,15 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos?.['indiceDesarrolloHumanoTabla'] || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.poblacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.idh || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.esperanzaVida || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.educacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankEducacion2 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.anosEducacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankAnios || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.ingreso || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.rankIngresoFinal || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'poblacion'">{{ item.poblacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'idh'">{{ item.idh || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'esperanzaVida'">{{ item.esperanzaVida || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'educacion'">{{ item.educacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankEducacion2'">{{ item.rankEducacion2 || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'anosEducacion'">{{ item.anosEducacion || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankAnios'">{{ item.rankAnios || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'ingreso'">{{ item.ingreso || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'rankIngresoFinal'">{{ item.rankIngresoFinal || '____' }}</td>
         </tr>
         <tr *ngIf="!datos?.['indiceDesarrolloHumanoTabla'] || (datos?.['indiceDesarrolloHumanoTabla'] || []).length === 0">
             <td class="table-cell">____</td>

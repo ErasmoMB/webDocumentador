@@ -74,17 +74,19 @@ export class TableManagementService {
   ): boolean {
     const { tablaKey, totalKey } = config;
     const tabla = datos[tablaKey] || [];
-    
-    if (tabla.length > 1) {
-      const item = tabla[index];
-      const valor = item[totalKey];
-      
-      if (!valor || !valor.toString().toLowerCase().includes('total')) {
-        tabla.splice(index, 1);
-        return true;
-      }
+
+    if (!tabla.length) return false;
+
+    const item = tabla[index];
+    const valor = item?.[totalKey];
+
+    // No eliminar filas de totales si existen
+    if (valor && valor.toString().toLowerCase().includes('total')) {
+      return false;
     }
-    return false;
+
+    tabla.splice(index, 1);
+    return true;
   }
 
   actualizarFila(

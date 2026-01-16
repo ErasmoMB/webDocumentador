@@ -13,8 +13,6 @@
   --label-color: #0b274e;
   --highlight-color: #ffff00;
   --highlight-text: #000000;
-  --automatic-color: #9c27b0;
-  --automatic-text: #ffffff;
   --bg-form: #f7f7f7;
   --bg-light: #ffffff;
   --bg-highlight: #fffaf0;
@@ -445,14 +443,6 @@ li {
   font-weight: bold;
   color: var(--highlight-text);
   background-color: var(--highlight-color);
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-
-.data-automatic {
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #9c27b0;
   padding: 2px 4px;
   border-radius: 3px;
 }

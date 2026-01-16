@@ -12,8 +12,8 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos?.['festividades'] || [])">
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.festividad || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.fecha || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'festividad'">{{ item.festividad || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'fecha'">{{ item.fecha || '____' }}</td>
         </tr>
         <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
             <td class="table-cell" [appDataSource]="'manual'">Carnavales</td>
@@ -74,14 +74,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos?.['mapaActores'] || []); let i = index">
-            <td class="table-cell" *ngIf="shouldShowCategoriaCell(i)" [attr.rowspan]="getCategoriaRowSpan(item.categoria)" [appDataSource]="'manual'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.espacio || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.cargo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.actor || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.aFavor === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.neutro === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.enContra === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'">{{ item.percepcion || '____' }}</td>
+            <td class="table-cell" *ngIf="shouldShowCategoriaCell(i)" [attr.rowspan]="getCategoriaRowSpan(item.categoria)" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'espacio'">{{ item.espacio || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'cargo'">{{ item.cargo || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'actor'">{{ item.actor || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'aFavor'">{{ item.aFavor === 'X' ? 'X' : '' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'neutro'">{{ item.neutro === 'X' ? 'X' : '' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'enContra'">{{ item.enContra === 'X' ? 'X' : '' }}</td>
+            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'percepcion'">{{ item.percepcion || '____' }}</td>
         </tr>
         <tr *ngIf="!datos?.['mapaActores'] || (datos?.['mapaActores'] || []).length === 0">
             <td class="table-cell" colspan="8">____</td>

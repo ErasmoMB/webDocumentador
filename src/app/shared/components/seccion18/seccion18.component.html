@@ -1,7 +1,7 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
 <p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas !== '____'">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[0] }}</p>
-<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span> se halla un total de <span [appDataSource]="'automatic'">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span [appDataSource]="'automatic'">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span [appDataSource]="'automatic'">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ datos.grupoAISD || 'Ayroca' }}</span> se halla un total de <span [appDataSource]="'section'">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
 
 <app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.14">
 <table class="table-container">
@@ -14,9 +14,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.nbiCCAyrocaTabla || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.nbiCCAyrocaTabla || datos.nbiCCAyrocaTabla.length === 0">
             <td class="table-cell">____</td>
@@ -26,10 +26,10 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+<p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 <p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1]">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1] }}</p>
-<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">Por otro lado, a nivel distrital de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, de un total de <span [appDataSource]="'automatic'">{{ getTotalUnidadesDistrito() }}</span> unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (<span [appDataSource]="'automatic'">{{ getPorcentajeSinServiciosDistrito() }}</span>), seguida de la de viviendas con hacinamiento (<span [appDataSource]="'automatic'">{{ getPorcentajeHacinamientoDistrito() }}</span>). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span> con el distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>.</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">Por otro lado, a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, de un total de <span [appDataSource]="'section'">{{ getTotalUnidadesDistrito() }}</span> unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosDistrito() }}</span>), seguida de la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoDistrito() }}</span>). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span> con el distrito de <span [appDataSource]="'section'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>.</p>
 
 <app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.14">
 <table class="table-container">
@@ -42,9 +42,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.nbiDistritoCahuachoTabla || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.nbiDistritoCahuachoTabla || datos.nbiDistritoCahuachoTabla.length === 0">
             <td class="table-cell">____</td>

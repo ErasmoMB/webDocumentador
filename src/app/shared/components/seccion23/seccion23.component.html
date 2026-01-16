@@ -2,7 +2,7 @@
 <h5>B.1.2. Indicadores y distribución de la Población Económicamente Activa</h5>
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población en edad de trabajar (PET)</strong></p>
 <p class="text-justify">La población cumplida de 14 años de edad, se encuentra en edad de trabajar, en concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001.</p>
-<p class="text-justify">La población en edad de trabajar (PET) en el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> representa un <span [appDataSource]="'automatic'">{{ getPorcentajePET() }}</span> de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el <span [appDataSource]="'automatic'">{{ getPorcentajeGrupoPET('45 a 64') }}</span> de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el <span [appDataSource]="'automatic'">{{ getPorcentajeGrupoPET('65') }}</span> de la PET.</p>
+<p class="text-justify">La población en edad de trabajar (PET) en el CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> representa un <span [appDataSource]="'section'">{{ getPorcentajePET() }}</span> de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el <span [appDataSource]="'section'">{{ getPorcentajeGrupoPET('45 a 64') }}</span> de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el <span [appDataSource]="'section'">{{ getPorcentajeGrupoPET('65') }}</span> de la PET.</p>
 
 <app-table-wrapper title="PET según grupos de edad – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.2">
 <table class="table-container">
@@ -15,9 +15,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.petGruposEdadAISI || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.petGruposEdadAISI || datos.petGruposEdadAISI.length === 0">
             <td class="table-cell">____</td>
@@ -27,13 +27,13 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+<p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'distritoSeleccionado'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
-<p class="text-justify">No obstante, los indicadores de la Población Económicamente Activa (PEA), tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, jurisdicción donde se ubica el AISD en cuestión, es de <span [appDataSource]="'automatic'">{{ getPoblacionDistrital() }}</span> personas, y que la PET (de 14 años a más) al mismo nivel está conformada por <span [appDataSource]="'automatic'">{{ getPETDistrital() }}</span> personas.</p>
+<p class="text-justify">No obstante, los indicadores de la Población Económicamente Activa (PEA), tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, jurisdicción donde se ubica el AISD en cuestión, es de <span [appDataSource]="'section'">{{ getPoblacionDistrital() }}</span> personas, y que la PET (de 14 años a más) al mismo nivel está conformada por <span [appDataSource]="'section'">{{ getPETDistrital() }}</span> personas.</p>
 
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población Económicamente Activa (PEA)</strong></p>
 <p class="text-justify" *ngIf="datos.textoPEA_AISI && datos.textoPEA_AISI !== '____'">{{ datos.textoPEA_AISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoPEA_AISI || datos.textoPEA_AISI === '____'">La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, jurisdicción que abarca a su capital distrital, el CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.</p>
+<p class="text-justify" *ngIf="!datos.textoPEA_AISI || datos.textoPEA_AISI === '____'">La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de <span [appDataSource]="'section'" [fieldName]="'textoPEA_AISI'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, jurisdicción que abarca a su capital distrital, el CP <span [appDataSource]="'section'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.</p>
 
 <app-table-wrapper title="Conformación de la PEA y No PEA, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.2">
 <table class="table-container">
@@ -50,13 +50,13 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.peaDistritoSexoTabla || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.hombres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentajeHombres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.mujeres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentajeMujeres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeHombres'">{{ item.porcentajeHombres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'mujeres'">{{ item.mujeres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeMujeres'">{{ item.porcentajeMujeres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.peaDistritoSexoTabla || datos.peaDistritoSexoTabla.length === 0">
             <td class="table-cell">____</td>
@@ -70,20 +70,20 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
-<p class="text-justify">Del cuadro precedente, se aprecia que la PEA del distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> representa un <span [appDataSource]="'automatic'">{{ getPorcentajePEA() }}</span> del total de la PET de la jurisdicción, mientras que la No PEA abarca el <span [appDataSource]="'automatic'">{{ getPorcentajeNoPEA() }}</span> restante. Asimismo, se visualiza que los hombres se hallan predominantemente dentro de la PEA, pues el <span [appDataSource]="'automatic'">{{ getPorcentajeHombresPEA() }}</span> se halla en esta categoría. Por otro lado, la mayor parte de las mujeres se hallan en el indicador de No PEA con un <span [appDataSource]="'automatic'">{{ getPorcentajeMujeresNoPEA() }}</span>.</p>
+<p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'distritoSeleccionado'"> Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+<p class="text-justify">Del cuadro precedente, se aprecia que la PEA del distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> representa un <span [appDataSource]="'section'">{{ getPorcentajePEA() }}</span> del total de la PET de la jurisdicción, mientras que la No PEA abarca el <span [appDataSource]="'section'">{{ getPorcentajeNoPEA() }}</span> restante. Asimismo, se visualiza que los hombres se hallan predominantemente dentro de la PEA, pues el <span [appDataSource]="'section'">{{ getPorcentajeHombresPEA() }}</span> se halla en esta categoría. Por otro lado, la mayor parte de las mujeres se hallan en el indicador de No PEA con un <span [appDataSource]="'section'">{{ getPorcentajeMujeresNoPEA() }}</span>.</p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b.1. Situación del empleo (dependiente o independiente)</strong></p>
-<p class="text-justify">La mayor parte de la población de la capital distrital de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se dedica a actividades agropecuarias, siendo la agricultura y la ganadería las principales fuentes de empleo independiente. En el sector agrícola, los cultivos predominantes son la papa, cebada, habas, trigo y oca, productos que abastecen tanto el consumo local como el comercio en menor medida. Asimismo, la ganadería juega un papel importante, con la crianza de vacunos y ovinos como las principales actividades ganaderas de la zona. Aunque en menor proporción, algunos pobladores también se dedican al comercio, complementando así su ingreso económico.</p>
+<p class="text-justify">La mayor parte de la población de la capital distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se dedica a actividades agropecuarias, siendo la agricultura y la ganadería las principales fuentes de empleo independiente. En el sector agrícola, los cultivos predominantes son la papa, cebada, habas, trigo y oca, productos que abastecen tanto el consumo local como el comercio en menor medida. Asimismo, la ganadería juega un papel importante, con la crianza de vacunos y ovinos como las principales actividades ganaderas de la zona. Aunque en menor proporción, algunos pobladores también se dedican al comercio, complementando así su ingreso económico.</p>
 <p class="text-justify">En cuanto al empleo dependiente, este sector es reducido y está conformado principalmente por trabajadores de la municipalidad distrital, quienes cumplen funciones administrativas y operativas; el personal de las instituciones educativas que ofrecen servicios de enseñanza en la localidad; y los empleados del puesto de salud que brindan atención básica a los habitantes. Este tipo de empleo proporciona estabilidad a un pequeño grupo de la población, pero no es la fuente principal de ingresos entre los habitantes. En general, el empleo independiente predomina como el principal medio de subsistencia para la mayoría de los pobladores.</p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b.2. Ingresos de la población</strong></p>
-<p class="text-justify">Los ingresos de la población en la capital distrital de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. La agricultura, en particular, proporciona una fuente regular de alimentos y productos que, en su mayoría, se destinan al autoconsumo, mientras que un porcentaje menor es comercializado. Los ingresos provenientes de la ganadería dependen de la venta de animales en pie, especialmente vacunos y ovinos, así como de productos derivados como el queso, el cual se vende a intermediarios. Sin embargo, las fluctuaciones en los precios del mercado, así como las limitaciones en infraestructura y acceso a mercados directos, afectan los ingresos de los habitantes, generando una inestabilidad económica.</p>
+<p class="text-justify">Los ingresos de la población en la capital distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. La agricultura, en particular, proporciona una fuente regular de alimentos y productos que, en su mayoría, se destinan al autoconsumo, mientras que un porcentaje menor es comercializado. Los ingresos provenientes de la ganadería dependen de la venta de animales en pie, especialmente vacunos y ovinos, así como de productos derivados como el queso, el cual se vende a intermediarios. Sin embargo, las fluctuaciones en los precios del mercado, así como las limitaciones en infraestructura y acceso a mercados directos, afectan los ingresos de los habitantes, generando una inestabilidad económica.</p>
 <p class="text-justify">Aquellos que trabajan de manera dependiente, como los empleados municipales, profesores y personal del puesto de salud, tienen ingresos más regulares. Sin embargo, debido a que este sector representa una pequeña proporción de la población, sus ingresos no son significativos en la economía general de la localidad, mucho menos del distrito. Además, el acceso a empleos dependientes es limitado y no logra cubrir las necesidades de una mayor parte de la población.</p>
-<p class="text-justify">Adicionalmente, cabe mencionar que, según el informe del PNUD 2019, el distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>) cuenta con un ingreso familiar per cápita de S/. <span [appDataSource]="'automatic'">{{ getIngresoPerCapita() }}</span> mensuales, ocupando el puesto N°<span [appDataSource]="'automatic'">{{ getRankingIngreso() }}</span> en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.</p>
+<p class="text-justify">Adicionalmente, cabe mencionar que, según el informe del PNUD 2019, el distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al CP <span [appDataSource]="'section'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>) cuenta con un ingreso familiar per cápita de S/. <span [appDataSource]="'section'">{{ getIngresoPerCapita() }}</span> mensuales, ocupando el puesto N°<span [appDataSource]="'section'">{{ getRankingIngreso() }}</span> en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.</p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b.3. Índice de Desempleo</strong></p>
-<p class="text-justify">El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, el cual abarca al CP <span [appDataSource]="'automatic'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> (capital distrital). Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).</p>
+<p class="text-justify">El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, el cual abarca al CP <span [appDataSource]="'section'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> (capital distrital). Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).</p>
 
 <app-table-wrapper title="Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.2">
 <table class="table-container">
@@ -100,13 +100,13 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.peaOcupadaDesocupadaTabla || [])">
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.hombres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentajeHombres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.mujeres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentajeMujeres || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'automatic'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeHombres'">{{ item.porcentajeHombres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'mujeres'">{{ item.mujeres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentajeMujeres'">{{ item.porcentajeMujeres || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="!datos.peaOcupadaDesocupadaTabla || datos.peaOcupadaDesocupadaTabla.length === 0">
             <td class="table-cell">____</td>
@@ -120,8 +120,8 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> Resultados Definitivos de la PEA 2017 – INEI 2018</span></p>
-<p class="text-justify">Del cuadro precedente, se halla que en el distrito de <span [appDataSource]="'automatic'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> la PEA Desocupada representa un <span [appDataSource]="'automatic'">{{ getPorcentajeDesempleo() }}</span> del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de <span [appDataSource]="'automatic'">{{ getPorcentajeHombresOcupados() }}</span> y <span [appDataSource]="'automatic'">{{ getPorcentajeMujeresOcupadas() }}</span>, respectivamente.</p>
+<p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'distritoSeleccionado'"> Resultados Definitivos de la PEA 2017 – INEI 2018</span></p>
+<p class="text-justify">Del cuadro precedente, se halla que en el distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> la PEA Desocupada representa un <span [appDataSource]="'section'">{{ getPorcentajeDesempleo() }}</span> del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de <span [appDataSource]="'section'">{{ getPorcentajeHombresOcupados() }}</span> y <span [appDataSource]="'section'">{{ getPorcentajeMujeresOcupadas() }}</span>, respectivamente.</p>
 
 
 <app-image-upload

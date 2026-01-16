@@ -6,7 +6,7 @@
     {{ obtenerParrafoInstitucionalidad() }}
 </p>
   <ng-template #institucionalidadDefault>
-      <p class="text-justify">Dentro de los límites de la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).</p>
+      <p class="text-justify">Dentro de los límites de la CC <span [appDataSource]="'section'" [fieldName]="'tituloInstituciones'">{{ obtenerNombreComunidadActual() }}</span> se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).</p>
   </ng-template>
 
   <app-table-wrapper [title]="(datos.tituloInstituciones || 'Instituciones existentes – CC ' + obtenerNombreComunidadActual())" sectionId="3.1.4.A.1.1">
@@ -23,8 +23,8 @@
           <tr *ngFor="let institucion of (datos.tablepagina6 || [])">
               <td class="table-cell"><span *ngIf="institucion.categoria && institucion.categoria !== '____'" [appDataSource]="'manual'">{{ institucion.categoria }}</span><span *ngIf="!institucion.categoria || institucion.categoria === '____'">____</span></td>
               <td class="table-cell"><span *ngIf="institucion.respuesta && institucion.respuesta !== '____'" [appDataSource]="'manual'">{{ institucion.respuesta }}</span><span *ngIf="!institucion.respuesta || institucion.respuesta === '____'">____</span></td>
-              <td class="table-cell"><span *ngIf="institucion.nombre && institucion.nombre !== '____' && institucion.nombre !== '–'" [appDataSource]="'manual'">{{ institucion.nombre }}</span><span *ngIf="!institucion.nombre || institucion.nombre === '____' || institucion.nombre === '–'">{{ institucion.nombre || '____' }}</span></td>
-              <td class="table-cell"><span *ngIf="institucion.comentario && institucion.comentario !== '____' && institucion.comentario !== '–'" [appDataSource]="'manual'">{{ institucion.comentario }}</span><span *ngIf="!institucion.comentario || institucion.comentario === '____' || institucion.comentario === '–'">{{ institucion.comentario || '____' }}</span></td>
+              <td class="table-cell"><span *ngIf="institucion.nombre && institucion.nombre !== '____' && institucion.nombre !== '–'" [appDataSource]="'manual'" [fieldName]="'tablepagina6'">{{ institucion.nombre }}</span><span *ngIf="!institucion.nombre || institucion.nombre === '____' || institucion.nombre === '–'">{{ institucion.nombre || '____' }}</span></td>
+              <td class="table-cell"><span *ngIf="institucion.comentario && institucion.comentario !== '____' && institucion.comentario !== '–'" [appDataSource]="'manual'" [fieldName]="'tablepagina6'">{{ institucion.comentario }}</span><span *ngIf="!institucion.comentario || institucion.comentario === '____' || institucion.comentario === '–'">{{ institucion.comentario || '____' }}</span></td>
           </tr>
           <tr *ngIf="!datos.tablepagina6 || datos.tablepagina6.length === 0">
               <td class="table-cell">____</td>
@@ -34,7 +34,7 @@
           </tr>
       </tbody>
   </table>
-  <p class="source">Fuente:<span *ngIf="datos.fuenteInstituciones && datos.fuenteInstituciones !== '____'" [appDataSource]="'fuenteInstituciones' | dataSource">{{ datos.fuenteInstituciones }}</span><span *ngIf="!datos.fuenteInstituciones || datos.fuenteInstituciones === '____'">GEADES (2024)</span></p>
+  <p class="source">Fuente:<span *ngIf="datos.fuenteInstituciones && datos.fuenteInstituciones !== '____'" [appDataSource]="'fuenteInstituciones' | dataSource" [fieldName]="'fuenteInstituciones'">{{ datos.fuenteInstituciones }}</span><span *ngIf="!datos.fuenteInstituciones || datos.fuenteInstituciones === '____'">GEADES (2024)</span></p>
   </app-table-wrapper>
 
 <!-- Vista previa de fotografías (solo lectura) -->

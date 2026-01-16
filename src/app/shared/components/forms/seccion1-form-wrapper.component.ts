@@ -67,12 +67,17 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     reader.onload = (e: any) => {
       try {
         const jsonContent = JSON.parse(e.target.result);
-        const { data, geoInfo, fileName } = this.procesarJSON(jsonContent, file.name);
+        const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSON(jsonContent, file.name);
         
         this.formularioService.guardarJSON(data);
         this.formularioService.actualizarDato('centrosPobladosJSON', data);
+        this.formularioService.actualizarDato('jsonCompleto', jsonCompleto);
         this.formularioService.actualizarDato('geoInfo', geoInfo);
         this.formularioService.actualizarDato('jsonFileName', fileName);
+        
+        if (comunidadesCampesinas && comunidadesCampesinas.length > 0) {
+          this.formularioService.actualizarDato('comunidadesCampesinas', comunidadesCampesinas);
+        }
         
         if (geoInfo.DPTO) {
           this.formularioService.actualizarDato('departamentoSeleccionado', geoInfo.DPTO);
@@ -102,18 +107,53 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     }
   }
 
-  private procesarJSON(jsonContent: any, fileName: string): { data: any[], geoInfo: any, fileName: string } {
+  private procesarJSON(jsonContent: any, fileName: string): { 
+    data: any[], 
+    geoInfo: any, 
+    fileName: string, 
+    comunidadesCampesinas?: any[],
+    jsonCompleto?: any
+  } {
     let centrosPoblados: any[] = [];
     let geoInfo: any = {};
+    let comunidadesCampesinas: any[] = [];
+    let jsonCompleto: any = null;
     
     if (Array.isArray(jsonContent)) {
       centrosPoblados = jsonContent;
+      jsonCompleto = jsonContent;
     } else if (typeof jsonContent === 'object') {
+      jsonCompleto = jsonContent;
       const keys = Object.keys(jsonContent);
+      
       if (keys.length > 0) {
-        const firstKey = keys[0];
-        if (Array.isArray(jsonContent[firstKey])) {
-          centrosPoblados = jsonContent[firstKey];
+        for (const grupoKey of keys) {
+          const grupoData = jsonContent[grupoKey];
+          
+          if (Array.isArray(grupoData)) {
+            const centrosGrupo = grupoData;
+            centrosPoblados = centrosPoblados.concat(centrosGrupo);
+            
+            const codigosGrupo = centrosGrupo
+              .map((cp: any) => {
+                const codigo = cp.CODIGO;
+                if (codigo === null || codigo === undefined) return '';
+                return codigo.toString().trim();
+              })
+              .filter((codigo: string) => codigo !== '');
+            
+            let nombreComunidad = grupoKey;
+            if (nombreComunidad.toUpperCase().startsWith('CCPP ')) {
+              nombreComunidad = nombreComunidad.substring(5).trim();
+            }
+            
+            const comunidadId = `cc_${nombreComunidad.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+            comunidadesCampesinas.push({
+              id: comunidadId,
+              nombre: nombreComunidad,
+              centrosPobladosSeleccionados: codigosGrupo
+            });
+          }
         }
       }
     }
@@ -125,6 +165,12 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
       if (primer.DIST) geoInfo.DIST = primer.DIST;
     }
     
-    return { data: centrosPoblados, geoInfo, fileName };
+    return { 
+      data: centrosPoblados, 
+      geoInfo, 
+      fileName, 
+      comunidadesCampesinas: comunidadesCampesinas.length > 0 ? comunidadesCampesinas : undefined,
+      jsonCompleto
+    };
   }
 }

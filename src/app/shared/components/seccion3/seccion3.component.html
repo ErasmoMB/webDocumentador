@@ -15,13 +15,13 @@
 <h4>A. Fuentes primarias</h4>
 <div *ngIf="datos.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_primarias)"></div>
 <ng-template #fuentesPrimariasDefault>
-    <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')">{{ datos.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
+    <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ datos.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
 </ng-template>
 <p class="text-justify">A continuación, se muestra en el siguiente cuadro los cargos u
-    ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')">{{ datos.cantidadEntrevistas || '____' }}</span>
+    ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ datos.cantidadEntrevistas || '____' }}</span>
     autoridades e
     informantes que fueron entrevistados durante el trabajo de campo llevado a cabo en el mes de <span
-        [appDataSource]="getDataSourceType('fechaTrabajoCampo')">{{ datos.fechaTrabajoCampo || '____' }}</span>. </p>
+        [appDataSource]="getDataSourceType('fechaTrabajoCampo')" [fieldName]="'fechaTrabajoCampo'">{{ datos.fechaTrabajoCampo || '____' }}</span>. </p>
 <app-table-wrapper title="Lista de entrevistados" sectionId="3.1.3">
 <table class="table-container">
     <thead>
@@ -59,7 +59,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')">{{ datos.consultora || 'GEADES (2024)' }}</span></p>
+<p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')" [fieldName]="'consultora'">{{ datos.consultora || 'GEADES (2024)' }}</span></p>
 <h4>B. Fuentes secundarias</h4>
 <div *ngIf="datos.parrafoSeccion3_fuentes_secundarias; else fuentesSecundariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_secundarias)"></div>
 <ng-template #fuentesSecundariasDefault>

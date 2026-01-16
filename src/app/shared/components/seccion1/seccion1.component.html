@@ -5,16 +5,16 @@
     <p class="text-justify">
         Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del
         área de influencia social del proyecto
-        <span [appDataSource]="'projectName' | dataSource">{{ datos.projectName || '____' }}</span>, como un patrón de referencia inicial en
+        <span [appDataSource]="'manual'" [fieldName]="'projectName'">{{ datos.projectName || '____' }}</span>, como un patrón de referencia inicial en
         base a la
         cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.
     </p>
     <p class="text-justify">
-        El proyecto <span [appDataSource]="'projectName' | dataSource">{{ datos.projectName || '____' }}</span> se encuentra ubicado en el distrito de
-        <span [appDataSource]="'distritoSeleccionado' | dataSource">{{ datos.distritoSeleccionado || '____' }}</span>, en la provincia de
-        <span [appDataSource]="'provinciaSeleccionada' | dataSource">{{ datos.provinciaSeleccionada || '____' }}</span>, en el departamento de
-        <span [appDataSource]="'departamentoSeleccionado' | dataSource">{{ datos.departamentoSeleccionado || '____' }}</span>, bajo la administración del Gobierno
-        Regional de <span [appDataSource]="'departamentoSeleccionado' | dataSource">{{ datos.departamentoSeleccionado || '____' }}</span>, en el sur del Perú.
+        El proyecto <span [appDataSource]="'manual'" [fieldName]="'projectName'">{{ datos.projectName || '____' }}</span> se encuentra ubicado en el distrito de
+        <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || '____' }}</span>, en la provincia de
+        <span [appDataSource]="'section'" [fieldName]="'provinciaSeleccionada'">{{ datos.provinciaSeleccionada || '____' }}</span>, en el departamento de
+        <span [appDataSource]="'section'" [fieldName]="'departamentoSeleccionado'">{{ datos.departamentoSeleccionado || '____' }}</span>, bajo la administración del Gobierno
+        Regional de <span [appDataSource]="'section'" [fieldName]="'departamentoSeleccionado'">{{ datos.departamentoSeleccionado || '____' }}</span>, en el sur del Perú.
     </p>
     <p class="text-justify">
         Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).
@@ -35,7 +35,7 @@
     <ng-template #objetivo1Default>
         <li class="list-item">Describir los aspectos demográficos,
             sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de
-            influencia social del proyecto de exploración minera <span [appDataSource]="'projectName' | dataSource">{{ normalizarNombreProyecto(datos.projectName, false) || '____' }}</span>.</li>
+            influencia social del proyecto de exploración minera <span [appDataSource]="'manual'" [fieldName]="'projectName'">{{ normalizarNombreProyecto(datos.projectName, false) || '____' }}</span>.</li>
     </ng-template>
     <li class="list-item" *ngIf="datos.objetivoSeccion1_2; else objetivo2Default">
         {{ datos.objetivoSeccion1_2 }}

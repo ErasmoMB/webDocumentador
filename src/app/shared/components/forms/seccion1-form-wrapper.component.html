@@ -45,8 +45,9 @@
           type="text" 
           class="input" 
           [value]="formData['departamentoSeleccionado'] || geoInfo.DPTO || ''"
-          [readonly]="!!geoInfo.DPTO"
-          (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)">
+          (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)"
+          placeholder="Ingrese el departamento">
+        <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
       </div>
       <div class="form-field">
         <label class="label">Provincia <span class="required">*</span></label>
@@ -54,8 +55,9 @@
           type="text" 
           class="input" 
           [value]="formData['provinciaSeleccionada'] || geoInfo.PROV || ''"
-          [readonly]="!!geoInfo.PROV"
-          (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)">
+          (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)"
+          placeholder="Ingrese la provincia">
+        <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
       </div>
       <div class="form-field">
         <label class="label">Distrito <span class="required">*</span></label>
@@ -63,11 +65,11 @@
           type="text" 
           class="input" 
           [value]="formData['distritoSeleccionado'] || geoInfo.DIST || ''"
-          [readonly]="!!geoInfo.DIST"
-          (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)">
+          (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)"
+          placeholder="Ingrese el distrito">
+        <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
       </div>
     </div>
-    <small class="form-hint">Esta información se completa automáticamente desde el JSON</small>
   </div>
 </div>
 

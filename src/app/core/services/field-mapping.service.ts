@@ -10,7 +10,7 @@ export interface FieldMapping {
   endpoint?: string;
   endpointParams?: (seccionId: string, datos: any) => any;
   transform?: (data: any) => any;
-  dataSource: 'manual' | 'automatic' | 'section';
+  dataSource: 'manual' | 'section';
 }
 
 @Injectable({
@@ -30,11 +30,12 @@ export class FieldMappingService {
 
   private initializeMappings(): void {
     this.fieldMappings.set('projectName', { fieldName: 'projectName', dataSource: 'manual' });
-    this.fieldMappings.set('distritoSeleccionado', { fieldName: 'distritoSeleccionado', dataSource: 'automatic' });
-    this.fieldMappings.set('provinciaSeleccionada', { fieldName: 'provinciaSeleccionada', dataSource: 'automatic' });
-    this.fieldMappings.set('departamentoSeleccionado', { fieldName: 'departamentoSeleccionado', dataSource: 'automatic' });
+    this.fieldMappings.set('distritoSeleccionado', { fieldName: 'distritoSeleccionado', dataSource: 'section' });
+    this.fieldMappings.set('provinciaSeleccionada', { fieldName: 'provinciaSeleccionada', dataSource: 'section' });
+    this.fieldMappings.set('departamentoSeleccionado', { fieldName: 'departamentoSeleccionado', dataSource: 'section' });
+    this.fieldMappings.set('comunidadesCampesinas', { fieldName: 'comunidadesCampesinas', dataSource: 'section' });
     this.fieldMappings.set('grupoAISD', { fieldName: 'grupoAISD', dataSource: 'manual' });
-    this.fieldMappings.set('grupoAISI', { fieldName: 'grupoAISI', dataSource: 'manual' });
+    this.fieldMappings.set('grupoAISI', { fieldName: 'grupoAISI', dataSource: 'section' });
     this.fieldMappings.set('centroPobladoAISI', { fieldName: 'centroPobladoAISI', dataSource: 'manual' });
     this.fieldMappings.set('cantidadEntrevistas', { fieldName: 'cantidadEntrevistas', dataSource: 'manual' });
     this.fieldMappings.set('fechaTrabajoCampo', { fieldName: 'fechaTrabajoCampo', dataSource: 'manual' });
@@ -57,14 +58,14 @@ export class FieldMappingService {
     this.fieldMappings.set('parrafoSeccion4_introduccion_aisd', { fieldName: 'parrafoSeccion4_introduccion_aisd', dataSource: 'manual' });
     this.fieldMappings.set('parrafoSeccion4_comunidad_completo', { fieldName: 'parrafoSeccion4_comunidad_completo', dataSource: 'manual' });
     this.fieldMappings.set('parrafoSeccion4_caracterizacion_indicadores', { fieldName: 'parrafoSeccion4_caracterizacion_indicadores', dataSource: 'manual' });
-    this.fieldMappings.set('coordenadasAISD', { fieldName: 'coordenadasAISD', dataSource: 'automatic' });
-    this.fieldMappings.set('altitudAISD', { fieldName: 'altitudAISD', dataSource: 'automatic' });
+    this.fieldMappings.set('coordenadasAISD', { fieldName: 'coordenadasAISD', dataSource: 'section' });
+    this.fieldMappings.set('altitudAISD', { fieldName: 'altitudAISD', dataSource: 'section' });
     this.fieldMappings.set('tablaAISD1Localidad', { fieldName: 'tablaAISD1Localidad', dataSource: 'section' });
-    this.fieldMappings.set('tablaAISD1Coordenadas', { fieldName: 'tablaAISD1Coordenadas', dataSource: 'automatic' });
-    this.fieldMappings.set('tablaAISD1Altitud', { fieldName: 'tablaAISD1Altitud', dataSource: 'automatic' });
-    this.fieldMappings.set('tablaAISD1Distrito', { fieldName: 'tablaAISD1Distrito', dataSource: 'automatic' });
-    this.fieldMappings.set('tablaAISD1Provincia', { fieldName: 'tablaAISD1Provincia', dataSource: 'automatic' });
-    this.fieldMappings.set('tablaAISD1Departamento', { fieldName: 'tablaAISD1Departamento', dataSource: 'automatic' });
+    this.fieldMappings.set('tablaAISD1Coordenadas', { fieldName: 'tablaAISD1Coordenadas', dataSource: 'section' });
+    this.fieldMappings.set('tablaAISD1Altitud', { fieldName: 'tablaAISD1Altitud', dataSource: 'section' });
+    this.fieldMappings.set('tablaAISD1Distrito', { fieldName: 'tablaAISD1Distrito', dataSource: 'section' });
+    this.fieldMappings.set('tablaAISD1Provincia', { fieldName: 'tablaAISD1Provincia', dataSource: 'section' });
+    this.fieldMappings.set('tablaAISD1Departamento', { fieldName: 'tablaAISD1Departamento', dataSource: 'section' });
     this.fieldMappings.set('cuadroTituloAISD1', { fieldName: 'cuadroTituloAISD1', dataSource: 'manual' });
     this.fieldMappings.set('cuadroFuenteAISD1', { fieldName: 'cuadroFuenteAISD1', dataSource: 'manual' });
     this.fieldMappings.set('cuadroTituloAISD2', { fieldName: 'cuadroTituloAISD2', dataSource: 'manual' });
@@ -79,7 +80,7 @@ export class FieldMappingService {
     return this.fieldMappings.get(fieldName);
   }
 
-  getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+  getDataSourceType(fieldName: string): 'manual' | 'section' {
     if (this.testDataFields.has(fieldName)) {
       return 'manual';
     }

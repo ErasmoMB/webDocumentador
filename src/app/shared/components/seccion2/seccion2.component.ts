@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
+import { AutocompleteService, AutocompleteData } from 'src/app/core/services/autocomplete.service';
 import { ComunidadCampesina } from 'src/app/core/models/formulario.model';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -30,6 +31,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   
   fotografiasSeccion2: FotoItem[] = [];
   private stateSubscription?: Subscription;
+  autocompleteData: { [key: string]: AutocompleteData } = {};
   
   override watchedFields: string[] = [
     'parrafoSeccion2_introduccion',
@@ -54,7 +56,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private autocompleteService: AutocompleteService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -64,6 +67,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.cargarSeccionesAISI();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.actualizarDatos();
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -120,18 +124,49 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.distritosSeleccionados = this.datos['distritosAISI'] || {};
     this.distritosSeleccionadosAISI = this.datos['distritosSeleccionadosAISI'] || [];
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
-    if (this.comunidadesCampesinas.length === 0 && this.datos['grupoAISD']) {
-      this.comunidadesCampesinas = [{
-        id: 'cc_legacy',
-        nombre: this.datos['grupoAISD'],
-        centrosPobladosSeleccionados: this.datos['centrosPobladosSeleccionadosAISD'] || []
-      }];
+    
+    this.comunidadesCampesinas = this.comunidadesCampesinas.map(cc => ({
+      ...cc,
+      centrosPobladosSeleccionados: (cc.centrosPobladosSeleccionados || []).map((c: any) => {
+        if (c === null || c === undefined) return '';
+        return c.toString().trim();
+      }).filter((codigo: string) => codigo !== '')
+    }));
+    
+    if (this.comunidadesCampesinas.length === 0) {
+      if (this.datos['grupoAISD']) {
+        this.comunidadesCampesinas = [{
+          id: 'cc_legacy',
+          nombre: this.datos['grupoAISD'],
+          centrosPobladosSeleccionados: this.datos['centrosPobladosSeleccionadosAISD'] || []
+        }];
+      } else {
+        const centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
+        if (centrosPobladosJSON.length > 0) {
+          const codigos = centrosPobladosJSON
+            .map((cp: any) => {
+              const codigo = cp.CODIGO;
+              if (codigo === null || codigo === undefined) return '';
+              return codigo.toString().trim();
+            })
+            .filter((codigo: string) => codigo !== '');
+          
+          this.comunidadesCampesinas = [{
+            id: `cc_default_${Date.now()}`,
+            nombre: '',
+            centrosPobladosSeleccionados: codigos
+          }];
+          this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
+          this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+        }
+      }
     }
+    
     this.detectarDistritosAISI();
     this.cargarFotografias();
   }
 
-  override getDataSourceType(fieldName: string): 'manual' | 'automatic' | 'section' {
+  override getDataSourceType(fieldName: string): 'manual' | 'section' {
     return this.fieldMapping.getDataSourceType(fieldName);
   }
 
@@ -379,6 +414,166 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  agregarComunidadCampesina(): void {
+    const nuevaComunidad: ComunidadCampesina = {
+      id: `cc_${Date.now()}`,
+      nombre: '',
+      centrosPobladosSeleccionados: []
+    };
+    this.comunidadesCampesinas.push(nuevaComunidad);
+    this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
+    this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    this.actualizarDatos();
+  }
+
+  eliminarComunidadCampesina(id: string): void {
+    if (this.comunidadesCampesinas.length <= 1) {
+      return;
+    }
+    
+    const nuevasComunidades = this.comunidadesCampesinas.filter(cc => cc.id !== id);
+    
+    this.comunidadesCampesinas = nuevasComunidades;
+    this.datos['comunidadesCampesinas'] = nuevasComunidades;
+    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
+  }
+
+  actualizarNombreComunidad(id: string, nombre: string): void {
+    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
+      cc.id === id ? { ...cc, nombre: nombre } : cc
+    );
+    
+    this.comunidadesCampesinas = nuevasComunidades;
+    this.datos['comunidadesCampesinas'] = nuevasComunidades;
+    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+  }
+
+  obtenerCentrosPobladosSeleccionadosComunidad(id: string): string[] {
+    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
+    return comunidad?.centrosPobladosSeleccionados || [];
+  }
+
+  estaCentroPobladoSeleccionadoComunidad(id: string, codigo: string): boolean {
+    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
+    if (!comunidad || !comunidad.centrosPobladosSeleccionados) {
+      return false;
+    }
+    const codigoNormalizado = codigo?.toString().trim() || '';
+    return comunidad.centrosPobladosSeleccionados.some(
+      (c: string) => c?.toString().trim() === codigoNormalizado
+    );
+  }
+
+  toggleCentroPobladoComunidad(id: string, codigo: string): void {
+    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
+    if (!comunidad) {
+      return;
+    }
+
+    const centrosActuales = comunidad.centrosPobladosSeleccionados || [];
+    const codigoNormalizado = codigo?.toString().trim() || '';
+    
+    const index = centrosActuales.findIndex(
+      (c: string) => c?.toString().trim() === codigoNormalizado
+    );
+    
+    let nuevosCentros: string[];
+    if (index > -1) {
+      nuevosCentros = centrosActuales.filter((c: string) => c?.toString().trim() !== codigoNormalizado);
+    } else {
+      nuevosCentros = [...centrosActuales, codigoNormalizado];
+    }
+
+    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
+      cc.id === id ? { ...cc, centrosPobladosSeleccionados: nuevosCentros } : cc
+    );
+    
+    this.comunidadesCampesinas = nuevasComunidades;
+    this.datos['comunidadesCampesinas'] = nuevasComunidades;
+    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
+  }
+
+  seleccionarTodosCentrosPobladosComunidad(id: string): void {
+    const datos = this.formularioService.obtenerDatos();
+    const jsonCompleto = datos['jsonCompleto'];
+    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
+    
+    if (!comunidad) {
+      return;
+    }
+
+    let codigos: string[] = [];
+
+    if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
+      const nombreGrupo = comunidad.nombre;
+      const grupoOriginal = Object.keys(jsonCompleto).find(key => {
+        const keySinPrefijo = key.toUpperCase().startsWith('CCPP ') ? key.substring(5).trim() : key;
+        return keySinPrefijo === nombreGrupo || key === nombreGrupo;
+      });
+      
+      if (grupoOriginal && jsonCompleto[grupoOriginal] && Array.isArray(jsonCompleto[grupoOriginal])) {
+        codigos = jsonCompleto[grupoOriginal]
+          .map((cp: any) => {
+            const codigo = cp.CODIGO;
+            if (codigo === null || codigo === undefined) return '';
+            return codigo.toString().trim();
+          })
+          .filter((codigo: string) => codigo !== '');
+      }
+    }
+    
+    if (codigos.length === 0) {
+      const centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
+      codigos = centrosPobladosJSON
+        .map((cp: any) => {
+          const codigo = cp.CODIGO;
+          if (codigo === null || codigo === undefined) return '';
+          return codigo.toString().trim();
+        })
+        .filter((codigo: string) => codigo !== '');
+    }
+
+    comunidad.centrosPobladosSeleccionados = [...codigos];
+    
+    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
+      cc.id === id ? { ...cc, centrosPobladosSeleccionados: [...codigos] } : cc
+    );
+    
+    this.comunidadesCampesinas = nuevasComunidades;
+    this.datos['comunidadesCampesinas'] = nuevasComunidades;
+    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
+  }
+
+  deseleccionarTodosCentrosPobladosComunidad(id: string): void {
+    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
+    if (comunidad) {
+      const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
+        cc.id === id ? { ...cc, centrosPobladosSeleccionados: [] } : cc
+      );
+      
+      this.comunidadesCampesinas = nuevasComunidades;
+      this.datos['comunidadesCampesinas'] = nuevasComunidades;
+      this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+      this.stateService.setDatos(this.formularioService.obtenerDatos());
+      
+      this.cdRef.markForCheck();
+      this.cdRef.detectChanges();
+    }
+  }
+
   cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.fotografiasSeccion2 = this.imageService.loadImages(
@@ -501,6 +696,87 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   estaDistritoSeleccionadoAISI(distrito: string): boolean {
     return this.distritosSeleccionadosAISI.includes(distrito);
+  }
+
+  onAutocompleteInput(field: string, value: string): void {
+    if (!this.autocompleteData[field]) {
+      this.autocompleteData[field] = {
+        sugerencias: [],
+        mostrar: false,
+        buscado: ''
+      };
+    }
+
+    this.autocompleteData[field].buscado = value;
+    
+    if (field === 'aisdComponente1' || field === 'aisdComponente2') {
+      this.formularioService.actualizarDato(field as any, value);
+      this.actualizarDatos();
+    }
+
+    if (value && value.trim().length > 0) {
+      const provincia = this.datos.provinciaSeleccionada || '';
+      this.autocompleteService.buscarSugerenciasDistrito(value, provincia).subscribe(sugerencias => {
+        if (this.autocompleteData[field]) {
+          this.autocompleteData[field].sugerencias = sugerencias;
+          this.autocompleteData[field].mostrar = sugerencias.length > 0;
+        }
+        this.cdRef.detectChanges();
+      });
+    } else {
+      if (this.autocompleteData[field]) {
+        this.autocompleteData[field].sugerencias = [];
+        this.autocompleteData[field].mostrar = false;
+      }
+    }
+  }
+
+  onFocusDistritoAdicional(field: string): void {
+    if (!this.autocompleteData[field]) {
+      this.autocompleteData[field] = {
+        sugerencias: [],
+        mostrar: false,
+        buscado: ''
+      };
+    }
+
+    const valorActual = this.datos[field] || '';
+    if (valorActual && valorActual.trim().length > 0) {
+      this.autocompleteData[field].buscado = valorActual;
+      const provincia = this.datos.provinciaSeleccionada || '';
+      this.autocompleteService.buscarSugerenciasDistrito(valorActual, provincia).subscribe(sugerencias => {
+        if (this.autocompleteData[field]) {
+          this.autocompleteData[field].sugerencias = sugerencias;
+          this.autocompleteData[field].mostrar = sugerencias.length > 0;
+        }
+        this.cdRef.detectChanges();
+      });
+    }
+  }
+
+  cerrarSugerenciasAutocomplete(field: string): void {
+    if (this.autocompleteData[field]) {
+      setTimeout(() => {
+        if (this.autocompleteData[field]) {
+          this.autocompleteData[field].mostrar = false;
+        }
+        this.cdRef.detectChanges();
+      }, 200);
+    }
+  }
+
+  seleccionarSugerencia(field: string, sugerencia: any): void {
+    const valor = typeof sugerencia === 'string' ? sugerencia : sugerencia.nombre || sugerencia;
+    
+    this.formularioService.actualizarDato(field as any, valor);
+    
+    if (this.autocompleteData[field]) {
+      this.autocompleteData[field].buscado = valor;
+      this.autocompleteData[field].mostrar = false;
+    }
+    
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 }
 

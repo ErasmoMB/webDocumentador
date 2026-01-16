@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 
@@ -15,7 +15,7 @@ export interface TableColumn {
   templateUrl: './dynamic-table.component.html',
   styleUrls: ['./dynamic-table.component.css']
 })
-export class DynamicTableComponent {
+export class DynamicTableComponent implements OnInit, OnChanges {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() config!: TableConfig;
@@ -34,6 +34,33 @@ export class DynamicTableComponent {
     private formularioService: FormularioService,
     private cdRef: ChangeDetectorRef
   ) {}
+
+  ngOnInit(): void {
+    this.verificarEInicializarTabla();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['datos'] || changes['config'] || changes['tablaKey']) {
+      this.verificarEInicializarTabla();
+    }
+  }
+
+  private verificarEInicializarTabla(): void {
+    if (!this.config || !this.datos) return;
+    
+    const tablaKey = this.config.tablaKey || this.tablaKey;
+    if (!tablaKey) return;
+    
+    const datosTabla = this.datos[tablaKey];
+    
+    if (!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) {
+      if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
+        this.initializeTable();
+      }
+    } else {
+      this.cdRef.detectChanges();
+    }
+  }
 
   onFieldChange(index: number, field: string, value: any): void {
     if (!this.config) return;
@@ -80,9 +107,10 @@ export class DynamicTableComponent {
 
   canDelete(index: number): boolean {
     if (!this.showDeleteButton) return false;
-    if (!this.data || this.data.length <= 1) return false;
+    const tableData = (this.data && this.data.length > 0) ? this.data : this.getTableData();
+    if (!tableData || tableData.length === 0) return false;
     
-    const item = this.data[index];
+    const item = tableData[index];
     if (!item) return false;
     
     const totalValue = item[this.totalKey];

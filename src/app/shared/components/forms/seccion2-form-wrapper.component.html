@@ -1,7 +1,7 @@
 <div class="form-group-section">
   <h4 class="section-title">Delimitación de Áreas de Influencia Social</h4>
   
-  <div *ngFor="let comunidad of comunidadesCampesinas; let i = index" 
+  <div *ngFor="let comunidad of comunidadesCampesinas; let i = index; trackBy: trackByComunidadId" 
        style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -35,7 +35,7 @@
         </button>
       </div>
       <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white;">
-        <div *ngFor="let cp of centrosPobladosJSON" 
+        <div *ngFor="let cp of obtenerCentrosPobladosDeComunidad(comunidad.id)" 
              style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
           <input 
             type="checkbox" 
@@ -43,6 +43,9 @@
             (change)="toggleCentroPobladoComunidad(comunidad.id, cp.CODIGO?.toString() || '')"
             style="margin-right: 8px;">
           <span style="flex: 1;">{{ cp.CCPP }}</span>
+        </div>
+        <div *ngIf="obtenerCentrosPobladosDeComunidad(comunidad.id).length === 0" style="padding: 10px; text-align: center; color: #999;">
+          No hay centros poblados disponibles para esta comunidad
         </div>
       </div>
       <small class="form-hint">Seleccione los centros poblados que formarán parte del AISD. Debe seleccionar al menos uno.</small>
@@ -55,9 +58,8 @@
         class="input" 
         placeholder="Ingrese el nombre de la comunidad campesina"
         [value]="comunidad.nombre"
-        (input)="actualizarNombreComunidad(comunidad.id, $any($event.target).value)"
-        [disabled]="obtenerCentrosPobladosSeleccionadosComunidad(comunidad.id).length === 0">
-      <small class="form-hint">Asigne un nombre a la Comunidad Campesina. Primero seleccione los centros poblados.</small>
+        (input)="actualizarNombreComunidad(comunidad.id, $any($event.target).value)">
+      <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
     </div>
   </div>
 
@@ -79,8 +81,9 @@
           type="text" 
           class="input" 
           placeholder="Buscar distrito adicional..."
-          [value]="((autocompleteData['aisdComponente1'] && autocompleteData['aisdComponente1'].buscado) || formData['aisdComponente1'] || '')"
+          [value]="(formData['aisdComponente1'] || '')"
           (input)="onAutocompleteInput('aisdComponente1', $any($event.target).value)"
+          (blur)="onFieldChange('aisdComponente1', $any($event.target).value)"
           (focus)="onFocusDistritoAdicional('aisdComponente1')"
           [disabled]="false">
         
@@ -106,8 +109,9 @@
           type="text" 
           class="input" 
           placeholder="Buscar distrito adicional..."
-          [value]="((autocompleteData['aisdComponente2'] && autocompleteData['aisdComponente2'].buscado) || formData['aisdComponente2'] || '')"
+          [value]="(formData['aisdComponente2'] || '')"
           (input)="onAutocompleteInput('aisdComponente2', $any($event.target).value)"
+          (blur)="onFieldChange('aisdComponente2', $any($event.target).value)"
           (focus)="onFocusDistritoAdicional('aisdComponente2')"
           [disabled]="false">
         

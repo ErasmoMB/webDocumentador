@@ -48,6 +48,8 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     'tablaAISD1Distrito',
     'tablaAISD1Provincia',
     'tablaAISD1Departamento',
+    'tablaAISD1Datos',
+    'tablaAISD2Datos',
     'cuadroTituloAISD1',
     'cuadroFuenteAISD1',
     'cuadroTituloAISD2',
@@ -119,9 +121,25 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (valorActual !== valorAnterior) {
+      
+      let haCambiado = false;
+      if (Array.isArray(valorActual) || Array.isArray(valorAnterior)) {
+        haCambiado = JSON.stringify(valorActual) !== JSON.stringify(valorAnterior);
+      } else if (typeof valorActual === 'object' && valorActual !== null || typeof valorAnterior === 'object' && valorAnterior !== null) {
+        haCambiado = JSON.stringify(valorActual) !== JSON.stringify(valorAnterior);
+      } else {
+        haCambiado = valorActual !== valorAnterior;
+      }
+      
+      if (haCambiado) {
         hayCambios = true;
-        this.datosAnteriores[campo] = valorActual;
+        if (Array.isArray(valorActual)) {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        } else if (typeof valorActual === 'object' && valorActual !== null) {
+          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        } else {
+          this.datosAnteriores[campo] = valorActual;
+        }
       }
     }
     
@@ -142,6 +160,38 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
     this.cargarFotografias();
+    
+    if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos)) {
+      console.log('[Seccion4] actualizarDatosCustom - tablaAISD2Datos actualizada', {
+        length: this.datos.tablaAISD2Datos.length,
+        primerElemento: this.datos.tablaAISD2Datos[0]
+      });
+    }
+    
+    if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos)) {
+      this.datos.tablaAISD1Datos.forEach((fila: any, index: number) => {
+        if (index === 0) {
+          if (fila.localidad && !this.datos.tablaAISD1Localidad) {
+            this.datos.tablaAISD1Localidad = fila.localidad;
+          }
+          if (fila.coordenadas && !this.datos.tablaAISD1Coordenadas) {
+            this.datos.tablaAISD1Coordenadas = fila.coordenadas;
+          }
+          if (fila.altitud && !this.datos.tablaAISD1Altitud) {
+            this.datos.tablaAISD1Altitud = fila.altitud;
+          }
+          if (fila.distrito && !this.datos.tablaAISD1Distrito) {
+            this.datos.tablaAISD1Distrito = fila.distrito;
+          }
+          if (fila.provincia && !this.datos.tablaAISD1Provincia) {
+            this.datos.tablaAISD1Provincia = fila.provincia;
+          }
+          if (fila.departamento && !this.datos.tablaAISD1Departamento) {
+            this.datos.tablaAISD1Departamento = fila.departamento;
+          }
+        }
+      });
+    }
   }
 
   override obtenerPrefijoGrupo(): string {
@@ -216,8 +266,67 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  getFilasTablaAISD1(): any[] {
+    if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos) && this.datos.tablaAISD1Datos.length > 0) {
+      return this.datos.tablaAISD1Datos.map((fila: any) => {
+        const localidad = fila.localidad || fila.Localidad || '';
+        const coordenadas = fila.coordenadas || fila.Coordenadas || '';
+        const altitud = fila.altitud || fila.Altitud || '';
+        const distrito = fila.distrito || fila.Distrito || '';
+        const provincia = fila.provincia || fila.Provincia || '';
+        const departamento = fila.departamento || fila.Departamento || '';
+        
+        return {
+          localidad: localidad && localidad.toString().trim() !== '' ? localidad : (this.datos.tablaAISD1Localidad || this.obtenerNombreComunidadActual() || '____'),
+          coordenadas: coordenadas && coordenadas.toString().trim() !== '' ? coordenadas : (this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____'),
+          altitud: altitud && altitud.toString().trim() !== '' ? altitud : (this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____'),
+          distrito: distrito && distrito.toString().trim() !== '' ? distrito : (this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '____'),
+          provincia: provincia && provincia.toString().trim() !== '' ? provincia : (this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '____'),
+          departamento: departamento && departamento.toString().trim() !== '' ? departamento : (this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || '____')
+        };
+      });
+    }
+    
+    return [{
+      localidad: this.datos.tablaAISD1Localidad || this.obtenerNombreComunidadActual() || '____',
+      coordenadas: this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____',
+      altitud: this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____',
+      distrito: this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '____',
+      provincia: this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '____',
+      departamento: this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || '____'
+    }];
+  }
+
   getFilasTablaAISD2(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
+    
+    if (this.filasCache && this.ultimoPrefijoCache === prefijo) {
+      return this.filasCache;
+    }
+    
+    if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos) && this.datos.tablaAISD2Datos.length > 0) {
+      const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
+      const filas = this.datos.tablaAISD2Datos
+        .filter((fila: any) => {
+          if (this.modoFormulario) return true;
+          const codigoStr = (fila.codigo || fila.Codigo)?.toString().trim() || '';
+          return filasActivas.length === 0 || filasActivas.includes(codigoStr);
+        })
+        .map((fila: any) => ({
+          punto: fila.punto || fila.Punto || '____',
+          codigo: fila.codigo || fila.Codigo || '____',
+          poblacion: fila.poblacion || fila.Poblacion || '____',
+          viviendasEmpadronadas: fila.viviendasEmpadronadas || fila.ViviendasEmpadronadas || '____',
+          viviendasOcupadas: fila.viviendasOcupadas || fila.ViviendasOcupadas || '____'
+        }));
+      
+      if (filas.length > 0) {
+        this.filasCache = filas;
+        this.ultimoPrefijoCache = prefijo;
+        return filas;
+      }
+    }
+    
     const filas: any[] = [];
     const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
     
@@ -231,22 +340,34 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       const codigoStr = codigo ? codigo.toString().trim() : '';
       const esFilaActiva = filasActivas.length === 0 || filasActivas.includes(codigoStr);
       
-      const tieneValor = (val: any) => val && val !== '____' && val.toString().trim() !== '';
+      const tieneValor = (val: any) => val && val !== '____' && val !== null && val !== undefined && val.toString().trim() !== '';
       const tieneAlgunDato = tieneValor(punto) || tieneValor(codigo) || tieneValor(poblacion) || 
                              tieneValor(viviendasEmp) || tieneValor(viviendasOcp);
       
-      if (esFilaActiva && tieneAlgunDato) {
-        filas.push({
-          punto: punto || '____',
-          codigo: codigo || '____',
-          poblacion: poblacion || '____',
-          viviendasEmpadronadas: viviendasEmp || '____',
-          viviendasOcupadas: viviendasOcp || '____'
-        });
+      if (this.modoFormulario) {
+        if (tieneAlgunDato || i === 1) {
+          filas.push({
+            punto: punto || '',
+            codigo: codigo || '',
+            poblacion: poblacion || '',
+            viviendasEmpadronadas: viviendasEmp || '',
+            viviendasOcupadas: viviendasOcp || ''
+          });
+        }
+      } else {
+        if (esFilaActiva && tieneAlgunDato) {
+          filas.push({
+            punto: punto || '____',
+            codigo: codigo || '____',
+            poblacion: poblacion || '____',
+            viviendasEmpadronadas: viviendasEmp || '____',
+            viviendasOcupadas: viviendasOcp || '____'
+          });
+        }
       }
     }
     
-    if (filas.length === 0) {
+    if (filas.length === 0 && !this.modoFormulario) {
       filas.push({
         punto: '____',
         codigo: '____',
@@ -255,31 +376,49 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
         viviendasOcupadas: '____'
       });
     }
+    
+    this.filasCache = filas;
+    this.ultimoPrefijoCache = prefijo;
     return filas;
   }
 
   getTotalPoblacionAISD2(): number | '____' {
-    const total = this.getFilasTablaAISD2()
-      .map(f => Number(f.poblacion))
+    const filas = this.getFilasTablaAISD2();
+    const total = filas
+      .map(f => {
+        const valor = f.poblacion;
+        if (!valor || valor === '____' || valor === '') return 0;
+        return Number(valor);
+      })
       .filter(v => !isNaN(v))
       .reduce((a, b) => a + b, 0);
-    return isNaN(total) ? '____' : total;
+    return total === 0 && !this.modoFormulario ? '____' : total;
   }
 
   getTotalViviendasEmpadronadasAISD2(): number | '____' {
-    const total = this.getFilasTablaAISD2()
-      .map(f => Number(f.viviendasEmpadronadas))
+    const filas = this.getFilasTablaAISD2();
+    const total = filas
+      .map(f => {
+        const valor = f.viviendasEmpadronadas;
+        if (!valor || valor === '____' || valor === '') return 0;
+        return Number(valor);
+      })
       .filter(v => !isNaN(v))
       .reduce((a, b) => a + b, 0);
-    return isNaN(total) ? '____' : total;
+    return total === 0 && !this.modoFormulario ? '____' : total;
   }
 
   getTotalViviendasOcupadasAISD2(): number | '____' {
-    const total = this.getFilasTablaAISD2()
-      .map(f => Number(f.viviendasOcupadas))
+    const filas = this.getFilasTablaAISD2();
+    const total = filas
+      .map(f => {
+        const valor = f.viviendasOcupadas;
+        if (!valor || valor === '____' || valor === '') return 0;
+        return Number(valor);
+      })
       .filter(v => !isNaN(v))
       .reduce((a, b) => a + b, 0);
-    return isNaN(total) ? '____' : total;
+    return total === 0 && !this.modoFormulario ? '____' : total;
   }
 
   llenarTablaAutomaticamenteSiNecesario(): void {
@@ -427,6 +566,150 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.formularioService.actualizarDato(campoConPrefijo, nuevoValor);
     this.datos[campoConPrefijo] = nuevoValor;
     
+    this.actualizarDatos();
+  }
+
+  onCellEditTablaAISD1(event: any, campo: string, indiceFila: number, campoFila: string): void {
+    const nuevoValor = event.target.textContent?.trim() || '';
+    
+    if (!this.datos.tablaAISD1Datos || !Array.isArray(this.datos.tablaAISD1Datos) || this.datos.tablaAISD1Datos.length === 0) {
+      const filaInicial: any = {
+        localidad: this.datos.tablaAISD1Localidad || this.obtenerNombreComunidadActual() || '',
+        coordenadas: this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '',
+        altitud: this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '',
+        distrito: this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '',
+        provincia: this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '',
+        departamento: this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || ''
+      };
+      filaInicial[campoFila] = nuevoValor;
+      this.datos.tablaAISD1Datos = [filaInicial];
+    } else {
+      if (indiceFila >= 0 && indiceFila < this.datos.tablaAISD1Datos.length) {
+        if (!this.datos.tablaAISD1Datos[indiceFila]) {
+          this.datos.tablaAISD1Datos[indiceFila] = {
+            localidad: '',
+            coordenadas: '',
+            altitud: '',
+            distrito: '',
+            provincia: '',
+            departamento: ''
+          };
+        }
+        (this.datos.tablaAISD1Datos[indiceFila] as any)[campoFila] = nuevoValor;
+      } else if (indiceFila >= this.datos.tablaAISD1Datos.length) {
+        const nuevaFila: any = {
+          localidad: '',
+          coordenadas: '',
+          altitud: '',
+          distrito: '',
+          provincia: '',
+          departamento: ''
+        };
+        nuevaFila[campoFila] = nuevoValor;
+        this.datos.tablaAISD1Datos.push(nuevaFila);
+      }
+    }
+    
+    this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);
+    
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+    this.formularioService.actualizarDato(campoConPrefijo, nuevoValor);
+    this.datos[campoConPrefijo] = nuevoValor;
+    
+    if (indiceFila === 0) {
+      const campoLegacy = `tablaAISD1${campoFila.charAt(0).toUpperCase() + campoFila.slice(1)}`;
+      const campoLegacyConPrefijo = prefijo ? `${campoLegacy}${prefijo}` : campoLegacy;
+      this.formularioService.actualizarDato(campoLegacyConPrefijo, nuevoValor);
+      this.datos[campoLegacyConPrefijo] = nuevoValor;
+    }
+    
+    this.actualizarDatos();
+  }
+
+  onTablaFieldChange(campo: string, valor: string): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+    const valorLimpio = valor.trim() || '';
+    
+    this.formularioService.actualizarDato(campoConPrefijo, valorLimpio);
+    this.datos[campoConPrefijo] = valorLimpio;
+    
+    this.filasCache = null;
+    this.ultimoPrefijoCache = null;
+    this.actualizarDatos();
+  }
+
+  agregarFilaTabla(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const filasActuales = this.getFilasTablaAISD2();
+    const siguienteIndice = filasActuales.length + 1;
+    
+    if (siguienteIndice > 20) {
+      return;
+    }
+
+    const campoPunto = prefijo ? `tablaAISD2Fila${siguienteIndice}Punto${prefijo}` : `tablaAISD2Fila${siguienteIndice}Punto`;
+    const campoCodigo = prefijo ? `tablaAISD2Fila${siguienteIndice}Codigo${prefijo}` : `tablaAISD2Fila${siguienteIndice}Codigo`;
+    const campoPoblacion = prefijo ? `tablaAISD2Fila${siguienteIndice}Poblacion${prefijo}` : `tablaAISD2Fila${siguienteIndice}Poblacion`;
+    const campoViviendasEmp = prefijo ? `tablaAISD2Fila${siguienteIndice}ViviendasEmpadronadas${prefijo}` : `tablaAISD2Fila${siguienteIndice}ViviendasEmpadronadas`;
+    const campoViviendasOcp = prefijo ? `tablaAISD2Fila${siguienteIndice}ViviendasOcupadas${prefijo}` : `tablaAISD2Fila${siguienteIndice}ViviendasOcupadas`;
+
+    this.formularioService.actualizarDato(campoPunto, '');
+    this.formularioService.actualizarDato(campoCodigo, '');
+    this.formularioService.actualizarDato(campoPoblacion, '');
+    this.formularioService.actualizarDato(campoViviendasEmp, '');
+    this.formularioService.actualizarDato(campoViviendasOcp, '');
+
+    this.datos[campoPunto] = '';
+    this.datos[campoCodigo] = '';
+    this.datos[campoPoblacion] = '';
+    this.datos[campoViviendasEmp] = '';
+    this.datos[campoViviendasOcp] = '';
+
+    this.filasCache = null;
+    this.ultimoPrefijoCache = null;
+    this.actualizarDatos();
+  }
+
+  eliminarFilaTabla(index: number): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const filasActuales = this.getFilasTablaAISD2();
+    
+    if (filasActuales.length <= 1) {
+      return;
+    }
+
+    const filaIndex = index + 1;
+    const campoPunto = prefijo ? `tablaAISD2Fila${filaIndex}Punto${prefijo}` : `tablaAISD2Fila${filaIndex}Punto`;
+    const campoCodigo = prefijo ? `tablaAISD2Fila${filaIndex}Codigo${prefijo}` : `tablaAISD2Fila${filaIndex}Codigo`;
+    const campoPoblacion = prefijo ? `tablaAISD2Fila${filaIndex}Poblacion${prefijo}` : `tablaAISD2Fila${filaIndex}Poblacion`;
+    const campoViviendasEmp = prefijo ? `tablaAISD2Fila${filaIndex}ViviendasEmpadronadas${prefijo}` : `tablaAISD2Fila${filaIndex}ViviendasEmpadronadas`;
+    const campoViviendasOcp = prefijo ? `tablaAISD2Fila${filaIndex}ViviendasOcupadas${prefijo}` : `tablaAISD2Fila${filaIndex}ViviendasOcupadas`;
+
+    const codigoEliminado = this.obtenerValorConPrefijo(`tablaAISD2Fila${filaIndex}Codigo`);
+    const codigoStr = codigoEliminado ? codigoEliminado.toString().trim() : '';
+
+    this.formularioService.actualizarDato(campoPunto, '');
+    this.formularioService.actualizarDato(campoCodigo, '');
+    this.formularioService.actualizarDato(campoPoblacion, '');
+    this.formularioService.actualizarDato(campoViviendasEmp, '');
+    this.formularioService.actualizarDato(campoViviendasOcp, '');
+
+    this.datos[campoPunto] = '';
+    this.datos[campoCodigo] = '';
+    this.datos[campoPoblacion] = '';
+    this.datos[campoViviendasEmp] = '';
+    this.datos[campoViviendasOcp] = '';
+
+    if (codigoStr) {
+      const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
+      const nuevasFilasActivas = filasActivas.filter(codigo => codigo !== codigoStr);
+      this.formularioService.guardarFilasActivasTablaAISD2(nuevasFilasActivas, prefijo);
+    }
+
+    this.filasCache = null;
+    this.ultimoPrefijoCache = null;
     this.actualizarDatos();
   }
 

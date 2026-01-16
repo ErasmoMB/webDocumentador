@@ -4,7 +4,7 @@
 <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
 <div *ngIf="datos.parrafoSeccion12_salud_completo; else saludCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion12_salud_completo)"></div>
 <ng-template #saludCompletoDefault>
-    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de <span [appDataSource]="'automatic'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>.</p>
+    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ datos.grupoAISD || '____' }}</span> se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de <span [appDataSource]="'section'">{{ datos.provinciaSeleccionada || 'Caravelí' }}</span>.</p>
 </ng-template>
 
 <app-table-wrapper title="Principales características del Puesto de Salud {{ datos.grupoAISD || 'Ayroca' }}" sectionId="3.1.4.A.1.8">
@@ -17,7 +17,7 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.caracteristicasSaludTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
         <tr *ngIf="!datos.caracteristicasSaludTabla || datos.caracteristicasSaludTabla.length === 0">
@@ -43,7 +43,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
 <div *ngIf="datos.parrafoSeccion12_educacion_completo; else educacionCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion12_educacion_completo)"></div>
 <ng-template #educacionCompletoDefault>
-    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span>, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
+    <p class="text-justify">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ datos.grupoAISD || '____' }}</span> se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span>, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
 </ng-template>
 
 <app-table-wrapper title="Infraestructura educativa – CC {{ datos.grupoAISD || 'Ayroca' }} (2023)" sectionId="3.1.4.A.1.8">
@@ -59,11 +59,11 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.cantidadEstudiantesEducacionTabla || [])">
-            <td class="table-cell"><span *ngIf="item.institucion && item.institucion !== '____'" [appDataSource]="'automatic'">{{ item.institucion }}</span><span *ngIf="!item.institucion || item.institucion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'automatic'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.gestion && item.gestion !== '____'" [appDataSource]="'automatic'">{{ item.gestion }}</span><span *ngIf="!item.gestion || item.gestion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.total !== undefined && item.total !== '____'" [appDataSource]="'automatic'">{{ item.total }}</span><span *ngIf="item.total === undefined || item.total === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'automatic'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.institucion && item.institucion !== '____'" [appDataSource]="'section'" [fieldName]="'institucion'">{{ item.institucion }}</span><span *ngIf="!item.institucion || item.institucion === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'section'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.gestion && item.gestion !== '____'" [appDataSource]="'section'" [fieldName]="'gestion'">{{ item.gestion }}</span><span *ngIf="!item.gestion || item.gestion === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.total !== undefined && item.total !== '____'" [appDataSource]="'section'" [fieldName]="'total'">{{ item.total }}</span><span *ngIf="item.total === undefined || item.total === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.cantidadEstudiantesEducacionTabla || datos.cantidadEstudiantesEducacionTabla.length === 0">
             <td class="table-cell">____</td>
@@ -75,10 +75,10 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span [appDataSource]="'manual'">Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
+<p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoInfraestructuraEducacionPost'">Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
 
 <p class="text-justify" *ngIf="datos.textoInfraestructuraEducacionPost && datos.textoInfraestructuraEducacionPost !== '____'">{{ datos.textoInfraestructuraEducacionPost }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraEducacionPost || datos.textoInfraestructuraEducacionPost === '____'">De las entrevistas aplicadas durante el trabajo de campo, se recopiló información de carácter cualitativo de las instituciones educativas de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>. En los cuadros que se presentan a continuación se detallan características de cada una de ellas para el año 2024.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraEducacionPost || datos.textoInfraestructuraEducacionPost === '____'">De las entrevistas aplicadas durante el trabajo de campo, se recopiló información de carácter cualitativo de las instituciones educativas de la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraEducacionPost'">{{ datos.grupoAISD || '____' }}</span>. En los cuadros que se presentan a continuación se detallan características de cada una de ellas para el año 2024.</p>
 
 <app-table-wrapper title="Características y datos – IE {{ datos.grupoAISD || 'Ayroca' }}" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -90,7 +90,7 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.ieAyrocaTabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
         <tr *ngIf="!datos.ieAyrocaTabla || datos.ieAyrocaTabla.length === 0">
@@ -112,7 +112,7 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.ie40270Tabla || [])">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell" [class.text-left]="item.descripcion?.includes('•')" [innerHTML]="item.descripcion || '____'"></td>
         </tr>
         <tr *ngIf="!datos.ie40270Tabla || datos.ie40270Tabla.length === 0">
@@ -122,10 +122,10 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span [appDataSource]="'manual'">GEADES (2024)</span></p>
+<p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoAlumnosPorSexoGrado'">GEADES (2024)</span></p>
 
 <p class="text-justify" *ngIf="datos.textoAlumnosPorSexoGrado && datos.textoAlumnosPorSexoGrado !== '____'">{{ datos.textoAlumnosPorSexoGrado }}</p>
-<p class="text-justify" *ngIf="!datos.textoAlumnosPorSexoGrado || datos.textoAlumnosPorSexoGrado === '____'">De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.</p>
+<p class="text-justify" *ngIf="!datos.textoAlumnosPorSexoGrado || datos.textoAlumnosPorSexoGrado === '____'">De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoAlumnosPorSexoGrado'">{{ datos.grupoAISD || '____' }}</span> según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.</p>
 
 <app-table-wrapper title="Cantidad de alumnos según grado de enseñanza y sexo – IE {{ datos.grupoAISD || 'Ayroca' }}" sectionId="3.1.4.A.1.8">
 <table class="table-container">
@@ -151,16 +151,16 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.alumnosIEAyrocaTabla || [])">
-            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" [appDataSource]="'manual'">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.tresH !== undefined && item.tresH !== '____'" [appDataSource]="'manual'">{{ item.tresH }}</span><span *ngIf="item.tresH === undefined || item.tresH === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.tresM !== undefined && item.tresM !== '____'" [appDataSource]="'manual'">{{ item.tresM }}</span><span *ngIf="item.tresM === undefined || item.tresM === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.cuatroH !== undefined && item.cuatroH !== '____'" [appDataSource]="'manual'">{{ item.cuatroH }}</span><span *ngIf="item.cuatroH === undefined || item.cuatroH === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.cuatroM !== undefined && item.cuatroM !== '____'" [appDataSource]="'manual'">{{ item.cuatroM }}</span><span *ngIf="item.cuatroM === undefined || item.cuatroM === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.cincoH !== undefined && item.cincoH !== '____'" [appDataSource]="'manual'">{{ item.cincoH }}</span><span *ngIf="item.cincoH === undefined || item.cincoH === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.cincoM !== undefined && item.cincoM !== '____'" [appDataSource]="'manual'">{{ item.cincoM }}</span><span *ngIf="item.cincoM === undefined || item.cincoM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'" [fieldName]="'totalH'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" [appDataSource]="'manual'" [fieldName]="'totalM'">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.tresH !== undefined && item.tresH !== '____'" [appDataSource]="'manual'" [fieldName]="'tresH'">{{ item.tresH }}</span><span *ngIf="item.tresH === undefined || item.tresH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.tresM !== undefined && item.tresM !== '____'" [appDataSource]="'manual'" [fieldName]="'tresM'">{{ item.tresM }}</span><span *ngIf="item.tresM === undefined || item.tresM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cuatroH !== undefined && item.cuatroH !== '____'" [appDataSource]="'manual'" [fieldName]="'cuatroH'">{{ item.cuatroH }}</span><span *ngIf="item.cuatroH === undefined || item.cuatroH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cuatroM !== undefined && item.cuatroM !== '____'" [appDataSource]="'manual'" [fieldName]="'cuatroM'">{{ item.cuatroM }}</span><span *ngIf="item.cuatroM === undefined || item.cuatroM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cincoH !== undefined && item.cincoH !== '____'" [appDataSource]="'manual'" [fieldName]="'cincoH'">{{ item.cincoH }}</span><span *ngIf="item.cincoH === undefined || item.cincoH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.cincoM !== undefined && item.cincoM !== '____'" [appDataSource]="'manual'" [fieldName]="'cincoM'">{{ item.cincoM }}</span><span *ngIf="item.cincoM === undefined || item.cincoM === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.alumnosIEAyrocaTabla || datos.alumnosIEAyrocaTabla.length === 0">
             <td class="table-cell">____</td>
@@ -223,22 +223,22 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of (datos.alumnosIE40270Tabla || [])">
-            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" [appDataSource]="'manual'">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p1H !== undefined && item.p1H !== '____'" [appDataSource]="'manual'">{{ item.p1H }}</span><span *ngIf="item.p1H === undefined || item.p1H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p1M !== undefined && item.p1M !== '____'" [appDataSource]="'manual'">{{ item.p1M }}</span><span *ngIf="item.p1M === undefined || item.p1M === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p2H !== undefined && item.p2H !== '____'" [appDataSource]="'manual'">{{ item.p2H }}</span><span *ngIf="item.p2H === undefined || item.p2H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p2M !== undefined && item.p2M !== '____'" [appDataSource]="'manual'">{{ item.p2M }}</span><span *ngIf="item.p2M === undefined || item.p2M === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p3H !== undefined && item.p3H !== '____'" [appDataSource]="'manual'">{{ item.p3H }}</span><span *ngIf="item.p3H === undefined || item.p3H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p3M !== undefined && item.p3M !== '____'" [appDataSource]="'manual'">{{ item.p3M }}</span><span *ngIf="item.p3M === undefined || item.p3M === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p4H !== undefined && item.p4H !== '____'" [appDataSource]="'manual'">{{ item.p4H }}</span><span *ngIf="item.p4H === undefined || item.p4H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p4M !== undefined && item.p4M !== '____'" [appDataSource]="'manual'">{{ item.p4M }}</span><span *ngIf="item.p4M === undefined || item.p4M === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p5H !== undefined && item.p5H !== '____'" [appDataSource]="'manual'">{{ item.p5H }}</span><span *ngIf="item.p5H === undefined || item.p5H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p5M !== undefined && item.p5M !== '____'" [appDataSource]="'manual'">{{ item.p5M }}</span><span *ngIf="item.p5M === undefined || item.p5M === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p6H !== undefined && item.p6H !== '____'" [appDataSource]="'manual'">{{ item.p6H }}</span><span *ngIf="item.p6H === undefined || item.p6H === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.p6M !== undefined && item.p6M !== '____'" [appDataSource]="'manual'">{{ item.p6M }}</span><span *ngIf="item.p6M === undefined || item.p6M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nombre && item.nombre !== '____'" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre }}</span><span *ngIf="!item.nombre || item.nombre === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'manual'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalH !== undefined && item.totalH !== '____'" [appDataSource]="'manual'" [fieldName]="'totalH'">{{ item.totalH }}</span><span *ngIf="item.totalH === undefined || item.totalH === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.totalM !== undefined && item.totalM !== '____'" [appDataSource]="'manual'" [fieldName]="'totalM'">{{ item.totalM }}</span><span *ngIf="item.totalM === undefined || item.totalM === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p1H !== undefined && item.p1H !== '____'" [appDataSource]="'manual'" [fieldName]="'p1H'">{{ item.p1H }}</span><span *ngIf="item.p1H === undefined || item.p1H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p1M !== undefined && item.p1M !== '____'" [appDataSource]="'manual'" [fieldName]="'p1M'">{{ item.p1M }}</span><span *ngIf="item.p1M === undefined || item.p1M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p2H !== undefined && item.p2H !== '____'" [appDataSource]="'manual'" [fieldName]="'p2H'">{{ item.p2H }}</span><span *ngIf="item.p2H === undefined || item.p2H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p2M !== undefined && item.p2M !== '____'" [appDataSource]="'manual'" [fieldName]="'p2M'">{{ item.p2M }}</span><span *ngIf="item.p2M === undefined || item.p2M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p3H !== undefined && item.p3H !== '____'" [appDataSource]="'manual'" [fieldName]="'p3H'">{{ item.p3H }}</span><span *ngIf="item.p3H === undefined || item.p3H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p3M !== undefined && item.p3M !== '____'" [appDataSource]="'manual'" [fieldName]="'p3M'">{{ item.p3M }}</span><span *ngIf="item.p3M === undefined || item.p3M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p4H !== undefined && item.p4H !== '____'" [appDataSource]="'manual'" [fieldName]="'p4H'">{{ item.p4H }}</span><span *ngIf="item.p4H === undefined || item.p4H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p4M !== undefined && item.p4M !== '____'" [appDataSource]="'manual'" [fieldName]="'p4M'">{{ item.p4M }}</span><span *ngIf="item.p4M === undefined || item.p4M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p5H !== undefined && item.p5H !== '____'" [appDataSource]="'manual'" [fieldName]="'p5H'">{{ item.p5H }}</span><span *ngIf="item.p5H === undefined || item.p5H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p5M !== undefined && item.p5M !== '____'" [appDataSource]="'manual'" [fieldName]="'p5M'">{{ item.p5M }}</span><span *ngIf="item.p5M === undefined || item.p5M === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p6H !== undefined && item.p6H !== '____'" [appDataSource]="'manual'" [fieldName]="'p6H'">{{ item.p6H }}</span><span *ngIf="item.p6H === undefined || item.p6H === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.p6M !== undefined && item.p6M !== '____'" [appDataSource]="'manual'" [fieldName]="'p6M'">{{ item.p6M }}</span><span *ngIf="item.p6M === undefined || item.p6M === '____'">____</span></td>
         </tr>
         <tr *ngIf="!datos.alumnosIE40270Tabla || datos.alumnosIE40270Tabla.length === 0">
             <td class="table-cell">____</td>
@@ -276,8 +276,8 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
 <p class="text-justify" *ngIf="datos.textoInfraestructuraRecreacion && datos.textoInfraestructuraRecreacion !== '____'">{{ datos.textoInfraestructuraRecreacion }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacion || datos.textoInfraestructuraRecreacion === '____'">Dentro de la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span> se cuenta con un espacio destinado a la recreación de la población. Este es el parque recreacional público, el cual se ubica entre el puesto de salud y el local comunal. Aquí la población puede reunirse y también cuenta con juegos recreativos destinados a los niños. La siguiente infraestructura es la plaza de toros, que se halla en la zona este del anexo, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales.</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacionDetalle || datos.textoInfraestructuraRecreacionDetalle === '____'">En adición a ello, otro espacio de reunión es la plaza central del anexo <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span>. Este lugar sirve ocasionalmente como punto de encuentro para los comuneros, quienes se reúnen allí de manera informal en momentos importantes o festivos.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacion || datos.textoInfraestructuraRecreacion === '____'">Dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraRecreacion'">{{ datos.grupoAISD || '____' }}</span> se cuenta con un espacio destinado a la recreación de la población. Este es el parque recreacional público, el cual se ubica entre el puesto de salud y el local comunal. Aquí la población puede reunirse y también cuenta con juegos recreativos destinados a los niños. La siguiente infraestructura es la plaza de toros, que se halla en la zona este del anexo, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraRecreacionDetalle || datos.textoInfraestructuraRecreacionDetalle === '____'">En adición a ello, otro espacio de reunión es la plaza central del anexo <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraRecreacionDetalle'">{{ datos.grupoAISD || 'Ayroca' }}</span>. Este lugar sirve ocasionalmente como punto de encuentro para los comuneros, quienes se reúnen allí de manera informal en momentos importantes o festivos.</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -292,7 +292,7 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
 <p class="text-justify" *ngIf="datos.textoInfraestructuraDeporte && datos.textoInfraestructuraDeporte !== '____'">{{ datos.textoInfraestructuraDeporte }}</p>
-<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeporte || datos.textoInfraestructuraDeporte === '____'">En la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, la infraestructura deportiva es limitada. Los únicos espacios dedicados al deporte son una losa deportiva y un "estadio". Estas infraestructuras son utilizadas principalmente para partidos de fútbol y otros encuentros deportivos informales que se organizan entre los comuneros, especialmente durante festividades locales.</p>
+<p class="text-justify" *ngIf="!datos.textoInfraestructuraDeporte || datos.textoInfraestructuraDeporte === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoInfraestructuraDeporte'">{{ datos.grupoAISD || '____' }}</span>, la infraestructura deportiva es limitada. Los únicos espacios dedicados al deporte son una losa deportiva y un "estadio". Estas infraestructuras son utilizadas principalmente para partidos de fútbol y otros encuentros deportivos informales que se organizan entre los comuneros, especialmente durante festividades locales.</p>
 <p class="text-justify" *ngIf="!datos.textoInfraestructuraDeportDetalle || datos.textoInfraestructuraDeportDetalle === '____'">Respecto a la losa deportiva, esta se encuentra hecha a base de cemento. Por otra parte, el "estadio" es un campo de juego de pasto natural de un tamaño más extenso que la losa. No obstante, no cuenta con infraestructura adicional como gradas o servicios higiénicos.</p>
 
 <app-image-upload
