@@ -335,6 +335,17 @@
         "fuente": "GEADES, 2024"
       }
     ],
+    "tiposViviendaCpTabla": [
+      { "categoria": "Casa independiente", "casos": 164, "porcentaje": "100,00 %" },
+      { "categoria": "Total", "casos": 164, "porcentaje": "100,00 %" }
+    ],
+    "condicionOcupacionCpTabla": [
+      { "categoria": "Ocupada, con personas presentes", "casos": 49, "porcentaje": "29,88 %" },
+      { "categoria": "Ocupada, con personas ausentes", "casos": 19, "porcentaje": "11,59 %" },
+      { "categoria": "Ocupada, de uso ocasional", "casos": 73, "porcentaje": "44,51 %" },
+      { "categoria": "Desocupada, abandonada o cerrada", "casos": 23, "porcentaje": "14,02 %" },
+      { "categoria": "Total", "casos": 164, "porcentaje": "100,00 %" }
+    ],
     "abastecimientoAguaCpTabla": [
       { "categoria": "Red pública dentro de la vivienda", "casos": "48", "porcentaje": "97,96 %" },
       { "categoria": "Red pública fuera de la vivienda, pero dentro de la edificación", "casos": "1", "porcentaje": "2,04 %" },

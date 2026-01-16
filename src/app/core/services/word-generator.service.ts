@@ -23,6 +23,213 @@ export class WordGeneratorService {
     const children = await this.convertirHtmlADocx(elemento);
     
     const doc = new Document({
+      styles: {
+        default: {
+          document: {
+            run: {
+              font: 'Arial',
+              size: 22
+            },
+            paragraph: {
+              spacing: {
+                after: 200,
+                line: 360 // 1.5 line spacing (360 = 1.5 * 240)
+              }
+            }
+          }
+        },
+        paragraphStyles: [
+          {
+            id: 'Normal',
+            name: 'Normal',
+            basedOn: 'Normal',
+            next: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22
+            },
+            paragraph: {
+              spacing: {
+                after: 200,
+                line: 360 // 1.5 line spacing
+              },
+              alignment: AlignmentType.JUSTIFIED
+            }
+          },
+          {
+            id: 'TituloCapitulo',
+            name: 'Titulo Capitulo',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true,
+              color: '0F4761'
+            },
+            paragraph: {
+              alignment: AlignmentType.CENTER,
+              spacing: {
+                before: 200,
+                after: 200,
+                line: 360
+              },
+              shading: {
+                fill: 'D3D3D3'
+              }
+            }
+          },
+          {
+            id: 'Heading1',
+            name: 'Heading 1',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              spacing: {
+                before: 200,
+                after: 200,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'Heading2',
+            name: 'Heading 2',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              spacing: {
+                before: 200,
+                after: 200,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'Heading3',
+            name: 'Heading 3',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              spacing: {
+                before: 150,
+                after: 150,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'Heading4',
+            name: 'Heading 4',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              spacing: {
+                before: 150,
+                after: 150,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'Heading5',
+            name: 'Heading 5',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              spacing: {
+                before: 150,
+                after: 150,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'TituloTabla',
+            name: 'Titulo Tabla',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22,
+              bold: true
+            },
+            paragraph: {
+              alignment: AlignmentType.CENTER,
+              spacing: {
+                after: 100,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'SubtituloTabla',
+            name: 'Subtitulo Tabla',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22
+            },
+            paragraph: {
+              alignment: AlignmentType.CENTER,
+              spacing: {
+                after: 200,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'Fuente',
+            name: 'Fuente',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 20,
+              italics: true
+            },
+            paragraph: {
+              spacing: {
+                after: 300,
+                line: 360
+              }
+            }
+          },
+          {
+            id: 'ListaBullet',
+            name: 'Lista Bullet',
+            basedOn: 'Normal',
+            run: {
+              font: 'Arial',
+              size: 22
+            },
+            paragraph: {
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: {
+                after: 150,
+                line: 360
+              }
+            }
+          }
+        ]
+      },
       sections: [
         {
           properties: {
@@ -119,7 +326,11 @@ export class WordGeneratorService {
     return new Paragraph({
       text: texto,
       heading: nivel,
-      spacing: { before: 240, after: 200 },
+      spacing: { 
+        before: 240, 
+        after: 200,
+        line: 360 // 1.5 line spacing
+      },
     });
   }
 
@@ -139,16 +350,23 @@ export class WordGeneratorService {
         children.push(new TextRun({
           text: parte.texto,
           bold: parte.esHighlight,
+          font: 'Arial'
         }));
       });
     } else {
-      children.push(new TextRun({ text: texto }));
+      children.push(new TextRun({ 
+        text: texto,
+        font: 'Arial'
+      }));
     }
 
     return new Paragraph({
       alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
       children: children,
-      spacing: { after: esSource ? 200 : 120 },
+      spacing: { 
+        after: esSource ? 200 : 120,
+        line: 360 // 1.5 line spacing
+      },
     });
   }
 
@@ -183,25 +401,39 @@ export class WordGeneratorService {
     return items.map(li => {
       const texto = li.innerText?.trim() || '';
       return new Paragraph({
-        text: texto,
+        children: [new TextRun({ 
+          text: texto,
+          font: 'Arial'
+        })],
         bullet: { level: 0 },
-        spacing: { after: 100 },
+        spacing: { 
+          after: 100,
+          line: 360 // 1.5 line spacing
+        },
       });
     });
   }
 
   private crearTabla(elem: HTMLElement): Table {
-    const rows = Array.from(elem.querySelectorAll('tr')).map(row => {
+    const rows = Array.from(elem.querySelectorAll('tr')).map((row, rowIndex) => {
       const cells = Array.from(row.querySelectorAll('th, td')).map(cell => {
         const isHeader = cell.tagName === 'TH' || cell.classList.contains('table-header');
         const cellHTMLElem = cell as HTMLElement;
-        const isCentered = cell.classList.contains('table-cell-center') || 
+        
+        // Determinar si está centrado - los encabezados siempre centrados
+        const isCentered = isHeader || 
+                          cell.classList.contains('table-cell-center') || 
                           cell.classList.contains('header-centrado') ||
                           cell.classList.contains('table-header') ||
                           cellHTMLElem.style?.textAlign === 'center';
+        
         const texto = (cell as HTMLElement).textContent?.trim() || '';
         const cellElem = cell as HTMLElement;
         const tieneHighlight = cellElem.querySelector('.highlight');
+
+        // Obtener colspan y rowspan
+        const colspan = parseInt(cellHTMLElem.getAttribute('colspan') || '1');
+        const rowspan = parseInt(cellHTMLElem.getAttribute('rowspan') || '1');
 
         let children: TextRun[] = [];
         if (tieneHighlight) {
@@ -210,43 +442,143 @@ export class WordGeneratorService {
             children.push(new TextRun({
               text: parte.texto,
               bold: parte.esHighlight || isHeader,
+              font: 'Arial',
+              size: 22
             }));
           });
         } else {
-          children.push(new TextRun({ text: texto, bold: isHeader }));
+          children.push(new TextRun({ 
+            text: texto, 
+            bold: isHeader,
+            font: 'Arial',
+            size: 22
+          }));
         }
 
-        return new TableCell({
-          children: [
-            new Paragraph({
-              alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-              children: children,
-            }),
-          ],
+        // Crear párrafo con text wrapping para celdas con texto largo
+        const paragraphOptions: any = {
+          alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+          children: children,
+          spacing: {
+            before: 50,
+            after: 50,
+            line: 360 // 1.5 line spacing
+          }
+        };
+
+        const cellOptions: any = {
+          children: [new Paragraph(paragraphOptions)],
           shading: isHeader ? { fill: 'E6E6E6' } : undefined,
-        });
+          margins: {
+            top: 100,
+            bottom: 100,
+            left: 100,
+            right: 100
+          },
+          verticalAlign: 'center' as any,
+          borders: {
+            top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            right: { size: 1, color: '000000', style: BorderStyle.SINGLE }
+          }
+        };
+
+        // Agregar columnSpan si es mayor a 1
+        if (colspan > 1) {
+          cellOptions.columnSpan = colspan;
+        }
+
+        // Agregar rowSpan si es mayor a 1
+        if (rowspan > 1) {
+          cellOptions.rowSpan = rowspan;
+          // Para celdas con rowspan, asegurar verticalAlign center
+          cellOptions.verticalAlign = 'center' as any;
+        }
+
+        // Para celdas con colspan, ajustar width proporcional
+        if (colspan > 1) {
+          cellOptions.width = {
+            size: colspan * 10,
+            type: WidthType.PERCENTAGE
+          };
+        }
+
+        return new TableCell(cellOptions);
       });
-      return new TableRow({ children: cells });
+      
+      return new TableRow({ 
+        children: cells,
+        tableHeader: cells.some((c: any) => c.options?.shading?.fill === 'E6E6E6'),
+        height: { value: 500, rule: 'atLeast' as any }
+      });
     });
 
     return new Table({
       rows: rows,
       width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: {
-        top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-        bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-        left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-        right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-        insideHorizontal: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-        insideVertical: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-      },
+      layout: 'autofit' as any,
+      columnWidths: this.calcularAnchoColumnas(elem),
       margins: {
-        top: 100,
-        bottom: 100,
-        left: 100,
-        right: 100,
-      },
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
+      }
     });
+  }
+
+  private calcularAnchoColumnas(elem: HTMLElement): number[] | undefined {
+    // Encontrar la fila con más celdas (considerando colspan)
+    const rows = Array.from(elem.querySelectorAll('tr'));
+    let maxCells = 0;
+    let dataRow: HTMLElement | null = null;
+    
+    // Buscar la fila con más columnas totales
+    for (const row of rows) {
+      const cells = Array.from(row.querySelectorAll('th, td')) as HTMLElement[];
+      let totalColumns = 0;
+      cells.forEach(cell => {
+        const colspan = parseInt(cell.getAttribute('colspan') || '1');
+        totalColumns += colspan;
+      });
+      
+      if (totalColumns > maxCells) {
+        maxCells = totalColumns;
+      }
+      
+      // Encontrar una fila de datos sin colspan para usar como referencia
+      if (!dataRow && cells.length === totalColumns && cells.some(c => c.tagName === 'TD')) {
+        dataRow = row;
+      }
+    }
+    
+    if (maxCells > 0) {
+      const widths: number[] = [];
+      
+      // Si la primera columna es texto largo (descripciones), darle más espacio
+      if (dataRow) {
+        const cells = Array.from(dataRow.querySelectorAll('th, td')) as HTMLElement[];
+        const firstCellText = cells[0]?.textContent?.trim() || '';
+        
+        // Si la primera celda tiene texto largo, darle 40% del ancho
+        if (firstCellText.length > 20) {
+          widths.push(3800); // 40% para descripción
+          const remainingWidth = 5700; // 60% restante
+          const widthPerColumn = Math.floor(remainingWidth / (maxCells - 1));
+          for (let i = 1; i < maxCells; i++) {
+            widths.push(widthPerColumn);
+          }
+          return widths;
+        }
+      }
+      
+      // Por defecto, distribuir equitativamente
+      const widthPerColumn = Math.floor(9500 / maxCells);
+      return Array(maxCells).fill(widthPerColumn);
+    }
+    
+    return undefined;
   }
 
   private async procesarFotoInfo(elem: HTMLElement): Promise<any[]> {
@@ -357,46 +689,19 @@ export class WordGeneratorService {
 
   private async procesarContenidoDiv(elem: HTMLElement): Promise<any[]> {
     const contenido: any[] = [];
-    const tagName = elem.tagName.toLowerCase();
-    
-    if (tagName.startsWith('app-')) {
-      const allElements = Array.from(elem.querySelectorAll('h1, h2, h3, h4, h5, p, table, ul, ol, img, div'));
-      const processedElements = new Set<HTMLElement>();
-      
-      for (const child of Array.from(elem.children)) {
-        if (!processedElements.has(child as HTMLElement)) {
-          const procesado = await this.procesarElemento(child as HTMLElement);
-          if (procesado) {
-            contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
-          }
-          processedElements.add(child as HTMLElement);
-        }
-      }
-      
-      for (const el of allElements) {
-        if (!processedElements.has(el as HTMLElement)) {
-          const procesado = await this.procesarElemento(el as HTMLElement);
-          if (procesado) {
-            contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
-          }
-          processedElements.add(el as HTMLElement);
-        }
-      }
-    } else {
-      const nodos = Array.from(elem.childNodes);
+    const nodos = Array.from(elem.childNodes);
 
-      for (const nodo of nodos) {
-        if (nodo.nodeType === Node.TEXT_NODE) {
-          const texto = nodo.textContent?.trim();
-          if (texto && texto.length > 0) {
-            contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
-          }
-        } else if (nodo.nodeType === Node.ELEMENT_NODE) {
-          const elemento = nodo as HTMLElement;
-          const procesado = await this.procesarElemento(elemento);
-          if (procesado) {
-            contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
-          }
+    for (const nodo of nodos) {
+      if (nodo.nodeType === Node.TEXT_NODE) {
+        const texto = nodo.textContent?.trim();
+        if (texto && texto.length > 0) {
+          contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
+        }
+      } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+        const elemento = nodo as HTMLElement;
+        const procesado = await this.procesarElemento(elemento);
+        if (procesado) {
+          contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
         }
       }
     }

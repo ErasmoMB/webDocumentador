@@ -8,6 +8,7 @@ import { StateService } from 'src/app/core/services/state.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
+import { MockDataService } from 'src/app/core/services/mock-data.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Subscription } from 'rxjs';
@@ -187,6 +188,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
   comunidadesCampesinas: ComunidadCampesina[] = [];
   geoInfo: any = {};
   autocompleteData: any = {};
+  testDataActive = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -199,7 +201,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     private stateService: StateService,
     private fieldMapping: FieldMappingService,
     private imageService: ImageManagementService,
-    private navigationService: SectionNavigationService
+    private navigationService: SectionNavigationService,
+    private mockDataService: MockDataService
   ) {}
 
   ngOnInit() {
@@ -236,6 +239,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
     this.geoInfo = this.datos['geoInfo'] || {};
     this.jsonFileName = this.datos['jsonFileName'] || '';
+    this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
     this.actualizarEstadoNavegacion();
     this.scrollRealizado = false;
     this.cdRef.detectChanges();
@@ -549,6 +553,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
         
         this.datos = this.formularioService.obtenerDatos();
         this.formData = { ...this.datos };
+        this.testDataActive = false;
         
         this.cargarSeccion();
         this.cdRef.detectChanges();
@@ -886,10 +891,63 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     return '';
   }
 
-  llenarDatosPrueba() {
-    const component = ViewChildHelper.getComponent('seccion1');
-    if (component && component['llenarDatosPrueba']) {
-      component['llenarDatosPrueba']();
+  async llenarDatosPrueba() {
+    try {
+      const mock = await this.mockDataService.getCapitulo3Datos();
+      const datosMock = mock?.datos || {};
+      const seccionFields = this.fieldMapping.getFieldsForSection(this.seccionId);
+
+      // Enriquecer mock con valores derivados
+      const enrichedMock: any = { ...datosMock };
+
+      // Calcular total de población si no existe
+      if (!enrichedMock.tablaAISD2TotalPoblacion && Array.isArray(enrichedMock.poblacionSexoTabla)) {
+        enrichedMock.tablaAISD2TotalPoblacion = enrichedMock.poblacionSexoTabla.reduce((sum: number, item: any) => {
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+      }
+
+      // Alias de campos para secciones específicas (ej. 3.1.4.A.1.2)
+      const aliasMap: Record<string, string[]> = {
+        textoPoblacionSexoAISD: ['textoPoblacionSexo'],
+        poblacionSexoAISD: ['poblacionSexoTabla'],
+        textoPoblacionEtarioAISD: ['textoPoblacionEtario'],
+        poblacionEtarioAISD: ['poblacionEtarioTabla']
+      };
+
+      const fieldsConDatos: string[] = [];
+
+      seccionFields.forEach(field => {
+        let value = enrichedMock[field];
+        if (value === undefined && aliasMap[field]) {
+          const altKey = aliasMap[field].find(k => enrichedMock[k] !== undefined);
+          if (altKey) {
+            value = enrichedMock[altKey];
+          }
+        }
+
+        // Fallback específico: total de población
+        if (value === undefined && field === 'tablaAISD2TotalPoblacion' && enrichedMock.poblacionSexoTabla) {
+          value = enrichedMock.tablaAISD2TotalPoblacion;
+        }
+
+        if (value !== undefined) {
+          this.formularioService.actualizarDato(field as keyof FormularioDatos, value);
+          fieldsConDatos.push(field);
+        }
+      });
+
+      this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
+
+      this.datos = this.formularioService.obtenerDatos();
+      this.stateService.setDatos(this.datos);
+      this.actualizarComponenteSeccion();
+      this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
+      this.cdRef.detectChanges();
+    } catch (error) {
+      console.error('Error al llenar datos de prueba:', error);
+      alert('No se pudieron cargar los datos de prueba. Por favor, intenta nuevamente.');
     }
   }
 

@@ -130,6 +130,15 @@ export class FieldMappingService {
     return this.testDataFields.has(fieldName);
   }
 
+  markFieldsAsTestData(fields: string[]): void {
+    fields.forEach(field => this.testDataFields.add(field));
+  }
+
+  hasAnyTestDataForSection(seccionId: string): boolean {
+    const fields = this.getFieldsForSection(seccionId);
+    return fields.some(field => this.testDataFields.has(field));
+  }
+
   getFieldsForSection(seccionId: string): string[] {
     const sectionFields: { [key: string]: string[] } = {
       '3.1.1': [
@@ -265,6 +274,48 @@ export class FieldMappingService {
         'parrafoSeccion4_comunidad_completo',
         'parrafoSeccion4_caracterizacion_indicadores'
       ],
+      '3.1.4.A.1.2': [
+        'grupoAISD',
+        'textoPoblacionSexoAISD',
+        'poblacionSexoAISD',
+        'textoPoblacionEtarioAISD',
+        'poblacionEtarioAISD',
+        'tablaAISD2TotalPoblacion'
+      ],
+      '3.1.4.A.1.9': [
+        'grupoAISD',
+        'distritoSeleccionado',
+        'parrafoSeccion13_natalidad_mortalidad_completo',
+        'parrafoSeccion13_morbilidad_completo',
+        'natalidadMortalidadTabla',
+        'morbilidadTabla',
+        'porcentajeSIS',
+        'porcentajeESSALUD',
+        'porcentajeSinSeguro',
+        'afiliacionSaludTabla',
+        'textoAfiliacionSalud'
+      ],
+      '3.1.4.A.2.2': [
+        'grupoAISD',
+        'textoPoblacionSexoAISD',
+        'poblacionSexoAISD',
+        'textoPoblacionEtarioAISD',
+        'poblacionEtarioAISD',
+        'tablaAISD2TotalPoblacion'
+      ],
+      '3.1.4.A.2.9': [
+        'grupoAISD',
+        'distritoSeleccionado',
+        'parrafoSeccion13_natalidad_mortalidad_completo',
+        'parrafoSeccion13_morbilidad_completo',
+        'natalidadMortalidadTabla',
+        'morbilidadTabla',
+        'porcentajeSIS',
+        'porcentajeESSALUD',
+        'porcentajeSinSeguro',
+        'afiliacionSaludTabla',
+        'textoAfiliacionSalud'
+      ],
       '3.1.4.B': [
         'centroPobladoAISI',
         'distritoSeleccionado',
@@ -286,11 +337,17 @@ export class FieldMappingService {
       ]
     };
 
+    // Prefer most specific mapping first
+    if (sectionFields[seccionId]) {
+      return sectionFields[seccionId];
+    }
+
+    // Fallback to base (e.g., 3.1.4)
     const baseSeccionId = seccionId.split('.').slice(0, 3).join('.');
     if (sectionFields[baseSeccionId]) {
       return sectionFields[baseSeccionId];
     }
 
-    return sectionFields[seccionId] || [];
+    return [];
   }
 }
