@@ -7,9 +7,9 @@
 
 <p style="margin-bottom: 10px;"><strong>a. Nivel Educativo de la población</strong></p>
 <p class="text-justify" *ngIf="datos.textoNivelEducativo && datos.textoNivelEducativo !== '____'">{{ datos.textoNivelEducativo }}</p>
-<p class="text-justify" *ngIf="!datos.textoNivelEducativo || datos.textoNivelEducativo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoNivelEducativo'">{{ datos.grupoAISD || 'Ayroca' }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el <span [appDataSource]="'section'">{{ getPorcentajePrimaria() }}</span>. En segundo lugar, se hallan aquellos que cuentan con secundaria (<span [appDataSource]="'section'">{{ getPorcentajeSecundaria() }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un <span [appDataSource]="'section'">{{ getPorcentajeSuperiorNoUniversitaria() }}</span>.</p>
+<p class="text-justify" *ngIf="!datos.textoNivelEducativo || datos.textoNivelEducativo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoNivelEducativo'">{{ obtenerNombreComunidadActual() }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el <span [appDataSource]="'section'">{{ getPorcentajePrimaria() }}</span>. En segundo lugar, se hallan aquellos que cuentan con secundaria (<span [appDataSource]="'section'">{{ getPorcentajeSecundaria() }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un <span [appDataSource]="'section'">{{ getPorcentajeSuperiorNoUniversitaria() }}</span>.</p>
 
-<app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.10">
+<app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
 <table class="table-container">
     <thead>
         <tr>
@@ -22,7 +22,7 @@
         <tr *ngFor="let item of getNivelEducativoSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getNivelEducativoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -52,9 +52,9 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tasa de analfabetismo</strong></p>
 <p class="text-justify" *ngIf="datos.textoTasaAnalfabetismo && datos.textoTasaAnalfabetismo !== '____'">{{ datos.textoTasaAnalfabetismo }}</p>
-<p class="text-justify" *ngIf="!datos.textoTasaAnalfabetismo || datos.textoTasaAnalfabetismo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoTasaAnalfabetismo'">{{ datos.grupoAISD || 'Ayroca' }}</span>, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de <span [appDataSource]="'section'">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span [appDataSource]="'section'">{{ getTasaAnalfabetismo() }}</span> en la comunidad.</p>
+<p class="text-justify" *ngIf="!datos.textoTasaAnalfabetismo || datos.textoTasaAnalfabetismo === '____'">En la CC <span [appDataSource]="'section'" [fieldName]="'textoTasaAnalfabetismo'">{{ obtenerNombreComunidadActual() }}</span>, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de <span [appDataSource]="'section'">{{ getCasosAnalfabetismo() }}</span>. Esto representa una tasa de analfabetismo del <span [appDataSource]="'section'">{{ getTasaAnalfabetismo() }}</span> en la comunidad.</p>
 
-<app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.10">
+<app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
 <table class="table-container">
     <thead>
         <tr>
@@ -67,7 +67,7 @@
         <tr *ngFor="let item of getTasaAnalfabetismoSinTotal()">
             <td class="table-cell"><span *ngIf="item.indicador && item.indicador !== '____'" [appDataSource]="'section'" [fieldName]="'indicador'">{{ item.indicador }}</span><span *ngIf="!item.indicador || item.indicador === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -126,7 +126,7 @@
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [tablaKey]="'nivelEducativoTabla'"
           [totalKey]="'categoria'"
@@ -190,7 +190,7 @@
           [columns]="[
             { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [tablaKey]="'tasaAnalfabetismoTabla'"
           [totalKey]="'indicador'"

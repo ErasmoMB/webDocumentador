@@ -2,8 +2,8 @@
 <h5>A.1.1. Institucionalidad local</h5>
 
 <!-- Párrafo informativo -->
-<p class="text-justify" *ngIf="obtenerParrafoInstitucionalidad(); else institucionalidadDefault">
-    {{ obtenerParrafoInstitucionalidad() }}
+<p class="text-justify" *ngIf="tieneParrafoPersonalizado(); else institucionalidadDefault">
+  {{ obtenerParrafoInstitucionalidad() }}
 </p>
   <ng-template #institucionalidadDefault>
       <p class="text-justify">Dentro de los límites de la CC <span [appDataSource]="'section'" [fieldName]="'tituloInstituciones'">{{ obtenerNombreComunidadActual() }}</span> se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).</p>

@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
@@ -78,6 +79,9 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
   }
 
   getIDH(): string {

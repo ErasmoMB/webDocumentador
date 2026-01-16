@@ -6,6 +6,7 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { AutocompleteService, AutocompleteData } from 'src/app/core/services/autocomplete.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
 import { ComunidadCampesina } from 'src/app/core/models/formulario.model';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -57,7 +58,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private stateService: StateService,
-    private autocompleteService: AutocompleteService
+    private autocompleteService: AutocompleteService,
+    private centrosPobladosActivos: CentrosPobladosActivosService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -498,8 +500,21 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
     this.stateService.setDatos(this.formularioService.obtenerDatos());
     
+    const prefijo = this.obtenerPrefijoDeComunidad(id);
+    if (prefijo) {
+      this.centrosPobladosActivos.actualizarCodigosActivos(id, nuevosCentros);
+    }
+    
     this.cdRef.markForCheck();
     this.cdRef.detectChanges();
+  }
+
+  private obtenerPrefijoDeComunidad(comunidadId: string): string {
+    const indice = this.comunidadesCampesinas.findIndex(cc => cc.id === comunidadId);
+    if (indice >= 0) {
+      return `_A${indice + 1}`;
+    }
+    return '';
   }
 
   seleccionarTodosCentrosPobladosComunidad(id: string): void {
@@ -553,6 +568,11 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
     this.stateService.setDatos(this.formularioService.obtenerDatos());
     
+    const prefijo = this.obtenerPrefijoDeComunidad(id);
+    if (prefijo) {
+      this.centrosPobladosActivos.actualizarCodigosActivos(id, codigos);
+    }
+    
     this.cdRef.markForCheck();
     this.cdRef.detectChanges();
   }
@@ -568,6 +588,11 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       this.datos['comunidadesCampesinas'] = nuevasComunidades;
       this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
       this.stateService.setDatos(this.formularioService.obtenerDatos());
+      
+      const prefijo = this.obtenerPrefijoDeComunidad(id);
+      if (prefijo) {
+        this.centrosPobladosActivos.actualizarCodigosActivos(id, []);
+      }
       
       this.cdRef.markForCheck();
       this.cdRef.detectChanges();

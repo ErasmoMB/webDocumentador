@@ -2,7 +2,7 @@ import { Directive, ElementRef, Input, OnInit, OnChanges, SimpleChanges, Rendere
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { ConfigService } from 'src/app/core/services/config.service';
 
-export type DataSourceType = 'manual' | 'section' | 'backend';
+export type DataSourceType = 'manual' | 'section' | 'backend' | 'calculated';
 
 @Directive({
   selector: '[appDataSource]'
@@ -42,6 +42,7 @@ export class DataSourceDirective implements OnInit, OnChanges {
     this.renderer.removeClass(nativeElement, 'data-manual');
     this.renderer.removeClass(nativeElement, 'data-section');
     this.renderer.removeClass(nativeElement, 'data-backend');
+    this.renderer.removeClass(nativeElement, 'data-calculated');
     
     let resolvedType: DataSourceType | undefined;
 
@@ -63,6 +64,8 @@ export class DataSourceDirective implements OnInit, OnChanges {
       this.renderer.addClass(nativeElement, 'data-section');
     } else if (resolvedType === 'backend') {
       this.renderer.addClass(nativeElement, 'data-backend');
+    } else if (resolvedType === 'calculated') {
+      this.renderer.addClass(nativeElement, 'data-calculated');
     }
   }
 }

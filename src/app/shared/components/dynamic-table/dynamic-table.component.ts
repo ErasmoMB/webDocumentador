@@ -48,10 +48,10 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   private verificarEInicializarTabla(): void {
     if (!this.config || !this.datos) return;
     
-    const tablaKey = this.config.tablaKey || this.tablaKey;
-    if (!tablaKey) return;
+    const tablaKeyActual = this.tablaKey || this.config.tablaKey;
+    if (!tablaKeyActual) return;
     
-    const datosTabla = this.datos[tablaKey];
+    const datosTabla = this.datos[tablaKeyActual];
     
     if (!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) {
       if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
@@ -65,20 +65,22 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   onFieldChange(index: number, field: string, value: any): void {
     if (!this.config) return;
     
+    const tablaKeyActual = this.tablaKey || this.config.tablaKey;
+    
     if (this.customFieldChangeHandler) {
       this.customFieldChangeHandler(index, field, value);
     } else {
       this.tableService.actualizarFila(
         this.datos,
-        this.config,
+        { ...this.config, tablaKey: tablaKeyActual },
         index,
         field,
         value
       );
     }
     
-    this.formularioService.actualizarDato(this.config.tablaKey as any, this.datos[this.config.tablaKey]);
-    this.dataChange.emit(this.datos[this.config.tablaKey]);
+    this.formularioService.actualizarDato(tablaKeyActual as any, this.datos[tablaKeyActual]);
+    this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit();
     this.cdRef.detectChanges();
   }
@@ -86,9 +88,10 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   onAdd(): void {
     if (!this.config) return;
     
-    this.tableService.agregarFila(this.datos, this.config);
-    this.formularioService.actualizarDato(this.config.tablaKey as any, this.datos[this.config.tablaKey]);
-    this.dataChange.emit(this.datos[this.config.tablaKey]);
+    const tablaKeyActual = this.tablaKey || this.config.tablaKey;
+    this.tableService.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual });
+    this.formularioService.actualizarDato(tablaKeyActual as any, this.datos[tablaKeyActual]);
+    this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit();
     this.cdRef.detectChanges();
   }
@@ -96,10 +99,11 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   onDelete(index: number): void {
     if (!this.config) return;
     
-    const deleted = this.tableService.eliminarFila(this.datos, this.config, index);
+    const tablaKeyActual = this.tablaKey || this.config.tablaKey;
+    const deleted = this.tableService.eliminarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual }, index);
     if (deleted) {
-      this.formularioService.actualizarDato(this.config.tablaKey as any, this.datos[this.config.tablaKey]);
-      this.dataChange.emit(this.datos[this.config.tablaKey]);
+      this.formularioService.actualizarDato(tablaKeyActual as any, this.datos[tablaKeyActual]);
+      this.dataChange.emit(this.datos[tablaKeyActual]);
       this.tableUpdated.emit();
       this.cdRef.detectChanges();
     }
@@ -120,14 +124,16 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   initializeTable(): void {
     if (!this.config) return;
     
-    this.tableService.inicializarTabla(this.datos, this.config);
-    this.formularioService.actualizarDato(this.config.tablaKey as any, this.datos[this.config.tablaKey]);
-    this.dataChange.emit(this.datos[this.config.tablaKey]);
+    const tablaKeyActual = this.tablaKey || this.config.tablaKey;
+    this.tableService.inicializarTabla(this.datos, { ...this.config, tablaKey: tablaKeyActual });
+    this.formularioService.actualizarDato(tablaKeyActual as any, this.datos[tablaKeyActual]);
+    this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit();
     this.cdRef.detectChanges();
   }
 
   getTableData(): any[] {
-    return this.datos[this.config?.tablaKey] || [];
+    const tablaKeyActual = this.tablaKey || this.config?.tablaKey;
+    return this.datos[tablaKeyActual] || [];
   }
 }

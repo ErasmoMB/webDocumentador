@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -7,6 +8,7 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
 import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -50,7 +52,9 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private centrosPobladosActivos: CentrosPobladosActivosService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -67,26 +71,73 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
 
   private verificarCargaDatos(): void {
     setTimeout(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const codigosActivos = this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo);
+      
+      if (codigosActivos.length === 0) {
+        console.warn(`⚠️ [Seccion6] No hay códigos activos para ${prefijo}. Ve a la Sección 4.`);
+        return;
+      }
+      
+      const poblacionSexo = this.getTablaSexo();
+      const poblacionEtario = this.getTablaEtario();
+      
+      const poblacionSexoValida = poblacionSexo && Array.isArray(poblacionSexo) && poblacionSexo.length > 0 && 
+        poblacionSexo.some((item: any) => item.sexo && item.sexo.trim() !== '' && (item.casos > 0 || item.casos !== 0));
+      const poblacionEtarioValida = poblacionEtario && Array.isArray(poblacionEtario) && poblacionEtario.length > 0 && 
+        poblacionEtario.some((item: any) => item.categoria && item.categoria.trim() !== '' && (item.casos > 0 || item.casos !== 0));
+      
+      if (!poblacionSexoValida) {
+        console.warn(`⚠️ [Seccion6] Datos de población por sexo no válidos o vacíos`);
+        this.limpiarDatosVacios('poblacionSexoAISD');
+      }
+      
+      if (!poblacionEtarioValida) {
+        console.warn(`⚠️ [Seccion6] Datos de población etario no válidos o vacíos`);
+        this.limpiarDatosVacios('poblacionEtarioAISD');
+      }
+      
       this.eliminarFilasTotal('poblacionSexoAISD', 'sexo');
       this.eliminarFilasTotal('poblacionEtarioAISD', 'categoria');
+    }, 1500);
+  }
+
+  private limpiarDatosVacios(tablaKey: string): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `${tablaKey}${prefijo}` : tablaKey;
+    const datosTabla = this.datos[campoConPrefijo] || this.datos[tablaKey];
+    
+    if (datosTabla && Array.isArray(datosTabla)) {
+      const tieneDatosValidos = datosTabla.some((item: any) => {
+        if (item.sexo !== undefined) {
+          return item.sexo && item.sexo.trim() !== '' && (item.casos > 0 || item.casos !== 0);
+        }
+        if (item.categoria !== undefined) {
+          return item.categoria && item.categoria.trim() !== '' && (item.casos > 0 || item.casos !== 0);
+        }
+        return false;
+      });
       
-      const datos = this.formularioService.obtenerDatos();
-      console.log('🔍 [Seccion6] Verificando carga de datos del backend...');
-      console.log('📊 Población por sexo:', datos['poblacionSexoAISD']);
-      console.log('📊 Población etario:', datos['poblacionEtarioAISD']);
-      
-      if (datos['poblacionSexoAISD'] && Array.isArray(datos['poblacionSexoAISD']) && datos['poblacionSexoAISD'].length > 0) {
-        console.log('✅ Datos de población por sexo cargados correctamente');
-      } else {
-        console.warn('⚠️ No hay datos de población por sexo. Verifica que el backend esté respondiendo.');
+      if (!tieneDatosValidos) {
+        if (prefijo) {
+          delete this.datos[campoConPrefijo];
+          this.formularioService.actualizarDato(campoConPrefijo as any, null);
+        } else {
+          delete this.datos[tablaKey];
+          this.formularioService.actualizarDato(tablaKey as any, null);
+        }
       }
-      
-      if (datos['poblacionEtarioAISD'] && Array.isArray(datos['poblacionEtarioAISD']) && datos['poblacionEtarioAISD'].length > 0) {
-        console.log('✅ Datos de población etario cargados correctamente');
-      } else {
-        console.warn('⚠️ No hay datos de población etario. Verifica que el backend esté respondiendo.');
-      }
-    }, 1000);
+    }
+  }
+
+  private getTablaSexo(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'poblacionSexoAISD', this.seccionId);
+    return pref || this.datos.poblacionSexoAISD || [];
+  }
+
+  private getTablaEtario(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'poblacionEtarioAISD', this.seccionId);
+    return pref || this.datos.poblacionEtarioAISD || [];
   }
 
   ngOnDestroy() {
@@ -101,11 +152,11 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
     
-    const poblacionSexoActual = datosActuales['poblacionSexoAISD'] || [];
+    const poblacionSexoActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'poblacionSexoAISD', this.seccionId) || [];
     const poblacionSexoAnterior = this.datosAnteriores.poblacionSexoAISD || [];
     const hayCambioPoblacionSexo = JSON.stringify(poblacionSexoActual) !== JSON.stringify(poblacionSexoAnterior);
     
-    const poblacionEtarioActual = datosActuales['poblacionEtarioAISD'] || [];
+    const poblacionEtarioActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'poblacionEtarioAISD', this.seccionId) || [];
     const poblacionEtarioAnterior = this.datosAnteriores.poblacionEtarioAISD || [];
     const hayCambioPoblacionEtario = JSON.stringify(poblacionEtarioActual) !== JSON.stringify(poblacionEtarioAnterior);
     
@@ -142,55 +193,60 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    this.eliminarFilasTotal('poblacionSexoAISD', 'sexo');
-    this.eliminarFilasTotal('poblacionEtarioAISD', 'categoria');
-    
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
     
-    if (this.datos.poblacionSexoAISD && Array.isArray(this.datos.poblacionSexoAISD)) {
-      this.datosAnteriores.poblacionSexoAISD = JSON.parse(JSON.stringify(this.datos.poblacionSexoAISD));
+    const poblacionSexo = this.getTablaSexo();
+    if (poblacionSexo && Array.isArray(poblacionSexo) && poblacionSexo.length > 0) {
+      this.datosAnteriores.poblacionSexoAISD = JSON.parse(JSON.stringify(poblacionSexo));
     } else {
       this.datosAnteriores.poblacionSexoAISD = [];
     }
     
-    if (this.datos.poblacionEtarioAISD && Array.isArray(this.datos.poblacionEtarioAISD)) {
-      this.datosAnteriores.poblacionEtarioAISD = JSON.parse(JSON.stringify(this.datos.poblacionEtarioAISD));
+    const poblacionEtario = this.getTablaEtario();
+    if (poblacionEtario && Array.isArray(poblacionEtario) && poblacionEtario.length > 0) {
+      this.datosAnteriores.poblacionEtarioAISD = JSON.parse(JSON.stringify(poblacionEtario));
     } else {
       this.datosAnteriores.poblacionEtarioAISD = [];
     }
     
     this.datosAnteriores.textoPoblacionSexoAISD = this.datos.textoPoblacionSexoAISD || null;
     this.datosAnteriores.textoPoblacionEtarioAISD = this.datos.textoPoblacionEtarioAISD || null;
+    
+    this.eliminarFilasTotal('poblacionSexoAISD', 'sexo');
+    this.eliminarFilasTotal('poblacionEtarioAISD', 'categoria');
   }
 
   getPorcentajeHombres(): string {
-    if (!this.datos?.poblacionSexoAISD || !Array.isArray(this.datos.poblacionSexoAISD)) {
+    const tablaSexo = this.getTablaSexo();
+    if (!tablaSexo || !Array.isArray(tablaSexo) || tablaSexo.length === 0) {
       return '____';
     }
-    const hombres = this.datos.poblacionSexoAISD.find((item: any) => 
+    const hombres = tablaSexo.find((item: any) => 
       item.sexo && (item.sexo.toLowerCase().includes('hombre') || item.sexo.toLowerCase().includes('varon'))
     );
     return hombres?.porcentaje || '____';
   }
 
   getPorcentajeMujeres(): string {
-    if (!this.datos?.poblacionSexoAISD || !Array.isArray(this.datos.poblacionSexoAISD)) {
+    const tablaSexo = this.getTablaSexo();
+    if (!tablaSexo || !Array.isArray(tablaSexo) || tablaSexo.length === 0) {
       return '____';
     }
-    const mujeres = this.datos.poblacionSexoAISD.find((item: any) => 
+    const mujeres = tablaSexo.find((item: any) => 
       item.sexo && (item.sexo.toLowerCase().includes('mujer') || item.sexo.toLowerCase().includes('femenin'))
     );
     return mujeres?.porcentaje || '____';
   }
 
   getPorcentajeGrupoEtario(categoria: string): string {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '____';
     }
     
-    const grupo = this.datos.poblacionEtarioAISD.find((item: any) => {
+    const grupo = tablaEtario.find((item: any) => {
       if (!item.categoria) return false;
       const itemCategoria = item.categoria.toLowerCase();
       const buscarCategoria = categoria.toLowerCase();
@@ -210,14 +266,15 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getGrupoEtarioMayoritario(): string {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '15 a 29 años';
     }
     
     let mayorPorcentaje = 0;
     let grupoMayoritario = '15 a 29 años';
     
-    this.datos.poblacionEtarioAISD.forEach((item: any) => {
+    tablaEtario.forEach((item: any) => {
       if (item.porcentaje) {
         const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
         if (!isNaN(porcentajeNum) && porcentajeNum > mayorPorcentaje) {
@@ -231,11 +288,12 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getGrupoEtarioSegundo(): string {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '0 a 14 años';
     }
     
-    const gruposOrdenados = [...this.datos.poblacionEtarioAISD]
+    const gruposOrdenados = [...tablaEtario]
       .filter((item: any) => item.porcentaje && item.categoria)
       .map((item: any) => ({
         categoria: item.categoria,
@@ -248,14 +306,15 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getGrupoEtarioMenoritario(): string {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '65 años a más';
     }
     
     let menorPorcentaje = Infinity;
     let grupoMenoritario = '65 años a más';
     
-    this.datos.poblacionEtarioAISD.forEach((item: any) => {
+    tablaEtario.forEach((item: any) => {
       if (item.porcentaje) {
         const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
         if (!isNaN(porcentajeNum) && porcentajeNum < menorPorcentaje) {
@@ -269,27 +328,62 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getPoblacionSexoSinTotal(): any[] {
-    if (!this.datos?.poblacionSexoAISD || !Array.isArray(this.datos.poblacionSexoAISD)) {
+    const tablaSexo = this.getTablaSexo();
+    if (!tablaSexo || !Array.isArray(tablaSexo) || tablaSexo.length === 0) {
       return [];
     }
-    return this.datos.poblacionSexoAISD.filter((item: any) => {
+    return tablaSexo.filter((item: any) => {
       const sexo = item.sexo?.toString().toLowerCase() || '';
       return !sexo.includes('total');
     });
   }
 
   getPoblacionEtarioSinTotal(): any[] {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return [];
     }
-    return this.datos.poblacionEtarioAISD.filter((item: any) => {
+    return tablaEtario.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
   }
 
+  override obtenerNombreComunidadActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? this.datos[`grupoAISD${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    if (this.datos.comunidadesCampesinas && Array.isArray(this.datos.comunidadesCampesinas) && this.datos.comunidadesCampesinas.length > 0) {
+      const primerCC = this.datos.comunidadesCampesinas[0];
+      if (primerCC && primerCC.nombre && primerCC.nombre.trim() !== '') {
+        return primerCC.nombre;
+      }
+    }
+    
+    if (this.datos.tablaAISD1Localidad && this.datos.tablaAISD1Localidad.trim() !== '') {
+      return this.datos.tablaAISD1Localidad;
+    }
+    
+    const grupoAISDBase = this.datos.grupoAISD;
+    if (grupoAISDBase && grupoAISDBase.trim() !== '') {
+      return grupoAISDBase;
+    }
+    
+    return '____';
+  }
+
   getTotalPoblacionSexo(): string {
-    if (!this.datos?.poblacionSexoAISD || !Array.isArray(this.datos.poblacionSexoAISD)) {
+    const tablaSexo = this.getTablaSexo();
+    if (!tablaSexo || !Array.isArray(tablaSexo)) {
       return '0';
     }
     const datosSinTotal = this.getPoblacionSexoSinTotal();
@@ -301,7 +395,8 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getTotalPoblacionEtario(): string {
-    if (!this.datos?.poblacionEtarioAISD || !Array.isArray(this.datos.poblacionEtarioAISD)) {
+    const tablaEtario = this.getTablaEtario();
+    if (!tablaEtario || !Array.isArray(tablaEtario)) {
       return '0';
     }
     const datosSinTotal = this.getPoblacionEtarioSinTotal();
@@ -321,6 +416,14 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   getFotografiasDemografiaVista(): any[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return this.fotografiasCache.map(foto => ({
+        imagen: foto.imagen || '',
+        titulo: foto.titulo || 'Demografía',
+        fuente: foto.fuente || 'GEADES, 2024'
+      }));
+    }
+    
     const prefijo = this.obtenerPrefijoGrupo();
     const fotografias: any[] = [];
     for (let i = 1; i <= 10; i++) {
@@ -363,86 +466,168 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasCache = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   onPoblacionSexoFieldChange(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.poblacionSexoConfig, index, field, value, false);
-    if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
-      const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
-      if (total > 0) {
-        const casos = parseInt(value) || 0;
-        const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
-        this.datos['poblacionSexoAISD'][index].porcentaje = porcentaje;
-      }
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionSexoAISD${prefijo}` : 'poblacionSexoAISD';
+    const tabla = this.getTablaSexo();
+    
+    if (!tabla || !Array.isArray(tabla)) {
+      return;
     }
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const totalPoblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
+        const total = parseInt(this.datos[totalPoblacionKey] || this.datos['tablaAISD2TotalPoblacion'] || '0') || 0;
+        if (total > 0) {
+          const casos = parseInt(value) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
+          tabla[index].porcentaje = porcentaje;
+        }
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+    }
+    
     this.eliminarFilasTotal('poblacionSexoAISD', 'sexo');
-    this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   onPoblacionEtarioFieldChange(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.poblacionEtarioConfig, index, field, value, false);
-    if (field === 'casos' && this.datos['tablaAISD2TotalPoblacion']) {
-      const total = parseInt(this.datos['tablaAISD2TotalPoblacion']) || 0;
-      if (total > 0) {
-        const casos = parseInt(value) || 0;
-        const porcentaje = ((casos / total) * 100).toFixed(2) + '%';
-        this.datos['poblacionEtarioAISD'][index].porcentaje = porcentaje;
-      }
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionEtarioAISD${prefijo}` : 'poblacionEtarioAISD';
+    const tabla = this.getTablaEtario();
+    
+    if (!tabla || !Array.isArray(tabla)) {
+      return;
     }
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const totalPoblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
+        const total = parseInt(this.datos[totalPoblacionKey] || this.datos['tablaAISD2TotalPoblacion'] || '0') || 0;
+        if (total > 0) {
+          const casos = parseInt(value) || 0;
+          const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
+          tabla[index].porcentaje = porcentaje;
+        }
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+    }
+    
     this.eliminarFilasTotal('poblacionEtarioAISD', 'categoria');
-    this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   onPoblacionSexoTableUpdated() {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionSexoAISD${prefijo}` : 'poblacionSexoAISD';
+    const tabla = this.getTablaSexo();
+    
+    if (tabla && Array.isArray(tabla)) {
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+    }
+    
     this.eliminarFilasTotal('poblacionSexoAISD', 'sexo');
-    this.formularioService.actualizarDato('poblacionSexoAISD', this.datos['poblacionSexoAISD']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   onPoblacionEtarioTableUpdated() {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionEtarioAISD${prefijo}` : 'poblacionEtarioAISD';
+    const tabla = this.getTablaEtario();
+    
+    if (tabla && Array.isArray(tabla)) {
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+    }
+    
     this.eliminarFilasTotal('poblacionEtarioAISD', 'categoria');
-    this.formularioService.actualizarDato('poblacionEtarioAISD', this.datos['poblacionEtarioAISD']);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   private eliminarFilasTotal(tablaKey: string, campoKey: string): void {
-    if (this.datos[tablaKey] && Array.isArray(this.datos[tablaKey])) {
-      const longitudOriginal = this.datos[tablaKey].length;
-      const datosFiltrados = this.datos[tablaKey].filter((item: any) => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `${tablaKey}${prefijo}` : tablaKey;
+    const datosTabla = this.datos[campoConPrefijo] || this.datos[tablaKey];
+    
+    if (datosTabla && Array.isArray(datosTabla)) {
+      const longitudOriginal = datosTabla.length;
+      const datosFiltrados = datosTabla.filter((item: any) => {
         const valor = item[campoKey]?.toString().toLowerCase() || '';
         return !valor.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.datos[tablaKey] = datosFiltrados;
+        if (prefijo) {
+          this.datos[campoConPrefijo] = datosFiltrados;
+          this.formularioService.actualizarDato(campoConPrefijo as any, datosFiltrados);
+        } else {
+          this.datos[tablaKey] = datosFiltrados;
+          this.formularioService.actualizarDato(tablaKey as any, datosFiltrados);
+        }
       }
     }
   }
 
+  getFieldIdTextoPoblacionSexo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoPoblacionSexoAISD${prefijo}` : 'textoPoblacionSexoAISD';
+  }
+
+  getFieldIdTextoPoblacionEtario(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoPoblacionEtarioAISD${prefijo}` : 'textoPoblacionEtarioAISD';
+  }
+
   obtenerTextoPoblacionSexoAISD(): string {
-    if (this.datos.textoPoblacionSexoAISD && this.datos.textoPoblacionSexoAISD !== '____') {
-      return this.datos.textoPoblacionSexoAISD;
-    }
+    const fieldId = this.getFieldIdTextoPoblacionSexo();
+    const textoConPrefijo = this.datos[fieldId];
+    const textoSinPrefijo = this.datos.textoPoblacionSexoAISD;
+    const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
-    const totalPoblacion = this.datos.tablaAISD2TotalPoblacion || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const totalPoblacion = this.getTotalPoblacionSexo();
     const porcentajeHombres = this.getPorcentajeHombres();
     const porcentajeMujeres = this.getPorcentajeMujeres();
     
-    return `Respecto a la población de la CC ${grupoAISD}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ${totalPoblacion} habitantes que residen permanentemente en la comunidad. De este conjunto, el ${porcentajeHombres} son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (${porcentajeMujeres}).`;
+    const textoPorDefecto = `Respecto a la población de la CC ${grupoAISD}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ${totalPoblacion} habitantes que residen permanentemente en la comunidad. De este conjunto, el ${porcentajeHombres} son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (${porcentajeMujeres}).`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
+        .replace(/total de\s*___/g, `total de ${totalPoblacion}`)
+        .replace(/existen un total de\s*___/g, `existen un total de ${totalPoblacion}`)
+        .replace(/el\s*___\s*son varones/g, `el ${porcentajeHombres} son varones`)
+        .replace(/\(\s*___\s*\)/g, `(${porcentajeMujeres})`)
+        .replace(/femeninos\s*\(\s*___\s*\)/g, `femeninos (${porcentajeMujeres})`);
+    }
+    
+    return textoPorDefecto;
   }
 
   obtenerTextoPoblacionEtarioAISD(): string {
-    if (this.datos.textoPoblacionEtarioAISD && this.datos.textoPoblacionEtarioAISD !== '____') {
-      return this.datos.textoPoblacionEtarioAISD;
-    }
+    const fieldId = this.getFieldIdTextoPoblacionEtario();
+    const textoConPrefijo = this.datos[fieldId];
+    const textoSinPrefijo = this.datos.textoPoblacionEtarioAISD;
+    const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     const grupoMayoritario = this.getGrupoEtarioMayoritario();
     const porcentajeMayoritario = this.getPorcentajeGrupoEtario(grupoMayoritario);
     const grupoSegundo = this.getGrupoEtarioSegundo();
@@ -450,7 +635,100 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
     const grupoMenoritario = this.getGrupoEtarioMenoritario();
     const porcentajeMenoritario = this.getPorcentajeGrupoEtario(grupoMenoritario);
     
-    return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${grupoAISD} es el de ${grupoMayoritario}, puesto que representa el ${porcentajeMayoritario} de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ${grupoSegundo} (${porcentajeSegundo}). Por otro lado, el conjunto minoritario está conformado por la población de ${grupoMenoritario}, pues solo representa un ${porcentajeMenoritario}.`;
+    const textoPorDefecto = `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${grupoAISD} es el de ${grupoMayoritario}, puesto que representa el ${porcentajeMayoritario} de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ${grupoSegundo} (${porcentajeSegundo}). Por otro lado, el conjunto minoritario está conformado por la población de ${grupoMenoritario}, pues solo representa un ${porcentajeMenoritario}.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
+        .replace(/es el de\s*___/g, `es el de ${grupoMayoritario}`)
+        .replace(/representa el\s*___/g, `representa el ${porcentajeMayoritario}`)
+        .replace(/bloque etario de\s*___/g, `bloque etario de ${grupoSegundo}`)
+        .replace(/\(\s*___\s*\)/g, `(${porcentajeSegundo})`)
+        .replace(/población de\s*___/g, `población de ${grupoMenoritario}`)
+        .replace(/representa un\s*___/g, `representa un ${porcentajeMenoritario}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoPoblacionSexoAISDConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoPoblacionSexoAISD();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const totalPoblacion = this.getTotalPoblacionSexo();
+    const porcentajeHombres = this.getPorcentajeHombres();
+    const porcentajeMujeres = this.getPorcentajeMujeres();
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    if (totalPoblacion && totalPoblacion !== '____' && totalPoblacion !== '0') {
+      html = html.replace(new RegExp(this.escapeRegex(totalPoblacion), 'g'), `<span class="data-calculated">${this.escapeHtml(totalPoblacion)}</span>`);
+    }
+    if (porcentajeHombres && porcentajeHombres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeHombres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeHombres)}</span>`);
+    }
+    if (porcentajeMujeres && porcentajeMujeres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeMujeres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMujeres)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoPoblacionEtarioAISDConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoPoblacionEtarioAISD();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const grupoMayoritario = this.getGrupoEtarioMayoritario();
+    const porcentajeMayoritario = this.getPorcentajeGrupoEtario(grupoMayoritario);
+    const grupoSegundo = this.getGrupoEtarioSegundo();
+    const porcentajeSegundo = this.getPorcentajeGrupoEtario(grupoSegundo);
+    const grupoMenoritario = this.getGrupoEtarioMenoritario();
+    const porcentajeMenoritario = this.getPorcentajeGrupoEtario(grupoMenoritario);
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    if (grupoMayoritario && grupoMayoritario !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoMayoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoMayoritario)}</span>`);
+    }
+    if (porcentajeMayoritario && porcentajeMayoritario !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeMayoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMayoritario)}</span>`);
+    }
+    if (grupoSegundo && grupoSegundo !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoSegundo), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoSegundo)}</span>`);
+    }
+    if (porcentajeSegundo && porcentajeSegundo !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeSegundo), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeSegundo)}</span>`);
+    }
+    if (grupoMenoritario && grupoMenoritario !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoMenoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoMenoritario)}</span>`);
+    }
+    if (porcentajeMenoritario && porcentajeMenoritario !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeMenoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMenoritario)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  getTablaKeyPoblacionSexo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionSexoAISD${prefijo}` : 'poblacionSexoAISD';
+  }
+
+  getTablaKeyPoblacionEtario(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionEtarioAISD${prefijo}` : 'poblacionEtarioAISD';
   }
 }
 

@@ -1,9 +1,9 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
 <p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas !== '____'">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[0] }}</p>
-<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ datos.grupoAISD || 'Ayroca' }}</span> se halla un total de <span [appDataSource]="'section'">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">En primer lugar, cabe mencionar que en la CC <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ obtenerNombreComunidadActual() }}</span> se halla un total de <span [appDataSource]="'section'">{{ getTotalPersonasCC() }}</span> personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoCC() }}</span>), seguido de la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosCC() }}</span>).</p>
 
-<app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.14">
+<app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.14">
 <table class="table-container">
     <thead>
         <tr>
@@ -34,7 +34,7 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 <p class="text-justify" *ngIf="datos.textoNecesidadesBasicasInsatisfechas && datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1]">{{ datos.textoNecesidadesBasicasInsatisfechas.split('\n\n')[1] }}</p>
-<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">Por otro lado, a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, de un total de <span [appDataSource]="'section'">{{ getTotalUnidadesDistrito() }}</span> unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosDistrito() }}</span>), seguida de la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoDistrito() }}</span>). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC <span [appDataSource]="'section'">{{ datos.grupoAISD || 'Ayroca' }}</span> con el distrito de <span [appDataSource]="'section'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>.</p>
+<p class="text-justify" *ngIf="!datos.textoNecesidadesBasicasInsatisfechas || datos.textoNecesidadesBasicasInsatisfechas === '____'">Por otro lado, a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>, de un total de <span [appDataSource]="'section'">{{ getTotalUnidadesDistrito() }}</span> unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (<span [appDataSource]="'section'">{{ getPorcentajeSinServiciosDistrito() }}</span>), seguida de la de viviendas con hacinamiento (<span [appDataSource]="'section'">{{ getPorcentajeHacinamientoDistrito() }}</span>). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span> con el distrito de <span [appDataSource]="'section'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>.</p>
 
 <app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.14">
 <table class="table-container">
@@ -103,7 +103,7 @@
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con hacinamiento' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
         [tablaKey]="'nbiCCAyrocaTabla'"
         [totalKey]="'categoria'"
@@ -131,7 +131,7 @@
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas sin servicios higiénicos' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
         [tablaKey]="'nbiDistritoCahuachoTabla'"
         [totalKey]="'categoria'"

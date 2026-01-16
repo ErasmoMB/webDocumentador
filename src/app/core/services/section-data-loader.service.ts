@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FormularioService } from './formulario.service';
 import { FieldMappingService } from './field-mapping.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -22,6 +23,7 @@ export class SectionDataLoaderService {
       return this.cache.get(cacheKey)!;
     }
 
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(seccionId);
     const observables: { [key: string]: Observable<any> } = {};
 
     fieldsToLoad.forEach(fieldName => {
@@ -29,7 +31,7 @@ export class SectionDataLoaderService {
       if (mapping && mapping.endpoint) {
         observables[fieldName] = this.fieldMappingService.loadDataForField(fieldName, seccionId).pipe(
           catchError(error => {
-            console.warn(`Error loading data for field ${fieldName}`, error);
+            console.error(`❌ [SectionDataLoader] Error loading data for field ${fieldName}:`, error);
             return of(null);
           })
         );
@@ -47,10 +49,39 @@ export class SectionDataLoaderService {
         const updatedData: any = {};
         for (const fieldName in results) {
           if (results.hasOwnProperty(fieldName)) {
-            updatedData[fieldName] = results[fieldName];
+            const valor = results[fieldName];
+            if (valor !== null && valor !== undefined) {
+              const esArrayVacio = Array.isArray(valor) && valor.length === 0;
+              const esArrayConDatosVacios = Array.isArray(valor) && valor.length > 0 && 
+                valor.every((item: any) => {
+                  if (item.sexo !== undefined) {
+                    return !item.sexo || item.sexo === '' || (item.casos === 0 || item.casos === '0');
+                  }
+                  if (item.categoria !== undefined) {
+                    return !item.categoria || item.categoria === '' || (item.casos === 0 || item.casos === '0');
+                  }
+                  return false;
+                });
+              
+              if (esArrayVacio || esArrayConDatosVacios) {
+                console.warn(`⚠️ [SectionDataLoader] Ignorando ${fieldName} - array vacío o con datos vacíos:`, valor);
+                continue;
+              }
+              
+              if (prefijo && this.debeGuardarConPrefijo(fieldName)) {
+                const campoConPrefijo = `${fieldName}${prefijo}`;
+                updatedData[campoConPrefijo] = valor;
+              } else {
+                updatedData[fieldName] = valor;
+              }
+            }
           }
         }
-        this.formularioService.actualizarDatos(updatedData);
+        if (Object.keys(updatedData).length > 0) {
+          this.formularioService.actualizarDatos(updatedData);
+        } else {
+          console.warn(`⚠️ [SectionDataLoader] No hay datos válidos para guardar en ${seccionId}`);
+        }
         return updatedData;
       }),
       shareReplay(1)
@@ -60,15 +91,35 @@ export class SectionDataLoaderService {
     return result$;
   }
 
+  private debeGuardarConPrefijo(fieldName: string): boolean {
+    const camposConPrefijo = [
+      'poblacionSexoAISD',
+      'poblacionEtarioAISD',
+      'petAISD',
+      'petTabla',
+      'peaOcupacionesTabla',
+      'materialesConstruccionAISD',
+      'grupoAISD',
+      'tablaAISD2TotalPoblacion'
+    ];
+    return camposConPrefijo.includes(fieldName);
+  }
+
   clearCache(): void {
     this.cache.clear();
   }
 
   loadFieldData(fieldName: string, seccionId: string): Observable<any> {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(seccionId);
     return this.fieldMappingService.loadDataForField(fieldName, seccionId).pipe(
       map(data => {
         if (data !== null) {
-          this.formularioService.actualizarDato(fieldName, data);
+          if (prefijo && this.debeGuardarConPrefijo(fieldName)) {
+            const campoConPrefijo = `${fieldName}${prefijo}` as any;
+            this.formularioService.actualizarDato(campoConPrefijo, data);
+          } else {
+            this.formularioService.actualizarDato(fieldName as any, data);
+          }
         }
         return data;
       }),

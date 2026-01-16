@@ -96,6 +96,38 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  obtenerNombreComunidadActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
+    
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? this.datos[`grupoAISD${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    if (this.datos.comunidadesCampesinas && Array.isArray(this.datos.comunidadesCampesinas) && this.datos.comunidadesCampesinas.length > 0) {
+      const primerCC = this.datos.comunidadesCampesinas[0];
+      if (primerCC && primerCC.nombre && primerCC.nombre.trim() !== '') {
+        return primerCC.nombre;
+      }
+    }
+    
+    if (this.datos.tablaAISD1Localidad && this.datos.tablaAISD1Localidad.trim() !== '') {
+      return this.datos.tablaAISD1Localidad;
+    }
+    
+    const grupoAISDBase = this.datos.grupoAISD;
+    if (grupoAISDBase && grupoAISDBase.trim() !== '') {
+      return grupoAISDBase;
+    }
+    
+    return '____';
+  }
+
   protected actualizarFotografiasCache(): void {
     if (!this.PHOTO_PREFIX) return;
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);

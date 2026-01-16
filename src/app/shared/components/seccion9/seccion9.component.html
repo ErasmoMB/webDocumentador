@@ -1,9 +1,9 @@
 <div *ngIf="!modoFormulario">
 <h5>A.1.5. Viviendas</h5>
 <p class="text-justify" *ngIf="datos.textoViviendas && datos.textoViviendas !== '____'">{{ datos.textoViviendas }}</p>
-<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span [appDataSource]="'section'" [fieldName]="'textoViviendas'">{{ datos.grupoAISD || '____' }}</span> se hallan un total de <span [appDataSource]="'section'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span [appDataSource]="'section'">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span [appDataSource]="'section'">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
+<p class="text-justify" *ngIf="!datos.textoViviendas || datos.textoViviendas === '____'">Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC <span [appDataSource]="'section'" [fieldName]="'textoViviendas'">{{ obtenerNombreComunidadActual() }}</span> se hallan un total de <span [appDataSource]="'section'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. De estas, solamente <span [appDataSource]="'section'">{{ getViviendasOcupadas() }}</span> se encuentran ocupadas, representando un <span [appDataSource]="'section'">{{ getPorcentajeViviendasOcupadas() }}</span>. Cabe mencionar que, para poder describir el acápite de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.</p>
 
-<app-table-wrapper title="Condición de ocupación de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.5">
+<app-table-wrapper title="Condición de ocupación de las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
     <thead>
         <tr>
@@ -16,7 +16,7 @@
         <tr *ngFor="let item of getCondicionOcupacionSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getCondicionOcupacionSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -35,11 +35,11 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
 <p class="text-justify" *ngIf="datos.textoEstructura && datos.textoEstructura !== '____'">{{ datos.textoEstructura }}</p>
-    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ datos.grupoAISD || '____' }}</span>, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el <span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'adobe') }}</span>. A ello le complementa el material de triplay / calamina / estera (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'triplay') }}</span>).</p>
+    <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro de la CC <span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ obtenerNombreComunidadActual() }}</span>, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el <span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'adobe') }}</span>. A ello le complementa el material de triplay / calamina / estera (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('paredes', 'triplay') }}</span>).</p>
     <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un <span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ getPorcentajeMaterial('techos', 'calamina') }}</span>. El porcentaje restante consiste en triplay / estera / carrizo (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('techos', 'triplay') }}</span>) y en tejas (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('techos', 'tejas') }}</span>).</p>
     <p class="text-justify" *ngIf="!datos.textoEstructura || datos.textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span [appDataSource]="'section'" [fieldName]="'textoEstructura'">{{ getPorcentajeMaterial('pisos', 'tierra') }}</span>). Por otra parte, el porcentaje restante (<span [appDataSource]="'section'">{{ getPorcentajeMaterial('pisos', 'cemento') }}</span>) consiste en cemento.</p>
 
-<app-table-wrapper title="Tipos de materiales de las viviendas – CC {{ datos.grupoAISD || 'Ayroca' }} (2017)" sectionId="3.1.4.A.1.5">
+<app-table-wrapper title="Tipos de materiales de las viviendas – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.5">
 <table class="table-container">
     <thead>
         <tr>
@@ -54,7 +54,7 @@
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'section'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial }}</span><span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getTiposMaterialesSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -110,7 +110,7 @@
         [columns]="[
           { field: 'categoria', label: 'Condición de ocupación', type: 'text', placeholder: 'Viviendas ocupadas' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
         [tablaKey]="'condicionOcupacionTabla'"
         [totalKey]="'categoria'"
@@ -165,7 +165,7 @@
             { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Materiales de las paredes' },
             { field: 'tipoMaterial', label: 'Tipos de materiales', type: 'text', placeholder: 'Adobe' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [tablaKey]="'tiposMaterialesTabla'"
           [totalKey]="'categoria'"

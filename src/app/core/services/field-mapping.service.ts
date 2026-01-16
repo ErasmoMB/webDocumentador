@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { BackendApiService } from './backend-api.service';
 import { FormularioService } from './formulario.service';
 import { UbigeoHelperService } from './ubigeo-helper.service';
+import { CentrosPobladosActivosService } from './centros-poblados-activos.service';
 
 export interface FieldMapping {
   fieldName: string;
@@ -23,7 +24,8 @@ export class FieldMappingService {
   constructor(
     private backendApi: BackendApiService,
     private formularioService: FormularioService,
-    private ubigeoHelper: UbigeoHelperService
+    private ubigeoHelper: UbigeoHelperService,
+    private centrosPobladosActivos: CentrosPobladosActivosService
   ) {
     this.initializeMappings();
   }
@@ -80,9 +82,27 @@ export class FieldMappingService {
     this.fieldMappings.set('provinciaAISD', { fieldName: 'provinciaAISD', dataSource: 'backend' });
     this.fieldMappings.set('departamentoAISD', { fieldName: 'departamentoAISD', dataSource: 'backend' });
     this.fieldMappings.set('componentesCC', { fieldName: 'componentesCC', dataSource: 'backend' });
-    this.fieldMappings.set('poblacionSexoAISD', { fieldName: 'poblacionSexoAISD', dataSource: 'backend' });
-    this.fieldMappings.set('poblacionEtarioAISD', { fieldName: 'poblacionEtarioAISD', dataSource: 'backend' });
+    this.fieldMappings.set('poblacionSexoAISD', { 
+      fieldName: 'poblacionSexoAISD', 
+      dataSource: 'backend',
+      endpoint: '/aisd/poblacion-sexo'
+    });
+    this.fieldMappings.set('poblacionEtarioAISD', { 
+      fieldName: 'poblacionEtarioAISD', 
+      dataSource: 'backend',
+      endpoint: '/aisd/poblacion-etario'
+    });
     this.fieldMappings.set('petAISD', { fieldName: 'petAISD', dataSource: 'backend' });
+    this.fieldMappings.set('petTabla', { 
+      fieldName: 'petTabla', 
+      dataSource: 'backend',
+      endpoint: '/aisd/poblacion-etario'
+    });
+    this.fieldMappings.set('peaOcupacionesTabla', { 
+      fieldName: 'peaOcupacionesTabla', 
+      dataSource: 'backend',
+      endpoint: '/economicos/principales'
+    });
     this.fieldMappings.set('tablaAISD2Punto', { fieldName: 'tablaAISD2Punto', dataSource: 'backend' });
     this.fieldMappings.set('tablaAISD2Codigo', { fieldName: 'tablaAISD2Codigo', dataSource: 'backend' });
     this.fieldMappings.set('tablaAISD2Poblacion', { fieldName: 'tablaAISD2Poblacion', dataSource: 'backend' });
@@ -156,26 +176,102 @@ export class FieldMappingService {
     }
 
     if (mapping.endpoint === '/aisd/poblacion-sexo') {
-      return this.backendApi.getPoblacionPorSexo(params.id_ubigeo).pipe(
-        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => this.backendApi.getDatosDemograficos(codigo),
+        this.agregarDatosDemograficos
+      ).pipe(
+        map(response => {
+          const transformado = this.transformarPoblacionSexo(response);
+          if (transformado.length === 0) {
+            console.warn(`⚠️ [FieldMapping] Población por sexo: datos vacíos después de transformar`);
+          }
+          return transformado;
+        })
       );
     }
 
     if (mapping.endpoint === '/aisd/poblacion-etario') {
-      return this.backendApi.getPoblacionPorGrupoEtario(params.id_ubigeo).pipe(
-        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => this.backendApi.getDatosDemograficos(codigo),
+        this.agregarDatosDemograficos
+      ).pipe(
+        map(response => {
+          const transformado = this.transformarPoblacionEtario(response);
+          if (transformado.length === 0) {
+            console.warn(`⚠️ [FieldMapping] Población etario: datos vacíos después de transformar`);
+          }
+          return transformado;
+        })
       );
     }
 
     if (mapping.endpoint === '/aisd/pet') {
-      return this.backendApi.getPET(params.id_ubigeo).pipe(
-        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => this.backendApi.getPET(codigo),
+        this.agregarDatosDemografia
+      ).pipe(
+        map(response => mapping.transform ? mapping.transform(response) : response)
+      );
+    }
+
+    if (fieldName === 'petTabla') {
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => this.backendApi.getDatosDemograficos(codigo),
+        this.agregarDatosDemograficos
+      ).pipe(
+        map(response => {
+          const transformado = this.transformarPET(response);
+          if (transformado.length === 0) {
+            console.warn(`⚠️ [FieldMapping] PET: datos vacíos después de transformar`);
+          }
+          return transformado;
+        })
+      );
+    }
+
+    if (fieldName === 'peaOcupacionesTabla') {
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => {
+          return this.backendApi.getActividadesPrincipales(codigo).pipe(
+            map(response => {
+              const datos = response?.data || response || [];
+              const datosFiltrados = Array.isArray(datos) ? datos.filter(item => {
+                if (!item) return false;
+                const actividadPrincipal = item.actividad_principal;
+                const totalTrabajadores = parseInt(item.total_trabajadores || '0') || 0;
+                return actividadPrincipal !== null && 
+                       actividadPrincipal !== undefined && 
+                       actividadPrincipal !== '' &&
+                       totalTrabajadores > 0;
+              }) : [];
+              return datosFiltrados;
+            })
+          );
+        },
+        this.agregarDatosOcupaciones
+      ).pipe(
+        map(datosAgregados => {
+          const transformado = this.transformarPEAOcupaciones(datosAgregados);
+          if (transformado.length === 0) {
+            console.warn(`⚠️ [FieldMapping] PEA Ocupaciones: No hay datos válidos después de transformar`);
+          }
+          return transformado;
+        })
       );
     }
 
     if (mapping.endpoint === '/aisd/materiales-construccion') {
-      return this.backendApi.getMaterialesConstruccion(params.id_ubigeo).pipe(
-        map(response => mapping.transform ? mapping.transform(response.data) : response.data)
+      return this.cargarDatosAgregadosAISD(
+        seccionId,
+        (codigo) => this.backendApi.getMaterialesConstruccion(codigo),
+        this.agregarDatosMateriales
+      ).pipe(
+        map(response => mapping.transform ? mapping.transform(response) : response)
       );
     }
 
@@ -204,6 +300,355 @@ export class FieldMappingService {
     }
 
     return of(null);
+  }
+
+  private cargarDatosAgregadosAISD<T>(
+    seccionId: string,
+    consultaPorCodigo: (codigo: string) => Observable<any>,
+    agregarFuncion: (acumulado: T[], nuevo: any) => T[]
+  ): Observable<T[]> {
+    const prefijo = this.obtenerPrefijoDeSeccionId(seccionId);
+    
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      const idUbigeo = this.ubigeoHelper.getIdUbigeoPrincipal(seccionId);
+      if (idUbigeo) {
+        return consultaPorCodigo(idUbigeo).pipe(
+          map(response => {
+            const datos = response?.data || response || [];
+            return datos;
+          }),
+          catchError((error) => {
+            console.error(`❌ [FieldMapping] Error consultando backend:`, error);
+            return of([]);
+          })
+        );
+      }
+      return of([]);
+    }
+
+    const codigosActivos = this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo);
+    
+    if (codigosActivos.length === 0) {
+      console.error(`❌ [FieldMapping] No hay códigos activos para ${prefijo}. Ve a la Sección 4 (Cuadro 3.3).`);
+      return of([]);
+    }
+
+    if (codigosActivos.length === 1) {
+      return consultaPorCodigo(codigosActivos[0]).pipe(
+        map(response => {
+          const datos = response?.data || response || [];
+          return datos;
+        }),
+        catchError((error) => {
+          console.error(`❌ [FieldMapping] Error consultando backend:`, error);
+          return of([]);
+        })
+      );
+    }
+
+    const consultas = codigosActivos.map(codigo =>
+      consultaPorCodigo(codigo).pipe(
+        map(response => {
+          const datos = response?.data || response || [];
+          return datos;
+        }),
+        catchError((error) => {
+          console.error(`❌ [FieldMapping] Error consultando código ${codigo}:`, error);
+          return of([]);
+        })
+      )
+    );
+
+    return forkJoin(consultas).pipe(
+      map(resultados => {
+        let acumulado: T[] = [];
+        let totalConDatos = 0;
+        resultados.forEach((datos) => {
+          if (Array.isArray(datos) && datos.length > 0) {
+            totalConDatos++;
+            acumulado = agregarFuncion(acumulado, datos);
+          }
+        });
+        if (totalConDatos === 0) {
+          console.warn(`⚠️ [FieldMapping] Ningún código UBIGEO devolvió datos. Total códigos consultados: ${codigosActivos.length}`);
+        } else {
+          console.log(`✅ [FieldMapping] ${totalConDatos} de ${codigosActivos.length} códigos devolvieron datos. Acumulado:`, acumulado);
+        }
+        return acumulado;
+      }),
+      catchError((error) => {
+        console.error(`❌ [FieldMapping] Error agregando datos:`, error);
+        return of([]);
+      })
+    );
+  }
+
+  private agregarDatosDemografia(acumulado: any[], nuevos: any[]): any[] {
+    if (!Array.isArray(nuevos) || nuevos.length === 0) {
+      return acumulado;
+    }
+
+    const resultado = [...acumulado];
+
+    nuevos.forEach(nuevoItem => {
+      const existente = resultado.find(item => {
+        const claveExistente = item.sexo || item.categoria || item.grupo || '';
+        const claveNuevo = nuevoItem.sexo || nuevoItem.categoria || nuevoItem.grupo || '';
+        return claveExistente.toLowerCase() === claveNuevo.toLowerCase();
+      });
+
+      if (existente) {
+        const casosExistente = parseInt(existente.casos || '0') || 0;
+        const casosNuevo = parseInt(nuevoItem.casos || '0') || 0;
+        existente.casos = casosExistente + casosNuevo;
+      } else {
+        resultado.push({ ...nuevoItem });
+      }
+    });
+
+    return resultado;
+  }
+
+  private agregarDatosDemograficos(acumulado: any[], nuevos: any[]): any[] {
+    if (!Array.isArray(nuevos) || nuevos.length === 0) {
+      return acumulado;
+    }
+
+    if (acumulado.length === 0) {
+      return nuevos.map(item => ({ ...item }));
+    }
+
+    const resultado = { ...acumulado[0] };
+
+    nuevos.forEach(item => {
+      if (item.hombres !== undefined && item.hombres !== null) {
+        resultado.hombres = (resultado.hombres || 0) + (item.hombres || 0);
+      }
+      if (item.mujeres !== undefined && item.mujeres !== null) {
+        resultado.mujeres = (resultado.mujeres || 0) + (item.mujeres || 0);
+      }
+      if (item.de_1_a_14 !== undefined && item.de_1_a_14 !== null) {
+        resultado.de_1_a_14 = (resultado.de_1_a_14 || 0) + (item.de_1_a_14 || 0);
+      }
+      if (item.de_15_a_29 !== undefined && item.de_15_a_29 !== null) {
+        resultado.de_15_a_29 = (resultado.de_15_a_29 || 0) + (item.de_15_a_29 || 0);
+      }
+      if (item.de_30_a_44 !== undefined && item.de_30_a_44 !== null) {
+        resultado.de_30_a_44 = (resultado.de_30_a_44 || 0) + (item.de_30_a_44 || 0);
+      }
+      if (item.de_45_a_64 !== undefined && item.de_45_a_64 !== null) {
+        resultado.de_45_a_64 = (resultado.de_45_a_64 || 0) + (item.de_45_a_64 || 0);
+      }
+      if (item.mayores_65 !== undefined && item.mayores_65 !== null) {
+        resultado.mayores_65 = (resultado.mayores_65 || 0) + (item.mayores_65 || 0);
+      }
+      if (item.poblacion_total !== undefined && item.poblacion_total !== null) {
+        resultado.poblacion_total = (resultado.poblacion_total || 0) + (item.poblacion_total || 0);
+      }
+    });
+
+    return [resultado];
+  }
+
+  private transformarPoblacionSexo(datos: any[]): any[] {
+    if (!Array.isArray(datos) || datos.length === 0) {
+      return [];
+    }
+
+    const datosAgregados = datos[0];
+    const hombres = datosAgregados.hombres || 0;
+    const mujeres = datosAgregados.mujeres || 0;
+    const total = hombres + mujeres;
+
+    if (total === 0) {
+      console.warn(`⚠️ [FieldMapping] Población por sexo: total es 0`);
+      return [];
+    }
+
+    const porcentajeHombres = total > 0 ? ((hombres / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+    const porcentajeMujeres = total > 0 ? ((mujeres / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+
+    return [
+      { sexo: 'Hombres', casos: hombres, porcentaje: porcentajeHombres },
+      { sexo: 'Mujeres', casos: mujeres, porcentaje: porcentajeMujeres }
+    ];
+  }
+
+  private transformarPoblacionEtario(datos: any[]): any[] {
+    if (!Array.isArray(datos) || datos.length === 0) {
+      return [];
+    }
+
+    const datosAgregados = datos[0];
+    const de_1_a_14 = datosAgregados.de_1_a_14 || 0;
+    const de_15_a_29 = datosAgregados.de_15_a_29 || 0;
+    const de_30_a_44 = datosAgregados.de_30_a_44 || 0;
+    const de_45_a_64 = datosAgregados.de_45_a_64 || 0;
+    const mayores_65 = datosAgregados.mayores_65 || 0;
+    const total = de_1_a_14 + de_15_a_29 + de_30_a_44 + de_45_a_64 + mayores_65;
+
+    if (total === 0) {
+      console.warn(`⚠️ [FieldMapping] Población etario: total es 0`);
+      return [];
+    }
+
+    const calcularPorcentaje = (valor: number) => total > 0 ? ((valor / total) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+
+    return [
+      { categoria: '0 a 14 años', casos: de_1_a_14, porcentaje: calcularPorcentaje(de_1_a_14) },
+      { categoria: '15 a 29 años', casos: de_15_a_29, porcentaje: calcularPorcentaje(de_15_a_29) },
+      { categoria: '30 a 44 años', casos: de_30_a_44, porcentaje: calcularPorcentaje(de_30_a_44) },
+      { categoria: '45 a 64 años', casos: de_45_a_64, porcentaje: calcularPorcentaje(de_45_a_64) },
+      { categoria: '65 años a más', casos: mayores_65, porcentaje: calcularPorcentaje(mayores_65) }
+    ];
+  }
+
+  private transformarPET(datos: any[]): any[] {
+    if (!Array.isArray(datos) || datos.length === 0) {
+      return [];
+    }
+
+    const datosAgregados = datos[0];
+    const de_15_a_29 = datosAgregados.de_15_a_29 || 0;
+    const de_30_a_44 = datosAgregados.de_30_a_44 || 0;
+    const de_45_a_64 = datosAgregados.de_45_a_64 || 0;
+    const mayores_65 = datosAgregados.mayores_65 || 0;
+    const totalPET = de_15_a_29 + de_30_a_44 + de_45_a_64 + mayores_65;
+
+    if (totalPET === 0) {
+      console.warn(`⚠️ [FieldMapping] PET: total es 0`);
+      return [];
+    }
+
+    const calcularPorcentaje = (valor: number) => totalPET > 0 ? ((valor / totalPET) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+
+    return [
+      { categoria: '15 a 29 años', casos: de_15_a_29, porcentaje: calcularPorcentaje(de_15_a_29) },
+      { categoria: '30 a 44 años', casos: de_30_a_44, porcentaje: calcularPorcentaje(de_30_a_44) },
+      { categoria: '45 a 64 años', casos: de_45_a_64, porcentaje: calcularPorcentaje(de_45_a_64) },
+      { categoria: '65 años a más', casos: mayores_65, porcentaje: calcularPorcentaje(mayores_65) }
+    ];
+  }
+
+  private agregarDatosOcupaciones(acumulado: any[], nuevos: any[]): any[] {
+    if (!Array.isArray(nuevos) || nuevos.length === 0) {
+      return acumulado;
+    }
+
+    const resultado = [...acumulado];
+
+    nuevos.forEach(nuevoItem => {
+      const actividadPrincipal = nuevoItem.actividad_principal || '';
+      const totalTrabajadores = parseInt(nuevoItem.total_trabajadores || '0') || 0;
+      
+      if (!actividadPrincipal || actividadPrincipal.trim() === '' || totalTrabajadores === 0) {
+        return;
+      }
+      
+      const existente = resultado.find(item => {
+        const catExistente = (item.categoria || item.actividad_principal || '').toLowerCase();
+        return catExistente === actividadPrincipal.toLowerCase();
+      });
+
+      if (existente) {
+        const casosExistente = parseInt(existente.casos || existente.total_trabajadores || '0') || 0;
+        existente.casos = casosExistente + totalTrabajadores;
+        existente.total_trabajadores = existente.casos;
+      } else {
+        resultado.push({ 
+          categoria: actividadPrincipal,
+          casos: totalTrabajadores,
+          total_trabajadores: totalTrabajadores,
+          porcentaje: nuevoItem.porcentaje ? nuevoItem.porcentaje.toString().replace('.', ',') + ' %' : '0,00 %'
+        });
+      }
+    });
+
+    return resultado;
+  }
+
+  private transformarPEAOcupaciones(datos: any[]): any[] {
+    if (!Array.isArray(datos) || datos.length === 0) {
+      return [];
+    }
+
+    const datosFiltrados = datos.filter(item => {
+      const categoria = item.categoria || item.actividad_principal || '';
+      const casos = parseInt(item.casos || item.total_trabajadores || '0') || 0;
+      return categoria.trim() !== '' && casos > 0;
+    });
+
+    if (datosFiltrados.length === 0) {
+      return [];
+    }
+
+    const totalCasos = datosFiltrados.reduce((sum, item) => {
+      return sum + (parseInt(item.casos || item.total_trabajadores || '0') || 0);
+    }, 0);
+
+    if (totalCasos === 0) {
+      return [];
+    }
+
+    return datosFiltrados.map(item => {
+      const casos = parseInt(item.casos || item.total_trabajadores || '0') || 0;
+      const porcentaje = totalCasos > 0 ? ((casos / totalCasos) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+      
+      return {
+        categoria: item.categoria || item.actividad_principal || '',
+        casos: casos,
+        porcentaje: porcentaje
+      };
+    });
+  }
+
+  private agregarDatosMateriales(acumulado: any[], nuevos: any[]): any[] {
+    if (!Array.isArray(nuevos) || nuevos.length === 0) {
+      return acumulado;
+    }
+
+    const resultado = [...acumulado];
+
+    nuevos.forEach(nuevoItem => {
+      const categoria = nuevoItem.categoria || nuevoItem.tipo || '';
+      const material = nuevoItem.material || nuevoItem.tipoMaterial || '';
+      
+      const existente = resultado.find(item => {
+        const catExistente = (item.categoria || item.tipo || '').toLowerCase();
+        const matExistente = (item.material || item.tipoMaterial || '').toLowerCase();
+        return catExistente === categoria.toLowerCase() && matExistente === material.toLowerCase();
+      });
+
+      if (existente) {
+        const casosExistente = parseInt(existente.casos || '0') || 0;
+        const casosNuevo = parseInt(nuevoItem.casos || '0') || 0;
+        existente.casos = casosExistente + casosNuevo;
+      } else {
+        resultado.push({ ...nuevoItem });
+      }
+    });
+
+    return resultado;
+  }
+
+  private obtenerPrefijoDeSeccionId(seccionId: string): string {
+    const matchA = seccionId.match(/^3\.1\.4\.A\.(\d+)/);
+    if (matchA) {
+      return `_A${matchA[1]}`;
+    }
+    
+    const matchB = seccionId.match(/^3\.1\.4\.B\.(\d+)/);
+    if (matchB) {
+      return `_B${matchB[1]}`;
+    }
+    
+    if (seccionId.startsWith('3.1.4.A')) {
+      return '_A1';
+    } else if (seccionId.startsWith('3.1.4.B')) {
+      return '_B1';
+    }
+    
+    return '';
   }
 
   markFieldAsTestData(fieldName: string): void {
@@ -460,6 +905,8 @@ export class FieldMappingService {
       ],
       '3.1.4.A.1.3': [
         'grupoAISD',
+        'textoPET',
+        'petTabla',
         'textoDefinicionPEA',
         'textoDetalePEA',
         'textoAnalisisPEA',
@@ -476,6 +923,8 @@ export class FieldMappingService {
         'grupoAISD',
         'textoActividadesEconomicas',
         'textoFuentesActividadesEconomicas',
+        'peaOcupacionesTabla',
+        'textoAnalisisCuadro310',
         'textoGanaderia1',
         'textoGanaderia2',
         'textoGanaderia3',

@@ -56,6 +56,16 @@
 <ng-template #caracterizacionIndicadoresDefault>
     <p class="text-justify">Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC <span [appDataSource]="'section'" [fieldName]="'cuadroTituloAISD2'">{{ obtenerNombreComunidadActual() }}</span>. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.</p>
 </ng-template>
+
+<div class="info-box" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin: 15px 0; font-size: 14px;">
+    <strong style="color: #856404;">⚠️ Importante - Fuente de Verdad:</strong>
+    <p style="margin: 8px 0 0 0; color: #856404;">
+        Los centros poblados que aparecen en esta tabla son los que se utilizarán para <strong>todos los cálculos y tablas del grupo AISD</strong> de esta comunidad campesina. 
+        Si eliminas una fila, ese centro poblado <strong>no se considerará</strong> en las demás secciones (demografía, vivienda, servicios, etc.).
+        <br><strong>Total de centros poblados activos: {{ obtenerTotalCentrosPobladosActivos() }}</strong>
+    </p>
+</div>
+
 <app-table-wrapper [title]="(datos.cuadroTituloAISD2 || 'Cantidad total de población y viviendas') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
 <table class="table-container">
     <thead>

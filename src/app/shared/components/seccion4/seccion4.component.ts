@@ -5,6 +5,7 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
@@ -63,13 +64,17 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private centrosPobladosActivos: CentrosPobladosActivosService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.llenarTablaAutomaticamenteSiNecesario();
+    setTimeout(() => {
+      this.guardarTotalPoblacion();
+    }, 500);
     this.calcularCoordenadasYAltitudReferenciales();
     
     if (!this.modoFormulario) {
@@ -157,6 +162,9 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarDatosCustom(): void {
+    setTimeout(() => {
+      this.guardarTotalPoblacion();
+    }, 100);
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
     this.cargarFotografias();
@@ -204,7 +212,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     return '';
   }
 
-  obtenerNombreComunidadActual(): string {
+  override obtenerNombreComunidadActual(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     
     if (!prefijo || !prefijo.startsWith('_A')) {
@@ -462,7 +470,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     
     centrosPoblados.forEach((cp: any, index: number) => {
       const filaIndex = index + 1;
-      if (filaIndex > 20) return; // Máximo 20 filas
+      if (filaIndex > 20) return;
       
       const codigoCPP = cp.CODIGO?.toString().trim() || '';
       const campoPunto = `tablaAISD2Fila${filaIndex}Punto${prefijo}`;
@@ -478,13 +486,15 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       }
     });
 
-    // Guardar en FormularioService
     this.formularioService.actualizarDatos(this.datos);
     this.formularioService.guardarFilasActivasTablaAISD2(codigosActivos, prefijo);
     
-    // Limpiar caché para que se recalcule
+    const comunidadId = this.centrosPobladosActivos.obtenerComunidadIdDePrefijo(prefijo);
+    this.centrosPobladosActivos.actualizarCodigosActivos(comunidadId, codigosActivos);
+    
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
+    this.guardarTotalPoblacion();
   }
 
   obtenerCentrosPobladosDeComunidadCampesina(): string[] {
@@ -566,7 +576,37 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.formularioService.actualizarDato(campoConPrefijo, nuevoValor);
     this.datos[campoConPrefijo] = nuevoValor;
     
+    if (campo.includes('Poblacion')) {
+      this.guardarTotalPoblacion();
+    }
+    
     this.actualizarDatos();
+  }
+
+  guardarTotalPoblacion(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const totalPoblacionRaw = this.getTotalPoblacionAISD2();
+    const totalPoblacion = typeof totalPoblacionRaw === 'number' ? totalPoblacionRaw : (totalPoblacionRaw === '____' ? 0 : parseInt(totalPoblacionRaw as any) || 0);
+    const poblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
+    
+    console.log('🔍 [Seccion4] guardarTotalPoblacion - Debug:', {
+      prefijo,
+      poblacionKey,
+      totalPoblacionRaw,
+      totalPoblacion,
+      tipo: typeof totalPoblacion,
+      esNumero: typeof totalPoblacion === 'number',
+      esMayorACero: typeof totalPoblacion === 'number' && totalPoblacion > 0,
+      filasTabla: this.getFilasTablaAISD2().length
+    });
+    
+    if (typeof totalPoblacion === 'number' && totalPoblacion > 0) {
+      this.formularioService.actualizarDato(poblacionKey as any, totalPoblacion);
+      this.datos[poblacionKey] = totalPoblacion;
+      console.log('✅ [Seccion4] guardarTotalPoblacion - Guardado:', poblacionKey, '=', totalPoblacion);
+    } else {
+      console.warn('⚠️ [Seccion4] guardarTotalPoblacion - No se guardó (totalPoblacion no válido):', totalPoblacion);
+    }
   }
 
   onCellEditTablaAISD1(event: any, campo: string, indiceFila: number, campoFila: string): void {
@@ -637,6 +677,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
+    this.guardarTotalPoblacion();
     this.actualizarDatos();
   }
 
@@ -669,6 +710,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
 
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
+    this.guardarTotalPoblacion();
     this.actualizarDatos();
   }
 
@@ -702,15 +744,24 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.datos[campoViviendasEmp] = '';
     this.datos[campoViviendasOcp] = '';
 
-    if (codigoStr) {
+    if (codigoStr && prefijo) {
       const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
       const nuevasFilasActivas = filasActivas.filter(codigo => codigo !== codigoStr);
       this.formularioService.guardarFilasActivasTablaAISD2(nuevasFilasActivas, prefijo);
+      
+      const comunidadId = this.centrosPobladosActivos.obtenerComunidadIdDePrefijo(prefijo);
+      this.centrosPobladosActivos.actualizarCodigosActivos(comunidadId, nuevasFilasActivas);
     }
 
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
+    this.guardarTotalPoblacion();
     this.actualizarDatos();
+  }
+
+  obtenerTotalCentrosPobladosActivos(): number {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return this.centrosPobladosActivos.obtenerTotalCentrosPobladosActivos(prefijo);
   }
 
   cargarFotografias(): void {

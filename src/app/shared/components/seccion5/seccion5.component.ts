@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
@@ -56,6 +57,12 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
 
   protected override onInitCustom(): void {
     if (!this.modoFormulario) {
+      console.log('[Seccion5] init', {
+        seccionId: this.seccionId,
+        prefijo: this.obtenerPrefijoGrupo(),
+        grupoAISD: this.obtenerGrupoAISDConFallback(this.datos),
+        claves: Object.keys(this.datos || {})
+      });
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografiasVista();
         this.cdRef.detectChanges();
@@ -71,11 +78,11 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
 
   protected override detectarCambios(): boolean {
     const datosActuales = this.formularioService.obtenerDatos();
-    const prefijo = this.obtenerPrefijoGrupo();
-    const campoConPrefijo = prefijo ? `grupoAISD${prefijo}` : 'grupoAISD';
-    const grupoAISDActual = datosActuales[campoConPrefijo] || datosActuales['grupoAISD'] || null;
+    const grupoAISDActual = this.obtenerGrupoAISDConFallback(datosActuales);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    const prefijo = this.obtenerPrefijoGrupo();
     
     const campoParrafo = prefijo ? `parrafoSeccion5_institucionalidad${prefijo}` : 'parrafoSeccion5_institucionalidad';
     const parrafoActual = (datosActuales as any)[campoParrafo] || null;
@@ -94,6 +101,15 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     const tablaAnterior = this.datosAnteriores.tablepagina6 || [];
     const hayCambioTabla = JSON.stringify(tablaActual) !== JSON.stringify(tablaAnterior);
     
+    if (!grupoAISDActual) {
+      console.warn('[Seccion5] grupoAISD vacío', {
+        seccionId: this.seccionId,
+        prefijo,
+        campoPrefijado: prefijo ? `grupoAISD${prefijo}` : 'grupoAISD',
+        claves: Object.keys(datosActuales || {})
+      });
+    }
+
     if (grupoAISDActual !== grupoAISDAnterior || 
         grupoAISDActual !== grupoAISDEnDatos || 
         parrafoActual !== parrafoAnterior ||
@@ -125,11 +141,12 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    const grupoAISD = this.obtenerGrupoAISDConFallback(this.datos);
+    this.datos.grupoAISD = grupoAISD || null;
+    this.datosAnteriores.grupoAISD = grupoAISD || null;
+    
     const prefijo = this.obtenerPrefijoGrupo();
     if (prefijo) {
-      const grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
-      this.datos.grupoAISD = grupoAISD || null;
-      this.datosAnteriores.grupoAISD = grupoAISD || null;
       
       const campoParrafo = `parrafoSeccion5_institucionalidad${prefijo}`;
       const parrafo = this.datos[campoParrafo] || this.datos['parrafoSeccion5_institucionalidad'] || null;
@@ -156,8 +173,40 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     return `Dentro de los límites de la CC ${nombreComunidad} se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).`;
   }
 
-  obtenerNombreComunidadActual(): string {
-    return this.datos.grupoAISD || '____';
+  tieneParrafoPersonalizado(): boolean {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoParrafo = prefijo ? `parrafoSeccion5_institucionalidad${prefijo}` : 'parrafoSeccion5_institucionalidad';
+    const parrafoGuardado = this.datos[campoParrafo] || this.datos['parrafoSeccion5_institucionalidad'];
+    return !!(parrafoGuardado && parrafoGuardado !== '____');
+  }
+
+  override obtenerNombreComunidadActual(): string {
+    return this.obtenerGrupoAISDConFallback(this.datos) || '____';
+  }
+
+  private obtenerGrupoAISDConFallback(source: any): string | null {
+    const valorPrefijo = PrefijoHelper.obtenerValorConPrefijo(source, 'grupoAISD', this.seccionId);
+    if (valorPrefijo) {
+      return valorPrefijo;
+    }
+
+    const clavePrefijada = Object.keys(source || {}).find(k => k.startsWith('grupoAISD_') && source[k]);
+    if (clavePrefijada) {
+      return source[clavePrefijada];
+    }
+
+    // Fallbacks adicionales cuando no hay grupoAISD explícito
+    const comunidades = (source?.comunidadesCampesinas as any[]) || [];
+    const nombreCC = comunidades.find(c => c?.nombre)?.nombre;
+    if (nombreCC) {
+      return nombreCC;
+    }
+
+    const localidadTabla = source?.tablaAISD1Localidad;
+    if (localidadTabla) {
+      return localidadTabla;
+    }
+    return source?.grupoAISD || null;
   }
 
   getFotoInstitucionalidad(): any {

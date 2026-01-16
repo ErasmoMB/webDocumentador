@@ -21,18 +21,18 @@
       <label class="label">Tabla PET según grupos de edad</label>
       <app-dynamic-table
         [datos]="datos"
-        [config]="petConfig"
+        [config]="getPetConfig()"
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: 15 a 29 años' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
-        [tablaKey]="'petTabla'"
+        [tablaKey]="getTablaKeyPET()"
         [totalKey]="'categoria'"
         [customFieldChangeHandler]="onPETFieldChange.bind(this)"
         (tableUpdated)="onPETTableUpdated()">
       </app-dynamic-table>
-      <div class="table-editor" *ngIf="datos['petTabla'] && datos['petTabla'].length > 0" style="margin-top: 10px;">
+      <div class="table-editor" *ngIf="getTablaPET().length > 0" style="margin-top: 10px;">
         <table class="editor-table">
           <tbody>
             <tr class="total-row">
@@ -85,40 +85,23 @@
       </app-paragraph-editor>
     </div>
     
-    <div class="form-field" style="margin-top: 15px;">
-      <label class="label">Población Distrital</label>
-      <input type="text" class="input" placeholder="Ej: 610"
-        [value]="formData['poblacionDistritalCahuacho'] || ''"
-        (input)="onFieldChange('poblacionDistritalCahuacho', $any($event.target).value)"
-        readonly>
-      <small class="form-hint">Se carga automáticamente desde el backend</small>
-    </div>
-    
-    <div class="form-field" style="margin-top: 15px;">
-      <label class="label">PET Distrital (14 años a más)</label>
-      <input type="text" class="input" placeholder="Ej: 461"
-        [value]="formData['petDistritalCahuacho'] || ''"
-        (input)="onFieldChange('petDistritalCahuacho', $any($event.target).value)"
-        readonly>
-      <small class="form-hint">Se carga automáticamente desde el backend</small>
-    </div>
-    
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Tabla PEA y No PEA según sexo</label>
       <app-dynamic-table
         [datos]="datos"
         [config]="peaConfig"
         [columns]="[
-          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA' },
+          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA', readonly: true },
           { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
+          { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
           { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
-          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: true },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
         [tablaKey]="'peaTabla'"
         [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onPEAFieldChange.bind(this)"
         (tableUpdated)="onPEATableUpdated()">
       </app-dynamic-table>
       <div class="table-editor" *ngIf="datos['peaTabla'] && datos['peaTabla'].length > 0" style="margin-top: 10px;">
@@ -253,7 +236,8 @@
               <td>
                 <input type="text" class="table-input" 
                   [value]="item.porcentajeHombres || ''"
-                  (input)="actualizarPEAOcupada(i, 'porcentajeHombres', $any($event.target).value)"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;"
                   placeholder="0%">
               </td>
               <td>
@@ -265,19 +249,22 @@
               <td>
                 <input type="text" class="table-input" 
                   [value]="item.porcentajeMujeres || ''"
-                  (input)="actualizarPEAOcupada(i, 'porcentajeMujeres', $any($event.target).value)"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;"
                   placeholder="0%">
               </td>
               <td>
                 <input type="number" class="table-input" 
                   [value]="item.casos || ''"
-                  (input)="actualizarPEAOcupada(i, 'casos', $any($event.target).value)"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;"
                   placeholder="0">
               </td>
               <td>
                 <input type="text" class="table-input" 
                   [value]="item.porcentaje || ''"
-                  (input)="actualizarPEAOcupada(i, 'porcentaje', $any($event.target).value)"
+                  readonly
+                  style="background-color: #f5f5f5; cursor: not-allowed;"
                   placeholder="0%">
               </td>
               <td>

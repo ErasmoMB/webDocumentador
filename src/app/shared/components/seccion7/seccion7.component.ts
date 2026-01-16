@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -21,11 +22,13 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   @Input() override modoFormulario: boolean = false;
   
   private datosSubscription?: Subscription;
+  private stateSubscription?: Subscription;
   private actualizandoDatos: boolean = false;
   
   override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'poblacionDistritalCahuacho', 'petDistritalCahuacho', 'ingresoFamiliarPerCapita', 'rankingIngresoPerCapita', 'petTabla', 'peaTabla', 'peaOcupadaTabla', 'parrafoSeccion7_situacion_empleo_completo', 'parrafoSeccion7_ingresos_completo', 'textoPET', 'textoDetalePEA', 'textoDefinicionPEA', 'textoAnalisisPEA', 'textoIndiceDesempleo', 'textoAnalisisOcupacion'];
   
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
+  override fotografiasCache: FotoItem[] = [];
 
   constructor(
     formularioService: FormularioService,
@@ -34,13 +37,28 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.asegurarArraysValidos();
+    
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const petTablaInicial = this.datos[petTablaKey] || null;
+    this.datosAnteriores[petTablaKey] = petTablaInicial ? JSON.parse(JSON.stringify(petTablaInicial)) : null;
+    
+    this.cargarFotografias();
+    
+    if (!this.modoFormulario) {
+      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        this.cargarFotografias();
+        this.cdRef.detectChanges();
+      });
+    }
     
     this.datosSubscription = this.stateService.datos$.pipe(
       debounceTime(100),
@@ -59,6 +77,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
       this.actualizandoDatos = true;
       this.actualizarDatos();
       this.asegurarArraysValidos();
+      this.cargarFotografias();
       const datosNuevos = JSON.stringify(this.datos);
       
       if (datosAnteriores !== datosNuevos) {
@@ -76,6 +95,9 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     if (this.datosSubscription) {
       this.datosSubscription.unsubscribe();
     }
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   protected override detectarCambios(): boolean {
@@ -83,6 +105,12 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
+    
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const petTablaActual = datosActuales[petTablaKey] || null;
+    const petTablaAnteriorKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const petTablaAnterior = this.datosAnteriores[petTablaAnteriorKey] || null;
     
     let hayCambios = false;
     
@@ -93,6 +121,11 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
         hayCambios = true;
         this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
       }
+    }
+    
+    if (JSON.stringify(petTablaActual) !== JSON.stringify(petTablaAnterior)) {
+      hayCambios = true;
+      this.datosAnteriores[petTablaAnteriorKey] = petTablaActual ? JSON.parse(JSON.stringify(petTablaActual)) : null;
     }
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
@@ -114,8 +147,11 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   asegurarArraysValidos() {
-    if (!Array.isArray(this.datos.petTabla)) {
-      this.datos.petTabla = [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const petTabla = this.datos[petTablaKey] || [];
+    if (!Array.isArray(petTabla)) {
+      this.datos[petTablaKey] = [];
     }
     if (!Array.isArray(this.datos.peaTabla)) {
       this.datos.peaTabla = [];
@@ -127,14 +163,18 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   private eliminarFilasTotal(): void {
-    if (this.datos.petTabla && Array.isArray(this.datos.petTabla)) {
-      const longitudOriginal = this.datos.petTabla.length;
-      const datosFiltrados = this.datos.petTabla.filter((item: any) => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const petTabla = this.datos[petTablaKey];
+    if (petTabla && Array.isArray(petTabla)) {
+      const longitudOriginal = petTabla.length;
+      const datosFiltrados = petTabla.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.datos.petTabla = datosFiltrados;
+        this.datos[petTablaKey] = datosFiltrados;
+        this.formularioService.actualizarDato(petTablaKey as any, datosFiltrados);
       }
     }
     if (this.datos.peaTabla && Array.isArray(this.datos.peaTabla)) {
@@ -159,11 +199,22 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  getTablaKeyPET(): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    return prefijo ? `petTabla${prefijo}` : 'petTabla';
+  }
+
+  private getTablaPET(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'petTabla', this.seccionId);
+    return pref || this.datos.petTabla || [];
+  }
+
   getPETTablaSinTotal(): any[] {
-    if (!this.datos?.petTabla || !Array.isArray(this.datos.petTabla)) {
+    const petTabla = this.getTablaPET();
+    if (!petTabla || !Array.isArray(petTabla)) {
       return [];
     }
-    return this.datos.petTabla.filter((item: any) => {
+    return petTabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -171,11 +222,15 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
 
   getTotalPET(): string {
     const datosSinTotal = this.getPETTablaSinTotal();
-    if (datosSinTotal.length === 0) return '0';
+    if (datosSinTotal.length === 0) {
+      console.warn('⚠️ [Seccion7] getTotalPET - Tabla PET vacía');
+      return '0';
+    }
     const total = datosSinTotal.reduce((sum: number, item: any) => {
       const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
       return sum + casos;
     }, 0);
+    console.log('🔍 [Seccion7] getTotalPET - Total calculado:', total, 'de', datosSinTotal.length, 'filas');
     return total.toString();
   }
 
@@ -268,23 +323,45 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }).join('');
   }
 
+
   getPorcentajePET(): string {
-    if (!this.datos?.tablaAISD2TotalPoblacion) {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const poblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
+    const totalPoblacion = parseInt(this.datos[poblacionKey] || this.datos.tablaAISD2TotalPoblacion || '0') || 0;
+    const totalPET = parseInt(this.getTotalPET()) || 0;
+    
+    console.log('🔍 [Seccion7] getPorcentajePET - Debug:', {
+      prefijo,
+      poblacionKey,
+      totalPoblacion,
+      totalPET,
+      datosPoblacionKey: this.datos[poblacionKey],
+      datosTablaAISD2TotalPoblacion: this.datos.tablaAISD2TotalPoblacion,
+      todasLasClaves: Object.keys(this.datos).filter(k => k.includes('tablaAISD2TotalPoblacion'))
+    });
+    
+    if (totalPoblacion === 0) {
+      console.warn('⚠️ [Seccion7] getPorcentajePET - Población total es 0');
       return '____';
     }
-    const totalPoblacion = parseInt(this.datos.tablaAISD2TotalPoblacion) || 0;
-    if (totalPoblacion === 0) return '____';
     
-    const totalPET = parseInt(this.getTotalPET()) || 0;
+    if (totalPET === 0) {
+      console.warn('⚠️ [Seccion7] getPorcentajePET - Total PET es 0');
+      return '____';
+    }
+    
     const porcentaje = ((totalPET / totalPoblacion) * 100).toFixed(2);
-    return porcentaje.replace('.', ',') + ' %';
+    const resultado = porcentaje.replace('.', ',') + ' %';
+    console.log('✅ [Seccion7] getPorcentajePET - Resultado:', resultado);
+    return resultado;
   }
 
   getPorcentajePETGrupo(categoria: string): string {
-    if (!this.datos?.petTabla || !Array.isArray(this.datos.petTabla)) {
+    const petTabla = this.getTablaPET();
+    if (!petTabla || !Array.isArray(petTabla)) {
       return '____';
     }
-    const grupo = this.datos.petTabla.find((item: any) => 
+    const grupo = petTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase())
     );
     return grupo?.porcentaje || '____';
@@ -320,6 +397,16 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }
     const noPea = this.datos.peaTabla.find((item: any) => item.categoria === 'No PEA');
     return noPea?.porcentajeMujeres || '____';
+  }
+
+  getPorcentajePEAOcupada(): string {
+    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+      return '____';
+    }
+    const ocupada = this.datos.peaOcupadaTabla.find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('ocupada') && !item.categoria.toLowerCase().includes('desocupada')
+    );
+    return ocupada?.porcentaje || '____';
   }
 
   getPorcentajePEADesocupada(): string {
@@ -361,12 +448,16 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   getFotografiasPEAVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return this.fotografiasCache;
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(
+    const fotografias = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
       groupPrefix
     );
+    return fotografias || [];
   }
 
   protected override actualizarFotografiasFormMulti(): void {
@@ -378,9 +469,22 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     );
   }
 
+  cargarFotografias(): void {
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const fotos = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
+    this.fotografiasCache = [...fotos];
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasCache = [...fotografias];
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {
@@ -388,7 +492,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
       return this.datos.parrafoSeccion7_situacion_empleo_completo;
     }
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     return `En la CC ${grupoAISD}, la mayor parte de la población se dedica a actividades económicas de carácter independiente, siendo la ganadería la principal fuente de sustento. De manera complementaria, también se desarrolla la agricultura. Esta realidad implica que la mayoría de los comuneros se dediquen al trabajo por cuenta propia, centrado en la crianza de vacunos y ovinos como las principales especies ganaderas. Estas actividades son claves para la economía local, siendo la venta de ganado y sus derivados una fuente de ingresos importante para las familias. En el ámbito agrícola, las tierras comunales se destinan a la producción de cultivos como la papa, habas y cebada, productos que se destinan principalmente al autoconsumo y de manera esporádica a la comercialización en mercados cercanos.\n\nEl empleo dependiente en la CC ${grupoAISD} es mínimo y se encuentra limitado a aquellos que trabajan en instituciones públicas. Entre ellos se encuentran los docentes que laboran en las instituciones educativas locales, así como el personal que presta servicios en el puesto de salud. Estas ocupaciones representan un pequeño porcentaje de la fuerza laboral, ya que la mayoría de los comuneros siguen trabajando en actividades tradicionales como la ganadería y la agricultura, que forman parte de su modo de vida ancestral.`;
   }
 
@@ -397,10 +501,10 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
       return this.datos.parrafoSeccion7_ingresos_completo;
     }
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const ingresoPerCapita = this.datos.ingresoFamiliarPerCapita || '391,06';
-    const ranking = this.datos.rankingIngresoPerCapita || '1191';
+    const ingresoPerCapita = this.datos.ingresoFamiliarPerCapita || '____';
+    const ranking = this.datos.rankingIngresoPerCapita || '____';
     
     return `En la CC ${grupoAISD}, los ingresos de la población provienen principalmente de las actividades ganaderas y agrícolas, que son las fuentes económicas predominantes en la localidad. La venta de vacunos y ovinos, así como de productos agrícolas como papa, habas y cebada, proporciona ingresos variables, dependiendo de las condiciones climáticas y las fluctuaciones en los mercados locales. Sin embargo, debido a la dependencia de estos sectores primarios, los ingresos no son estables ni regulares, y pueden verse afectados por factores como las heladas, la falta de pasto en épocas de sequía o la baja demanda de los productos en el mercado.\n\nOtra parte de los ingresos proviene de los comuneros que participan en actividades de comercio de pequeña escala, vendiendo sus productos en mercados locales o en ferias regionales. No obstante, esta forma de generación de ingresos sigue siendo limitada y no representa una fuente principal para la mayoría de las familias. En cuanto a los pocos habitantes que se encuentran empleados de manera dependiente, tales como los maestros en las instituciones educativas y el personal del puesto de salud, sus ingresos son más regulares, aunque representan una porción muy pequeña de la población.\n\nAdicionalmente, cabe mencionar que, según el informe del PNUD 2019, el distrito de ${distrito} (jurisdicción que abarca a los poblados que conforman la CC ${grupoAISD}) cuenta con un ingreso familiar per cápita de S/. ${ingresoPerCapita} mensuales, ocupando el puesto N°${ranking} en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.`;
   }
@@ -410,7 +514,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
       return this.datos.textoPET;
     }
     
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     const porcentajePET = this.getPorcentajePET();
     const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29 años');
     const porcentaje65 = this.getPorcentajePETGrupo('65 años a más');
@@ -436,7 +540,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }
     
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     
     return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de ${distrito}, jurisdicción que abarca a las poblaciones de la CC ${grupoAISD}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.`;
   }
@@ -461,9 +565,145 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }
     
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || '____';
+    const grupoAISD = this.obtenerNombreComunidadActual();
     
     return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca los poblados de la CC ${grupoAISD}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).`;
+  }
+
+  obtenerTextoPETConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoPET();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29 años');
+    const porcentaje65 = this.getPorcentajePETGrupo('65 años a más');
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    if (porcentajePET && porcentajePET !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajePET), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajePET)}</span>`);
+    }
+    if (porcentaje1529 && porcentaje1529 !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentaje1529), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje1529)}</span>`);
+    }
+    if (porcentaje65 && porcentaje65 !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentaje65), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje65)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoDetalePEAConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoDetalePEA();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const poblacionDistrital = this.datos.poblacionDistritalCahuacho || '610';
+    const petDistrital = this.datos.petDistritalCahuacho || '461';
+    
+    let html = this.escapeHtml(texto);
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (poblacionDistrital && poblacionDistrital !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(poblacionDistrital), 'g'), `<span class="data-section">${this.escapeHtml(poblacionDistrital)}</span>`);
+    }
+    if (petDistrital && petDistrital !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(petDistrital), 'g'), `<span class="data-section">${this.escapeHtml(petDistrital)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoDefinicionPEAConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoDefinicionPEA();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoAnalisisPEAConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoAnalisisPEA();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajePEA = this.getPorcentajePEA();
+    const porcentajeNoPEA = this.getPorcentajeNoPEA();
+    const porcentajePEAHombres = this.getPorcentajePEAHombres();
+    const porcentajeNoPEAMujeres = this.getPorcentajeNoPEAMujeres();
+    
+    let html = this.escapeHtml(texto);
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (porcentajePEA && porcentajePEA !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajePEA), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajePEA)}</span>`);
+    }
+    if (porcentajeNoPEA && porcentajeNoPEA !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeNoPEA), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeNoPEA)}</span>`);
+    }
+    if (porcentajePEAHombres && porcentajePEAHombres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajePEAHombres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajePEAHombres)}</span>`);
+    }
+    if (porcentajeNoPEAMujeres && porcentajeNoPEAMujeres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeNoPEAMujeres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeNoPEAMujeres)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoSeccion7SituacionEmpleoCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion7SituacionEmpleoCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    html = html.replace(/\n/g, '<br>');
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoSeccion7IngresosCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion7IngresosCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const ingresoPerCapita = this.datos.ingresoFamiliarPerCapita || '____';
+    const ranking = this.datos.rankingIngresoPerCapita || '____';
+    
+    let html = this.escapeHtml(texto);
+    html = html.replace(/\n/g, '<br>');
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (ingresoPerCapita && ingresoPerCapita !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(ingresoPerCapita), 'g'), `<span class="data-manual">${this.escapeHtml(ingresoPerCapita)}</span>`);
+    }
+    if (ranking && ranking !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(ranking), 'g'), `<span class="data-manual">${this.escapeHtml(ranking)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   obtenerTextoAnalisisOcupacion(): string {
@@ -477,6 +717,46 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     const porcentajeOcupadaMujeres = this.getPorcentajePEAOcupadaMujeres();
     
     return `Del cuadro precedente, se halla que en el distrito de ${distrito} la PEA Desocupada representa un ${porcentajeDesocupada} del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de ${porcentajeOcupadaHombres} y ${porcentajeOcupadaMujeres}, respectivamente.`;
+  }
+
+  obtenerTextoIndiceDesempleoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoIndiceDesempleo();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  obtenerTextoAnalisisOcupacionConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoAnalisisOcupacion();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const porcentajeDesocupada = this.getPorcentajePEADesocupada();
+    const porcentajeOcupadaHombres = this.getPorcentajePEAOcupadaHombres();
+    const porcentajeOcupadaMujeres = this.getPorcentajePEAOcupadaMujeres();
+    
+    let html = this.escapeHtml(texto);
+    if (distrito && distrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (porcentajeDesocupada && porcentajeDesocupada !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeDesocupada), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeDesocupada)}</span>`);
+    }
+    if (porcentajeOcupadaHombres && porcentajeOcupadaHombres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeOcupadaHombres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeOcupadaHombres)}</span>`);
+    }
+    if (porcentajeOcupadaMujeres && porcentajeOcupadaMujeres !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeOcupadaMujeres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeOcupadaMujeres)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
 

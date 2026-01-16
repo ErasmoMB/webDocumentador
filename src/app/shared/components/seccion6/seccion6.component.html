@@ -2,10 +2,9 @@
 <h5>A.1.2 Aspectos Demográficos</h5>
 
 <p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
-<p class="text-justify" *ngIf="datos.textoPoblacionSexoAISD && datos.textoPoblacionSexoAISD !== '____'">{{ datos.textoPoblacionSexoAISD }}</p>
-<p class="text-justify" *ngIf="!datos.textoPoblacionSexoAISD || datos.textoPoblacionSexoAISD === '____'">Respecto a la población de la CC <span [appDataSource]="'section'" [fieldName]="'textoPoblacionSexoAISD'">{{ datos.grupoAISD || '____' }}</span>, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de <span [appDataSource]="'tablaAISD2TotalPoblacion' | dataSource">{{ datos.tablaAISD2TotalPoblacion || '____' }}</span> habitantes que residen permanentemente en la comunidad. De este conjunto, el <span [appDataSource]="'manual'">{{ getPorcentajeHombres() }}</span> son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (<span [appDataSource]="'manual'">{{ getPorcentajeMujeres() }}</span>).</p>
+<p class="text-justify" [innerHTML]="obtenerTextoPoblacionSexoAISDConResaltado()"></p>
 
-<app-table-wrapper title="Población por sexo – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.2">
+<app-table-wrapper title="Población por sexo – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.2">
 <table class="table-container">
     <thead>
         <tr>
@@ -16,14 +15,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPoblacionSexoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.sexo && item.sexo !== '____'" [appDataSource]="'backend'">{{ item.sexo }}</span><span *ngIf="!item.sexo || item.sexo === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getPoblacionSexoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">{{ getTotalPoblacionSexo() }}</span></td>
-            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionSexoAISD'">100,00 %</span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'">{{ getTotalPoblacionSexo() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'">100,00 %</span></td>
         </tr>
         <tr *ngIf="getPoblacionSexoSinTotal().length === 0">
             <td class="table-cell">____</td>
@@ -33,13 +32,12 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'textoPoblacionEtarioAISD'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+<p class="source">Fuente: Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</p>
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Población según grupo etario</strong></p>
-<p class="text-justify" *ngIf="datos.textoPoblacionEtarioAISD && datos.textoPoblacionEtarioAISD !== '____'">{{ datos.textoPoblacionEtarioAISD }}</p>
-<p class="text-justify" *ngIf="!datos.textoPoblacionEtarioAISD || datos.textoPoblacionEtarioAISD === '____'">En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC <span [appDataSource]="'section'" [fieldName]="'textoPoblacionEtarioAISD'">{{ datos.grupoAISD || '____' }}</span> es el de <span [appDataSource]="'manual'">{{ getGrupoEtarioMayoritario() }}</span>, puesto que representa el <span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioMayoritario()) }}</span> de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de <span [appDataSource]="'manual'">{{ getGrupoEtarioSegundo() }}</span> (<span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioSegundo()) }}</span>). Por otro lado, el conjunto minoritario está conformado por la población de <span [appDataSource]="'manual'">{{ getGrupoEtarioMenoritario() }}</span>, pues solo representa un <span [appDataSource]="'manual'">{{ getPorcentajeGrupoEtario(getGrupoEtarioMenoritario()) }}</span>.</p>
+<p class="text-justify" [innerHTML]="obtenerTextoPoblacionEtarioAISDConResaltado()"></p>
 
-<app-table-wrapper title="Población por grandes grupos de edad – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.2">
+<app-table-wrapper title="Población por grandes grupos de edad – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.2">
 <table class="table-container">
     <thead>
         <tr>
@@ -50,14 +48,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPoblacionEtarioSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getPoblacionEtarioSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">{{ getTotalPoblacionEtario() }}</span></td>
-            <td class="table-cell"><span [appDataSource]="'backend'" [fieldName]="'poblacionEtarioAISD'">100,00 %</span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'">{{ getTotalPoblacionEtario() }}</span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'">100,00 %</span></td>
         </tr>
         <tr *ngIf="getPoblacionEtarioSinTotal().length === 0">
             <td class="table-cell">____</td>
@@ -67,7 +65,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+<p class="source">Fuente: Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -92,12 +90,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="textoPoblacionSexoAISD"
+          [fieldId]="getFieldIdTextoPoblacionSexo()"
           label="Población según Sexo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoPoblacionSexoAISD()"
-          (valueChange)="onFieldChange('textoPoblacionSexoAISD', $event)">
+          (valueChange)="onFieldChange(getFieldIdTextoPoblacionSexo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -109,14 +107,14 @@
           [columns]="[
             { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombres/Mujeres' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'poblacionSexoAISD'"
+          [tablaKey]="getTablaKeyPoblacionSexo()"
           [totalKey]="'sexo'"
           [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
           (tableUpdated)="onPoblacionSexoTableUpdated()">
         </app-dynamic-table>
-        <div class="table-editor" *ngIf="datos['poblacionSexoAISD'] && datos['poblacionSexoAISD'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getPoblacionSexoSinTotal() && getPoblacionSexoSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
@@ -147,12 +145,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          fieldId="textoPoblacionEtarioAISD"
+          [fieldId]="getFieldIdTextoPoblacionEtario()"
           label="Población por Grupo Etario - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoPoblacionEtarioAISD()"
-          (valueChange)="onFieldChange('textoPoblacionEtarioAISD', $event)">
+          (valueChange)="onFieldChange(getFieldIdTextoPoblacionEtario(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -164,14 +162,14 @@
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="'poblacionEtarioAISD'"
+          [tablaKey]="getTablaKeyPoblacionEtario()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
           (tableUpdated)="onPoblacionEtarioTableUpdated()">
         </app-dynamic-table>
-        <div class="table-editor" *ngIf="datos['poblacionEtarioAISD'] && datos['poblacionEtarioAISD'].length > 0" style="margin-top: 10px;">
+        <div class="table-editor" *ngIf="getPoblacionEtarioSinTotal() && getPoblacionEtarioSinTotal().length > 0" style="margin-top: 10px;">
           <table class="editor-table">
             <tbody>
               <tr class="total-row">

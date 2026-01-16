@@ -128,7 +128,7 @@
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Sin nivel o Inicial' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
         [tablaKey]="'nivelEducativoTabla'"
         [totalKey]="'categoria'"
@@ -151,7 +151,7 @@
         [columns]="[
           { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
         [tablaKey]="'tasaAnalfabetismoTabla'"
         [totalKey]="'indicador'"

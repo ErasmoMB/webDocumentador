@@ -6,7 +6,7 @@
 <p class="text-justify" *ngIf="datos.textoIdioma && datos.textoIdioma !== '____'">{{ datos.textoIdioma }}</p>
 <p class="text-justify" *ngIf="!datos.textoIdioma || datos.textoIdioma === '____'">Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el <span [appDataSource]="'manual'" [fieldName]="'textoIdioma'">{{ getPorcentajeCastellano() }}</span> de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del <span [appDataSource]="'manual'">{{ getPorcentajeQuechua() }}</span> de los habitantes.</p>
 
-<app-table-wrapper title="Lenguas maternas en población de 3 años a más – CC {{ datos.grupoAISD || '____' }} (2017)" sectionId="3.1.4.A.1.11">
+<app-table-wrapper title="Lenguas maternas en población de 3 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.11">
 <table class="table-container">
     <thead>
         <tr>
@@ -19,7 +19,7 @@
         <tr *ngFor="let item of getLenguasMaternaSinTotal()">
             <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'manual'" [fieldName]="'porcentaje'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getLenguasMaternaSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
@@ -39,7 +39,7 @@
 <h5>b. Religión</h5>
 <div *ngIf="datos.parrafoSeccion15_religion_completo; else religionCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion15_religion_completo)"></div>
 <ng-template #religionCompletoDefault>
-    <p class="text-justify">La confesión predominante dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ datos.grupoAISD || '____' }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span [appDataSource]="'section'">{{ datos.grupoAISD || '____' }}</span>.</p>
+    <p class="text-justify">La confesión predominante dentro de la CC <span [appDataSource]="'section'" [fieldName]="'grupoAISD'">{{ obtenerNombreComunidadActual() }}</span> es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>.</p>
 </ng-template>
 
 <app-image-upload
@@ -82,7 +82,7 @@
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [tablaKey]="'lenguasMaternasTabla'"
           [totalKey]="'categoria'"

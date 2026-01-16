@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { FormularioService } from './formulario.service';
+import { CentrosPobladosActivosService } from './centros-poblados-activos.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UbigeoHelperService {
-  constructor(private formularioService: FormularioService) {}
+  constructor(
+    private formularioService: FormularioService,
+    private centrosPobladosActivos: CentrosPobladosActivosService
+  ) {}
 
   getIdUbigeoFromCentroPoblado(centroPoblado: any): string | null {
     return centroPoblado?.CODIGO?.toString() || null;
@@ -69,10 +73,20 @@ export class UbigeoHelperService {
     return null;
   }
 
+  getAllCodigosComunidad(seccionId: string): string[] {
+    return this.getCodigosComunidad(seccionId);
+  }
+
   private getCodigosComunidad(seccionId: string): string[] {
     const prefijo = this.getPrefijoFromSeccionId(seccionId);
     if (!prefijo || !prefijo.startsWith('_A')) {
       return [];
+    }
+
+    const codigosActivos = this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo);
+    
+    if (codigosActivos.length > 0) {
+      return codigosActivos;
     }
 
     const match = prefijo.match(/_A(\d+)/);

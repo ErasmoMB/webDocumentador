@@ -463,6 +463,14 @@ li {
   border-radius: 3px;
 }
 
+.data-calculated {
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #4caf50;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
 .text-justify {
   text-align: justify;
 }

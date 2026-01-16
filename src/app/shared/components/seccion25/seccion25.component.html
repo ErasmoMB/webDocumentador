@@ -153,7 +153,7 @@
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Casa independiente' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
         [tablaKey]="'tiposViviendaAISI'"
         [totalKey]="'categoria'"
@@ -199,7 +199,7 @@
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Ocupada, con personas presentes' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
         [tablaKey]="'condicionOcupacionAISI'"
         [totalKey]="'categoria'"
@@ -249,7 +249,7 @@
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
             { field: 'tipoMaterial', label: 'Tipo de material', type: 'text', placeholder: 'Ej: Adobe' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %' }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
           ]"
           [tablaKey]="'materialesViviendaAISI'"
           [totalKey]="'categoria'"

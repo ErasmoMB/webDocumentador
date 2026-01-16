@@ -1001,7 +1001,22 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       primerElemento: this.datos?.tablaAISD2Datos?.[0]
     });
     this.sincronizarCamposDesdeTablas();
+    this.guardarTotalPoblacion();
     this.cdRef.detectChanges();
+  }
+
+  guardarTotalPoblacion(): void {
+    const component = ViewChildHelper.getComponent('seccion4');
+    if (component && component['getTotalPoblacionAISD2']) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const totalPoblacion = component['getTotalPoblacionAISD2']();
+      const poblacionKey = prefijo ? `tablaAISD2TotalPoblacion${prefijo}` : 'tablaAISD2TotalPoblacion';
+      
+      if (typeof totalPoblacion === 'number' && totalPoblacion > 0) {
+        this.formularioService.actualizarDato(poblacionKey as any, totalPoblacion);
+        this.datos[poblacionKey] = totalPoblacion;
+      }
+    }
   }
 
   getFilasTabla(): any[] {
@@ -1085,7 +1100,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     this.fotografiasPoblacionFormMulti = [...fotografias];
   }
 
-  obtenerNombreComunidadActual(): string {
+  override obtenerNombreComunidadActual(): string {
     const component = ViewChildHelper.getComponent('seccion4');
     if (component && component['obtenerNombreComunidadActual']) {
       return component['obtenerNombreComunidadActual']();
