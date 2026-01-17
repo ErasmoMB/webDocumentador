@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -54,19 +55,41 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
+    this.actualizarFotografiasFormMulti();
+    this.cargarFotografias();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyNbiCC(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
+  }
+
+  getTablaKeyNbiDistrito(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
+  }
+
+  getFieldIdTextoNBI(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoNecesidadesBasicasInsatisfechas${prefijo}` : 'textoNecesidadesBasicasInsatisfechas';
   }
 
   private eliminarFilasTotal(): void {
@@ -249,12 +272,69 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
   }
 
   getFotografiasNBIVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return this.fotografiasCache;
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,
       groupPrefix
     );
+  }
+
+  obtenerTextoNBIConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoNecesidadesBasicasInsatisfechas();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const totalPersonas = this.getTotalPersonasCC();
+    const porcentajeHacinamiento = this.getPorcentajeHacinamientoCC();
+    const porcentajeSinServicios = this.getPorcentajeSinServiciosCC();
+    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const totalUnidades = this.getTotalUnidadesDistrito();
+    const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito();
+    const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito();
+    
+    let html = this.escapeHtml(texto);
+    
+    if (grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    if (totalPersonas !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(totalPersonas), 'g'), `<span class="data-section">${this.escapeHtml(totalPersonas)}</span>`);
+    }
+    if (porcentajeHacinamiento !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeHacinamiento), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeHacinamiento)}</span>`);
+    }
+    if (porcentajeSinServicios !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeSinServicios), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeSinServicios)}</span>`);
+    }
+    if (distrito !== 'Cahuacho') {
+      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+    }
+    if (totalUnidades !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(totalUnidades), 'g'), `<span class="data-section">${this.escapeHtml(totalUnidades)}</span>`);
+    }
+    if (porcentajeSinServiciosDistrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeSinServiciosDistrito), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeSinServiciosDistrito)}</span>`);
+    }
+    if (porcentajeHacinamientoDistrito !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajeHacinamientoDistrito), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeHacinamientoDistrito)}</span>`);
+    }
+    
+    html = html.replace(/\n\n/g, '</p><p class="text-justify">');
+    html = `<p class="text-justify">${html}</p>`;
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   protected override actualizarFotografiasFormMulti(): void {

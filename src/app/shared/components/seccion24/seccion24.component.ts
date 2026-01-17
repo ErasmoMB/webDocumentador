@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -46,7 +47,8 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -123,6 +125,15 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyActividadesEconomicas(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
   }
 
   protected override tieneFotografias(): boolean {

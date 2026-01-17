@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -53,7 +54,8 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
   }
@@ -174,6 +176,30 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyPoblacionSexo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+  }
+
+  getTablaKeyPoblacionEtario(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+  }
+
+  getFieldIdTextoDemografia(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
+  }
+
+  getFieldIdTextoGrupoEtario(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
   }
 
   protected override tieneFotografias(): boolean {

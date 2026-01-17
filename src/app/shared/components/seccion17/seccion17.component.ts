@@ -204,11 +204,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   }
 
   override obtenerPrefijoGrupo(): string {
-    if (this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
-    if (this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
-    if (this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
-    if (this.seccionId.startsWith('3.1.4.B.2.')) return '_B2';
-    return '';
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
   getTablaKeyIDH(): string {

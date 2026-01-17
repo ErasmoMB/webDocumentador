@@ -408,11 +408,7 @@ export class Seccion6Component extends BaseSectionComponent implements OnDestroy
   }
 
   override obtenerPrefijoGrupo(): string {
-    if (this.seccionId === '3.1.4.A.1.2' || this.seccionId.startsWith('3.1.4.A.1.')) return '_A1';
-    if (this.seccionId === '3.1.4.A.2.2' || this.seccionId.startsWith('3.1.4.A.2.')) return '_A2';
-    if (this.seccionId === '3.1.4.B.1.2' || this.seccionId.startsWith('3.1.4.B.1.')) return '_B1';
-    if (this.seccionId === '3.1.4.B.2.2' || this.seccionId.startsWith('3.1.4.B.2.')) return '_B2';
-    return '';
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
   getFotografiasDemografiaVista(): any[] {

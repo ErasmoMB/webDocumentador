@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -83,7 +84,8 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -152,6 +154,30 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyAbastecimientoAgua(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `abastecimientoAguaCpTabla${prefijo}` : 'abastecimientoAguaCpTabla';
+  }
+
+  getTablaKeySaneamiento(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `saneamientoCpTabla${prefijo}` : 'saneamientoCpTabla';
+  }
+
+  getTablaKeyCoberturaElectrica(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `coberturaElectricaCpTabla${prefijo}` : 'coberturaElectricaCpTabla';
+  }
+
+  getTablaKeyCombustiblesCocinar(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `combustiblesCocinarCpTabla${prefijo}` : 'combustiblesCocinarCpTabla';
   }
 
   protected override tieneFotografias(): boolean {

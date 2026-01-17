@@ -6,6 +6,7 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
@@ -203,13 +204,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   override obtenerPrefijoGrupo(): string {
-    const aisdMatch = this.seccionId.match(/^3\.1\.4\.([AB])(?:\.(\d+))?/);
-    if (aisdMatch) {
-      const letra = aisdMatch[1];
-      const numero = aisdMatch[2] || '1';
-      return `_${letra}${numero}`;
-    }
-    return '';
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
   override obtenerNombreComunidadActual(): string {

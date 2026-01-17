@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -72,7 +73,8 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -274,6 +276,25 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyPetGruposEdad(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `petGruposEdadAISI${prefijo}` : 'petGruposEdadAISI';
+  }
+
+  getTablaKeyPeaDistritoSexo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `peaDistritoSexoTabla${prefijo}` : 'peaDistritoSexoTabla';
+  }
+
+  getTablaKeyPeaOcupadaDesocupada(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `peaOcupadaDesocupadaTabla${prefijo}` : 'peaOcupadaDesocupadaTabla';
   }
 
   protected override tieneFotografias(): boolean {
@@ -534,6 +555,9 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
   // Eliminar métodos de cache y eventos de cambio de fotos
 
   override getFotografiasVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return this.fotografiasCache;
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,

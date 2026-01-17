@@ -1,9 +1,11 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
@@ -32,7 +34,8 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -102,6 +105,28 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    this.datos.centroPobladoAISI = centroPobladoAISI || null;
+    this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyUbicacionCp(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+  }
+
+  getFieldIdTextoAISIIntro(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+  }
+
+  getFieldIdTextoCentroPoblado(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
   }
 
   protected override loadSectionData(): void {
@@ -125,6 +150,9 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
   }
 
   getFotografiasCahuachoVista(): FotoItem[] {
+    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
+      return this.fotografiasCache;
+    }
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,

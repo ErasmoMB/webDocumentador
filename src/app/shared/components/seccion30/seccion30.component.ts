@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -60,7 +61,8 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
-    private stateService: StateService
+    private stateService: StateService,
+    private sanitizer: DomSanitizer
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
@@ -128,6 +130,20 @@ export class Seccion30Component extends BaseSectionComponent implements OnDestro
     const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
     this.datos.centroPobladoAISI = centroPobladoAISI || null;
     this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+  }
+
+  override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  getTablaKeyNivelEducativo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+  }
+
+  getTablaKeyTasaAnalfabetismo(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
   }
 
   protected override tieneFotografias(): boolean {
