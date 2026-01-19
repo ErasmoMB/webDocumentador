@@ -74,44 +74,51 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     const datos = this.formularioService.obtenerDatos();
     
     if (!this.photoPrefix) {
-      console.warn('❌ photoPrefix no definido');
       return '';
     }
 
-    // ORDEN GLOBAL FIJO de todos los prefixes en el documento
+    // ORDEN GLOBAL con POSICIÓN VISUAL en el documento (no por orden de upload)
+    // Incluye sectionId implícitamente en el orden
     const globalOrder = [
+      // Sección 1
       'fotografiaSeccion1',
+      // Sección 2
       'fotografiaSeccion2',
+      // Sección 3
       'fotografiaSeccion3',
+      // Sección 4 (3.1.4.A.1) - Incluye AISD primero
       'fotografiaAISD',
       'fotografiaAISD2',
-      'fotografiaPoblacionViviendas',
+      // Dentro de 3.1.4.A.1: Ubicación ANTES que Población
       'fotografiaUbicacionReferencial',
-      'fotografiaInstitucionalidad',
-      'fotografiaDemografia',
-      'fotografiaPEA',
-      'fotografiaGanaderia',
-      'fotografiaAgricultura',
-      'fotografiaComercio',
-      'fotografiaEstructura',
-      'fotografiaDesechosSolidos',
-      'fotografiaElectricidad',
-      'fotografiaTransporte',
-      'fotografiaTelecomunicaciones',
-      'fotografiaSalud',
-      'fotografiaIEAyroca',
-      'fotografiaIE40270',
-      'fotografiaRecreacion',
-      'fotografiaDeporte',
-      'fotografiaSaludIndicadores',
-      'fotografiaEducacionIndicadores',
-      'fotografiaIglesia',
-      'fotografiaReservorio',
-      'fotografiaUsoSuelos',
-      'fotografiaIDH',
-      'fotografiaNBI',
-      'fotografiaOrganizacionSocial',
-      'fotografiaFestividades',
+      'fotografiaPoblacionViviendas',
+      // Continúa con otras subsecciones de 3.1.4.A
+      'fotografiaInstitucionalidad',      // 3.1.4.A.1.1
+      'fotografiaDemografia',              // 3.1.4.A.1.2
+      'fotografiaPEA',                     // 3.1.4.A.1.3
+      'fotografiaGanaderia',               // 3.1.4.A.1.4
+      'fotografiaAgricultura',             // 3.1.4.A.1.4
+      'fotografiaComercio',                // 3.1.4.A.1.4
+      'fotografiaEstructura',              // 3.1.4.A.1.5
+      'fotografiaDesechosSolidos',         // 3.1.4.A.1.6
+      'fotografiaElectricidad',            // 3.1.4.A.1.6
+      'fotografiaTransporte',              // 3.1.4.A.1.7
+      'fotografiaTelecomunicaciones',      // 3.1.4.A.1.7
+      'fotografiaSalud',                   // 3.1.4.A.1.8
+      'fotografiaIEAyroca',                // 3.1.4.A.1.8
+      'fotografiaIE40270',                 // 3.1.4.A.1.8
+      'fotografiaRecreacion',              // 3.1.4.A.1.8
+      'fotografiaDeporte',                 // 3.1.4.A.1.8
+      'fotografiaSaludIndicadores',        // 3.1.4.A.1.9
+      'fotografiaEducacionIndicadores',    // 3.1.4.A.1.10
+      'fotografiaIglesia',                 // 3.1.4.A.1.11
+      'fotografiaReservorio',              // 3.1.4.A.1.12
+      'fotografiaUsoSuelos',               // 3.1.4.A.1.12
+      'fotografiaIDH',                     // 3.1.4.A.1.13
+      'fotografiaNBI',                     // 3.1.4.A.1.14
+      'fotografiaOrganizacionSocial',      // 3.1.4.A.1.15
+      'fotografiaFestividades',            // 3.1.4.A.1.16
+      // Sección 4B
       'fotografiaCahuacho',
       'fotografiaCahuachoB11',
       'fotografiaCahuachoB13',
@@ -120,7 +127,16 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       'fotografiaCahuachoB16',
       'fotografiaCahuachoB17',
       'fotografiaCahuachoB18',
-      'fotografiaCahuachoB19'
+      'fotografiaCahuachoB19',
+      'fotografiaDesechosSolidosAISI',
+      'fotografiaElectricidadAISI',
+      'fotografiaEnergiaCocinarAISI',
+      'fotografiaTransporteAISI',
+      'fotografiaTelecomunicacionesAISI',
+      'fotografiaSaludAISI',
+      'fotografiaEducacionAISI',
+      'fotografiaRecreacionAISI',
+      'fotografiaDeporteAISI'
     ];
 
     let globalCounter = 0;
@@ -140,9 +156,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         }
         // Sumar 1 por la imagen actual que se está procesando
         globalCounter++;
-        const numeroFinal = `3.${globalCounter}`;
-        console.log(`📸 Número calculado - Prefix: ${this.photoPrefix}, Index: ${index}, Número: ${numeroFinal}`);
-        return numeroFinal;
+        return `3.${globalCounter}`;
       } else {
         // Contar TODAS las imágenes de prefixes anteriores
         for (let i = 1; i <= 20; i++) {
@@ -155,7 +169,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       }
     }
 
-    console.warn(`⚠️ Prefix "${this.photoPrefix}" no encontrado en orden global`);
     return '';
   }
 
@@ -434,9 +447,8 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     
     const formularioId = this.formularioService.obtenerDatos().projectName || 'default';
     
-    // NUEVO: Calcular el número ANTES de subir
+    // Calcular el número ANTES de subir
     const numeroGlobal = this.calculateGlobalPhotoNumber(index ?? 0);
-    console.log(`💾 Guardando número: ${numeroGlobal} para ${this.photoPrefix}[${index}]`);
     
     this.imageBackendService.uploadImage(file, formularioId, this.sectionId, this.photoPrefix).subscribe({
       next: (response) => {
@@ -449,7 +461,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
             const numeroKey = `${this.photoPrefix}${index + 1}Numero`;
             this.formularioService.actualizarDato(imagenKey, imageId);
             this.formularioService.actualizarDato(numeroKey, numeroGlobal);
-            console.log(`✅ Guardado en localStorage: ${imagenKey}=${imageId}, ${numeroKey}=${numeroGlobal}`);
             
             this._fotografias[index] = {
               ...this._fotografias[index],
@@ -468,7 +479,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           const numeroKey = `${this.photoPrefix}Numero`;
           this.formularioService.actualizarDato(imagenKey, imageId);
           this.formularioService.actualizarDato(numeroKey, numeroGlobal);
-          console.log(`✅ Guardado en localStorage (única): ${imagenKey}=${imageId}, ${numeroKey}=${numeroGlobal}`);
           
           this.preview = imageUrl;
           this.imagenChange.emit(imageId);
@@ -483,7 +493,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
               // NUEVO: Guardar número incluso con fallback base64
               const numeroKey = `${this.photoPrefix}${index + 1}Numero`;
               this.formularioService.actualizarDato(numeroKey, numeroGlobal);
-              console.log(`✅ Guardado número en fallback: ${numeroKey}=${numeroGlobal}`);
               
               this._fotografias[index] = {
                 ...this._fotografias[index],
@@ -496,7 +505,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
             // NUEVO: Guardar número para imagen única con fallback
             const numeroKey = `${this.photoPrefix}Numero`;
             this.formularioService.actualizarDato(numeroKey, numeroGlobal);
-            console.log(`✅ Guardado número en fallback (única): ${numeroKey}=${numeroGlobal}`);
             
             this.preview = imagenComprimida;
             this.imagenChange.emit(imagenComprimida);
@@ -578,10 +586,10 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         if (imageId && imageId.includes('-') && imageId.length === 36) {
           this.imageBackendService.deleteImage(imageId).subscribe({
             next: () => {
-              console.log(`✅ Imagen eliminada del backend: ${imageId}`);
+              // Imagen eliminada del backend
             },
             error: (err) => {
-              console.warn(`⚠️ Error al eliminar del backend: ${err}, pero se elimina localmente`);
+              // Error al eliminar del backend, pero se elimina localmente
             }
           });
         }
@@ -592,7 +600,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       const numeroKey = `${this.photoPrefix}${index + 1}Numero`;
       this.formularioService.actualizarDato(imagenKey, '');
       this.formularioService.actualizarDato(numeroKey, '');
-      console.log(`🗑️ Eliminado del localStorage: ${imagenKey}, ${numeroKey}`);
       
       // TERCERO: Eliminar del componente
       if (this._fotografias.length > 1) {
