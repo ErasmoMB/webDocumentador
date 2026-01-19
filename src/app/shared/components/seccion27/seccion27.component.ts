@@ -9,15 +9,17 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 
 @Component({
   selector: 'app-seccion27',
   templateUrl: './seccion27.component.html',
   styleUrls: ['./seccion27.component.css']
 })
-export class Seccion27Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion27Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.6';
   @Input() override modoFormulario: boolean = false;
   
@@ -51,12 +53,12 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
-  }
-
-  protected override onInitCustom(): void {
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
@@ -79,10 +81,19 @@ export class Seccion27Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion27_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {

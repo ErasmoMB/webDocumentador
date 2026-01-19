@@ -13,19 +13,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getNbiCCAyrocaSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell"><span class="data-source">{{ item.categoria || '____' }}</span></td>
+            <td class="table-cell"><span class="data-source">{{ item.casos || 0 }}</span></td>
+            <td class="table-cell"><span class="data-calculated">{{ item.porcentaje || 0 }}<span *ngIf="(item.porcentaje || item.porcentaje === 0) && item.porcentaje !== '____'">%</span></span></td>
         </tr>
         <tr class="total-row" *ngIf="getNbiCCAyrocaSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
             <td class="table-cell"><strong>{{ getTotalNbiCCAyroca() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="!datos.nbiCCAyrocaTabla || datos.nbiCCAyrocaTabla.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
         </tr>
     </tbody>
 </table>
@@ -44,19 +39,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getNbiDistritoCahuachoSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell"><span class="data-source">{{ item.categoria || '____' }}</span></td>
+            <td class="table-cell"><span class="data-source">{{ item.casos || 0 }}</span></td>
+            <td class="table-cell"><span class="data-calculated">{{ item.porcentaje || 0 }}<span *ngIf="(item.porcentaje || item.porcentaje === 0) && item.porcentaje !== '____'">%</span></span></td>
         </tr>
         <tr class="total-row" *ngIf="getNbiDistritoCahuachoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
             <td class="table-cell"><strong>{{ getTotalNbiDistritoCahuacho() }}</strong></td>
             <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="!datos.nbiDistritoCahuachoTabla || datos.nbiDistritoCahuachoTabla.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
         </tr>
     </tbody>
 </table>

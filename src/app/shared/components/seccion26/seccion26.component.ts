@@ -9,15 +9,18 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { ServiciosBasicosService } from 'src/app/core/services/servicios-basicos.service';
 
 @Component({
   selector: 'app-seccion26',
   templateUrl: './seccion26.component.html',
   styleUrls: ['./seccion26.component.css']
 })
-export class Seccion26Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion26Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
   
@@ -85,14 +88,23 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private serviciosBasicosService: ServiciosBasicosService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
+    
+    // Cargar servicios básicos desde el backend
+    if (!this.modoFormulario) {
+      this.cargarServiciosBasicos();
+    }
+    
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -115,10 +127,19 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion26_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -198,7 +219,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.condicionOcupacionAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('ocupada') && item.categoria.toLowerCase().includes('presentes')
+      item.categoria && item.categoria.toLowerCase().includes('ocupado')
     );
     return item?.casos?.toString() || '____';
   }
@@ -208,7 +229,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.abastecimientoAguaCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('dentro')
+      item.tipo && item.tipo.toLowerCase().includes('dentro')
     );
     return item?.porcentaje || '____';
   }
@@ -218,7 +239,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.abastecimientoAguaCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('fuera')
+      item.tipo && item.tipo.toLowerCase().includes('fuera')
     );
     return item?.porcentaje || '____';
   }
@@ -228,7 +249,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.coberturaElectricaCpTabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('si tiene') || item.categoria.toLowerCase().includes('tiene'))
+      item.tipo && (item.tipo.toLowerCase().includes('si') || item.tipo.toLowerCase().includes('con'))
     );
     return item?.porcentaje || '____';
   }
@@ -238,7 +259,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.coberturaElectricaCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('no tiene')
+      item.tipo && item.tipo.toLowerCase().includes('sin')
     );
     return item?.porcentaje || '____';
   }
@@ -258,7 +279,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.combustiblesCocinarCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('leña')
+      item.nombre && item.nombre.toLowerCase().includes('leña')
     );
     return item?.porcentaje || '____';
   }
@@ -268,7 +289,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.combustiblesCocinarCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('gas')
+      item.nombre && item.nombre.toLowerCase().includes('gas')
     );
     return item?.porcentaje || '____';
   }
@@ -278,7 +299,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.combustiblesCocinarCpTabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('bosta') || item.categoria.toLowerCase().includes('estiércol'))
+      item.nombre && (item.nombre.toLowerCase().includes('bosta') || item.nombre.toLowerCase().includes('estiércol'))
     );
     return item?.porcentaje || '____';
   }
@@ -288,7 +309,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.combustiblesCocinarCpTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('electricidad')
+      item.nombre && item.nombre.toLowerCase().includes('electricidad')
     );
     return item?.porcentaje || '____';
   }
@@ -486,7 +507,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return [];
     }
     return this.datos.abastecimientoAguaCpTabla.filter((item: any) => 
-      !item.categoria || !item.categoria.toLowerCase().includes('total')
+      !item.tipo || !item.tipo.toLowerCase().includes('total')
     );
   }
 
@@ -501,7 +522,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return [];
     }
     return this.datos.saneamientoCpTabla.filter((item: any) => 
-      !item.categoria || !item.categoria.toLowerCase().includes('total')
+      !item.tipo || !item.tipo.toLowerCase().includes('total')
     );
   }
 
@@ -516,7 +537,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return [];
     }
     return this.datos.coberturaElectricaCpTabla.filter((item: any) => 
-      !item.categoria || !item.categoria.toLowerCase().includes('total')
+      !item.tipo || !item.tipo.toLowerCase().includes('total')
     );
   }
 
@@ -531,7 +552,7 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
       return [];
     }
     return this.datos.combustiblesCocinarCpTabla.filter((item: any) => 
-      !item.categoria || !item.categoria.toLowerCase().includes('total')
+      !item.nombre || !item.nombre.toLowerCase().includes('total')
     );
   }
 
@@ -585,6 +606,112 @@ export class Seccion26Component extends BaseSectionComponent implements OnDestro
         this.formularioService.actualizarDato('combustiblesCocinarCpTabla', filtered);
       }
     }
+  }
+
+  /**
+   * Recalcula dinámicamente los porcentajes de un array de items
+   * basándose en el total de casos
+   */
+  private recalcularPorcentajes(items: any[]): any[] {
+    if (!items || items.length === 0) return items;
+    
+    // Calcular total de casos
+    const total = items.reduce((sum, item) => sum + (Number(item.casos) || 0), 0);
+    
+    if (total === 0) return items;
+    
+    // Recalcular porcentajes
+    return items.map(item => ({
+      ...item,
+      porcentaje: `${((Number(item.casos) / total) * 100).toFixed(2).replace('.', ',')} %`
+    }));
+  }
+
+  /**
+   * Normaliza un string removiendo palabras comunes cortas para comparación
+   */
+  private normalizarParaComparacion(texto: string): string {
+    if (!texto) return '';
+    // Convertir a minúsculas y remover palabras pequeñas: "de", "la", "el", "los", "las", etc.
+    return texto
+      .toLowerCase()
+      .replace(/\b(de|la|el|los|las|un|una|unos|unas|y|o|a)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Elimina registros duplicados por tipo/nombre, manteniendo el primero
+   * Detecta duplicados incluso con variaciones menores en el texto
+   */
+  private eliminarDuplicadosPorTipo(items: any[], campoTipo: string = 'tipo'): any[] {
+    const vistos = new Set<string>();
+    return items.filter(item => {
+      const valor = this.normalizarParaComparacion(item[campoTipo] || '');
+      if (vistos.has(valor)) {
+        return false; // Filtrar duplicado
+      }
+      vistos.add(valor);
+      return true; // Mantener
+    });
+  }
+
+  cargarServiciosBasicos(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    if (!codigos || codigos.length === 0) {
+      console.warn('No hay códigos AISI disponibles');
+      return;
+    }
+
+    // Cargar servicios básicos (agua, desagüe, electricidad)
+    this.serviciosBasicosService.obtenerServiciosPorCodigos(codigos).subscribe(
+      (response: any) => {
+        if (response.success && response.data) {
+          const datos = response.data;
+          
+          // Procesar Agua (3.48) - eliminar duplicados y recalcular porcentajes
+          if (datos['Agua']) {
+            const aguaSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Agua'], 'tipo');
+            this.datos.abastecimientoAguaCpTabla = this.recalcularPorcentajes(aguaSinDuplicados);
+            this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos.abastecimientoAguaCpTabla);
+          }
+          
+          // Procesar Desagüe (3.49) - eliminar duplicados y recalcular porcentajes
+          if (datos['Desagüe']) {
+            const desagueSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Desagüe'], 'tipo');
+            this.datos.saneamientoCpTabla = this.recalcularPorcentajes(desagueSinDuplicados);
+            this.formularioService.actualizarDato('saneamientoCpTabla', this.datos.saneamientoCpTabla);
+          }
+          
+          // Procesar Alumbrado (3.50) - eliminar duplicados y recalcular porcentajes
+          if (datos['Alumbrado']) {
+            const alumbradoSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Alumbrado'], 'tipo');
+            this.datos.coberturaElectricaCpTabla = this.recalcularPorcentajes(alumbradoSinDuplicados);
+            this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos.coberturaElectricaCpTabla);
+          }
+
+          this.cdRef.detectChanges();
+        }
+      },
+      (error: any) => {
+        console.error('Error cargando servicios básicos:', error);
+      }
+    );
+
+    // Cargar energía para cocinar (3.51) - eliminar duplicados y recalcular porcentajes
+    this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
+      (response: any) => {
+        if (response.success && response.data) {
+          const combustiblesSinDuplicados = this.eliminarDuplicadosPorTipo(response.data, 'nombre');
+          this.datos.combustiblesCocinarCpTabla = this.recalcularPorcentajes(combustiblesSinDuplicados);
+          this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos.combustiblesCocinarCpTabla);
+          this.cdRef.detectChanges();
+        }
+      },
+      (error: any) => {
+        console.error('Error cargando energía de cocinar:', error);
+      }
+    );
   }
 }
 

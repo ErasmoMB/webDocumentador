@@ -31,7 +31,6 @@ export class Seccion20Component extends BaseSectionComponent implements OnDestro
     tablaKey: 'festividades',
     totalKey: 'festividad',
     campoTotal: 'festividad',
-    campoPorcentaje: 'fecha',
     estructuraInicial: [{ festividad: '', fecha: '' }]
   };
 
@@ -70,6 +69,12 @@ export class Seccion20Component extends BaseSectionComponent implements OnDestro
   getTablaKeyFestividades(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `festividades${prefijo}` : 'festividades';
+  }
+
+  getTablaFestividades(): any[] {
+    const tablaKey = this.getTablaKeyFestividades();
+    const tabla = this.datos[tablaKey] || this.datos.festividades || [];
+    return Array.isArray(tabla) ? tabla : [];
   }
 
   getFieldIdTextoFestividades(): string {

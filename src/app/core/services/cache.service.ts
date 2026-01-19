@@ -32,7 +32,7 @@ export class CacheService {
       // Guardar organizado por endpoint para uso como mock data
       this.saveMockDataByEndpoint(url, params, data);
       
-      console.log('✅ Respuesta guardada en cache:', cacheKey);
+      
       
       // Auto-exportar si está habilitado
       if (this.autoExportEnabled) {
@@ -67,7 +67,7 @@ export class CacheService {
       // Actualizar el archivo JSON consolidado para este tipo
       this.updateConsolidatedMockData(endpointType, data);
       
-      console.log(`📝 Mock data actualizado para: ${endpointType}`);
+      
     } catch (error) {
       console.error('Error al guardar mock data:', error);
     }
@@ -137,7 +137,7 @@ export class CacheService {
       }
       const stats = this.getCacheStats();
       if (stats.total > 0 && stats.total % 20 === 0) {
-        console.log('🔄 Auto-exportando mock data... (cada 20 respuestas)');
+        
         this.exportMockDataToJSON();
       }
     } catch (error) {
@@ -205,7 +205,7 @@ export class CacheService {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log('✅ Mock data exportado automáticamente');
+      
     } catch (error) {
       console.error('Error al exportar mock data:', error);
     }
@@ -238,7 +238,7 @@ export class CacheService {
         return null;
       }
 
-      console.log('Usando respuesta desde cache:', cacheKey);
+      
       return entry.data;
     } catch (error) {
       console.error('Error al leer cache:', error);
@@ -274,7 +274,7 @@ export class CacheService {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log('Cache exportado a JSON');
+      
     } catch (error) {
       console.error('Error al exportar cache:', error);
     }
@@ -293,7 +293,7 @@ export class CacheService {
         };
         localStorage.setItem(this.CACHE_PREFIX + cacheKey, JSON.stringify(cacheEntry));
       });
-      console.log('Cache importado desde JSON');
+      
     } catch (error) {
       console.error('Error al importar cache:', error);
     }
@@ -307,7 +307,7 @@ export class CacheService {
           localStorage.removeItem(key);
         }
       });
-      console.log('Cache limpiado');
+      
     } catch (error) {
       console.error('Error al limpiar cache:', error);
     }
@@ -356,12 +356,10 @@ export class CacheService {
 
   enableAutoExport(): void {
     this.autoExportEnabled = true;
-    console.log('✅ Auto-export habilitado');
   }
 
   disableAutoExport(): void {
     this.autoExportEnabled = false;
-    console.log('⏸️ Auto-export deshabilitado');
   }
 
   isAutoExportEnabled(): boolean {

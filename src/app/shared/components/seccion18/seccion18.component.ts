@@ -6,10 +6,12 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -17,7 +19,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion18.component.html',
   styleUrls: ['./seccion18.component.css']
 })
-export class Seccion18Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion18Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -54,12 +56,34 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
+
+  protected getSectionKey(): string {
+    return 'seccion18_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      // Limpiar '0' al inicio de cada CCPP
+      const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
+        const cleaned = cpp.toString().replace(/^0+/, '') || '0';
+        console.log(`[Seccion18] CCPP: ${cpp} → ${cleaned}`);
+        return cleaned;
+      });
+      return ccppLimpios;
+    }
+    return null;
+  }
+
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
@@ -120,11 +144,22 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     }
   }
 
+  getTablaKeyNbiCCAyroca(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
+  }
+
+  getTableNbiCCAyroca(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'nbiCCAyrocaTabla', this.seccionId);
+    return pref || this.datos.nbiCCAyrocaTabla || [];
+  }
+
   getNbiCCAyrocaSinTotal(): any[] {
-    if (!this.datos?.nbiCCAyrocaTabla || !Array.isArray(this.datos.nbiCCAyrocaTabla)) {
+    const tabla = this.getTableNbiCCAyroca();
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.nbiCCAyrocaTabla.filter((item: any) => {
+    return tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -139,11 +174,22 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     return total.toString();
   }
 
+  getTablaKeyNbiDistritoCahuacho(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
+  }
+
+  getTableNbiDistritoCahuacho(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'nbiDistritoCahuachoTabla', this.seccionId);
+    return pref || this.datos.nbiDistritoCahuachoTabla || [];
+  }
+
   getNbiDistritoCahuachoSinTotal(): any[] {
-    if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
+    const tabla = this.getTableNbiDistritoCahuacho();
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.nbiDistritoCahuachoTabla.filter((item: any) => {
+    return tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -158,7 +204,8 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     return total.toString();
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -195,43 +242,51 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
   }
 
   getTotalPersonasCC(): string {
-    if (!this.datos?.nbiCCAyrocaTabla || !Array.isArray(this.datos.nbiCCAyrocaTabla)) {
+    const tabla = this.getTableNbiCCAyroca();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const totalItem = this.datos.nbiCCAyrocaTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total referencial')
-    );
-    return totalItem?.casos || '____';
+    // Sumar todos los casos de la tabla
+    const total = tabla.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total > 0 ? total.toString() : '____';
   }
 
   getPorcentajeHacinamientoCC(): string {
-    if (!this.datos?.nbiCCAyrocaTabla || !Array.isArray(this.datos.nbiCCAyrocaTabla)) {
+    const tabla = this.getTableNbiCCAyroca();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.nbiCCAyrocaTabla.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
     return item?.porcentaje || '____';
   }
 
   getPorcentajeSinServiciosCC(): string {
-    if (!this.datos?.nbiCCAyrocaTabla || !Array.isArray(this.datos.nbiCCAyrocaTabla)) {
+    const tabla = this.getTableNbiCCAyroca();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.nbiCCAyrocaTabla.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
     return item?.porcentaje || '____';
   }
 
   getTotalUnidadesDistrito(): string {
-    if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
+    const tabla = this.getTableNbiDistritoCahuacho();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const totalItem = this.datos.nbiDistritoCahuachoTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total referencial')
-    );
-    return totalItem?.casos || '____';
+    // Sumar todos los casos de la tabla
+    const total = tabla.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total > 0 ? total.toString() : '____';
   }
 
   obtenerTextoNecesidadesBasicasInsatisfechas(): string {
@@ -248,24 +303,26 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito();
     const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito();
     
-    return `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de ${totalPersonas} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento (${porcentajeHacinamiento}), seguido de la de viviendas sin servicios higiénicos (${porcentajeSinServicios}).\n\nPor otro lado, a nivel distrital de ${distrito}, de un total de ${totalUnidades} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos (${porcentajeSinServiciosDistrito}), seguida de la de viviendas con hacinamiento (${porcentajeHacinamientoDistrito}). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
+    return `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de [TOTAL_CC:${totalPersonas}] personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de [NBI_HACINAMIENTO_CC:viviendas con hacinamiento] (${porcentajeHacinamiento}%), seguido de la de [NBI_SERVICIOS_CC:viviendas sin servicios higiénicos] (${porcentajeSinServicios}%).\n\nPor otro lado, a nivel distrital de [DISTRITO:${distrito}], de un total de [TOTAL_DIST:${totalUnidades}] unidades de análisis, se sabe que el tipo de NBI más frecuente es la de [NBI_SERVICIOS_DIST:viviendas sin servicios higiénicos] (${porcentajeSinServiciosDistrito}%), seguida de la de [NBI_HACINAMIENTO_DIST:viviendas con hacinamiento] (${porcentajeHacinamientoDistrito}%). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
   }
 
   getPorcentajeSinServiciosDistrito(): string {
-    if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
+    const tabla = this.getTableNbiDistritoCahuacho();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.nbiDistritoCahuachoTabla.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
     return item?.porcentaje || '____';
   }
 
   getPorcentajeHacinamientoDistrito(): string {
-    if (!this.datos?.nbiDistritoCahuachoTabla || !Array.isArray(this.datos.nbiDistritoCahuachoTabla)) {
+    const tabla = this.getTableNbiDistritoCahuacho();
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.nbiDistritoCahuachoTabla.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
     return item?.porcentaje || '____';
@@ -285,44 +342,47 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
 
   obtenerTextoNBIConResaltado(): SafeHtml {
     const texto = this.obtenerTextoNecesidadesBasicasInsatisfechas();
-    const grupoAISD = this.obtenerNombreComunidadActual();
-    const totalPersonas = this.getTotalPersonasCC();
-    const porcentajeHacinamiento = this.getPorcentajeHacinamientoCC();
-    const porcentajeSinServicios = this.getPorcentajeSinServiciosCC();
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId) || 'Ayroca';
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const totalPersonas = this.getTotalPersonasCC();
     const totalUnidades = this.getTotalUnidadesDistrito();
-    const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito();
-    const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito();
     
-    let html = this.escapeHtml(texto);
+    let html = texto;
     
-    if (grupoAISD !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
-    }
-    if (totalPersonas !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(totalPersonas), 'g'), `<span class="data-section">${this.escapeHtml(totalPersonas)}</span>`);
-    }
-    if (porcentajeHacinamiento !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeHacinamiento), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeHacinamiento)}</span>`);
-    }
-    if (porcentajeSinServicios !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeSinServicios), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeSinServicios)}</span>`);
-    }
-    if (distrito !== 'Cahuacho') {
-      html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
-    }
-    if (totalUnidades !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(totalUnidades), 'g'), `<span class="data-section">${this.escapeHtml(totalUnidades)}</span>`);
-    }
-    if (porcentajeSinServiciosDistrito !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeSinServiciosDistrito), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeSinServiciosDistrito)}</span>`);
-    }
-    if (porcentajeHacinamientoDistrito !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeHacinamientoDistrito), 'g'), `<span class="data-section">${this.escapeHtml(porcentajeHacinamientoDistrito)}</span>`);
-    }
+    // Reemplazar ANTES de escapar HTML (usar placeholders)
+    html = html.split('[TOTAL_CC:' + totalPersonas + ']').join(`[TOTAL_CC:${totalPersonas}]`);
+    html = html.split('[TOTAL_DIST:' + totalUnidades + ']').join(`[TOTAL_DIST:${totalUnidades}]`);
+    html = html.split('[NBI_HACINAMIENTO_CC:viviendas con hacinamiento]').join(`[NBI_HAC_CC:viviendas con hacinamiento]`);
+    html = html.split('[NBI_SERVICIOS_CC:viviendas sin servicios higiénicos]').join(`[NBI_SRV_CC:viviendas sin servicios higiénicos]`);
+    html = html.split('[DISTRITO:' + distrito + ']').join(`[DIST:${distrito}]`);
+    html = html.split('[NBI_SERVICIOS_DIST:viviendas sin servicios higiénicos]').join(`[NBI_SRV_DIST:viviendas sin servicios higiénicos]`);
+    html = html.split('[NBI_HACINAMIENTO_DIST:viviendas con hacinamiento]').join(`[NBI_HAC_DIST:viviendas con hacinamiento]`);
     
-    html = html.replace(/\n\n/g, '</p><p class="text-justify">');
-    html = `<p class="text-justify">${html}</p>`;
+    // AHORA escapar el HTML
+    html = this.escapeHtml(html);
+    
+    // Y AHORA hacer los reemplazos con spans (CELESTE para totales, LILA para categorías, VERDE para porcentajes)
+    const porcentajeHacinamiento = this.getPorcentajeHacinamientoCC() || '0';
+    const porcentajeSinServicios = this.getPorcentajeSinServiciosCC() || '0';
+    const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito() || '0';
+    const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito() || '0';
+    
+    // Reemplazar totales (CELESTE - data-section)
+    html = html.split(`[TOTAL_CC:${totalPersonas}]`).join(`<span class="data-section">${this.escapeHtml(totalPersonas)}</span>`);
+    html = html.split(`[TOTAL_DIST:${totalUnidades}]`).join(`<span class="data-section">${this.escapeHtml(totalUnidades)}</span>`);
+    
+    // Reemplazar categorías NBI (LILA - data-source)
+    html = html.split(`[NBI_HAC_CC:viviendas con hacinamiento]`).join(`<span class="data-source">viviendas con hacinamiento</span>`);
+    html = html.split(`[NBI_SRV_CC:viviendas sin servicios higiénicos]`).join(`<span class="data-source">viviendas sin servicios higiénicos</span>`);
+    html = html.split(`[NBI_SRV_DIST:viviendas sin servicios higiénicos]`).join(`<span class="data-source">viviendas sin servicios higiénicos</span>`);
+    html = html.split(`[NBI_HAC_DIST:viviendas con hacinamiento]`).join(`<span class="data-source">viviendas con hacinamiento</span>`);
+    html = html.split(`[DIST:${distrito}]`).join(`<span class="data-source">${this.escapeHtml(distrito)}</span>`);
+    
+    // Reemplazar porcentajes (VERDE - data-calculated con %)
+    html = html.split(`${porcentajeHacinamiento}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeHacinamiento)}%</span>`);
+    html = html.split(`${porcentajeSinServicios}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeSinServicios)}%</span>`);
+    html = html.split(`${porcentajeSinServiciosDistrito}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeSinServiciosDistrito)}%</span>`);
+    html = html.split(`${porcentajeHacinamientoDistrito}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeHacinamientoDistrito)}%</span>`);
     
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -369,6 +429,5 @@ export class Seccion18Component extends BaseSectionComponent implements OnDestro
     this.fotografiasFormMulti = [...fotografias];
     this.cdRef.detectChanges();
   }
-
 }
 

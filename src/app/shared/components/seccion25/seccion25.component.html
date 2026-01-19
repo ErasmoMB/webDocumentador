@@ -1,7 +1,7 @@
 <div *ngIf="!modoFormulario">
 <h5>B.1.4. Vivienda</h5>
 <p class="text-justify" *ngIf="datos.textoViviendaAISI && datos.textoViviendaAISI !== '____'">{{ datos.textoViviendaAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoViviendaAISI || datos.textoViviendaAISI === '____'">Según los Censos Nacionales 2017, en el CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan un total de <span [appDataSource]="'section'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
+<p class="text-justify" *ngIf="!datos.textoViviendaAISI || datos.textoViviendaAISI === '____'">Según los Censos Nacionales 2017, en el CP <span class="data-section">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan un total de <span [appDataSource]="'section'">{{ getTotalViviendasEmpadronadas() }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
 
 <app-table-wrapper title="Tipos de Vivienda – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.4">
 <table class="table-container">
@@ -14,14 +14,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getTiposViviendaSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd">{{ item.categoria || '____' }}</td>
+            <td class="table-cell cell-from-bd">{{ item.casos || '____' }}</td>
+            <td class="table-cell cell-percentage">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="getTiposViviendaSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalTiposVivienda() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell cell-from-bd"><strong>{{ getTotalTiposVivienda() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="getTiposViviendaSinTotal().length === 0">
             <td class="table-cell">____</td>
@@ -34,7 +34,7 @@
 <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoOcupacionViviendaAISI'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
 <p class="text-justify" *ngIf="datos.textoOcupacionViviendaAISI && datos.textoOcupacionViviendaAISI !== '____'">{{ datos.textoOcupacionViviendaAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoOcupacionViviendaAISI || datos.textoOcupacionViviendaAISI === '____'">Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de <span [appDataSource]="'section'" [fieldName]="'textoOcupacionViviendaAISI'">{{ getViviendasOcupadasPresentes() }}</span>. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el <span [appDataSource]="'section'">{{ getPorcentajeOcupadasPresentes() }}</span> del conjunto analizado.</p>
+<p class="text-justify" *ngIf="!datos.textoOcupacionViviendaAISI || datos.textoOcupacionViviendaAISI === '____'">Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de <span class="data-manual">{{ getTotalCondicionOcupacion() }}</span>. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el <span class="data-calculated">{{ getPorcentajeOcupadasPresentes() }}</span> del conjunto analizado.</p>
 
 <app-table-wrapper title="Condición de Ocupación de la Vivienda – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.4">
 <table class="table-container">
@@ -47,19 +47,19 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getCondicionOcupacionSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell data-manual">{{ item.categoria || '____' }}</td>
+            <td class="table-cell data-manual">{{ item.casos || '____' }}</td>
+            <td class="table-cell cell-percentage">{{ calcularPorcentajeCondicion(item) }}</td>
         </tr>
         <tr *ngIf="getCondicionOcupacionSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalCondicionOcupacion() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell data-manual"><strong>{{ getTotalCondicionOcupacion() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="getCondicionOcupacionSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
+            <td class="table-cell data-manual">____</td>
+            <td class="table-cell data-manual">____</td>
+            <td class="table-cell cell-percentage">____</td>
         </tr>
     </tbody>
 </table>
@@ -68,8 +68,8 @@
 
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
 <p class="text-justify" *ngIf="datos.textoEstructuraAISI && datos.textoEstructuraAISI !== '____'">{{ datos.textoEstructuraAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Según la información recabada de los Censos Nacionales 2017, dentro del CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.</p>
-<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span [appDataSource]="'section'" [fieldName]="'textoEstructuraAISI'">{{ getPorcentajePisosTierra() }}</span>). El porcentaje restante, que consta del <span [appDataSource]="'section'">{{ getPorcentajePisosCemento() }}</span>, cuentan con pisos elaborados a base de cemento.</p>
+<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Según la información recabada de los Censos Nacionales 2017, dentro del CP <span class="data-section">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.</p>
+<p class="text-justify" *ngIf="!datos.textoEstructuraAISI || datos.textoEstructuraAISI === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span class="data-calculated">{{ getPorcentajePisosTierra() }}</span>). El porcentaje restante, que consta del <span class="data-calculated">{{ getPorcentajePisosCemento() }}</span>, cuentan con pisos elaborados a base de cemento.</p>
 
 <app-table-wrapper title="Tipos de materiales de las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.4">
 <table class="table-container">
@@ -82,18 +82,34 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getMaterialesViviendaSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+        <tr *ngFor="let item of getMaterialesAgrupados()" [class.row-subtotal]="item.esSubtotal">
+            <!-- Fila de categoría (resaltada) -->
+            <td *ngIf="!item.esSubtotal" class="table-cell cell-from-bd">{{ item.categoria || '____' }}</td>
+            <td *ngIf="item.esSubtotal" class="table-cell"><strong>{{ item.categoria }}</strong></td>
+            
+            <!-- Tipo de material o guión para subtotal -->
+            <td class="table-cell" [class.cell-from-bd]="!item.esSubtotal">
+                {{ item.tipoMaterial || '____' }}
+            </td>
+            
+            <!-- Casos -->
+            <td class="table-cell" [class.cell-from-bd]="!item.esSubtotal">
+                <strong *ngIf="item.esSubtotal">{{ item.casos || 0 }}</strong>
+                <span *ngIf="!item.esSubtotal">{{ item.casos || 0 }}</span>
+            </td>
+            
+            <!-- Porcentaje -->
+            <td class="table-cell" [class.cell-percentage]="!item.esSubtotal">
+                <strong *ngIf="item.esSubtotal">{{ item.porcentaje }}</strong>
+                <span *ngIf="!item.esSubtotal">{{ item.porcentaje || '____' }}</span>
+            </td>
         </tr>
-        <tr *ngIf="getMaterialesViviendaSinTotal().length > 0">
+        <tr *ngIf="getMaterialesAgrupados().length > 0">
             <td class="table-cell" colspan="2"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalMaterialesVivienda() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell cell-from-bd"><strong>{{ getTotalMaterialesVivienda() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
-        <tr *ngIf="getMaterialesViviendaSinTotal().length === 0">
+        <tr *ngIf="getMaterialesAgrupados().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>

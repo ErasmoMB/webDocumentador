@@ -9,15 +9,18 @@ import { TableManagementService, TableConfig } from 'src/app/core/services/table
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { PeaService } from 'src/app/core/services/pea.service';
 
 @Component({
   selector: 'app-seccion23',
   templateUrl: './seccion23.component.html',
   styleUrls: ['./seccion23.component.css']
 })
-export class Seccion23Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion23Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -74,14 +77,18 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private peaService: PeaService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     this.eliminarFilasTotal();
+    this.cargarDatosPEA();
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -142,6 +149,107 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
         this.cdRef.detectChanges();
       }
     }
+  }
+
+  private cargarDatosPEA(): void {
+    // Obtener UBIGEOs del grupo AISI desde la configuración
+    const ubigeos = this.groupConfig.getAISICCPPActivos();
+    
+    if (!ubigeos || ubigeos.length === 0) {
+      console.warn('No se encontraron UBIGEOs para el grupo AISI');
+      return;
+    }
+
+    // Llamar al endpoint para obtener datos PEA agregados
+    this.peaService.obtenerPorCodigos(ubigeos).subscribe(
+      (response: any) => {
+        if (response.success) {
+          // TABLA 3.41: PET según grupos de edad
+          let petGruposEdad = response.tabla_3_41_pea_grupos_edad || [];
+          // Formatear porcentajes
+          petGruposEdad = petGruposEdad.map((item: any) => ({
+            ...item,
+            porcentaje: this.formatearPorcentaje(item.porcentaje)
+          }));
+          this.formularioService.actualizarDato('petGruposEdadAISI', petGruposEdad);
+
+          // TABLA 3.42/3.43: Reorganizar datos de estado/sexo
+          const datos_estado_sexo = response.tabla_3_42_3_43_pea_estado_sexo || [];
+          
+          // Agrupar por estado para las 2 tablas
+          const peaDistritoSexo = this.agruparPorEstado(datos_estado_sexo);
+          this.formularioService.actualizarDato('peaDistritoSexoTabla', peaDistritoSexo);
+          
+          // peaOcupadaDesocupadaTabla usa la misma estructura
+          this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
+
+          this.cdRef.detectChanges();
+        } else {
+          console.error('Error al cargar datos PEA:', response.error);
+        }
+      },
+      (error: any) => {
+        console.error('Error en servicio PEA:', error);
+      }
+    );
+  }
+
+  private formatearPorcentaje(valor: number | string): string {
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '0,00 %';
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+  }
+
+  private agruparPorEstado(datos_estado_sexo: any[]): any[] {
+    const estados: { [key: string]: any } = {};
+
+    for (const item of datos_estado_sexo) {
+      const estado = item.estado || '';
+      const sexo = item.sexo || '';
+      const cantidad = item.cantidad || 0;
+
+      if (!estados[estado]) {
+        estados[estado] = {
+          categoria: estado,
+          hombres: 0,
+          mujeres: 0,
+          casos: 0,
+          porcentajeHombres: '0,00 %',
+          porcentajeMujeres: '0,00 %',
+          porcentaje: '0,00 %'
+        };
+      }
+
+      if (sexo.toLowerCase() === 'hombre' || sexo.toLowerCase() === 'h') {
+        estados[estado].hombres += cantidad;
+      } else if (sexo.toLowerCase() === 'mujer' || sexo.toLowerCase() === 'm') {
+        estados[estado].mujeres += cantidad;
+      }
+
+      estados[estado].casos += cantidad;
+    }
+
+    // Calcular porcentajes
+    let totalGlobal = 0;
+    for (const key in estados) {
+      totalGlobal += estados[key].casos;
+    }
+
+    for (const key in estados) {
+      const estado = estados[key];
+      const totalEstado = estado.hombres + estado.mujeres;
+
+      if (totalEstado > 0) {
+        estado.porcentajeHombres = ((estado.hombres / totalEstado) * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+        estado.porcentajeMujeres = ((estado.mujeres / totalEstado) * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+      }
+
+      if (totalGlobal > 0) {
+        estado.porcentaje = ((estado.casos / totalGlobal) * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+      }
+    }
+
+    return Object.values(estados);
   }
 
   getPetGruposEdadSinTotal(): any[] {
@@ -237,10 +345,19 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
     return total.toString();
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion23_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -340,33 +457,32 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
 
   getPorcentajePET(): string {
     if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
-      return '____';
+      return '0,00 %';
     }
-    const totalItem = this.datos.petGruposEdadAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total')
-    );
-    if (!totalItem) {
-      return '____';
-    }
-    const totalPET = totalItem.casos;
-    const totalPoblacion = this.datos?.poblacionSexoAISI?.find((item: any) => 
-      item.sexo && item.sexo.toLowerCase().includes('total')
-    )?.casos || 160;
+    const totalPET = this.datos.petGruposEdadAISI.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    
+    const totalPoblacion = this.datos?.poblacionSexoAISI?.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0) || 0;
+    
     if (!totalPoblacion || totalPoblacion === 0) {
-      return '____';
+      return '0,00 %';
     }
-    const porcentaje = ((totalPET / totalPoblacion) * 100).toFixed(2);
-    return porcentaje + ' %';
+    return this.formatearPorcentaje((totalPET / totalPoblacion) * 100);
   }
 
   getPorcentajeGrupoPET(categoria: string): string {
     if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.petGruposEdadAISI.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase())
     );
-    return item?.porcentaje || '____';
+    return item?.porcentaje || '0,00 %';
   }
 
   getPoblacionDistrital(): string {
@@ -476,42 +592,42 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
 
   getPorcentajePEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no')
     );
-    return item?.porcentaje || '____';
+    return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeNoPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('no pea')
     );
-    return item?.porcentaje || '____';
+    return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeHombresPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no')
     );
-    return item?.porcentajeHombres || '____';
+    return item?.porcentajeHombres || '0,00 %';
   }
 
   getPorcentajeMujeresNoPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('no pea')
     );
-    return item?.porcentajeMujeres || '____';
+    return item?.porcentajeMujeres || '0,00 %';
   }
 
   getIngresoPerCapita(): string {
@@ -524,32 +640,32 @@ export class Seccion23Component extends BaseSectionComponent implements OnDestro
 
   getPorcentajeDesempleo(): string {
     if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('desocupada')
     );
-    return item?.porcentaje || '____';
+    return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeHombresOcupados(): string {
     if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada')
     );
-    return item?.porcentajeHombres || '____';
+    return item?.porcentajeHombres || '0,00 %';
   }
 
   getPorcentajeMujeresOcupadas(): string {
     if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) {
-      return '____';
+      return '0,00 %';
     }
     const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada')
     );
-    return item?.porcentajeMujeres || '____';
+    return item?.porcentajeMujeres || '0,00 %';
   }
 
   // Eliminar métodos de cache y eventos de cambio de fotos

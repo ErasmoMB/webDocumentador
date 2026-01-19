@@ -8,15 +8,19 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { ViviendaService } from 'src/app/core/services/vivienda.service';
+import { MaterialesService } from 'src/app/core/services/materiales.service';
 
 @Component({
   selector: 'app-seccion25',
   templateUrl: './seccion25.component.html',
   styleUrls: ['./seccion25.component.css']
 })
-export class Seccion25Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion25Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -66,14 +70,20 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private viviendaService: ViviendaService,
+    private materialesService: MaterialesService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
+    this.cargarDatosVivienda();
+    this.cargarDatosMateriales();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -82,10 +92,19 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion25_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -145,16 +164,6 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     return true;
   }
 
-  getTotalViviendasEmpadronadas(): string {
-    if (!this.datos?.tiposViviendaAISI || !Array.isArray(this.datos.tiposViviendaAISI)) {
-      return '____';
-    }
-    const total = this.datos.tiposViviendaAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('total')
-    );
-    return total?.casos?.toString() || '____';
-  }
-
   getViviendasOcupadasPresentes(): string {
     if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
       return '____';
@@ -169,10 +178,24 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
       return '____';
     }
+    
+    // Buscar la fila "Ocupado"
     const item = this.datos.condicionOcupacionAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('ocupada') && item.categoria.toLowerCase().includes('presentes')
+      item.categoria && item.categoria.toLowerCase() === 'ocupado'
     );
-    return item?.porcentaje || '____';
+    
+    if (!item) {
+      return '____';
+    }
+    
+    // Calcular dinámicamente basado en casos (igual que calcularPorcentajeCondicion)
+    const total = this.getTotalCondicionOcupacion();
+    if (total === 0) {
+      return '0,00 %';
+    }
+    const casos = Number(item.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return this.formatearPorcentaje(porcentaje);
   }
 
   getPorcentajePisosTierra(): string {
@@ -180,7 +203,7 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.materialesViviendaAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('pisos') && 
+      item.categoria && item.categoria.toLowerCase().includes('piso') && 
       item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('tierra')
     );
     return item?.porcentaje || '____';
@@ -191,7 +214,7 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
       return '____';
     }
     const item = this.datos.materialesViviendaAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('pisos') && 
+      item.categoria && item.categoria.toLowerCase().includes('piso') && 
       item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('cemento')
     );
     return item?.porcentaje || '____';
@@ -359,6 +382,11 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
   }
 
+  // Alias para compatibilidad - obtener total de viviendas empadronadas
+  getTotalViviendasEmpadronadas(): number {
+    return this.getTotalTiposVivienda();
+  }
+
   // Métodos para filtrar filas Total de condición de ocupación
   getCondicionOcupacionSinTotal(): any[] {
     if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
@@ -374,6 +402,17 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
   }
 
+  // Calcular porcentaje dinámico para tabla manual de Condición de Ocupación
+  calcularPorcentajeCondicion(item: any): string {
+    const total = this.getTotalCondicionOcupacion();
+    if (total === 0) {
+      return '0,00 %';
+    }
+    const casos = Number(item.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return this.formatearPorcentaje(porcentaje);
+  }
+
   // Métodos para filtrar filas Total de materiales de vivienda
   getMaterialesViviendaSinTotal(): any[] {
     if (!this.datos?.materialesViviendaAISI || !Array.isArray(this.datos.materialesViviendaAISI)) {
@@ -382,6 +421,54 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
     return this.datos.materialesViviendaAISI.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
+  }
+
+  // Agrupar materiales por categoría con subtotales
+  getMaterialesAgrupados(): any[] {
+    const materiales = this.getMaterialesViviendaSinTotal();
+    if (!materiales || materiales.length === 0) {
+      return [];
+    }
+
+    // Agrupar por categoría
+    const grupos: { [key: string]: any[] } = {};
+    const ordenCategorias: string[] = [];
+
+    materiales.forEach((item: any) => {
+      const categoria = item.categoria || '';
+      if (!grupos[categoria]) {
+        grupos[categoria] = [];
+        ordenCategorias.push(categoria);
+      }
+      grupos[categoria].push(item);
+    });
+
+    // Construir resultado con subtotales
+    const resultado: any[] = [];
+    ordenCategorias.forEach((categoria: string) => {
+      const itemsCategoria = grupos[categoria];
+      const subtotal = itemsCategoria.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+
+      // Agregar items de la categoría
+      itemsCategoria.forEach((item: any) => {
+        resultado.push({
+          ...item,
+          esSubtotal: false,
+          categoria: categoria
+        });
+      });
+
+      // Agregar fila de subtotal con "Total" en la categoría
+      resultado.push({
+        categoria: 'Total',
+        tipoMaterial: '—',
+        casos: subtotal,
+        porcentaje: '100,00 %',
+        esSubtotal: true
+      });
+    });
+
+    return resultado;
   }
 
   getTotalMaterialesVivienda(): number {
@@ -423,6 +510,89 @@ export class Seccion25Component extends BaseSectionComponent implements OnDestro
         this.formularioService.actualizarDato('materialesViviendaAISI', filtered);
       }
     }
+  }
+
+  private cargarDatosVivienda(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    
+    if (!codigos || codigos.length === 0) {
+      console.warn('[Sección 25] No hay códigos AISI activos disponibles');
+      return;
+    }
+
+    console.log('[Sección 25] Cargando tipos de vivienda para AISI:', codigos);
+
+    this.viviendaService.obtenerTiposVivienda(codigos).subscribe(
+      (response: any) => {
+        console.log('[Sección 25] Respuesta vivienda:', response);
+        
+        if (response && response.success && response.tipos_vivienda) {
+          const viviendas = response.tipos_vivienda.map((item: any) => ({
+            categoria: item.tipo_vivienda || '',
+            casos: item.casos || 0,
+            porcentaje: this.formatearPorcentaje(item.porcentaje)
+          }));
+
+          console.log('[Sección 25] Viviendas mapeadas:', viviendas);
+
+          this.datos['tiposViviendaAISI'] = viviendas;
+          this.formularioService.actualizarDato('tiposViviendaAISI', viviendas);
+          
+          this.cdRef.markForCheck();
+          this.cdRef.detectChanges();
+          
+          console.log('[Sección 25] Datos de vivienda cargados. Total:', viviendas.length);
+        }
+      },
+      (error: any) => {
+        console.error('[Sección 25] Error cargando vivienda:', error);
+      }
+    );
+  }
+
+  private cargarDatosMateriales(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    
+    if (!codigos || codigos.length === 0) {
+      console.warn('[Sección 25] No hay códigos AISI activos disponibles');
+      return;
+    }
+
+    console.log('[Sección 25] Cargando materiales para AISI:', codigos);
+
+    this.materialesService.obtenerMateriales(codigos).subscribe(
+      (response: any) => {
+        console.log('[Sección 25] Respuesta materiales:', response);
+        
+        if (response && response.success && response.materiales_construccion) {
+          const materiales = response.materiales_construccion.map((item: any) => ({
+            categoria: item.categoria || '',
+            tipoMaterial: item.tipo_material || '',
+            casos: item.casos || 0,
+            porcentaje: this.formatearPorcentaje(item.porcentaje)
+          }));
+
+          console.log('[Sección 25] Materiales mapeados:', materiales);
+
+          this.datos['materialesViviendaAISI'] = materiales;
+          this.formularioService.actualizarDato('materialesViviendaAISI', materiales);
+          
+          this.cdRef.markForCheck();
+          this.cdRef.detectChanges();
+          
+          console.log('[Sección 25] Datos de materiales cargados. Total:', materiales.length);
+        }
+      },
+      (error: any) => {
+        console.error('[Sección 25] Error cargando materiales:', error);
+      }
+    );
+  }
+
+  private formatearPorcentaje(valor: number | string): string {
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '0,00 %';
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
   }
 }
 

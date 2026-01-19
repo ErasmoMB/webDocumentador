@@ -6,10 +6,13 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -17,7 +20,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion9.component.html',
   styleUrls: ['./seccion9.component.css']
 })
-export class Seccion9Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion9Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -35,10 +38,7 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas ocupadas', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas con otra condición', casos: 0, porcentaje: '0,00 %' }
-      ],
+      estructuraInicial: [],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
     };
@@ -50,15 +50,7 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Materiales de las paredes de las viviendas', tipoMaterial: 'Adobe', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de las paredes de las viviendas', tipoMaterial: 'Triplay / calamina / estera', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de los techos de las viviendas', tipoMaterial: 'Planchas de calamina, fibra de cemento o similares', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de los techos de las viviendas', tipoMaterial: 'Triplay / estera / carrizo', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de los techos de las viviendas', tipoMaterial: 'Tejas', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de los pisos de las viviendas', tipoMaterial: 'Tierra', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Materiales de los pisos de las viviendas', tipoMaterial: 'Cemento', casos: 0, porcentaje: '0,00 %' }
-      ],
+      estructuraInicial: [],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
     };
@@ -71,11 +63,27 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
+    private centrosPobladosActivos: CentrosPobladosActivosService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion9_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const codigosActivos = prefijo?.startsWith('_A')
+      ? this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo)
+      : this.groupConfig.getAISDCCPPActivos();
+
+    return codigosActivos && codigosActivos.length > 0 ? codigosActivos : null;
   }
 
   protected override onInitCustom(): void {
@@ -87,6 +95,62 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    console.log('[SECCION9-COMPONENT] applyLoadedData called with:', loadedData);
+
+    for (const [fieldName, data] of Object.entries(loadedData)) {
+      if (data === null || data === undefined) continue;
+      const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
+
+      const actual = this.datos[fieldKey];
+      const vieneNoVacio = Array.isArray(data) && data.length > 0;
+      const actualEsPlaceholder = this.esTablaPlaceholder(actual);
+
+      const siempreDesdeBackend = fieldName === 'condicionOcupacionTabla' || fieldName === 'tiposMaterialesTabla';
+
+      if (
+        (siempreDesdeBackend && vieneNoVacio) ||
+        this.datos[fieldKey] === undefined ||
+        this.datos[fieldKey] === null ||
+        (vieneNoVacio && actualEsPlaceholder)
+      ) {
+        console.log(`[SECCION9-COMPONENT] Applying ${fieldName} to form:`, data);
+        if (fieldName === 'tiposMaterialesTabla' && Array.isArray(data)) {
+          const tabla = data.map((x: any) => ({ ...x }));
+          this.calcularPorcentajesPorCategoria(tabla);
+          this.formularioService.actualizarDato(fieldKey as any, tabla);
+          continue;
+        }
+        this.formularioService.actualizarDato(fieldKey as any, data);
+      }
+    }
+
+    this.actualizarDatos();
+  }
+
+  private esTablaPlaceholder(valor: any): boolean {
+    if (!Array.isArray(valor) || valor.length === 0) {
+      return true;
+    }
+    const todosCeros = valor.every((row: any) => {
+      const casos = typeof row?.casos === 'number' ? row.casos : parseInt(row?.casos) || 0;
+      return casos === 0;
+    });
+
+    if (todosCeros) {
+      return true;
+    }
+
+    return valor.every((row: any) => {
+      if (!row) return true;
+      const casos = typeof row.casos === 'number' ? row.casos : parseInt(row.casos) || 0;
+      const categoriaVacia = row.categoria !== undefined ? (row.categoria?.toString().trim() || '') === '' : true;
+      const tipoVacio = row.tipoMaterial !== undefined ? (row.tipoMaterial?.toString().trim() || '') === '' : true;
+      return (categoriaVacia || tipoVacio) && casos === 0;
+    });
   }
 
   private eliminarFilasTotal(): void {
@@ -119,7 +183,8 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -210,13 +275,58 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
 
   getPorcentajeMaterial(categoria: string, tipoMaterial: string): string {
     const tabla = this.getTablaTiposMateriales();
-    if (!tabla || !Array.isArray(tabla)) {
+    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) {
+      console.log(`[SECCION9] getPorcentajeMaterial - tabla vacía o no disponible`);
       return '____';
     }
-    const item = tabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase()) &&
-      item.tipoMaterial && item.tipoMaterial.toLowerCase().includes(tipoMaterial.toLowerCase())
-    );
+    
+    const norm = (s: string) =>
+      (s ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\W_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    
+    const catNorm = norm(categoria);
+    const tipoNorm = norm(tipoMaterial);
+    
+    // Variaciones de búsqueda: singular/plural
+    const catVariations = [catNorm, catNorm.endsWith('s') ? catNorm.slice(0, -1) : catNorm + 's'];
+    
+    console.log(`[SECCION9] getPorcentajeMaterial buscando: "${categoria}" + "${tipoMaterial}"`)
+    console.log(`  Categoría normalizada: "${catNorm}" (variaciones: ${catVariations.join(', ')})`)
+    console.log(`  Tipo normalizado: "${tipoNorm}"`)
+    console.log(`  Items en tabla: ${tabla.length}`);
+    
+    const item = tabla.find((item: any) => {
+      const itemCatNorm = norm(item.categoria || '');
+      const itemTipoNorm = norm(item.tipoMaterial || '');
+      
+      // Buscar si la categoría coincide (singular o plural)
+      const catMatch = catVariations.some(v => itemCatNorm.includes(v) || v.includes(itemCatNorm));
+      
+      // Buscar si todas las palabras del tipo buscado están en el tipo del item
+      const typeWords = tipoNorm.split(/\s+/).filter(w => w.length > 0);
+      const tipoMatch = typeWords.length === 0 || typeWords.some(word => itemTipoNorm.includes(word));
+      
+      const match = catMatch && tipoMatch;
+      
+      if (match) {
+        console.log(`  ✓ Encontrado: "${item.categoria}" | "${item.tipoMaterial}" = ${item.porcentaje}`);
+      }
+      
+      return match;
+    });
+    
+    if (!item) {
+      console.log(`  ✗ NO encontrado para: "${categoria}" + "${tipoMaterial}"`);
+      // Mostrar opciones disponibles para debugging
+      const availableCats = [...new Set(tabla.map(i => i.categoria))];
+      console.log(`  Categorías disponibles: ${availableCats.join(', ')}`);
+    }
+    
     return item?.porcentaje || '____';
   }
 
@@ -433,17 +543,28 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
       const itemsCategoria = tabla.filter(item => item.categoria === categoria && item.tipoMaterial !== 'Total');
       const totalCategoria = itemsCategoria.reduce((sum, item) => sum + (parseInt(item.casos) || 0), 0);
       
-      if (totalCategoria > 0) {
-        itemsCategoria.forEach(item => {
-          const casos = parseInt(item.casos) || 0;
-          const porcentaje = ((casos / totalCategoria) * 100).toFixed(2).replace('.', ',') + ' %';
-          item.porcentaje = porcentaje;
-        });
-      } else {
-        itemsCategoria.forEach(item => {
-          item.porcentaje = '0,00 %';
-        });
+      if (totalCategoria <= 0) {
+        itemsCategoria.forEach(item => (item.porcentaje = '0,00 %'));
+        return;
       }
+
+      const calculadas = itemsCategoria.map(item => {
+        const casos = parseInt(item.casos) || 0;
+        const porcentaje = (casos / totalCategoria) * 100;
+        const porcentajeNum = Math.round(porcentaje * 100) / 100;
+        return { item, porcentajeNum };
+      });
+
+      const suma = calculadas.reduce((sum, x) => sum + (x.porcentajeNum || 0), 0);
+      const diff = Math.round((100 - suma) * 100) / 100;
+      const idxAjuste = calculadas.length - 1;
+      calculadas[idxAjuste].porcentajeNum = Math.round(((calculadas[idxAjuste].porcentajeNum || 0) + diff) * 100) / 100;
+
+      calculadas.forEach(({ item, porcentajeNum }) => {
+        item.porcentaje = (porcentajeNum || 0)
+          .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .replace('.', ',') + ' %';
+      });
     });
   }
 
@@ -519,6 +640,15 @@ export class Seccion9Component extends BaseSectionComponent implements OnDestroy
     const porcentajeTejas = this.getPorcentajeMaterial('techos', 'tejas');
     const porcentajeTierra = this.getPorcentajeMaterial('pisos', 'tierra');
     const porcentajeCemento = this.getPorcentajeMaterial('pisos', 'cemento');
+    
+    console.log(`%c[SECCION9] Texto Estructura - Valores extraídos:`, 'color: #FF6F00; font-weight: bold;');
+    console.log(`  Adobe (paredes): ${porcentajeAdobe}`);
+    console.log(`  Triplay (paredes): ${porcentajeTriplayParedes}`);
+    console.log(`  Calamina (techos): ${porcentajeCalamina}`);
+    console.log(`  Triplay (techos): ${porcentajeTriplayTechos}`);
+    console.log(`  Tejas (techos): ${porcentajeTejas}`);
+    console.log(`  Tierra (pisos): ${porcentajeTierra}`);
+    console.log(`  Cemento (pisos): ${porcentajeCemento}`);
     
     return `Según la información recabada de los Censos Nacionales 2017, dentro de la CC ${grupoAISD}, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el ${porcentajeAdobe}. A ello le complementa el material de triplay / calamina / estera (${porcentajeTriplayParedes}).\n\nRespecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un ${porcentajeCalamina}. El porcentaje restante consiste en triplay / estera / carrizo (${porcentajeTriplayTechos}) y en tejas (${porcentajeTejas}).\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajeTierra}). Por otra parte, el porcentaje restante (${porcentajeCemento}) consiste en cemento.`;
   }

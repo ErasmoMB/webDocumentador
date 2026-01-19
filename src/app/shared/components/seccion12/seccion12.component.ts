@@ -6,18 +6,20 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
-import { BaseSectionComponent } from '../base-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { Subscription } from 'rxjs';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   selector: 'app-seccion12',
   templateUrl: './seccion12.component.html',
   styleUrls: ['./seccion12.component.css']
 })
-export class Seccion12Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion12Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -145,11 +147,35 @@ export class Seccion12Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(
+      formularioService,
+      fieldMapping,
+      sectionDataLoader,
+      imageService,
+      photoNumberingService,
+      cdRef,
+      autoLoader
+    );
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion12_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    // Obtiene CCPP activos del distrito configurado en Sección 2 para AISI
+    const ccppDesdeGrupo = this.groupConfig.getAISICCPPActivos();
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      return ccppDesdeGrupo;
+    }
+    
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -438,7 +464,7 @@ export class Seccion12Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }

@@ -1,12 +1,23 @@
 export class PrefijoHelper {
   static obtenerPrefijoGrupo(seccionId: string): string {
-    const regex = /^3\.1\.4\.([A-Z])\.(\d+)/;
-    const match = seccionId.match(regex);
-    if (match) {
-      const letra = match[1];
-      const numero = match[2];
+    // Intenta primero con formato completo: 3.1.4.A.1 o 3.1.4.A.2
+    const regexCompleto = /^3\.1\.4\.([A-Z])\.(\d+)/;
+    const matchCompleto = seccionId.match(regexCompleto);
+    if (matchCompleto) {
+      const letra = matchCompleto[1];
+      const numero = matchCompleto[2];
       return `_${letra}${numero}`;
     }
+    
+    // Si no, intenta con formato simplificado: 3.1.4.A
+    const regexSimple = /^3\.1\.4\.([A-Z])$/;
+    const matchSimple = seccionId.match(regexSimple);
+    if (matchSimple) {
+      const letra = matchSimple[1];
+      // Por defecto usa 1 si no hay número especificado
+      return `_${letra}1`;
+    }
+    
     return '';
   }
 

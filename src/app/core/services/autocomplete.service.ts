@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { DataService } from './data.service';
+import { BackendApiService } from './backend-api.service';
 import { LoggerService } from './logger.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { CentroPoblado } from '../models/api-response.model';
 
 export interface AutocompleteData {
@@ -18,7 +18,7 @@ export class AutocompleteService {
   private cache: Map<string, string[]> = new Map();
 
   constructor(
-    private dataService: DataService,
+    private backendApi: BackendApiService,
     private logger: LoggerService
   ) {}
 
@@ -28,21 +28,72 @@ export class AutocompleteService {
     }
 
     const terminoLower = termino.toLowerCase();
-    const terminoBusqueda = termino.trim().toUpperCase();
-    const cacheKey = `distrito_${terminoLower}`;
+    const cacheKey = `distrito_${provincia}_${terminoLower}`;
 
     if (this.cache.has(cacheKey)) {
       return of(this.cache.get(cacheKey)!);
     }
 
-    return this.dataService.getPoblacionByDistrito(terminoBusqueda).pipe(
-      map(response => {
+    // Si tenemos provincia, buscar distritos de esa provincia
+    if (provincia) {
+      return this.backendApi.getProvincias().pipe(
+        switchMap((respProvincias: any) => {
+          // Buscar el código de la provincia
+          if (respProvincias.data && Array.isArray(respProvincias.data)) {
+            const provinciaEncontrada = respProvincias.data.find((p: any) => 
+              (p.provincia && p.provincia.toLowerCase() === provincia.toLowerCase())
+            );
+            
+            if (provinciaEncontrada && provinciaEncontrada.codigo) {
+              // Usar el código para obtener distritos
+              return this.backendApi.getDistritos(provinciaEncontrada.codigo);
+            }
+          }
+          // Si no encontramos la provincia, traer todos
+          return this.backendApi.getDistritos();
+        }),
+        map((response: any) => {
+          if (response && response.success && Array.isArray(response.data)) {
+            const distritosUnicos = new Set<string>();
+            const terminoFilter = termino.toLowerCase();
+            
+            response.data.forEach((item: any) => {
+              const distrito = item.distrito || item.nombre || item.DIST;
+              if (distrito) {
+                const distritoLower = distrito.toLowerCase();
+                if (distritoLower.includes(terminoFilter)) {
+                  distritosUnicos.add(distrito);
+                }
+              }
+            });
+            
+            const sugerencias = Array.from(distritosUnicos).sort();
+            this.cache.set(cacheKey, sugerencias);
+            return sugerencias;
+          }
+          return [];
+        }),
+        catchError(error => {
+          this.logger.error('Error al buscar sugerencias de distrito:', error);
+          return of([]);
+        })
+      );
+    }
+
+    // Si no hay provincia, traer todos los distritos
+    return this.backendApi.getDistritos().pipe(
+      map((response: any) => {
         if (response && response.success && Array.isArray(response.data)) {
           const distritosUnicos = new Set<string>();
+          const terminoFilter = termino.toLowerCase();
           
-          response.data.forEach((cp: CentroPoblado) => {
-            if (cp.distrito) {
-              distritosUnicos.add(cp.distrito);
+          response.data.forEach((item: any) => {
+            const distrito = item.distrito || item.nombre || item.DIST;
+            if (distrito) {
+              const distritoLower = distrito.toLowerCase();
+              if (distritoLower.includes(terminoFilter)) {
+                distritosUnicos.add(distrito);
+              }
             }
           });
           
@@ -69,18 +120,20 @@ export class AutocompleteService {
       return of(this.cache.get(cacheKey)!);
     }
 
-    const terminoBusqueda = termino.trim().toUpperCase();
-    return this.dataService.getPoblacionByDistrito(distritoSeleccionado.toUpperCase()).pipe(
+    // Obtener código del distrito (los primeros 6 dígitos del código UBIGEO)
+    // Por ahora, usar el nombre del distrito para buscar
+    return this.backendApi.getCentrosPoblados().pipe(
       map(response => {
         if (response && response.success && Array.isArray(response.data)) {
           const centrosPobladosUnicos = new Set<string>();
           const terminoLower = termino.toLowerCase();
           
-          response.data.forEach((cp: CentroPoblado) => {
-            if (cp.centro_poblado) {
-              const centroLower = cp.centro_poblado.toLowerCase();
+          response.data.forEach((cp: any) => {
+            const nombreCP = cp.centro_poblado || cp.CCPP || cp.nombre;
+            if (nombreCP) {
+              const centroLower = nombreCP.toLowerCase();
               if (centroLower.includes(terminoLower)) {
-                centrosPobladosUnicos.add(cp.centro_poblado);
+                centrosPobladosUnicos.add(nombreCP);
               }
             }
           });

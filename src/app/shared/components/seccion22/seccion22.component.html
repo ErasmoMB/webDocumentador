@@ -2,7 +2,7 @@
 <h5>B.1.1. Aspectos demográficos</h5>
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
 <p class="text-justify" *ngIf="datos.textoDemografiaAISI && datos.textoDemografiaAISI !== '____'">{{ datos.textoDemografiaAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoDemografiaAISI || datos.textoDemografiaAISI === '____'">Respecto a la población del CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta los Censos Nacionales 2017, existen <span [appDataSource]="'section'">{{ getTotalPoblacion() }}</span> habitantes que viven permanentemente en la localidad. De este conjunto, el <span [appDataSource]="'section'">{{ getPorcentajeMujeres() }}</span> son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (<span [appDataSource]="'section'">{{ getPorcentajeHombres() }}</span>).</p>
+<p class="text-justify" *ngIf="!datos.textoDemografiaAISI || datos.textoDemografiaAISI === '____'">Respecto a la población del CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta los Censos Nacionales 2017, existen <span [appDataSource]="'section'">{{ getTotalPoblacion() }}</span> habitantes que viven permanentemente en la localidad. De este conjunto, el <span class="data-calculated">{{ getPorcentajeMujeres() }}</span> son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (<span class="data-calculated">{{ getPorcentajeHombres() }}</span>).</p>
 
 <app-table-wrapper title="Población por sexo – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
 <table class="table-container">
@@ -15,19 +15,19 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPoblacionSexoSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'sexo'">{{ item.sexo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'sexo'">{{ item.sexo || '0' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '0' }}</td>
+            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '0,00 %' }}</td>
         </tr>
         <tr class="total-row" *ngIf="getPoblacionSexoSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPoblacionSexo() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell cell-from-bd"><strong>{{ getTotalPoblacionSexo() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.poblacionSexoAISI || datos.poblacionSexoAISI.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
+            <td class="table-cell">0</td>
+            <td class="table-cell">0</td>
+            <td class="table-cell">0,00 %</td>
         </tr>
     </tbody>
 </table>
@@ -36,7 +36,7 @@
 
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
 <p class="text-justify" *ngIf="datos.textoGrupoEtarioAISI && datos.textoGrupoEtarioAISI !== '____'">{{ datos.textoGrupoEtarioAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoGrupoEtarioAISI || datos.textoGrupoEtarioAISI === '____'">En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el <span [appDataSource]="'section'" [fieldName]="'textoGrupoEtarioAISI'">{{ getPorcentajeGrupoEtario('0 a 14') }}</span> del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (<span [appDataSource]="'section'">{{ getPorcentajeGrupoEtario('45 a 64') }}</span>). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el <span [appDataSource]="'section'">{{ getPorcentajeGrupoEtario('15 a 29') }}</span> cada uno.</p>
+<p class="text-justify" *ngIf="!datos.textoGrupoEtarioAISI || datos.textoGrupoEtarioAISI === '____'">En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el <span class="data-calculated">{{ getPorcentajeGrupoEtario('0 a 14') }}</span> del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (<span class="data-calculated">{{ getPorcentajeGrupoEtario('45 a 64') }}</span>). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el <span class="data-calculated">{{ getPorcentajeGrupoEtario('15 a 29') }}</span> cada uno.</p>
 
 <app-table-wrapper title="Población por grupo etario – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
 <table class="table-container">
@@ -49,19 +49,19 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPoblacionEtarioSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '0' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '0' }}</td>
+            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '0,00 %' }}</td>
         </tr>
         <tr class="total-row" *ngIf="getPoblacionEtarioSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPoblacionEtario() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell cell-from-bd"><strong>{{ getTotalPoblacionEtario() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="!datos.poblacionEtarioAISI || datos.poblacionEtarioAISI.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
+            <td class="table-cell">0</td>
+            <td class="table-cell">0</td>
+            <td class="table-cell">0,00 %</td>
         </tr>
     </tbody>
 </table>

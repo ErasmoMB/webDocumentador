@@ -8,15 +8,18 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { CentrosPobladosService } from 'src/app/core/services/centros-poblados.service';
 
 @Component({
   selector: 'app-seccion22',
   templateUrl: './seccion22.component.html',
   styleUrls: ['./seccion22.component.css']
 })
-export class Seccion22Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion22Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -55,21 +58,152 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private centrosPobladosService: CentrosPobladosService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     this.actualizarFotografiasFormMulti();
     this.eliminarFilasTotal();
+    this.cargarDatosDesdeAPI();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private cargarDatosDesdeAPI(): void {
+    // Obtener UBIGEOs dinámicos del grupo AISI actual
+    const ubigeos = this.getLoadParameters();
+    
+    if (!ubigeos || ubigeos.length === 0) {
+      console.warn('⚠️  No hay UBIGEOs activos para cargar datos del grupo AISI');
+      return;
+    }
+
+    console.log(`[Seccion22] Cargando datos para ${ubigeos.length} centros poblados:`, ubigeos);
+    
+    // Cargar datos de todos los centros poblados del grupo AISI
+    this.centrosPobladosService.obtenerPorCodigos(ubigeos).subscribe(
+      (centrosPoblados) => {
+        if (centrosPoblados && centrosPoblados.length > 0) {
+          // Agregar datos demográficos por sexo
+          const poblacionSexo = this.agregarPoblacionPorSexo(centrosPoblados);
+          const poblacionEtario = this.agregarPoblacionPorGrupoEtario(centrosPoblados);
+          
+          // Actualizar los datos en el formulario service
+          this.formularioService.actualizarDato('poblacionSexoAISI', poblacionSexo);
+          this.formularioService.actualizarDato('poblacionEtarioAISI', poblacionEtario);
+          
+          // Actualizar datos locales
+          this.datos.poblacionSexoAISI = poblacionSexo;
+          this.datos.poblacionEtarioAISI = poblacionEtario;
+          
+          // Detectar cambios
+          this.cdRef.detectChanges();
+          
+          console.log('✅ Datos agregados de centros poblados cargados desde API');
+          console.log('   Población por sexo:', poblacionSexo);
+          console.log('   Población por grupo etario:', poblacionEtario);
+        }
+      },
+      (error) => {
+        console.error('❌ Error cargando datos de API:', error);
+      }
+    );
+  }
+
+  /**
+   * Agrega datos de población por sexo de múltiples centros poblados
+   */
+  private agregarPoblacionPorSexo(centrosPoblados: any[]): any[] {
+    let totalHombres = 0;
+    let totalMujeres = 0;
+
+    centrosPoblados.forEach(cp => {
+      totalHombres += cp.hombres || 0;
+      totalMujeres += cp.mujeres || 0;
+    });
+
+    return [
+      {
+        sexo: 'Hombre',
+        casos: totalHombres,
+        porcentaje: this.calcularPorcentaje(totalHombres, totalHombres + totalMujeres)
+      },
+      {
+        sexo: 'Mujer',
+        casos: totalMujeres,
+        porcentaje: this.calcularPorcentaje(totalMujeres, totalHombres + totalMujeres)
+      }
+    ];
+  }
+
+  /**
+   * Agrega datos de población por grupo etario de múltiples centros poblados
+   */
+  private agregarPoblacionPorGrupoEtario(centrosPoblados: any[]): any[] {
+    let de0a14 = 0;
+    let de15a29 = 0;
+    let de30a44 = 0;
+    let de45a64 = 0;
+    let de65amas = 0;
+
+    centrosPoblados.forEach(cp => {
+      de0a14 += cp.de_6_a_14_anios || 0;
+      de15a29 += cp.de_15_a_29 || 0;
+      de30a44 += cp.de_30_a_44 || 0;
+      de45a64 += cp.de_45_a_64 || 0;
+      de65amas += cp.de_65_a_mas || 0;
+    });
+
+    const total = de0a14 + de15a29 + de30a44 + de45a64 + de65amas;
+
+    return [
+      {
+        categoria: '0 a 14',
+        casos: de0a14,
+        porcentaje: this.calcularPorcentaje(de0a14, total)
+      },
+      {
+        categoria: '15 a 29',
+        casos: de15a29,
+        porcentaje: this.calcularPorcentaje(de15a29, total)
+      },
+      {
+        categoria: '30 a 44',
+        casos: de30a44,
+        porcentaje: this.calcularPorcentaje(de30a44, total)
+      },
+      {
+        categoria: '45 a 64',
+        casos: de45a64,
+        porcentaje: this.calcularPorcentaje(de45a64, total)
+      },
+      {
+        categoria: '65 a más',
+        casos: de65amas,
+        porcentaje: this.calcularPorcentaje(de65amas, total)
+      }
+    ];
+  }
+
+  /**
+   * Calcula porcentaje formateado al estilo español
+   */
+  private calcularPorcentaje(valor: number, total: number): string {
+    if (total === 0) return '0,00 %';
+    return ((valor / total) * 100).toLocaleString('es-ES', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' %';
   }
 
   private eliminarFilasTotal(): void {
@@ -138,10 +272,19 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
     return total.toString();
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion22_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -210,10 +353,12 @@ export class Seccion22Component extends BaseSectionComponent implements OnDestro
     if (!this.datos?.poblacionSexoAISI || !Array.isArray(this.datos.poblacionSexoAISI)) {
       return '____';
     }
-    const totalItem = this.datos.poblacionSexoAISI.find((item: any) => 
-      item.sexo && item.sexo.toLowerCase().includes('total')
-    );
-    return totalItem?.casos?.toString() || '____';
+    // Calcular total sumando todos los casos de sexo
+    const total = this.datos.poblacionSexoAISI.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    return total > 0 ? total.toString() : '____';
   }
 
   getPorcentajeMujeres(): string {

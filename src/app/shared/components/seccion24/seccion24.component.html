@@ -14,14 +14,14 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getActividadesEconomicasSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'actividad'">{{ item.actividad || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd">{{ item.actividad || '____' }}</td>
+            <td class="table-cell cell-from-bd">{{ item.casos || '____' }}</td>
+            <td class="table-cell cell-percentage">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="getActividadesEconomicasSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalActividadesEconomicas() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell cell-from-bd"><strong>{{ getTotalActividadesEconomicas() }}</strong></td>
+            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
         </tr>
         <tr *ngIf="getActividadesEconomicasSinTotal().length === 0">
             <td class="table-cell">____</td>

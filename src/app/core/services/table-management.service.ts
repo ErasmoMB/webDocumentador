@@ -11,7 +11,7 @@ export interface TableConfig {
   tablaKey: string;
   totalKey: string;
   campoTotal: string;
-  campoPorcentaje: string;
+  campoPorcentaje?: string;
   estructuraInicial?: any[];
   calcularPorcentajes?: boolean;
   camposParaCalcular?: string[];
@@ -32,7 +32,11 @@ export class TableManagementService {
       if (estructuraInicial && estructuraInicial.length > 0) {
         datos[tablaKey] = JSON.parse(JSON.stringify(estructuraInicial));
       } else {
-        datos[tablaKey] = [{ [config.totalKey]: '', [config.campoTotal]: 0, [config.campoPorcentaje]: '0,00 %' }];
+        const fila: any = { [config.totalKey]: '', [config.campoTotal]: 0 };
+        if (config.campoPorcentaje) {
+          fila[config.campoPorcentaje] = '0,00 %';
+        }
+        datos[tablaKey] = [fila];
       }
     }
   }
@@ -52,7 +56,7 @@ export class TableManagementService {
     const filaPorDefecto = nuevaFila || { 
       [totalKey]: '', 
       [campoTotal]: 0, 
-      [campoPorcentaje]: '0,00 %' 
+      ...(campoPorcentaje && { [campoPorcentaje]: '0,00 %' })
     };
     
     const totalIndex = tabla.findIndex((item: any) => {
@@ -129,7 +133,7 @@ export class TableManagementService {
     
     const total = totalItem ? parseFloat(totalItem[campoTotal]) || 0 : 0;
 
-    if (total > 0) {
+    if (total > 0 && campoPorcentaje) {
       tabla.forEach((item: any) => {
         const valor = item[totalKey];
         if (!valor || !valor.toString().toLowerCase().includes('total')) {

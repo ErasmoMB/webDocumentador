@@ -13,7 +13,6 @@ import {
   WidthType,
   BorderStyle,
 } from 'docx';
-import { saveAs } from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
@@ -248,6 +247,7 @@ export class WordGeneratorService {
     });
 
     const blob = await Packer.toBlob(doc);
+    const { saveAs } = await import('file-saver');
     saveAs(blob, `${nombreArchivo}.docx`);
   }
 
@@ -891,6 +891,7 @@ export class WordGeneratorService {
       console.log('Documento creado, generando blob...');
       const blob = await Packer.toBlob(doc);
       console.log('Blob generado, iniciando descarga...');
+      const { saveAs } = await import('file-saver');
       saveAs(blob, 'LBSPaka_Ejemplo_Estructura.docx');
       console.log('Descarga iniciada');
     } catch (error) {

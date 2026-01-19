@@ -153,17 +153,25 @@ export class DataService {
     const params = { distrito: distrito };
 
     if (!this.configService.isMockMode()) {
-      return this.backendApi.getUbicacionesConDatosDemograficos().pipe(
+      // Usar el nuevo endpoint de distritos que sí existe
+      return this.backendApi.getDistritos().pipe(
         switchMap(response => {
           if (response.data && Array.isArray(response.data)) {
-            const filtered = DataTransformerUtil.filterByDistrito(response.data, distrito);
-            const centrosPoblados: CentroPoblado[] = filtered.map(DataTransformerUtil.mapToCentroPoblado);
-            return of({
-              success: true,
-              message: `Datos de población para ${distrito} obtenidos correctamente`,
-              data: centrosPoblados,
-              status_code: 200
-            });
+            // Si el distrito coincide con alguno de los devueltos, devolver con ese distrito
+            const found = response.data.find((d: any) => 
+              (d.distrito && d.distrito.toLowerCase() === distrito.toLowerCase())
+            );
+            
+            if (found) {
+              return of({
+                success: true,
+                message: `Datos de población para ${distrito} obtenidos correctamente`,
+                data: [found] as any,
+                status_code: 200
+              });
+            }
+            
+            return this.getPoblacionDistritoFromCacheOrMock('', params, distrito);
           }
           return this.getPoblacionDistritoFromCacheOrMock('', params, distrito);
         }),

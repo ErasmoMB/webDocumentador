@@ -7,26 +7,42 @@ import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.ser
 import { StateService } from 'src/app/core/services/state.service';
 import { AutocompleteService, AutocompleteData } from 'src/app/core/services/autocomplete.service';
 import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
-import { ComunidadCampesina } from 'src/app/core/models/formulario.model';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { GroupValidationService } from 'src/app/core/services/group-validation.service';
+import { ProvinciaDinamicaService } from 'src/app/core/services/provincia-dinamica.service';
+import { ProvinciasDinamicas } from 'src/app/core/models/provincia-dynamic.model';
+import { Grupo } from 'src/app/core/models/group-config.model';
+import { ComunidadCampesina, Distrito } from 'src/app/core/models/formulario.model';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
+
+type CampoEntidad = 'comunidadesCampesinas' | 'distritosAISI';
 
 @Component({
   selector: 'app-seccion2',
   templateUrl: './seccion2.component.html',
   styleUrls: ['./seccion2.component.css']
 })
+
 export class Seccion2Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.2';
   @Input() override modoFormulario: boolean = false;
+  
+  // Propiedades dinámicas para provincias
+  provinciasDinamicas: ProvinciasDinamicas = {};
+  provinciasOrdenadas: string[] = [];
   
   distritosDisponibles: string[] = [];
   distritosSeleccionados: { [key: string]: string } = {};
   seccionesAISI: number[] = [];
   distritosDisponiblesAISI: string[] = [];
-  distritosSeleccionadosAISI: string[] = [];
+  distritosAISI: Distrito[] = [];
   comunidadesCampesinas: ComunidadCampesina[] = [];
+  
+  // Flags para evitar reinicialización múltiple
+  private _distritosAISICargados = false;
+  private _comunidadesCargadas = false;
   
   override readonly PHOTO_PREFIX = 'fotografiaSeccion2';
   
@@ -59,14 +75,23 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     cdRef: ChangeDetectorRef,
     private stateService: StateService,
     private autocompleteService: AutocompleteService,
-    private centrosPobladosActivos: CentrosPobladosActivosService
+    private centrosPobladosActivos: CentrosPobladosActivosService,
+    private groupConfig: GroupConfigService,
+    private groupValidation: GroupValidationService,
+    private provinciaDinamicaService: ProvinciaDinamicaService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
-    this.detectarDistritos();
+    // Primero detectar provincias dinámicamente
+    this.detectarProvinciasDinamicas();
+    // Detectar distritos y comunidades
+    this.detectarDistritosAISI();
+    this.detectarComunidadesCampesinas();
+    // Luego cargar las secciones AISI
     this.cargarSeccionesAISI();
+    this.sincronizarCongrupConfigService();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.actualizarDatos();
@@ -75,6 +100,150 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       });
     }
   }
+
+  /**
+   * Sincroniza la configuración actual con GroupConfigService
+   * Crea objetos Grupo desde las comunidades campesinas y distritos
+   */
+  private sincronizarCongrupConfigService(): void {
+    try {
+      // Sincronizar AISD (Comunidades Campesinas)
+      const grupoAISD = this.construirGrupoAISD();
+      if (grupoAISD) {
+        this.groupConfig.setAISD(grupoAISD);
+      }
+
+      const grupoAISI = this.construirGrupoAISI();
+      if (grupoAISI) {
+        this.groupConfig.setAISI(grupoAISI);
+      }
+    } catch (error) {
+      console.error('[Seccion2] Error sincronizando con GroupConfigService:', error);
+    }
+  }
+
+  private construirGrupoAISD(): Grupo | null {
+    if (!this.comunidadesCampesinas || this.comunidadesCampesinas.length === 0) {
+      return null;
+    }
+
+    const nombres = this.comunidadesCampesinas
+      .map((comunidad, index) => {
+        const nombreLimpio = comunidad.nombre?.trim();
+        const numero = index + 1;
+        return nombreLimpio ? `A.${numero} ${nombreLimpio}` : `A.${numero}`;
+      })
+      .filter(Boolean);
+
+    if (nombres.length === 0) {
+      return null;
+    }
+
+    const codigosActivos = this.unirCodigosSeleccionados(this.comunidadesCampesinas);
+
+    return {
+      nombre: nombres.join(' / '),
+      tipo: 'AISD',
+      ccppList: [],
+      ccppActivos: codigosActivos
+    };
+  }
+
+  private construirGrupoAISI(): Grupo | null {
+    if (!this.distritosAISI || this.distritosAISI.length === 0) {
+      return null;
+    }
+
+    const nombres = this.distritosAISI
+      .map((distrito, index) => {
+        const nombreLimpio = distrito.nombre?.trim();
+        const numero = index + 1;
+        const sufijo = nombreLimpio ? ` ${nombreLimpio}` : '';
+        return `B.${numero}${sufijo}`;
+      })
+      .filter(Boolean);
+
+    if (nombres.length === 0) {
+      return null;
+    }
+
+    const codigosActivos = this.unirCodigosSeleccionados(this.distritosAISI);
+
+    return {
+      nombre: nombres.join(' / '),
+      tipo: 'AISI',
+      ccppList: [],
+      ccppActivos: codigosActivos
+    };
+  }
+
+  private unirCodigosSeleccionados(entities: Array<ComunidadCampesina | Distrito>): string[] {
+    const codigoSet = new Set<string>();
+    entities.forEach(entity => {
+      (entity.centrosPobladosSeleccionados || []).forEach(codigo => {
+        const valor = codigo?.toString().trim();
+        if (valor) {
+          codigoSet.add(valor);
+        }
+      });
+    });
+    return Array.from(codigoSet);
+  }
+
+  private normalizarCodigo(codigo: string): string {
+    return (codigo || '').toString().trim();
+  }
+
+  private toggleCentroPobladoEnLista<T extends ComunidadCampesina | Distrito>(entities: T[], id: string, codigo: string): string[] | null {
+    const entidad = entities.find(entry => entry.id === id);
+    if (!entidad) {
+      return null;
+    }
+
+    const codigoNormalizado = this.normalizarCodigo(codigo);
+    if (!codigoNormalizado) {
+      return entidad.centrosPobladosSeleccionados || [];
+    }
+
+    const centrosActuales = entidad.centrosPobladosSeleccionados || [];
+    const yaSeleccionado = centrosActuales.some(c => c === codigoNormalizado);
+    entidad.centrosPobladosSeleccionados = yaSeleccionado
+      ? centrosActuales.filter((c: string) => c !== codigoNormalizado)
+      : [...centrosActuales, codigoNormalizado];
+
+    return entidad.centrosPobladosSeleccionados;
+  }
+
+  private actualizarEntidadConCodigos(field: CampoEntidad, nuevasEntidades: Array<ComunidadCampesina | Distrito>, marcarCambios: boolean = false): void {
+    if (field === 'comunidadesCampesinas') {
+      this.comunidadesCampesinas = nuevasEntidades as ComunidadCampesina[];
+    } else {
+      this.distritosAISI = nuevasEntidades as Distrito[];
+    }
+
+    this.datos[field] = nuevasEntidades;
+    this.formularioService.actualizarDato(field as any, nuevasEntidades);
+    this.stateService.setDatos(this.formularioService.obtenerDatos());
+
+    if (marcarCambios) {
+      this.cdRef.markForCheck();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  private aplicarCodigosAEntidad<T extends ComunidadCampesina | Distrito>(
+    field: CampoEntidad,
+    entidades: T[],
+    id: string,
+    codigos: string[],
+    marcarCambios: boolean = false
+  ): void {
+    const nuevasEntidades = entidades.map(entidad => 
+      entidad.id === id ? { ...entidad, centrosPobladosSeleccionados: [...codigos] } : entidad
+    );
+    this.actualizarEntidadConCodigos(field, nuevasEntidades, marcarCambios);
+  }
+
 
   ngOnDestroy() {
     if (this.stateSubscription) {
@@ -123,48 +292,78 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarDatosCustom(): void {
-    this.distritosSeleccionados = this.datos['distritosAISI'] || {};
-    this.distritosSeleccionadosAISI = this.datos['distritosSeleccionadosAISI'] || [];
-    this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
+    // Cargar distritos AISI desde localStorage
+    const distritosGuardados = this.datos['distritosAISI'] || [];
     
-    this.comunidadesCampesinas = this.comunidadesCampesinas.map(cc => ({
-      ...cc,
-      centrosPobladosSeleccionados: (cc.centrosPobladosSeleccionados || []).map((c: any) => {
-        if (c === null || c === undefined) return '';
-        return c.toString().trim();
-      }).filter((codigo: string) => codigo !== '')
-    }));
+    console.log('[Seccion2] 📥 Cargando distritosAISI desde datos:', JSON.stringify(distritosGuardados));
     
-    if (this.comunidadesCampesinas.length === 0) {
-      if (this.datos['grupoAISD']) {
-        this.comunidadesCampesinas = [{
-          id: 'cc_legacy',
-          nombre: this.datos['grupoAISD'],
-          centrosPobladosSeleccionados: this.datos['centrosPobladosSeleccionadosAISD'] || []
-        }];
-      } else {
-        const centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
-        if (centrosPobladosJSON.length > 0) {
-          const codigos = centrosPobladosJSON
-            .map((cp: any) => {
-              const codigo = cp.CODIGO;
-              if (codigo === null || codigo === undefined) return '';
-              return codigo.toString().trim();
-            })
-            .filter((codigo: string) => codigo !== '');
-          
+    if (distritosGuardados.length > 0 && Array.isArray(distritosGuardados)) {
+      this.distritosAISI = distritosGuardados.map((d: Distrito) => ({
+        ...d,
+        nombreOriginal: d.nombreOriginal || d.nombre,
+        centrosPobladosSeleccionados: (d.centrosPobladosSeleccionados || []).map((c: any) => {
+          if (c === null || c === undefined) return '';
+          return c.toString().trim();
+        }).filter((codigo: string) => codigo !== '')
+      }));
+      
+      console.log('[Seccion2] ✅ Distritos cargados exitosamente:', JSON.stringify(this.distritosAISI));
+      
+      if (this.distritosAISI.length > 0 && this.distritosAISI[0].nombre) {
+        const primerDistritoNombre = this.distritosAISI[0].nombre;
+        if (!this.datos['centroPobladoAISI'] || this.datos['centroPobladoAISI'] !== primerDistritoNombre) {
+          this.datos['centroPobladoAISI'] = primerDistritoNombre;
+          this.formularioService.actualizarDato('centroPobladoAISI', primerDistritoNombre);
+        }
+      }
+    } else {
+      console.log('[Seccion2] ⚠️ No hay distritosAISI guardados, detectando...');
+      this.detectarDistritosAISI();
+    }
+    
+    // Cargar comunidades campesinas desde localStorage
+    const comunidadesGuardadas = this.datos['comunidadesCampesinas'] || [];
+    if (comunidadesGuardadas.length > 0) {
+      this.comunidadesCampesinas = comunidadesGuardadas.map((cc: ComunidadCampesina) => ({
+        ...cc,
+        centrosPobladosSeleccionados: (cc.centrosPobladosSeleccionados || []).map((c: any) => {
+          if (c === null || c === undefined) return '';
+          return c.toString().trim();
+        }).filter((codigo: string) => codigo !== '')
+      }));
+    } else {
+      this.detectarComunidadesCampesinas();
+      
+      if (this.comunidadesCampesinas.length === 0) {
+        if (this.datos['grupoAISD']) {
           this.comunidadesCampesinas = [{
-            id: `cc_default_${Date.now()}`,
-            nombre: '',
-            centrosPobladosSeleccionados: codigos
+            id: 'cc_legacy',
+            nombre: this.datos['grupoAISD'],
+            centrosPobladosSeleccionados: this.datos['centrosPobladosSeleccionadosAISD'] || []
           }];
-          this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
-          this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+        } else {
+          const centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
+          if (centrosPobladosJSON.length > 0) {
+            const codigos = centrosPobladosJSON
+              .map((cp: any) => {
+                const codigo = cp.CODIGO;
+                if (codigo === null || codigo === undefined) return '';
+                return codigo.toString().trim();
+              })
+              .filter((codigo: string) => codigo !== '');
+            
+            this.comunidadesCampesinas = [{
+              id: `cc_default_${Date.now()}`,
+              nombre: '',
+              centrosPobladosSeleccionados: codigos
+            }];
+            this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
+            this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+          }
         }
       }
     }
     
-    this.detectarDistritosAISI();
     this.cargarFotografias();
   }
 
@@ -182,7 +381,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerDistritosSeleccionadosAISI(): string[] {
-    return this.distritosSeleccionadosAISI || [];
+    return this.distritosAISI.map(d => d.nombre) || [];
   }
 
   obtenerTextoAISI(): string {
@@ -219,6 +418,20 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const jsonData = this.formularioService.obtenerJSON();
     const distritosSet = new Set<string>();
 
+    // Si jsonData es un objeto con claves (formato nuevo)
+    if (jsonData && typeof jsonData === 'object' && !Array.isArray(jsonData)) {
+      Object.keys(jsonData).forEach(key => {
+        // Remover prefijo "CCPP " si existe
+        let distritoNombre = key.trim();
+        if (distritoNombre.toUpperCase().startsWith('CCPP ')) {
+          distritoNombre = distritoNombre.substring(5).trim();
+        }
+        if (distritoNombre) {
+          distritosSet.add(distritoNombre);
+        }
+      });
+    }
+    
     if (Array.isArray(jsonData)) {
       jsonData.forEach((cp: any) => {
         if (cp && cp.DIST) {
@@ -254,6 +467,10 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   cargarSeccionesAISI() {
+    console.log('[Seccion2.cargarSeccionesAISI] Iniciando...');
+    console.log('[Seccion2.cargarSeccionesAISI] distritosAISI actuales:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre, centros: d.centrosPobladosSeleccionados.length }))));
+    
+    // Mantener compatibilidad con secciones AISI (legacy)
     const secciones = this.datos['seccionesAISI'] || [];
     if (secciones.length === 0 && this.distritosDisponibles.length > 0) {
       this.seccionesAISI = [1];
@@ -275,6 +492,20 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     this.datos[centroPobladoKey] = distrito;
     this.formularioService.actualizarDato(centroPobladoKey, distrito);
     
+    // Sincronizar con GroupConfigService
+    if (seccion === 1) {
+      const ccppActivos = this.distritosAISI.length > 0 
+        ? this.distritosAISI[0].centrosPobladosSeleccionados || []
+        : [];
+      const grupoAISI = {
+        nombre: distrito,
+        tipo: 'AISI' as const,
+        ccppList: [],
+        ccppActivos: ccppActivos
+      };
+      this.groupConfig.setAISI(grupoAISI);
+    }
+    
     this.actualizarDatos();
   }
 
@@ -295,8 +526,9 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   guardarDistritosAISI() {
-    this.datos['distritosAISI'] = this.distritosSeleccionados;
-    this.formularioService.actualizarDato('distritosAISI', this.distritosSeleccionados);
+    console.log('[Seccion2] ✅ guardarDistritosAISI guardado:', JSON.stringify(this.distritosAISI));
+    this.datos['distritosAISI'] = this.distritosAISI;
+    this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
   }
 
   guardarSeccionesAISI() {
@@ -413,6 +645,20 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       this.comunidadesCampesinas[indiceComunidad].centrosPobladosSeleccionados = codigosSeleccionados;
       this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
       this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+      
+      // Sincronizar AISD con GroupConfigService
+      if (indiceComunidad === 0) {
+        const cc = this.comunidadesCampesinas[indiceComunidad];
+        if (cc.nombre) {
+          const grupoAISD = {
+            nombre: cc.nombre,
+            tipo: 'AISD' as const,
+            ccppList: [],
+            ccppActivos: codigosSeleccionados
+          };
+          this.groupConfig.setAISD(grupoAISD);
+        }
+      }
     }
   }
 
@@ -420,7 +666,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const nuevaComunidad: ComunidadCampesina = {
       id: `cc_${Date.now()}`,
       nombre: '',
-      centrosPobladosSeleccionados: []
+      centrosPobladosSeleccionados: [],
+      esNueva: true
     };
     this.comunidadesCampesinas.push(nuevaComunidad);
     this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
@@ -446,13 +693,22 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   actualizarNombreComunidad(id: string, nombre: string): void {
-    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
-      cc.id === id ? { ...cc, nombre: nombre } : cc
-    );
+    // Crear nuevo array con la comunidad actualizada
+    this.comunidadesCampesinas = this.comunidadesCampesinas.map(cc => {
+      if (cc.id === id) {
+        return {
+          ...cc,
+          nombre: nombre,
+          esNueva: !nombre || nombre.trim() === '' ? cc.esNueva : false
+        };
+      }
+      return cc;
+    });
     
-    this.comunidadesCampesinas = nuevasComunidades;
-    this.datos['comunidadesCampesinas'] = nuevasComunidades;
-    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+    this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
+    this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+    const datosActuales = this.formularioService.obtenerDatos();
+    this.stateService.setDatos(datosActuales);
   }
 
   obtenerCentrosPobladosSeleccionadosComunidad(id: string): string[] {
@@ -472,41 +728,17 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   toggleCentroPobladoComunidad(id: string, codigo: string): void {
-    const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
-    if (!comunidad) {
+    const nuevosCentros = this.toggleCentroPobladoEnLista(this.comunidadesCampesinas, id, codigo);
+    if (!nuevosCentros) {
       return;
     }
 
-    const centrosActuales = comunidad.centrosPobladosSeleccionados || [];
-    const codigoNormalizado = codigo?.toString().trim() || '';
-    
-    const index = centrosActuales.findIndex(
-      (c: string) => c?.toString().trim() === codigoNormalizado
-    );
-    
-    let nuevosCentros: string[];
-    if (index > -1) {
-      nuevosCentros = centrosActuales.filter((c: string) => c?.toString().trim() !== codigoNormalizado);
-    } else {
-      nuevosCentros = [...centrosActuales, codigoNormalizado];
-    }
-
-    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
-      cc.id === id ? { ...cc, centrosPobladosSeleccionados: nuevosCentros } : cc
-    );
-    
-    this.comunidadesCampesinas = nuevasComunidades;
-    this.datos['comunidadesCampesinas'] = nuevasComunidades;
-    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
-    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    this.actualizarEntidadConCodigos('comunidadesCampesinas', [...this.comunidadesCampesinas]);
     
     const prefijo = this.obtenerPrefijoDeComunidad(id);
     if (prefijo) {
       this.centrosPobladosActivos.actualizarCodigosActivos(id, nuevosCentros);
     }
-    
-    this.cdRef.markForCheck();
-    this.cdRef.detectChanges();
   }
 
   private obtenerPrefijoDeComunidad(comunidadId: string): string {
@@ -557,46 +789,159 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         .filter((codigo: string) => codigo !== '');
     }
 
-    comunidad.centrosPobladosSeleccionados = [...codigos];
-    
-    const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
-      cc.id === id ? { ...cc, centrosPobladosSeleccionados: [...codigos] } : cc
-    );
-    
-    this.comunidadesCampesinas = nuevasComunidades;
-    this.datos['comunidadesCampesinas'] = nuevasComunidades;
-    this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
-    this.stateService.setDatos(this.formularioService.obtenerDatos());
+    if (codigos.length === 0) {
+      return;
+    }
+
+    this.aplicarCodigosAEntidad('comunidadesCampesinas', this.comunidadesCampesinas, id, codigos, true);
     
     const prefijo = this.obtenerPrefijoDeComunidad(id);
     if (prefijo) {
       this.centrosPobladosActivos.actualizarCodigosActivos(id, codigos);
     }
-    
-    this.cdRef.markForCheck();
-    this.cdRef.detectChanges();
   }
 
   deseleccionarTodosCentrosPobladosComunidad(id: string): void {
     const comunidad = this.comunidadesCampesinas.find(cc => cc.id === id);
-    if (comunidad) {
-      const nuevasComunidades = this.comunidadesCampesinas.map(cc => 
-        cc.id === id ? { ...cc, centrosPobladosSeleccionados: [] } : cc
-      );
-      
-      this.comunidadesCampesinas = nuevasComunidades;
-      this.datos['comunidadesCampesinas'] = nuevasComunidades;
-      this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
-      this.stateService.setDatos(this.formularioService.obtenerDatos());
-      
-      const prefijo = this.obtenerPrefijoDeComunidad(id);
-      if (prefijo) {
-        this.centrosPobladosActivos.actualizarCodigosActivos(id, []);
-      }
-      
-      this.cdRef.markForCheck();
-      this.cdRef.detectChanges();
+    if (!this.comunidadesCampesinas.some(cc => cc.id === id)) {
+      return;
     }
+
+    this.aplicarCodigosAEntidad('comunidadesCampesinas', this.comunidadesCampesinas, id, [], true);
+    
+    const prefijo = this.obtenerPrefijoDeComunidad(id);
+    if (prefijo) {
+      this.centrosPobladosActivos.actualizarCodigosActivos(id, []);
+    }
+  }
+
+  // Métodos para DISTRITOS (AISI)
+  agregarDistritoAISI(): void {
+    if (this.distritosDisponiblesAISI.length === 0) {
+      return;
+    }
+    const todosLosCCPP = this.obtenerTodosLosCentrosPoblados()
+      .map((cp: any) => cp.CODIGO?.toString() || '')
+      .filter((codigo: string) => codigo !== '');
+    
+    const nuevoDistrito: Distrito = {
+      id: `dist_${Date.now()}_${Math.random()}`,
+      nombre: '',
+      nombreOriginal: '',
+      centrosPobladosSeleccionados: todosLosCCPP
+    };
+    this.distritosAISI.push(nuevoDistrito);
+    this.datos['distritosAISI'] = this.distritosAISI;
+    this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
+    this.onFieldChange('distritosAISI', this.distritosAISI);
+    this.actualizarDatos();
+  }
+
+  eliminarDistritoAISI(id: string): void {
+    if (this.distritosAISI.length <= 1) {
+      return;
+    }
+    
+    const nuevosDistritos = this.distritosAISI.filter(d => d.id !== id);
+    this.distritosAISI = nuevosDistritos;
+    this.datos['distritosAISI'] = nuevosDistritos;
+    this.formularioService.actualizarDato('distritosAISI', nuevosDistritos);
+    this.onFieldChange('distritosAISI', nuevosDistritos);
+    this.actualizarDatos();
+  }
+
+  actualizarNombreDistrito(id: string, nombre: string): void {
+    console.log('[Seccion2] 📝 actualizarNombreDistrito LLAMADO:', id, 'nombre:', nombre);
+    console.log('[Seccion2] 📊 Distritos antes:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre }))));
+    
+    // Crear nuevo array con el distrito actualizado
+    this.distritosAISI = this.distritosAISI.map(d => {
+      if (d.id === id) {
+        const nombreOriginal = !d.nombreOriginal || d.nombreOriginal.trim() === '' 
+          ? (d.nombre && d.nombre.trim() !== '' ? d.nombre : nombre)
+          : d.nombreOriginal;
+        
+        console.log('[Seccion2] 🔄 Actualizando:', { id, nombreOriginal, nuevoNombre: nombre });
+        
+        return {
+          ...d,
+          nombreOriginal: nombreOriginal,
+          nombre: nombre,
+          esNuevo: !nombre || nombre.trim() === '' ? d.esNuevo : false
+        };
+      }
+      return d;
+    });
+    
+    console.log('[Seccion2] 📊 Distritos después:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre }))));
+    
+    this.datos['distritosAISI'] = this.distritosAISI;
+    console.log('[Seccion2] 💾 Guardando en formularioService...');
+    this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
+    
+    const indiceDistrito = this.distritosAISI.findIndex(d => d.id === id);
+    if (indiceDistrito === 0 || this.distritosAISI.length === 1) {
+      this.datos['centroPobladoAISI'] = nombre;
+      this.formularioService.actualizarDato('centroPobladoAISI', nombre);
+    }
+    
+    this.sincronizarCongrupConfigService();
+    const datosActuales = this.formularioService.obtenerDatos();
+    this.stateService.setDatos(datosActuales);
+  }
+
+  estaCentroPobladoSeleccionadoDistrito(id: string, codigo: string): boolean {
+    const distrito = this.distritosAISI.find(d => d.id === id);
+    if (!distrito || !distrito.centrosPobladosSeleccionados) {
+      return false;
+    }
+    const codigoNormalizado = codigo?.toString().trim() || '';
+    return distrito.centrosPobladosSeleccionados.some(
+      (c: string) => c?.toString().trim() === codigoNormalizado
+    );
+  }
+
+  toggleCentroPobladoDistrito(id: string, codigo: string): void {
+    console.log('[Seccion2] ☑️ Toggle CP:', codigo);
+    const distrito = this.distritosAISI.find(d => d.id === id);
+    
+    const nuevosCentros = this.toggleCentroPobladoEnLista(this.distritosAISI, id, codigo);
+    
+    if (!nuevosCentros) {
+      console.warn('[Seccion2] ❌ toggle retornó null');
+      return;
+    }
+
+    this.actualizarEntidadConCodigos('distritosAISI', [...this.distritosAISI]);
+    this.sincronizarCongrupConfigService();
+  }
+
+  seleccionarTodosCentrosPobladosDistrito(id: string): void {
+    const distrito = this.distritosAISI.find(d => d.id === id);
+    if (!distrito) {
+      return;
+    }
+
+    const ccppDisponibles = this.obtenerCentrosPobladosDisponiblesParaDistrito(distrito.nombreOriginal || distrito.nombre);
+    const codigos = ccppDisponibles
+      .map((cp: any) => cp.CODIGO?.toString() || '')
+      .filter((codigo: string) => codigo !== '');
+
+    const nuevosDistritos = this.distritosAISI.map(d => 
+      d.id === id ? { ...d, centrosPobladosSeleccionados: codigos } : d
+    );
+    
+    this.aplicarCodigosAEntidad('distritosAISI', this.distritosAISI, id, codigos, true);
+    this.sincronizarCongrupConfigService();
+  }
+
+  deseleccionarTodosCentrosPobladosDistrito(id: string): void {
+    this.aplicarCodigosAEntidad('distritosAISI', this.distritosAISI, id, []);
+    this.sincronizarCongrupConfigService();
+  }
+
+  trackByDistritoId(index: number, distrito: Distrito): string {
+    return distrito.id;
   }
 
   cargarFotografias(): void {
@@ -675,133 +1020,468 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return `El Área de influencia social indirecta (AISI) se delimita en torno a la capital distrital de la jurisdicción de ${textoAISI}. Esta localidad se considera dentro del AISI debido a su función como centro administrativo y político de su respectivo distrito. Como capital distrital, el Centro Poblado (CP) ${textoAISI} es un punto focal para la interacción con las autoridades locales, quienes jugarán un papel crucial en la gestión y supervisión de las actividades del Proyecto. Además, la adquisición de bienes y servicios esporádicos en este centro poblado será esencial para el soporte logístico, lo que justifica su inclusión en el AISI.\n\nLa delimitación también se basa en la necesidad de establecer un diálogo continuo y efectivo con las autoridades políticas locales en el distrito de ${textoAISI}. Esta interacción es vital para asegurar que las operaciones del Proyecto sean transparentes y alineadas con las normativas locales y las expectativas de la población. Asimismo, la compra esporádica de suministros y la contratación de servicios en este centro poblado contribuirá al dinamismo económico de la capital distrital, generando beneficios indirectos para esta población. De esta manera, la delimitación del AISI considera tanto la dimensión administrativa y política como la económica, garantizando un enfoque integral y sostenible en la implementación del Proyecto.`;
   }
 
+  /**
+   * Detecta las provincias dinámicamente del JSON
+   */
+  private detectarProvinciasDinamicas(): void {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    
+    if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
+      this.provinciasDinamicas = this.provinciaDinamicaService.analizarProvinciasDinamicas(jsonCompleto);
+      this.provinciasOrdenadas = this.provinciaDinamicaService.obtenerProvinciasOrdenadas(this.provinciasDinamicas);
+      
+      console.log('[Seccion2] Provincias detectadas:', this.provinciasOrdenadas);
+      console.log('[Seccion2] Detalle provincial:', this.provinciasDinamicas);
+    }
+  }
+
+  /**
+   * Obtiene los distritos para una provincia específica
+   */
+  obtenerDistritosParaProvincia(nombreProvincia: string): string[] {
+    return this.provinciaDinamicaService.obtenerDistritosPorProvincia(this.provinciasDinamicas, nombreProvincia);
+  }
+
+  /**
+   * Genera dinámicamente el párrafo AISD
+   */
+  generarParrafoAISDDinamico(): string {
+    if (Object.keys(this.provinciasDinamicas).length === 0) {
+      return '';
+    }
+    return this.provinciaDinamicaService.generarPárrafoAISD(this.provinciasDinamicas);
+  }
+
   detectarDistritosAISI() {
-    const jsonData = this.formularioService.obtenerJSON();
+    // Reiniciar flag para permitir recargar cuando hay datos guardados
+    if (this.datos['distritosAISI'] && Array.isArray(this.datos['distritosAISI']) && this.datos['distritosAISI'].length > 0) {
+      this._distritosAISICargados = false;
+    }
+    
+    // Evitar ejecución múltiple (solo si no hay datos guardados)
+    if (this._distritosAISICargados) {
+      console.log('[Seccion2.detectarDistritosAISI] ⏭️ Ya se cargaron, SKIP');
+      return;
+    }
+    
+    // ⚠️ CRÍTICO: Primero intentar cargar distritos guardados
+    const distritosGuardados = this.datos['distritosAISI'];
+    console.log('[Seccion2.detectarDistritosAISI] distritosGuardados:', JSON.stringify(distritosGuardados));
+    
+    if (Array.isArray(distritosGuardados) && distritosGuardados.length > 0) {
+      console.log('[Seccion2.detectarDistritosAISI] ✅ Cargando distritos guardados');
+      this.distritosAISI = distritosGuardados.map((d: Distrito) => ({
+        ...d,
+        nombreOriginal: d.nombreOriginal || d.nombre,
+        centrosPobladosSeleccionados: (d.centrosPobladosSeleccionados || [])
+          .map((c: any) => c?.toString?.() || c)
+          .filter((c: any) => c !== null && c !== undefined && c !== '')
+      }));
+      
+      // Actualizar centro poblado al primero disponible
+      if (this.distritosAISI.length > 0 && this.distritosAISI[0].nombre) {
+        const primerDistritoNombre = this.distritosAISI[0].nombre;
+        this.datos['centroPobladoAISI'] = primerDistritoNombre;
+        this.formularioService.actualizarDato('centroPobladoAISI', primerDistritoNombre);
+      }
+      
+      this._distritosAISICargados = true;
+      console.log('[Seccion2.detectarDistritosAISI] ✅ FIN - Distritos cargados desde guardados');
+      return;
+    }
+    
+    // Si NO hay distritos guardados, CREAR nuevos
+    console.log('[Seccion2.detectarDistritosAISI] 📝 Creando nuevos distritos...');
+    
+    const jsonCompleto = this.datos['jsonCompleto'];
     const distritosSet = new Set<string>();
 
-    if (Array.isArray(jsonData)) {
-      jsonData.forEach((cp: any) => {
-        if (cp && cp.DIST) {
-          distritosSet.add(cp.DIST);
-        }
-      });
-    } else if (jsonData && typeof jsonData === 'object') {
-      Object.keys(jsonData).forEach((key: string) => {
-        const centrosPoblados: any = jsonData[key];
+    // Extraer los nombres de distrito del campo DIST de todos los centros poblados
+    if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
+      Object.keys(jsonCompleto).forEach(key => {
+        const centrosPoblados = (jsonCompleto as any)[key];
         if (Array.isArray(centrosPoblados)) {
           centrosPoblados.forEach((cp: any) => {
-            if (cp && cp.DIST) {
-              distritosSet.add(cp.DIST);
+            const nombreDistrito = cp.DIST || cp.dist;
+            if (nombreDistrito && typeof nombreDistrito === 'string') {
+              distritosSet.add(nombreDistrito.trim());
             }
           });
-        } else if (centrosPoblados && typeof centrosPoblados === 'object' && centrosPoblados.DIST) {
-          distritosSet.add(centrosPoblados.DIST);
         }
       });
     }
 
     this.distritosDisponiblesAISI = Array.from(distritosSet).sort();
 
-    if (this.distritosSeleccionadosAISI.length === 0 && this.distritosDisponiblesAISI.length > 0) {
-      this.distritosSeleccionadosAISI = [...this.distritosDisponiblesAISI];
-      this.onFieldChange('distritosSeleccionadosAISI', this.distritosSeleccionadosAISI);
+    if (this.distritosAISI.length === 0 && this.distritosDisponiblesAISI.length > 0) {
+      this.distritosAISI = [];
+      
+      // Crear un distrito por cada distrito disponible con todos sus CCPP pre-seleccionados
+      this.distritosDisponiblesAISI.forEach((nombreDistrito, index) => {
+        const ccppDisponibles = this.obtenerCentrosPobladosDisponiblesParaDistrito(nombreDistrito);
+        console.log(`[Seccion2] Distrito ${index + 1} "${nombreDistrito}" tiene ${ccppDisponibles.length} centros poblados`);
+        
+        const todosLosCCPP = ccppDisponibles
+          .map((cp: any) => cp.CODIGO?.toString() || '')
+          .filter((codigo: string) => codigo !== '');
+        
+        console.log(`[Seccion2] Códigos para Distrito ${index + 1}:`, JSON.stringify(todosLosCCPP));
+        
+        const nuevoDistrito: Distrito = {
+          id: `dist_${Date.now()}_${Math.random()}`,
+          nombre: nombreDistrito,
+          nombreOriginal: nombreDistrito,
+          centrosPobladosSeleccionados: todosLosCCPP,
+          esNuevo: false  // false para que filtre correctamente por DIST
+        };
+        
+        console.log(`[Seccion2] ✅ Distrito ${index + 1} creado:`, JSON.stringify({ nombre: nuevoDistrito.nombre, centros: nuevoDistrito.centrosPobladosSeleccionados.length }));
+        this.distritosAISI.push(nuevoDistrito);
+      });
+      
+      console.log('[Seccion2] 📊 Total de distritos creados:', this.distritosAISI.length);
+      console.log('[Seccion2] 📋 Detalles:', JSON.stringify(this.distritosAISI.map(d => ({ nombre: d.nombre, centros: d.centrosPobladosSeleccionados.length }))));
+      
+      this.datos['distritosAISI'] = this.distritosAISI;
+      this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
+      
+      if (this.distritosAISI.length > 0 && this.distritosAISI[0].nombre) {
+        const primerDistritoNombre = this.distritosAISI[0].nombre;
+        this.datos['centroPobladoAISI'] = primerDistritoNombre;
+        this.formularioService.actualizarDato('centroPobladoAISI', primerDistritoNombre);
+      }
     }
+    
+    this._distritosAISICargados = true;
   }
 
-  toggleDistritoAISI(distrito: string) {
-    const index = this.distritosSeleccionadosAISI.indexOf(distrito);
-    if (index > -1) {
-      this.distritosSeleccionadosAISI.splice(index, 1);
-    } else {
-      this.distritosSeleccionadosAISI.push(distrito);
+  detectarComunidadesCampesinas() {
+    // Reiniciar flag para permitir recargar cuando hay datos guardados
+    if (this.datos['comunidadesCampesinas'] && Array.isArray(this.datos['comunidadesCampesinas']) && this.datos['comunidadesCampesinas'].length > 0) {
+      this._comunidadesCargadas = false;
     }
-    this.onFieldChange('distritosSeleccionadosAISI', [...this.distritosSeleccionadosAISI]);
+    
+    // Evitar ejecución múltiple (solo si no hay datos guardados)
+    if (this._comunidadesCargadas) {
+      console.log('[Seccion2.detectarComunidadesCampesinas] ⏭️ Ya se cargaron, SKIP');
+      return;
+    }
+    
+    const jsonCompleto = this.datos['jsonCompleto'];
+    const comunidadesDisponibles: string[] = [];
+
+    // Extraer las claves del JSON (que representan comunidades campesinas)
+    if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
+      Object.keys(jsonCompleto).forEach(key => {
+        let nombreComunidad = key.trim();
+        // Remover prefijo "CCPP " si existe
+        if (nombreComunidad.toUpperCase().startsWith('CCPP ')) {
+          nombreComunidad = nombreComunidad.substring(5).trim();
+        }
+        if (nombreComunidad && Array.isArray((jsonCompleto as any)[key])) {
+          comunidadesDisponibles.push(nombreComunidad);
+        }
+      });
+    }
+
+    const comunidadesGuardadasEnDatos = this.datos['comunidadesCampesinas'] || [];
+    
+    if (comunidadesGuardadasEnDatos.length > 0) {
+      this.comunidadesCampesinas = comunidadesGuardadasEnDatos.map((cc: any) => ({
+        ...cc,
+        centrosPobladosSeleccionados: (cc.centrosPobladosSeleccionados || []).map((c: any) => {
+          if (c === null || c === undefined) return '';
+          return c.toString().trim();
+        }).filter((codigo: string) => codigo !== '')
+      }));
+      this._comunidadesCargadas = true;
+      console.log('[Seccion2.detectarComunidadesCampesinas] ✅ Cargadas desde storage');
+      return;
+    }
+
+    let necesitaReinicializar = false;
+    
+    if (this.comunidadesCampesinas.length > 0) {
+      const comunidadesGuardadas = this.comunidadesCampesinas
+        .map(cc => cc.nombre.trim().toUpperCase())
+        .filter(n => n !== '');
+      const comunidadesValidasActualmente = comunidadesDisponibles.map(c => c.trim().toUpperCase());
+      
+      if (comunidadesGuardadas.length > 0) {
+        const algunaComunidadInvalida = comunidadesGuardadas.some(c => !comunidadesValidasActualmente.includes(c));
+        if (algunaComunidadInvalida) {
+          necesitaReinicializar = true;
+        }
+      }
+    } else if (comunidadesDisponibles.length > 0) {
+      necesitaReinicializar = true;
+    }
+
+    if (necesitaReinicializar) {
+      this.comunidadesCampesinas = [];
+      
+      comunidadesDisponibles.forEach(nombreComunidad => {
+        // Obtener todos los CCPP de esta comunidad
+        const ccppDisponibles = this.obtenerCentrosPobladosDeComunidadPorNombre(nombreComunidad);
+        const todosLosCCPP = ccppDisponibles
+          .map((cp: any) => cp.CODIGO?.toString() || '')
+          .filter((codigo: string) => codigo !== '');
+        
+        const nuevaComunidad: ComunidadCampesina = {
+          id: `cc_${Date.now()}_${Math.random()}`,
+          nombre: nombreComunidad,
+          centrosPobladosSeleccionados: todosLosCCPP
+        };
+        this.comunidadesCampesinas.push(nuevaComunidad);
+      });
+      
+      this.datos['comunidadesCampesinas'] = this.comunidadesCampesinas;
+      this.formularioService.actualizarDato('comunidadesCampesinas', this.comunidadesCampesinas);
+    }
+    
+    this._comunidadesCargadas = true;
+  }
+
+  obtenerCentrosPobladosDeComunidadPorNombre(nombreComunidad: string): any[] {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return [];
+    }
+
+    const nombreUpper = nombreComunidad.trim().toUpperCase();
+    
+    // Buscar la clave que corresponde a esta comunidad
+    const keys = Object.keys(jsonCompleto);
+    for (const key of keys) {
+      let keySinPrefijo = key;
+      if (key.toUpperCase().startsWith('CCPP ')) {
+        keySinPrefijo = key.substring(5).trim();
+      }
+      
+      if (keySinPrefijo.toUpperCase() === nombreUpper) {
+        if (Array.isArray((jsonCompleto as any)[key])) {
+          return (jsonCompleto as any)[key];
+        }
+      }
+    }
+
+    return [];
+  }
+
+  obtenerCentrosPobladosDisponiblesParaDistrito(nombreDistrito: string): any[] {
+    if (!nombreDistrito || nombreDistrito.trim() === '') {
+      return this.obtenerTodosLosCentrosPoblados();
+    }
+
+    const jsonCompleto = this.datos['jsonCompleto'];
+    
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return this.obtenerTodosLosCentrosPoblados();
+    }
+
+    const nombreUpper = nombreDistrito.trim().toUpperCase();
+    const centrosPobladosDelDistrito: any[] = [];
+    
+    // Recorrer todas las claves del JSON (comunidades campesinas o grupos)
+    Object.keys(jsonCompleto).forEach((key: string) => {
+      const centrosPoblados = (jsonCompleto as any)[key];
+      if (Array.isArray(centrosPoblados)) {
+        // Filtrar los centros poblados que pertenecen al distrito seleccionado
+        centrosPoblados.forEach((cp: any) => {
+          const distritoCP = (cp.DIST || cp.dist || '').toString().trim().toUpperCase();
+          if (distritoCP === nombreUpper) {
+            centrosPobladosDelDistrito.push(cp);
+          }
+        });
+      }
+    });
+    
+    return centrosPobladosDelDistrito;
+  }
+
+  obtenerCentrosPobladosDeDistrito(id: string): any[] {
+    const distrito = this.distritosAISI.find(d => d.id === id);
+    if (!distrito) {
+      return [];
+    }
+    return this.obtenerCentrosPobladosDisponiblesParaDistrito(distrito.nombreOriginal || distrito.nombre);
+  }
+
+  obtenerCentrosPobladosVisiblesDistrito(distrito: Distrito): any[] {
+    // Siempre filtrar por el nombre del distrito (campo DIST)
+    return this.obtenerCentrosPobladosDeDistrito(distrito.id);
+  }
+
+  private obtenerTodosLosCentrosPoblados(): any[] {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    const centros: any[] = [];
+
+    if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
+      Object.keys(jsonCompleto).forEach((key: string) => {
+        const lista = (jsonCompleto as any)[key];
+        if (Array.isArray(lista)) {
+          centros.push(...lista);
+        }
+      });
+    }
+
+    if (centros.length > 0) {
+      return centros;
+    }
+
+    return this.datos['centrosPobladosJSON'] || [];
+  }
+
+  // Métodos para autocompletar (llamados desde seccion2-form-wrapper)
+  onAutocompleteInput(field: string, value: string): void {
+    // Actualizar el valor del campo
+    this.datos[field] = value;
+    console.log('[Seccion2] onAutocompleteInput:', field, value);
+    
+    // Si el campo es un distrito adicional, buscar sugerencias del backend
+    if (field === 'aisdComponente1' || field === 'aisdComponente2') {
+      this.buscarSugerenciasDistritoAdicional(field, value);
+    }
+    
     this.actualizarDatos();
   }
 
-  estaDistritoSeleccionadoAISI(distrito: string): boolean {
-    return this.distritosSeleccionadosAISI.includes(distrito);
+  onFocusDistritoAdicional(field: string): void {
+    // Al hacer focus, si hay valor buscar sugerencias
+    const valorActual = this.datos[field] || '';
+    if (valorActual.trim().length > 0) {
+      this.buscarSugerenciasDistritoAdicional(field, valorActual);
+    }
   }
-
-  onAutocompleteInput(field: string, value: string): void {
-    if (!this.autocompleteData[field]) {
+  
+  buscarSugerenciasDistritoAdicional(field: string, termino: string): void {
+    console.log('[Seccion2] buscarSugerenciasDistritoAdicional:', field, termino);
+    
+    if (!termino || termino.trim().length < 1) {
       this.autocompleteData[field] = {
         sugerencias: [],
         mostrar: false,
         buscado: ''
       };
+      return;
     }
-
-    this.autocompleteData[field].buscado = value;
     
-    if (field === 'aisdComponente1' || field === 'aisdComponente2') {
-      this.formularioService.actualizarDato(field as any, value);
-      this.actualizarDatos();
-    }
-
-    if (value && value.trim().length > 0) {
-      const provincia = this.datos.provinciaSeleccionada || '';
-      this.autocompleteService.buscarSugerenciasDistrito(value, provincia).subscribe(sugerencias => {
-        if (this.autocompleteData[field]) {
-          this.autocompleteData[field].sugerencias = sugerencias;
-          this.autocompleteData[field].mostrar = sugerencias.length > 0;
-        }
-        this.cdRef.detectChanges();
-      });
-    } else {
-      if (this.autocompleteData[field]) {
-        this.autocompleteData[field].sugerencias = [];
-        this.autocompleteData[field].mostrar = false;
+    // Extraer provincia del nombre del field (ej: "aisdComponente1_OCROS" → "OCROS")
+    let provincia = this.obtenerProvinciaDelJSON();
+    if (field.includes('_')) {
+      const partes = field.split('_');
+      const provinciaDelField = partes[partes.length - 1];
+      if (this.provinciasOrdenadas.includes(provinciaDelField)) {
+        provincia = provinciaDelField;
       }
     }
+    
+    console.log('[Seccion2] Provincia extraída para', field, ':', provincia);
+    
+    // Buscar distritos de esa provincia en el JSON LOCAL
+    const sugerencias = this.buscarDistritosEnJSON(termino, provincia);
+    console.log('[Seccion2] Sugerencias encontradas en JSON:', sugerencias);
+    
+    this.autocompleteData[field] = {
+      sugerencias: sugerencias || [],
+      mostrar: sugerencias && sugerencias.length > 0,
+      buscado: termino
+    };
+    this.cdRef.detectChanges();
   }
 
-  onFocusDistritoAdicional(field: string): void {
-    if (!this.autocompleteData[field]) {
-      this.autocompleteData[field] = {
-        sugerencias: [],
-        mostrar: false,
-        buscado: ''
-      };
+  private buscarDistritosEnJSON(termino: string, provincia?: string): string[] {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return [];
     }
 
-    const valorActual = this.datos[field] || '';
-    if (valorActual && valorActual.trim().length > 0) {
-      this.autocompleteData[field].buscado = valorActual;
-      const provincia = this.datos.provinciaSeleccionada || '';
-      this.autocompleteService.buscarSugerenciasDistrito(valorActual, provincia).subscribe(sugerencias => {
-        if (this.autocompleteData[field]) {
-          this.autocompleteData[field].sugerencias = sugerencias;
-          this.autocompleteData[field].mostrar = sugerencias.length > 0;
-        }
-        this.cdRef.detectChanges();
-      });
+    const terminoFilter = termino.toLowerCase();
+    const distritosSet = new Set<string>();
+    
+    // Recorrer todas las comunidades en el JSON
+    Object.keys(jsonCompleto).forEach((key: string) => {
+      const centrosPoblados = (jsonCompleto as any)[key];
+      if (Array.isArray(centrosPoblados)) {
+        centrosPoblados.forEach((cp: any) => {
+          const nombreDistrito = cp.DIST || cp.dist;
+          const nombreProvincia = cp.PROV || cp.prov;
+          
+          // Filtrar por provincia si se proporciona
+          if (provincia && nombreProvincia && nombreProvincia.toLowerCase() !== provincia.toLowerCase()) {
+            return;
+          }
+          
+          if (nombreDistrito) {
+            const distritoLower = nombreDistrito.toLowerCase();
+            if (distritoLower.includes(terminoFilter)) {
+              distritosSet.add(nombreDistrito);
+            }
+          }
+        });
+      }
+    });
+    
+    return Array.from(distritosSet).sort();
+  }
+  
+  private obtenerProvinciaDelJSON(): string {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return '';
     }
+    
+    // Obtener la provincia del primer centro poblado disponible
+    const primerKey = Object.keys(jsonCompleto)[0];
+    if (primerKey) {
+      const centrosPoblados = (jsonCompleto as any)[primerKey];
+      if (Array.isArray(centrosPoblados) && centrosPoblados.length > 0) {
+        return centrosPoblados[0].PROV || '';
+      }
+    }
+    
+    return '';
   }
 
   cerrarSugerenciasAutocomplete(field: string): void {
+    // Limpia datos de autocompletar para el campo especificado
     if (this.autocompleteData[field]) {
-      setTimeout(() => {
-        if (this.autocompleteData[field]) {
-          this.autocompleteData[field].mostrar = false;
-        }
-        this.cdRef.detectChanges();
-      }, 200);
+      this.autocompleteData[field] = {
+        sugerencias: [],
+        mostrar: false,
+        buscado: ''
+      };
     }
   }
 
   seleccionarSugerencia(field: string, sugerencia: any): void {
-    const valor = typeof sugerencia === 'string' ? sugerencia : sugerencia.nombre || sugerencia;
-    
-    this.formularioService.actualizarDato(field as any, valor);
-    
-    if (this.autocompleteData[field]) {
-      this.autocompleteData[field].buscado = valor;
-      this.autocompleteData[field].mostrar = false;
+    // Selecciona una sugerencia y actualiza el campo correspondiente
+    if (sugerencia) {
+      this.datos[field] = sugerencia;
+      this.formularioService.actualizarDato(field, sugerencia);
+      this.cerrarSugerenciasAutocomplete(field);
+      this.actualizarDatos();
     }
-    
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  }
+
+  /**
+   * Método auxiliar para manejar el mouseenter en sugerencias
+   */
+  onSugerenciaMouseEnter(event: any): void {
+    if (event && event.target) {
+      (event.target as HTMLElement).style.backgroundColor = '#f0f0f0';
+    }
+  }
+
+  /**
+   * Método auxiliar para manejar el mouseleave en sugerencias
+   */
+  onSugerenciaMouseLeave(event: any): void {
+    if (event && event.target) {
+      (event.target as HTMLElement).style.backgroundColor = 'white';
+    }
   }
 }
 

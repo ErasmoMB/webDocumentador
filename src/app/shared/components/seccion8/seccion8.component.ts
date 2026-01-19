@@ -6,10 +6,12 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -17,7 +19,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion8.component.html',
   styleUrls: ['./seccion8.component.css']
 })
-export class Seccion8Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion8Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -38,6 +40,10 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
   fotografiasAgriculturaCache: FotoItem[] = [];
   fotografiasComercioCache: FotoItem[] = [];
   
+  private peaOcupacionesCache: any[] = [];
+  private peaOcupacionesCacheKey: string = '';
+  private totalPEACache: string = '0';
+  
   override readonly PHOTO_PREFIX = '';
 
   peaOcupacionesConfig: TableConfig = {
@@ -45,7 +51,8 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+    // Sin fila por defecto para que, si el backend no trae datos, la tabla quede vacía
+    estructuraInicial: [],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -73,11 +80,25 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion8_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      return ccppDesdeGrupo;
+    }
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -104,7 +125,9 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
       
       if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
         hayCambios = true;
+        // Invalidar caache cuando cambia peaOcupacionesTabla
         if (campo === 'peaOcupacionesTabla') {
+          this.invalidarCachePEA();
           const prefijo = this.obtenerPrefijoGrupo();
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
           this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
@@ -132,6 +155,7 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `peaOcupacionesTabla${prefijo}` : 'peaOcupacionesTabla';
     const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'peaOcupacionesTabla', this.seccionId) || this.datos.peaOcupacionesTabla || [];
+    
     return tabla;
   }
 
@@ -158,23 +182,59 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
 
   getPEAOcupacionesSinTotal(): any[] {
     const tabla = this.getTablaPEAOcupaciones();
+    const tablaKey = this.getTablaKeyPEAOcupaciones();
+    
+    // Si el caache es válido para esta clave, devolverlo
+    if (this.peaOcupacionesCacheKey === tablaKey && this.peaOcupacionesCache.length > 0) {
+      return this.peaOcupacionesCache;
+    }
+    
     if (!tabla || !Array.isArray(tabla)) {
+      this.peaOcupacionesCache = [];
+      this.peaOcupacionesCacheKey = tablaKey;
       return [];
     }
-    return tabla.filter((item: any) => {
+    
+    const filtrada = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
-  }
-
-  getTotalPEAOcupaciones(): string {
-    const datosSinTotal = this.getPEAOcupacionesSinTotal();
-    if (datosSinTotal.length === 0) return '0';
-    const total = datosSinTotal.reduce((sum: number, item: any) => {
+    
+    const total = filtrada.reduce((sum: number, item: any) => {
       const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
       return sum + casos;
     }, 0);
-    return total.toString();
+    
+    this.totalPEACache = total.toString();
+    
+    const resultado = filtrada.map((item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      const porcentaje = total > 0 ? ((casos / total) * 100).toFixed(2).replace('.', ',') : '0,00';
+      return {
+        ...item,
+        porcentaje: `${porcentaje} %`
+      };
+    });
+
+
+    
+    // Guardar en caache
+    this.peaOcupacionesCache = resultado;
+    this.peaOcupacionesCacheKey = tablaKey;
+    
+    return resultado;
+  }
+
+  getTotalPEAOcupaciones(): string {
+    // Asegurar que el caache esté actualizado
+    this.getPEAOcupacionesSinTotal();
+    return this.totalPEACache;
+  }
+
+  private invalidarCachePEA(): void {
+    this.peaOcupacionesCache = [];
+    this.peaOcupacionesCacheKey = '';
+    this.totalPEACache = '0';
   }
 
   protected override tieneFotografias(): boolean {
@@ -202,24 +262,20 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
   }
 
   getTopOcupaciones(limit: number = 3): Array<{categoria: string, porcentaje: string, casos: number}> {
-    const tabla = this.getTablaPEAOcupaciones();
-    if (!tabla || !Array.isArray(tabla)) {
+    // Usa la versión calculada (con porcentaje ya evaluado) para que el texto se alimente del backend.
+    const calculada = this.getPEAOcupacionesSinTotal();
+    if (!calculada || !Array.isArray(calculada)) {
       return [];
     }
-    
-    const sinTotal = tabla.filter((item: any) => 
-      item.categoria && 
-      item.categoria.toLowerCase() !== 'total' &&
-      item.casos !== undefined &&
-      item.casos > 0
-    );
-    
-    sinTotal.sort((a: any, b: any) => {
-      const casosA = parseInt(a.casos) || 0;
-      const casosB = parseInt(b.casos) || 0;
-      return casosB - casosA;
-    });
-    
+
+    const sinTotal = calculada
+      .filter((item: any) => item.categoria && item.casos !== undefined && item.casos > 0)
+      .sort((a: any, b: any) => {
+        const casosA = parseInt(a.casos) || 0;
+        const casosB = parseInt(b.casos) || 0;
+        return casosB - casosA;
+      });
+
     return sinTotal.slice(0, limit).map((item: any) => ({
       categoria: item.categoria || '____',
       porcentaje: item.porcentaje || '____',
@@ -228,6 +284,7 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
   }
 
   onPEAOcupacionesTableUpdated() {
+    this.invalidarCachePEA();
     this.eliminarFilasTotal();
     const tablaKey = this.getTablaKeyPEAOcupaciones();
     const tabla = this.getTablaPEAOcupaciones();
@@ -272,7 +329,8 @@ export class Seccion8Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }

@@ -9,15 +9,18 @@ import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.ser
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { SaludService } from 'src/app/core/services/salud.service';
 
 @Component({
   selector: 'app-seccion29',
   templateUrl: './seccion29.component.html',
   styleUrls: ['./seccion29.component.css']
 })
-export class Seccion29Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion29Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.8';
   @Input() override modoFormulario: boolean = false;
   
@@ -64,14 +67,18 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private saludService: SaludService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
+    
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -87,16 +94,29 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
       });
     } else {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
+        // Cargar datos de seguros cuando el CPP cambia
+        if (this.datos.centroPobladoAISI) {
+          this.cargarSegurosSalud();
+        }
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion29_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -403,6 +423,13 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
     };
   }
 
+  calcularPorcentajeAfiliacion(item: any): string {
+    const total = this.getTotalAfiliacionSalud().casos;
+    if (total === 0 || !item.casos) return '____';
+    const porcentaje = ((item.casos / total) * 100).toFixed(2).replace('.', ',');
+    return `${porcentaje} %`;
+  }
+
   eliminarFilasTotal() {
     if (this.datos.natalidadMortalidadCpTabla && Array.isArray(this.datos.natalidadMortalidadCpTabla)) {
       this.datos.natalidadMortalidadCpTabla = this.datos.natalidadMortalidadCpTabla.filter((item: any) => 
@@ -468,6 +495,50 @@ export class Seccion29Component extends BaseSectionComponent implements OnDestro
     const porcentajeSinSeguro = this.getPorcentajeSinSeguro();
     
     return `En el CP ${centroPoblado}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${porcentajeSIS} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${porcentajeESSALUD} de la población. Por último, cabe mencionar que el ${porcentajeSinSeguro} de la población no cuenta con ningún tipo de seguro de salud.`;
+  }
+
+  cargarSegurosSalud(): void {
+    const cpp = this.datos.centroPobladoAISI;
+    console.log('🔵 cargarSegurosSalud - CPP:', cpp);
+    if (!cpp) {
+      return; // No hay CPP
+    }
+
+    this.saludService.obtenerSeguroSaludPorCpp(cpp).subscribe({
+      next: (response: any) => {
+        console.log('✓ Respuesta cargarSegurosSalud:', response);
+        if (response?.success && response?.data) {
+          this.datos.afiliacionSaludTabla = response.data;
+          console.log('✓ afiliacionSaludTabla asignada:', this.datos.afiliacionSaludTabla);
+          this.cdRef.detectChanges();
+        }
+      },
+      error: (error: any) => {
+        console.error('Error cargando seguros de salud para CPP:', cpp, error);
+      }
+    });
+  }
+
+  cargarSegurosSaludGrupo(cpps: string[]): void {
+    if (!cpps || cpps.length === 0) {
+      return;
+    }
+
+    this.saludService.obtenerSeguroSaludMultiples(cpps).subscribe({
+      next: (response: any) => {
+        if (response?.success && response?.data) {
+          // Si el CPP actual está en los datos, cargar para la tabla actual
+          const cppActual = this.datos.centroPobladoAISI;
+          if (cppActual && response.data[cppActual]) {
+            this.datos.afiliacionSaludTabla = response.data[cppActual];
+            this.cdRef.detectChanges();
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error cargando seguros de salud múltiples:', error);
+      }
+    });
   }
 }
 

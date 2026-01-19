@@ -12,12 +12,12 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.autoridades || []); let i = index">
-            <td class="table-cell" *ngIf="shouldShowOrgCell(i, datos.autoridades)" [attr.rowspan]="getOrgRowSpan(item.organizacion, datos.autoridades)" [appDataSource]="'manual'" [fieldName]="'autoridades'">{{ item.organizacion || '____' }}</td>
+        <tr *ngFor="let item of (getTablaAutoridades() || []); let i = index">
+            <td class="table-cell" *ngIf="shouldShowOrgCell(i, getTablaAutoridades())" [attr.rowspan]="getOrgRowSpan(item.organizacion, getTablaAutoridades())" [appDataSource]="'manual'" [fieldName]="'autoridades'">{{ item.organizacion || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'cargo'">{{ item.cargo || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.autoridades || datos.autoridades.length === 0">
+        <tr *ngIf="!getTablaAutoridades() || getTablaAutoridades().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>

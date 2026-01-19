@@ -1,0 +1,11 @@
+/* Resaltar fila de capital con el color celeste del sistema de colores */
+tr.capital-row {
+  background-color: #00bcd4; /* Celeste consistente con .data-section */
+}
+
+tr.capital-row td {
+  background-color: #00bcd4;
+  font-weight: 500;
+  color: #ffffff; /* Texto blanco para contraste */
+}
+

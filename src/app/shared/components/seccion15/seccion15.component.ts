@@ -6,9 +6,11 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
@@ -17,7 +19,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './seccion15.component.html',
   styleUrls: ['./seccion15.component.css']
 })
-export class Seccion15Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion15Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -57,11 +59,31 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion15_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      // Limpiar '0' al inicio de cada CCPP
+      const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
+        const cleaned = cpp.toString().replace(/^0+/, '') || '0';
+        return cleaned;
+      });
+      return ccppLimpios;
+    }
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -143,6 +165,44 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
       i.categoria && i.categoria.toLowerCase().includes('quechua')
     );
     return item?.porcentaje || '____';
+  }
+
+  obtenerTop2Lenguas(): { primera: any; segunda: any } {
+    const tabla = this.getTablaLenguasMaternas();
+    if (!tabla || tabla.length === 0) {
+      return { primera: null, segunda: null };
+    }
+    
+    // Ordenar por casos (descendente)
+    const ordenada = [...tabla].sort((a: any, b: any) => {
+      const casosA = typeof a.casos === 'number' ? a.casos : parseFloat(a.casos) || 0;
+      const casosB = typeof b.casos === 'number' ? b.casos : parseFloat(b.casos) || 0;
+      return casosB - casosA;
+    });
+    
+    return {
+      primera: ordenada[0] || null,
+      segunda: ordenada[1] || null
+    };
+  }
+
+  obtenerTop2Religiones(): { primera: any; segunda: any } {
+    const tabla = this.getTablaReligiones();
+    if (!tabla || tabla.length === 0) {
+      return { primera: null, segunda: null };
+    }
+    
+    // Ordenar por casos (descendente)
+    const ordenada = [...tabla].sort((a: any, b: any) => {
+      const casosA = typeof a.casos === 'number' ? a.casos : parseFloat(a.casos) || 0;
+      const casosB = typeof b.casos === 'number' ? b.casos : parseFloat(b.casos) || 0;
+      return casosB - casosA;
+    });
+    
+    return {
+      primera: ordenada[0] || null,
+      segunda: ordenada[1] || null
+    };
   }
 
   override obtenerPrefijoGrupo(): string {
@@ -384,7 +444,8 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     return total.toString();
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -400,14 +461,17 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     const textoPersonalizado = this.datos[fieldId] || this.datos.parrafoSeccion15_religion_completo;
     
     const grupoAISD = this.obtenerNombreComunidadActual();
+    const top2 = this.obtenerTop2Religiones();
     
-    const textoPorDefecto = `La confesión predominante dentro de la CC ${grupoAISD} es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
+    let religionPrincipal = 'el catolicismo';
+    if (top2.primera) {
+      religionPrincipal = top2.primera.categoria?.toLowerCase() || 'el catolicismo';
+    }
+    
+    const textoPorDefecto = `La confesión predominante dentro de la CC ${grupoAISD} es ${religionPrincipal}. Según las entrevistas, la permanencia de ${religionPrincipal} como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
     
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
-      return textoPersonalizado
-        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
-        .replace(/Iglesia Matriz de\s*___/g, `Iglesia Matriz de ${grupoAISD}`)
-        .replace(/anexo\s*___/g, `anexo ${grupoAISD}`);
+      return textoPersonalizado;
     }
     
     return textoPorDefecto;
@@ -428,17 +492,23 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
 
   obtenerTextoSeccion15ReligionCompletoConResaltado(): SafeHtml {
     const texto = this.obtenerTextoSeccion15ReligionCompleto();
-    const grupoAISD = this.obtenerNombreComunidadActual();
+    const top2 = this.obtenerTop2Religiones();
     
     let html = this.escapeHtml(texto);
-    if (grupoAISD !== '____') {
+    
+    // Resaltar primera religión (LILA - data-source)
+    if (top2.primera && top2.primera.categoria) {
+      const religionPrimera = top2.primera.categoria;
+      const escapedReligion = this.escapeRegex(religionPrimera);
       html = html.replace(
-        new RegExp(this.escapeRegex(grupoAISD), 'g'), 
-        `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
+        new RegExp(`\\b${escapedReligion}\\b`, 'gi'),
+        `<span class="data-source">${this.escapeHtml(religionPrimera)}</span>`
       );
     }
+    
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
+
 
   getFieldIdIdioma(): string {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -449,15 +519,24 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     const fieldId = this.getFieldIdIdioma();
     const textoPersonalizado = this.datos[fieldId] || this.datos.textoIdioma;
     
-    const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
-    const porcentajeQuechua = this.getPorcentajeQuechua() || '____';
+    const top2 = this.obtenerTop2Lenguas();
+    let textoPorDefecto = 'Se entiende por lengua materna aquella que es la primera lengua que aprende una persona.';
     
-    const textoPorDefecto = `Se entiende por lengua materna aquella que es la primera lengua que aprende una persona. En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, el castellano es la categoría mayoritaria, al representar el ${porcentajeCastellano} de la población de 3 años a más. En segundo lugar, se halla el quechua, siendo la lengua materna del ${porcentajeQuechua} de los habitantes.`;
+    if (top2.primera) {
+      const categoriaPrimera = top2.primera.categoria || 'la categoría mayoritaria';
+      const porcentajePrimera = top2.primera.porcentaje || '____';
+      
+      textoPorDefecto += ` En base a los datos de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, ${categoriaPrimera} es la categoría mayoritaria, al representar el ${porcentajePrimera} de la población de 3 años a más.`;
+      
+      if (top2.segunda) {
+        const categoriaSegunda = top2.segunda.categoria || 'otra categoría';
+        const porcentajeSegunda = top2.segunda.porcentaje || '____';
+        textoPorDefecto += ` En segundo lugar, se halla ${categoriaSegunda}, siendo la lengua materna del ${porcentajeSegunda} de los habitantes.`;
+      }
+    }
     
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
-      return textoPersonalizado
-        .replace(/el\s*___\s*de la población/g, `el ${porcentajeCastellano} de la población`)
-        .replace(/del\s*___\s*de los habitantes/g, `del ${porcentajeQuechua} de los habitantes`);
+      return textoPersonalizado;
     }
     
     return textoPorDefecto;
@@ -479,22 +558,63 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
 
   obtenerTextoIdiomaConResaltado(): SafeHtml {
     const texto = this.obtenerTextoIdioma();
-    const porcentajeCastellano = this.getPorcentajeCastellano() || '____';
-    const porcentajeQuechua = this.getPorcentajeQuechua() || '____';
-
-    let html = this.escapeHtml(texto);
-    if (porcentajeCastellano !== '____') {
-      html = html.replace(
-        new RegExp(this.escapeRegex(porcentajeCastellano), 'g'), 
-        `<span class="data-calculated">${this.escapeHtml(porcentajeCastellano)}</span>`
-      );
+    const top2 = this.obtenerTop2Lenguas();
+    
+    let html = texto;
+    
+    // Reemplazar ANTES de escapar HTML
+    // Resaltar primera categoría (LILA - data-source)
+    if (top2.primera && top2.primera.categoria) {
+      const categoriaPrimera = top2.primera.categoria;
+      html = html.split(categoriaPrimera).join(`[CATEGORIA_1:${categoriaPrimera}]`);
     }
-    if (porcentajeQuechua !== '____') {
-      html = html.replace(
-        new RegExp(this.escapeRegex(porcentajeQuechua), 'g'), 
-        `<span class="data-calculated">${this.escapeHtml(porcentajeQuechua)}</span>`
-      );
+    
+    // Resaltar primer porcentaje (VERDE - data-calculated con %)
+    if (top2.primera && top2.primera.porcentaje) {
+      const porcentajePrimera = String(top2.primera.porcentaje);
+      html = html.split(porcentajePrimera).join(`[PORCENTAJE_1:${porcentajePrimera}]`);
     }
+    
+    // Resaltar segunda categoría (LILA - data-source)
+    if (top2.segunda && top2.segunda.categoria) {
+      const categoriaSegunda = top2.segunda.categoria;
+      html = html.split(categoriaSegunda).join(`[CATEGORIA_2:${categoriaSegunda}]`);
+    }
+    
+    // Resaltar segundo porcentaje (VERDE - data-calculated con %)
+    if (top2.segunda && top2.segunda.porcentaje) {
+      const porcentajeSegunda = String(top2.segunda.porcentaje);
+      html = html.split(porcentajeSegunda).join(`[PORCENTAJE_2:${porcentajeSegunda}]`);
+    }
+    
+    // AHORA escapar el HTML
+    html = this.escapeHtml(html);
+    
+    // Y AHORA hacer los reemplazos con spans
+    if (top2.primera && top2.primera.categoria) {
+      const categoriaPrimera = top2.primera.categoria;
+      const placeholder = `[CATEGORIA_1:${categoriaPrimera}]`;
+      html = html.split(placeholder).join(`<span class="data-source">${this.escapeHtml(categoriaPrimera)}</span>`);
+    }
+    
+    if (top2.primera && top2.primera.porcentaje) {
+      const porcentajePrimera = String(top2.primera.porcentaje);
+      const placeholder = `[PORCENTAJE_1:${porcentajePrimera}]`;
+      html = html.split(placeholder).join(`<span class="data-calculated">${this.escapeHtml(porcentajePrimera)}%</span>`);
+    }
+    
+    if (top2.segunda && top2.segunda.categoria) {
+      const categoriaSegunda = top2.segunda.categoria;
+      const placeholder = `[CATEGORIA_2:${categoriaSegunda}]`;
+      html = html.split(placeholder).join(`<span class="data-source">${this.escapeHtml(categoriaSegunda)}</span>`);
+    }
+    
+    if (top2.segunda && top2.segunda.porcentaje) {
+      const porcentajeSegunda = String(top2.segunda.porcentaje);
+      const placeholder = `[PORCENTAJE_2:${porcentajeSegunda}]`;
+      html = html.split(placeholder).join(`<span class="data-calculated">${this.escapeHtml(porcentajeSegunda)}%</span>`);
+    }
+    
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
@@ -526,7 +646,10 @@ export class Seccion15Component extends BaseSectionComponent implements OnDestro
     return div.innerHTML;
   }
 
-  private escapeRegex(str: string): string {
+  private escapeRegex(str: any): string {
+    if (typeof str !== 'string') {
+      return '';
+    }
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 

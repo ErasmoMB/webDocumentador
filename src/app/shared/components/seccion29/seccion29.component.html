@@ -59,13 +59,13 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getMorbilidadSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'grupo'">{{ item.grupo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad0_11'">{{ item.edad0_11 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad12_17'">{{ item.edad12_17 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad18_29'">{{ item.edad18_29 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad30_59'">{{ item.edad30_59 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'edad60_mas'">{{ item.edad60_mas || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'grupo'">{{ item.grupo || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'edad0_11'">{{ item.edad0_11 || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'edad12_17'">{{ item.edad12_17 || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'edad18_29'">{{ item.edad18_29 || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'edad30_59'">{{ item.edad30_59 || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'edad60_mas'">{{ item.edad60_mas || '____' }}</td>
+            <td class="table-cell cell-manual" [appDataSource]="'manual'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
         </tr>
         <tr *ngIf="getMorbilidadSinTotal().length > 0" style="font-weight: bold;">
             <td class="table-cell">Total</td>
@@ -105,9 +105,9 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getAfiliacionSaludSinTotal()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="getAfiliacionSaludSinTotal().length > 0">
             <td class="table-cell" style="font-weight: bold;">{{ getTotalAfiliacionSalud().categoria }}</td>

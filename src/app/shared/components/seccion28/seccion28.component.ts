@@ -9,15 +9,18 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { EducacionService } from 'src/app/core/services/educacion.service';
 
 @Component({
   selector: 'app-seccion28',
   templateUrl: './seccion28.component.html',
   styleUrls: ['./seccion28.component.css']
 })
-export class Seccion28Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion28Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.7';
   @Input() override modoFormulario: boolean = false;
   
@@ -65,12 +68,16 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private educacionService: EducacionService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
+    this.cargarEducacion();
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
@@ -94,10 +101,19 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion28_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -488,6 +504,38 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
     return `Asimismo, cabe mencionar que en ${centroPoblado} se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.`;
   }
 
+  // Cargar datos de educación desde el backend
+  private cargarEducacion(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    if (!codigos || codigos.length === 0) {
+      return;
+    }
+
+    // Obtener datos del primer CPP del grupo
+    const cpp = codigos[0];
+    
+    this.educacionService.obtenerNivelesPorCpp(cpp).subscribe(
+      (response: any) => {
+        if (response.success && response.data && Array.isArray(response.data)) {
+          const educacionData = response.data.map((item: any) => ({
+            nombreIE: '____',  // Manual
+            nivel: item.nivel_educativo,
+            tipoGestion: '____',  // Manual
+            cantidadEstudiantes: item.casos,
+            porcentaje: '____'  // Manual
+          }));
+
+          this.datos.educacionCpTabla = educacionData;
+          this.formularioService.actualizarDato('educacionCpTabla', educacionData);
+          this.cdRef.detectChanges();
+        }
+      },
+      (error: any) => {
+        console.error('Error cargando educación:', error);
+      }
+    );
+  }
+
   // Métodos para filtrar filas Total de educación
   getEducacionSinTotal(): any[] {
     if (!this.datos?.educacionCpTabla || !Array.isArray(this.datos.educacionCpTabla)) {
@@ -501,6 +549,15 @@ export class Seccion28Component extends BaseSectionComponent implements OnDestro
   getTotalEducacion(): number {
     const filtered = this.getEducacionSinTotal();
     return filtered.reduce((sum: number, item: any) => sum + (Number(item.cantidadEstudiantes) || 0), 0);
+  }
+
+  calcularPorcentajeEducacion(item: any): string {
+    const total = this.getTotalEducacion();
+    if (total === 0 || !item.cantidadEstudiantes) {
+      return '____';
+    }
+    const porcentaje = (Number(item.cantidadEstudiantes) / total) * 100;
+    return `${porcentaje.toFixed(2).replace('.', ',')} %`;
   }
 
   // Eliminar filas Total al cargar datos

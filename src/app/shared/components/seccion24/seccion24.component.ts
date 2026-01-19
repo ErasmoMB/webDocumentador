@@ -8,15 +8,18 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { PeaActividadesService } from 'src/app/core/services/pea-actividades.service';
 
 @Component({
   selector: 'app-seccion24',
   templateUrl: './seccion24.component.html',
   styleUrls: ['./seccion24.component.css']
 })
-export class Seccion24Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion24Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -48,14 +51,18 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService,
+    private peaActividadesService: PeaActividadesService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     this.eliminarFilasTotal();
+    this.cargarDatosActividadesEconomicas();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -64,10 +71,19 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion24_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -390,5 +406,55 @@ export class Seccion24Component extends BaseSectionComponent implements OnDestro
         this.cdRef.detectChanges();
       }
     }
+  }
+
+  private cargarDatosActividadesEconomicas(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    
+    if (!codigos || codigos.length === 0) {
+      console.warn('No hay códigos AISI activos disponibles');
+      return;
+    }
+
+    console.log('[Sección 24] Cargando actividades económicas para AISI:', codigos);
+
+    this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
+      (response: any) => {
+        console.log('[Sección 24] Respuesta del backend:', response);
+        
+        if (response && response.success && response.actividades_economicas) {
+          const actividades = response.actividades_economicas.map((item: any) => ({
+            actividad: item.actividad || '',
+            casos: item.casos || 0,
+            porcentaje: this.formatearPorcentaje(item.porcentaje)
+          }));
+
+          console.log('[Sección 24] Actividades mapeadas:', actividades);
+
+          // Actualizar datos locales primero
+          this.datos['actividadesEconomicasAISI'] = actividades;
+          
+          // Actualizar en formularioService
+          this.formularioService.actualizarDato('actividadesEconomicasAISI', actividades);
+          
+          // Forzar detección de cambios
+          this.cdRef.markForCheck();
+          this.cdRef.detectChanges();
+          
+          console.log('[Sección 24] Datos cargados correctamente. Total:', actividades.length);
+        } else {
+          console.warn('[Sección 24] Respuesta sin datos:', response);
+        }
+      },
+      (error: any) => {
+        console.error('[Sección 24] Error cargando datos de actividades económicas:', error);
+      }
+    );
+  }
+
+  private formatearPorcentaje(valor: number | string): string {
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '0,00 %';
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
   }
 }

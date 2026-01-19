@@ -54,9 +54,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   generarSeccionesAISI(): SidebarSection[] {
     const datos = this.formularioService.obtenerDatos();
-    const distritosSeleccionados = datos['distritosSeleccionadosAISI'] || [];
-    
-    if (distritosSeleccionados.length === 0) {
+    const distritosAISI = datos['distritosAISI'] || [];
+
+    if (distritosAISI.length === 0) {
       return [{
         id: '3.1.4.B.1',
         title: 'B.1 Centro Poblado',
@@ -67,9 +67,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }];
     }
 
-    return distritosSeleccionados.map((distrito: string, index: number) => {
+    return distritosAISI.map((distrito: any, index: number) => {
       const numero = index + 1;
-      const nombreDistrito = distrito && distrito.trim() !== '' ? ` ${distrito}` : '';
+      const nombre = distrito?.nombre?.trim();
+      const nombreDistrito = nombre ? ` ${nombre}` : '';
       return {
         id: `3.1.4.B.${numero}`,
         title: `B.${numero} Centro Poblado${nombreDistrito}`,

@@ -1,0 +1,7 @@
+/* Estilos para inputs readonly con fondo verde (porcentajes automáticos) */
+:host /deep/ input[readonly][data-field="porcentaje"],
+:host /deep/ .table-input[data-field="porcentaje"] {
+  background-color: #C8E6C9 !important;
+  color: #2E7D32;
+  font-weight: 500;
+}

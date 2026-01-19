@@ -23,8 +23,8 @@
             </tr>
             <tr class="total-row">
                 <td class="table-cell"><strong>Total</strong></td>
-                <td class="table-cell"><strong>{{ getTotalPET() }}</strong></td>
-                <td class="table-cell"><strong>100,00 %</strong></td>
+                <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPET() }}</strong></span></td>
+                <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
             </tr>
         </ng-container>
         <tr *ngIf="getPETTablaSinTotal().length === 0">
@@ -138,22 +138,22 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPEATableSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataSource]="'backend'">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeHombres && item.porcentajeHombres !== '____'" [appDataSource]="'calculated'">{{ item.porcentajeHombres }}</span><span *ngIf="!item.porcentajeHombres || item.porcentajeHombres === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataSource]="'section'" [fieldName]="'mujeres'">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataSource]="'backend'">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeMujeres && item.porcentajeMujeres !== '____'" [appDataSource]="'calculated'">{{ item.porcentajeMujeres }}</span><span *ngIf="!item.porcentajeMujeres || item.porcentajeMujeres === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getPEATableSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEAHombres() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEAMujeres() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEA() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEAHombres() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEAMujeres() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEA() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
         </tr>
         <tr *ngIf="getPEATableSinTotal().length === 0">
             <td class="table-cell">____</td>
@@ -202,24 +202,24 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPEAOcupadaTableSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataSource]="'section'" [fieldName]="'hombres'">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataSource]="'backend'">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeHombres && item.porcentajeHombres !== '____'" [appDataSource]="'calculated'">{{ item.porcentajeHombres }}</span><span *ngIf="!item.porcentajeHombres || item.porcentajeHombres === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataSource]="'section'" [fieldName]="'mujeres'">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataSource]="'backend'">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeMujeres && item.porcentajeMujeres !== '____'" [appDataSource]="'calculated'">{{ item.porcentajeMujeres }}</span><span *ngIf="!item.porcentajeMujeres || item.porcentajeMujeres === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
         </tr>
         <tr class="total-row" *ngIf="getPEAOcupadaTableSinTotal().length > 0">
             <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEAOcupadaHombres() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEAOcupadaMujeres() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-            <td class="table-cell"><strong>{{ getTotalPEAOcupada() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEAOcupadaHombres() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEAOcupadaMujeres() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>{{ getTotalPEAOcupada() }}</strong></span></td>
+            <td class="table-cell"><span [appDataSource]="'calculated'"><strong>100,00 %</strong></span></td>
         </tr>
-        <tr *ngIf="!datos.peaOcupadaTabla || datos.peaOcupadaTabla.length === 0">
+        <tr *ngIf="getPEAOcupadaTableSinTotal().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>

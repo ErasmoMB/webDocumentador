@@ -1,0 +1,53 @@
+/* Estilos específicos para Sección 12 (AISI) - Demographics for District */
+
+.table-container {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.table-header {
+  background-color: #f5f5f5;
+  padding: 10px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+.table-cell {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.total-row {
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
+
+.source {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 10px;
+}
+
+.section-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin: 15px 0 10px 0;
+}
+
+.form-field {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.text-justify {
+  text-align: justify;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}

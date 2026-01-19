@@ -8,15 +8,17 @@ import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.ser
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 
 @Component({
   selector: 'app-seccion21',
   templateUrl: './seccion21.component.html',
   styleUrls: ['./seccion21.component.css']
 })
-export class Seccion21Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion21Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1';
   @Input() override modoFormulario: boolean = false;
   
@@ -35,13 +37,16 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
+    this.debugCentrosPobladosAISI(); // Debug de centros poblados
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -69,10 +74,19 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion21_aisi';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    return this.groupConfig.getAISICCPPActivos();
   }
 
   protected override detectarCambios(): boolean {
@@ -105,9 +119,20 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-    this.datos.centroPobladoAISI = centroPobladoAISI || null;
-    this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+    let centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    
+    // Si no hay centroPobladoAISI definido, usar el del informacionReferencialAISI (heredado del AutoLoad)
+    if (!centroPobladoAISI && this.datos.informacionReferencialAISI?.centro_poblado) {
+      centroPobladoAISI = this.datos.informacionReferencialAISI.centro_poblado;
+    }
+    
+    // Fallback a PATIVILCA si no hay nada
+    if (!centroPobladoAISI) {
+      centroPobladoAISI = 'PATIVILCA';
+    }
+    
+    this.datos.centroPobladoAISI = centroPobladoAISI;
+    this.datosAnteriores.centroPobladoAISI = centroPobladoAISI;
   }
 
   override obtenerPrefijoGrupo(): string {
@@ -117,6 +142,232 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
   getTablaKeyUbicacionCp(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+  }
+
+  /**
+   * Busca un centro poblado en el JSON por nombre y obtiene sus coordenadas y altitud
+   * Retorna las coordenadas formateadas como: "18L E: 660619 m N: 8291173 m"
+   * Retorna la altitud formateada como: "3599 msnm"
+   */
+  private buscarCentroEnJSON(nombreCentro: string): any {
+    if (!nombreCentro) return null;
+
+    const jsonCompleto = this.datos['jsonCompleto'];
+    const nombreUpper = nombreCentro.trim().toUpperCase();
+
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return null;
+    }
+
+    // Recorrer todas las CLAVES (distritos) en el JSON
+    for (const nombreDistrito of Object.keys(jsonCompleto)) {
+      const centrosPoblados = jsonCompleto[nombreDistrito];
+      if (Array.isArray(centrosPoblados)) {
+        // Buscar el centro poblado por nombre (CCPP)
+        const centro = centrosPoblados.find((cp: any) => {
+          const nombreCP = (cp.CCPP || cp.ccpp || '').trim().toUpperCase();
+          return nombreCP === nombreUpper;
+        });
+
+        if (centro) {
+          // Formatear coordenadas: "18L E: 660619 m N: 8291173 m"
+          const este = centro.ESTE || '____';
+          const norte = centro.NORTE || '____';
+          const zonaUTM = centro.ZONA_UTM || centro.zona_utm || '18L'; // Por defecto 18L
+          
+          let coordenadasFormato = '____';
+          if (este !== '____' && norte !== '____') {
+            coordenadasFormato = `${zonaUTM} E: ${este} m N: ${norte} m`;
+          }
+
+          // Formatear altitud: "3599 msnm"
+          const altitudRaw = centro.ALTITUD || centro.altitud || '____';
+          let altitudFormato = '____';
+          if (altitudRaw !== '____') {
+            altitudFormato = `${altitudRaw} msnm`;
+          }
+
+          return {
+            nombre: centro.CCPP || nombreCentro,
+            coordenadas: coordenadasFormato,
+            altitud: altitudFormato,
+            distrito: centro.DIST || '____',
+            provincia: centro.PROV || '____',
+            departamento: centro.DPTO || '____'
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Busca un centro poblado en el JSON por código y obtiene sus coordenadas y altitud
+   * Retorna: { coordenadas: "ESTE, NORTE", altitud: "3423" }
+   */
+  private obtenerCoordenadasyAltitudDelCentro(codigoCentro: string): { coordenadas: string; altitud: string } | null {
+    const jsonCompleto = this.datos['jsonCompleto'];
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return null;
+    }
+
+    // Buscar en TODOS los distritos del JSON
+    for (const nombreDistrito of Object.keys(jsonCompleto)) {
+      const centrosPoblados = jsonCompleto[nombreDistrito];
+      if (Array.isArray(centrosPoblados)) {
+        const centro = centrosPoblados.find((cp: any) => 
+          (cp.CODIGO || cp.codigo || '').toString() === codigoCentro?.toString()
+        );
+
+        if (centro) {
+          const este = centro.ESTE || centro.este || '';
+          const norte = centro.NORTE || centro.norte || '';
+          const altitud = centro.ALTITUD || centro.altitud || '';
+
+          return {
+            coordenadas: `${este}, ${norte}`,
+            altitud: altitud.toString()
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Obtiene el CAPITAL del distrito actual: el centro poblado con MAYOR POBLACIÓN
+   * entre los centros poblados SELECCIONADOS
+   */
+  private obtenerCapitalDelDistritoActual(): string | null {
+    const distritosAISI = this.datos['distritosAISI'] || [];
+    const distritoActual = this.datos.distritoSeleccionado;
+
+    if (!distritoActual) return null;
+
+    // Buscar el distrito actual en distritosAISI
+    const distrito = distritosAISI.find((d: any) => 
+      d.nombre === distritoActual || d.nombreOriginal === distritoActual
+    );
+
+    if (!distrito || !distrito.centrosPobladosSeleccionados || distrito.centrosPobladosSeleccionados.length === 0) {
+      return null;
+    }
+
+    const jsonCompleto = this.datos['jsonCompleto'];
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return null;
+    }
+
+    // BUSCAR en el JSON la CLAVE que corresponde a este distrito
+    const distritosJSON = Object.keys(jsonCompleto);
+    const claveDistrito = distritosJSON.find((clave: string) => 
+      clave.toUpperCase() === distritoActual.toUpperCase() ||
+      clave.toUpperCase().includes(distritoActual.toUpperCase().substring(0, 3))
+    );
+
+    if (!claveDistrito) {
+      console.log(`[Seccion21] ⚠️ Distrito ${distritoActual} NO encontrado en JSON`);
+      return null;
+    }
+
+    const centrosPobladosDelDistrito = jsonCompleto[claveDistrito];
+    if (!Array.isArray(centrosPobladosDelDistrito)) {
+      return null;
+    }
+
+    // FILTRAR solo los centros poblados SELECCIONADOS
+    const centrosSeleccionados = centrosPobladosDelDistrito.filter((cp: any) => {
+      const codigo = (cp.CODIGO || cp.codigo || '').toString();
+      return distrito.centrosPobladosSeleccionados.some((sel: any) => 
+        sel.toString() === codigo
+      );
+    });
+
+    if (centrosSeleccionados.length === 0) {
+      console.log(`[Seccion21] ⚠️ No hay centros poblados seleccionados para ${distritoActual}`);
+      return null;
+    }
+
+    // BUSCAR el con MAYOR POBLACIÓN
+    const capitalConMayorPoblacion = centrosSeleccionados.reduce((max: any, actual: any) => {
+      const poblacionMax = parseInt(max.POBLACION || max.poblacion || '0') || 0;
+      const poblacionActual = parseInt(actual.POBLACION || actual.poblacion || '0') || 0;
+      return poblacionActual > poblacionMax ? actual : max;
+    });
+
+    console.log(`[Seccion21] 🏘️ Capital del distrito ${distritoActual}: ${capitalConMayorPoblacion.CCPP} (Población: ${capitalConMayorPoblacion.POBLACION})`);
+
+    return capitalConMayorPoblacion.CCPP || capitalConMayorPoblacion.ccpp;
+  }
+
+  getFilasUbicacionCp(): any[] {
+    const tablaKey = this.getTablaKeyUbicacionCp();
+    
+    // Obtener la tabla del usuario (ubicacionCpTabla) - esto contiene coordenadas y altitud
+    const tablaUbicacion = this.datos.ubicacionCpTabla || [];
+    
+    // Obtener la CAPITAL del distrito actual desde los centros poblados seleccionados
+    let capitalDelDistrito = this.obtenerCapitalDelDistritoActual();
+
+    // Fallback a centroPobladoAISI si no se encuentra la capital
+    if (!capitalDelDistrito) {
+      capitalDelDistrito = this.datos.centroPobladoAISI;
+    }
+
+    // Si aún no hay capital, fallback a informacionReferencialAISI
+    if (!capitalDelDistrito && this.datos.informacionReferencialAISI) {
+      capitalDelDistrito = this.datos.informacionReferencialAISI.centro_poblado;
+    }
+
+    // Último fallback
+    if (!capitalDelDistrito) {
+      capitalDelDistrito = 'PATIVILCA';
+    }
+
+    // Buscar los datos de la capital en el JSON
+    const datosCapitalEnJSON = this.buscarCentroEnJSON(capitalDelDistrito);
+
+    if (tablaUbicacion && Array.isArray(tablaUbicacion) && tablaUbicacion.length > 0) {
+      // Retornar la tabla como está, pero auto-rellenando con datos del JSON
+      return tablaUbicacion.map((fila: any, index: number) => {
+        const localidad = fila.localidad || fila.Localidad || '';
+        const coordenadas = fila.coordenadas || fila.Coordenadas || '';
+        const altitud = fila.altitud || fila.Altitud || '';
+        const distrito = fila.distrito || fila.Distrito || '';
+        const provincia = fila.provincia || fila.Provincia || '';
+        const departamento = fila.departamento || fila.Departamento || '';
+
+        // Si es la primera fila y tenemos datos de la capital en JSON, rellenarla automáticamente
+        const esCapitalRow = index === 0 && datosCapitalEnJSON;
+
+        return {
+          localidad: localidad && localidad.toString().trim() !== '' ? localidad : capitalDelDistrito,
+          coordenadas: esCapitalRow && (datosCapitalEnJSON?.coordenadas !== '____') 
+            ? datosCapitalEnJSON.coordenadas 
+            : (coordenadas && coordenadas.toString().trim() !== '' ? coordenadas : '____'),
+          altitud: esCapitalRow && (datosCapitalEnJSON?.altitud !== '____') 
+            ? datosCapitalEnJSON.altitud 
+            : (altitud && altitud.toString().trim() !== '' ? altitud : '____'),
+          distrito: distrito && distrito.toString().trim() !== '' ? distrito : (this.datos.distritoSeleccionado || 'SAN PEDRO'),
+          provincia: provincia && provincia.toString().trim() !== '' ? provincia : (this.datos.provinciaSeleccionada || 'OCROS'),
+          departamento: departamento && departamento.toString().trim() !== '' ? departamento : (this.datos.departamentoSeleccionado || 'ANCASH'),
+          esCapital: esCapitalRow // Marcador para resaltar en celeste
+        };
+      });
+    }
+
+    // Si no hay datos, retornar fila por defecto con datos de la capital
+    return [{
+      localidad: capitalDelDistrito,
+      coordenadas: datosCapitalEnJSON?.coordenadas || '____',
+      altitud: datosCapitalEnJSON?.altitud || '____',
+      distrito: this.datos.distritoSeleccionado || 'SAN PEDRO',
+      provincia: this.datos.provinciaSeleccionada || 'OCROS',
+      departamento: this.datos.departamentoSeleccionado || 'ANCASH',
+      esCapital: true // Marcador para resaltar en celeste
+    }];
   }
 
   getFieldIdTextoAISIIntro(): string {
@@ -256,5 +507,55 @@ export class Seccion21Component extends BaseSectionComponent implements OnDestro
       this.cdRef.detectChanges();
     }
   }
+
+  private debugCentrosPobladosAISI(): void {
+    console.clear();
+    console.log('=== DEBUG SECCION 21 - CENTROS POBLADOS AISI ===\n');
+    
+    // Mostrar prefijo del grupo
+    const prefijo = this.obtenerPrefijoGrupo();
+    console.log(`📍 Prefijo AISI: ${prefijo}\n`);
+    
+    // Buscar los ubigeos guardados
+    console.log('🔢 UBIGEOs de centros poblados AISI guardados:\n');
+    const ubigeosList = [1502030003, 1502030006, 1502030042, 1502030008, 1502030009, 1502030034];
+    console.log(ubigeosList);
+    
+    console.log('\n---\n');
+    
+    // Búsqueda de datos de Seccion 2
+    console.log('🔍 Buscando datos de Seccion 2 (centrosPoblados) en datos:\n');
+    
+    const todasLasClaves = Object.keys(this.datos).filter(key => 
+      key.toLowerCase().includes('centro') || 
+      key.toLowerCase().includes('ubigeo')
+    );
+    
+    console.log(`Claves encontradas: ${todasLasClaves.length}`);
+    todasLasClaves.forEach(clave => {
+      const valor = this.datos[clave];
+      if (Array.isArray(valor) && valor.length > 0) {
+        console.log(`\n✅ ${clave} (${valor.length} items):`);
+        console.log(`   Primer item:`, valor[0]);
+      }
+    });
+    
+    console.log('\n---\n');
+    console.log('🏢 Buscando tabla específica de centros poblados Seccion 2:\n');
+    
+    // Buscar centrosPobladosTabla o similar
+    if (this.datos['centrosPobladosTabla']) {
+      console.log('✅ Encontrado: centrosPobladosTabla');
+      console.table(this.datos['centrosPobladosTabla'].slice(0, 5));
+    }
+    if (this.datos['centrosPobladosTabla_A1']) {
+      console.log('✅ Encontrado: centrosPobladosTabla_A1');
+      console.table(this.datos['centrosPobladosTabla_A1'].slice(0, 5));
+    }
+    
+    console.log('\n---\n');
+    console.log('✨ Fin de debug\n');
+  }
 }
+
 

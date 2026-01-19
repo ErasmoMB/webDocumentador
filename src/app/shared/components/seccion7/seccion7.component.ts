@@ -4,12 +4,16 @@ import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { StateService } from 'src/app/core/services/state.service';
-import { Subscription } from 'rxjs';
-import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { forkJoin, of, Subscription } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { BackendApiService } from 'src/app/core/services/backend-api.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -17,7 +21,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion7.component.html',
   styleUrls: ['./seccion7.component.css']
 })
-export class Seccion7Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion7Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -37,10 +41,14 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
+    private backendApi: BackendApiService,
+    private centrosPobladosActivos: CentrosPobladosActivosService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
   protected override onInitCustom(): void {
@@ -52,6 +60,7 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     this.datosAnteriores[petTablaKey] = petTablaInicial ? JSON.parse(JSON.stringify(petTablaInicial)) : null;
     
     this.cargarFotografias();
+    this.cargarTablasPEADistrital();
     
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
@@ -91,13 +100,47 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     });
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.datosSubscription) {
       this.datosSubscription.unsubscribe();
     }
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion7_aisd';
+  }
+
+  protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+
+    for (const [fieldName, data] of Object.entries(loadedData)) {
+      if (data === null || data === undefined) continue;
+      const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
+
+      const actual = this.datos[fieldKey];
+      const vieneNoVacio = Array.isArray(data) && data.length > 0;
+      const actualEsVacio = !Array.isArray(actual) || actual.length === 0;
+
+      if (this.datos[fieldKey] === undefined || this.datos[fieldKey] === null || (vieneNoVacio && actualEsVacio)) {
+        this.formularioService.actualizarDato(fieldKey as any, data);
+      }
+    }
+
+    this.actualizarDatos();
+    this.calcularPorcentajesPET();
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const codigosActivos = prefijo?.startsWith('_A')
+      ? this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo)
+      : this.groupConfig.getAISDCCPPActivos();
+
+    return codigosActivos && codigosActivos.length > 0 ? codigosActivos : null;
   }
 
   protected override detectarCambios(): boolean {
@@ -111,6 +154,14 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     const petTablaActual = datosActuales[petTablaKey] || null;
     const petTablaAnteriorKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
     const petTablaAnterior = this.datosAnteriores[petTablaAnteriorKey] || null;
+
+    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+    const peaTablaActual = datosActuales[peaTablaKey] || null;
+    const peaTablaAnterior = this.datosAnteriores[peaTablaKey] || null;
+
+    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+    const peaOcupadaTablaActual = datosActuales[peaOcupadaTablaKey] || null;
+    const peaOcupadaTablaAnterior = this.datosAnteriores[peaOcupadaTablaKey] || null;
     
     let hayCambios = false;
     
@@ -126,6 +177,16 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     if (JSON.stringify(petTablaActual) !== JSON.stringify(petTablaAnterior)) {
       hayCambios = true;
       this.datosAnteriores[petTablaAnteriorKey] = petTablaActual ? JSON.parse(JSON.stringify(petTablaActual)) : null;
+    }
+
+    if (JSON.stringify(peaTablaActual) !== JSON.stringify(peaTablaAnterior)) {
+      hayCambios = true;
+      this.datosAnteriores[peaTablaKey] = peaTablaActual ? JSON.parse(JSON.stringify(peaTablaActual)) : null;
+    }
+
+    if (JSON.stringify(peaOcupadaTablaActual) !== JSON.stringify(peaOcupadaTablaAnterior)) {
+      hayCambios = true;
+      this.datosAnteriores[peaOcupadaTablaKey] = peaOcupadaTablaActual ? JSON.parse(JSON.stringify(peaOcupadaTablaActual)) : null;
     }
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
@@ -153,11 +214,13 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     if (!Array.isArray(petTabla)) {
       this.datos[petTablaKey] = [];
     }
-    if (!Array.isArray(this.datos.peaTabla)) {
-      this.datos.peaTabla = [];
+    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+    if (!Array.isArray(this.datos[peaTablaKey])) {
+      this.datos[peaTablaKey] = [];
     }
-    if (!Array.isArray(this.datos.peaOcupadaTabla)) {
-      this.datos.peaOcupadaTabla = [];
+    if (!Array.isArray(this.datos[peaOcupadaTablaKey])) {
+      this.datos[peaOcupadaTablaKey] = [];
     }
     this.eliminarFilasTotal();
   }
@@ -177,24 +240,30 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
         this.formularioService.actualizarDato(petTablaKey as any, datosFiltrados);
       }
     }
-    if (this.datos.peaTabla && Array.isArray(this.datos.peaTabla)) {
-      const longitudOriginal = this.datos.peaTabla.length;
-      const datosFiltrados = this.datos.peaTabla.filter((item: any) => {
+    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+    const peaTabla = this.datos[peaTablaKey];
+    if (peaTabla && Array.isArray(peaTabla)) {
+      const longitudOriginal = peaTabla.length;
+      const datosFiltrados = peaTabla.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.datos.peaTabla = datosFiltrados;
+        this.datos[peaTablaKey] = datosFiltrados;
+        this.formularioService.actualizarDato(peaTablaKey as any, datosFiltrados);
       }
     }
-    if (this.datos.peaOcupadaTabla && Array.isArray(this.datos.peaOcupadaTabla)) {
-      const longitudOriginal = this.datos.peaOcupadaTabla.length;
-      const datosFiltrados = this.datos.peaOcupadaTabla.filter((item: any) => {
+    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+    const peaOcupadaTabla = this.datos[peaOcupadaTablaKey];
+    if (peaOcupadaTabla && Array.isArray(peaOcupadaTabla)) {
+      const longitudOriginal = peaOcupadaTabla.length;
+      const datosFiltrados = peaOcupadaTabla.filter((item: any) => {
         const categoria = item.categoria?.toString().toLowerCase() || '';
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.datos.peaOcupadaTabla = datosFiltrados;
+        this.datos[peaOcupadaTablaKey] = datosFiltrados;
+        this.formularioService.actualizarDato(peaOcupadaTablaKey as any, datosFiltrados);
       }
     }
   }
@@ -207,6 +276,16 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   private getTablaPET(): any[] {
     const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'petTabla', this.seccionId);
     return pref || this.datos.petTabla || [];
+  }
+
+  private getTablaPEA(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'peaTabla', this.seccionId);
+    return pref || this.datos.peaTabla || [];
+  }
+
+  private getTablaPEAOcupada(): any[] {
+    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'peaOcupadaTabla', this.seccionId);
+    return pref || this.datos.peaOcupadaTabla || [];
   }
 
   getPETTablaSinTotal(): any[] {
@@ -223,22 +302,65 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   getTotalPET(): string {
     const datosSinTotal = this.getPETTablaSinTotal();
     if (datosSinTotal.length === 0) {
-      console.warn('⚠️ [Seccion7] getTotalPET - Tabla PET vacía');
       return '0';
     }
     const total = datosSinTotal.reduce((sum: number, item: any) => {
       const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
       return sum + casos;
     }, 0);
-    console.log('🔍 [Seccion7] getTotalPET - Total calculado:', total, 'de', datosSinTotal.length, 'filas');
     return total.toString();
   }
 
+  private calcularPorcentajesPET(): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const tabla = this.getTablaPET();
+
+    if (!Array.isArray(tabla) || tabla.length === 0) {
+      return;
+    }
+
+    const total = tabla.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+
+    if (total <= 0) {
+      const actualizada = tabla.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
+      this.datos[petTablaKey] = actualizada;
+      this.formularioService.actualizarDato(petTablaKey as any, actualizada);
+      return;
+    }
+
+    const filas = tabla.map((item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      const porcentaje = (casos / total) * 100;
+      const porcentajeNum = Math.round(porcentaje * 100) / 100;
+      return { ...item, casos, porcentajeNum };
+    });
+
+    const suma = filas.reduce((sum: number, f: any) => sum + (f.porcentajeNum || 0), 0);
+    const diferencia = Math.round((100 - suma) * 100) / 100;
+    const idxAjuste = filas.length - 1;
+    filas[idxAjuste].porcentajeNum = Math.round(((filas[idxAjuste].porcentajeNum || 0) + diferencia) * 100) / 100;
+
+    const actualizada = filas.map((f: any) => ({
+      ...f,
+      porcentaje: (f.porcentajeNum || 0)
+        .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace('.', ',') + ' %'
+    }));
+
+    this.datos[petTablaKey] = actualizada;
+    this.formularioService.actualizarDato(petTablaKey as any, actualizada);
+  }
+
   getPEATableSinTotal(): any[] {
-    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+    const peaTabla = this.getTablaPEA();
+    if (!peaTabla || !Array.isArray(peaTabla)) {
       return [];
     }
-    return this.datos.peaTabla.filter((item: any) => {
+    return peaTabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -275,10 +397,11 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   }
 
   getPEAOcupadaTableSinTotal(): any[] {
-    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+    const peaOcupadaTabla = this.getTablaPEAOcupada();
+    if (!peaOcupadaTabla || !Array.isArray(peaOcupadaTabla)) {
       return [];
     }
-    return this.datos.peaOcupadaTabla.filter((item: any) => {
+    return peaOcupadaTabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
@@ -330,113 +453,237 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     const totalPoblacion = parseInt(this.datos[poblacionKey] || this.datos.tablaAISD2TotalPoblacion || '0') || 0;
     const totalPET = parseInt(this.getTotalPET()) || 0;
     
-    console.log('🔍 [Seccion7] getPorcentajePET - Debug:', {
-      prefijo,
-      poblacionKey,
-      totalPoblacion,
-      totalPET,
-      datosPoblacionKey: this.datos[poblacionKey],
-      datosTablaAISD2TotalPoblacion: this.datos.tablaAISD2TotalPoblacion,
-      todasLasClaves: Object.keys(this.datos).filter(k => k.includes('tablaAISD2TotalPoblacion'))
-    });
-    
-    if (totalPoblacion === 0) {
-      console.warn('⚠️ [Seccion7] getPorcentajePET - Población total es 0');
+    if (totalPoblacion === 0 || totalPET === 0) {
       return '____';
     }
     
-    if (totalPET === 0) {
-      console.warn('⚠️ [Seccion7] getPorcentajePET - Total PET es 0');
-      return '____';
-    }
-    
-    const porcentaje = ((totalPET / totalPoblacion) * 100).toFixed(2);
-    const resultado = porcentaje.replace('.', ',') + ' %';
-    console.log('✅ [Seccion7] getPorcentajePET - Resultado:', resultado);
+    const porcentaje = ((totalPET / totalPoblacion) * 100);
+    const resultado = porcentaje.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %';
     return resultado;
   }
 
-  getPorcentajePETGrupo(categoria: string): string {
+  getPorcentajePETGrupo(rangoInicio: string): string {
     const petTabla = this.getTablaPET();
     if (!petTabla || !Array.isArray(petTabla)) {
       return '____';
     }
-    const grupo = petTabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase())
-    );
+    // Buscar por inicio de rango (14, 30, 45, 65)
+    const grupo = petTabla.find((item: any) => {
+      if (!item.categoria) return false;
+      const cat = item.categoria.toString().toLowerCase();
+      return cat.includes(rangoInicio.toLowerCase());
+    });
     return grupo?.porcentaje || '____';
   }
 
   getPorcentajePEA(): string {
-    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+    const peaTabla = this.getTablaPEA();
+    if (!peaTabla || !Array.isArray(peaTabla)) {
       return '____';
     }
-    const pea = this.datos.peaTabla.find((item: any) => item.categoria === 'PEA');
+    const pea = peaTabla.find((item: any) => 
+      item.categoria && item.categoria.includes('PEA Ocupada')
+    );
     return pea?.porcentaje || '____';
   }
 
   getPorcentajeNoPEA(): string {
-    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+    const peaTabla = this.getTablaPEA();
+    if (!peaTabla || !Array.isArray(peaTabla)) {
       return '____';
     }
-    const noPea = this.datos.peaTabla.find((item: any) => item.categoria === 'No PEA');
+    const noPea = peaTabla.find((item: any) => item.categoria === 'No PEA');
     return noPea?.porcentaje || '____';
   }
 
   getPorcentajePEAHombres(): string {
-    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+    const peaTabla = this.getTablaPEA();
+    if (!peaTabla || !Array.isArray(peaTabla)) {
       return '____';
     }
-    const pea = this.datos.peaTabla.find((item: any) => item.categoria === 'PEA');
+    const pea = peaTabla.find((item: any) => 
+      item.categoria && item.categoria.includes('PEA Ocupada')
+    );
     return pea?.porcentajeHombres || '____';
   }
 
   getPorcentajeNoPEAMujeres(): string {
-    if (!this.datos?.peaTabla || !Array.isArray(this.datos.peaTabla)) {
+    const peaTabla = this.getTablaPEA();
+    if (!peaTabla || !Array.isArray(peaTabla)) {
       return '____';
     }
-    const noPea = this.datos.peaTabla.find((item: any) => item.categoria === 'No PEA');
+    const noPea = peaTabla.find((item: any) => item.categoria === 'No PEA');
     return noPea?.porcentajeMujeres || '____';
   }
 
   getPorcentajePEAOcupada(): string {
-    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+    const peaOcupadaTabla = this.getTablaPEAOcupada();
+    if (!peaOcupadaTabla || !Array.isArray(peaOcupadaTabla)) {
       return '____';
     }
-    const ocupada = this.datos.peaOcupadaTabla.find((item: any) => 
+    const ocupada = peaOcupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada') && !item.categoria.toLowerCase().includes('desocupada')
     );
     return ocupada?.porcentaje || '____';
   }
 
   getPorcentajePEADesocupada(): string {
-    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+    const peaOcupadaTabla = this.getTablaPEAOcupada();
+    if (!peaOcupadaTabla || !Array.isArray(peaOcupadaTabla)) {
       return '____';
     }
-    const desocupada = this.datos.peaOcupadaTabla.find((item: any) => 
+    const desocupada = peaOcupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('desocupada')
     );
     return desocupada?.porcentaje || '____';
   }
 
   getPorcentajePEAOcupadaHombres(): string {
-    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+    const peaOcupadaTabla = this.getTablaPEAOcupada();
+    if (!peaOcupadaTabla || !Array.isArray(peaOcupadaTabla)) {
       return '____';
     }
-    const ocupada = this.datos.peaOcupadaTabla.find((item: any) => 
+    const ocupada = peaOcupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada') && !item.categoria.toLowerCase().includes('desocupada')
     );
     return ocupada?.porcentajeHombres || '____';
   }
 
   getPorcentajePEAOcupadaMujeres(): string {
-    if (!this.datos?.peaOcupadaTabla || !Array.isArray(this.datos.peaOcupadaTabla)) {
+    const peaOcupadaTabla = this.getTablaPEAOcupada();
+    if (!peaOcupadaTabla || !Array.isArray(peaOcupadaTabla)) {
       return '____';
     }
-    const ocupada = this.datos.peaOcupadaTabla.find((item: any) => 
+    const ocupada = peaOcupadaTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada') && !item.categoria.toLowerCase().includes('desocupada')
     );
     return ocupada?.porcentajeMujeres || '____';
+  }
+
+  private cargarTablasPEADistrital(): void {
+    const ccppActivos = this.getLoadParameters() || [];
+    if (!Array.isArray(ccppActivos) || ccppActivos.length === 0) {
+      return;
+    }
+
+    const ubigeo = this.obtenerUbigeoDistritoDesdeCCPP(ccppActivos);
+    if (!ubigeo) {
+      return;
+    }
+
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+
+    this.backendApi.getPEADistrital(ubigeo).pipe(
+      map((r: any) => r?.data || null),
+      catchError(() => of(null))
+    ).subscribe((data: any) => {
+      if (!data) {
+        return;
+      }
+
+      const peaTabla = this.construirTablaPEADesdeEstados(data.pea_estados || []);
+      const peaOcupadaTabla = this.construirTablaPEAOcupada(data.pea_estados || []);
+
+      this.formularioService.actualizarDato(peaTablaKey as any, peaTabla);
+      this.formularioService.actualizarDato(peaOcupadaTablaKey as any, peaOcupadaTabla);
+      this.actualizarDatos();
+    });
+  }
+
+  private construirTablaPEADesdeEstados(peaEstados: any[]): any[] {
+    if (!peaEstados || peaEstados.length === 0) {
+      return [];
+    }
+
+    const totalGeneral = peaEstados.reduce((sum, e) => sum + (parseInt(e.total) || 0), 0);
+    const totalHombres = peaEstados.reduce((sum, e) => sum + (parseInt(e.hombres) || 0), 0);
+    const totalMujeres = peaEstados.reduce((sum, e) => sum + (parseInt(e.mujeres) || 0), 0);
+
+    return peaEstados.map((estado: any) => {
+      const total = parseInt(estado.total) || 0;
+      const hombres = parseInt(estado.hombres) || 0;
+      const mujeres = parseInt(estado.mujeres) || 0;
+      
+      const porcentajeTotal = totalGeneral > 0 ? (total / totalGeneral) * 100 : 0;
+      const porcentajeHombres = totalHombres > 0 ? (hombres / totalHombres) * 100 : 0;
+      const porcentajeMujeres = totalMujeres > 0 ? (mujeres / totalMujeres) * 100 : 0;
+      
+      return {
+        categoria: estado.categoria,
+        hombres: hombres,
+        porcentajeHombres: porcentajeHombres.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %',
+        mujeres: mujeres,
+        porcentajeMujeres: porcentajeMujeres.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %',
+        casos: total,
+        porcentaje: porcentajeTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %'
+      };
+    });
+  }
+
+  private construirTablaPEAOcupada(peaEstados: any[]): any[] {
+    if (!Array.isArray(peaEstados) || peaEstados.length === 0) {
+      return [];
+    }
+
+    const matchEstado = (needle: string) =>
+      peaEstados.find((e: any) => (e?.categoria || '').toString().toLowerCase() === needle);
+
+    const ocupada = matchEstado('pea ocupada') || matchEstado('pea_ocupada');
+    const desocupada = matchEstado('pea desocupada') || matchEstado('pea_desocupada');
+
+    const ocupadaTotal = parseInt(ocupada?.total) || 0;
+    const ocupadaHombres = parseInt(ocupada?.hombres) || 0;
+    const ocupadaMujeres = parseInt(ocupada?.mujeres) || 0;
+
+    const desocupadaTotal = parseInt(desocupada?.total) || 0;
+    const desocupadaHombres = parseInt(desocupada?.hombres) || 0;
+    const desocupadaMujeres = parseInt(desocupada?.mujeres) || 0;
+
+    const total = ocupadaTotal + desocupadaTotal;
+    const totalHombres = ocupadaHombres + desocupadaHombres;
+    const totalMujeres = ocupadaMujeres + desocupadaMujeres;
+
+    if (total === 0) {
+      return [];
+    }
+
+    const fmt = (v: number, d: number) =>
+      (d > 0 ? (v / d) * 100 : 0)
+        .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace('.', ',') + ' %';
+
+    return [
+      {
+        categoria: 'PEA Ocupada',
+        hombres: ocupadaHombres,
+        porcentajeHombres: fmt(ocupadaHombres, totalHombres),
+        mujeres: ocupadaMujeres,
+        porcentajeMujeres: fmt(ocupadaMujeres, totalMujeres),
+        casos: ocupadaTotal,
+        porcentaje: fmt(ocupadaTotal, total)
+      },
+      {
+        categoria: 'PEA Desocupada',
+        hombres: desocupadaHombres,
+        porcentajeHombres: fmt(desocupadaHombres, totalHombres),
+        mujeres: desocupadaMujeres,
+        porcentajeMujeres: fmt(desocupadaMujeres, totalMujeres),
+        casos: desocupadaTotal,
+        porcentaje: fmt(desocupadaTotal, total)
+      }
+    ];
+  }
+
+  private obtenerUbigeoDistritoDesdeCCPP(ccppActivos: string[]): string | null {
+    const primero = ccppActivos.find(c => !!c)?.toString() || '';
+    if (!primero) {
+      return null;
+    }
+    const sinCerosIzq = primero.replace(/^0+/, '') || '0';
+    const seis = sinCerosIzq.substring(0, 6);
+    return seis.length === 6 ? seis : null;
   }
 
   trackByIndex(index: number): number {
@@ -515,11 +762,10 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const porcentajePET = this.getPorcentajePET();
-    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29 años');
-    const porcentaje65 = this.getPorcentajePETGrupo('65 años a más');
+    const porcentaje1429 = this.getPorcentajePETGrupo('14 a 29');
+    const porcentaje65 = this.getPorcentajePETGrupo('65');
     
-    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del ${porcentajePET} de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el ${porcentaje1529} de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ${porcentaje65}.`;
+    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar. La población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del total mostrado en la tabla siguiente. El bloque etario que más aporta a la PET es el de 14 a 29 años, pues representa el ${porcentaje1429} de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ${porcentaje65}.`;
   }
 
   obtenerTextoDetalePEA(): string {
@@ -573,19 +819,15 @@ export class Seccion7Component extends BaseSectionComponent implements OnDestroy
   obtenerTextoPETConResaltado(): SafeHtml {
     const texto = this.obtenerTextoPET();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const porcentajePET = this.getPorcentajePET();
-    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29 años');
-    const porcentaje65 = this.getPorcentajePETGrupo('65 años a más');
+    const porcentaje1429 = this.getPorcentajePETGrupo('14 a 29');
+    const porcentaje65 = this.getPorcentajePETGrupo('65');
     
     let html = this.escapeHtml(texto);
     if (grupoAISD && grupoAISD !== '____') {
       html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     }
-    if (porcentajePET && porcentajePET !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajePET), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajePET)}</span>`);
-    }
-    if (porcentaje1529 && porcentaje1529 !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentaje1529), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje1529)}</span>`);
+    if (porcentaje1429 && porcentaje1429 !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentaje1429), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje1429)}</span>`);
     }
     if (porcentaje65 && porcentaje65 !== '____') {
       html = html.replace(new RegExp(this.escapeRegex(porcentaje65), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje65)}</span>`);

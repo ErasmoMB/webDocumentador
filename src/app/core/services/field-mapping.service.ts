@@ -194,7 +194,6 @@ export class FieldMappingService {
         map(response => {
           const transformado = this.transformarPoblacionSexo(response);
           if (transformado.length === 0) {
-            console.warn(`⚠️ [FieldMapping] Población por sexo: datos vacíos después de transformar`);
           }
           return transformado;
         })
@@ -210,7 +209,6 @@ export class FieldMappingService {
         map(response => {
           const transformado = this.transformarPoblacionEtario(response);
           if (transformado.length === 0) {
-            console.warn(`⚠️ [FieldMapping] Población etario: datos vacíos después de transformar`);
           }
           return transformado;
         })
@@ -236,7 +234,6 @@ export class FieldMappingService {
         map(response => {
           const transformado = this.transformarPET(response);
           if (transformado.length === 0) {
-            console.warn(`⚠️ [FieldMapping] PET: datos vacíos después de transformar`);
           }
           return transformado;
         })
@@ -250,25 +247,23 @@ export class FieldMappingService {
           return this.backendApi.getActividadesPrincipales(codigo).pipe(
             map(response => {
               const datos = response?.data || response || [];
+              // El backend devuelve {categoria, casos}
               const datosFiltrados = Array.isArray(datos) ? datos.filter(item => {
                 if (!item) return false;
-                const actividadPrincipal = item.actividad_principal;
-                const totalTrabajadores = parseInt(item.total_trabajadores || '0') || 0;
-                return actividadPrincipal !== null && 
-                       actividadPrincipal !== undefined && 
-                       actividadPrincipal !== '' &&
-                       totalTrabajadores > 0;
+                const categoria = item.categoria;
+                const casos = parseInt(item.casos || '0') || 0;
+                return categoria !== null && categoria !== undefined && categoria !== '' && casos > 0;
               }) : [];
               return datosFiltrados;
             })
           );
         },
-        this.agregarDatosOcupaciones
+        // Sumar directo por categoria
+        this.agregarDatosDirectos.bind(this)
       ).pipe(
         map(datosAgregados => {
           const transformado = this.transformarPEAOcupaciones(datosAgregados);
           if (transformado.length === 0) {
-            console.warn(`⚠️ [FieldMapping] PEA Ocupaciones: No hay datos válidos después de transformar`);
           }
           return transformado;
         })
@@ -376,7 +371,6 @@ export class FieldMappingService {
             return datos;
           }),
           catchError((error) => {
-            console.error(`❌ [FieldMapping] Error consultando backend:`, error);
             return of([]);
           })
         );
@@ -387,7 +381,6 @@ export class FieldMappingService {
     const codigosActivos = this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo);
     
     if (codigosActivos.length === 0) {
-      console.error(`❌ [FieldMapping] No hay códigos activos para ${prefijo}. Ve a la Sección 4 (Cuadro 3.3).`);
       return of([]);
     }
 
@@ -398,7 +391,6 @@ export class FieldMappingService {
           return datos;
         }),
         catchError((error) => {
-          console.error(`❌ [FieldMapping] Error consultando backend:`, error);
           return of([]);
         })
       );
@@ -411,7 +403,6 @@ export class FieldMappingService {
           return datos;
         }),
         catchError((error) => {
-          console.error(`❌ [FieldMapping] Error consultando código ${codigo}:`, error);
           return of([]);
         })
       )
@@ -427,15 +418,9 @@ export class FieldMappingService {
             acumulado = agregarFuncion(acumulado, datos);
           }
         });
-        if (totalConDatos === 0) {
-          console.warn(`⚠️ [FieldMapping] Ningún código UBIGEO devolvió datos. Total códigos consultados: ${codigosActivos.length}`);
-        } else {
-          console.log(`✅ [FieldMapping] ${totalConDatos} de ${codigosActivos.length} códigos devolvieron datos. Acumulado:`, acumulado);
-        }
         return acumulado;
       }),
       catchError((error) => {
-        console.error(`❌ [FieldMapping] Error agregando datos:`, error);
         return of([]);
       })
     );
@@ -519,7 +504,6 @@ export class FieldMappingService {
     const total = hombres + mujeres;
 
     if (total === 0) {
-      console.warn(`⚠️ [FieldMapping] Población por sexo: total es 0`);
       return [];
     }
 
@@ -546,7 +530,6 @@ export class FieldMappingService {
     const total = de_1_a_14 + de_15_a_29 + de_30_a_44 + de_45_a_64 + mayores_65;
 
     if (total === 0) {
-      console.warn(`⚠️ [FieldMapping] Población etario: total es 0`);
       return [];
     }
 
@@ -574,7 +557,6 @@ export class FieldMappingService {
     const totalPET = de_15_a_29 + de_30_a_44 + de_45_a_64 + mayores_65;
 
     if (totalPET === 0) {
-      console.warn(`⚠️ [FieldMapping] PET: total es 0`);
       return [];
     }
 
@@ -650,12 +632,13 @@ export class FieldMappingService {
 
     return datosFiltrados.map(item => {
       const casos = parseInt(item.casos || item.total_trabajadores || '0') || 0;
-      const porcentaje = totalCasos > 0 ? ((casos / totalCasos) * 100).toFixed(2).replace('.', ',') + ' %' : '0,00 %';
+      const porcentaje = totalCasos > 0 ? (casos / totalCasos) * 100 : 0;
+      const porcentajeFormateado = porcentaje.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %';
       
       return {
         categoria: item.categoria || item.actividad_principal || '',
         casos: casos,
-        porcentaje: porcentaje
+        porcentaje: porcentajeFormateado
       };
     });
   }

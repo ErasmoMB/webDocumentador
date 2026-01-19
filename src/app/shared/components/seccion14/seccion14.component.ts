@@ -8,7 +8,9 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
@@ -17,7 +19,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './seccion14.component.html',
   styleUrls: ['./seccion14.component.css']
 })
-export class Seccion14Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion14Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -70,9 +72,29 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
     cdRef: ChangeDetectorRef,
     private tableService: TableManagementService,
     private stateService: StateService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    protected override autoLoader: AutoBackendDataLoaderService,
+    private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  override getSectionKey(): string {
+    return 'seccion14_aisd';
+  }
+
+  protected override getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      // Limpiar '0' al inicio de cada CCPP
+      const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
+        const cleaned = cpp.toString().replace(/^0+/, '') || '0';
+        return cleaned;
+      });
+      return ccppLimpios;
+    }
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -167,31 +189,31 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
   getPorcentajePrimaria(): string {
     const tabla = this.getTablaNivelEducativo();
     const item = tabla.find((i: any) => i.categoria?.toLowerCase().includes('primaria'));
-    return item?.porcentaje || '____';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getPorcentajeSecundaria(): string {
     const tabla = this.getTablaNivelEducativo();
     const item = tabla.find((i: any) => i.categoria?.toLowerCase().includes('secundaria'));
-    return item?.porcentaje || '____';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getPorcentajeSuperiorNoUniversitaria(): string {
     const tabla = this.getTablaNivelEducativo();
     const item = tabla.find((i: any) => i.categoria?.toLowerCase().includes('superior no universitaria'));
-    return item?.porcentaje || '____';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getTasaAnalfabetismo(): string {
     const tabla = this.getTablaTasaAnalfabetismo();
     const item = tabla.find((i: any) => i.indicador?.toLowerCase().includes('no sabe'));
-    return item?.porcentaje || '____';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getCasosAnalfabetismo(): string {
     const tabla = this.getTablaTasaAnalfabetismo();
     const item = tabla.find((i: any) => i.indicador?.toLowerCase().includes('no sabe'));
-    return item?.casos?.toString() || '____';
+    return item?.casos ? String(item.casos) : '____';
   }
 
   getFotografiasEducacionIndicadoresVista(): FotoItem[] {
@@ -408,8 +430,8 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
     }, 0);
     return total.toString();
   }
-
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -562,7 +584,8 @@ export class Seccion14Component extends BaseSectionComponent implements OnDestro
   }
 
   private escapeRegex(str: string): string {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const strValue = String(str || '');
+    return strValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
 }

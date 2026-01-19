@@ -41,6 +41,15 @@ export interface ComunidadCampesina {
   id: string;
   nombre: string;
   centrosPobladosSeleccionados: string[];
+  esNueva?: boolean;
+}
+
+export interface Distrito {
+  id: string;
+  nombre: string;
+  nombreOriginal?: string;
+  centrosPobladosSeleccionados: string[];
+  esNuevo?: boolean;
 }
 
 export interface FormularioDatos {
@@ -48,6 +57,7 @@ export interface FormularioDatos {
   grupoAISD: string;
   grupoAISI: string;
   comunidadesCampesinas?: ComunidadCampesina[];
+  distritosAISI?: Distrito[];
   departamentoSeleccionado: string;
   provinciaSeleccionada: string;
   distritoSeleccionado: string;

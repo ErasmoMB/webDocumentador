@@ -8,7 +8,9 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
@@ -17,7 +19,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './seccion13.component.html',
   styleUrls: ['./seccion13.component.css']
 })
-export class Seccion13Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion13Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -77,11 +79,34 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion13_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    console.log('%c[Seccion13] getLoadParameters() resultado:', 'color: #FF5722; font-weight: bold;', ccppDesdeGrupo);
+    
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      // Limpiar '0' al inicio de cada CCPP
+      const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
+        const cleaned = cpp.toString().replace(/^0+/, '') || '0';
+        console.log(`  Limpiando: ${cpp} → ${cleaned}`);
+        return cleaned;
+      });
+      console.log('%c  ✓ CCPPs después de limpiar:', 'color: #FF5722;', ccppLimpios);
+      return ccppLimpios;
+    }
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -242,7 +267,8 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -321,15 +347,33 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   }
 
   obtenerTextoAfiliacionSaludConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoAfiliacionSalud();
+    let texto = this.obtenerTextoAfiliacionSalud();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const porcentajeSIS = this.getPorcentajeSIS() || '____';
-    const porcentajeESSALUD = this.getPorcentajeESSALUD() || '____';
-    const porcentajeSinSeguro = this.getPorcentajeSinSeguro() || '____';
+    const tabla = this.getAfiliacionSaludSinTotal();
     
-    let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    // Obtener porcentajes
+    const porcentajeSIS = this.getPorcentajeSIS();
+    const porcentajeESSALUD = this.getPorcentajeESSALUD();
+    const porcentajeSinSeguro = this.getPorcentajeSinSeguro();
     
+    // Primero, llenar todos los ____ con los valores correspondientes
+    // Buscar patrones como "____ %" o simplemente "____"
+    let textoConValores = texto;
+    
+    // Reemplazar "el ____ %" con el porcentaje sin seguro
+    if (porcentajeSinSeguro !== '____') {
+      textoConValores = textoConValores.replace(
+        /el ____ %/g,
+        `el ${porcentajeSinSeguro} %`
+      );
+    }
+    
+    // Ahora aplicar resaltados: nombre de comunidad
+    let textoConResaltado = textoConValores
+      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), 
+        `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    
+    // Aplicar resaltados a los porcentajes (verde)
     if (porcentajeSIS !== '____') {
       textoConResaltado = textoConResaltado.replace(
         new RegExp(`${this.escapeRegex(porcentajeSIS)}\\s*%`, 'g'),
@@ -355,19 +399,21 @@ export class Seccion13Component extends BaseSectionComponent implements OnDestro
   getPorcentajeSIS(): string {
     const tabla = this.getAfiliacionSaludSinTotal();
     const itemSIS = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('sis'));
-    return itemSIS ? itemSIS.porcentaje || '____' : '____';
+    return itemSIS ? (itemSIS.porcentaje ? String(itemSIS.porcentaje) : '____') : '____';
   }
 
   getPorcentajeESSALUD(): string {
     const tabla = this.getAfiliacionSaludSinTotal();
     const itemESSALUD = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('essalud'));
-    return itemESSALUD ? itemESSALUD.porcentaje || '____' : '____';
+    return itemESSALUD ? (itemESSALUD.porcentaje ? String(itemESSALUD.porcentaje) : '____') : '____';
   }
 
   getPorcentajeSinSeguro(): string {
     const tabla = this.getAfiliacionSaludSinTotal();
-    const itemSinSeguro = tabla.find((item: any) => item.categoria && (item.categoria.toString().toLowerCase().includes('sin seguro') || item.categoria.toString().toLowerCase().includes('sin seg')));
-    return itemSinSeguro ? itemSinSeguro.porcentaje || '____' : '____';
+    console.log('[SECCION13] Buscando "Sin Seguro" en tabla:', tabla);
+    const itemSinSeguro = tabla.find((item: any) => item.categoria && (item.categoria.toString().toLowerCase().includes('sin seguro') || item.categoria.toString().toLowerCase().includes('sin seg') || item.categoria.toString().toLowerCase().includes('ningún')));
+    console.log('[SECCION13] itemSinSeguro encontrado:', itemSinSeguro);
+    return itemSinSeguro ? (itemSinSeguro.porcentaje ? String(itemSinSeguro.porcentaje) : '____') : '____';
   }
 
   private escapeHtml(text: string): string {

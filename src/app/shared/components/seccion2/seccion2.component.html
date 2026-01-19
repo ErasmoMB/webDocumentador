@@ -47,26 +47,7 @@
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">3.1.2 Delimitación de las áreas de influencia social</h4>
-    
-    <div class="form-field" *ngIf="distritosDisponiblesAISI.length > 0">
-      <label class="label">Seleccionar Distritos para AISI</label>
-      <div style="margin-bottom: 10px;">
-        <span class="badge badge-primary">{{ distritosDisponiblesAISI.length }} distrito(s) disponible(s)</span>
-        <span class="badge badge-primary" style="margin-left: 10px;">{{ distritosSeleccionadosAISI.length }} seleccionado(s)</span>
-      </div>
-      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
-        <div *ngFor="let distrito of distritosDisponiblesAISI" style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
-          <input 
-            type="checkbox" 
-            [checked]="estaDistritoSeleccionadoAISI(distrito)"
-            (change)="toggleDistritoAISI(distrito)"
-            style="margin-right: 8px;">
-          <span style="flex: 1;">{{ distrito }}</span>
-        </div>
-      </div>
-      <small class="form-hint">Seleccione los distritos que formarán parte del AISI. Cada distrito seleccionado generará una sección B.X correspondiente.</small>
-    </div>
+    <!-- Sección de Distritos AISI -->
 
     <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
     

@@ -1,20 +1,16 @@
 <div *ngIf="!modoFormulario">
 <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
 <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
-<div *ngIf="datos.parrafoSeccion4_introduccion_aisd; else introduccionAISDDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_introduccion_aisd)"></div>
-<ng-template #introduccionAISDDefault>
-    <p class="text-justify">Se ha determinado como Área de Influencia Social Directa (AISD) a la CC <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.</p>
-</ng-template>
+
+<!-- Párrafo: Introducción AISD -->
+<div [innerHTML]="obtenerTextoSeccion4IntroduccionAISDConResaltado()"></div>
 
 <h5 *ngIf="seccionId.includes('3.1.4.A.1')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
 <h5 *ngIf="seccionId.includes('3.1.4.A.2')">A.2. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
 <h5 *ngIf="!seccionId.includes('3.1.4.A.1') && !seccionId.includes('3.1.4.A.2')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
-<div *ngIf="datos.parrafoSeccion4_comunidad_completo; else comunidadCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_comunidad_completo)"></div>
-<ng-template #comunidadCompletoDefault>
-    <p class="text-justify">La CC <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ obtenerNombreComunidadActual() }}</span> se encuentra ubicada predominantemente dentro del distrito de <span [appDataSource]="'section'">{{ datos.distritoSeleccionado || '____' }}</span>, provincia de <span [appDataSource]="'section'">{{ datos.provinciaSeleccionada || '____' }}</span>; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de <span [appDataSource]="'section'">{{ datos.aisdComponente1 || '____' }}</span> y de <span [appDataSource]="'section'">{{ datos.aisdComponente2 || '____' }}</span>, del departamento de <span [appDataSource]="'section'">{{ datos.departamentoSeleccionado || '____' }}</span>. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo <span [appDataSource]="'section'">{{ obtenerNombreComunidadActual() }}</span>.</p>
-    <p class="text-justify">En cuanto al nombre "<span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerNombreComunidadActual() }}</span>", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP {{ datos.grupoAISI || datos.distritoSeleccionado || '____' }} y al oeste del anexo Nauquipa.</p>
-    <p class="text-justify">Asimismo, la CC <span [appDataSource]="'section'" [fieldName]="'cuadroTituloAISD1'">{{ obtenerNombreComunidadActual() }}</span> es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.</p>
-</ng-template>
+
+<!-- Párrafo: Comunidad Completo -->
+<div [innerHTML]="obtenerTextoSeccion4ComunidadCompletoConResaltado()"></div>
 <app-table-wrapper [title]="(datos.cuadroTituloAISD1 || 'Ubicación referencial') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
 <table class="table-container">
     <thead>
@@ -52,19 +48,7 @@
     [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<div *ngIf="datos.parrafoSeccion4_caracterizacion_indicadores; else caracterizacionIndicadoresDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion4_caracterizacion_indicadores)"></div>
-<ng-template #caracterizacionIndicadoresDefault>
-    <p class="text-justify">Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC <span [appDataSource]="'section'" [fieldName]="'cuadroTituloAISD2'">{{ obtenerNombreComunidadActual() }}</span>. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.</p>
-</ng-template>
-
-<div class="info-box" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin: 15px 0; font-size: 14px;">
-    <strong style="color: #856404;">⚠️ Importante - Fuente de Verdad:</strong>
-    <p style="margin: 8px 0 0 0; color: #856404;">
-        Los centros poblados que aparecen en esta tabla son los que se utilizarán para <strong>todos los cálculos y tablas del grupo AISD</strong> de esta comunidad campesina. 
-        Si eliminas una fila, ese centro poblado <strong>no se considerará</strong> en las demás secciones (demografía, vivienda, servicios, etc.).
-        <br><strong>Total de centros poblados activos: {{ obtenerTotalCentrosPobladosActivos() }}</strong>
-    </p>
-</div>
+<div [innerHTML]="obtenerTextoSeccion4CaracterizacionIndicadoresConResaltado()"></div>
 
 <app-table-wrapper [title]="(datos.cuadroTituloAISD2 || 'Cantidad total de población y viviendas') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
 <table class="table-container">
@@ -82,8 +66,8 @@
             <td class="table-cell"><span *ngIf="fila.punto !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Punto'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Punto')">{{ fila.punto }}</span><span *ngIf="fila.punto === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="fila.codigo !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Codigo'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Codigo')">{{ fila.codigo }}</span><span *ngIf="fila.codigo === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="fila.poblacion !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Poblacion'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Poblacion')">{{ fila.poblacion }}</span><span *ngIf="fila.poblacion === '____'">____</span></td>
-            <td class="table-cell manual-cell"><span *ngIf="fila.viviendasEmpadronadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas')">{{ fila.viviendasEmpadronadas }}</span><span *ngIf="fila.viviendasEmpadronadas === '____'">____</span></td>
-            <td class="table-cell manual-cell"><span *ngIf="fila.viviendasOcupadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas')">{{ fila.viviendasOcupadas }}</span><span *ngIf="fila.viviendasOcupadas === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="fila.viviendasEmpadronadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas')">{{ fila.viviendasEmpadronadas }}</span><span *ngIf="fila.viviendasEmpadronadas === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="fila.viviendasOcupadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas')">{{ fila.viviendasOcupadas }}</span><span *ngIf="fila.viviendasOcupadas === '____'">____</span></td>
         </tr>
         <tr>
             <th class="table-header">Total</th>
@@ -107,4 +91,85 @@
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
 </app-image-upload>
+</div>
+
+<!-- FORMULARIO (modoFormulario = true) -->
+<div *ngIf="modoFormulario" class="formulario-seccion">
+<h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
+
+<h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
+
+<!-- Párrafo: Introducción AISD -->
+<div class="form-section">
+  <h5>Editar Párrafos</h5>
+  <h6>Introducción AISD</h6>
+  <app-paragraph-editor
+    [fieldId]="getFieldIdTextoSeccion4IntroduccionAISD()"
+    label="Introducción AISD"
+    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="4"
+    [value]="obtenerTextoSeccion4IntroduccionAISD()"
+    (valueChange)="onFieldChange(getFieldIdTextoSeccion4IntroduccionAISD(), $event)">
+  </app-paragraph-editor>
+</div>
+
+<!-- Párrafo: Comunidad Completo -->
+<div class="form-section">
+  <h6>Información de la Comunidad - Texto Completo</h6>
+  <app-paragraph-editor
+    [fieldId]="getFieldIdTextoSeccion4ComunidadCompleto()"
+    label="Comunidad - Texto Completo"
+    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="6"
+    [value]="obtenerTextoSeccion4ComunidadCompleto()"
+    (valueChange)="onFieldChange(getFieldIdTextoSeccion4ComunidadCompleto(), $event)">
+  </app-paragraph-editor>
+</div>
+
+<!-- Párrafo: Caracterización Indicadores -->
+<div class="form-section">
+  <h6>Caracterización de Indicadores</h6>
+  <app-paragraph-editor
+    [fieldId]="getFieldIdTextoSeccion4CaracterizacionIndicadores()"
+    label="Caracterización de Indicadores"
+    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="4"
+    [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
+    (valueChange)="onFieldChange(getFieldIdTextoSeccion4CaracterizacionIndicadores(), $event)">
+  </app-paragraph-editor>
+</div>
+
+<!-- Tabla AISD1 -->
+<h5>Ubicación Referencial</h5>
+<div class="form-section">
+  <h6>Fotografías - Ubicación</h6>
+  <app-image-upload
+    [fotografias]="fotografiasUbicacionFormMulti"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_UBICACION"
+    [permitirMultiples]="true"
+    labelTitulo="Título de la fotografía"
+    labelFuente="Fuente de la fotografía"
+    labelImagen="Fotografía - Imagen"
+    [requerido]="false"
+    (fotografiasChange)="onFotografiasUbicacionChange($event)">
+  </app-image-upload>
+</div>
+
+<!-- Tabla AISD2 -->
+<h5>Cantidad total de población y viviendas</h5>
+<div class="form-section">
+  <h6>Fotografías - Población y Viviendas</h6>
+  <app-image-upload
+    [fotografias]="fotografiasPoblacionFormMulti"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_POBLACION"
+    [permitirMultiples]="true"
+    labelTitulo="Título de la fotografía"
+    labelFuente="Fuente de la fotografía"
+    labelImagen="Fotografía - Imagen"
+    [requerido]="false"
+    (fotografiasChange)="onFotografiasPoblacionChange($event)">
+  </app-image-upload>
+</div>
 </div>

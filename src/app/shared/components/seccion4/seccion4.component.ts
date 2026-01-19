@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, Input, OnDestroy, SimpleChanges } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -6,6 +7,7 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -22,12 +24,13 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   
   private filasCache: any[] | null = null;
   private ultimoPrefijoCache: string | null = null;
-  
   readonly PHOTO_PREFIX_UBICACION = 'fotografiaUbicacionReferencial';
   readonly PHOTO_PREFIX_POBLACION = 'fotografiaPoblacionViviendas';
   
   fotografiasUbicacionFormMulti: FotoItem[] = [];
   fotografiasPoblacionFormMulti: FotoItem[] = [];
+  fotografiasUbicacionCache: FotoItem[] = [];
+  fotografiasPoblacionCache: FotoItem[] = [];
   private stateSubscription?: Subscription;
   
   override readonly PHOTO_PREFIX = '';
@@ -66,17 +69,23 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
     private stateService: StateService,
-    private centrosPobladosActivos: CentrosPobladosActivosService
+    private centrosPobladosActivos: CentrosPobladosActivosService,
+    private sanitizer: DomSanitizer,
+    protected autoLoader: AutoBackendDataLoaderService
   ) {
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
   }
 
   protected override onInitCustom(): void {
     this.llenarTablaAutomaticamenteSiNecesario();
+    this.cargarDatosBackendSeccion4();
     setTimeout(() => {
       this.guardarTotalPoblacion();
     }, 500);
     this.calcularCoordenadasYAltitudReferenciales();
+    
+    // Inicializar párrafos con valores por defecto si no existen
+    this.inicializarPárrafosParrafoSeccion4();
     
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
@@ -92,6 +101,49 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  private cargarDatosBackendSeccion4(): void {
+    const parametros = this.getLoadParameters();
+    if (parametros && parametros.length > 0) {
+      this.autoLoader.loadSectionData('seccion4_aisd', parametros).subscribe(
+        (data: { [fieldName: string]: any }) => {
+          this.applyLoadedData(data);
+        }
+      );
+    }
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion4_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const codigosActivos = prefijo?.startsWith('_A')
+      ? this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo)
+      : [];
+
+    return codigosActivos && codigosActivos.length > 0 ? codigosActivos : null;
+  }
+
+  protected applyLoadedData(loadedData: { [fieldName: string]: any }): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+
+    for (const [fieldName, data] of Object.entries(loadedData)) {
+      if (data === null || data === undefined) continue;
+      
+      const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
+
+      if (fieldName === 'tablaAISD2Datos' && Array.isArray(data) && data.length > 0) {
+        this.formularioService.actualizarDato(fieldKey as any, data);
+        // Limpiar cache para forzar recalcular filas
+        this.filasCache = null;
+        this.ultimoPrefijoCache = null;
+      }
+    }
+
+    this.actualizarDatos();
+  }
+
   ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
@@ -102,6 +154,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   protected override onChangesCustom(changes: SimpleChanges): void {
     if (changes['seccionId']) {
       this.llenarTablaAutomaticamenteSiNecesario();
+      this.cargarDatosBackendSeccion4();
       this.calcularCoordenadasYAltitudReferenciales();
       this.actualizarFotografiasFormMulti();
     }
@@ -169,13 +222,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.filasCache = null;
     this.ultimoPrefijoCache = null;
     this.cargarFotografias();
-    
-    if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos)) {
-      console.log('[Seccion4] actualizarDatosCustom - tablaAISD2Datos actualizada', {
-        length: this.datos.tablaAISD2Datos.length,
-        primerElemento: this.datos.tablaAISD2Datos[0]
-      });
-    }
     
     if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos)) {
       this.datos.tablaAISD1Datos.forEach((fila: any, index: number) => {
@@ -269,7 +315,151 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  /**
+   * Busca un centro poblado en el JSON por nombre y obtiene sus coordenadas y altitud
+   * Retorna las coordenadas formateadas como: "18L E: 660619 m N: 8291173 m"
+   * Retorna la altitud formateada como: "3599 msnm"
+   */
+  private buscarCentroEnJSON(nombreCentro: string): any {
+    if (!nombreCentro) return null;
+
+    const jsonCompleto = this.datos['jsonCompleto'];
+    const nombreUpper = nombreCentro.trim().toUpperCase();
+
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return null;
+    }
+
+    // Recorrer todas las CLAVES (distritos) en el JSON
+    for (const nombreDistrito of Object.keys(jsonCompleto)) {
+      const centrosPoblados = jsonCompleto[nombreDistrito];
+      if (Array.isArray(centrosPoblados)) {
+        // Buscar el centro poblado por nombre (CCPP)
+        const centro = centrosPoblados.find((cp: any) => {
+          const nombreCP = (cp.CCPP || cp.ccpp || '').trim().toUpperCase();
+          return nombreCP === nombreUpper;
+        });
+
+        if (centro) {
+          // Formatear coordenadas: "18L E: 660619 m N: 8291173 m"
+          const este = centro.ESTE || '____';
+          const norte = centro.NORTE || '____';
+          const zonaUTM = centro.ZONA_UTM || centro.zona_utm || '18L';
+          
+          let coordenadasFormato = '____';
+          if (este !== '____' && norte !== '____') {
+            coordenadasFormato = `${zonaUTM} E: ${este} m N: ${norte} m`;
+          }
+
+          // Formatear altitud: "3599 msnm"
+          const altitudRaw = centro.ALTITUD || centro.altitud || '____';
+          let altitudFormato = '____';
+          if (altitudRaw !== '____') {
+            altitudFormato = `${altitudRaw} msnm`;
+          }
+
+          return {
+            nombre: centro.CCPP || nombreCentro,
+            coordenadas: coordenadasFormato,
+            altitud: altitudFormato,
+            distrito: centro.DIST || '____',
+            provincia: centro.PROV || '____',
+            departamento: centro.DPTO || '____'
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Obtiene la CAPITAL de la comunidad campesina actual: el centro poblado con MAYOR POBLACIÓN
+   * entre los centros poblados SELECCIONADOS
+   */
+  private obtenerCapitalDeLaComunidadActual(): string | null {
+    const comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // Extraer el número del prefijo (_A1 -> 1, _A2 -> 2, etc.)
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      return null;
+    }
+
+    const match = prefijo.match(/_A(\d+)/);
+    if (!match) {
+      return null;
+    }
+
+    const indiceComunidad = parseInt(match[1]) - 1;
+    if (indiceComunidad < 0 || indiceComunidad >= comunidadesCampesinas.length) {
+      return null;
+    }
+
+    const comunidad = comunidadesCampesinas[indiceComunidad];
+    if (!comunidad || !comunidad.centrosPobladosSeleccionados || comunidad.centrosPobladosSeleccionados.length === 0) {
+      return null;
+    }
+
+    const jsonCompleto = this.datos['jsonCompleto'];
+    if (!jsonCompleto || typeof jsonCompleto !== 'object' || Array.isArray(jsonCompleto)) {
+      return null;
+    }
+
+    // BUSCAR en el JSON todos los centros poblados que pertenecen a esta comunidad
+    const distritoDeLaComunidad = comunidad.nombreOriginal || comunidad.nombre;
+    const claveDistrito = Object.keys(jsonCompleto).find((clave: string) => 
+      clave.toUpperCase() === distritoDeLaComunidad.toUpperCase() ||
+      clave.toUpperCase().includes(distritoDeLaComunidad.toUpperCase().substring(0, 3))
+    );
+
+    if (!claveDistrito) {
+      console.log(`[Seccion4] ⚠️ Comunidad ${comunidad.nombre} NO encontrada en JSON`);
+      return null;
+    }
+
+    const centrosPobladosDelDistrito = jsonCompleto[claveDistrito];
+    if (!Array.isArray(centrosPobladosDelDistrito)) {
+      return null;
+    }
+
+    // FILTRAR solo los centros poblados SELECCIONADOS de la comunidad
+    const centrosSeleccionados = centrosPobladosDelDistrito.filter((cp: any) => {
+      const codigo = (cp.CODIGO || cp.codigo || '').toString();
+      return comunidad.centrosPobladosSeleccionados.some((sel: any) => 
+        sel.toString() === codigo
+      );
+    });
+
+    if (centrosSeleccionados.length === 0) {
+      console.log(`[Seccion4] ⚠️ No hay centros poblados seleccionados para ${comunidad.nombre}`);
+      return null;
+    }
+
+    // BUSCAR el con MAYOR POBLACIÓN
+    const capitalConMayorPoblacion = centrosSeleccionados.reduce((max: any, actual: any) => {
+      const poblacionMax = parseInt(max.POBLACION || max.poblacion || '0') || 0;
+      const poblacionActual = parseInt(actual.POBLACION || actual.poblacion || '0') || 0;
+      return poblacionActual > poblacionMax ? actual : max;
+    });
+
+    console.log(`[Seccion4] 🏘️ Capital de ${comunidad.nombre}: ${capitalConMayorPoblacion.CCPP} (Población: ${capitalConMayorPoblacion.POBLACION})`);
+
+    return capitalConMayorPoblacion.CCPP || capitalConMayorPoblacion.ccpp;
+  }
+
   getFilasTablaAISD1(): any[] {
+    // Obtener la CAPITAL de la comunidad actual (con mayor población)
+    let capitalDeLaComunidad = this.obtenerCapitalDeLaComunidadActual();
+    
+    // Fallback a nombre de comunidad si no se encuentra capital
+    if (!capitalDeLaComunidad) {
+      capitalDeLaComunidad = this.obtenerNombreComunidadActual();
+    }
+
+    // Buscar los datos de la capital en el JSON
+    const datosCapitalEnJSON = capitalDeLaComunidad ? this.buscarCentroEnJSON(capitalDeLaComunidad) : null;
+
     if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos) && this.datos.tablaAISD1Datos.length > 0) {
       return this.datos.tablaAISD1Datos.map((fila: any) => {
         const localidad = fila.localidad || fila.Localidad || '';
@@ -280,9 +470,9 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
         const departamento = fila.departamento || fila.Departamento || '';
         
         return {
-          localidad: localidad && localidad.toString().trim() !== '' ? localidad : (this.datos.tablaAISD1Localidad || this.obtenerNombreComunidadActual() || '____'),
-          coordenadas: coordenadas && coordenadas.toString().trim() !== '' ? coordenadas : (this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____'),
-          altitud: altitud && altitud.toString().trim() !== '' ? altitud : (this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____'),
+          localidad: localidad && localidad.toString().trim() !== '' ? localidad : (this.datos.tablaAISD1Localidad || capitalDeLaComunidad || '____'),
+          coordenadas: coordenadas && coordenadas.toString().trim() !== '' ? coordenadas : (datosCapitalEnJSON?.coordenadas || this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____'),
+          altitud: altitud && altitud.toString().trim() !== '' ? altitud : (datosCapitalEnJSON?.altitud || this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____'),
           distrito: distrito && distrito.toString().trim() !== '' ? distrito : (this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '____'),
           provincia: provincia && provincia.toString().trim() !== '' ? provincia : (this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '____'),
           departamento: departamento && departamento.toString().trim() !== '' ? departamento : (this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || '____')
@@ -291,9 +481,9 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     }
     
     return [{
-      localidad: this.datos.tablaAISD1Localidad || this.obtenerNombreComunidadActual() || '____',
-      coordenadas: this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____',
-      altitud: this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____',
+      localidad: this.datos.tablaAISD1Localidad || capitalDeLaComunidad || '____',
+      coordenadas: datosCapitalEnJSON?.coordenadas || this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '____',
+      altitud: datosCapitalEnJSON?.altitud || this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '____',
       distrito: this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '____',
       provincia: this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '____',
       departamento: this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || '____'
@@ -307,9 +497,14 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       return this.filasCache;
     }
     
-    if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos) && this.datos.tablaAISD2Datos.length > 0) {
-      const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
-      const filas = this.datos.tablaAISD2Datos
+    // Primero intenta obtener datos con prefijo (desde backend)
+    const datosConPrefijo = prefijo ? this.datos[`tablaAISD2Datos${prefijo}`] : null;
+    const datosBase = this.datos.tablaAISD2Datos;
+    const tablaAISD2Datos = datosConPrefijo || datosBase;
+    
+    if (tablaAISD2Datos && Array.isArray(tablaAISD2Datos) && tablaAISD2Datos.length > 0) {
+    const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
+      const filas = tablaAISD2Datos
         .filter((fila: any) => {
           if (this.modoFormulario) return true;
           const codigoStr = (fila.codigo || fila.Codigo)?.toString().trim() || '';
@@ -379,7 +574,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
         viviendasOcupadas: '____'
       });
     }
-    
+
     this.filasCache = filas;
     this.ultimoPrefijoCache = prefijo;
     return filas;
@@ -426,61 +621,64 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
 
   llenarTablaAutomaticamenteSiNecesario(): void {
     const prefijo = this.obtenerPrefijoGrupo();
+    
     if (!prefijo || !prefijo.startsWith('_A')) {
       return;
     }
 
     const datosActuales = this.formularioService.obtenerDatos();
     const centrosPobladosJSON = datosActuales['centrosPobladosJSON'] || [];
+
+    const centrosDisponibles = this.aplanarCentrosPoblados(centrosPobladosJSON);
+
     
     if (centrosPobladosJSON.length === 0) {
       return;
     }
 
     const codigosComunidad = this.obtenerCentrosPobladosDeComunidadCampesina();
-    
     if (codigosComunidad.length === 0) {
       return;
     }
 
-    const primerCampo = `tablaAISD2Fila1Punto${prefijo}`;
-    const datosDelServicio = this.formularioService.obtenerDatos();
-    if (datosDelServicio[primerCampo]) {
+    const flagKey = `tablaAISD2DatosLlena${prefijo}`;
+    if (this.datos[flagKey]) {
       return;
     }
-
     const codigosSet = new Set(codigosComunidad.map(c => c.toString().trim()));
-    const centrosFiltrados = centrosPobladosJSON.filter((cp: any) => {
+    const centrosFiltrados = centrosDisponibles.filter((cp: any) => {
       const codigo = cp.CODIGO?.toString().trim() || '';
       return codigo && codigosSet.has(codigo);
     });
     
     if (centrosFiltrados.length > 0) {
       this.poblarTablaAutomaticamente(centrosFiltrados, prefijo);
+      this.datos[flagKey] = true;
+      this.formularioService.actualizarDato(flagKey as any, true);
+    } else {
+      console.warn('[Seccion4] No se encontraron centros poblados filtrados para los códigos proporcionados');
     }
   }
 
   poblarTablaAutomaticamente(centrosPoblados: any[], prefijo: string): void {
     const codigosActivos: string[] = [];
     
-    centrosPoblados.forEach((cp: any, index: number) => {
-      const filaIndex = index + 1;
-      if (filaIndex > 20) return;
-      
+    const filas = centrosPoblados.map(cp => {
       const codigoCPP = cp.CODIGO?.toString().trim() || '';
-      const campoPunto = `tablaAISD2Fila${filaIndex}Punto${prefijo}`;
-      const campoCodigo = `tablaAISD2Fila${filaIndex}Codigo${prefijo}`;
-      const campoPoblacion = `tablaAISD2Fila${filaIndex}Poblacion${prefijo}`;
-      
-      this.datos[campoPunto] = cp.CCPP || '';
-      this.datos[campoCodigo] = codigoCPP;
-      this.datos[campoPoblacion] = cp.POBLACION?.toString() || '0';
-      
       if (codigoCPP) {
         codigosActivos.push(codigoCPP);
       }
+      return {
+        punto: cp.CCPP || '____',
+        codigo: codigoCPP || '____',
+        poblacion: cp.POBLACION?.toString() || '0',
+        viviendasEmpadronadas: '____',
+        viviendasOcupadas: '____'
+      };
     });
 
+    this.datos.tablaAISD2Datos = filas;
+    
     this.formularioService.actualizarDatos(this.datos);
     this.formularioService.guardarFilasActivasTablaAISD2(codigosActivos, prefijo);
     
@@ -513,6 +711,27 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       }
     }
     
+    return [];
+  }
+
+  private aplanarCentrosPoblados(jsonData: any): any[] {
+    if (!jsonData) {
+      return [];
+    }
+
+    if (Array.isArray(jsonData)) {
+      return jsonData;
+    }
+
+    if (typeof jsonData === 'object') {
+      return Object.values(jsonData).reduce((acumulador: any[], valor) => {
+        if (Array.isArray(valor)) {
+          return acumulador.concat(valor);
+        }
+        return acumulador;
+      }, []);
+    }
+
     return [];
   }
 
@@ -783,7 +1002,8 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       this.PHOTO_PREFIX_POBLACION,
       groupPrefix
     );
-    this.fotografiasCache = [...fotosUbicacion, ...fotosPoblacion];
+    this.fotografiasUbicacionCache = [...fotosUbicacion];
+    this.fotografiasPoblacionCache = [...fotosPoblacion];
     this.cdRef.markForCheck();
   }
 
@@ -802,6 +1022,12 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   getFotografiasUbicacionVista(): FotoItem[] {
+    // 1. Si hay cache, usarlo (más rápido y actualizado)
+    if (this.fotografiasUbicacionCache && this.fotografiasUbicacionCache.length > 0) {
+      return this.fotografiasUbicacionCache;
+    }
+    
+    // 2. Fallback: cargar del servicio
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
@@ -811,6 +1037,12 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   getFotografiasPoblacionVista(): FotoItem[] {
+    // 1. Si hay cache, usarlo (más rápido y actualizado)
+    if (this.fotografiasPoblacionCache && this.fotografiasPoblacionCache.length > 0) {
+      return this.fotografiasPoblacionCache;
+    }
+    
+    // 2. Fallback: cargar del servicio
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(
       this.seccionId,
@@ -820,32 +1052,72 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   onFotografiasUbicacionChange(fotografias: FotoItem[]) {
+    // 1. Guardar en el servicio
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX_UBICACION, fotografias);
+    
+    // 2. Actualizar formulario
     this.fotografiasUbicacionFormMulti = [...fotografias];
+    
+    // 3. Actualizar cache
+    this.fotografiasUbicacionCache = [...fotografias];
+    
+    // 4. Forzar detección de cambios
+    this.cdRef.detectChanges();
   }
 
   onFotografiasPoblacionChange(fotografias: FotoItem[]) {
+    // 1. Guardar en el servicio
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX_POBLACION, fotografias);
+    
+    // 2. Actualizar formulario
     this.fotografiasPoblacionFormMulti = [...fotografias];
+    
+    // 3. Actualizar cache
+    this.fotografiasPoblacionCache = [...fotografias];
+    
+    // 4. Forzar detección de cambios
+    this.cdRef.detectChanges();
   }
 
   obtenerTextoSeccion4IntroduccionAISD(): string {
     const prefijo = this.obtenerPrefijoGrupo();
-    const campoParrafo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
-    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_introduccion_aisd']) {
-      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_introduccion_aisd'];
-    }
+    const campoConPrefijo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
+    const campoSinPrefijo = 'parrafoSeccion4_introduccion_aisd';
+    
+    // Prioridad: con prefijo > sin prefijo > por defecto
+    const textoPersonalizado = this.datos[campoConPrefijo] || this.datos[campoSinPrefijo];
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    return `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${grupoAISD}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
+    const textoPorDefecto = `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${grupoAISD}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
+    
+    // Si hay texto personalizado, reemplazar placeholders
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoSeccion4IntroduccionAISDConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion4IntroduccionAISD();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD !== '____') {
+      html = html.replace(
+        new RegExp(this.escapeRegex(grupoAISD), 'g'),
+        `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
+      );
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   obtenerTextoSeccion4ComunidadCompleto(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const campoParrafo = prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
-    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo']) {
-      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo'];
-    }
+    const textoPersonalizado = this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo'];
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const distrito = this.datos.distritoSeleccionado || '____';
@@ -855,18 +1127,85 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     const departamento = this.datos.departamentoSeleccionado || '____';
     const grupoAISI = this.datos.grupoAISI || this.datos.distritoSeleccionado || '____';
     
-    return `La CC ${grupoAISD} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${grupoAISD}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${grupoAISD}.\n\nEn cuanto al nombre "${grupoAISD}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${grupoAISD} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+    const textoPorDefecto = `La CC ${grupoAISD} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${grupoAISD}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${grupoAISD}.\n\nEn cuanto al nombre "${grupoAISD}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${grupoAISD} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
+        .replace(/distrito de\s*___/g, `distrito de ${distrito}`)
+        .replace(/provincia de\s*___/g, `provincia de ${provincia}`)
+        .replace(/distritos de\s*___\s*y de/g, `distritos de ${aisd1} y de`)
+        .replace(/y de\s*___\s*del departamento/g, `y de ${aisd2} del departamento`)
+        .replace(/departamento de\s*___/g, `departamento de ${departamento}`)
+        .replace(/CP\s*___/g, `CP ${grupoAISI}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoSeccion4ComunidadCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion4ComunidadCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const distrito = this.datos.distritoSeleccionado || '____';
+    const provincia = this.datos.provinciaSeleccionada || '____';
+    const aisd1 = this.datos.aisdComponente1 || '____';
+    const aisd2 = this.datos.aisdComponente2 || '____';
+    const departamento = this.datos.departamentoSeleccionado || '____';
+    const grupoAISI = this.datos.grupoAISI || this.datos.distritoSeleccionado || '____';
+    
+    let html = this.escapeHtml(texto);
+    
+    const valores = [
+      { valor: grupoAISD, clase: 'data-section' },
+      { valor: distrito, clase: 'data-section' },
+      { valor: provincia, clase: 'data-section' },
+      { valor: aisd1, clase: 'data-section' },
+      { valor: aisd2, clase: 'data-section' },
+      { valor: departamento, clase: 'data-section' },
+      { valor: grupoAISI, clase: 'data-section' }
+    ];
+    
+    valores.forEach(({ valor, clase }) => {
+      if (valor && valor !== '____') {
+        html = html.replace(
+          new RegExp(this.escapeRegex(valor), 'g'),
+          `<span class="${clase}">${this.escapeHtml(valor)}</span>`
+        );
+      }
+    });
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   obtenerTextoSeccion4CaracterizacionIndicadores(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const campoParrafo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
-    if (this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
-      return this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores'];
-    }
+    const textoPersonalizado = this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores'];
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    return `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${grupoAISD}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
+    const textoPorDefecto = `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${grupoAISD}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${grupoAISD}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoSeccion4CaracterizacionIndicadoresConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion4CaracterizacionIndicadores();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    
+    let html = this.escapeHtml(texto);
+    if (grupoAISD !== '____') {
+      html = html.replace(
+        new RegExp(this.escapeRegex(grupoAISD), 'g'),
+        `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
+      );
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   formatearParrafo(texto: string): string {
@@ -876,6 +1215,63 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       const textoLimpio = p.trim().replace(/\n/g, '<br>');
       return `<p class="text-justify">${textoLimpio}</p>`;
     }).join('');
+  }
+
+  getFieldIdTextoSeccion4IntroduccionAISD(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
+  }
+
+  getFieldIdTextoSeccion4ComunidadCompleto(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
+  }
+
+  getFieldIdTextoSeccion4CaracterizacionIndicadores(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  debugDatos(): void {
+    // método usado solo en depuraciones puntuales, se deja vacío para evitar logs
+  }
+
+  private inicializarPárrafosParrafoSeccion4(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
+    const campoSinPrefijo = 'parrafoSeccion4_introduccion_aisd';
+    
+    // Si no hay valor guardado, inicializar con el texto por defecto
+    if (!this.datos[campoConPrefijo] && !this.datos[campoSinPrefijo]) {
+      const textoDefault = this.obtenerTextoSeccion4IntroduccionAISD();
+      this.formularioService.actualizarDato(campoConPrefijo, textoDefault);
+      this.datos[campoConPrefijo] = textoDefault;
+    }
+    
+    // Hacer lo mismo para los otros párrafos
+    const campoCompletoConPrefijo = prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
+    if (!this.datos[campoCompletoConPrefijo] && !this.datos['parrafoSeccion4_comunidad_completo']) {
+      const textoDefault = this.obtenerTextoSeccion4ComunidadCompleto();
+      this.formularioService.actualizarDato(campoCompletoConPrefijo, textoDefault);
+      this.datos[campoCompletoConPrefijo] = textoDefault;
+    }
+    
+    const campoIndicadoresConPrefijo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
+    if (!this.datos[campoIndicadoresConPrefijo] && !this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
+      const textoDefault = this.obtenerTextoSeccion4CaracterizacionIndicadores();
+      this.formularioService.actualizarDato(campoIndicadoresConPrefijo, textoDefault);
+      this.datos[campoIndicadoresConPrefijo] = textoDefault;
+    }
   }
 
 }

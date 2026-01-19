@@ -1,16 +1,24 @@
 import { Injectable } from '@angular/core';
 import { FormularioDatos } from '../models/formulario.model';
+import { SectionAccessControlService } from './section-access-control.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SectionNavigationService {
 
+  constructor(private accessControl: SectionAccessControlService) {}
+
   normalizarSeccionId(seccionId: string): string {
-    if (seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A') {
-      return '3.1.4.A';
-    }
+    // No normalizar, permitir que cada seccion tenga su propio flujo
     return seccionId;
+  }
+
+  esSeccionIntro(seccionId: string): boolean {
+    // Verifica si es una sección intro (A.1, A.2, B.1, B.2, etc.)
+    // Formato: 3.1.4.A.{n} o 3.1.4.B.{n} sin puntos adicionales
+    const match = seccionId.match(/^3\.1\.4\.[AB]\.(\d+)$/);
+    return !!match;
   }
 
   obtenerTodasLasSecciones(datos: FormularioDatos): string[] {
@@ -21,21 +29,32 @@ export class SectionNavigationService {
       '3.1.4.A'
     ];
 
+    // Agregar secciones para Comunidades Campesinas (AISD)
     const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
     const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
 
     for (let i = 1; i <= numComunidades; i++) {
+      // Agregar intro de cada comunidad (A.1, A.2, etc.)
+      secciones.push(`3.1.4.A.${i}`);
+      
+      // Agregar subsecciones de cada comunidad (A.1.1 a A.1.16, etc.)
       for (let j = 1; j <= 16; j++) {
         secciones.push(`3.1.4.A.${i}.${j}`);
       }
     }
 
-    const distritosSeleccionadosAISI = datos['distritosSeleccionadosAISI'] || [];
-    const numDistritos = distritosSeleccionadosAISI.length > 0 ? distritosSeleccionadosAISI.length : 1;
+    // Agregar sección intro para AISI
+    secciones.push('3.1.4.B');
 
-    secciones.push('3.1.4.B.1');
+    // Agregar secciones para Distritos (AISI)
+    const distritosAISI = datos['distritosAISI'] || [];
+    const numDistritos = distritosAISI.length > 0 ? distritosAISI.length : 1;
 
     for (let i = 1; i <= numDistritos; i++) {
+      // Agregar intro de cada distrito (B.1, B.2, etc.)
+      secciones.push(`3.1.4.B.${i}`);
+      
+      // Agregar subsecciones de cada distrito (B.1.1 a B.1.9, etc.)
       for (let j = 1; j <= 9; j++) {
         secciones.push(`3.1.4.B.${i}.${j}`);
       }
@@ -45,69 +64,40 @@ export class SectionNavigationService {
   }
 
   obtenerSeccionAnterior(seccionId: string, datos: FormularioDatos): string | null {
-    if (seccionId === '3.1.3.B') {
-      return '3.1.3.A';
-    }
-    if (seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1') {
-      return '3.1.3.A';
-    }
-    
-    const seccionNormalizada = this.normalizarSeccionId(seccionId);
     const secciones = this.obtenerTodasLasSecciones(datos);
-    let index = secciones.indexOf(seccionNormalizada);
-    
+    let index = secciones.indexOf(seccionId);
+
     if (index === -1) {
-      index = secciones.indexOf(seccionId);
+      return null;
     }
-    
-    if (index > 0) {
-      const seccionAnterior = secciones[index - 1];
-      if (seccionAnterior === '3.1.4.A') {
-        return '3.1.4.A';
+
+    for (let i = index - 1; i >= 0; i--) {
+      const candidate = secciones[i];
+      // Saltar secciones intro cuando se navega con anterior/siguiente
+      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntro(candidate)) {
+        return candidate;
       }
-      return seccionAnterior;
     }
-    
+
     return null;
   }
 
   obtenerSeccionSiguiente(seccionId: string, datos: FormularioDatos): string | null {
-    if (seccionId === '3.1.3.A') {
-      return '3.1.4.A';
-    }
-    if (seccionId === '3.1.3.B') {
-      return '3.1.4.A';
-    }
-    if (seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1') {
-      const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-      const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
-      if (numComunidades >= 1) {
-        return '3.1.4.A.1.1';
-      }
-    }
-    
-    if (seccionId === '3.1.4.A.1.16') {
-      const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-      const numComunidades = comunidadesCampesinas.length > 0 ? comunidadesCampesinas.length : 1;
-      if (numComunidades > 1) {
-        return '3.1.4.A.2.1';
-      } else {
-        return '3.1.4.B.1';
-      }
-    }
-    
-    const seccionNormalizada = this.normalizarSeccionId(seccionId);
     const secciones = this.obtenerTodasLasSecciones(datos);
-    let index = secciones.indexOf(seccionNormalizada);
-    
+    let index = secciones.indexOf(seccionId);
+
     if (index === -1) {
-      index = secciones.indexOf(seccionId);
+      return null;
     }
-    
-    if (index < secciones.length - 1) {
-      return secciones[index + 1];
+
+    for (let i = index + 1; i < secciones.length; i++) {
+      const candidate = secciones[i];
+      // Saltar secciones intro cuando se navega con anterior/siguiente
+      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntro(candidate)) {
+        return candidate;
+      }
     }
-    
+
     return null;
   }
 
@@ -116,22 +106,16 @@ export class SectionNavigationService {
     puedeIrSiguiente: boolean; 
     esUltimaSeccion: boolean 
   } {
-    if (seccionId === '3.1.3.B') {
-      return {
-        puedeIrAnterior: true,
-        puedeIrSiguiente: true,
-        esUltimaSeccion: false
-      };
-    }
-    
     const seccionNormalizada = this.normalizarSeccionId(seccionId);
     const secciones = this.obtenerTodasLasSecciones(datos);
     const index = secciones.indexOf(seccionNormalizada);
-    
+    const anterior = this.obtenerSeccionAnterior(seccionId, datos);
+    const siguiente = this.obtenerSeccionSiguiente(seccionId, datos);
+
     return {
-      puedeIrAnterior: index > 0,
-      puedeIrSiguiente: index < secciones.length - 1,
-      esUltimaSeccion: index === secciones.length - 1
+      puedeIrAnterior: !!anterior,
+      puedeIrSiguiente: !!siguiente,
+      esUltimaSeccion: !siguiente && index === secciones.length - 1
     };
   }
 }

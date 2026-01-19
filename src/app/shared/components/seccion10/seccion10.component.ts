@@ -6,10 +6,12 @@ import { SectionDataLoaderService } from 'src/app/core/services/section-data-loa
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { Subscription } from 'rxjs';
-import { BaseSectionComponent } from '../base-section.component';
+import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
@@ -17,13 +19,13 @@ import { FotoItem } from '../image-upload/image-upload.component';
   templateUrl: './seccion10.component.html',
   styleUrls: ['./seccion10.component.css']
 })
-export class Seccion10Component extends BaseSectionComponent implements OnDestroy {
+export class Seccion10Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'coberturaElectricaTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo', 'textoServiciosAgua', 'textoServiciosAguaDetalle', 'textoServiciosDesague', 'textoServiciosDesagueDetalle', 'textoDesechosSolidos1', 'textoDesechosSolidos2', 'textoDesechosSolidos3', 'textoElectricidad1', 'textoElectricidad2', 'textoEnergiaParaCocinar'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'parrafoSeccion10_servicios_basicos_intro', 'abastecimientoAguaTabla', 'cuotaMensualAgua', 'tiposSaneamientoTabla', 'saneamientoTabla', 'alumbradoElectricoTabla', 'empresaElectrica', 'costoElectricidadMinimo', 'costoElectricidadMaximo', 'textoServiciosAgua', 'textoServiciosAguaDetalle', 'textoServiciosDesague', 'textoServiciosDesagueDetalle', 'textoDesechosSolidos1', 'textoDesechosSolidos2', 'textoDesechosSolidos3', 'textoElectricidad1', 'textoElectricidad2', 'textoEnergiaParaCocinar'];
   
   readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidos';
   readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidad';
@@ -91,11 +93,25 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     imageService: ImageManagementService,
     photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    protected override autoLoader: AutoBackendDataLoaderService,
     private tableService: TableManagementService,
     private stateService: StateService,
+    private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+  }
+
+  protected getSectionKey(): string {
+    return 'seccion10_aisd';
+  }
+
+  protected getLoadParameters(): string[] | null {
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
+      return ccppDesdeGrupo;
+    }
+    return null;
   }
 
   protected override detectarCambios(): boolean {
@@ -111,7 +127,7 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
       let valorActual: any = null;
       let valorAnterior: any = null;
       
-      if (campo === 'abastecimientoAguaTabla' || campo === 'tiposSaneamientoTabla' || campo === 'coberturaElectricaTabla') {
+      if (campo === 'abastecimientoAguaTabla' || campo === 'tiposSaneamientoTabla' || campo === 'alumbradoElectricoTabla') {
         valorActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, campo, this.seccionId) || null;
         const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
         valorAnterior = this.datosAnteriores[campoConPrefijo] || this.datosAnteriores[campo] || null;
@@ -122,7 +138,7 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
       
       if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
         hayCambios = true;
-        if (campo === 'abastecimientoAguaTabla' || campo === 'tiposSaneamientoTabla' || campo === 'coberturaElectricaTabla') {
+        if (campo === 'abastecimientoAguaTabla' || campo === 'tiposSaneamientoTabla' || campo === 'alumbradoElectricoTabla') {
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
           this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
         } else {
@@ -158,40 +174,27 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
   }
 
   getViviendasOcupadas(): string {
-    console.log('🔍 [Seccion10] getViviendasOcupadas() - Iniciando búsqueda');
-    console.log('🔍 [Seccion10] datos.condicionOcupacionTabla:', this.datos?.condicionOcupacionTabla);
-    
     const prefijo = this.obtenerPrefijoGrupo();
-    console.log('🔍 [Seccion10] Prefijo grupo:', prefijo);
     
     const tablaKeyConPrefijo = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
-    console.log('🔍 [Seccion10] Buscando tabla con key:', tablaKeyConPrefijo);
     
     let tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'condicionOcupacionTabla', this.seccionId);
-    console.log('🔍 [Seccion10] Tabla con prefijo:', tabla);
     
     if (!tabla || !Array.isArray(tabla)) {
       tabla = this.datos?.condicionOcupacionTabla;
-      console.log('🔍 [Seccion10] Tabla sin prefijo (fallback):', tabla);
     }
     
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('⚠️ [Seccion10] No se encontró tabla condicionOcupacionTabla');
       return '____';
     }
-    
-    console.log('🔍 [Seccion10] Tabla encontrada, items:', tabla);
     
     const ocupadas = tabla.find((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       const match = categoria.includes('ocupada') || categoria.includes('ocupadas');
-      console.log(`🔍 [Seccion10] Item: ${item.categoria}, match: ${match}`);
       return match;
     });
     
-    console.log('🔍 [Seccion10] Item encontrado:', ocupadas);
     const resultado = ocupadas?.casos || '____';
-    console.log('🔍 [Seccion10] Resultado final:', resultado);
     
     return resultado;
   }
@@ -199,22 +202,40 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
   getPorcentajeAguaRedPublica(): string {
     const tabla = this.getTablaAbastecimientoAgua();
     if (!tabla || !Array.isArray(tabla)) {
+      console.warn('[DEBUG] getPorcentajeAguaRedPublica: tabla no existe');
       return '____';
     }
-    const redPublica = tabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('red pública')
-    );
+    console.log('%c[DEBUG] getPorcentajeAguaRedPublica', 'color: #00BCD4; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    const redPublica = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('red pública') || cat.includes('red pública dentro');
+    });
+    
+    console.log('  Resultado encontrado:', redPublica);
     return redPublica?.porcentaje || '____';
   }
 
   getPorcentajeAguaSinAbastecimiento(): string {
     const tabla = this.getTablaAbastecimientoAgua();
     if (!tabla || !Array.isArray(tabla)) {
+      console.warn('[DEBUG] getPorcentajeAguaSinAbastecimiento: tabla no existe');
       return '____';
     }
-    const sinAbastecimiento = tabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('sin abastecimiento') || item.categoria.toLowerCase().includes('no se abastece'))
-    );
+    console.log('%c[DEBUG] getPorcentajeAguaSinAbastecimiento', 'color: #00BCD4; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    const sinAbastecimiento = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('sin acceso a red pública') || 
+             cat.includes('sin abastecimiento') || 
+             cat.includes('no se abastece') ||
+             cat.includes('río') ||
+             cat.includes('otro tipo');
+    });
+    
+    console.log('  Resultado encontrado:', sinAbastecimiento);
     return sinAbastecimiento?.porcentaje || '____';
   }
 
@@ -223,9 +244,18 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const redPublica = tabla.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('red pública')
-    );
+    console.log('%c[DEBUG] getPorcentajeSaneamientoRedPublica', 'color: #FF6B6B; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    // Buscar "Red pública" o "Con alcantarillado" (ambas son desagüe por red)
+    const redPublica = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('red pública') || 
+             cat.includes('con alcantarillado') ||
+             cat.includes('red pública de desagüe');
+    });
+    
+    console.log('  Resultado encontrado:', redPublica);
     return redPublica?.porcentaje || '____';
   }
 
@@ -234,31 +264,59 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const sinSaneamiento = tabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('sin saneamiento') || item.categoria.toLowerCase().includes('no posee'))
-    );
+    console.log('%c[DEBUG] getPorcentajeSaneamientoSinSaneamiento', 'color: #FF6B6B; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    // Buscar opciones sin saneamiento
+    const sinSaneamiento = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('sin alcantarillado') || 
+             cat.includes('no tiene desagüe') ||
+             cat.includes('río') ||
+             cat.includes('pozo negro');
+    });
+    
+    console.log('  Resultado encontrado:', sinSaneamiento);
     return sinSaneamiento?.porcentaje || '____';
   }
 
   getPorcentajeElectricidad(): string {
     const tabla = this.getTablaCoberturaElectrica();
     if (!tabla || !Array.isArray(tabla)) {
+      console.warn('[DEBUG] getPorcentajeElectricidad: tabla no existe');
       return '____';
     }
-    const conElectricidad = tabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('con acceso') || item.categoria.toLowerCase().includes('con electricidad') || item.categoria.toLowerCase().includes('con alumbrado'))
-    );
+    console.log('%c[DEBUG] getPorcentajeElectricidad', 'color: #9C27B0; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    const conElectricidad = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('con acceso') || 
+             cat.includes('con electricidad') || 
+             cat.includes('con alumbrado');
+    });
+    
+    console.log('  Resultado encontrado:', conElectricidad);
     return conElectricidad?.porcentaje || '____';
   }
 
   getPorcentajeSinElectricidad(): string {
     const tabla = this.getTablaCoberturaElectrica();
     if (!tabla || !Array.isArray(tabla)) {
+      console.warn('[DEBUG] getPorcentajeSinElectricidad: tabla no existe');
       return '____';
     }
-    const sinElectricidad = tabla.find((item: any) => 
-      item.categoria && (item.categoria.toLowerCase().includes('sin acceso') || item.categoria.toLowerCase().includes('sin electricidad') || item.categoria.toLowerCase().includes('sin alumbrado'))
-    );
+    console.log('%c[DEBUG] getPorcentajeSinElectricidad', 'color: #9C27B0; font-weight: bold');
+    console.log('  Tabla completa:', tabla);
+    
+    const sinElectricidad = tabla.find((item: any) => {
+      const cat = (item.categoria || '').toLowerCase();
+      return cat.includes('sin acceso') || 
+             cat.includes('sin electricidad') || 
+             cat.includes('sin alumbrado');
+    });
+    
+    console.log('  Resultado encontrado:', sinElectricidad);
     return sinElectricidad?.porcentaje || '____';
   }
 
@@ -343,13 +401,13 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
 
   private getTablaCoberturaElectrica(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'coberturaElectricaTabla', this.seccionId) || this.datos.coberturaElectricaTabla || [];
+    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'alumbradoElectricoTabla', this.seccionId) || this.datos.alumbradoElectricoTabla || [];
     return tabla;
   }
 
   getTablaKeyCoberturaElectrica(): string {
     const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `coberturaElectricaTabla${prefijo}` : 'coberturaElectricaTabla';
+    return prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla';
   }
 
   getCoberturaElectricaSinTotal(): any[] {
@@ -480,7 +538,8 @@ export class Seccion10Component extends BaseSectionComponent implements OnDestro
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }

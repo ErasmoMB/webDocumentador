@@ -94,20 +94,12 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
   }
 
   protected override onInitCustom(): void {
-    console.log('[Seccion4FormWrapper] onInitCustom - INICIO');
     this.cargarFotografias();
     this.inicializarTablas();
     this.stateSubscription = this.stateService.datos$.subscribe(() => {
-      console.log('[Seccion4FormWrapper] stateService.datos$ - Cambio detectado', {
-        sincronizando: this.sincronizando,
-        tablaAISD1Datos: this.datos?.tablaAISD1Datos?.length,
-        tablaAISD2Datos: this.datos?.tablaAISD2Datos?.length
-      });
       if (!this.sincronizando) {
         this.cargarFotografias();
         this.cdRef.detectChanges();
-      } else {
-        console.log('[Seccion4FormWrapper] stateService.datos$ - Ignorando cambio (sincronizando)');
       }
     });
     setTimeout(() => {
@@ -147,17 +139,6 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       });
     }
     
-    console.log('[Seccion4FormWrapper] actualizarDatosCustom - INICIO', {
-      sincronizando: this.sincronizando,
-      tieneDatos: !!this.datos,
-      prefijo,
-      tablaAISD1Datos: this.datos?.tablaAISD1Datos?.length,
-      tablaAISD2Datos: this.datos?.tablaAISD2Datos?.length,
-      tablaAISD1Localidad: this.datos?.tablaAISD1Localidad,
-      tablaAISD1Coordenadas: this.datos?.tablaAISD1Coordenadas,
-      primerosCamposAISD2: camposAISD2
-    });
-    
     if (!this.sincronizando) {
       const prefijosPosiblesAISD1 = ['', '_A1', '_A2', '_B1', '_B2'];
       let prefijoDetectadoAISD1 = prefijo;
@@ -196,7 +177,6 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         });
       
       if (tieneDatosIndividualesAISD1 && !tieneArrayValidoAISD1) {
-        console.log('[Seccion4FormWrapper] actualizarDatosCustom - Sincronizando AISD1 desde campos individuales');
         this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
           this.datos,
           'tablaAISD1Datos',
@@ -216,7 +196,6 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     this.cargarFotografias();
     if (!this.sincronizando && this.datos) {
       setTimeout(() => {
-        console.log('[Seccion4FormWrapper] actualizarDatosCustom - Llamando sincronizarTablasDesdeCampos');
         this.sincronizarTablasDesdeCampos();
       }, 0);
     }
@@ -317,27 +296,16 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     }
   }
 
-
   override obtenerValorConPrefijo(campo: string): any {
     return super.obtenerValorConPrefijo(campo);
   }
 
-  inicializarTablas(): void {
-    console.log('[Seccion4FormWrapper] inicializarTablas - INICIO', {
-      sincronizando: this.sincronizando,
-      tieneDatos: !!this.datos,
-      tablaAISD1Datos: this.datos?.tablaAISD1Datos?.length,
-      tablaAISD2Datos: this.datos?.tablaAISD2Datos?.length
-    });
-    
-    if (this.sincronizando || !this.datos) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - SALIENDO (sincronizando o sin datos)');
+  inicializarTablas(): void {if (this.sincronizando || !this.datos) {
       return;
     }
     
     this.sincronizando = true;
     const prefijo = this.obtenerPrefijoGrupo();
-    console.log('[Seccion4FormWrapper] inicializarTablas - Prefijo:', prefijo);
     
     const camposAISD1EnDatos = Object.keys(this.datos).filter(key => key.startsWith('tablaAISD1')).slice(0, 10);
     
@@ -351,10 +319,6 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         if (this.datos[campoTest] && this.datos[campoTest].toString().trim() !== '') {
           prefijoDetectadoAISD1 = prefijoTest;
           tieneDatosConPrefijoAISD1 = true;
-          console.log(`[Seccion4FormWrapper] Detectado prefijo AISD1 automáticamente: ${prefijoTest}`, {
-            campoTest,
-            valor: this.datos[campoTest]
-          });
           break;
         }
       }
@@ -390,39 +354,14 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       });
     
     const contenidoArrayCompleto = this.datos.tablaAISD1Datos ? 
-      JSON.stringify(this.datos.tablaAISD1Datos, null, 2) : 'null';
-    
-    console.log('[Seccion4FormWrapper] inicializarTablas - AISD1', {
-      prefijoOriginal: prefijo,
-      prefijoDetectado: prefijoDetectadoAISD1,
-      tieneDatosConPrefijo: tieneDatosConPrefijoAISD1,
-      campoLocalidad,
-      campoCoordenadas,
-      campoAltitud,
-      valorLocalidad: this.datos[campoLocalidad] || this.datos.tablaAISD1Localidad,
-      valorCoordenadas: this.datos[campoCoordenadas] || this.datos.tablaAISD1Coordenadas,
-      valorAltitud: this.datos[campoAltitud] || this.datos.tablaAISD1Altitud,
-      tieneDatosIndividuales: !!tieneDatosIndividualesAISD1,
-      tieneArray: !!this.datos.tablaAISD1Datos,
-      tieneArrayValido: !!tieneArrayValidoAISD1,
-      arrayLength: this.datos.tablaAISD1Datos?.length,
-      contenidoArray: this.datos.tablaAISD1Datos?.[0],
-      contenidoArrayCompleto,
-      camposAISD1EnDatos
-    });
-    
-    if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos) && this.datos.tablaAISD1Datos.length > 0) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - AISD1 tiene array, normalizando claves siempre');
-      const arrayCompletoAISD1 = this.datos.tablaAISD1Datos;
+      JSON.stringify(this.datos.tablaAISD1Datos, null, 2) : 'null';if (this.datos.tablaAISD1Datos && Array.isArray(this.datos.tablaAISD1Datos) && this.datos.tablaAISD1Datos.length > 0) {const arrayCompletoAISD1 = this.datos.tablaAISD1Datos;
       
       let localidadDesdeAISD2 = '';
       if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos) && this.datos.tablaAISD2Datos.length > 0) {
         const primeraFilaAISD2 = this.datos.tablaAISD2Datos[0];
         const puntoAISD2 = primeraFilaAISD2?.punto || primeraFilaAISD2?.Punto || '';
         if (puntoAISD2 && puntoAISD2.toString().trim() !== '' && puntoAISD2 !== '____') {
-          localidadDesdeAISD2 = puntoAISD2.toString().trim();
-          console.log('[Seccion4FormWrapper] Localidad obtenida desde AISD2:', localidadDesdeAISD2);
-        }
+          localidadDesdeAISD2 = puntoAISD2.toString().trim();}
       }
       
       if (!localidadDesdeAISD2) {
@@ -430,9 +369,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         for (const prefijoTest of prefijosPosiblesAISD2) {
           const campoTest = `tablaAISD2Fila1Punto${prefijoTest}`;
           if (this.datos[campoTest] && this.datos[campoTest].toString().trim() !== '' && this.datos[campoTest] !== '____') {
-            localidadDesdeAISD2 = this.datos[campoTest].toString().trim();
-            console.log('[Seccion4FormWrapper] Localidad obtenida desde campo individual AISD2:', localidadDesdeAISD2, { campoTest });
-            break;
+            localidadDesdeAISD2 = this.datos[campoTest].toString().trim();break;
           }
         }
       }
@@ -462,20 +399,8 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
           provincia: provincia && provincia.toString().trim() !== '' && provincia !== '____' ? provincia : (this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || ''),
           departamento: departamento && departamento.toString().trim() !== '' && departamento !== '____' ? departamento : (this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || '')
         };
-      });
-      console.log('[Seccion4FormWrapper] Array AISD1 normalizado:', {
-        totalFilas: arrayNormalizadoAISD1.length,
-        primerElemento: arrayNormalizadoAISD1[0],
-        arrayCompleto: JSON.stringify(arrayNormalizadoAISD1, null, 2)
-      });
-      this.datos.tablaAISD1Datos = arrayNormalizadoAISD1;
-      this.formularioService.actualizarDato('tablaAISD1Datos', arrayNormalizadoAISD1);
-      console.log('[Seccion4FormWrapper] Array AISD1 actualizado en datos y servicio');
-    } else if (tieneDatosIndividualesAISD1) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - Sincronizando AISD1 desde campos individuales', {
-        prefijoUsado: prefijoDetectadoAISD1
-      });
-      this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
+      });this.datos.tablaAISD1Datos = arrayNormalizadoAISD1;
+      this.formularioService.actualizarDato('tablaAISD1Datos', arrayNormalizadoAISD1);} else if (tieneDatosIndividualesAISD1) {this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
         this.datos,
         'tablaAISD1Datos',
         {
@@ -514,13 +439,9 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
             ? nombreComunidad 
             : (localidadDesdeAISD2 || '');
           primeraFila.localidad = localidadFinal;
-          this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);
-          console.log('[Seccion4FormWrapper] Localidad llenada:', { nombreComunidad, localidadDesdeAISD2, localidadFinal });
-        }
+          this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);}
       }
-    } else if (!this.datos.tablaAISD1Datos || this.datos.tablaAISD1Datos.length === 0) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - Creando AISD1 con valores por defecto');
-      const nombreComunidad = this.obtenerNombreComunidadActual();
+    } else if (!this.datos.tablaAISD1Datos || this.datos.tablaAISD1Datos.length === 0) {const nombreComunidad = this.obtenerNombreComunidadActual();
       let localidadDesdeAISD2 = '';
       if (this.datos.tablaAISD2Datos && Array.isArray(this.datos.tablaAISD2Datos) && this.datos.tablaAISD2Datos.length > 0) {
         const primeraFilaAISD2 = this.datos.tablaAISD2Datos[0];
@@ -541,18 +462,14 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       }
       const localidadFinal = nombreComunidad && nombreComunidad !== '____' 
         ? nombreComunidad 
-        : (localidadDesdeAISD2 || this.datos.tablaAISD1Localidad || '');
-      console.log('[Seccion4FormWrapper] Nombre comunidad obtenido:', { nombreComunidad, localidadDesdeAISD2, localidadFinal });
-      const filaInicial = {
+        : (localidadDesdeAISD2 || this.datos.tablaAISD1Localidad || '');const filaInicial = {
         localidad: localidadFinal,
         coordenadas: this.datos.tablaAISD1Coordenadas || this.datos.coordenadasAISD || '',
         altitud: this.datos.tablaAISD1Altitud || this.datos.altitudAISD || '',
         distrito: this.datos.tablaAISD1Distrito || this.datos.distritoSeleccionado || '',
         provincia: this.datos.tablaAISD1Provincia || this.datos.provinciaSeleccionada || '',
         departamento: this.datos.tablaAISD1Departamento || this.datos.departamentoSeleccionado || ''
-      };
-      console.log('[Seccion4FormWrapper] Fila inicial creada:', filaInicial);
-      this.datos.tablaAISD1Datos = [filaInicial];
+      };this.datos.tablaAISD1Datos = [filaInicial];
       this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);
     }
     
@@ -567,12 +484,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         const campoTest = `tablaAISD2Fila1Punto${prefijoTest}`;
         if (this.datos[campoTest] && this.datos[campoTest].toString().trim() !== '') {
           prefijoDetectado = prefijoTest;
-          tieneDatosConPrefijo = true;
-          console.log(`[Seccion4FormWrapper] Detectado prefijo automáticamente: ${prefijoTest}`, {
-            campoTest,
-            valor: this.datos[campoTest]
-          });
-          break;
+          tieneDatosConPrefijo = true;break;
         }
       }
     }
@@ -598,32 +510,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     }
     
     const tieneDatosIndividualesAISD2 = !!(this.datos[campoPunto] || this.datos[campoCodigo] || this.datos[campoPoblacion]) ||
-      valoresPrimerasFilas.length > 0;
-    
-    console.log('[Seccion4FormWrapper] inicializarTablas - AISD2', {
-      prefijoOriginal: prefijo,
-      prefijoDetectado,
-      tieneDatosConPrefijo,
-      seccionId: this.seccionId,
-      campoPunto,
-      campoCodigo,
-      campoPoblacion,
-      valorCampoPunto: this.datos[campoPunto],
-      valorCampoCodigo: this.datos[campoCodigo],
-      valorCampoPoblacion: this.datos[campoPoblacion],
-      valorSinPrefijoPunto: this.datos.tablaAISD2Fila1Punto,
-      valorSinPrefijoCodigo: this.datos.tablaAISD2Fila1Codigo,
-      valorSinPrefijoPoblacion: this.datos.tablaAISD2Fila1Poblacion,
-      tieneDatosIndividuales: !!tieneDatosIndividualesAISD2,
-      tieneArray: !!this.datos.tablaAISD2Datos,
-      arrayLength: this.datos.tablaAISD2Datos?.length,
-      contenidoArray: this.datos.tablaAISD2Datos?.[0],
-      contenidoArrayCompleto: this.datos.tablaAISD2Datos,
-      camposAISD2EnDatos,
-      valoresPrimerasFilas
-    });
-    
-    const arrayCompleto = this.datos.tablaAISD2Datos;
+      valoresPrimerasFilas.length > 0;const arrayCompleto = this.datos.tablaAISD2Datos;
     const tieneArrayValido = arrayCompleto && 
       Array.isArray(arrayCompleto) &&
       arrayCompleto.length > 0 &&
@@ -656,22 +543,9 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
             poblacion: fila.poblacion || fila.Poblacion || ''
           }
         }))
-      : [];
+      : [];const arrayVacioOInvalido = !tieneArrayValido;
     
-    console.log('[Seccion4FormWrapper] inicializarTablas - Verificación array AISD2', {
-      tieneArray: !!arrayCompleto,
-      esArray: Array.isArray(arrayCompleto),
-      length: arrayCompleto?.length,
-      tieneArrayValido,
-      analisisPrimerasFilas: analisisArray,
-      arrayCompletoJSON: JSON.stringify(arrayCompleto?.slice(0, 5), null, 2)
-    });
-    
-    const arrayVacioOInvalido = !tieneArrayValido;
-    
-    if (tieneArrayValido) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - AISD2 tiene array válido, normalizando claves');
-      const arrayNormalizado = arrayCompleto.map((fila: any, index: number) => {
+    if (tieneArrayValido) {const arrayNormalizado = arrayCompleto.map((fila: any, index: number) => {
         const filaNormalizada = {
           punto: fila.punto || fila.Punto || '',
           codigo: fila.codigo || fila.Codigo || '',
@@ -679,28 +553,10 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
           viviendasEmpadronadas: fila.viviendasEmpadronadas || fila.ViviendasEmpadronadas || '',
           viviendasOcupadas: fila.viviendasOcupadas || fila.ViviendasOcupadas || ''
         };
-        if (index < 3) {
-          console.log(`[Seccion4FormWrapper] Normalizando fila ${index + 1}:`, {
-            original: { punto: fila.punto || fila.Punto, codigo: fila.codigo || fila.Codigo, poblacion: fila.poblacion || fila.Poblacion },
-            normalizado: filaNormalizada
-          });
-        }
+        if (index < 3) {}
         return filaNormalizada;
-      });
-      console.log('[Seccion4FormWrapper] Array normalizado completo:', {
-        totalFilas: arrayNormalizado.length,
-        primeras3Filas: arrayNormalizado.slice(0, 3),
-        tieneDatos: arrayNormalizado.some(f => f.punto || f.codigo || f.poblacion)
-      });
-      this.datos.tablaAISD2Datos = arrayNormalizado;
-      this.formularioService.actualizarDato('tablaAISD2Datos', arrayNormalizado);
-      console.log('[Seccion4FormWrapper] Array actualizado en datos y servicio');
-    } else if (tieneDatosIndividualesAISD2) {
-      console.log('[Seccion4FormWrapper] inicializarTablas - Sincronizando AISD2 desde campos individuales', {
-        arrayVacioOInvalido,
-        tieneDatosIndividualesAISD2
-      });
-      this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
+      });this.datos.tablaAISD2Datos = arrayNormalizado;
+      this.formularioService.actualizarDato('tablaAISD2Datos', arrayNormalizado);} else if (tieneDatosIndividualesAISD2) {this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
         this.datos,
         'tablaAISD2Datos',
         {
@@ -711,48 +567,17 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         20,
         true,
         true
-      );
-      console.log('[Seccion4FormWrapper] inicializarTablas - AISD2 después de sincronizar', {
-        arrayLength: this.datos.tablaAISD2Datos?.length,
-        primerElemento: this.datos.tablaAISD2Datos?.[0],
-        segundoElemento: this.datos.tablaAISD2Datos?.[1],
-        arrayCompleto: JSON.stringify(this.datos.tablaAISD2Datos?.slice(0, 3), null, 2)
-      });
-    } else {
-      console.log('[Seccion4FormWrapper] inicializarTablas - NO sincronizando AISD2 (array ya tiene datos válidos)');
-    }
+      );} else {}
     
     setTimeout(() => {
-      this.sincronizando = false;
-      console.log('[Seccion4FormWrapper] inicializarTablas - FIN', {
-      sincronizando: false,
-      tablaAISD1Datos: {
-        length: this.datos.tablaAISD1Datos?.length,
-        tieneDatos: !!(this.datos.tablaAISD1Datos && this.datos.tablaAISD1Datos.length > 0)
-      },
-      tablaAISD2Datos: {
-        length: this.datos.tablaAISD2Datos?.length,
-        tieneDatos: !!(this.datos.tablaAISD2Datos && this.datos.tablaAISD2Datos.length > 0),
-        primerElemento: this.datos.tablaAISD2Datos?.[0]
-      }
-    });
-    }, 0);
+      this.sincronizando = false;}, 0);
   }
 
-  sincronizarTablasDesdeCampos(): void {
-    console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - INICIO', {
-      sincronizando: this.sincronizando,
-      tieneDatos: !!this.datos
-    });
-    
-    if (this.sincronizando || !this.datos) {
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - SALIENDO (sincronizando o sin datos)');
-      return;
+  sincronizarTablasDesdeCampos(): void {if (this.sincronizando || !this.datos) {return;
     }
     
     this.sincronizando = true;
     const prefijo = this.obtenerPrefijoGrupo();
-    console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - Prefijo:', prefijo);
     
     const prefijosPosiblesAISD1Sync = ['', '_A1', '_A2', '_B1', '_B2'];
     let prefijoDetectadoAISD1Sync = prefijo;
@@ -777,16 +602,9 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       this.datos.tablaAISD1Localidad ||
       this.datos.tablaAISD1Coordenadas ||
       this.datos.tablaAISD1Altitud);
-    
-    console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - AISD1', {
-      prefijoUsado: prefijoDetectadoAISD1Sync,
-      tieneDatosIndividuales: !!tieneDatosIndividualesAISD1,
-      tieneArray: !!this.datos.tablaAISD1Datos,
-      arrayLength: this.datos.tablaAISD1Datos?.length
-    });
-    
+
     if (tieneDatosIndividualesAISD1 || !this.datos.tablaAISD1Datos || this.datos.tablaAISD1Datos.length === 0) {
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - Sincronizando AISD1');
+
         this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
           this.datos,
           'tablaAISD1Datos',
@@ -826,9 +644,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
               ? nombreComunidad 
               : (localidadDesdeAISD2 || '');
             primeraFila.localidad = localidadFinal;
-            this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);
-            console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - Localidad llenada:', { nombreComunidad, localidadDesdeAISD2, localidadFinal });
-          }
+            this.formularioService.actualizarDato('tablaAISD1Datos', this.datos.tablaAISD1Datos);}
         }
     }
     
@@ -840,26 +656,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       this.datos[campoPoblacion] ||
       this.datos.tablaAISD2Fila1Punto ||
       this.datos.tablaAISD2Fila1Codigo ||
-      this.datos.tablaAISD2Fila1Poblacion;
-    
-    console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - AISD2', {
-      prefijo,
-      campoPunto,
-      campoCodigo,
-      campoPoblacion,
-      valorCampoPunto: this.datos[campoPunto],
-      valorCampoCodigo: this.datos[campoCodigo],
-      valorCampoPoblacion: this.datos[campoPoblacion],
-      valorSinPrefijoPunto: this.datos.tablaAISD2Fila1Punto,
-      valorSinPrefijoCodigo: this.datos.tablaAISD2Fila1Codigo,
-      valorSinPrefijoPoblacion: this.datos.tablaAISD2Fila1Poblacion,
-      tieneDatosIndividuales: !!tieneDatosIndividualesAISD2,
-      tieneArray: !!this.datos.tablaAISD2Datos,
-      arrayLength: this.datos.tablaAISD2Datos?.length
-    });
-    
-    if (tieneDatosIndividualesAISD2 || !this.datos.tablaAISD2Datos || this.datos.tablaAISD2Datos.length === 0) {
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - Sincronizando AISD2');
+      this.datos.tablaAISD2Fila1Poblacion;if (tieneDatosIndividualesAISD2 || !this.datos.tablaAISD2Datos || this.datos.tablaAISD2Datos.length === 0) {
       this.tableAdapter.sincronizarArrayDesdeCamposIndividuales(
         this.datos,
         'tablaAISD2Datos',
@@ -871,12 +668,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
         20,
         true,
         false
-      );
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - AISD2 después de sincronizar', {
-        arrayLength: this.datos.tablaAISD2Datos?.length,
-        primerElemento: this.datos.tablaAISD2Datos?.[0]
-      });
-    }
+      );}
     
     if (this.datos.tablaAISD1Datos || this.datos.tablaAISD2Datos) {
       const datosActualizar: any = {};
@@ -885,27 +677,15 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       }
       if (this.datos.tablaAISD2Datos) {
         datosActualizar.tablaAISD2Datos = this.datos.tablaAISD2Datos;
-      }
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - Actualizando servicio con:', datosActualizar);
-      this.formularioService.actualizarDatos(datosActualizar);
+      }this.formularioService.actualizarDatos(datosActualizar);
     }
     
     setTimeout(() => {
       this.sincronizando = false;
-      console.log('[Seccion4FormWrapper] sincronizarTablasDesdeCampos - FIN (sincronizando = false)');
     }, 0);
   }
 
-  sincronizarCamposDesdeTablas(): void {
-    console.log('[Seccion4FormWrapper] sincronizarCamposDesdeTablas - INICIO', {
-      sincronizando: this.sincronizando,
-      tablaAISD1Datos: this.datos?.tablaAISD1Datos?.length,
-      tablaAISD2Datos: this.datos?.tablaAISD2Datos?.length
-    });
-    
-    if (this.sincronizando) {
-      console.log('[Seccion4FormWrapper] sincronizarCamposDesdeTablas - SALIENDO (ya sincronizando)');
-      return;
+  sincronizarCamposDesdeTablas(): void {if (this.sincronizando) {return;
     }
     
     this.sincronizando = true;
@@ -935,15 +715,7 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
           break;
         }
       }
-    }
-    
-    console.log('[Seccion4FormWrapper] sincronizarCamposDesdeTablas - Prefijos detectados', {
-      prefijoOriginal: prefijo,
-      prefijoAISD1: prefijoDetectadoAISD1Sync2,
-      prefijoAISD2: prefijoDetectadoAISD2Sync2
-    });
-    
-    this.tableAdapter.sincronizarCamposIndividualesDesdeArray(
+    }this.tableAdapter.sincronizarCamposIndividualesDesdeArray(
       this.datos,
       'tablaAISD1Datos',
       {
@@ -967,15 +739,10 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
       20,
       true,
       false
-    );
-    
-    console.log('[Seccion4FormWrapper] sincronizarCamposDesdeTablas - Actualizando servicio con todos los datos');
-    this.formularioService.actualizarDatos(this.datos);
+    );this.formularioService.actualizarDatos(this.datos);
     
     setTimeout(() => {
-      this.sincronizando = false;
-      console.log('[Seccion4FormWrapper] sincronizarCamposDesdeTablas - FIN (sincronizando = false)');
-    }, 0);
+      this.sincronizando = false;}, 0);
   }
 
   onTablaFieldChange(fieldId: string, value: any) {
@@ -989,18 +756,11 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     }
   }
 
-  onTablaAISD1Updated(): void {
-    console.log('[Seccion4FormWrapper] onTablaAISD1Updated - Tabla actualizada');
-    this.sincronizarCamposDesdeTablas();
+  onTablaAISD1Updated(): void {this.sincronizarCamposDesdeTablas();
     this.cdRef.detectChanges();
   }
 
-  onTablaAISD2Updated(): void {
-    console.log('[Seccion4FormWrapper] onTablaAISD2Updated - Tabla actualizada', {
-      tablaAISD2Datos: this.datos?.tablaAISD2Datos?.length,
-      primerElemento: this.datos?.tablaAISD2Datos?.[0]
-    });
-    this.sincronizarCamposDesdeTablas();
+  onTablaAISD2Updated(): void {this.sincronizarCamposDesdeTablas();
     this.guardarTotalPoblacion();
     this.cdRef.detectChanges();
   }
@@ -1193,3 +953,4 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     return '____';
   }
 }
+
