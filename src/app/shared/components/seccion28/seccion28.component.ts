@@ -45,8 +45,8 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   puestoSaludConfig: TableConfig = {
     tablaKey: 'puestoSaludCpTabla',
     totalKey: 'categoria',
-    campoTotal: 'categoria',
-    campoPorcentaje: 'descripcion',
+    campoTotal: 'descripcion',
+    campoPorcentaje: '',
     estructuraInicial: [{ categoria: '', descripcion: '' }]
   };
 

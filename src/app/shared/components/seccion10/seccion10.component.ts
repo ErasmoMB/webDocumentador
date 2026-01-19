@@ -463,12 +463,32 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
+    // Recalcular porcentajes después de eliminar filas totales
+    this.recalcularPorcentajesSiHayDatos();
     this.cargarFotografias();
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
+    }
+  }
+
+  private recalcularPorcentajesSiHayDatos(): void {
+    // Recalcular porcentajes si las tablas tienen datos
+    const tablaAgua = this.getTablaAbastecimientoAgua();
+    if (tablaAgua && tablaAgua.length > 0 && tablaAgua[0].casos) {
+      this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+    }
+
+    const tablaSaneamiento = this.getTablaTiposSaneamiento();
+    if (tablaSaneamiento && tablaSaneamiento.length > 0 && tablaSaneamiento[0].casos) {
+      this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+    }
+
+    const tablaElectrica = this.getTablaCoberturaElectrica();
+    if (tablaElectrica && tablaElectrica.length > 0 && tablaElectrica[0].casos) {
+      this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
     }
   }
 
@@ -1044,6 +1064,23 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   private escapeRegex(text: any): string {
     const str = typeof text === 'string' ? text : String(text || '');
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Recalcula porcentajes después de cargar datos del backend
+   * Asegura que los porcentajes se calculen dinámicamente basados en los casos
+   */
+  protected override recalcularPorcentajesDelBackend(loadedData: { [fieldName: string]: any }): void {
+    // Recalcular porcentajes para cada tabla que vino del backend
+    if (loadedData['abastecimientoAguaTabla']) {
+      this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+    }
+    if (loadedData['tiposSaneamientoTabla']) {
+      this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+    }
+    if (loadedData['alumbradoElectricoTabla']) {
+      this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
+    }
   }
 }
 // Cache rebuild trigger - 2026-01-19

@@ -104,45 +104,45 @@
   <h5>Editar Párrafos</h5>
   <h6>Introducción AISD</h6>
   <app-paragraph-editor
-    [fieldId]="getFieldIdTextoSeccion4IntroduccionAISD()"
-    label="Introducción AISD"
-    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="4"
-    [value]="obtenerTextoSeccion4IntroduccionAISD()"
-    (valueChange)="onFieldChange(getFieldIdTextoSeccion4IntroduccionAISD(), $event)">
-  </app-paragraph-editor>
-</div>
+      [fieldId]="'parrafoSeccion4_introduccion_aisd'"
+      label="Introducción AISD"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="4"
+      [value]="obtenerTextoSeccion4IntroduccionAISD()"
+      (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+    </app-paragraph-editor>
+  </div>
 
-<!-- Párrafo: Comunidad Completo -->
-<div class="form-section">
-  <h6>Información de la Comunidad - Texto Completo</h6>
-  <app-paragraph-editor
-    [fieldId]="getFieldIdTextoSeccion4ComunidadCompleto()"
-    label="Comunidad - Texto Completo"
-    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="6"
-    [value]="obtenerTextoSeccion4ComunidadCompleto()"
-    (valueChange)="onFieldChange(getFieldIdTextoSeccion4ComunidadCompleto(), $event)">
-  </app-paragraph-editor>
-</div>
+  <!-- Párrafo: Comunidad Completo -->
+  <div class="form-section">
+    <h6>Información de la Comunidad - Texto Completo</h6>
+    <app-paragraph-editor
+      [fieldId]="'parrafoSeccion4_comunidad_completo'"
+      label="Comunidad - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="6"
+      [value]="obtenerTextoSeccion4ComunidadCompleto()"
+      (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+    </app-paragraph-editor>
+  </div>
 
-<!-- Párrafo: Caracterización Indicadores -->
-<div class="form-section">
-  <h6>Caracterización de Indicadores</h6>
-  <app-paragraph-editor
-    [fieldId]="getFieldIdTextoSeccion4CaracterizacionIndicadores()"
-    label="Caracterización de Indicadores"
-    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="4"
-    [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
-    (valueChange)="onFieldChange(getFieldIdTextoSeccion4CaracterizacionIndicadores(), $event)">
-  </app-paragraph-editor>
-</div>
+  <!-- Párrafo: Caracterización Indicadores -->
+  <div class="form-section">
+    <h6>Caracterización de Indicadores</h6>
+    <app-paragraph-editor
+      [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
+      label="Caracterización de Indicadores"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="4"
+      [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
+      (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+    </app-paragraph-editor>
+  </div>
 
-<!-- Tabla AISD1 -->
-<h5>Ubicación Referencial</h5>
-<div class="form-section">
-  <h6>Fotografías - Ubicación</h6>
+  <!-- Tabla AISD1 -->
+  <h5>Ubicación Referencial</h5>
+  <div class="form-section">
+    <h6>Fotografías - Ubicación</h6>
   <app-image-upload
     [fotografias]="fotografiasUbicacionFormMulti"
     [sectionId]="seccionId"

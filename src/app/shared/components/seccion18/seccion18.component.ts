@@ -87,6 +87,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
+    this.recalcularPorcentajesSiHayDatos();
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
     if (!this.modoFormulario) {
@@ -529,5 +530,34 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     }
     return clon;
   }
-}
 
+  /**
+   * Recalcula porcentajes después de cargar datos del backend
+   * Asegura que los porcentajes se calculen dinámicamente basados en los casos
+   */
+  protected override recalcularPorcentajesDelBackend(loadedData: { [fieldName: string]: any }): void {
+    // Recalcular porcentajes para cada tabla que vino del backend
+    if (loadedData['nbiCCAyrocaTabla']) {
+      this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+    }
+    if (loadedData['nbiDistritoCahuachoTabla']) {
+      this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+    }
+  }
+
+  /**
+   * Recalcula porcentajes si las tablas tienen datos
+   * Se ejecuta en onInitCustom después de eliminar filas total
+   */
+  private recalcularPorcentajesSiHayDatos(): void {
+    const tablaNbiCC = this.getTableNbiCCAyroca();
+    if (tablaNbiCC && tablaNbiCC.length > 0 && tablaNbiCC[0].casos) {
+      this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+    }
+
+    const tablaDistrito = this.getTableNbiDistritoCahuacho();
+    if (tablaDistrito && tablaDistrito.length > 0 && tablaDistrito[0].casos) {
+      this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+    }
+  }
+}

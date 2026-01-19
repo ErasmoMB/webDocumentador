@@ -138,6 +138,8 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
 
       if (debeActualizar) {
         this.formularioService.actualizarDato(fieldKey as any, data);
+        // IMPORTANTE: Actualizar this.datos inmediatamente para que recalcularPorcentajes tenga datos frescos
+        this.datos[fieldKey] = data;
         // Invalidar cachés específicos cuando cambian tablas calculadas
         if (fieldName === 'peaOcupacionesTabla' && typeof (this as any).invalidarCachePEA === 'function') {
           (this as any).invalidarCachePEA();
@@ -145,7 +147,18 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
       }
     }
 
+    // IMPORTANTE: Recalcular porcentajes DESPUÉS de actualizar todos los datos
+    this.recalcularPorcentajesDelBackend(loadedData);
     this.actualizarDatos();
+  }
+
+  /**
+   * Recalcula porcentajes para tablas que vinieron del backend
+   * Esto asegura que los porcentajes se calculen dinámicamente basados en los casos
+   */
+  protected recalcularPorcentajesDelBackend(loadedData: { [fieldName: string]: any }): void {
+    // Este método puede ser sobrescrito en componentes específicos si necesitan lógica especial
+    // Por defecto, hace nada - cada componente decide qué tablas recalcular
   }
 
   protected abstract getSectionKey(): string;

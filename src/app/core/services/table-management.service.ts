@@ -138,7 +138,10 @@ export class TableManagementService {
         const valor = item[totalKey];
         if (!valor || !valor.toString().toLowerCase().includes('total')) {
           const casos = parseFloat(item[campoTotal]) || 0;
-          const porcentaje = ((casos / total) * 100)
+          // Redondear a 2 decimales y luego formatear para locale
+          const porcentajeNumerico = (casos / total) * 100;
+          const porcentajeRedondeado = Math.round(porcentajeNumerico * 100) / 100;
+          const porcentaje = porcentajeRedondeado
             .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
             .replace('.', ',') + ' %';
           item[campoPorcentaje] = porcentaje;
@@ -162,14 +165,14 @@ export class TableManagementService {
     campoRetorno: string
   ): string {
     const tabla = datos[tablaKey] || [];
-    if (!Array.isArray(tabla)) return '____';
+    if (!Array.isArray(tabla)) return '';
     
     const item = tabla.find((item: any) => {
       const valor = item[campoBusqueda];
       return valor && valor.toString().toLowerCase().includes(valorBusqueda.toLowerCase());
     });
     
-    return item?.[campoRetorno]?.toString() || '____';
+    return item?.[campoRetorno]?.toString() || '';
   }
 
   obtenerValorDeTablaPorIndicador(

@@ -1077,12 +1077,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoSeccion4IntroduccionAISD(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const campoConPrefijo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
-    const campoSinPrefijo = 'parrafoSeccion4_introduccion_aisd';
+    // PRIMERO: Buscar sin prefijo (como se guarda desde el editor)
+    let textoPersonalizado = this.datos['parrafoSeccion4_introduccion_aisd'];
     
-    // Prioridad: con prefijo > sin prefijo > por defecto
-    const textoPersonalizado = this.datos[campoConPrefijo] || this.datos[campoSinPrefijo];
+    // SEGUNDO: Si no existe, intentar con prefijo (por compatibilidad)
+    if (!textoPersonalizado) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) {
+        textoPersonalizado = this.datos[`parrafoSeccion4_introduccion_aisd${prefijo}`];
+      }
+    }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const textoPorDefecto = `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${grupoAISD}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
@@ -1112,9 +1116,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoSeccion4ComunidadCompleto(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const campoParrafo = prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
-    const textoPersonalizado = this.datos[campoParrafo] || this.datos['parrafoSeccion4_comunidad_completo'];
+    // PRIMERO: Buscar sin prefijo (como se guarda desde el editor)
+    let textoPersonalizado = this.datos['parrafoSeccion4_comunidad_completo'];
+    
+    // SEGUNDO: Si no existe, intentar con prefijo (por compatibilidad)
+    if (!textoPersonalizado) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) {
+        textoPersonalizado = this.datos[`parrafoSeccion4_comunidad_completo${prefijo}`];
+      }
+    }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const distrito = this.datos.distritoSeleccionado || '____';
@@ -1175,9 +1186,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoSeccion4CaracterizacionIndicadores(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const campoParrafo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
-    const textoPersonalizado = this.datos[campoParrafo] || this.datos['parrafoSeccion4_caracterizacion_indicadores'];
+    // PRIMERO: Buscar sin prefijo (como se guarda desde el editor)
+    let textoPersonalizado = this.datos['parrafoSeccion4_caracterizacion_indicadores'];
+    
+    // SEGUNDO: Si no existe, intentar con prefijo (por compatibilidad)
+    if (!textoPersonalizado) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) {
+        textoPersonalizado = this.datos[`parrafoSeccion4_caracterizacion_indicadores${prefijo}`];
+      }
+    }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const textoPorDefecto = `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${grupoAISD}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
@@ -1215,18 +1233,21 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   getFieldIdTextoSeccion4IntroduccionAISD(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
+    // ❌ DEPRECATED - No usar. Los fieldIds deben ser strings fijos en el HTML.
+    // Se guarda SIN prefijo: 'parrafoSeccion4_introduccion_aisd'
+    return 'parrafoSeccion4_introduccion_aisd';
   }
 
   getFieldIdTextoSeccion4ComunidadCompleto(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
+    // ❌ DEPRECATED - No usar. Los fieldIds deben ser strings fijos en el HTML.
+    // Se guarda SIN prefijo: 'parrafoSeccion4_comunidad_completo'
+    return 'parrafoSeccion4_comunidad_completo';
   }
 
   getFieldIdTextoSeccion4CaracterizacionIndicadores(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
+    // ❌ DEPRECATED - No usar. Los fieldIds deben ser strings fijos en el HTML.
+    // Se guarda SIN prefijo: 'parrafoSeccion4_caracterizacion_indicadores'
+    return 'parrafoSeccion4_caracterizacion_indicadores';
   }
 
   private escapeHtml(text: string): string {
@@ -1244,30 +1265,27 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   private inicializarPárrafosParrafoSeccion4(): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const campoConPrefijo = prefijo ? `parrafoSeccion4_introduccion_aisd${prefijo}` : 'parrafoSeccion4_introduccion_aisd';
-    const campoSinPrefijo = 'parrafoSeccion4_introduccion_aisd';
+    // ✅ CORRECCIÓN: Los párrafos se guardan SIN prefijo
     
-    // Si no hay valor guardado, inicializar con el texto por defecto
-    if (!this.datos[campoConPrefijo] && !this.datos[campoSinPrefijo]) {
+    // Párrafo 1: Introducción AISD
+    if (!this.datos['parrafoSeccion4_introduccion_aisd']) {
       const textoDefault = this.obtenerTextoSeccion4IntroduccionAISD();
-      this.formularioService.actualizarDato(campoConPrefijo, textoDefault);
-      this.datos[campoConPrefijo] = textoDefault;
+      this.formularioService.actualizarDato('parrafoSeccion4_introduccion_aisd' as any, textoDefault);
+      this.datos['parrafoSeccion4_introduccion_aisd'] = textoDefault;
     }
     
-    // Hacer lo mismo para los otros párrafos
-    const campoCompletoConPrefijo = prefijo ? `parrafoSeccion4_comunidad_completo${prefijo}` : 'parrafoSeccion4_comunidad_completo';
-    if (!this.datos[campoCompletoConPrefijo] && !this.datos['parrafoSeccion4_comunidad_completo']) {
+    // Párrafo 2: Comunidad Completo
+    if (!this.datos['parrafoSeccion4_comunidad_completo']) {
       const textoDefault = this.obtenerTextoSeccion4ComunidadCompleto();
-      this.formularioService.actualizarDato(campoCompletoConPrefijo, textoDefault);
-      this.datos[campoCompletoConPrefijo] = textoDefault;
+      this.formularioService.actualizarDato('parrafoSeccion4_comunidad_completo' as any, textoDefault);
+      this.datos['parrafoSeccion4_comunidad_completo'] = textoDefault;
     }
     
-    const campoIndicadoresConPrefijo = prefijo ? `parrafoSeccion4_caracterizacion_indicadores${prefijo}` : 'parrafoSeccion4_caracterizacion_indicadores';
-    if (!this.datos[campoIndicadoresConPrefijo] && !this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
+    // Párrafo 3: Caracterización Indicadores
+    if (!this.datos['parrafoSeccion4_caracterizacion_indicadores']) {
       const textoDefault = this.obtenerTextoSeccion4CaracterizacionIndicadores();
-      this.formularioService.actualizarDato(campoIndicadoresConPrefijo, textoDefault);
-      this.datos[campoIndicadoresConPrefijo] = textoDefault;
+      this.formularioService.actualizarDato('parrafoSeccion4_caracterizacion_indicadores' as any, textoDefault);
+      this.datos['parrafoSeccion4_caracterizacion_indicadores'] = textoDefault;
     }
   }
 
