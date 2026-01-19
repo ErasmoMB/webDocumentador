@@ -29,6 +29,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
   override fotografiasCache: FotoItem[] = [];
   override fotografiasFormMulti: FotoItem[] = [];
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
 
   get natalidadMortalidadConfig(): TableConfig {
     return {
@@ -63,9 +64,9 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
       estructuraInicial: [
-        { categoria: 'SIS', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'ESSALUD', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Sin seguro', casos: 0, porcentaje: '0,00 %' }
+        { categoria: 'SIS', casos: 0, porcentaje: 0 },
+        { categoria: 'ESSALUD', casos: 0, porcentaje: 0 },
+        { categoria: 'Sin seguro', casos: 0, porcentaje: 0 }
       ],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
@@ -130,13 +131,14 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
         valorAnterior = this.datosAnteriores[campo] || null;
       }
       
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      const sonIguales = this.compararValores(valorActual, valorAnterior);
+      if (!sonIguales) {
         hayCambios = true;
         if (tablasConPrefijo.includes(campo)) {
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
-          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
         } else {
-          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
         }
       }
     }
@@ -302,7 +304,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
@@ -323,8 +325,8 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     const distrito = this.datos.distritoSeleccionado || '____';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
@@ -373,7 +375,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     // Aplicar resaltados a los porcentajes (verde)
     if (porcentajeSIS !== '____') {
       textoConResaltado = textoConResaltado.replace(
-        new RegExp(`${this.escapeRegex(porcentajeSIS)}\\s*%`, 'g'),
+        this.obtenerRegExp(`${this.escapeRegex(porcentajeSIS)}\\s*%`),
         `<span class="data-calculated">${this.escapeHtml(porcentajeSIS)} %</span>`
       );
     }
@@ -385,7 +387,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     }
     if (porcentajeSinSeguro !== '____') {
       textoConResaltado = textoConResaltado.replace(
-        new RegExp(`${this.escapeRegex(porcentajeSinSeguro)}\\s*%`, 'g'),
+        this.obtenerRegExp(`${this.escapeRegex(porcentajeSinSeguro)}\\s*%`),
         `<span class="data-calculated">${this.escapeHtml(porcentajeSinSeguro)} %</span>`
       );
     }
@@ -417,8 +419,50 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     return div.innerHTML;
   }
 
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual === null || anterior === null) return actual === anterior;
+    if (actual === undefined || anterior === undefined) return actual === anterior;
+    if (Array.isArray(actual) && Array.isArray(anterior)) {
+      if (actual.length !== anterior.length) return false;
+      return actual.every((item, index) => this.compararValores(item, anterior[index]));
+    }
+    if (typeof actual === 'object' && typeof anterior === 'object') {
+      const keysActual = Object.keys(actual);
+      const keysAnterior = Object.keys(anterior);
+      if (keysActual.length !== keysAnterior.length) return false;
+      return keysActual.every(key => this.compararValores(actual[key], anterior[key]));
+    }
+    return actual === anterior;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor === null || valor === undefined) return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    if (typeof valor === 'object') {
+      const clon: any = {};
+      for (const key in valor) {
+        if (valor.hasOwnProperty(key)) {
+          clon[key] = this.clonarValor(valor[key]);
+        }
+      }
+      return clon;
+    }
+    return valor;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private escapeRegex(text: any): string {
+    const str = typeof text === 'string' ? text : String(text || '');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   onMorbilidadFieldChange(rowIndex: number, field: string, value: any) {
@@ -477,6 +521,16 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       return sum + casos;
     }, 0);
     return total.toString();
+  }
+
+  getPorcentajeNumerico(porcentaje: any): number {
+    if (typeof porcentaje === 'number') {
+      return porcentaje;
+    }
+    if (typeof porcentaje === 'string') {
+      return parseFloat(porcentaje.replace('%', '').trim().replace(',', '.')) || 0;
+    }
+    return 0;
   }
 
   getMorbilidadSinTotal(): any[] {
@@ -556,16 +610,25 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaAfiliacionSalud();
     if (tabla && tabla[rowIndex]) {
       tabla[rowIndex][field] = value;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesAfiliacionSalud();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey, tabla);
-      this.calcularPorcentajesAfiliacionSalud();
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
     }
   }
 
   onAfiliacionSaludTableUpdated(): void {
     const tablaKey = this.getTablaKeyAfiliacionSalud();
     const tabla = this.getTablaAfiliacionSalud();
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.calcularPorcentajesAfiliacionSalud();
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
@@ -586,8 +649,8 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     if (total > 0) {
       datosSinTotal.forEach((item: any) => {
         const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
-        const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',');
-        item.porcentaje = porcentaje + ' %';
+        const porcentajeNumerico = (casos / total) * 100;
+        item.porcentaje = porcentajeNumerico;
       });
       
       const tablaKey = this.getTablaKeyAfiliacionSalud();

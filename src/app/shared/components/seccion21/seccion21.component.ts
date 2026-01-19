@@ -23,6 +23,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   fotografiasCahuachoCache: any[] = [];
   override watchedFields: string[] = ['parrafoSeccion21_aisi_intro_completo', 'parrafoSeccion21_centro_poblado_completo', 'centroPobladoAISI', 'provinciaSeleccionada', 'departamentoSeleccionado', 'leyCreacionDistrito', 'fechaCreacionDistrito', 'distritoSeleccionado', 'distritoAnterior', 'origenPobladores1', 'origenPobladores2', 'departamentoOrigen', 'anexosEjemplo', 'ubicacionCpTabla'];
@@ -96,9 +97,9 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -114,7 +115,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     this.datos = this.formularioService.obtenerDatos();
     this.actualizarFotografiasCache();
     this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
+      this.datosAnteriores[campo] = this.clonarValor((this.datos as any)[campo] || null);
     });
   }
 
@@ -295,7 +296,6 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
       return poblacionActual > poblacionMax ? actual : max;
     });
 
-    console.log(`[Seccion21] 🏘️ Capital del distrito ${distritoActual}: ${capitalConMayorPoblacion.CCPP} (Población: ${capitalConMayorPoblacion.POBLACION})`);
 
     return capitalConMayorPoblacion.CCPP || capitalConMayorPoblacion.ccpp;
   }
@@ -488,6 +488,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   eliminarUbicacionCp(index: number) {
     if (this.datos['ubicacionCpTabla'] && this.datos['ubicacionCpTabla'].length > 1) {
       this.datos['ubicacionCpTabla'].splice(index, 1);
+      this.datos['ubicacionCpTabla'] = [...this.datos['ubicacionCpTabla']];
       this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -500,6 +501,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     }
     if (this.datos['ubicacionCpTabla'][index]) {
       this.datos['ubicacionCpTabla'][index][field] = value;
+      this.datos['ubicacionCpTabla'] = [...this.datos['ubicacionCpTabla']];
       this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -507,6 +509,50 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private debugCentrosPobladosAISI(): void {
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

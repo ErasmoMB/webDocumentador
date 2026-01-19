@@ -22,35 +22,22 @@ export class CacheCleanupService {
    * Llamar esto regularmente previene memory leaks.
    */
   cleanupAll(): void {
-    console.log('[CacheCleanup] Limpiando todos los cachés...');
-    
     try {
-      // Limpiar caché de carga de secciones
       this.sectionDataLoader.clearCache();
-      console.log('[CacheCleanup] ✓ SectionDataLoaderService limpiado');
     } catch (e) {
-      console.warn('[CacheCleanup] Error limpiando SectionDataLoaderService:', e);
     }
 
     try {
-      // Limpiar caché de auto-backend (esto limpia loadingRequests.Map)
       this.autoBackendDataLoader.clearCache();
-      console.log('[CacheCleanup] ✓ AutoBackendDataLoaderService limpiado');
     } catch (e) {
-      console.warn('[CacheCleanup] Error limpiando AutoBackendDataLoaderService:', e);
     }
 
     try {
-      // Limpiar localStorage cache
       this.cacheService.clearCache();
-      console.log('[CacheCleanup] ✓ CacheService limpiado');
     } catch (e) {
-      console.warn('[CacheCleanup] Error limpiando CacheService:', e);
     }
 
-    // Notificar que limpieza completada
     if ((window as any).gc) {
-      console.log('[CacheCleanup] Sugiriendo GC...');
       (window as any).gc();
     }
   }
@@ -63,6 +50,5 @@ export class CacheCleanupService {
     setInterval(() => {
       this.cleanupAll();
     }, intervalMs);
-    console.log(`[CacheCleanup] Limpieza periódica iniciada (cada ${intervalMs}ms)`);
   }
 }

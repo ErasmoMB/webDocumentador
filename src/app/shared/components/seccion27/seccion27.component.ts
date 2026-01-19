@@ -24,6 +24,7 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla', 'costoTransporteMinimo', 'costoTransporteMaximo', 'textoTransporteCP1', 'textoTransporteCP2', 'textoTelecomunicacionesCP1', 'textoTelecomunicacionesCP2', 'textoTelecomunicacionesCP3'];
   
@@ -107,9 +108,9 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -339,6 +340,50 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
     
     return `Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en ${centroPoblado} optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.\n\nEn lo que respecta a la telefonía móvil e internet, la cobertura es proporcionada por las operadoras Movistar, Claro y Entel, lo que facilita la comunicación dentro del área y con el exterior. Para el acceso a internet, la población principalmente se conecta a través de los datos móviles proporcionados por Movistar y Entel, lo que les permite mantenerse conectados para actividades cotidianas y laborales.`;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

@@ -107,7 +107,7 @@
         <tr *ngFor="let item of getAfiliacionSaludSinTotal()">
             <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
+            <td class="table-cell cell-from-bd" [appDataSource]="'calculated'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
         </tr>
         <tr *ngIf="getAfiliacionSaludSinTotal().length > 0">
             <td class="table-cell" style="font-weight: bold;">{{ getTotalAfiliacionSalud().categoria }}</td>
@@ -177,7 +177,7 @@
           ]"
           [tablaKey]="'natalidadMortalidadCpTabla'"
           [totalKey]="'anio'"
-          (tableUpdated)="cdRef.detectChanges()">
+          (tableUpdated)="onNatalidadMortalidadTableUpdated()">
         </app-dynamic-table>
         <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getNatalidadMortalidadSinTotal().length > 0">
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
@@ -266,7 +266,8 @@
           ]"
           [tablaKey]="'afiliacionSaludTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onAfiliacionSaludFieldChange.bind(this)"
+          (tableUpdated)="onAfiliacionSaludTableUpdated()">
         </app-dynamic-table>
         <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getAfiliacionSaludSinTotal().length > 0">
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">

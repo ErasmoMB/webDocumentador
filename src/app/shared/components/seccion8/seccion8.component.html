@@ -169,6 +169,7 @@
         ]"
         [tablaKey]="getTablaKeyPEAOcupaciones()"
         [totalKey]="'categoria'"
+        [customFieldChangeHandler]="onPEAOcupacionesFieldChange.bind(this)"
         (tableUpdated)="onPEAOcupacionesTableUpdated()">
       </app-dynamic-table>
       <div class="table-editor" *ngIf="getPEAOcupacionesSinTotal().length > 0" style="margin-top: 10px;">

@@ -128,7 +128,8 @@
         ]"
         [tablaKey]="'nivelEducativoTabla'"
         [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
+        [customFieldChangeHandler]="onNivelEducativoFieldChange.bind(this)"
+        (tableUpdated)="onNivelEducativoTableUpdated()">
       </app-dynamic-table>
       <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getNivelEducativoSinTotal().length > 0">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">
@@ -151,7 +152,8 @@
         ]"
         [tablaKey]="'tasaAnalfabetismoTabla'"
         [totalKey]="'indicador'"
-        (tableUpdated)="cdRef.detectChanges()">
+        [customFieldChangeHandler]="onTasaAnalfabetismoFieldChange.bind(this)"
+        (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
       </app-dynamic-table>
       <div style="margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-weight: bold;">

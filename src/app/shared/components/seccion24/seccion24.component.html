@@ -111,7 +111,8 @@
         ]"
         [tablaKey]="'actividadesEconomicasAISI'"
         [totalKey]="'actividad'"
-        (tableUpdated)="cdRef.detectChanges()">
+        [customFieldChangeHandler]="onActividadesEconomicasFieldChange.bind(this)"
+        (tableUpdated)="onActividadesEconomicasTableUpdated()">
       </app-dynamic-table>
 
       <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">

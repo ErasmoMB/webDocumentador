@@ -25,6 +25,7 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   private cppAnterior: string | null = null;
   private nivelEducativoBatch: { [cpp: string]: any[] } = {};
   private analfabetismoBatch: { [cpp: string]: any } = {};
@@ -273,14 +274,23 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
       }));
       
       this.datos.nivelEducativoTabla = nivelEducativoTabla;
+      this.formularioService.actualizarDato('nivelEducativoTabla', nivelEducativoTabla);
     }
     
     // Actualizar tasa de analfabetismo
     if (this.analfabetismoBatch[cpp]) {
       const data = this.analfabetismoBatch[cpp];
-      this.datos.tasaAnalfabetismo = data.tasa_analfabetismo || 0;
-      this.datos.totalPoblacion15Mas = data.total_poblacion_15_y_mas || 0;
+      this.datos.tasaAnalfabetismo = data.tasa_analfabetismo || data.tasaAnalfabetismo || 0;
+      this.datos.totalPoblacion15Mas = data.total_poblacion_15_y_mas || data.totalPoblacion15yMas || 0;
+      this.formularioService.actualizarDato('tasaAnalfabetismo', this.datos.tasaAnalfabetismo);
+      this.formularioService.actualizarDato('totalPoblacion15Mas', this.datos.totalPoblacion15Mas);
+    } else {
+      this.datos.tasaAnalfabetismo = 0;
+      this.datos.totalPoblacion15Mas = 0;
     }
+    
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   /**
@@ -325,9 +335,9 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -624,6 +634,140 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.parrafoSeccion30_indicadores_educacion_intro;
     }
     return `La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.`;
+  }
+
+  onNivelEducativoFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.nivelEducativoTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+        
+        const fieldIdParrafo = 'textoNivelEducativo';
+        if (this.datos[fieldIdParrafo]) {
+          delete this.datos[fieldIdParrafo];
+          this.formularioService.actualizarDato(fieldIdParrafo as any, null);
+        }
+      }
+      
+      this.datos.nivelEducativoTabla = [...tabla];
+      this.formularioService.actualizarDato('nivelEducativoTabla', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onNivelEducativoTableUpdated(): void {
+    const tabla = this.datos.nivelEducativoTabla || [];
+    this.datos.nivelEducativoTabla = [...tabla];
+    this.formularioService.actualizarDato('nivelEducativoTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onTasaAnalfabetismoFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.tasaAnalfabetismoTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const indicador = item.indicador?.toString().toLowerCase() || '';
+          if (indicador.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const indicador = item.indicador?.toString().toLowerCase() || '';
+            if (!indicador.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.tasaAnalfabetismoTabla = [...tabla];
+      this.formularioService.actualizarDato('tasaAnalfabetismoTabla', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onTasaAnalfabetismoTableUpdated(): void {
+    const tabla = this.datos.tasaAnalfabetismoTabla || [];
+    this.datos.tasaAnalfabetismoTabla = [...tabla];
+    this.formularioService.actualizarDato('tasaAnalfabetismoTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

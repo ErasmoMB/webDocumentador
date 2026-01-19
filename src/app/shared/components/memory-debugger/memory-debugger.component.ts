@@ -89,7 +89,6 @@ export class MemoryDebuggerComponent implements OnInit, OnDestroy {
   }
 
   forceGC() {
-    console.log('%cFuerza GC abriendo Chrome DevTools Memory > Collect garbage', 'color: #ffaa00; font-weight: bold;');
   }
 
   toggleVisible() {

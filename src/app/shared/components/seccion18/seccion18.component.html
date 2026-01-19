@@ -94,7 +94,8 @@
         ]"
         [tablaKey]="getTablaKeyNbiCC()"
         [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
+        [customFieldChangeHandler]="onNbiCCFieldChange.bind(this)"
+        (tableUpdated)="onNbiCCTableUpdated()">
       </app-dynamic-table>
 
       <div class="table-editor" *ngIf="datos['nbiCCAyrocaTabla'] && datos['nbiCCAyrocaTabla'].length > 0" style="margin-top: 10px;">
@@ -122,7 +123,8 @@
         ]"
         [tablaKey]="getTablaKeyNbiDistrito()"
         [totalKey]="'categoria'"
-        (tableUpdated)="cdRef.detectChanges()">
+        [customFieldChangeHandler]="onNbiDistritoFieldChange.bind(this)"
+        (tableUpdated)="onNbiDistritoTableUpdated()">
       </app-dynamic-table>
 
       <div class="table-editor" *ngIf="datos['nbiDistritoCahuachoTabla'] && datos['nbiDistritoCahuachoTabla'].length > 0" style="margin-top: 10px;">

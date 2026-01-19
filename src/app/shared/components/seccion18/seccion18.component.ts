@@ -24,6 +24,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'nbiCCAyrocaTabla', 'nbiDistritoCahuachoTabla', 'textoNecesidadesBasicasInsatisfechas'];
   
@@ -221,9 +222,9 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -427,6 +428,106 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     this.fotografiasCache = [...fotografias];
     this.fotografiasFormMulti = [...fotografias];
     this.cdRef.detectChanges();
+  }
+
+  onNbiCCFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyNbiCC();
+    const tabla = this.getTableNbiCCAyroca();
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onNbiCCTableUpdated(): void {
+    const tablaKey = this.getTablaKeyNbiCC();
+    const tabla = this.getTableNbiCCAyroca();
+    this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onNbiDistritoFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyNbiDistrito();
+    const tabla = this.getTableNbiDistritoCahuacho();
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onNbiDistritoTableUpdated(): void {
+    const tablaKey = this.getTablaKeyNbiDistrito();
+    const tabla = this.getTableNbiDistritoCahuacho();
+    this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

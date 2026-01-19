@@ -486,7 +486,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         }
       },
       error: (error) => {
-        console.warn('Error al subir imagen al backend, usando base64 como fallback:', error);
         this.comprimirImagen(file).then((imagenComprimida) => {
           if (this.permitirMultiples && index !== undefined) {
             if (this._fotografias[index]) {
@@ -511,7 +510,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           }
           this.cdRef.markForCheck();
         }).catch((err) => {
-          console.error('Error al procesar la imagen:', err);
         });
       }
     });
@@ -624,10 +622,8 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         if (imageId && imageId.includes('-') && imageId.length === 36) {
           this.imageBackendService.deleteImage(imageId).subscribe({
             next: () => {
-              console.log(`✅ Imagen única eliminada del backend: ${imageId}`);
             },
             error: (err) => {
-              console.warn(`⚠️ Error al eliminar del backend: ${err}`);
             }
           });
         }
@@ -638,7 +634,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       const numeroKey = `${this.photoPrefix}Numero`;
       this.formularioService.actualizarDato(imagenKey, '');
       this.formularioService.actualizarDato(numeroKey, '');
-      console.log(`🗑️ Eliminado del localStorage (única): ${imagenKey}, ${numeroKey}`);
       
       this.preview = null;
       this.imagenChange.emit('');

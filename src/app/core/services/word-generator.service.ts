@@ -13,15 +13,41 @@ import {
   WidthType,
   BorderStyle,
 } from 'docx';
+import { saveAs } from 'file-saver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordGeneratorService {
+  private asegurarString(valor: any): string {
+    if (valor === null || valor === undefined) {
+      return '';
+    }
+    if (typeof valor === 'string') {
+      // Reemplazar saltos de línea literales por espacios
+      return valor.replace(/\\n/g, ' ').trim();
+    }
+    if (Array.isArray(valor)) {
+      return valor.map(v => this.asegurarString(v)).join('\n').trim();
+    }
+    if (typeof valor === 'object') {
+      return String(valor);
+    }
+    return String(valor);
+  }
+
   async generarDocumento(elemento: HTMLElement, nombreArchivo: string = 'documento'): Promise<void> {
-    const children = await this.convertirHtmlADocx(elemento);
+    try {
+      console.log('[SERVICE] Iniciando generarDocumento con:', nombreArchivo);
+      console.log('[SERVICE] Elemento HTML:', elemento?.tagName);
+      
+      console.log('[SERVICE] Llamando a convertirHtmlADocx()...');
+      const children = await this.convertirHtmlADocx(elemento);
+      console.log('[SERVICE] Conversión HTML a DOCX completada, elementos:', children.length);
+      console.log('[SERVICE] Tipos de elementos:', children.map((c: any) => c.constructor?.name).slice(0, 5));
     
-    const doc = new Document({
+      console.log('[SERVICE] Creando documento Word...');
+      const doc = new Document({
       styles: {
         default: {
           document: {
@@ -246,27 +272,49 @@ export class WordGeneratorService {
       ],
     });
 
-    const blob = await Packer.toBlob(doc);
-    const { saveAs } = await import('file-saver');
-    saveAs(blob, `${nombreArchivo}.docx`);
+      console.log('[SERVICE] Documento creado, generando blob...');
+      const blob = await Packer.toBlob(doc);
+      console.log('[SERVICE] Blob generado, tamaño:', blob.size);
+      console.log('[SERVICE] Guardando archivo:', `${nombreArchivo}.docx`);
+      saveAs(blob, `${nombreArchivo}.docx`);
+      console.log('[SERVICE] ✓ Archivo guardado exitosamente');
+    } catch (error: any) {
+      console.error('[SERVICE] ✗ Error en generarDocumento:', error);
+      console.error('[SERVICE] Mensaje:', error?.message);
+      console.error('[SERVICE] Stack:', error?.stack);
+      throw error;
+    }
   }
 
   private async convertirHtmlADocx(elemento: HTMLElement): Promise<any[]> {
+    console.log('[SERVICE] convertirHtmlADocx: Procesando', elemento.childNodes.length, 'nodos');
     const nodos = Array.from(elemento.childNodes);
     const contenido: any[] = [];
+    let nodeCount = 0;
 
     for (const nodo of nodos) {
-      if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = nodo.textContent?.trim();
-        if (texto) {
-          contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
+      try {
+        nodeCount++;
+        if (nodeCount % 50 === 0) console.log('[SERVICE] Procesados', nodeCount, 'nodos...');
+        if (nodo.nodeType === Node.TEXT_NODE) {
+          const texto = this.asegurarString(nodo.textContent?.trim());
+          if (texto) {
+            contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
+          }
+        } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+          const elem = nodo as HTMLElement;
+          const procesado = await this.procesarElemento(elem);
+          if (procesado) {
+            if (Array.isArray(procesado)) {
+              contenido.push(...procesado.filter(p => p));
+            } else if (procesado) {
+              contenido.push(procesado);
+            }
+          }
         }
-      } else if (nodo.nodeType === Node.ELEMENT_NODE) {
-        const elem = nodo as HTMLElement;
-        const procesado = await this.procesarElemento(elem);
-        if (procesado) {
-          contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
-        }
+      } catch (error) {
+        console.error('Error procesando nodo en convertirHtmlADocx:', error);
+        continue;
       }
     }
 
@@ -274,34 +322,37 @@ export class WordGeneratorService {
   }
 
   private async procesarElemento(elem: HTMLElement): Promise<any | any[] | null> {
-    const tagName = elem.tagName.toLowerCase();
-    const text = elem.innerText?.trim();
+    try {
+      const tagName = elem.tagName.toLowerCase();
+      const text = this.asegurarString(elem.innerText?.trim());
+      
+      console.log('[SERVICE] Procesando elemento:', tagName);
 
-    if (tagName === 'app-foto-info' || tagName === 'app-image-upload') {
-      return await this.procesarFotoInfo(elem);
-    }
+      if (tagName === 'app-foto-info' || tagName === 'app-image-upload') {
+        return await this.procesarFotoInfo(elem);
+      }
 
-    if (tagName.startsWith('app-')) {
-      return await this.procesarContenidoDiv(elem);
-    }
+      if (tagName.startsWith('app-')) {
+        return await this.procesarContenidoDiv(elem);
+      }
 
-    if (!text && !['table', 'img', 'ul', 'ol', 'div'].includes(tagName)) {
-      return null;
-    }
+      if (!text && !['table', 'img', 'ul', 'ol', 'div'].includes(tagName)) {
+        return null;
+      }
 
-    switch (tagName) {
-      case 'h1':
-        return this.crearTitulo(text, HeadingLevel.HEADING_1);
-      case 'h2':
-        return this.crearTitulo(text, HeadingLevel.HEADING_2);
-      case 'h3':
-        return this.crearTitulo(text, HeadingLevel.HEADING_3);
-      case 'h4':
-        return this.crearTitulo(text, HeadingLevel.HEADING_4);
-      case 'h5':
-        return this.crearTitulo(text, HeadingLevel.HEADING_5);
-      case 'p':
-        return this.crearParrafo(elem);
+      switch (tagName) {
+        case 'h1':
+          return this.crearTitulo(text, HeadingLevel.HEADING_1);
+        case 'h2':
+          return this.crearTitulo(text, HeadingLevel.HEADING_2);
+        case 'h3':
+          return this.crearTitulo(text, HeadingLevel.HEADING_3);
+        case 'h4':
+          return this.crearTitulo(text, HeadingLevel.HEADING_4);
+        case 'h5':
+          return this.crearTitulo(text, HeadingLevel.HEADING_5);
+        case 'p':
+          return this.crearParrafo(elem);
       case 'ul':
       case 'ol':
         return this.crearLista(elem);
@@ -319,12 +370,18 @@ export class WordGeneratorService {
         return await this.procesarContenidoDiv(elem);
       default:
         return null;
+      }
+    } catch (error: any) {
+      console.error('[SERVICE] Error en procesarElemento - tag:', elem.tagName);
+      console.error('[SERVICE] Error detalles:', error?.message || error);
+      throw error;
     }
   }
 
   private crearTitulo(texto: string, nivel: any): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       heading: nivel,
       spacing: { 
         before: 240, 
@@ -335,39 +392,55 @@ export class WordGeneratorService {
   }
 
   private crearParrafo(elem: HTMLElement): Paragraph {
-    const texto = elem.innerText?.trim() || '';
-    const esTituloCentrado = elem.classList.contains('titulo-centrado') || 
-                             elem.classList.contains('table-title') ||
-                             elem.classList.contains('table-title-main');
-    const esSource = elem.classList.contains('source');
-    const tieneHighlight = elem.querySelector('.highlight');
+    try {
+      const texto = this.asegurarString(elem.innerText?.trim() || '');
+      const esTituloCentrado = elem.classList.contains('titulo-centrado') || 
+                               elem.classList.contains('table-title') ||
+                               elem.classList.contains('table-title-main');
+      const esSource = elem.classList.contains('source');
+      const tieneHighlight = elem.querySelector('.highlight');
 
-    const children: TextRun[] = [];
-    
-    if (tieneHighlight) {
-      const partes = this.extraerTextoConHighlight(elem);
-      partes.forEach(parte => {
-        children.push(new TextRun({
-          text: parte.texto,
-          bold: parte.esHighlight,
+      const children: TextRun[] = [];
+      
+      if (tieneHighlight) {
+        const partes = this.extraerTextoConHighlight(elem);
+        partes.forEach(parte => {
+          const textoStr = this.asegurarString(parte.texto || '');
+          if (textoStr) {
+            children.push(new TextRun({
+              text: textoStr,
+              bold: parte.esHighlight,
+              font: 'Arial'
+            }));
+          }
+        });
+      } else {
+        const textoStr = this.asegurarString(texto || '');
+        children.push(new TextRun({ 
+          text: textoStr || ' ',
           font: 'Arial'
         }));
-      });
-    } else {
-      children.push(new TextRun({ 
-        text: texto,
-        font: 'Arial'
-      }));
-    }
+      }
 
-    return new Paragraph({
-      alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
-      children: children,
-      spacing: { 
-        after: esSource ? 200 : 120,
-        line: 360 // 1.5 line spacing
-      },
-    });
+      if (children.length === 0) {
+        children.push(new TextRun({ text: ' ', font: 'Arial' }));
+      }
+
+      return new Paragraph({
+        alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+        children: children,
+        spacing: { 
+          after: esSource ? 200 : 120,
+          line: 360
+        },
+      });
+    } catch (error) {
+      console.error('Error en crearParrafo:', error);
+      return new Paragraph({
+        text: ' ',
+        spacing: { after: 120, line: 360 }
+      });
+    }
   }
 
   private extraerTextoConHighlight(elem: HTMLElement): Array<{ texto: string; esHighlight: boolean }> {
@@ -376,16 +449,17 @@ export class WordGeneratorService {
 
     nodos.forEach(nodo => {
       if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = nodo.textContent?.trim();
+        const texto = this.asegurarString(nodo.textContent?.trim());
         if (texto) {
           partes.push({ texto, esHighlight: false });
         }
       } else if (nodo.nodeType === Node.ELEMENT_NODE) {
         const elemento = nodo as HTMLElement;
         if (elemento.classList.contains('highlight')) {
-          partes.push({ texto: elemento.textContent?.trim() || '', esHighlight: true });
+          const texto = this.asegurarString(elemento.textContent?.trim());
+          partes.push({ texto, esHighlight: true });
         } else {
-          const texto = elemento.textContent?.trim();
+          const texto = this.asegurarString(elemento.textContent?.trim());
           if (texto) {
             partes.push({ texto, esHighlight: false });
           }
@@ -399,7 +473,7 @@ export class WordGeneratorService {
   private crearLista(elem: HTMLElement): Paragraph[] {
     const items = Array.from(elem.querySelectorAll('li'));
     return items.map(li => {
-      const texto = li.innerText?.trim() || '';
+      const texto = this.asegurarString(li.innerText?.trim());
       return new Paragraph({
         children: [new TextRun({ 
           text: texto,
@@ -427,7 +501,7 @@ export class WordGeneratorService {
                           cell.classList.contains('table-header') ||
                           cellHTMLElem.style?.textAlign === 'center';
         
-        const texto = (cell as HTMLElement).textContent?.trim() || '';
+        const texto = this.asegurarString((cell as HTMLElement).textContent?.trim());
         const cellElem = cell as HTMLElement;
         const tieneHighlight = cellElem.querySelector('.highlight');
 
@@ -439,16 +513,18 @@ export class WordGeneratorService {
         if (tieneHighlight) {
           const partes = this.extraerTextoConHighlight(cellElem);
           partes.forEach(parte => {
+            const textoStr = this.asegurarString(parte.texto);
             children.push(new TextRun({
-              text: parte.texto,
+              text: textoStr,
               bold: parte.esHighlight || isHeader,
               font: 'Arial',
               size: 22
             }));
           });
         } else {
+          const textoStr = this.asegurarString(texto);
           children.push(new TextRun({ 
-            text: texto, 
+            text: textoStr, 
             bold: isHeader,
             font: 'Arial',
             size: 22
@@ -559,7 +635,7 @@ export class WordGeneratorService {
       // Si la primera columna es texto largo (descripciones), darle más espacio
       if (dataRow) {
         const cells = Array.from(dataRow.querySelectorAll('th, td')) as HTMLElement[];
-        const firstCellText = cells[0]?.textContent?.trim() || '';
+        const firstCellText = this.asegurarString(cells[0]?.textContent?.trim());
         
         // Si la primera celda tiene texto largo, darle 40% del ancho
         if (firstCellText.length > 20) {
@@ -584,14 +660,14 @@ export class WordGeneratorService {
   private async procesarFotoInfo(elem: HTMLElement): Promise<any[]> {
     const contenido: any[] = [];
     
-    const numero = elem.querySelector('.foto-numero')?.textContent?.trim() || '';
-    const titulo = elem.querySelector('.foto-titulo')?.textContent?.trim() || '';
-    const fuente = elem.querySelector('.foto-fuente')?.textContent?.trim() || '';
+    const numero = this.asegurarString(elem.querySelector('.foto-numero')?.textContent?.trim());
+    const titulo = this.asegurarString(elem.querySelector('.foto-titulo')?.textContent?.trim());
+    const fuente = this.asegurarString(elem.querySelector('.foto-fuente')?.textContent?.trim());
     const img = elem.querySelector('img') as HTMLImageElement;
     
     if (numero) {
       contenido.push(new Paragraph({
-        children: [new TextRun({ text: numero, bold: true })],
+        children: [new TextRun({ text: this.asegurarString(numero), bold: true })],
         alignment: AlignmentType.CENTER,
         spacing: { after: 100 },
       }));
@@ -599,7 +675,7 @@ export class WordGeneratorService {
     
     if (titulo) {
       contenido.push(new Paragraph({
-        children: [new TextRun({ text: titulo })],
+        children: [new TextRun({ text: this.asegurarString(titulo) })],
         alignment: AlignmentType.CENTER,
         spacing: { after: 150 },
       }));
@@ -614,7 +690,7 @@ export class WordGeneratorService {
     
     if (fuente) {
       contenido.push(new Paragraph({
-        children: [new TextRun({ text: fuente })],
+        children: [new TextRun({ text: this.asegurarString(fuente) })],
         alignment: AlignmentType.CENTER,
         spacing: { after: 300 },
       }));
@@ -659,8 +735,8 @@ export class WordGeneratorService {
     const imageItems = Array.from(elem.querySelectorAll('.image-item'));
 
     for (const item of imageItems) {
-      const caption = item.querySelector('p')?.textContent?.trim() || '';
-      const fuente = item.querySelector('div')?.textContent?.trim() || '';
+      const caption = this.asegurarString(item.querySelector('p')?.textContent?.trim());
+      const fuente = this.asegurarString(item.querySelector('div')?.textContent?.trim());
       const img = item.querySelector('img') as HTMLImageElement;
 
       if (img && img.src) {
@@ -668,14 +744,14 @@ export class WordGeneratorService {
         if (imagen) {
           if (caption) {
             contenido.push(new Paragraph({
-              children: [new TextRun({ text: caption, bold: true })],
+              children: [new TextRun({ text: this.asegurarString(caption), bold: true })],
               spacing: { after: 100 },
             }));
           }
           contenido.push(imagen);
           if (fuente) {
             contenido.push(new Paragraph({
-              text: fuente,
+              text: this.asegurarString(fuente),
               alignment: AlignmentType.CENTER,
               spacing: { after: 150 },
             }));
@@ -693,7 +769,7 @@ export class WordGeneratorService {
 
     for (const nodo of nodos) {
       if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = nodo.textContent?.trim();
+        const texto = this.asegurarString(nodo.textContent?.trim());
         if (texto && texto.length > 0) {
           contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
         }
@@ -891,7 +967,6 @@ export class WordGeneratorService {
       console.log('Documento creado, generando blob...');
       const blob = await Packer.toBlob(doc);
       console.log('Blob generado, iniciando descarga...');
-      const { saveAs } = await import('file-saver');
       saveAs(blob, 'LBSPaka_Ejemplo_Estructura.docx');
       console.log('Descarga iniciada');
     } catch (error) {
@@ -935,8 +1010,9 @@ export class WordGeneratorService {
   }
 
   private crearParrafoArial(texto: string, opciones: any = {}): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       style: 'Normal',
       spacing: { after: opciones.spacing || 200 }
     });
@@ -952,7 +1028,7 @@ export class WordGeneratorService {
   private crearParrafoArialConTextos(textos: Array<{text: string, bold?: boolean, underline?: boolean}>): Paragraph {
     return new Paragraph({
       children: textos.map(t => new TextRun({
-        text: t.text,
+        text: this.asegurarString(t.text),
         bold: t.bold || false,
         underline: t.underline ? { type: 'single', color: 'FF0000' } : undefined
       })),
@@ -961,36 +1037,41 @@ export class WordGeneratorService {
   }
 
   private crearTituloArialH3(texto: string): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       style: 'TituloCapitulo'
     });
   }
 
   private crearTituloArialH4(texto: string): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       style: 'Heading1'
     });
   }
 
   private crearTituloArialH5(texto: string): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       style: 'Heading2'
     });
   }
 
   private crearTituloArialH6(texto: string): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: texto,
+      text: textoStr,
       style: 'Heading3'
     });
   }
 
   private crearBulletArial(texto: string): Paragraph {
+    const textoStr = this.asegurarString(texto);
     return new Paragraph({
-      text: '•   ' + texto,
+      text: '•   ' + textoStr,
       style: 'ListaBullet'
     });
   }
@@ -999,12 +1080,12 @@ export class WordGeneratorService {
     const contenido: any[] = [];
 
     contenido.push(new Paragraph({
-      text: 'CAPÍTULO III - LÍNEA BASE',
+      text: String('CAPÍTULO III - LÍNEA BASE'),
       style: 'TituloCapitulo'
     }));
 
     contenido.push(new Paragraph({
-      text: '3.1.     DESCRIPCIÓN Y CARACTERIZACIÓN DE LOS ASPECTOS SOCIALES, CULTURALES Y ANTROPOLÓGICOS DE LA POBLACIÓN UBICADA EN EL ÁREA DE INFLUENCIA SOCIAL DEL PROYECTO',
+      text: String('3.1.     DESCRIPCIÓN Y CARACTERIZACIÓN DE LOS ASPECTOS SOCIALES, CULTURALES Y ANTROPOLÓGICOS DE LA POBLACIÓN UBICADA EN EL ÁREA DE INFLUENCIA SOCIAL DEL PROYECTO'),
       style: 'Heading1'
     }));
 
@@ -1056,13 +1137,13 @@ export class WordGeneratorService {
     }));
 
     contenido.push(new Paragraph({
-      text: 'Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).',
-      alignment: AlignmentType.JUSTIFIED,
-      spacing: { after: 300 },
-      run: {
+      children: [new TextRun({
+        text: 'Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).',
         font: 'Arial',
         size: 22
-      }
+      })],
+      alignment: AlignmentType.JUSTIFIED,
+      spacing: { after: 300 }
     }));
 
     contenido.push(this.crearTituloArialH5('3.1.1.     Objetivos de la línea base social'));
@@ -1109,12 +1190,12 @@ export class WordGeneratorService {
 
     // Cuadro N° 3. 1 Lista de entrevistados
     contenido.push(new Paragraph({
-      text: 'Cuadro N° 3. 1',
+      text: String('Cuadro N° 3. 1'),
       alignment: AlignmentType.CENTER,
       spacing: { after: 100 },
     }));
     contenido.push(new Paragraph({
-      text: 'Lista de entrevistados',
+      text: String('Lista de entrevistados'),
       alignment: AlignmentType.CENTER,
       spacing: { after: 200 },
     }));
@@ -3242,23 +3323,23 @@ export class WordGeneratorService {
   private async agregarFotografia(numero: string, titulo: string): Promise<any[]> {
     const contenido: any[] = [];
     contenido.push(new Paragraph({
-      text: `Fotografía N° ${numero}`,
+      text: String(`Fotografía N° ${numero}`),
       style: 'TituloTabla'
     }));
     contenido.push(new Paragraph({
-      text: titulo,
+      text: this.asegurarString(titulo),
       style: 'SubtituloTabla'
     }));
 
     contenido.push(new Paragraph({
-      text: '[IMAGEN]',
+      text: String('[IMAGEN]'),
       alignment: AlignmentType.CENTER,
       spacing: { after: 200 },
       style: 'Normal'
     }));
 
     contenido.push(new Paragraph({
-      text: 'FUENTE: GEADES, 2024',
+      text: String('FUENTE: GEADES, 2024'),
       style: 'Fuente'
     }));
     return contenido;
@@ -3267,17 +3348,17 @@ export class WordGeneratorService {
   private crearTablaConDatos(numero: string, titulo: string, headers: string[], rows: string[][]): any[] {
     const contenido: any[] = [];
     contenido.push(new Paragraph({
-      text: `Cuadro N° ${numero}`,
+      text: this.asegurarString(`Cuadro N° ${numero}`),
       style: 'TituloTabla'
     }));
     contenido.push(new Paragraph({
-      text: titulo,
+      text: this.asegurarString(titulo),
       style: 'SubtituloTabla'
     }));
 
     const headerCells = headers.map(header =>
       new TableCell({
-        children: [new Paragraph({ text: header, alignment: AlignmentType.CENTER, style: 'Normal' })],
+        children: [new Paragraph({ text: this.asegurarString(header), alignment: AlignmentType.CENTER, style: 'Normal' })],
         shading: { fill: 'E6E6E6' }
       })
     );
@@ -3286,9 +3367,17 @@ export class WordGeneratorService {
       new TableRow({ children: headerCells }),
       ...rows.map(row =>
         new TableRow({
-          children: row.map(cell =>
-            new TableCell({ children: [new Paragraph({ text: cell || '', style: 'Normal' })] })
-          )
+          children: row.map(cell => {
+            const cellText = this.asegurarString(cell);
+            // Dividir el texto en múltiples líneas si contiene saltos de línea reales
+            const lines = cellText.split('\n').filter(line => line.trim().length > 0);
+            const paragraphs = lines.map(line => 
+              new Paragraph({ text: line, style: 'Normal' })
+            );
+            return new TableCell({
+              children: paragraphs.length > 0 ? paragraphs : [new Paragraph({ text: '', style: 'Normal' })]
+            });
+          })
         })
       )
     ];
@@ -3307,7 +3396,7 @@ export class WordGeneratorService {
     }));
 
     contenido.push(new Paragraph({
-      text: 'FUENTE: GEADES (2024)',
+      text: String('FUENTE: GEADES (2024)'),
       style: 'Fuente'
     }));
 

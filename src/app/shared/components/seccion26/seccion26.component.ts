@@ -25,6 +25,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla', 'textoIntroServiciosBasicosAISI', 'textoServiciosAguaAISI', 'textoDesagueCP', 'textoDesechosSolidosCP', 'textoElectricidadCP', 'textoEnergiaCocinarCP'];
   
@@ -153,9 +154,9 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -709,6 +710,185 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       (error: any) => {
       }
     );
+  }
+
+  private calcularPorcentajesTabla(tablaKey: string, campoCasos: string = 'casos', campoPorcentaje: string = 'porcentaje'): void {
+    const tabla = this.datos[tablaKey] || [];
+    if (!tabla || tabla.length === 0) return;
+    
+    const total = tabla.reduce((sum: number, item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      if (categoria.includes('total')) return sum;
+      const casos = typeof item[campoCasos] === 'number' ? item[campoCasos] : parseInt(item[campoCasos]) || 0;
+      return sum + casos;
+    }, 0);
+    
+    if (total > 0) {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          const casos = typeof item[campoCasos] === 'number' ? item[campoCasos] : parseInt(item[campoCasos]) || 0;
+          const porcentaje = ((casos / total) * 100)
+            .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            .replace('.', ',') + ' %';
+          item[campoPorcentaje] = porcentaje;
+        }
+      });
+    } else {
+      tabla.forEach((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (!categoria.includes('total')) {
+          item[campoPorcentaje] = '0,00 %';
+        }
+      });
+    }
+    
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+  }
+
+  onAbastecimientoAguaFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyAbastecimientoAgua();
+    const tabla = this.datos[tablaKey] || this.datos.abastecimientoAguaCpTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesTabla(tablaKey);
+      } else {
+        this.datos[tablaKey] = [...tabla];
+        this.formularioService.actualizarDato(tablaKey as any, tabla);
+      }
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onAbastecimientoAguaTableUpdated(): void {
+    const tablaKey = this.getTablaKeyAbastecimientoAgua();
+    const tabla = this.datos[tablaKey] || this.datos.abastecimientoAguaCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onSaneamientoFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeySaneamiento();
+    const tabla = this.datos[tablaKey] || this.datos.saneamientoCpTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesTabla(tablaKey);
+      } else {
+        this.datos[tablaKey] = [...tabla];
+        this.formularioService.actualizarDato(tablaKey as any, tabla);
+      }
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onSaneamientoTableUpdated(): void {
+    const tablaKey = this.getTablaKeySaneamiento();
+    const tabla = this.datos[tablaKey] || this.datos.saneamientoCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onCoberturaElectricaFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyCoberturaElectrica();
+    const tabla = this.datos[tablaKey] || this.datos.coberturaElectricaCpTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesTabla(tablaKey);
+      } else {
+        this.datos[tablaKey] = [...tabla];
+        this.formularioService.actualizarDato(tablaKey as any, tabla);
+      }
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onCoberturaElectricaTableUpdated(): void {
+    const tablaKey = this.getTablaKeyCoberturaElectrica();
+    const tabla = this.datos[tablaKey] || this.datos.coberturaElectricaCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onCombustiblesCocinarFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyCombustiblesCocinar();
+    const tabla = this.datos[tablaKey] || this.datos.combustiblesCocinarCpTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        this.calcularPorcentajesTabla(tablaKey);
+      } else {
+        this.datos[tablaKey] = [...tabla];
+        this.formularioService.actualizarDato(tablaKey as any, tabla);
+      }
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onCombustiblesCocinarTableUpdated(): void {
+    const tablaKey = this.getTablaKeyCombustiblesCocinar();
+    const tabla = this.datos[tablaKey] || this.datos.combustiblesCocinarCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

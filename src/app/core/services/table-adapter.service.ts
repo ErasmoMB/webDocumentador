@@ -20,14 +20,6 @@ export class TableAdapterService {
     maxFilas: number = 20,
     usarIndiceFila: boolean = true
   ): any[] {
-    console.log('[TableAdapter] convertirCamposIndividualesAArray - INICIO', {
-      baseField: mapping.baseField,
-      prefijo,
-      maxFilas,
-      usarIndiceFila,
-      fields: mapping.fields
-    });
-    
     const filas: any[] = [];
     
     for (let i = 1; i <= maxFilas; i++) {
@@ -56,17 +48,6 @@ export class TableAdapterService {
         }
         valor = valor || '';
         
-        if (i <= 3) {
-          console.log(`[TableAdapter] Fila ${i}, Campo ${field}:`, {
-            campoCompleto,
-            campoSinPrefijo: usarIndiceFila 
-              ? `${mapping.baseField}Fila${i}${field}`
-              : `${mapping.baseField}${field}`,
-            valor,
-            tieneValor: !!(valor && valor !== '____' && valor.toString().trim() !== '')
-          });
-        }
-        
         if (valor && valor !== '____' && valor.toString().trim() !== '') {
           tieneDatos = true;
         }
@@ -79,12 +60,6 @@ export class TableAdapterService {
         filas.push(fila);
       }
     }
-
-    console.log('[TableAdapter] convertirCamposIndividualesAArray - RESULTADO', {
-      totalFilas: filas.length,
-      primeraFila: filas[0],
-      segundaFila: filas[1]
-    });
 
     return filas.length > 0 ? filas : [this.crearFilaVacia(mapping.fields.map(f => f.charAt(0).toLowerCase() + f.slice(1)))];
   }
@@ -168,24 +143,10 @@ export class TableAdapterService {
     usarIndiceFila: boolean = true,
     actualizarServicio: boolean = true
   ): void {
-    console.log('[TableAdapter] sincronizarArrayDesdeCamposIndividuales - INICIO', {
-      arrayKey,
-      baseField: mapping.baseField,
-      prefijo,
-      actualizarServicio
-    });
-    
     const arrayData = this.convertirCamposIndividualesAArray(datos, mapping, prefijo, maxFilas, usarIndiceFila);
     datos[arrayKey] = arrayData;
     
-    console.log('[TableAdapter] sincronizarArrayDesdeCamposIndividuales - Array creado', {
-      arrayKey,
-      arrayLength: arrayData.length,
-      actualizarServicio
-    });
-    
     if (actualizarServicio) {
-      console.log('[TableAdapter] sincronizarArrayDesdeCamposIndividuales - Actualizando servicio');
       this.formularioService.actualizarDato(arrayKey, arrayData);
     }
   }

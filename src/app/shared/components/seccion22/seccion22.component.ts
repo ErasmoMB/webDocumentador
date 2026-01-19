@@ -24,6 +24,7 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   fotografiasInstitucionalidadCache: any[] = [];
   override watchedFields: string[] = ['centroPobladoAISI', 'poblacionSexoAISI', 'poblacionEtarioAISI', 'textoDemografiaAISI', 'textoGrupoEtarioAISI'];
@@ -290,9 +291,9 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -450,6 +451,134 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
     const porcentaje1529 = this.getPorcentajeGrupoEtario('15 a 29');
     
     return `En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el ${porcentaje014} del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (${porcentaje4564}). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el ${porcentaje1529} cada uno.`;
+  }
+
+  onPoblacionSexoFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.poblacionSexoAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const sexo = item.sexo?.toString().toLowerCase() || '';
+          if (sexo.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const sexo = item.sexo?.toString().toLowerCase() || '';
+            if (!sexo.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.poblacionSexoAISI = [...tabla];
+      this.formularioService.actualizarDato('poblacionSexoAISI', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPoblacionSexoTableUpdated(): void {
+    const tabla = this.datos.poblacionSexoAISI || [];
+    this.datos.poblacionSexoAISI = [...tabla];
+    this.formularioService.actualizarDato('poblacionSexoAISI', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPoblacionEtarioFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.poblacionEtarioAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.poblacionEtarioAISI = [...tabla];
+      this.formularioService.actualizarDato('poblacionEtarioAISI', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPoblacionEtarioTableUpdated(): void {
+    const tabla = this.datos.poblacionEtarioAISI || [];
+    this.datos.poblacionEtarioAISI = [...tabla];
+    this.formularioService.actualizarDato('poblacionEtarioAISI', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

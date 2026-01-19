@@ -24,6 +24,7 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'actividadesEconomicasAISI', 'ciudadOrigenComercio', 'textoIntroActividadesEconomicasAISI', 'textoActividadesEconomicasAISI', 'textoMercadoProductos', 'textoHabitosConsumo'];
   
@@ -101,9 +102,9 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -115,25 +116,25 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override actualizarDatos(): void {
-    const datosAnteriores = JSON.stringify({
+    const datosAnteriores = {
       actividades: this.datos?.['fotografiaActividadesEconomicasImagen'],
       mercado: this.datos?.['fotografiaMercadoImagen']
-    });
+    };
     
     const datosNuevos = this.formularioService.obtenerDatos();
     this.datos = { ...datosNuevos };
     this.actualizarValoresConPrefijo();
     
     this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = JSON.parse(JSON.stringify((this.datos as any)[campo] || null));
+      this.datosAnteriores[campo] = this.clonarValor((this.datos as any)[campo] || null);
     });
     
-    const datosActuales = JSON.stringify({
+    const datosActuales = {
       actividades: this.datos?.['fotografiaActividadesEconomicasImagen'],
       mercado: this.datos?.['fotografiaMercadoImagen']
-    });
+    };
     
-    if (datosAnteriores !== datosActuales) {
+    if (!this.compararValores(datosAnteriores, datosActuales)) {
       this.actualizarFotografiasCache();
       this.cdRef.detectChanges();
     } else {
@@ -483,5 +484,91 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
     const num = typeof valor === 'string' ? parseFloat(valor) : valor;
     if (isNaN(num)) return '0,00 %';
     return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+  }
+
+  onActividadesEconomicasFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.actividadesEconomicasAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const actividad = item.actividad?.toString().toLowerCase() || '';
+          if (actividad.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const actividad = item.actividad?.toString().toLowerCase() || '';
+            if (!actividad.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.actividadesEconomicasAISI = [...tabla];
+      this.formularioService.actualizarDato('actividadesEconomicasAISI', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onActividadesEconomicasTableUpdated(): void {
+    const tabla = this.datos.actividadesEconomicasAISI || [];
+    this.datos.actividadesEconomicasAISI = [...tabla];
+    this.formularioService.actualizarDato('actividadesEconomicasAISI', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }

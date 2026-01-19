@@ -661,12 +661,16 @@ export class FormularioService {
       }));
       
       datosTransformados.afiliacionSaludTabla.forEach((item: any) => {
-        if (item.categoria?.includes('SIS') && !item.categoria?.includes('ESSALUD')) {
-          datosTransformados.porcentajeSIS = item.porcentaje?.replace(/[^0-9,]/g, '') || '84,44';
-        } else if (item.categoria?.includes('ESSALUD')) {
-          datosTransformados.porcentajeESSALUD = item.porcentaje?.replace(/[^0-9,]/g, '') || '3,56';
-        } else if (item.categoria?.includes('sin seguro') || item.categoria?.includes('Ningún')) {
-          datosTransformados.porcentajeSinSeguro = item.porcentaje?.replace(/[^0-9,]/g, '') || '12,00';
+        const categoria = String(item.categoria || '');
+        if (categoria.includes('SIS') && !categoria.includes('ESSALUD')) {
+          const porcentajeStr = String(item.porcentaje || '');
+          datosTransformados.porcentajeSIS = porcentajeStr.replace(/[^0-9,]/g, '') || '84,44';
+        } else if (categoria.includes('ESSALUD')) {
+          const porcentajeStr = String(item.porcentaje || '');
+          datosTransformados.porcentajeESSALUD = porcentajeStr.replace(/[^0-9,]/g, '') || '3,56';
+        } else if (categoria.includes('sin seguro') || categoria.includes('Ningún')) {
+          const porcentajeStr = String(item.porcentaje || '');
+          datosTransformados.porcentajeSinSeguro = porcentajeStr.replace(/[^0-9,]/g, '') || '12,00';
         }
       });
     }
@@ -709,15 +713,19 @@ export class FormularioService {
     }
 
     if (!datosTransformados.textoEstructuraAISI && Array.isArray(datosTransformados.tiposMaterialesTabla) && datosTransformados.tiposMaterialesTabla.length > 0) {
-      const pisosTierra = datosTransformados.tiposMaterialesTabla.find((item: any) => 
-        item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Tierra')
-      );
-      const pisosCemento = datosTransformados.tiposMaterialesTabla.find((item: any) => 
-        item.categoria?.includes('pisos') && item.tipoMaterial?.includes('Cemento')
-      );
-      const porcTierra = pisosTierra?.porcentaje || '79,59 %';
-      const porcCemento = pisosCemento?.porcentaje || '20,41 %';
-      const distrito = datosTransformados.distritoSeleccionado || 'Cahuacho';
+      const pisosTierra = datosTransformados.tiposMaterialesTabla.find((item: any) => {
+        const categoria = String(item.categoria || '');
+        const tipoMaterial = String(item.tipoMaterial || '');
+        return categoria.includes('pisos') && tipoMaterial.includes('Tierra');
+      });
+      const pisosCemento = datosTransformados.tiposMaterialesTabla.find((item: any) => {
+        const categoria = String(item.categoria || '');
+        const tipoMaterial = String(item.tipoMaterial || '');
+        return categoria.includes('pisos') && tipoMaterial.includes('Cemento');
+      });
+      const porcTierra = String(pisosTierra?.porcentaje || '79,59 %');
+      const porcCemento = String(pisosCemento?.porcentaje || '20,41 %');
+      const distrito = String(datosTransformados.distritoSeleccionado || 'Cahuacho');
       
       datosTransformados.textoEstructuraAISI = `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${distrito}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcTierra}). El porcentaje restante, que consta del ${porcCemento}, cuentan con pisos elaborados a base de cemento.`;
     }
@@ -727,12 +735,13 @@ export class FormularioService {
     }
 
     if (!datosTransformados.textoOcupacionViviendaAISI && datosTransformados.condicionOcupacionCpTabla) {
-      const ocupadasPresentes = datosTransformados.condicionOcupacionCpTabla.find((item: any) => 
-        item.categoria?.includes('presentes')
-      );
-      const porcentaje = ocupadasPresentes?.porcentaje || '29,88 %';
-      const casos = ocupadasPresentes?.casos || '49';
-      const distrito = datosTransformados.distritoSeleccionado || 'Cahuacho';
+      const ocupadasPresentes = datosTransformados.condicionOcupacionCpTabla.find((item: any) => {
+        const categoria = String(item.categoria || '');
+        return categoria.includes('presentes');
+      });
+      const porcentaje = String(ocupadasPresentes?.porcentaje || '29,88 %');
+      const casos = String(ocupadasPresentes?.casos || '49');
+      const distrito = String(datosTransformados.distritoSeleccionado || 'Cahuacho');
       datosTransformados.textoOcupacionViviendaAISI = `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${casos}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentaje} del conjunto analizado.`;
     }
 

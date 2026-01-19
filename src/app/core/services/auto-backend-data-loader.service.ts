@@ -11,7 +11,9 @@ import { CentrosPobladosActivosService } from './centros-poblados-activos.servic
 })
 export class AutoBackendDataLoaderService {
   private readonly CACHE_DURATION = 3600000;
+  private readonly MAX_RETRIES = 3;
   private loadingRequests: Map<string, Observable<any>> = new Map();
+  private failedRequests: Map<string, { retries: number; lastError: any }> = new Map();
 
   constructor(
     private backendApi: BackendApiService,
@@ -61,7 +63,12 @@ export class AutoBackendDataLoaderService {
     const params = this.buildCacheParams(mapping.paramType, ubigeoOrCppList);
     const requestKey = `${fieldName}_${mapping.endpoint}_${JSON.stringify(params)}`;
     
-    console.log('[LOADFIELD] Iniciando para fieldName:', fieldName, 'endpoint:', mapping.endpoint, 'aggregatable:', mapping.aggregatable);
+    // Verificar si ya hemos superado el límite de reintentos
+    const failedRequest = this.failedRequests.get(requestKey);
+    if (failedRequest && failedRequest.retries >= this.MAX_RETRIES) {
+      console.warn(`🚫 Reintentos agotados (${this.MAX_RETRIES}) para: ${mapping.endpoint} con parámetros:`, params);
+      return of(null);
+    }
     
     // Si es aggregatable (múltiples CCPP), no cachear aquí, dejar que aggregateMultipleCpp maneje el cache individual
     const useCache = !forceRefresh && !mapping.aggregatable;
@@ -69,37 +76,40 @@ export class AutoBackendDataLoaderService {
     if (useCache) {
       const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
       if (cached) {
-        console.log('[LOADFIELD] Cache HIT para', fieldName, 'cached:', cached);
         const transformed = mapping.transform ? mapping.transform(cached) : cached;
-        console.log('[LOADFIELD] Cache después de transform:', transformed);
         return of(transformed);
       }
     }
 
     // Para fields NO aggregatable, reutilizar requests en progreso
     if (!mapping.aggregatable && this.loadingRequests.has(requestKey)) {
-      console.log('[LOADFIELD] Ya hay request en progreso para', fieldName, 'clave:', requestKey);
       return this.loadingRequests.get(requestKey)!;
     }
 
-    console.log('[LOADFIELD] Llamando fetchAndTransform para', fieldName);
     const request$ = this.fetchAndTransform(sectionKey, mapping, ubigeoOrCppList).pipe(
       map(data => {
-        console.log('[LOADFIELD] fetchAndTransform retornó data para', fieldName, ':', data);
+        // Limpiar contador de fallos si la solicitud fue exitosa
+        this.failedRequests.delete(requestKey);
+        
         // Solo cachear si NO es aggregatable (ya se cacheó en aggregateMultipleCpp)
         if (!mapping.aggregatable) {
           this.cacheService.saveResponse(mapping.endpoint, params, data);
           const transformedData = mapping.transform ? mapping.transform(data) : data;
-          console.log('[LOADFIELD] transformedData para', fieldName, ':', transformedData);
           return transformedData;
         } else {
           // Para aggregatable, aggregateMultipleCpp ya transformó los datos
-          console.log('[LOADFIELD] (aggregatable) data ya transformada:', data);
           return data;
         }
       }),
       catchError(err => {
-        console.log('[LOADFIELD] ERROR en', fieldName, ':', err);
+        // Incrementar contador de reintentos
+        const current = this.failedRequests.get(requestKey) || { retries: 0, lastError: null };
+        current.retries++;
+        current.lastError = err;
+        this.failedRequests.set(requestKey, current);
+        
+        console.warn(`⚠️ Error en ${mapping.endpoint} (intento ${current.retries}/${this.MAX_RETRIES}):`, err.message || err);
+        
         return of(null);
       }),
       shareReplay(1)
@@ -126,22 +136,17 @@ export class AutoBackendDataLoaderService {
     mapping: DataMapping,
     ubigeoOrCppList: string | string[]
   ): Observable<any> {
-    console.log('[FETCH] fetchAndTransform - sectionKey:', sectionKey, 'aggregatable:', mapping.aggregatable);
-
     if (Array.isArray(ubigeoOrCppList) && ubigeoOrCppList.length === 0) {
-      console.warn('[FETCH] Lista de CCPP vacía');
       return of([]);
     }
 
     if (Array.isArray(ubigeoOrCppList) && mapping.aggregatable) {
-      console.log('[FETCH] Agregando múltiples CCPP:', ubigeoOrCppList.length);
       return this.aggregateMultipleCpp(sectionKey, mapping, ubigeoOrCppList);
     }
     
     const paramValue = Array.isArray(ubigeoOrCppList) 
       ? ubigeoOrCppList[0] 
       : ubigeoOrCppList;
-    console.log('[FETCH] Llamando endpoint único con parámetro:', paramValue);
     return this.callEndpoint(mapping.endpoint, mapping.paramType, paramValue);
   }
 
@@ -153,6 +158,17 @@ export class AutoBackendDataLoaderService {
     const requests = cppList.map((cpp, idx) => {
       const paramType = mapping.paramType || 'id_ubigeo';
       const params = this.buildCacheParams(paramType, cpp);
+      
+      // Crear clave única para trackear reintentos por endpoint + parámetro
+      const endpointKey = `${mapping.endpoint}_${JSON.stringify(params)}`;
+      
+      // Verificar si ya hemos superado el límite de reintentos
+      const failedRequest = this.failedRequests.get(endpointKey);
+      if (failedRequest && failedRequest.retries >= this.MAX_RETRIES) {
+        console.warn(`🚫 Reintentos agotados (${this.MAX_RETRIES}) para: ${mapping.endpoint} con cpp: ${cpp}`);
+        return of([]);
+      }
+      
       const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
       
       if (cached) {
@@ -162,13 +178,21 @@ export class AutoBackendDataLoaderService {
 
       return this.callEndpoint(mapping.endpoint, mapping.paramType, cpp).pipe(
         map(data => {
-          console.log(`[AutoLoader] ${mapping.endpoint} para ${cpp}:`, data);
+          // Limpiar contador de fallos si fue exitoso
+          this.failedRequests.delete(endpointKey);
           this.cacheService.saveResponse(mapping.endpoint, params, data);
           // NO transformar aquí, retornar datos raw para que agregateMultipleCpp los procese
           return data;
         }),
         catchError(err => {
-          console.error(`[AutoLoader] Error en ${mapping.endpoint}:`, err);
+          // Incrementar contador de reintentos
+          const current = this.failedRequests.get(endpointKey) || { retries: 0, lastError: null };
+          current.retries++;
+          current.lastError = err;
+          this.failedRequests.set(endpointKey, current);
+          
+          console.warn(`⚠️ Error en ${mapping.endpoint} (cpp: ${cpp}, intento ${current.retries}/${this.MAX_RETRIES}):`, err.message || err);
+          
           return of([]);
         })
       );
@@ -176,16 +200,9 @@ export class AutoBackendDataLoaderService {
 
     return forkJoin(requests).pipe(
       map(results => {
-        console.log('[AGGREGATE] results (sin transformar):', results);
-        
-        // Aquí agregamos los datos RAW
         if (sectionKey === 'seccion6_aisd' && mapping.endpoint === '/demograficos/datos') {
-          console.log('[AGGREGATE] Procesando datos demográficos - agregando RAW data');
           const aggregated = this.agregarDemograficosDesdeRespuestas(results);
-          console.log('[AGGREGATE] aggregated.items:', aggregated.items);
-          // AHORA transformamos - pasamos aggregated.items (que es un array) al transform
           const transformed = mapping.transform ? mapping.transform(aggregated.items) : aggregated.items;
-          console.log('[AGGREGATE] transformed items:', transformed);
           return transformed;
         }
         
@@ -289,7 +306,6 @@ export class AutoBackendDataLoaderService {
       ? (paramValue ? paramValue.toString().replace(/^0+/, '') || '0' : paramValue)
       : paramValue;
 
-    console.log(`[LOADER] Llamando endpoint: ${endpoint}, parámetro: ${param}=${normalizedParamValue}`);
 
     switch (endpoint) {
       case '/demograficos/datos':
@@ -487,7 +503,38 @@ export class AutoBackendDataLoaderService {
   clearCache(): void {
     // Limpiar el Map de requests en progreso para prevenir memory leaks
     this.loadingRequests.clear();
+    // Limpiar el tracking de errores para permitir reintentos
+    this.failedRequests.clear();
     // Limpiar el caché del servicio de cache
     this.cacheService.clearCache();
+    console.log('✨ Cache y reintentos limpiados completamente');
+  }
+
+  /**
+   * Resetea el contador de reintentos para un endpoint específico.
+   * Útil para permitir reintentos después de que el backend vuelve a estar disponible.
+   * @param endpoint - El endpoint para el cual resetear reintentos (ej: '/aisi/informacion-referencial')
+   */
+  resetRetriesForEndpoint(endpoint: string): void {
+    const keysToDelete: string[] = [];
+    
+    this.failedRequests.forEach((value, key) => {
+      if (key.includes(endpoint)) {
+        keysToDelete.push(key);
+      }
+    });
+
+    keysToDelete.forEach(key => this.failedRequests.delete(key));
+    console.log(`🔄 Reintentos reseteados para endpoint: ${endpoint} (${keysToDelete.length} registros limpiados)`);
+  }
+
+  /**
+   * Resetea TODOS los contadores de reintentos.
+   * Útil cuando el backend vuelve a estar disponible o para debugging.
+   */
+  resetAllRetries(): void {
+    const count = this.failedRequests.size;
+    this.failedRequests.clear();
+    console.log(`🔄 Todos los reintentos reseteados (${count} registros limpiados)`);
   }
 }

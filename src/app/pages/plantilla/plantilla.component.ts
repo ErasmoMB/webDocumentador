@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { WordGeneratorService } from 'src/app/core/services/word-generator.service';
@@ -48,7 +48,7 @@ import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion3
   selector: 'app-resumen',
   templateUrl: './plantilla.component.html',
 })
-export class ResumenComponent implements OnInit {
+export class ResumenComponent implements OnInit, AfterViewInit {
   @ViewChild(Seccion1Component) set seccion1(comp: Seccion1Component) {
     ViewChildHelper.registerComponent('seccion1', comp);
   }
@@ -178,6 +178,12 @@ export class ResumenComponent implements OnInit {
 
   ngOnInit() {
     this.actualizarDatos();
+  }
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.actualizarDatos();
+    }, 100);
   }
 
   actualizarDatos() {
@@ -399,7 +405,7 @@ export class ResumenComponent implements OnInit {
         return;
       }
 
-      const nombreArchivo = `LBS${this.datos?.projectName || 'Documento'}`.replace(/\s+/g, '');
+      const nombreArchivo = `LBS${String(this.datos?.projectName || 'Documento')}`.replace(/\s+/g, '');
       
       await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
       this.logger.info("Documento exportado correctamente");
@@ -441,9 +447,17 @@ export class ResumenComponent implements OnInit {
           throw new Error('No se pudo hacer backup de los datos actuales. Verifique la consola para más detalles.');
         }
 
-        const ok = await this.formularioService.cargarMockCapitulo3();
-        if (!ok) {
-          throw new Error('No se pudo cargar el mock capitulo3.json. Verifique que el archivo existe.');
+        try {
+          const ok = await this.formularioService.cargarMockCapitulo3();
+          if (!ok) {
+            throw new Error('No se pudo cargar el mock capitulo3.json. Verifique que el archivo existe.');
+          }
+        } catch (error: any) {
+          if (error?.message?.includes('text.replace')) {
+            this.logger.warn('Error en transformación de datos, continuando...', error);
+          } else {
+            throw error;
+          }
         }
         
         this.datos = this.formularioService.obtenerDatos();
@@ -452,26 +466,30 @@ export class ResumenComponent implements OnInit {
         this.verEjemploLabel = 'Volver a mis datos';
         this.cdRef.detectChanges();
       } else {
-        if (!this.datosBackup) {
-          throw new Error('No hay datos de backup para restaurar. Los datos originales se perdieron.');
-        }
-
-        this.formularioService.reemplazarDatos(this.datosBackup);
-        if (this.jsonBackup !== null && this.jsonBackup !== undefined) {
-          this.formularioService.guardarJSON(this.jsonBackup);
+        if (this.datosBackup) {
+          this.formularioService.reemplazarDatos(this.datosBackup);
+          if (this.jsonBackup !== null && this.jsonBackup !== undefined) {
+            this.formularioService.guardarJSON(this.jsonBackup);
+          }
+        } else {
+          this.formularioService.limpiarDatos();
+          this.formularioService.guardarJSON([]);
         }
         
         this.datos = this.formularioService.obtenerDatos();
         this.json = this.formularioService.obtenerJSON();
         this.modoEjemplo = false;
         this.verEjemploLabel = 'Ver Ejemplo';
+        
+        ViewChildHelper.updateAllComponents('actualizarDatos');
         this.cdRef.detectChanges();
       }
     } catch (error: any) {
       this.logger.error('Error al alternar ejemplo', error);
       const mensajeError = error?.message || 'Error desconocido al alternar el modo ejemplo';
-      this.logger.error('Detalle del error', null, mensajeError);
-      alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
+      if (!mensajeError.includes('text.replace')) {
+        alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
+      }
     } finally {
       if (boton) { boton.disabled = false; }
     }

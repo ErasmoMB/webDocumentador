@@ -29,6 +29,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
   override fotografiasCache: FotoItem[] = [];
   override fotografiasFormMulti: FotoItem[] = [];
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
 
   get lenguasMaternasConfig(): TableConfig {
     return {
@@ -369,9 +370,14 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaLenguasMaternas();
     if (tabla && tabla[rowIndex]) {
       tabla[rowIndex][field] = value;
-      this.datos[tablaKey] = tabla;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesLenguasMaternas();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey, tabla);
-      this.calcularPorcentajesLenguasMaternas();
+      this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
@@ -379,8 +385,10 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
   onLenguasMaternasTableUpdated(): void {
     const tablaKey = this.getTablaKeyLenguasMaternas();
     const tabla = this.getTablaLenguasMaternas();
-    this.datos[tablaKey] = tabla;
     this.calcularPorcentajesLenguasMaternas();
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
@@ -389,9 +397,14 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaReligiones();
     if (tabla && tabla[rowIndex]) {
       tabla[rowIndex][field] = value;
-      this.datos[tablaKey] = tabla;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesReligiones();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey, tabla);
-      this.calcularPorcentajesReligiones();
+      this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
@@ -399,8 +412,10 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
   onReligionesTableUpdated(): void {
     const tablaKey = this.getTablaKeyReligiones();
     const tabla = this.getTablaReligiones();
-    this.datos[tablaKey] = tabla;
     this.calcularPorcentajesReligiones();
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
@@ -501,7 +516,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
       const religionPrimera = top2.primera.categoria;
       const escapedReligion = this.escapeRegex(religionPrimera);
       html = html.replace(
-        new RegExp(`\\b${escapedReligion}\\b`, 'gi'),
+        this.obtenerRegExp(`\\b${escapedReligion}\\b`),
         `<span class="data-source">${this.escapeHtml(religionPrimera)}</span>`
       );
     }
@@ -644,6 +659,13 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
   }
 
   private escapeRegex(str: any): string {

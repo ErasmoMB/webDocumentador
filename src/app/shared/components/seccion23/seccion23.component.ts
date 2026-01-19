@@ -25,6 +25,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI', 'textoPEAAISI', 'textoPET_AISI', 'textoIndicadoresDistritalesAISI', 'textoPEA_AISI', 'textoAnalisisPEA_AISI', 'textoEmpleoAISI', 'textoIngresosAISI', 'textoIndiceDesempleoAISI'];
   
@@ -367,9 +368,9 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -880,6 +881,142 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         }
       }
     });
+  }
+
+  onPetGruposEdadFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.petGruposEdadAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.petGruposEdadAISI = [...tabla];
+      this.formularioService.actualizarDato('petGruposEdadAISI', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPetGruposEdadTableUpdated(): void {
+    const tabla = this.datos.petGruposEdadAISI || [];
+    this.datos.petGruposEdadAISI = [...tabla];
+    this.formularioService.actualizarDato('petGruposEdadAISI', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPEADistritoSexoFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.peaDistritoSexoTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+        this.calcularPorcentajesPEADistritoSexo();
+      }
+      
+      this.datos.peaDistritoSexoTabla = [...tabla];
+      this.formularioService.actualizarDato('peaDistritoSexoTabla', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPEADistritoSexoTableUpdated(): void {
+    const tabla = this.datos.peaDistritoSexoTabla || [];
+    this.datos.peaDistritoSexoTabla = [...tabla];
+    this.calcularPorcentajesPEADistritoSexo();
+    this.formularioService.actualizarDato('peaDistritoSexoTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onPEAOcupadaDesocupadaFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.peaOcupadaDesocupadaTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
+        this.calcularPorcentajesPEAOcupadaDesocupada();
+      }
+      
+      this.datos.peaOcupadaDesocupadaTabla = [...tabla];
+      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPEAOcupadaDesocupadaTableUpdated(): void {
+    const tabla = this.datos.peaOcupadaDesocupadaTabla || [];
+    this.datos.peaOcupadaDesocupadaTabla = [...tabla];
+    this.calcularPorcentajesPEAOcupadaDesocupada();
+    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

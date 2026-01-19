@@ -138,8 +138,17 @@ export class TableManagementService {
         const valor = item[totalKey];
         if (!valor || !valor.toString().toLowerCase().includes('total')) {
           const casos = parseFloat(item[campoTotal]) || 0;
-          const porcentaje = ((casos / total) * 100).toFixed(2);
-          item[campoPorcentaje] = porcentaje + ' %';
+          const porcentaje = ((casos / total) * 100)
+            .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            .replace('.', ',') + ' %';
+          item[campoPorcentaje] = porcentaje;
+        }
+      });
+    } else if (campoPorcentaje) {
+      tabla.forEach((item: any) => {
+        const valor = item[totalKey];
+        if (!valor || !valor.toString().toLowerCase().includes('total')) {
+          item[campoPorcentaje] = '0,00 %';
         }
       });
     }

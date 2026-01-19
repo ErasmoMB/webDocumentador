@@ -46,6 +46,8 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
   
   override readonly PHOTO_PREFIX = '';
 
+  private readonly regexCache = new Map<string, RegExp>();
+
   peaOcupacionesConfig: TableConfig = {
     tablaKey: 'peaOcupacionesTabla',
     totalKey: 'categoria',
@@ -123,16 +125,16 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
         valorAnterior = this.datosAnteriores[campo] || null;
       }
       
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      const sonIguales = this.compararValores(valorActual, valorAnterior);
+      if (!sonIguales) {
         hayCambios = true;
-        // Invalidar caache cuando cambia peaOcupacionesTabla
         if (campo === 'peaOcupacionesTabla') {
           this.invalidarCachePEA();
           const prefijo = this.obtenerPrefijoGrupo();
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
-          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
         } else {
-          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
         }
       }
     }
@@ -283,6 +285,58 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     }));
   }
 
+  onPEAOcupacionesFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyPEAOcupaciones();
+    const tabla = this.getTablaPEAOcupaciones();
+
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        } else {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              item.porcentaje = '0,00 %';
+            }
+          });
+        }
+
+        this.invalidarCachePEA();
+        
+        const fieldIdParrafo = 'textoAnalisisCuadro310';
+        if (this.datos[fieldIdParrafo]) {
+          delete this.datos[fieldIdParrafo];
+          this.formularioService.actualizarDato(fieldIdParrafo as any, null);
+        }
+      }
+
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.eliminarFilasTotal();
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
   onPEAOcupacionesTableUpdated() {
     this.invalidarCachePEA();
     this.eliminarFilasTotal();
@@ -391,8 +445,8 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     const provincia = this.datos.provinciaSeleccionada || 'Caravelí';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(provincia), 'g'), `<span class="data-section">${this.escapeHtml(provincia)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(provincia)), `<span class="data-section">${this.escapeHtml(provincia)}</span>`);
     
     const parrafos = textoConResaltado.split(/\n\n+/);
     const html = parrafos.map(p => {
@@ -444,7 +498,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     const textoConResaltado = texto.replace(
-      new RegExp(this.escapeRegex(grupoAISD), 'g'),
+      this.obtenerRegExp(this.escapeRegex(grupoAISD)),
       `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
     );
     
@@ -481,13 +535,13 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     topOcupaciones.forEach(ocupacion => {
       if (ocupacion.categoria && ocupacion.categoria !== '____') {
         textoConResaltado = textoConResaltado.replace(
-          new RegExp(this.escapeRegex(ocupacion.categoria), 'g'), 
+          this.obtenerRegExp(this.escapeRegex(ocupacion.categoria)), 
           `<span class="data-backend">${this.escapeHtml(ocupacion.categoria)}</span>`
         );
       }
       if (ocupacion.porcentaje && ocupacion.porcentaje !== '____') {
         textoConResaltado = textoConResaltado.replace(
-          new RegExp(this.escapeRegex(ocupacion.porcentaje), 'g'), 
+          this.obtenerRegExp(this.escapeRegex(ocupacion.porcentaje)), 
           `<span class="data-calculated">${this.escapeHtml(ocupacion.porcentaje)}</span>`
         );
       }
@@ -511,7 +565,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     const textoConResaltado = texto.replace(
-      new RegExp(this.escapeRegex(grupoAISD), 'g'),
+      this.obtenerRegExp(this.escapeRegex(grupoAISD)),
       `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
     );
     
@@ -546,7 +600,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     const textoConResaltado = texto.replace(
-      new RegExp(this.escapeRegex(grupoAISD), 'g'),
+      this.obtenerRegExp(this.escapeRegex(grupoAISD)),
       `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
     );
     
@@ -568,7 +622,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     const textoConResaltado = texto.replace(
-      new RegExp(this.escapeRegex(grupoAISD), 'g'),
+      this.obtenerRegExp(this.escapeRegex(grupoAISD)),
       `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
     );
     
@@ -581,8 +635,50 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     return div.innerHTML;
   }
 
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual === null || anterior === null) return actual === anterior;
+    if (actual === undefined || anterior === undefined) return actual === anterior;
+    if (Array.isArray(actual) && Array.isArray(anterior)) {
+      if (actual.length !== anterior.length) return false;
+      return actual.every((item, index) => this.compararValores(item, anterior[index]));
+    }
+    if (typeof actual === 'object' && typeof anterior === 'object') {
+      const keysActual = Object.keys(actual);
+      const keysAnterior = Object.keys(anterior);
+      if (keysActual.length !== keysAnterior.length) return false;
+      return keysActual.every(key => this.compararValores(actual[key], anterior[key]));
+    }
+    return actual === anterior;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor === null || valor === undefined) return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    if (typeof valor === 'object') {
+      const clon: any = {};
+      for (const key in valor) {
+        if (valor.hasOwnProperty(key)) {
+          clon[key] = this.clonarValor(valor[key]);
+        }
+      }
+      return clon;
+    }
+    return valor;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private escapeRegex(text: any): string {
+    const str = typeof text === 'string' ? text : String(text || '');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
 

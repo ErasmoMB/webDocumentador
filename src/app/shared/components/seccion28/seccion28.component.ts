@@ -25,6 +25,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'puestoSaludCpTabla', 'educacionCpTabla', 'nombreIEMayorEstudiantes', 'cantidadEstudiantesIEMayor', 'textoSaludCP', 'textoEducacionCP', 'textoRecreacionCP1', 'textoRecreacionCP2', 'textoRecreacionCP3', 'textoDeporteCP1', 'textoDeporteCP2'];
   
@@ -127,9 +128,9 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -571,6 +572,100 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
         this.formularioService.actualizarDato('educacionCpTabla', filtered);
       }
     }
+  }
+
+  onPuestoSaludTableUpdated(): void {
+    const tabla = this.datos.puestoSaludCpTabla || [];
+    this.datos.puestoSaludCpTabla = [...tabla];
+    this.formularioService.actualizarDato('puestoSaludCpTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onEducacionFieldChange(index: number, field: string, value: any): void {
+    const tabla = this.datos.educacionCpTabla || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'cantidadEstudiantes') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const nombreIE = item.nombreIE?.toString().toLowerCase() || '';
+          if (nombreIE.includes('total')) return sum;
+          const cantidad = typeof item.cantidadEstudiantes === 'number' ? item.cantidadEstudiantes : parseInt(item.cantidadEstudiantes) || 0;
+          return sum + cantidad;
+        }, 0);
+        
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const nombreIE = item.nombreIE?.toString().toLowerCase() || '';
+            if (!nombreIE.includes('total')) {
+              const cantidad = typeof item.cantidadEstudiantes === 'number' ? item.cantidadEstudiantes : parseInt(item.cantidadEstudiantes) || 0;
+              const porcentaje = ((cantidad / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      
+      this.datos.educacionCpTabla = [...tabla];
+      this.formularioService.actualizarDato('educacionCpTabla', tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onEducacionTableUpdated(): void {
+    const tabla = this.datos.educacionCpTabla || [];
+    this.datos.educacionCpTabla = [...tabla];
+    this.formularioService.actualizarDato('educacionCpTabla', tabla);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

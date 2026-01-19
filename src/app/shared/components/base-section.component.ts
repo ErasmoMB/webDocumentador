@@ -273,7 +273,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         const fotos = this.cargarGrupoFotografias(config.prefix);
         this.setPhotoGroup(config.prefix, fotos);
       } catch (error) {
-        console.error(`[BaseSection] ❌ Error cargando grupo "${config.prefix}":`, error);
       }
     });
   }
@@ -283,7 +282,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.guardarGrupoFotografias(prefix, fotografias);
       this.cdRef.detectChanges();
     } catch (error) {
-      console.error(`[BaseSection] ❌ Error actualizando grupo "${prefix}":`, error);
     }
   }
 

@@ -34,6 +34,7 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
   
   override readonly PHOTO_PREFIX = '';
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
 
   constructor(
     formularioService: FormularioService,
@@ -73,9 +74,9 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = this.clonarValor(valorActual);
       }
     }
     
@@ -246,19 +247,19 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     let html = this.escapeHtml(texto);
     
     if (grupoAISD !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     }
     if (ojosAgua1 !== 'Quinsa Rumi') {
-      html = html.replace(new RegExp(this.escapeRegex(ojosAgua1), 'g'), `<span class="data-manual">${this.escapeHtml(ojosAgua1)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(ojosAgua1)), `<span class="data-manual">${this.escapeHtml(ojosAgua1)}</span>`);
     }
     if (ojosAgua2 !== 'Pallalli') {
-      html = html.replace(new RegExp(this.escapeRegex(ojosAgua2), 'g'), `<span class="data-manual">${this.escapeHtml(ojosAgua2)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(ojosAgua2)), `<span class="data-manual">${this.escapeHtml(ojosAgua2)}</span>`);
     }
     if (rioAgricola !== 'Yuracyacu') {
-      html = html.replace(new RegExp(this.escapeRegex(rioAgricola), 'g'), `<span class="data-manual">${this.escapeHtml(rioAgricola)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(rioAgricola)), `<span class="data-manual">${this.escapeHtml(rioAgricola)}</span>`);
     }
     if (quebradaAgricola !== 'Pucaccocha') {
-      html = html.replace(new RegExp(this.escapeRegex(quebradaAgricola), 'g'), `<span class="data-manual">${this.escapeHtml(quebradaAgricola)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(quebradaAgricola)), `<span class="data-manual">${this.escapeHtml(quebradaAgricola)}</span>`);
     }
     
     html = html.replace(/\n\n/g, '</p><p class="text-justify">');
@@ -291,7 +292,7 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     let html = this.escapeHtml(texto);
     
     if (grupoAISD !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+      html = html.replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     }
     
     html = html.replace(/\n\n/g, '</p><p class="text-justify">');
@@ -308,6 +309,50 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
 
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual == null || anterior == null) return actual === anterior;
+    if (typeof actual !== typeof anterior) return false;
+    if (typeof actual !== 'object') return actual === anterior;
+    if (Array.isArray(actual) !== Array.isArray(anterior)) return false;
+    if (Array.isArray(actual)) {
+      if (actual.length !== anterior.length) return false;
+      for (let i = 0; i < actual.length; i++) {
+        if (!this.compararValores(actual[i], anterior[i])) return false;
+      }
+      return true;
+    }
+    const keysActual = Object.keys(actual);
+    const keysAnterior = Object.keys(anterior);
+    if (keysActual.length !== keysAnterior.length) return false;
+    for (const key of keysActual) {
+      if (!keysAnterior.includes(key)) return false;
+      if (!this.compararValores(actual[key], anterior[key])) return false;
+    }
+    return true;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor == null || typeof valor !== 'object') return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    const clon: any = {};
+    for (const key in valor) {
+      if (valor.hasOwnProperty(key)) {
+        clon[key] = this.clonarValor(valor[key]);
+      }
+    }
+    return clon;
   }
 }
 

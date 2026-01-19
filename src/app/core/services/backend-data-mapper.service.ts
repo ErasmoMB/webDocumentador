@@ -91,12 +91,6 @@ export class BackendDataMapperService {
             ViviendasOcupadas: item.viviendas_ocupadas || 0
           }));
           
-          console.log('%c[SECCION4] Datos para llenar tabla AISD2', 'color: #2196F3; font-weight: bold; font-size: 12px;');
-          resultado.forEach(fila => {
-            console.log(`  ${fila.punto} | Código: ${fila.codigo} | Viviendas Empadronadas: ${fila.viviendasEmpadronadas} | Viviendas Ocupadas: ${fila.viviendasOcupadas}`);
-          });
-          console.log(`%cTotal de ${resultado.length} centros poblados cargados`, 'color: #4CAF50; font-weight: bold;');
-          
           return resultado;
         }
       }
@@ -122,7 +116,6 @@ export class BackendDataMapperService {
 
           const total = emp;
           if (total <= 0) {
-            console.log('%c[SECCION9] Cuadro 3.13 - Sin datos disponibles', 'color: #FF9800; font-weight: bold;');
             return [];
           }
 
@@ -138,12 +131,6 @@ export class BackendDataMapperService {
             { categoria: 'Viviendas ocupadas', casos: ocu, porcentaje: formatPct(pctOcu) },
             { categoria: 'Viviendas con otra condición', casos: otras, porcentaje: formatPct(pctOtrasAdj) }
           ];
-          
-          console.log('%c[SECCION9] Cuadro 3.13 - Condición de Ocupación', 'color: #2196F3; font-weight: bold; font-size: 12px;');
-          console.log(`  Viviendas empadronadas (total): ${emp}`);
-          console.log(`  Viviendas ocupadas: ${ocu} (${formatPct(pctOcu)})`);
-          console.log(`  Otras condiciones: ${otras} (${formatPct(pctOtrasAdj)})`);
-          console.log('%cTabla resultado:', 'color: #4CAF50; font-weight: bold;', resultado);
           
           return resultado;
         }
@@ -162,13 +149,6 @@ export class BackendDataMapperService {
          aggregatable: true,
          transform: (data) => {
            if (!Array.isArray(data)) return [];
-           
-           console.log('%c[SECCION9] Cuadro 3.14 - Materiales de Construcción', 'color: #9C27B0; font-weight: bold; font-size: 12px;');
-           console.log(`  Registros recibidos del backend: ${data.length}`);
-           data.slice(0, 5).forEach((item: any, idx: number) => {
-             console.log(`    ${idx + 1}. ${item.categoria} | ${item.tipo_material} = ${item.casos}`);
-           });
-           if (data.length > 5) console.log(`    ... y ${data.length - 5} más`);
            
            const norm = (s: any) =>
              (s ?? '')
@@ -207,12 +187,6 @@ export class BackendDataMapperService {
              return norm(a.tipoMaterial).localeCompare(norm(b.tipoMaterial));
            });
 
-           console.log('%cTabla resultado (agregada por tipo de material):', 'color: #4CAF50; font-weight: bold;');
-           console.log(`  Total de filas: ${filas.length}`);
-           filas.forEach(fila => {
-             console.log(`  ${fila.categoria} - ${fila.tipoMaterial}: ${fila.casos} casos`);
-           });
-           
            return filas;
          }
        }
@@ -225,9 +199,7 @@ export class BackendDataMapperService {
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          console.log('%c[SECCION10] Cuadro 3.15 - Abastecimiento de Agua', 'color: #2196F3; font-weight: bold; font-size: 14px;');
           if (!Array.isArray(data)) {
-            console.warn('  ⚠️ No es array, retornando vacío');
             return [];
           }
           
@@ -248,9 +220,6 @@ export class BackendDataMapperService {
             (item.categoria || '').toLowerCase() === 'agua'
           );
           
-          console.log(`  📊 Registros recibidos del backend: ${agua.length}`);
-          console.log(`  📋 Categorías esperadas: ${categoriasEsperadas.length}`);
-          
           // Deduplicar tipos similares
           const normalizarTipo = (tipo: string) => {
             return (tipo || '')
@@ -265,13 +234,11 @@ export class BackendDataMapperService {
             const tipoNorm = normalizarTipo(item.tipo);
             if (tiposMap.has(tipoNorm)) {
               tiposMap.get(tipoNorm).casos += item.casos || 0;
-              console.log(`  🔀 Deduplicado: ${item.tipo} -> suma = ${tiposMap.get(tipoNorm).casos}`);
             } else {
               tiposMap.set(tipoNorm, {
                 tipoOriginal: item.tipo,
                 casos: item.casos || 0
               });
-              console.log(`  ✓ ${item.tipo}: ${item.casos} casos`);
             }
           });
           
@@ -289,7 +256,6 @@ export class BackendDataMapperService {
                 categoria: cat,
                 casos: 0
               });
-              console.log(`  ⊘ ${cat}: SIN DATOS (completado con 0)`);
             }
           });
           
@@ -301,7 +267,6 @@ export class BackendDataMapperService {
             porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
           }));
           
-          console.log(`  ✅ Total casos: ${total} | Filas finales: ${final.length}`);
           return final;
         }
       },
@@ -311,13 +276,10 @@ export class BackendDataMapperService {
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          console.log('%c[SECCION10] Cuadro 3.16 - Tipos de Saneamiento', 'color: #FF9800; font-weight: bold; font-size: 14px;');
           if (!Array.isArray(data)) {
-            console.warn('  ⚠️ No es array, retornando vacío');
             return [];
           }
           
-          // Categorías esperadas para DESAGÜE
           const categoriasEsperadas = [
             'Red pública de desagüe',
             'Con alcantarillado',
@@ -328,13 +290,9 @@ export class BackendDataMapperService {
             'No tiene desagüe'
           ];
           
-          // Filtrar solo registros de DESAGÜE
           const desague = data.filter((item: any) => 
             (item.categoria || '').toLowerCase() === 'desagüe'
           );
-          
-          console.log(`  📊 Registros recibidos del backend: ${desague.length}`);
-          console.log(`  📋 Categorías esperadas: ${categoriasEsperadas.length}`);
           
           // Deduplicar tipos similares
           const normalizarTipo = (tipo: string) => {
@@ -350,13 +308,11 @@ export class BackendDataMapperService {
             const tipoNorm = normalizarTipo(item.tipo);
             if (tiposMap.has(tipoNorm)) {
               tiposMap.get(tipoNorm).casos += item.casos || 0;
-              console.log(`  🔀 Deduplicado: ${item.tipo} -> suma = ${tiposMap.get(tipoNorm).casos}`);
             } else {
               tiposMap.set(tipoNorm, {
                 tipoOriginal: item.tipo,
                 casos: item.casos || 0
               });
-              console.log(`  ✓ ${item.tipo}: ${item.casos} casos`);
             }
           });
           
@@ -374,7 +330,6 @@ export class BackendDataMapperService {
                 categoria: cat,
                 casos: 0
               });
-              console.log(`  ⊘ ${cat}: SIN DATOS (completado con 0)`);
             }
           });
           
@@ -386,7 +341,6 @@ export class BackendDataMapperService {
             porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
           }));
           
-          console.log(`  ✅ Total casos: ${total} | Filas finales: ${final.length}`);
           return final;
         }
       },
@@ -396,9 +350,7 @@ export class BackendDataMapperService {
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          console.log('%c[SECCION10] Cuadro 3.17 - Alumbrado Eléctrico', 'color: #9C27B0; font-weight: bold; font-size: 14px;');
           if (!Array.isArray(data)) {
-            console.warn('  ⚠️ No es array, retornando vacío');
             return [];
           }
           
@@ -417,9 +369,6 @@ export class BackendDataMapperService {
             (item.categoria || '').toLowerCase() === 'alumbrado'
           );
           
-          console.log(`  📊 Registros recibidos del backend: ${alumbrado.length}`);
-          console.log(`  📋 Categorías esperadas: ${categoriasEsperadas.length}`);
-          
           // Deduplicar tipos similares
           const normalizarTipo = (tipo: string) => {
             return (tipo || '')
@@ -434,13 +383,11 @@ export class BackendDataMapperService {
             const tipoNorm = normalizarTipo(item.tipo);
             if (tiposMap.has(tipoNorm)) {
               tiposMap.get(tipoNorm).casos += item.casos || 0;
-              console.log(`  🔀 Deduplicado: ${item.tipo} -> suma = ${tiposMap.get(tipoNorm).casos}`);
             } else {
               tiposMap.set(tipoNorm, {
                 tipoOriginal: item.tipo,
                 casos: item.casos || 0
               });
-              console.log(`  ✓ ${item.tipo}: ${item.casos} casos`);
             }
           });
           
@@ -458,7 +405,6 @@ export class BackendDataMapperService {
                 categoria: cat,
                 casos: 0
               });
-              console.log(`  ⊘ ${cat}: SIN DATOS (completado con 0)`);
             }
           });
           
@@ -470,7 +416,6 @@ export class BackendDataMapperService {
             porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
           }));
           
-          console.log(`  ✅ Total casos: ${total} | Filas finales: ${final.length}`);
           return final;
         }
       }
@@ -513,11 +458,7 @@ export class BackendDataMapperService {
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          console.log('%c[SECCION13] Cuadro 3.27 - Afiliación a Seguro de Salud', 'color: #2196F3; font-weight: bold; font-size: 14px;');
-          console.log('%c  📥 Datos recibidos:', 'color: #FF6B6B; font-weight: bold;', data);
-          
           if (!Array.isArray(data)) {
-            console.warn('  ⚠️ No es array, retornando vacío');
             return [];
           }
 
@@ -554,12 +495,6 @@ export class BackendDataMapperService {
           });
           
           resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          console.log('%c  📊 Registros procesados:', `color: #4CAF50;`);
-          console.log(`%c  Total casos: ${totalCasos}`, 'color: #4CAF50;');
-          resultado.forEach(fila => {
-            console.log(`    ${fila.categoria}: ${fila.casos} casos (${fila.porcentaje}%)`);
-          });
 
           return resultado;
         }

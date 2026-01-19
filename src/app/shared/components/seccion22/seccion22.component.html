@@ -112,7 +112,8 @@
           ]"
           [tablaKey]="'poblacionSexoAISI'"
           [totalKey]="'sexo'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
+          (tableUpdated)="onPoblacionSexoTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" *ngIf="datos['poblacionSexoAISI'] && datos['poblacionSexoAISI'].length > 0" style="margin-top: 10px;">
@@ -157,7 +158,8 @@
           ]"
           [tablaKey]="'poblacionEtarioAISI'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
+          (tableUpdated)="onPoblacionEtarioTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" *ngIf="datos['poblacionEtarioAISI'] && datos['poblacionEtarioAISI'].length > 0" style="margin-top: 10px;">

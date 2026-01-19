@@ -227,7 +227,8 @@
           ]"
           [tablaKey]="'abastecimientoAguaCpTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)"
+          (tableUpdated)="onAbastecimientoAguaTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
@@ -277,7 +278,8 @@
           ]"
           [tablaKey]="'saneamientoCpTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onSaneamientoFieldChange.bind(this)"
+          (tableUpdated)="onSaneamientoTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
@@ -363,7 +365,8 @@
           ]"
           [tablaKey]="'coberturaElectricaCpTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)"
+          (tableUpdated)="onCoberturaElectricaTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
@@ -432,7 +435,8 @@
           ]"
           [tablaKey]="'combustiblesCocinarCpTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onCombustiblesCocinarFieldChange.bind(this)"
+          (tableUpdated)="onCombustiblesCocinarTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">

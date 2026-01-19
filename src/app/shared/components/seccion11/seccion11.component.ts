@@ -35,6 +35,7 @@ export class Seccion11Component extends BaseSectionComponent implements OnDestro
   fotografiasTelecomunicacionesCache: FotoItem[] = [];
   
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
 
   get telecomunicacionesConfig(): TableConfig {
     return {
@@ -87,13 +88,14 @@ export class Seccion11Component extends BaseSectionComponent implements OnDestro
         valorAnterior = this.datosAnteriores[campo] || null;
       }
       
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      const sonIguales = this.compararValores(valorActual, valorAnterior);
+      if (!sonIguales) {
         hayCambios = true;
         if (campo === 'telecomunicacionesTabla') {
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
-          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
         } else {
-          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
         }
       }
     }
@@ -266,11 +268,11 @@ export class Seccion11Component extends BaseSectionComponent implements OnDestro
     const costoMax = this.datos.costoTransporteMaximo || '____';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(provincia), 'g'), `<span class="data-section">${this.escapeHtml(provincia)}</span>`)
-      .replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
-      .replace(new RegExp(`S/\\.\\s*${this.escapeRegex(costoMin)}(?=\\s|\\s|$)`, 'g'), `S/. <span class="data-manual">${this.escapeHtml(costoMin)}</span>`)
-      .replace(new RegExp(`S/\\.\\s*${this.escapeRegex(costoMax)}(?=\\s|\\s|$)`, 'g'), `S/. <span class="data-manual">${this.escapeHtml(costoMax)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(provincia)), `<span class="data-section">${this.escapeHtml(provincia)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
+      .replace(this.obtenerRegExp(`S/\\.\\s*${this.escapeRegex(costoMin)}(?=\\s|\\s|$)`), `S/. <span class="data-manual">${this.escapeHtml(costoMin)}</span>`)
+      .replace(this.obtenerRegExp(`S/\\.\\s*${this.escapeRegex(costoMax)}(?=\\s|\\s|$)`), `S/. <span class="data-manual">${this.escapeHtml(costoMax)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
@@ -291,10 +293,44 @@ export class Seccion11Component extends BaseSectionComponent implements OnDestro
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
+  }
+
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual === null || anterior === null) return actual === anterior;
+    if (actual === undefined || anterior === undefined) return actual === anterior;
+    if (Array.isArray(actual) && Array.isArray(anterior)) {
+      if (actual.length !== anterior.length) return false;
+      return actual.every((item, index) => this.compararValores(item, anterior[index]));
+    }
+    if (typeof actual === 'object' && typeof anterior === 'object') {
+      const keysActual = Object.keys(actual);
+      const keysAnterior = Object.keys(anterior);
+      if (keysActual.length !== keysAnterior.length) return false;
+      return keysActual.every(key => this.compararValores(actual[key], anterior[key]));
+    }
+    return actual === anterior;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor === null || valor === undefined) return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    if (typeof valor === 'object') {
+      const clon: any = {};
+      for (const key in valor) {
+        if (valor.hasOwnProperty(key)) {
+          clon[key] = this.clonarValor(valor[key]);
+        }
+      }
+      return clon;
+    }
+    return valor;
   }
 
   private escapeHtml(text: string): string {
@@ -303,8 +339,16 @@ export class Seccion11Component extends BaseSectionComponent implements OnDestro
     return div.innerHTML;
   }
 
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private escapeRegex(text: any): string {
+    const str = typeof text === 'string' ? text : String(text || '');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
 }

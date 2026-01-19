@@ -29,6 +29,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   override fotografiasCache: FotoItem[] = [];
   override fotografiasFormMulti: FotoItem[] = [];
   private stateSubscription?: Subscription;
+  private readonly regexCache = new Map<string, RegExp>();
 
   get nivelEducativoConfig(): TableConfig {
     return {
@@ -356,9 +357,14 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaNivelEducativo();
     if (tabla && tabla[rowIndex]) {
       tabla[rowIndex][field] = value;
-      this.datos[tablaKey] = tabla;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesNivelEducativo();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey, tabla);
-      this.calcularPorcentajesNivelEducativo();
+      this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
@@ -366,8 +372,10 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   onNivelEducativoTableUpdated(): void {
     const tablaKey = this.getTablaKeyNivelEducativo();
     const tabla = this.getTablaNivelEducativo();
-    this.datos[tablaKey] = tabla;
     this.calcularPorcentajesNivelEducativo();
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
@@ -376,9 +384,14 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaTasaAnalfabetismo();
     if (tabla && tabla[rowIndex]) {
       tabla[rowIndex][field] = value;
-      this.datos[tablaKey] = tabla;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesTasaAnalfabetismo();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey, tabla);
-      this.calcularPorcentajesTasaAnalfabetismo();
+      this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
@@ -386,8 +399,10 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   onTasaAnalfabetismoTableUpdated(): void {
     const tablaKey = this.getTablaKeyTasaAnalfabetismo();
     const tabla = this.getTablaTasaAnalfabetismo();
-    this.datos[tablaKey] = tabla;
     this.calcularPorcentajesTasaAnalfabetismo();
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
@@ -498,25 +513,25 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     let html = this.escapeHtml(texto);
     if (grupoAISD !== '____') {
       html = html.replace(
-        new RegExp(this.escapeRegex(grupoAISD), 'g'), 
+        this.obtenerRegExp(this.escapeRegex(grupoAISD)), 
         `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
       );
     }
     if (porcentajePrimaria !== '____') {
       html = html.replace(
-        new RegExp(this.escapeRegex(porcentajePrimaria), 'g'), 
+        this.obtenerRegExp(this.escapeRegex(porcentajePrimaria)), 
         `<span class="data-calculated">${this.escapeHtml(porcentajePrimaria)}</span>`
       );
     }
     if (porcentajeSecundaria !== '____') {
       html = html.replace(
-        new RegExp(this.escapeRegex(porcentajeSecundaria), 'g'), 
+        this.obtenerRegExp(this.escapeRegex(porcentajeSecundaria)), 
         `<span class="data-calculated">${this.escapeHtml(porcentajeSecundaria)}</span>`
       );
     }
     if (porcentajeSuperiorNoUniversitaria !== '____') {
       html = html.replace(
-        new RegExp(this.escapeRegex(porcentajeSuperiorNoUniversitaria), 'g'), 
+        this.obtenerRegExp(this.escapeRegex(porcentajeSuperiorNoUniversitaria)), 
         `<span class="data-calculated">${this.escapeHtml(porcentajeSuperiorNoUniversitaria)}</span>`
       );
     }
@@ -557,12 +572,13 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     let html = this.escapeHtml(texto);
     if (grupoAISD !== '____') {
       html = html.replace(
-        new RegExp(this.escapeRegex(grupoAISD), 'g'), 
+        this.obtenerRegExp(this.escapeRegex(grupoAISD)), 
         `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`
       );
     }
     if (casosAnalfabetismo !== '____') {
-      const regex = new RegExp(`(a la cantidad de\\s+)${this.escapeRegex(casosAnalfabetismo)}`, 'g');
+      const regexPattern = `(a la cantidad de\\s+)${this.escapeRegex(casosAnalfabetismo)}`;
+      const regex = this.obtenerRegExp(regexPattern);
       html = html.replace(
         regex, 
         `$1<span class="data-manual">${this.escapeHtml(casosAnalfabetismo)}</span>`
@@ -570,7 +586,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     }
     if (tasaAnalfabetismo !== '____') {
       html = html.replace(
-        new RegExp(`(del\\s+)${this.escapeRegex(tasaAnalfabetismo)}`, 'g'), 
+        this.obtenerRegExp(`(del\\s+)${this.escapeRegex(tasaAnalfabetismo)}`), 
         `$1<span class="data-calculated">${this.escapeHtml(tasaAnalfabetismo)}</span>`
       );
     }
@@ -581,6 +597,13 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
   }
 
   private escapeRegex(str: string): string {

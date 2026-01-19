@@ -40,6 +40,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   fotografiasDesechosSolidosCache: FotoItem[] = [];
   fotografiasElectricidadCache: FotoItem[] = [];
 
+  private readonly regexCache = new Map<string, RegExp>();
+
   get abastecimientoAguaConfig(): TableConfig {
     return {
       tablaKey: this.getTablaKeyAbastecimientoAgua(),
@@ -137,13 +139,14 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         valorAnterior = this.datosAnteriores[campo] || null;
       }
       
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      const sonIguales = this.compararValores(valorActual, valorAnterior);
+      if (!sonIguales) {
         hayCambios = true;
         if (campo === 'abastecimientoAguaTabla' || campo === 'tiposSaneamientoTabla' || campo === 'alumbradoElectricoTabla') {
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
-          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
         } else {
-          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
         }
       }
     }
@@ -211,7 +214,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       return cat.includes('red pública') || cat.includes('red pública dentro');
     });
     
-    console.log('  Resultado encontrado:', redPublica);
     return redPublica?.porcentaje || '____';
   }
 
@@ -785,9 +787,9 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const porcentajeSinAbastecimiento = this.getPorcentajeAguaSinAbastecimiento();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeRedPublica), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeRedPublica)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeSinAbastecimiento), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeSinAbastecimiento)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeRedPublica)), `<span class="data-calculated">${this.escapeHtml(porcentajeRedPublica)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeSinAbastecimiento)), `<span class="data-calculated">${this.escapeHtml(porcentajeSinAbastecimiento)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -809,8 +811,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const cuotaMensual = this.datos.cuotaMensualAgua || '____';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(cuotaMensual), 'g'), `<span class="data-manual">${this.escapeHtml(cuotaMensual)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(cuotaMensual)), `<span class="data-manual">${this.escapeHtml(cuotaMensual)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -834,9 +836,9 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const porcentajeSinSaneamiento = this.getPorcentajeSaneamientoSinSaneamiento();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeRedPublica), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeRedPublica)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeSinSaneamiento), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeSinSaneamiento)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeRedPublica)), `<span class="data-calculated">${this.escapeHtml(porcentajeRedPublica)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeSinSaneamiento)), `<span class="data-calculated">${this.escapeHtml(porcentajeSinSaneamiento)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -856,7 +858,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -876,7 +878,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const distrito = this.datos.distritoSeleccionado || '____';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -904,7 +906,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -926,8 +928,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const porcentajeSinElectricidad = this.getPorcentajeSinElectricidad();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(porcentajeElectricidad), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeElectricidad)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeSinElectricidad), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeSinElectricidad)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeElectricidad)), `<span class="data-calculated">${this.escapeHtml(porcentajeElectricidad)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeSinElectricidad)), `<span class="data-calculated">${this.escapeHtml(porcentajeSinElectricidad)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -953,10 +955,10 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const costoMaximo = this.datos.costoElectricidadMaximo || '____';
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(empresa), 'g'), `<span class="data-manual">${this.escapeHtml(empresa)}</span>`)
-      .replace(new RegExp(this.escapeRegex(costoMinimo), 'g'), `<span class="data-manual">${this.escapeHtml(costoMinimo)}</span>`)
-      .replace(new RegExp(this.escapeRegex(costoMaximo), 'g'), `<span class="data-manual">${this.escapeHtml(costoMaximo)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(empresa)), `<span class="data-manual">${this.escapeHtml(empresa)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(costoMinimo)), `<span class="data-manual">${this.escapeHtml(costoMinimo)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(costoMaximo)), `<span class="data-manual">${this.escapeHtml(costoMaximo)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -976,7 +978,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const grupoAISD = this.obtenerNombreComunidadActual();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
@@ -987,7 +989,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     const viviendasOcupadas = this.getViviendasOcupadas();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(viviendasOcupadas), 'g'), `<span class="data-section">${this.escapeHtml(viviendasOcupadas)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(viviendasOcupadas)), `<span class="data-section">${this.escapeHtml(viviendasOcupadas)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -998,8 +1000,50 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     return div.innerHTML;
   }
 
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual === null || anterior === null) return actual === anterior;
+    if (actual === undefined || anterior === undefined) return actual === anterior;
+    if (Array.isArray(actual) && Array.isArray(anterior)) {
+      if (actual.length !== anterior.length) return false;
+      return actual.every((item, index) => this.compararValores(item, anterior[index]));
+    }
+    if (typeof actual === 'object' && typeof anterior === 'object') {
+      const keysActual = Object.keys(actual);
+      const keysAnterior = Object.keys(anterior);
+      if (keysActual.length !== keysAnterior.length) return false;
+      return keysActual.every(key => this.compararValores(actual[key], anterior[key]));
+    }
+    return actual === anterior;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor === null || valor === undefined) return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    if (typeof valor === 'object') {
+      const clon: any = {};
+      for (const key in valor) {
+        if (valor.hasOwnProperty(key)) {
+          clon[key] = this.clonarValor(valor[key]);
+        }
+      }
+      return clon;
+    }
+    return valor;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private escapeRegex(text: any): string {
+    const str = typeof text === 'string' ? text : String(text || '');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }
 // Cache rebuild trigger - 2026-01-19

@@ -32,6 +32,8 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
   
   override fotografiasCache: FotoItem[] = [];
 
+  private readonly regexCache = new Map<string, RegExp>();
+
   get condicionOcupacionConfig(): TableConfig {
     return {
       tablaKey: this.getTablaKeyCondicionOcupacion(),
@@ -210,13 +212,14 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
         valorAnterior = this.datosAnteriores[campo] || null;
       }
       
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      const sonIguales = this.compararValores(valorActual, valorAnterior);
+      if (!sonIguales) {
         hayCambios = true;
         if (campo === 'condicionOcupacionTabla' || campo === 'tiposMaterialesTabla') {
           const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
-          this.datosAnteriores[campoConPrefijo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
         } else {
-          this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
         }
       }
     }
@@ -274,7 +277,6 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
   getPorcentajeMaterial(categoria: string, tipoMaterial: string): string {
     const tabla = this.getTablaTiposMateriales();
     if (!tabla || !Array.isArray(tabla) || tabla.length === 0) {
-      console.log(`[SECCION9] getPorcentajeMaterial - tabla vacía o no disponible`);
       return '____';
     }
     
@@ -600,10 +602,10 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     const porcentajeOcupadas = this.getPorcentajeViviendasOcupadas();
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(totalViviendas), 'g'), `<span class="data-section">${this.escapeHtml(totalViviendas)}</span>`)
-      .replace(new RegExp(this.escapeRegex(viviendasOcupadas), 'g'), `<span class="data-section">${this.escapeHtml(viviendasOcupadas)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeOcupadas), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeOcupadas)}</span>`);
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(totalViviendas)), `<span class="data-section">${this.escapeHtml(totalViviendas)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(viviendasOcupadas)), `<span class="data-section">${this.escapeHtml(viviendasOcupadas)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeOcupadas)), `<span class="data-calculated">${this.escapeHtml(porcentajeOcupadas)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
   }
@@ -637,14 +639,14 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     const porcentajeCemento = this.getPorcentajeMaterial('pisos', 'cemento');
     
     let textoConResaltado = texto
-      .replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeAdobe), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeAdobe)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeTriplayParedes), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeTriplayParedes)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeCalamina), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeCalamina)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeTriplayTechos), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeTriplayTechos)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeTejas), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeTejas)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeTierra), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeTierra)}</span>`)
-      .replace(new RegExp(this.escapeRegex(porcentajeCemento), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeCemento)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeAdobe)), `<span class="data-calculated">${this.escapeHtml(porcentajeAdobe)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeTriplayParedes)), `<span class="data-calculated">${this.escapeHtml(porcentajeTriplayParedes)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeCalamina)), `<span class="data-calculated">${this.escapeHtml(porcentajeCalamina)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeTriplayTechos)), `<span class="data-calculated">${this.escapeHtml(porcentajeTriplayTechos)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeTejas)), `<span class="data-calculated">${this.escapeHtml(porcentajeTejas)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeTierra)), `<span class="data-calculated">${this.escapeHtml(porcentajeTierra)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(porcentajeCemento)), `<span class="data-calculated">${this.escapeHtml(porcentajeCemento)}</span>`)
       .replace(/\n\n/g, '<br><br>');
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;
@@ -656,8 +658,50 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     return div.innerHTML;
   }
 
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private compararValores(actual: any, anterior: any): boolean {
+    if (actual === anterior) return true;
+    if (actual === null || anterior === null) return actual === anterior;
+    if (actual === undefined || anterior === undefined) return actual === anterior;
+    if (Array.isArray(actual) && Array.isArray(anterior)) {
+      if (actual.length !== anterior.length) return false;
+      return actual.every((item, index) => this.compararValores(item, anterior[index]));
+    }
+    if (typeof actual === 'object' && typeof anterior === 'object') {
+      const keysActual = Object.keys(actual);
+      const keysAnterior = Object.keys(anterior);
+      if (keysActual.length !== keysAnterior.length) return false;
+      return keysActual.every(key => this.compararValores(actual[key], anterior[key]));
+    }
+    return actual === anterior;
+  }
+
+  private clonarValor(valor: any): any {
+    if (valor === null || valor === undefined) return valor;
+    if (Array.isArray(valor)) {
+      return valor.map(item => this.clonarValor(item));
+    }
+    if (typeof valor === 'object') {
+      const clon: any = {};
+      for (const key in valor) {
+        if (valor.hasOwnProperty(key)) {
+          clon[key] = this.clonarValor(valor[key]);
+        }
+      }
+      return clon;
+    }
+    return valor;
+  }
+
+  private obtenerRegExp(pattern: string): RegExp {
+    if (!this.regexCache.has(pattern)) {
+      this.regexCache.set(pattern, new RegExp(pattern, 'g'));
+    }
+    return this.regexCache.get(pattern)!;
+  }
+
+  private escapeRegex(text: any): string {
+    const str = typeof text === 'string' ? text : String(text || '');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }
 

@@ -239,7 +239,6 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
         this.cdRef.detectChanges();
         
       } catch (error) {
-        console.error('Error al procesar JSON:', error);
         alert('Error al procesar el archivo JSON. Verifique el formato.');
       }
     };

@@ -120,15 +120,43 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
   }
 
   async exportarWord() {
-    const elemento = document.querySelector(".viewport-content") as HTMLElement || 
-                     document.querySelector(".preview") as HTMLElement;
-    if (!elemento) {
-      this.logger.error("No se encontró el contenido para exportar.");
-      return;
-    }
+    console.clear();
+    try {
+      console.log('[EXPORT] Iniciando exportación a Word...');
+      if (this.resumenComponent) {
+        console.log('[EXPORT] Actualizando datos del resumen...');
+        this.resumenComponent.actualizarDatos();
+      }
+      this.cdRef.detectChanges();
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('[EXPORT] Buscando elemento viewport-content...');
+      const elemento = document.querySelector(".viewport-content") as HTMLElement || 
+                       document.querySelector(".preview") as HTMLElement;
+      if (!elemento) {
+        console.error('[EXPORT] Error: No se encontró el contenido para exportar.');
+        this.logger.error("No se encontró el contenido para exportar.");
+        alert("No se pudo encontrar el contenido para exportar. Por favor, recarga la página e intenta nuevamente.");
+        return;
+      }
 
-    const nombreArchivo = `LBS${this.datos?.projectName || 'Documento'}`.replace(/\s+/g, '');
-    await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
+      console.log('[EXPORT] Elemento encontrado, preparando nombre del archivo...');
+      const nombreArchivo = `LBS${String(this.datos?.projectName || 'Documento')}`.replace(/\s+/g, '');
+      console.log('[EXPORT] Nombre del archivo:', nombreArchivo);
+      
+      console.log('[EXPORT] Llamando a generarDocumento()...');
+      await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
+      console.log('[EXPORT] ✓ Documento exportado correctamente');
+      this.logger.info("Documento exportado correctamente");
+    } catch (error: any) {
+      console.error('[EXPORT] ✗ ERROR CAPTURADO:', error);
+      console.error('[EXPORT] Stack trace:', error?.stack);
+      console.error('[EXPORT] Mensaje:', error?.message);
+      this.logger.error("Error al exportar a Word", error);
+      const mensajeError = error?.message || "Error desconocido";
+      alert(`Hubo un error al exportar el documento: ${mensajeError}. Por favor, intenta nuevamente.`);
+    }
   }
 
   private hacerBackupSeguro(): boolean {
@@ -161,9 +189,17 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
           throw new Error('No se pudo hacer backup de los datos actuales. Verifique la consola para más detalles.');
         }
 
-        const ok = await this.formularioService.cargarMockCapitulo3();
-        if (!ok) {
-          throw new Error('No se pudo cargar el mock capitulo3.json. Verifique que el archivo existe.');
+        try {
+          const ok = await this.formularioService.cargarMockCapitulo3();
+          if (!ok) {
+            throw new Error('No se pudo cargar el mock capitulo3.json. Verifique que el archivo existe.');
+          }
+        } catch (error: any) {
+          if (error?.message?.includes('text.replace')) {
+            this.logger.warn('Error en transformación de datos, continuando...', error);
+          } else {
+            throw error;
+          }
         }
         
         this.datos = this.formularioService.obtenerDatos();
@@ -185,13 +221,14 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
         
         this.cdRef.detectChanges();
       } else {
-        if (!this.datosBackup) {
-          throw new Error('No hay datos de backup para restaurar. Los datos originales se perdieron.');
-        }
-
-        this.formularioService.reemplazarDatos(this.datosBackup);
-        if (this.jsonBackup !== null && this.jsonBackup !== undefined) {
-          this.formularioService.guardarJSON(this.jsonBackup);
+        if (this.datosBackup) {
+          this.formularioService.reemplazarDatos(this.datosBackup);
+          if (this.jsonBackup !== null && this.jsonBackup !== undefined) {
+            this.formularioService.guardarJSON(this.jsonBackup);
+          }
+        } else {
+          this.formularioService.limpiarDatos();
+          this.formularioService.guardarJSON([]);
         }
         
         this.datos = this.formularioService.obtenerDatos();
@@ -199,7 +236,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
         this.modoEjemplo = false;
         this.verEjemploLabel = 'Ver Ejemplo';
         
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         if (this.resumenComponent) {
           this.resumenComponent.actualizarDatos();
@@ -208,7 +245,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
             if (this.resumenComponent) {
               this.resumenComponent.actualizarDatos();
             }
-          }, 200);
+          }, 300);
         }
         
         this.cdRef.detectChanges();
@@ -216,7 +253,9 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
     } catch (error: any) {
       this.logger.error('Error al alternar ejemplo', error);
       const mensajeError = error?.message || 'Error desconocido al alternar el modo ejemplo';
-      alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
+      if (!mensajeError.includes('text.replace')) {
+        alert(`No se pudo alternar el modo ejemplo.\n\n${mensajeError}`);
+      }
     } finally {
       if (boton) { boton.disabled = false; }
     }

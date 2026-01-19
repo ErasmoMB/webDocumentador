@@ -172,8 +172,6 @@
           [tablaKey]="getTablaKeyTiposMateriales()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onTiposMaterialesFieldChange.bind(this)"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTiposMaterialesTableUpdated()">
         </app-dynamic-table>
         <div class="table-editor" *ngIf="getTiposMaterialesSinTotal().length > 0" style="margin-top: 10px;">

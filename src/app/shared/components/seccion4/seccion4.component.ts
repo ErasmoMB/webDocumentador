@@ -656,7 +656,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       this.datos[flagKey] = true;
       this.formularioService.actualizarDato(flagKey as any, true);
     } else {
-      console.warn('[Seccion4] No se encontraron centros poblados filtrados para los códigos proporcionados');
     }
   }
 

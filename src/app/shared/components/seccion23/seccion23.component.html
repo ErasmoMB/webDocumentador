@@ -191,7 +191,8 @@
           ]"
           [tablaKey]="'petGruposEdadAISI'"
           [totalKey]="'categoria'"
-          (tableUpdated)="cdRef.detectChanges()">
+          [customFieldChangeHandler]="onPetGruposEdadFieldChange.bind(this)"
+          (tableUpdated)="onPetGruposEdadTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
@@ -258,7 +259,8 @@
           ]"
           [tablaKey]="'peaDistritoSexoTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="calcularPorcentajesPEADistritoSexo(); cdRef.detectChanges()">
+          [customFieldChangeHandler]="onPEADistritoSexoFieldChange.bind(this)"
+          (tableUpdated)="onPEADistritoSexoTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
@@ -375,7 +377,8 @@
           ]"
           [tablaKey]="'peaOcupadaDesocupadaTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="calcularPorcentajesPEAOcupadaDesocupada(); cdRef.detectChanges()">
+          [customFieldChangeHandler]="onPEAOcupadaDesocupadaFieldChange.bind(this)"
+          (tableUpdated)="onPEAOcupadaDesocupadaTableUpdated()">
         </app-dynamic-table>
 
         <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">

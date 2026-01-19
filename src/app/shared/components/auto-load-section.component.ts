@@ -38,7 +38,6 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
 
   override ngOnInit(): void {
     super.ngOnInit();
-    console.log('[AutoLoad] ngOnInit llamado');
     this.loadAutoSectionData();
   }
 
@@ -91,10 +90,7 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     const sectionKey = this.getSectionKey();
     const parameters = this.getLoadParameters();
     
-    console.log('[AutoLoad] loadAutoSectionData - sectionKey:', sectionKey, 'parameters:', parameters);
-    
     if (!sectionKey || !parameters) {
-      console.log('[AutoLoad] Saltando - sectionKey o parameters vacíos');
       return;
     }
 
@@ -108,31 +104,15 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     this.isLoadingData = true;
     this.lastLoadedSectionKey = requestKey;
     
-    console.log('[AutoLoad] Llamando autoLoader.loadSectionData() con:', sectionKey, ubigeoList);
-    
     const subscription = this.autoLoader.loadSectionData(sectionKey, ubigeoList, forceRefresh)
       .subscribe(
         (loadedData) => {
-          console.log('[AutoLoad] SUBSCRIBE SUCCESS - loadedData recibido:', Object.keys(loadedData));
-          console.log('[AutoLoad] poblacionSexoAISD:', loadedData['poblacionSexoAISD']);
-          console.log('[AutoLoad] poblacionEtarioAISD:', loadedData['poblacionEtarioAISD']);
-          if (Object.keys(loadedData).length > 0) {
-            for (const [key, value] of Object.entries(loadedData)) {
-              if (Array.isArray(value) && value.length > 0) {
-                console.log(`  → ${key}: ${value.length} items`);
-              }
-            }
-          }
           this.applyLoadedData(loadedData);
           this.isLoadingData = false;
           this.cdRef.detectChanges();
         },
         (error) => {
-          console.error('[AutoLoad] SUBSCRIBE ERROR:', error);
           this.isLoadingData = false;
-        },
-        () => {
-          console.log('[AutoLoad] SUBSCRIBE COMPLETE');
         }
       );
 
@@ -141,11 +121,6 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
 
   protected applyLoadedData(loadedData: { [fieldName: string]: any }): void {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    
-    console.log('%c[AutoLoad] applyLoadedData - Datos recibidos:', 'color: #0288d1; font-weight: bold;');
-    console.log('  Prefijo:', prefijo);
-    console.log('  loadedData keys:', Object.keys(loadedData));
-    console.log('  loadedData:', loadedData);
 
     for (const [fieldName, data] of Object.entries(loadedData)) {
       if (data === null || data === undefined) continue;
@@ -162,7 +137,6 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
         (!sonArrays && JSON.stringify(data) !== JSON.stringify(datosActuales));
 
       if (debeActualizar) {
-        console.log(`  ✓ Actualizando ${fieldKey}:`, Array.isArray(data) ? `[Array de ${data.length} items]` : data);
         this.formularioService.actualizarDato(fieldKey as any, data);
         // Invalidar cachés específicos cuando cambian tablas calculadas
         if (fieldName === 'peaOcupacionesTabla' && typeof (this as any).invalidarCachePEA === 'function') {
