@@ -18,6 +18,13 @@
     </div>
     
     <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de la Tabla PET <span class="required">*</span></label>
+      <input type="text" class="input" placeholder="Ej: PET según grupos de edad – CC {{ obtenerNombreComunidadActual() }} (2017)" 
+        [value]="formData['cuadroTituloPET'] || ''"
+        (input)="onFieldChange('cuadroTituloPET', $any($event.target).value)">
+    </div>
+
+    <div class="form-field" style="margin-top: 15px;">
       <label class="label">Tabla PET según grupos de edad</label>
       <app-dynamic-table
         [datos]="datos"
@@ -53,6 +60,13 @@
           </tbody>
         </table>
       </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Fuente de la Tabla PET <span class="required">*</span></label>
+        <input type="text" class="input" placeholder="Ej: Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)" 
+          [value]="formData['cuadroFuentePET'] || ''"
+          (input)="onFieldChange('cuadroFuentePET', $any($event.target).value)">
+      </div>
     </div>
   </div>
 
@@ -86,6 +100,13 @@
     </div>
     
     <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de la Tabla PEA <span class="required">*</span></label>
+      <input type="text" class="input" placeholder="Ej: Conformación de la PEA y No PEA, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" 
+        [value]="formData['cuadroTituloPEA'] || ''"
+        (input)="onFieldChange('cuadroTituloPEA', $any($event.target).value)">
+    </div>
+
+    <div class="form-field" style="margin-top: 15px;">
       <label class="label">Tabla PEA y No PEA según sexo</label>
       <app-dynamic-table
         [datos]="datos"
@@ -149,6 +170,13 @@
           </tbody>
         </table>
       </div>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Fuente de la Tabla PEA <span class="required">*</span></label>
+        <input type="text" class="input" placeholder="Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018" 
+          [value]="formData['cuadroFuentePEA'] || ''"
+          (input)="onFieldChange('cuadroFuentePEA', $any($event.target).value)">
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
@@ -204,6 +232,13 @@
     </div>
     
     <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de la Tabla PEA Ocupada <span class="required">*</span></label>
+      <input type="text" class="input" placeholder="Ej: Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" 
+        [value]="formData['cuadroTituloPEAOcupada'] || ''"
+        (input)="onFieldChange('cuadroTituloPEAOcupada', $any($event.target).value)">
+    </div>
+
+    <div class="form-field" style="margin-top: 15px;">
       <label class="label">Tabla PEA Ocupada y Desocupada según sexo</label>
       <div class="table-editor">
         <table class="editor-table">
@@ -325,6 +360,13 @@
       <button type="button" class="btn btn-secondary" (click)="agregarPEAOcupada()" style="margin-top: 10px;">
         + Agregar Fila
       </button>
+
+      <div class="form-field" style="margin-top: 15px;">
+        <label class="label">Fuente de la Tabla PEA Ocupada <span class="required">*</span></label>
+        <input type="text" class="input" placeholder="Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018" 
+          [value]="formData['cuadroFuentePEAOcupada'] || ''"
+          (input)="onFieldChange('cuadroFuentePEAOcupada', $any($event.target).value)">
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">

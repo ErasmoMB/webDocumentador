@@ -368,6 +368,111 @@ A: NO. Si necesitas override, es señal de mal diseño. Refactoriza en `shared.c
 
 ---
 
+## Sistema de Resaltado por Origen de Datos
+
+**IMPORTANTE:** Siempre verifica de dónde viene el dato y aplica el color correspondiente.
+
+### Clases de Resaltado Disponibles
+
+| Clase CSS | Color | Uso | Origen del Dato |
+|-----------|-------|-----|-----------------|
+| `.data-calculated` | Verde (#1fb324) | Porcentajes y valores calculados | Calculado en frontend |
+| `.data-section` | Celeste (#00bcd4) | Datos de la sección actual | Campo de la sección |
+| `.data-backend` | Morado (#9c27b0) | Datos del backend/BD | API o base de datos |
+| `.data-manual` | Amarillo | Datos ingresados manualmente | Usuario en formulario |
+
+### Ejemplo de Uso
+
+```html
+<!-- Porcentaje calculado (verde) -->
+<span class="data-calculated">45,23 %</span>
+
+<!-- Nombre de comunidad (celeste) -->
+<span class="data-section">Ayroca</span>
+
+<!-- Dato del backend (morado) -->
+<span class="data-backend">610</span>
+
+<!-- Dato manual (amarillo) -->
+<span class="data-manual">GEADES, 2024</span>
+```
+
+### Regla de Oro
+
+> **SIEMPRE identifica el origen del dato antes de aplicar el resaltado.**
+> - ¿Se calcula? → `.data-calculated` (verde) o `appDataHighlight="calculated"`
+> - ¿Viene de la sección? → `.data-section` (celeste) o `appDataHighlight="inherited"`
+> - ¿Viene del backend? → `.data-backend` (morado) o `appDataHighlight="database"`
+> - ¿Es manual? → `.data-manual` (amarillo) o `appDataHighlight="manual"`
+
+### Cómo Identificar el Origen
+
+**Para verificar de dónde viene un dato:**
+
+1. **Revisa el mapeo de campos:**
+   ```typescript
+   // En field-mapping.service.ts
+   this.fieldMappings.set('petTabla', { 
+     fieldName: 'petTabla', 
+     dataSource: 'backend',  // ← Aquí dice el origen
+     endpoint: '/aisd/poblacion-etario'
+   });
+   ```
+
+2. **Revisa el servicio de transformación:**
+   ```typescript
+   // En backend-data-mapper.service.ts
+   private transformPETTabla(data: any[]): any[] {
+     // Si transforma datos del backend → es 'database'
+   }
+   ```
+
+3. **Revisa si se calcula:**
+   ```typescript
+   // Si hay métodos como calcularPorcentajes() → es 'calculated'
+   ```
+
+**Ejemplos comunes:**
+- `categoria` en tablas PET/PEA → `database` (viene del backend)
+- `casos` en tablas → `database` (viene del backend)
+- `porcentaje` en tablas → `calculated` (se calcula en frontend)
+- Nombre de comunidad → `inherited` (viene de otra sección)
+- Fuente de tabla → `manual` (usuario ingresa)
+
+### Receta Rápida: ¿Tabla del Backend o Manual?
+
+**Paso 1: Busca el método de carga en el componente**
+```typescript
+// En seccion7.component.ts
+private cargarTablasPEADistrital(): void {
+  this.backendApi.getPEADistrital(ubigeo).subscribe(...)
+  // ← Si hay método así, la tabla viene del backend
+}
+```
+
+**Paso 2: Busca en `field-mapping.service.ts`**
+```typescript
+this.fieldMappings.set('petTabla', { 
+  dataSource: 'backend',  // ← Si dice 'backend', viene del backend
+  endpoint: '/aisd/poblacion-etario'
+});
+```
+
+**Paso 3: Busca llamadas a `cargarTablas*` o `load*` en `onInitCustom()`**
+```typescript
+protected override onInitCustom(): void {
+  this.cargarTablasPEADistrital();  // ← Si hay llamada así, viene del backend
+}
+```
+
+**Paso 4: Si NO encuentras nada de lo anterior → Es MANUAL**
+
+**Resumen visual:**
+- ✅ **Backend (`database`)**: Método `cargarTablas*`, `getPEADistrital()`, `dataSource: 'backend'`
+- ❌ **Manual (`manual`)**: Solo se llena en formulario, sin métodos de carga automática
+
+---
+
 ## Contacto / Preguntas
 
 Si encuentras una sección con CSS inconsistente o necesitas agregar nuevo estilo:

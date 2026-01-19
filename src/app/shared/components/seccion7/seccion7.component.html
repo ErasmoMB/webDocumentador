@@ -2,10 +2,10 @@
 <h5>A.1.3. Indicadores y distribución de la Población Económicamente Activa por rama de actividad, tipo de empleo, tasas e ingresos.</h5>
 
 <p class="section-subtitle"><strong>a. Población en edad de Trabajar (PET)</strong></p>
-<p class="text-justify" *ngIf="datos.textoPET && datos.textoPET !== '____'" [innerHTML]="obtenerTextoPETConResaltado()"></p>
-<p class="text-justify" *ngIf="!datos.textoPET || datos.textoPET === '____'" [innerHTML]="obtenerTextoPETConResaltado()"></p>
+<p class="text-justify" *ngIf="datos.parrafoSeccion7_pet_completo && datos.parrafoSeccion7_pet_completo !== '____'" [innerHTML]="obtenerTextoSeccion7PETCompletoConResaltado()"></p>
+<p class="text-justify" *ngIf="!datos.parrafoSeccion7_pet_completo || datos.parrafoSeccion7_pet_completo === '____'" [innerHTML]="obtenerTextoSeccion7PETCompletoConResaltado()"></p>
 
-<app-table-wrapper title="PET según grupos de edad – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.3">
+<app-table-wrapper [title]="(datos.cuadroTituloPET || 'PET según grupos de edad') + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" sectionId="3.1.4.A.1.3">
 <table class="table-container">
     <thead>
         <tr>
@@ -17,8 +17,8 @@
     <tbody>
         <ng-container *ngIf="getPETTablaSinTotal().length > 0">
             <tr *ngFor="let item of getPETTablaSinTotal(); trackBy: trackByIndex">
-                <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="inherited">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-                <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" appDataHighlight="database">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
+                <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="manual">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+                <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" appDataHighlight="manual">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
                 <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" appDataHighlight="calculated">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
             </tr>
             <tr class="total-row">
@@ -35,7 +35,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span appDataHighlight="manual">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+<p class="source">Fuente:<span *ngIf="datos.cuadroFuentePET && datos.cuadroFuentePET !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePET }}</span><span *ngIf="!datos.cuadroFuentePET || datos.cuadroFuentePET === '____'" appDataHighlight="manual">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -55,7 +55,7 @@
 <p class="section-subtitle"><strong>b. Población Económicamente Activa (PEA)</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoDefinicionPEAConResaltado()"></p>
 
-<app-table-wrapper title="Conformación de la PEA y No PEA, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.3">
+<app-table-wrapper [title]="(datos.cuadroTituloPEA || 'Conformación de la PEA y No PEA, según sexo') + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" sectionId="3.1.4.A.1.3">
 <table class="table-container">
     <thead>
         <tr>
@@ -77,7 +77,7 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPEATableSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="inherited">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="database">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" appDataHighlight="database">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeHombres && item.porcentajeHombres !== '____'" appDataHighlight="calculated">{{ item.porcentajeHombres }}</span><span *ngIf="!item.porcentajeHombres || item.porcentajeHombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" appDataHighlight="database">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
@@ -119,7 +119,7 @@
 <p class="section-subtitle"><strong>b.3. Índice de desempleo</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoIndiceDesempleoConResaltado()"></p>
 
-<app-table-wrapper title="Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.3">
+<app-table-wrapper [title]="(datos.cuadroTituloPEAOcupada || 'Conformación de la PEA Ocupada y Desocupada, según sexo') + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" sectionId="3.1.4.A.1.3">
 <table class="table-container">
     <thead>
         <tr>
@@ -141,7 +141,7 @@
     </thead>
     <tbody>
         <tr *ngFor="let item of getPEAOcupadaTableSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="inherited">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="database">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.hombres !== undefined && item.hombres !== '____'" appDataHighlight="database">{{ item.hombres }}</span><span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.porcentajeHombres && item.porcentajeHombres !== '____'" appDataHighlight="calculated">{{ item.porcentajeHombres }}</span><span *ngIf="!item.porcentajeHombres || item.porcentajeHombres === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" appDataHighlight="database">{{ item.mujeres }}</span><span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span></td>
@@ -170,7 +170,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente:<span appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+<p class="source">Fuente:<span *ngIf="datos.cuadroFuentePEAOcupada && datos.cuadroFuentePEAOcupada !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePEAOcupada }}</span><span *ngIf="!datos.cuadroFuentePEAOcupada || datos.cuadroFuentePEAOcupada === '____'" appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
 
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisOcupacionConResaltado()"></p>
 </div>

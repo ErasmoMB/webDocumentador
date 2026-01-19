@@ -29,7 +29,7 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
   private stateSubscription?: Subscription;
   private actualizandoDatos: boolean = false;
   
-  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'poblacionDistritalCahuacho', 'petDistritalCahuacho', 'ingresoFamiliarPerCapita', 'rankingIngresoPerCapita', 'petTabla', 'peaTabla', 'peaOcupadaTabla', 'parrafoSeccion7_situacion_empleo_completo', 'parrafoSeccion7_ingresos_completo', 'textoPET', 'textoDetalePEA', 'textoDefinicionPEA', 'textoAnalisisPEA', 'textoIndiceDesempleo', 'textoAnalisisOcupacion'];
+  override watchedFields: string[] = ['grupoAISD', 'distritoSeleccionado', 'poblacionDistritalCahuacho', 'petDistritalCahuacho', 'ingresoFamiliarPerCapita', 'rankingIngresoPerCapita', 'petTabla', 'peaTabla', 'peaOcupadaTabla', 'cuadroTituloPET', 'cuadroFuentePET', 'cuadroTituloPEA', 'cuadroFuentePEA', 'cuadroTituloPEAOcupada', 'cuadroFuentePEAOcupada', 'parrafoSeccion7_situacion_empleo_completo', 'parrafoSeccion7_ingresos_completo', 'textoPET', 'textoDetalePEA', 'textoDefinicionPEA', 'textoAnalisisPEA', 'textoIndiceDesempleo', 'textoAnalisisOcupacion'];
   
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override fotografiasCache: FotoItem[] = [];
@@ -541,12 +541,22 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     if (!petTabla || !Array.isArray(petTabla)) {
       return '____';
     }
-    // Buscar por inicio de rango (14, 30, 45, 65)
+    
     const grupo = petTabla.find((item: any) => {
       if (!item.categoria) return false;
       const cat = item.categoria.toString().toLowerCase();
-      return cat.includes(rangoInicio.toLowerCase());
+      const rangoLower = rangoInicio.toLowerCase();
+      
+      if (rangoLower === '15 a 29' || rangoLower === '15-29') {
+        return cat.includes('15') && (cat.includes('29') || cat.includes('30'));
+      }
+      if (rangoLower === '65' || rangoLower === '65 a más') {
+        return cat.includes('65') || cat.includes('65 a más');
+      }
+      
+      return cat.includes(rangoLower);
     });
+    
     return grupo?.porcentaje || '____';
   }
 
@@ -820,7 +830,39 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del ____% de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el ____% de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ____.`;
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29');
+    const porcentaje65 = this.getPorcentajePETGrupo('65');
+    
+    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del ${porcentajePET} de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el ${porcentaje1529} de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ${porcentaje65}.`;
+  }
+
+  obtenerTextoSeccion7PETCompletoConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoSeccion7PETCompleto();
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje1529 = this.getPorcentajePETGrupo('15 a 29');
+    const porcentaje65 = this.getPorcentajePETGrupo('65');
+    
+    let html = this.escapeHtml(texto);
+    
+    if (grupoAISD && grupoAISD !== '____') {
+      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+    }
+    
+    if (porcentajePET && porcentajePET !== '____' && porcentajePET !== '____%') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentajePET), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajePET)}</span>`);
+    }
+    
+    if (porcentaje1529 && porcentaje1529 !== '____' && porcentaje1529 !== '____%') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentaje1529), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje1529)}</span>`);
+    }
+    
+    if (porcentaje65 && porcentaje65 !== '____' && porcentaje65 !== '____%') {
+      html = html.replace(new RegExp(this.escapeRegex(porcentaje65), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentaje65)}</span>`);
+    }
+    
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {

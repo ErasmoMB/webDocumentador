@@ -557,6 +557,15 @@ export class Seccion7FormWrapperComponent implements OnInit, OnDestroy {
     return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca los poblados de la CC ${grupoAISD}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).`;
   }
 
+  obtenerNombreComunidadActual(): string {
+    if (!this.datos) return '____';
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      return this.datos.grupoAISD || '____';
+    }
+    return this.datos.grupoAISD || '____';
+  }
+
   obtenerTextoAnalisisOcupacion(): string {
     if (this.datos.textoAnalisisOcupacion && this.datos.textoAnalisisOcupacion !== '____') {
       return this.datos.textoAnalisisOcupacion;
