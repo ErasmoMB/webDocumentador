@@ -175,3 +175,218 @@
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisOcupacionConResaltado()"></p>
 </div>
 
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.3. Indicadores y distribución de la Población Económicamente Activa por rama de actividad, tipo de empleo, tasas e ingresos.</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">a. Población en edad de Trabajar (PET)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'textoPET'"
+          label="PET - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoPET()"
+          (valueChange)="onFieldChange('textoPET', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label class="label">Título de la Tabla</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroTituloPET']"
+            (ngModelChange)="onFieldChange('cuadroTituloPET', $event)"
+            placeholder="Ej: PET según grupos de edad">
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label class="label">Fuente de la Tabla</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroFuentePET']"
+            (ngModelChange)="onFieldChange('cuadroFuentePET', $event)"
+            placeholder="Ej: GEADES, 2024">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Población Económicamente Activa (PEA)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos - Detalle PEA</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'textoDetalePEA'"
+          label="Detalle PEA - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoDetalePEA()"
+          (valueChange)="onFieldChange('textoDetalePEA', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos - Definición PEA</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'textoDefinicionPEA'"
+          label="Definición PEA - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoDefinicionPEA()"
+          (valueChange)="onFieldChange('textoDefinicionPEA', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos - Análisis PEA</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'textoAnalisisPEA'"
+          label="Análisis PEA - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoAnalisisPEA()"
+          (valueChange)="onFieldChange('textoAnalisisPEA', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label class="label">Título de la Tabla PEA</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroTituloPEA']"
+            (ngModelChange)="onFieldChange('cuadroTituloPEA', $event)"
+            placeholder="Ej: Conformación de la PEA y No PEA, según sexo">
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label class="label">Fuente de la Tabla PEA</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroFuentePEA']"
+            (ngModelChange)="onFieldChange('cuadroFuentePEA', $event)"
+            placeholder="Ej: INEI 2018">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.1. Situación del empleo (independiente o dependiente)</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'parrafoSeccion7_situacion_empleo_completo'"
+          label="Situación del Empleo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.2. Ingresos de la población</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'parrafoSeccion7_ingresos_completo'"
+          label="Ingresos - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion7IngresosCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b.3. Índice de desempleo</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          [fieldId]="'textoIndiceDesempleo'"
+          label="Índice de Desempleo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoIndiceDesempleo()"
+          (valueChange)="onFieldChange('textoIndiceDesempleo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label class="label">Título de la Tabla PEA Ocupada</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroTituloPEAOcupada']"
+            (ngModelChange)="onFieldChange('cuadroTituloPEAOcupada', $event)"
+            placeholder="Ej: Conformación de la PEA Ocupada y Desocupada, según sexo">
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label class="label">Fuente de la Tabla PEA Ocupada</label>
+          <input 
+            type="text" 
+            class="form-control"
+            [(ngModel)]="datos['cuadroFuentePEAOcupada']"
+            (ngModelChange)="onFieldChange('cuadroFuentePEAOcupada', $event)"
+            placeholder="Ej: INEI 2018">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Editar Párrafo - Análisis de Ocupación</label>
+      
+      <app-paragraph-editor
+        [fieldId]="'textoAnalisisOcupacion'"
+        label="Análisis de Ocupación - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoAnalisisOcupacion()"
+        (valueChange)="onFieldChange('textoAnalisisOcupacion', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 30px;">
+      <label class="label">Fotografías de PEA</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Población de la CC Ayroca"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="PEA"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>
+

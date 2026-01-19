@@ -668,13 +668,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     }
   }
 
-  triggerFileInputById(id: string) {
-    const fileInput = document.getElementById(id) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.click();
-    }
-  }
-
   private emitirCambios() {
     if (!this.permitirMultiples) {
       return;

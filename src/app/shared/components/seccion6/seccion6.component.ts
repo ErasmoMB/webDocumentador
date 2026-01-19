@@ -626,7 +626,7 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
   }
 
   protected override actualizarFotografiasFormMulti(): void {
-    const groupPrefix = this.obtenerPrefijoGrupo();
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.fotografiasFormMulti = this.imageService.loadImages(
       this.seccionId,
       this.PHOTO_PREFIX,

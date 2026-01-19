@@ -1141,5 +1141,15 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
+
+  protected override onFieldChange(fieldId: string, value: any): void {
+    let valorLimpio = '';
+    if (value !== undefined && value !== null && value !== 'undefined') {
+      valorLimpio = value;
+    }
+    this.formularioService.actualizarDato(fieldId as any, valorLimpio);
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
 }
 
