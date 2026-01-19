@@ -156,7 +156,6 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     const ubigeos = this.groupConfig.getAISICCPPActivos();
     
     if (!ubigeos || ubigeos.length === 0) {
-      console.warn('No se encontraron UBIGEOs para el grupo AISI');
       return;
     }
 
@@ -184,12 +183,9 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
           this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
 
           this.cdRef.detectChanges();
-        } else {
-          console.error('Error al cargar datos PEA:', response.error);
         }
       },
       (error: any) => {
-        console.error('Error en servicio PEA:', error);
       }
     );
   }

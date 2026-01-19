@@ -148,9 +148,9 @@
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías de Actividades Económicas</label>
       <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
+        [fotografias]="fotografiasActividadesEconomicasForm"
+        [sectionId]="'3.1.4.B.1.3'"
+        [photoPrefix]="'fotografiaActividadesEconomicas'"
         [permitirMultiples]="true"
         labelTitulo="Título de la fotografía"
         labelFuente="Fuente de la fotografía"
@@ -160,7 +160,7 @@
         tituloDefault="Actividades Económicas del CP"
         fuenteDefault="GEADES, 2024"
         [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
+        (fotografiasChange)="onFotografiasActividadesEconomicasChange($event)">
       </app-image-upload>
     </div>
 
@@ -191,7 +191,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de Mercado</label>
         <app-image-upload
-          [fotografias]="fotografiasFormMulti"
+          [fotografias]="fotografiasMercadoForm"
           [sectionId]="'3.1.4.B.1.3'"
           [photoPrefix]="'fotografiaMercado'"
           [permitirMultiples]="true"
@@ -203,7 +203,7 @@
           tituloDefault="Bodega en el CP"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
-          (fotografiasChange)="onFotografiasChange($event)">
+          (fotografiasChange)="onFotografiasMercadoChange($event)">
         </app-image-upload>
       </div>
     </div>
@@ -227,7 +227,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de Hábitos de Consumo</label>
         <app-image-upload
-          [fotografias]="fotografiasFormMulti"
+          [fotografias]="fotografiasHabitosConsumoForm"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX"
           [permitirMultiples]="true"

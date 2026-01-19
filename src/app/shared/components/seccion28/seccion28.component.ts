@@ -531,7 +531,6 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('Error cargando educación:', error);
       }
     );
   }

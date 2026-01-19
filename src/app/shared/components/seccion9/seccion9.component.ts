@@ -99,7 +99,6 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
 
   protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    console.log('[SECCION9-COMPONENT] applyLoadedData called with:', loadedData);
 
     for (const [fieldName, data] of Object.entries(loadedData)) {
       if (data === null || data === undefined) continue;
@@ -117,7 +116,6 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
         this.datos[fieldKey] === null ||
         (vieneNoVacio && actualEsPlaceholder)
       ) {
-        console.log(`[SECCION9-COMPONENT] Applying ${fieldName} to form:`, data);
         if (fieldName === 'tiposMaterialesTabla' && Array.isArray(data)) {
           const tabla = data.map((x: any) => ({ ...x }));
           this.calcularPorcentajesPorCategoria(tabla);
@@ -293,13 +291,7 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     const tipoNorm = norm(tipoMaterial);
     
     // Variaciones de búsqueda: singular/plural
-    const catVariations = [catNorm, catNorm.endsWith('s') ? catNorm.slice(0, -1) : catNorm + 's'];
-    
-    console.log(`[SECCION9] getPorcentajeMaterial buscando: "${categoria}" + "${tipoMaterial}"`)
-    console.log(`  Categoría normalizada: "${catNorm}" (variaciones: ${catVariations.join(', ')})`)
-    console.log(`  Tipo normalizado: "${tipoNorm}"`)
-    console.log(`  Items en tabla: ${tabla.length}`);
-    
+    const catVariations = [catNorm, catNorm.endsWith('s') ? catNorm.slice(0, -1) : catNorm + 's']
     const item = tabla.find((item: any) => {
       const itemCatNorm = norm(item.categoria || '');
       const itemTipoNorm = norm(item.tipoMaterial || '');
@@ -313,19 +305,8 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
       
       const match = catMatch && tipoMatch;
       
-      if (match) {
-        console.log(`  ✓ Encontrado: "${item.categoria}" | "${item.tipoMaterial}" = ${item.porcentaje}`);
-      }
-      
       return match;
     });
-    
-    if (!item) {
-      console.log(`  ✗ NO encontrado para: "${categoria}" + "${tipoMaterial}"`);
-      // Mostrar opciones disponibles para debugging
-      const availableCats = [...new Set(tabla.map(i => i.categoria))];
-      console.log(`  Categorías disponibles: ${availableCats.join(', ')}`);
-    }
     
     return item?.porcentaje || '____';
   }
@@ -640,15 +621,6 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     const porcentajeTejas = this.getPorcentajeMaterial('techos', 'tejas');
     const porcentajeTierra = this.getPorcentajeMaterial('pisos', 'tierra');
     const porcentajeCemento = this.getPorcentajeMaterial('pisos', 'cemento');
-    
-    console.log(`%c[SECCION9] Texto Estructura - Valores extraídos:`, 'color: #FF6F00; font-weight: bold;');
-    console.log(`  Adobe (paredes): ${porcentajeAdobe}`);
-    console.log(`  Triplay (paredes): ${porcentajeTriplayParedes}`);
-    console.log(`  Calamina (techos): ${porcentajeCalamina}`);
-    console.log(`  Triplay (techos): ${porcentajeTriplayTechos}`);
-    console.log(`  Tejas (techos): ${porcentajeTejas}`);
-    console.log(`  Tierra (pisos): ${porcentajeTierra}`);
-    console.log(`  Cemento (pisos): ${porcentajeCemento}`);
     
     return `Según la información recabada de los Censos Nacionales 2017, dentro de la CC ${grupoAISD}, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el ${porcentajeAdobe}. A ello le complementa el material de triplay / calamina / estera (${porcentajeTriplayParedes}).\n\nRespecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un ${porcentajeCalamina}. El porcentaje restante consiste en triplay / estera / carrizo (${porcentajeTriplayTechos}) y en tejas (${porcentajeTejas}).\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajeTierra}). Por otra parte, el porcentaje restante (${porcentajeCemento}) consiste en cemento.`;
   }

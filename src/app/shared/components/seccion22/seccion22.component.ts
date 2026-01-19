@@ -84,12 +84,9 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
     const ubigeos = this.getLoadParameters();
     
     if (!ubigeos || ubigeos.length === 0) {
-      console.warn('⚠️  No hay UBIGEOs activos para cargar datos del grupo AISI');
       return;
     }
 
-    console.log(`[Seccion22] Cargando datos para ${ubigeos.length} centros poblados:`, ubigeos);
-    
     // Cargar datos de todos los centros poblados del grupo AISI
     this.centrosPobladosService.obtenerPorCodigos(ubigeos).subscribe(
       (centrosPoblados) => {
@@ -108,14 +105,9 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
           
           // Detectar cambios
           this.cdRef.detectChanges();
-          
-          console.log('✅ Datos agregados de centros poblados cargados desde API');
-          console.log('   Población por sexo:', poblacionSexo);
-          console.log('   Población por grupo etario:', poblacionEtario);
         }
       },
       (error) => {
-        console.error('❌ Error cargando datos de API:', error);
       }
     );
   }

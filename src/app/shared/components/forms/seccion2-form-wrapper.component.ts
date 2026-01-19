@@ -51,8 +51,6 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
     this.formData = { ...datos };
     const comunidadesRaw = datos['comunidadesCampesinas'] || [];
     
-    console.log('[Wrapper] 📥 Actualizando datos - Comunidades:', comunidadesRaw.length, 'Distritos:', (datos['distritosAISI'] || []).length);
-    
     if (comunidadesRaw.length > 0) {
       this.comunidadesCampesinas = comunidadesRaw.map((cc: any) => ({
         ...cc,
@@ -65,7 +63,6 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
 
     const distritosRaw = datos['distritosAISI'] || [];
     if (distritosRaw.length > 0) {
-      console.log('[Wrapper] 📥 Distritos cargados:', JSON.stringify(distritosRaw.map((d: any) => d.nombre)));
       this.distritosAISI = distritosRaw.map((d: any) => ({
         ...d,
         centrosPobladosSeleccionados: (d.centrosPobladosSeleccionados || []).map((c: any) => {
@@ -176,7 +173,6 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   agregarComunidadCampesina() {
     if (this.seccion2Component && this.seccion2Component['agregarComunidadCampesina']) {
       const todosLosCentros = this.obtenerTodosLosCentrosPoblados();
-      console.log('[Seccion2FormWrapper] Centros totales disponibles al agregar CC:', todosLosCentros.map(cp => cp.CCPP || cp.NOMBRE));
       this.seccion2Component.agregarComunidadCampesina();
       this.actualizarDatos();
     }
@@ -320,15 +316,11 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   obtenerCentrosPobladosDeDistrito(distritoId: string): any[] {
     const distrito = this.distritosAISI.find(d => d.id === distritoId);
     if (!distrito) {
-      console.log('[Wrapper] ⚠️ Distrito NO encontrado:', distritoId);
       return [];
     }
 
-    console.log('[Wrapper] 🔍 Buscando centros para distrito:', distrito.nombre);
-
     // Si es un distrito nuevo, mostrar todos los centros poblados
     if (distrito.esNuevo || !distrito.nombre || distrito.nombre.startsWith('Distrito ')) {
-      console.log('[Wrapper] 📝 Distrito nuevo, mostrando todos los centros');
       return this.obtenerTodosLosCentrosPoblados();
     }
 
@@ -354,14 +346,11 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
         }
       });
       
-      console.log('[Wrapper] ✅ Centros encontrados para', distrito.nombre + ':', centrosDelDistrito.length);
-      
       if (centrosDelDistrito.length > 0) {
         return centrosDelDistrito;
       }
     }
     
-    console.log('[Wrapper] ⚠️ No se encontraron centros, retornando todos');
     return this.obtenerTodosLosCentrosPoblados();
   }
 
@@ -394,20 +383,12 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   seleccionarTodosCentrosPobladosDistrito(id: string) {
     if (this.seccion2Component && this.seccion2Component['seleccionarTodosCentrosPobladosDistrito']) {
       this.seccion2Component.seleccionarTodosCentrosPobladosDistrito(id);
-      setTimeout(() => {
-        this.actualizarDatos();
-        this.stateService.setDatos(this.formularioService.obtenerDatos());
-      }, 0);
     }
   }
 
   deseleccionarTodosCentrosPobladosDistrito(id: string) {
     if (this.seccion2Component && this.seccion2Component['deseleccionarTodosCentrosPobladosDistrito']) {
       this.seccion2Component.deseleccionarTodosCentrosPobladosDistrito(id);
-      setTimeout(() => {
-        this.actualizarDatos();
-        this.stateService.setDatos(this.formularioService.obtenerDatos());
-      }, 0);
     }
   }
 
@@ -443,26 +424,19 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   }
 
   actualizarNombreDistrito(id: string, nombre: string) {
-    console.log('[Wrapper] 📝 actualizarNombreDistrito LLAMADO:', id, 'nombre:', nombre);
-    
     // Crear un nuevo array con el distrito actualizado (para detectar cambios en Angular)
     this.distritosAISI = this.distritosAISI.map(d => 
       d.id === id ? { ...d, nombre: nombre } : d
     );
     
-    console.log('[Wrapper] ✅ Array actualizado:', JSON.stringify(this.distritosAISI.map(d => d.nombre)));
-    
     // Actualizar en el componente hijo si existe
     if (this.seccion2Component && this.seccion2Component['actualizarNombreDistrito']) {
-      console.log('[Wrapper] 🔄 Sincronizando con hijo');
       this.seccion2Component.actualizarNombreDistrito(id, nombre);
     }
     
     // Guardar los cambios en formularioService y stateService
-    console.log('[Wrapper] 💾 Guardando en formularioService...');
     this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
     this.stateService.setDatos(this.formularioService.obtenerDatos());
-    console.log('[Wrapper] ✅ Cambios guardados');
   }
 
   trackByDistritoId(index: number, distrito: Distrito): string {

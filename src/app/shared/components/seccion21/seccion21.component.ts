@@ -268,7 +268,6 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     );
 
     if (!claveDistrito) {
-      console.log(`[Seccion21] ⚠️ Distrito ${distritoActual} NO encontrado en JSON`);
       return null;
     }
 
@@ -286,7 +285,6 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     });
 
     if (centrosSeleccionados.length === 0) {
-      console.log(`[Seccion21] ⚠️ No hay centros poblados seleccionados para ${distritoActual}`);
       return null;
     }
 
@@ -509,52 +507,6 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private debugCentrosPobladosAISI(): void {
-    console.clear();
-    console.log('=== DEBUG SECCION 21 - CENTROS POBLADOS AISI ===\n');
-    
-    // Mostrar prefijo del grupo
-    const prefijo = this.obtenerPrefijoGrupo();
-    console.log(`📍 Prefijo AISI: ${prefijo}\n`);
-    
-    // Buscar los ubigeos guardados
-    console.log('🔢 UBIGEOs de centros poblados AISI guardados:\n');
-    const ubigeosList = [1502030003, 1502030006, 1502030042, 1502030008, 1502030009, 1502030034];
-    console.log(ubigeosList);
-    
-    console.log('\n---\n');
-    
-    // Búsqueda de datos de Seccion 2
-    console.log('🔍 Buscando datos de Seccion 2 (centrosPoblados) en datos:\n');
-    
-    const todasLasClaves = Object.keys(this.datos).filter(key => 
-      key.toLowerCase().includes('centro') || 
-      key.toLowerCase().includes('ubigeo')
-    );
-    
-    console.log(`Claves encontradas: ${todasLasClaves.length}`);
-    todasLasClaves.forEach(clave => {
-      const valor = this.datos[clave];
-      if (Array.isArray(valor) && valor.length > 0) {
-        console.log(`\n✅ ${clave} (${valor.length} items):`);
-        console.log(`   Primer item:`, valor[0]);
-      }
-    });
-    
-    console.log('\n---\n');
-    console.log('🏢 Buscando tabla específica de centros poblados Seccion 2:\n');
-    
-    // Buscar centrosPobladosTabla o similar
-    if (this.datos['centrosPobladosTabla']) {
-      console.log('✅ Encontrado: centrosPobladosTabla');
-      console.table(this.datos['centrosPobladosTabla'].slice(0, 5));
-    }
-    if (this.datos['centrosPobladosTabla_A1']) {
-      console.log('✅ Encontrado: centrosPobladosTabla_A1');
-      console.table(this.datos['centrosPobladosTabla_A1'].slice(0, 5));
-    }
-    
-    console.log('\n---\n');
-    console.log('✨ Fin de debug\n');
   }
 }
 

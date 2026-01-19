@@ -516,16 +516,11 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     const codigos = this.groupConfig.getAISICCPPActivos();
     
     if (!codigos || codigos.length === 0) {
-      console.warn('[Sección 25] No hay códigos AISI activos disponibles');
       return;
     }
 
-    console.log('[Sección 25] Cargando tipos de vivienda para AISI:', codigos);
-
     this.viviendaService.obtenerTiposVivienda(codigos).subscribe(
       (response: any) => {
-        console.log('[Sección 25] Respuesta vivienda:', response);
-        
         if (response && response.success && response.tipos_vivienda) {
           const viviendas = response.tipos_vivienda.map((item: any) => ({
             categoria: item.tipo_vivienda || '',
@@ -533,19 +528,14 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
             porcentaje: this.formatearPorcentaje(item.porcentaje)
           }));
 
-          console.log('[Sección 25] Viviendas mapeadas:', viviendas);
-
           this.datos['tiposViviendaAISI'] = viviendas;
           this.formularioService.actualizarDato('tiposViviendaAISI', viviendas);
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
-          
-          console.log('[Sección 25] Datos de vivienda cargados. Total:', viviendas.length);
         }
       },
       (error: any) => {
-        console.error('[Sección 25] Error cargando vivienda:', error);
       }
     );
   }
@@ -554,44 +544,32 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     const codigos = this.groupConfig.getAISICCPPActivos();
     
     if (!codigos || codigos.length === 0) {
-      console.warn('[Sección 25] No hay códigos AISI activos disponibles');
       return;
     }
 
-    console.log('[Sección 25] Cargando materiales para AISI:', codigos);
-
     this.materialesService.obtenerMateriales(codigos).subscribe(
       (response: any) => {
-        console.log('[Sección 25] Respuesta materiales:', response);
-        
-        if (response && response.success && response.materiales_construccion) {
-          const materiales = response.materiales_construccion.map((item: any) => ({
+        if (response && response.success && response.materiales) {
+          const materiales = response.materiales.map((item: any) => ({
             categoria: item.categoria || '',
             tipoMaterial: item.tipo_material || '',
             casos: item.casos || 0,
             porcentaje: this.formatearPorcentaje(item.porcentaje)
           }));
 
-          console.log('[Sección 25] Materiales mapeados:', materiales);
-
           this.datos['materialesViviendaAISI'] = materiales;
           this.formularioService.actualizarDato('materialesViviendaAISI', materiales);
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
-          
-          console.log('[Sección 25] Datos de materiales cargados. Total:', materiales.length);
         }
       },
       (error: any) => {
-        console.error('[Sección 25] Error cargando materiales:', error);
       }
     );
   }
 
-  private formatearPorcentaje(valor: number | string): string {
-    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
-    if (isNaN(num)) return '0,00 %';
+  private formatearPorcentaje(num: number): string {
     return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
   }
 }

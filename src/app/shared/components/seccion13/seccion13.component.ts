@@ -94,16 +94,13 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
 
   protected getLoadParameters(): string[] | null {
     const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
-    console.log('%c[Seccion13] getLoadParameters() resultado:', 'color: #FF5722; font-weight: bold;', ccppDesdeGrupo);
     
     if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
       // Limpiar '0' al inicio de cada CCPP
       const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
         const cleaned = cpp.toString().replace(/^0+/, '') || '0';
-        console.log(`  Limpiando: ${cpp} → ${cleaned}`);
         return cleaned;
       });
-      console.log('%c  ✓ CCPPs después de limpiar:', 'color: #FF5722;', ccppLimpios);
       return ccppLimpios;
     }
     return null;
@@ -410,9 +407,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
 
   getPorcentajeSinSeguro(): string {
     const tabla = this.getAfiliacionSaludSinTotal();
-    console.log('[SECCION13] Buscando "Sin Seguro" en tabla:', tabla);
     const itemSinSeguro = tabla.find((item: any) => item.categoria && (item.categoria.toString().toLowerCase().includes('sin seguro') || item.categoria.toString().toLowerCase().includes('sin seg') || item.categoria.toString().toLowerCase().includes('ningún')));
-    console.log('[SECCION13] itemSinSeguro encontrado:', itemSinSeguro);
     return itemSinSeguro ? (itemSinSeguro.porcentaje ? String(itemSinSeguro.porcentaje) : '____') : '____';
   }
 

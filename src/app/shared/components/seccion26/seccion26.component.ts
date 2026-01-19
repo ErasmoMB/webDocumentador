@@ -659,7 +659,6 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   cargarServiciosBasicos(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
     if (!codigos || codigos.length === 0) {
-      console.warn('No hay códigos AISI disponibles');
       return;
     }
 
@@ -694,7 +693,6 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('Error cargando servicios básicos:', error);
       }
     );
 
@@ -709,7 +707,6 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('Error cargando energía de cocinar:', error);
       }
     );
   }

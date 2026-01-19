@@ -118,7 +118,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         this.groupConfig.setAISI(grupoAISI);
       }
     } catch (error) {
-      console.error('[Seccion2] Error sincronizando con GroupConfigService:', error);
     }
   }
 
@@ -296,8 +295,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     // Cargar distritos AISI desde localStorage
     const distritosGuardados = this.datos['distritosAISI'] || [];
     
-    console.log('[Seccion2] 📥 Cargando distritosAISI desde datos:', JSON.stringify(distritosGuardados));
-    
     if (distritosGuardados.length > 0 && Array.isArray(distritosGuardados)) {
       this.distritosAISI = distritosGuardados.map((d: Distrito) => ({
         ...d,
@@ -308,8 +305,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         }).filter((codigo: string) => codigo !== '')
       }));
       
-      console.log('[Seccion2] ✅ Distritos cargados exitosamente:', JSON.stringify(this.distritosAISI));
-      
       if (this.distritosAISI.length > 0 && this.distritosAISI[0].nombre) {
         const primerDistritoNombre = this.distritosAISI[0].nombre;
         if (!this.datos['centroPobladoAISI'] || this.datos['centroPobladoAISI'] !== primerDistritoNombre) {
@@ -318,7 +313,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         }
       }
     } else {
-      console.log('[Seccion2] ⚠️ No hay distritosAISI guardados, detectando...');
       this.detectarDistritosAISI();
     }
     
@@ -468,8 +462,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   cargarSeccionesAISI() {
-    console.log('[Seccion2.cargarSeccionesAISI] Iniciando...');
-    console.log('[Seccion2.cargarSeccionesAISI] distritosAISI actuales:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre, centros: d.centrosPobladosSeleccionados.length }))));
     
     // Mantener compatibilidad con secciones AISI (legacy)
     const secciones = this.datos['seccionesAISI'] || [];
@@ -527,7 +519,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   guardarDistritosAISI() {
-    console.log('[Seccion2] ✅ guardarDistritosAISI guardado:', JSON.stringify(this.distritosAISI));
     this.datos['distritosAISI'] = this.distritosAISI;
     this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
   }
@@ -852,17 +843,12 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   actualizarNombreDistrito(id: string, nombre: string): void {
-    console.log('[Seccion2] 📝 actualizarNombreDistrito LLAMADO:', id, 'nombre:', nombre);
-    console.log('[Seccion2] 📊 Distritos antes:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre }))));
-    
     // Crear nuevo array con el distrito actualizado
     this.distritosAISI = this.distritosAISI.map(d => {
       if (d.id === id) {
         const nombreOriginal = !d.nombreOriginal || d.nombreOriginal.trim() === '' 
           ? (d.nombre && d.nombre.trim() !== '' ? d.nombre : nombre)
           : d.nombreOriginal;
-        
-        console.log('[Seccion2] 🔄 Actualizando:', { id, nombreOriginal, nuevoNombre: nombre });
         
         return {
           ...d,
@@ -874,10 +860,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       return d;
     });
     
-    console.log('[Seccion2] 📊 Distritos después:', JSON.stringify(this.distritosAISI.map(d => ({ id: d.id, nombre: d.nombre }))));
-    
     this.datos['distritosAISI'] = this.distritosAISI;
-    console.log('[Seccion2] 💾 Guardando en formularioService...');
     this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
     
     const indiceDistrito = this.distritosAISI.findIndex(d => d.id === id);
@@ -903,13 +886,11 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   toggleCentroPobladoDistrito(id: string, codigo: string): void {
-    console.log('[Seccion2] ☑️ Toggle CP:', codigo);
     const distrito = this.distritosAISI.find(d => d.id === id);
     
     const nuevosCentros = this.toggleCentroPobladoEnLista(this.distritosAISI, id, codigo);
     
     if (!nuevosCentros) {
-      console.warn('[Seccion2] ❌ toggle retornó null');
       return;
     }
 
@@ -923,22 +904,54 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       return;
     }
 
-    const ccppDisponibles = this.obtenerCentrosPobladosDisponiblesParaDistrito(distrito.nombreOriginal || distrito.nombre);
+    const nombreDistrito = distrito.nombreOriginal || distrito.nombre || '';
+    
+    let ccppDisponibles = this.obtenerCentrosPobladosDisponiblesParaDistrito(nombreDistrito);
+    
+    if (ccppDisponibles.length === 0) {
+      ccppDisponibles = this.obtenerTodosLosCentrosPoblados();
+    }
+    
     const codigos = ccppDisponibles
       .map((cp: any) => cp.CODIGO?.toString() || '')
       .filter((codigo: string) => codigo !== '');
 
-    const nuevosDistritos = this.distritosAISI.map(d => 
-      d.id === id ? { ...d, centrosPobladosSeleccionados: codigos } : d
+    const nuevasEntidades = this.distritosAISI.map(entidad => 
+      entidad.id === id ? { ...entidad, centrosPobladosSeleccionados: [...codigos] } : entidad
     );
     
-    this.aplicarCodigosAEntidad('distritosAISI', this.distritosAISI, id, codigos, true);
+    this.distritosAISI = nuevasEntidades;
+    this.datos['distritosAISI'] = nuevasEntidades;
+    this.formularioService.actualizarDato('distritosAISI', nuevasEntidades);
     this.sincronizarCongrupConfigService();
+    
+    const datosActuales = this.formularioService.obtenerDatos();
+    this.stateService.setDatos(datosActuales);
+    
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
   }
 
   deseleccionarTodosCentrosPobladosDistrito(id: string): void {
-    this.aplicarCodigosAEntidad('distritosAISI', this.distritosAISI, id, []);
+    const distrito = this.distritosAISI.find(d => d.id === id);
+    if (!distrito) {
+      return;
+    }
+
+    const nuevasEntidades = this.distritosAISI.map(entidad => 
+      entidad.id === id ? { ...entidad, centrosPobladosSeleccionados: [] } : entidad
+    );
+    
+    this.distritosAISI = nuevasEntidades;
+    this.datos['distritosAISI'] = nuevasEntidades;
+    this.formularioService.actualizarDato('distritosAISI', nuevasEntidades);
     this.sincronizarCongrupConfigService();
+    
+    const datosActuales = this.formularioService.obtenerDatos();
+    this.stateService.setDatos(datosActuales);
+    
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
   }
 
   trackByDistritoId(index: number, distrito: Distrito): string {
@@ -1030,9 +1043,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     if (jsonCompleto && typeof jsonCompleto === 'object' && !Array.isArray(jsonCompleto)) {
       this.provinciasDinamicas = this.provinciaDinamicaService.analizarProvinciasDinamicas(jsonCompleto);
       this.provinciasOrdenadas = this.provinciaDinamicaService.obtenerProvinciasOrdenadas(this.provinciasDinamicas);
-      
-      console.log('[Seccion2] Provincias detectadas:', this.provinciasOrdenadas);
-      console.log('[Seccion2] Detalle provincial:', this.provinciasDinamicas);
     }
   }
 
@@ -1061,16 +1071,13 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     
     // Evitar ejecución múltiple (solo si no hay datos guardados)
     if (this._distritosAISICargados) {
-      console.log('[Seccion2.detectarDistritosAISI] ⏭️ Ya se cargaron, SKIP');
       return;
     }
     
     // ⚠️ CRÍTICO: Primero intentar cargar distritos guardados
     const distritosGuardados = this.datos['distritosAISI'];
-    console.log('[Seccion2.detectarDistritosAISI] distritosGuardados:', JSON.stringify(distritosGuardados));
     
     if (Array.isArray(distritosGuardados) && distritosGuardados.length > 0) {
-      console.log('[Seccion2.detectarDistritosAISI] ✅ Cargando distritos guardados');
       this.distritosAISI = distritosGuardados.map((d: Distrito) => ({
         ...d,
         nombreOriginal: d.nombreOriginal || d.nombre,
@@ -1087,12 +1094,10 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       }
       
       this._distritosAISICargados = true;
-      console.log('[Seccion2.detectarDistritosAISI] ✅ FIN - Distritos cargados desde guardados');
       return;
     }
     
     // Si NO hay distritos guardados, CREAR nuevos
-    console.log('[Seccion2.detectarDistritosAISI] 📝 Creando nuevos distritos...');
     
     const jsonCompleto = this.datos['jsonCompleto'];
     const distritosSet = new Set<string>();
@@ -1120,13 +1125,10 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       // Crear un distrito por cada distrito disponible con todos sus CCPP pre-seleccionados
       this.distritosDisponiblesAISI.forEach((nombreDistrito, index) => {
         const ccppDisponibles = this.obtenerCentrosPobladosDisponiblesParaDistrito(nombreDistrito);
-        console.log(`[Seccion2] Distrito ${index + 1} "${nombreDistrito}" tiene ${ccppDisponibles.length} centros poblados`);
         
         const todosLosCCPP = ccppDisponibles
           .map((cp: any) => cp.CODIGO?.toString() || '')
           .filter((codigo: string) => codigo !== '');
-        
-        console.log(`[Seccion2] Códigos para Distrito ${index + 1}:`, JSON.stringify(todosLosCCPP));
         
         const nuevoDistrito: Distrito = {
           id: `dist_${Date.now()}_${Math.random()}`,
@@ -1136,12 +1138,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
           esNuevo: false  // false para que filtre correctamente por DIST
         };
         
-        console.log(`[Seccion2] ✅ Distrito ${index + 1} creado:`, JSON.stringify({ nombre: nuevoDistrito.nombre, centros: nuevoDistrito.centrosPobladosSeleccionados.length }));
         this.distritosAISI.push(nuevoDistrito);
       });
-      
-      console.log('[Seccion2] 📊 Total de distritos creados:', this.distritosAISI.length);
-      console.log('[Seccion2] 📋 Detalles:', JSON.stringify(this.distritosAISI.map(d => ({ nombre: d.nombre, centros: d.centrosPobladosSeleccionados.length }))));
       
       this.datos['distritosAISI'] = this.distritosAISI;
       this.formularioService.actualizarDato('distritosAISI', this.distritosAISI);
@@ -1164,7 +1162,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     
     // Evitar ejecución múltiple (solo si no hay datos guardados)
     if (this._comunidadesCargadas) {
-      console.log('[Seccion2.detectarComunidadesCampesinas] ⏭️ Ya se cargaron, SKIP');
       return;
     }
     
@@ -1196,7 +1193,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         }).filter((codigo: string) => codigo !== '')
       }));
       this._comunidadesCargadas = true;
-      console.log('[Seccion2.detectarComunidadesCampesinas] ✅ Cargadas desde storage');
       return;
     }
 
@@ -1338,7 +1334,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   onAutocompleteInput(field: string, value: string): void {
     // Actualizar el valor del campo
     this.datos[field] = value;
-    console.log('[Seccion2] onAutocompleteInput:', field, value);
     
     // Si el campo es un distrito adicional, buscar sugerencias del backend
     if (field === 'aisdComponente1' || field === 'aisdComponente2') {
@@ -1357,7 +1352,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
   
   buscarSugerenciasDistritoAdicional(field: string, termino: string): void {
-    console.log('[Seccion2] buscarSugerenciasDistritoAdicional:', field, termino);
     
     if (!termino || termino.trim().length < 1) {
       this.autocompleteData[field] = {
@@ -1378,18 +1372,14 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       }
     }
     
-    console.log('[Seccion2] Provincia extraída para', field, ':', provincia);
-    
     // Buscar distritos de esa provincia en el JSON LOCAL
     const sugerencias = this.buscarDistritosEnJSON(termino, provincia);
-    console.log('[Seccion2] Sugerencias encontradas en JSON:', sugerencias);
     
     this.autocompleteData[field] = {
-      sugerencias: sugerencias || [],
-      mostrar: sugerencias && sugerencias.length > 0,
+      sugerencias: sugerencias,
+      mostrar: sugerencias.length > 0,
       buscado: termino
     };
-    this.cdRef.detectChanges();
   }
 
   private buscarDistritosEnJSON(termino: string, provincia?: string): string[] {

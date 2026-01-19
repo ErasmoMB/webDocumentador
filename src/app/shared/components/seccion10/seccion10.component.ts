@@ -20,6 +20,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
   styleUrls: ['./seccion10.component.css']
 })
 export class Seccion10Component extends AutoLoadSectionComponent implements OnDestroy {
+  // Component para gestionar servicios básicos - agua, saneamiento, electricidad, energía para cocinar
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
@@ -202,11 +203,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   getPorcentajeAguaRedPublica(): string {
     const tabla = this.getTablaAbastecimientoAgua();
     if (!tabla || !Array.isArray(tabla)) {
-      console.warn('[DEBUG] getPorcentajeAguaRedPublica: tabla no existe');
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeAguaRedPublica', 'color: #00BCD4; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
     
     const redPublica = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
@@ -220,11 +218,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   getPorcentajeAguaSinAbastecimiento(): string {
     const tabla = this.getTablaAbastecimientoAgua();
     if (!tabla || !Array.isArray(tabla)) {
-      console.warn('[DEBUG] getPorcentajeAguaSinAbastecimiento: tabla no existe');
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeAguaSinAbastecimiento', 'color: #00BCD4; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
     
     const sinAbastecimiento = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
@@ -235,7 +230,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
              cat.includes('otro tipo');
     });
     
-    console.log('  Resultado encontrado:', sinAbastecimiento);
     return sinAbastecimiento?.porcentaje || '____';
   }
 
@@ -244,10 +238,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeSaneamientoRedPublica', 'color: #FF6B6B; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
-    
-    // Buscar "Red pública" o "Con alcantarillado" (ambas son desagüe por red)
+
     const redPublica = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
       return cat.includes('red pública') || 
@@ -255,7 +246,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
              cat.includes('red pública de desagüe');
     });
     
-    console.log('  Resultado encontrado:', redPublica);
     return redPublica?.porcentaje || '____';
   }
 
@@ -264,10 +254,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeSaneamientoSinSaneamiento', 'color: #FF6B6B; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
-    
-    // Buscar opciones sin saneamiento
+
     const sinSaneamiento = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
       return cat.includes('sin alcantarillado') || 
@@ -276,47 +263,36 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
              cat.includes('pozo negro');
     });
     
-    console.log('  Resultado encontrado:', sinSaneamiento);
     return sinSaneamiento?.porcentaje || '____';
   }
 
   getPorcentajeElectricidad(): string {
     const tabla = this.getTablaCoberturaElectrica();
     if (!tabla || !Array.isArray(tabla)) {
-      console.warn('[DEBUG] getPorcentajeElectricidad: tabla no existe');
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeElectricidad', 'color: #9C27B0; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
-    
+
     const conElectricidad = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
-      return cat.includes('con acceso') || 
-             cat.includes('con electricidad') || 
+      return cat.includes('con electricidad') || 
              cat.includes('con alumbrado');
     });
     
-    console.log('  Resultado encontrado:', conElectricidad);
     return conElectricidad?.porcentaje || '____';
   }
 
   getPorcentajeSinElectricidad(): string {
     const tabla = this.getTablaCoberturaElectrica();
     if (!tabla || !Array.isArray(tabla)) {
-      console.warn('[DEBUG] getPorcentajeSinElectricidad: tabla no existe');
       return '____';
     }
-    console.log('%c[DEBUG] getPorcentajeSinElectricidad', 'color: #9C27B0; font-weight: bold');
-    console.log('  Tabla completa:', tabla);
-    
+
     const sinElectricidad = tabla.find((item: any) => {
       const cat = (item.categoria || '').toLowerCase();
-      return cat.includes('sin acceso') || 
-             cat.includes('sin electricidad') || 
+      return cat.includes('sin electricidad') || 
              cat.includes('sin alumbrado');
     });
     
-    console.log('  Resultado encontrado:', sinElectricidad);
     return sinElectricidad?.porcentaje || '____';
   }
 
@@ -1026,4 +1002,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }
+// Cache rebuild trigger - 2026-01-19
+
 

@@ -9,7 +9,10 @@ export class AppComponent {
   title = 'LBS';
   sidebarExpanded = false;
 
+  constructor() {}
+
   onSidebarToggle(expanded: boolean): void {
     this.sidebarExpanded = expanded;
   }
 }
+

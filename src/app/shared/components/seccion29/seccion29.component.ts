@@ -499,22 +499,18 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
 
   cargarSegurosSalud(): void {
     const cpp = this.datos.centroPobladoAISI;
-    console.log('🔵 cargarSegurosSalud - CPP:', cpp);
     if (!cpp) {
       return; // No hay CPP
     }
 
     this.saludService.obtenerSeguroSaludPorCpp(cpp).subscribe({
       next: (response: any) => {
-        console.log('✓ Respuesta cargarSegurosSalud:', response);
         if (response?.success && response?.data) {
           this.datos.afiliacionSaludTabla = response.data;
-          console.log('✓ afiliacionSaludTabla asignada:', this.datos.afiliacionSaludTabla);
           this.cdRef.detectChanges();
         }
       },
       error: (error: any) => {
-        console.error('Error cargando seguros de salud para CPP:', cpp, error);
       }
     });
   }
@@ -536,9 +532,7 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       error: (error: any) => {
-        console.error('Error cargando seguros de salud múltiples:', error);
       }
     });
   }
 }
-

@@ -57,15 +57,9 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
 
   protected override onInitCustom(): void {
     if (!this.modoFormulario) {
-      console.log('[Seccion5] init', {
-        seccionId: this.seccionId,
-        prefijo: this.obtenerPrefijoGrupo(),
-        grupoAISD: this.obtenerGrupoAISDConFallback(this.datos),
-        claves: Object.keys(this.datos || {})
-      });
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        this.cargarFotografiasVista();
-        this.cdRef.detectChanges();
+        this.fotografiasVista = this.cargarFotografiasVista();
+        this.cdRef.markForCheck();
       });
     }
   }
@@ -103,12 +97,6 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     const hayCambioTabla = JSON.stringify(tablaActual) !== JSON.stringify(tablaAnterior);
     
     if (!grupoAISDActual) {
-      console.warn('[Seccion5] grupoAISD vacío', {
-        seccionId: this.seccionId,
-        prefijo,
-        campoPrefijado: prefijo ? `grupoAISD${prefijo}` : 'grupoAISD',
-        claves: Object.keys(datosActuales || {})
-      });
     }
 
     if (grupoAISDActual !== grupoAISDAnterior || 
@@ -291,6 +279,10 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
   onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    if (!this.modoFormulario) {
+      this.fotografiasVista = this.cargarFotografiasVista();
+      this.cdRef.markForCheck();
+    }
   }
 
   onInstitucionFieldChange(index: number, field: string, value: any) {

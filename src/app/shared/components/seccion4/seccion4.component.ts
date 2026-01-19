@@ -418,7 +418,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     );
 
     if (!claveDistrito) {
-      console.log(`[Seccion4] ⚠️ Comunidad ${comunidad.nombre} NO encontrada en JSON`);
       return null;
     }
 
@@ -436,7 +435,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     });
 
     if (centrosSeleccionados.length === 0) {
-      console.log(`[Seccion4] ⚠️ No hay centros poblados seleccionados para ${comunidad.nombre}`);
       return null;
     }
 
@@ -446,8 +444,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
       const poblacionActual = parseInt(actual.POBLACION || actual.poblacion || '0') || 0;
       return poblacionActual > poblacionMax ? actual : max;
     });
-
-    console.log(`[Seccion4] 🏘️ Capital de ${comunidad.nombre}: ${capitalConMayorPoblacion.CCPP} (Población: ${capitalConMayorPoblacion.POBLACION})`);
 
     return capitalConMayorPoblacion.CCPP || capitalConMayorPoblacion.ccpp;
   }
@@ -1056,30 +1052,28 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   }
 
   onFotografiasUbicacionChange(fotografias: FotoItem[]) {
-    // 1. Guardar en el servicio
-    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_UBICACION, fotografias);
-    
-    // 2. Actualizar formulario
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_UBICACION,
+      fotografias,
+      groupPrefix
+    );
     this.fotografiasUbicacionFormMulti = [...fotografias];
-    
-    // 3. Actualizar cache
     this.fotografiasUbicacionCache = [...fotografias];
-    
-    // 4. Forzar detección de cambios
     this.cdRef.detectChanges();
   }
 
   onFotografiasPoblacionChange(fotografias: FotoItem[]) {
-    // 1. Guardar en el servicio
-    this.onGrupoFotografiasChange(this.PHOTO_PREFIX_POBLACION, fotografias);
-    
-    // 2. Actualizar formulario
+    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    this.imageService.saveImages(
+      this.seccionId,
+      this.PHOTO_PREFIX_POBLACION,
+      fotografias,
+      groupPrefix
+    );
     this.fotografiasPoblacionFormMulti = [...fotografias];
-    
-    // 3. Actualizar cache
     this.fotografiasPoblacionCache = [...fotografias];
-    
-    // 4. Forzar detección de cambios
     this.cdRef.detectChanges();
   }
 

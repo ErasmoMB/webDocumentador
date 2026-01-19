@@ -32,6 +32,10 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   fotografiasActividadesEconomicasCache: any[] = [];
   fotografiasMercadoCache: any[] = [];
   fotografiasInstitucionalidadCache: any[] = [];
+  
+  fotografiasActividadesEconomicasForm: FotoItem[] = [];
+  fotografiasMercadoForm: FotoItem[] = [];
+  fotografiasHabitosConsumoForm: FotoItem[] = [];
 
   actividadesEconomicasConfig: TableConfig = {
     tablaKey: 'actividadesEconomicasAISI',
@@ -304,6 +308,24 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
       this.PHOTO_PREFIX,
       groupPrefix
     );
+    
+    this.fotografiasActividadesEconomicasForm = this.imageService.loadImages(
+      '3.1.4.B.1.3',
+      'fotografiaActividadesEconomicas',
+      groupPrefix
+    );
+    
+    this.fotografiasMercadoForm = this.imageService.loadImages(
+      '3.1.4.B.1.3',
+      'fotografiaMercado',
+      groupPrefix
+    );
+    
+    this.fotografiasHabitosConsumoForm = this.imageService.loadImages(
+      this.seccionId,
+      this.PHOTO_PREFIX,
+      groupPrefix
+    );
   }
 
   protected override onChangesCustom(changes: any): void {
@@ -326,6 +348,23 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
+    this.fotografiasHabitosConsumoForm = [...fotografias];
+  }
+
+  onFotografiasActividadesEconomicasChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.3');
+    this.imageService.saveImages('3.1.4.B.1.3', 'fotografiaActividadesEconomicas', fotografias, groupPrefix);
+    this.fotografiasActividadesEconomicasForm = [...fotografias];
+    this.actualizarDatos();
+    this.cdRef.markForCheck();
+  }
+
+  onFotografiasMercadoChange(fotografias: FotoItem[]) {
+    const groupPrefix = this.imageService.getGroupPrefix('3.1.4.B.1.3');
+    this.imageService.saveImages('3.1.4.B.1.3', 'fotografiaMercado', fotografias, groupPrefix);
+    this.fotografiasMercadoForm = [...fotografias];
+    this.actualizarDatos();
+    this.cdRef.markForCheck();
   }
 
   obtenerTextoIntroActividadesEconomicasAISI(): string {
@@ -412,24 +451,17 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
     const codigos = this.groupConfig.getAISICCPPActivos();
     
     if (!codigos || codigos.length === 0) {
-      console.warn('No hay códigos AISI activos disponibles');
       return;
     }
 
-    console.log('[Sección 24] Cargando actividades económicas para AISI:', codigos);
-
     this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
       (response: any) => {
-        console.log('[Sección 24] Respuesta del backend:', response);
-        
         if (response && response.success && response.actividades_economicas) {
           const actividades = response.actividades_economicas.map((item: any) => ({
             actividad: item.actividad || '',
             casos: item.casos || 0,
             porcentaje: this.formatearPorcentaje(item.porcentaje)
           }));
-
-          console.log('[Sección 24] Actividades mapeadas:', actividades);
 
           // Actualizar datos locales primero
           this.datos['actividadesEconomicasAISI'] = actividades;
@@ -440,14 +472,9 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
           // Forzar detección de cambios
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
-          
-          console.log('[Sección 24] Datos cargados correctamente. Total:', actividades.length);
-        } else {
-          console.warn('[Sección 24] Respuesta sin datos:', response);
         }
       },
       (error: any) => {
-        console.error('[Sección 24] Error cargando datos de actividades económicas:', error);
       }
     );
   }

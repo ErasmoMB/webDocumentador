@@ -385,27 +385,29 @@ export class ResumenComponent implements OnInit {
   }
 
   async exportarWord() {
-    this.actualizarDatos();
-    
-    this.cdRef.detectChanges();
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const elemento = document.querySelector(".viewport-content") as HTMLElement || 
-                     document.querySelector(".preview") as HTMLElement;
-    if (!elemento) {
-      this.logger.error("No se encontró el contenido para exportar.");
-      alert("No se pudo encontrar el contenido para exportar. Por favor, recarga la página e intenta nuevamente.");
-      return;
-    }
-
-    const nombreArchivo = `LBS${this.datos?.projectName || 'Documento'}`.replace(/\s+/g, '');
-    
     try {
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const elemento = document.querySelector(".viewport-content") as HTMLElement || 
+                       document.querySelector(".preview") as HTMLElement;
+      if (!elemento) {
+        this.logger.error("No se encontró el contenido para exportar.");
+        alert("No se pudo encontrar el contenido para exportar. Por favor, recarga la página e intenta nuevamente.");
+        return;
+      }
+
+      const nombreArchivo = `LBS${this.datos?.projectName || 'Documento'}`.replace(/\s+/g, '');
+      
       await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
-    } catch (error) {
+      this.logger.info("Documento exportado correctamente");
+    } catch (error: any) {
       this.logger.error("Error al exportar a Word", error);
-      alert("Hubo un error al exportar el documento. Por favor, intenta nuevamente.");
+      const mensajeError = error?.message || "Error desconocido";
+      alert(`Hubo un error al exportar el documento: ${mensajeError}. Por favor, intenta nuevamente.`);
+      console.error("Detalles del error:", error);
     }
   }
 

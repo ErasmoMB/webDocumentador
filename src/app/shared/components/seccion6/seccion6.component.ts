@@ -85,7 +85,6 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     const firma = `${prefijo || ''}|${codigosActivos?.length || 0}`;
     if (firma !== this.ultimoLogCCPP) {
       this.ultimoLogCCPP = firma;
-      console.info(`[Seccion6] CCPP activos ${prefijo || ''}: ${codigosActivos?.length || 0}`);
     }
     return codigosActivos && codigosActivos.length > 0 ? codigosActivos : null;
   }

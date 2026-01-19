@@ -76,7 +76,6 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
       // Limpiar '0' al inicio de cada CCPP
       const ccppLimpios = ccppDesdeGrupo.map((cpp: string) => {
         const cleaned = cpp.toString().replace(/^0+/, '') || '0';
-        console.log(`[Seccion18] CCPP: ${cpp} → ${cleaned}`);
         return cleaned;
       });
       return ccppLimpios;
