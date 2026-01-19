@@ -70,10 +70,11 @@ export class Seccion5Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
   }
 
   protected override detectarCambios(): boolean {

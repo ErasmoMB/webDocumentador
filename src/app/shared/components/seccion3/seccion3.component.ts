@@ -66,10 +66,11 @@ export class Seccion3Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
   }
 
   protected override onChangesCustom(changes: SimpleChanges): void {

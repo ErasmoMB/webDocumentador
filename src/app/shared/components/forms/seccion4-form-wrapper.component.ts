@@ -241,10 +241,11 @@ export class Seccion4FormWrapperComponent extends BaseSectionComponent implement
     });
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
   }
 
   cargarFotografias() {

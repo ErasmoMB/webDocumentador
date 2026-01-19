@@ -1,4 +1,4 @@
-import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive } from '@angular/core';
+import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -7,9 +7,11 @@ import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.ser
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { FotoItem } from './image-upload/image-upload.component';
 import { PhotoGroupConfig } from '../utils/photo-group-config';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Directive()
-export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck {
+export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck, OnDestroy {
   @Input() seccionId: string = '';
   @Input() modoFormulario: boolean = false;
   
@@ -23,6 +25,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   
   protected photoGroups: Map<string, FotoItem[]> = new Map();
   protected photoGroupsConfig: PhotoGroupConfig[] = [];
+  protected destroy$ = new Subject<void>();
 
   protected constructor(
     protected formularioService: FormularioService,
@@ -84,8 +87,15 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   protected loadSectionData(): void {
     const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
     if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   protected obtenerValorConPrefijo(campo: string): any {

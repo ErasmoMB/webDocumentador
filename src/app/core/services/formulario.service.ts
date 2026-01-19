@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { FormularioDatos, CentroPobladoData, ComunidadCampesina } from '../models/formulario.model';
 import { LoggerService } from './logger.service';
 import { StateService } from './state.service';
 import { ImageMigrationService } from './image-migration.service';
+import { ImageBackendService } from './image-backend.service';
 
 @Injectable({
   providedIn: 'root'
@@ -188,16 +190,27 @@ export class FormularioService {
   private readonly STORAGE_KEY = 'formulario_datos';
   private readonly STORAGE_JSON_KEY = 'formulario_json';
   private readonly STORAGE_TABLA_FILAS_KEY = 'tabla_aisd2_filas_activas';
+  private saveDebounceSubject = new Subject<void>();
 
   constructor(
     private http: HttpClient,
     private logger: LoggerService,
     private stateService: StateService,
-    private imageMigration: ImageMigrationService
+    private imageMigration: ImageMigrationService,
+    private imageBackendService: ImageBackendService
   ) {
     this.cargarDesdeLocalStorage();
     this.sincronizarConEstado();
     this.ejecutarMigracionImagenes();
+    this.inicializarDebounceGuardado();
+  }
+
+  private inicializarDebounceGuardado(): void {
+    this.saveDebounceSubject.pipe(
+      debounceTime(500)
+    ).subscribe(() => {
+      this.ejecutarGuardado();
+    });
   }
 
   private async ejecutarMigracionImagenes(): Promise<void> {
@@ -233,14 +246,14 @@ export class FormularioService {
   actualizarDato(campo: keyof FormularioDatos, valor: any): void {
     if (this.datos) {
       (this.datos as any)[campo] = valor;
-      this.guardarEnLocalStorage();
+      this.programarGuardado();
       this.stateService.updateDato(campo, valor);
     }
   }
 
   actualizarDatos(nuevosDatos: Partial<FormularioDatos>): void {
     this.datos = { ...this.datos, ...nuevosDatos };
-    this.guardarEnLocalStorage();
+    this.programarGuardado();
     this.stateService.setDatos(this.datos);
   }
 
@@ -272,7 +285,11 @@ export class FormularioService {
     return this.jsonData;
   }
 
-  private guardarEnLocalStorage() {
+  private programarGuardado(): void {
+    this.saveDebounceSubject.next();
+  }
+
+  private ejecutarGuardado(): void {
     try {
       const datosSerializados = JSON.stringify(this.datos);
       const tamanioMB = new Blob([datosSerializados]).size / (1024 * 1024);
@@ -289,6 +306,10 @@ export class FormularioService {
         this.logger.error('Error al guardar en localStorage', error);
       }
     }
+  }
+
+  private guardarEnLocalStorage(): void {
+    this.ejecutarGuardado();
   }
 
   private guardarJSONEnLocalStorage(): void {
@@ -347,6 +368,18 @@ export class FormularioService {
   }
 
   limpiarDatos() {
+    const formularioId = this.datos.projectName || 'default';
+    if (formularioId && formularioId !== 'default') {
+      this.imageBackendService.deleteAllFormularioImages(formularioId).subscribe({
+        next: (response) => {
+          this.logger.info(`Se eliminaron ${response.deleted_count} imagen(es) del backend`);
+        },
+        error: (error) => {
+          this.logger.warn('Error al eliminar imágenes del backend:', error);
+        }
+      });
+    }
+    
     this.datos = {
       projectName: '',
       grupoAISD: '',

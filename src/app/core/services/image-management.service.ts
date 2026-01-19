@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FormularioService } from './formulario.service';
 import { PhotoNumberingService } from './photo-numbering.service';
 import { StateService } from './state.service';
+import { ImageBackendService } from './image-backend.service';
 import { FotoItem } from '../../shared/components/image-upload/image-upload.component';
 
 @Injectable({
@@ -12,7 +13,8 @@ export class ImageManagementService {
   constructor(
     private formularioService: FormularioService,
     private photoNumberingService: PhotoNumberingService,
-    private stateService: StateService
+    private stateService: StateService,
+    private imageBackendService: ImageBackendService
   ) {}
 
   loadImages(
@@ -33,7 +35,8 @@ export class ImageManagementService {
         const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
         imagen = datos[imagenBaseKey];
       }
-      if (this.isValidImage(imagen)) { 
+      if (this.isValidImage(imagen)) {
+        const imagenUrl = this.getImageUrl(imagen);
         const titulo = datos[tituloKey] || `Foto ${i}`;
         const fuente = datos[fuenteKey] || 'GEADES, 2024';
         const numeroGlobal = this.photoNumberingService.getGlobalPhotoNumber(
@@ -46,7 +49,7 @@ export class ImageManagementService {
           numero: numeroGlobal,
           titulo,
           fuente,
-          imagen
+          imagen: imagenUrl
         });
       }
     }
@@ -103,8 +106,25 @@ export class ImageManagementService {
           prefix,
           groupPrefix
         );
+        
+        let imagenValue = foto.imagen || '';
+        if (foto.imagen && typeof foto.imagen === 'string') {
+          if (foto.imagen.startsWith('data:image')) {
+            imagenValue = foto.imagen;
+          } else if (this.isImageId(foto.imagen)) {
+            imagenValue = foto.imagen;
+          } else if (foto.imagen.includes('/api/imagenes/')) {
+            const match = foto.imagen.match(/\/api\/imagenes\/([0-9a-f-]{36})/i);
+            if (match && match[1]) {
+              imagenValue = match[1];
+            } else {
+              imagenValue = foto.imagen;
+            }
+          }
+        }
+
         this.formularioService.actualizarDato(numeroKey as any, numeroGlobal);
-        this.formularioService.actualizarDato(imagenKey as any, foto.imagen || '');
+        this.formularioService.actualizarDato(imagenKey as any, imagenValue);
         this.formularioService.actualizarDato(tituloKey as any, foto.titulo || '');
         this.formularioService.actualizarDato(fuenteKey as any, foto.fuente || '');
 
@@ -113,7 +133,7 @@ export class ImageManagementService {
           const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
           const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
 
-          this.formularioService.actualizarDato(imagenBaseKey as any, foto.imagen || '');
+          this.formularioService.actualizarDato(imagenBaseKey as any, imagenValue);
           this.formularioService.actualizarDato(tituloBaseKey as any, foto.titulo || '');
           this.formularioService.actualizarDato(fuenteBaseKey as any, foto.fuente || '');
         }
@@ -133,12 +153,30 @@ export class ImageManagementService {
   private isValidImage(imagen: any): boolean {
     if (!imagen) return false;
     if (typeof imagen === 'string') {
-      return imagen !== 'null' && imagen.trim() !== '' && (imagen.startsWith('data:image') || imagen.length > 100);
+      return imagen !== 'null' && imagen.trim() !== '' && 
+        (imagen.startsWith('data:image') || imagen.length > 100 || this.isImageId(imagen));
     }
     if (imagen instanceof File) {
       return imagen.type.startsWith('image/');
     }
     return false;
+  }
+
+  private isImageId(value: string): boolean {
+    if (typeof value !== 'string') return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(value);
+  }
+
+  private getImageUrl(imagen: string): string {
+    if (!imagen) return '';
+    if (imagen.startsWith('data:image') || imagen.startsWith('http')) {
+      return imagen;
+    }
+    if (this.isImageId(imagen)) {
+      return this.imageBackendService.getImageUrl(imagen);
+    }
+    return imagen;
   }
 
   getFieldWithPrefix(baseField: string, groupPrefix: string = ''): string {

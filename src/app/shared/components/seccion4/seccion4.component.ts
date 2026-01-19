@@ -12,6 +12,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-seccion4',
@@ -104,11 +105,13 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
   private cargarDatosBackendSeccion4(): void {
     const parametros = this.getLoadParameters();
     if (parametros && parametros.length > 0) {
-      this.autoLoader.loadSectionData('seccion4_aisd', parametros).subscribe(
-        (data: { [fieldName: string]: any }) => {
-          this.applyLoadedData(data);
-        }
-      );
+      this.autoLoader.loadSectionData('seccion4_aisd', parametros)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (data: { [fieldName: string]: any }) => {
+            this.applyLoadedData(data);
+          }
+        );
     }
   }
 
@@ -144,11 +147,12 @@ export class Seccion4Component extends BaseSectionComponent implements OnDestroy
     this.actualizarDatos();
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
       this.stateSubscription = undefined;
     }
+    super.ngOnDestroy();
   }
 
   protected override onChangesCustom(changes: SimpleChanges): void {

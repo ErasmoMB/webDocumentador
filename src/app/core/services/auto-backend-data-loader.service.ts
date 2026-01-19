@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 import { BackendApiService } from './backend-api.service';
 import { BackendDataMapperService, DataMapping, SectionDataConfig } from './backend-data-mapper.service';
 import { CacheService } from './cache.service';
@@ -11,6 +11,7 @@ import { CentrosPobladosActivosService } from './centros-poblados-activos.servic
 })
 export class AutoBackendDataLoaderService {
   private readonly CACHE_DURATION = 3600000;
+  private loadingRequests: Map<string, Observable<any>> = new Map();
 
   constructor(
     private backendApi: BackendApiService,
@@ -58,9 +59,10 @@ export class AutoBackendDataLoaderService {
     forceRefresh: boolean
   ): Observable<any> {
     const params = this.buildCacheParams(mapping.paramType, ubigeoOrCppList);
-    // Evita cache para campos agregables (ej. demográficos) para siempre traer datos frescos.
-    const useCache = !forceRefresh && !mapping.aggregatable;
-
+    const requestKey = `${mapping.endpoint}_${JSON.stringify(params)}`;
+    
+    const useCache = !forceRefresh;
+    
     if (useCache) {
       const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
       if (cached) {
@@ -68,7 +70,11 @@ export class AutoBackendDataLoaderService {
       }
     }
 
-    return this.fetchAndTransform(sectionKey, mapping, ubigeoOrCppList).pipe(
+    if (this.loadingRequests.has(requestKey)) {
+      return this.loadingRequests.get(requestKey)!;
+    }
+
+    const request$ = this.fetchAndTransform(sectionKey, mapping, ubigeoOrCppList).pipe(
       map(data => {
         this.cacheService.saveResponse(mapping.endpoint, params, data);
         const transformedData = mapping.transform ? mapping.transform(data) : data;
@@ -76,8 +82,21 @@ export class AutoBackendDataLoaderService {
       }),
       catchError(err => {
         return of(null);
-      })
+      }),
+      shareReplay(1)
     );
+
+    this.loadingRequests.set(requestKey, request$);
+    
+    request$.subscribe({
+      complete: () => {
+        setTimeout(() => {
+          this.loadingRequests.delete(requestKey);
+        }, 100);
+      }
+    });
+
+    return request$;
   }
 
   private fetchAndTransform(
@@ -112,7 +131,19 @@ export class AutoBackendDataLoaderService {
     cppList: string[]
   ): Observable<any[]> {
     const requests = cppList.map((cpp, idx) => {
+      const paramType = mapping.paramType || 'id_ubigeo';
+      const params = this.buildCacheParams(paramType, cpp);
+      const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
+      
+      if (cached) {
+        return of(mapping.transform ? mapping.transform(cached) : cached);
+      }
+
       return this.callEndpoint(mapping.endpoint, mapping.paramType, cpp).pipe(
+        map(data => {
+          this.cacheService.saveResponse(mapping.endpoint, params, data);
+          return mapping.transform ? mapping.transform(data) : data;
+        }),
         catchError(err => {
           return of([]);
         })
@@ -125,7 +156,6 @@ export class AutoBackendDataLoaderService {
           const resumen = this.agregarDemograficosDesdeRespuestas(results);
           return resumen.items;
         }
-        // Para centros-poblados, simplemente concatenar sin merge
         if (mapping.endpoint === '/aisd/centros-poblados') {
           return results.flat();
         }

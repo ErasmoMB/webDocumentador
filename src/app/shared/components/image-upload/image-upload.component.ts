@@ -3,6 +3,8 @@ import {
   SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef 
 } from '@angular/core';
 import { PhotoNumberingService } from '../../../core/services/photo-numbering.service';
+import { ImageBackendService } from '../../../core/services/image-backend.service';
+import { FormularioService } from '../../../core/services/formulario.service';
 
 export interface FotoItem {
   numero?: string;
@@ -58,7 +60,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   constructor(
     private cdRef: ChangeDetectorRef,
-    private photoNumberingService: PhotoNumberingService
+    private photoNumberingService: PhotoNumberingService,
+    private imageBackendService: ImageBackendService,
+    private formularioService: FormularioService
   ) {}
 
   hasFotos(): boolean {
@@ -124,7 +128,10 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     if (this.modoVista) {
-      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen);
+      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen).map(f => ({
+        ...f,
+        imagen: this.getImageUrl(f.imagen)
+      }));
       this.cdRef.markForCheck();
       this.logSectionPhotos();
       return;
@@ -138,9 +145,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (this.modoVista) {
-      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen);
-      this.cdRef.detectChanges();
+      if (this.modoVista) {
+      this._fotografias = (this.fotografias || []).filter(f => !!f && !!f.imagen).map(f => ({
+        ...f,
+        imagen: this.getImageUrl(f.imagen)
+      }));
+      this.cdRef.markForCheck();
       return;
     }
 
@@ -225,29 +235,30 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       if (this.fotografias && this.fotografias.length > 0) {
         this._fotografias = this.fotografias.map(f => ({ 
           ...f, 
-          id: f.id || Date.now().toString() + Math.random().toString(36).substr(2, 9)
+          id: f.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          imagen: this.getImageUrl(f.imagen)
         }));
       } else {
         this._fotografias = [{
           titulo: this.titulo || this.tituloDefault,
           fuente: this.fuente || this.fuenteDefault,
-          imagen: this.previewInicial,
+          imagen: this.getImageUrl(this.previewInicial),
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
         }];
       }
     } else {
-      this.preview = this.previewInicial;
+      this.preview = this.getImageUrl(this.previewInicial);
       if (this._fotografias.length === 0) {
         this._fotografias = [{
           titulo: this.titulo || this.tituloDefault,
           fuente: this.fuente || this.fuenteDefault,
-          imagen: this.previewInicial,
+          imagen: this.preview,
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
         }];
       } else {
         this._fotografias[0].titulo = this.titulo || this.tituloDefault;
         this._fotografias[0].fuente = this.fuente || this.fuenteDefault;
-        this._fotografias[0].imagen = this.previewInicial;
+        this._fotografias[0].imagen = this.preview;
       }
     }
     
@@ -337,19 +348,47 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       return;
     }
     
-    this.comprimirImagen(file).then((imagenComprimida) => {
-      if (this.permitirMultiples && index !== undefined) {
-        if (this._fotografias[index]) {
-          this._fotografias[index].imagen = imagenComprimida;
-          this.emitirCambios();
+    const formularioId = this.formularioService.obtenerDatos().projectName || 'default';
+    
+    this.imageBackendService.uploadImage(file, formularioId, this.sectionId, this.photoPrefix).subscribe({
+      next: (response) => {
+        const imageId = response.image_id;
+        const imageUrl = this.imageBackendService.getImageUrl(imageId);
+        if (this.permitirMultiples && index !== undefined) {
+          if (this._fotografias[index]) {
+            this._fotografias[index] = {
+              ...this._fotografias[index],
+              imagen: imageUrl
+            };
+            this._fotografias = [...this._fotografias];
+            this.cdRef.markForCheck();
+            setTimeout(() => {
+              this.emitirCambios();
+            }, 0);
+          }
+        } else {
+          this.preview = imageUrl;
+          this.imagenChange.emit(imageId);
+          this.cdRef.markForCheck();
         }
-      } else {
-        this.preview = imagenComprimida;
-        this.imagenChange.emit(imagenComprimida);
+      },
+      error: (error) => {
+        console.warn('Error al subir imagen al backend, usando base64 como fallback:', error);
+        this.comprimirImagen(file).then((imagenComprimida) => {
+          if (this.permitirMultiples && index !== undefined) {
+            if (this._fotografias[index]) {
+              this._fotografias[index].imagen = imagenComprimida;
+              this.emitirCambios();
+            }
+          } else {
+            this.preview = imagenComprimida;
+            this.imagenChange.emit(imagenComprimida);
+          }
+          this.cdRef.markForCheck();
+        }).catch((err) => {
+          console.error('Error al procesar la imagen:', err);
+        });
       }
-      this.cdRef.markForCheck();
-    }).catch((error) => {
-      console.error('Error al procesar la imagen:', error);
     });
   }
 
@@ -430,7 +469,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   private emitirCambiosConVacio() {
     this.lastEmittedValue = '';
     this.fotografiasChange.emit([]);
-    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   agregarFoto() {
@@ -476,10 +515,46 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     if (serialized !== this.lastEmittedValue) {
       this.lastEmittedValue = serialized;
       this.isInternalUpdate = true;
-      this.fotografiasChange.emit([...this._fotografias]);
+      const fotografiasParaEmitir = this._fotografias.map(f => {
+        const imagenOriginal = this.extractImageId(f.imagen);
+        return {
+          ...f,
+          imagen: imagenOriginal || f.imagen
+        };
+      });
+      this.fotografiasChange.emit(fotografiasParaEmitir);
       this.hasLoggedPhotos = false;
       this.logSectionPhotos();
       this.cdRef.markForCheck();
     }
+  }
+
+  private getImageUrl(imagen: string | null): string | null {
+    if (!imagen) return null;
+    if (imagen.startsWith('data:image') || imagen.startsWith('http')) {
+      return imagen;
+    }
+    if (this.isImageId(imagen)) {
+      return this.imageBackendService.getImageUrl(imagen);
+    }
+    return imagen;
+  }
+
+  private isImageId(value: string): boolean {
+    if (typeof value !== 'string') return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(value);
+  }
+
+  private extractImageId(value: string | null): string | null {
+    if (!value) return null;
+    if (this.isImageId(value)) return value;
+    if (value.includes('/api/imagenes/')) {
+      const match = value.match(/\/api\/imagenes\/([0-9a-f-]{36})/i);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null;
   }
 }

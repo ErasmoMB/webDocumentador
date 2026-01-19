@@ -5,7 +5,7 @@ import { FieldMappingService } from 'src/app/core/services/field-mapping.service
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { StateService } from 'src/app/core/services/state.service';
 import { forkJoin, of, Subscription } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
@@ -577,7 +577,8 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
 
     this.backendApi.getPEADistrital(ubigeo).pipe(
       map((r: any) => r?.data || null),
-      catchError(() => of(null))
+      catchError(() => of(null)),
+      takeUntil(this.destroy$)
     ).subscribe((data: any) => {
       if (!data) {
         return;

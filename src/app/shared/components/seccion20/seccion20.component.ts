@@ -82,10 +82,11 @@ export class Seccion20Component extends BaseSectionComponent implements OnDestro
     return prefijo ? `textoFestividades${prefijo}` : 'textoFestividades';
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
   }
 
   protected override detectarCambios(): boolean {

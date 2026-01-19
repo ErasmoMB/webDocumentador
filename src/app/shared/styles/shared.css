@@ -7,8 +7,8 @@
   --primary-hover: #1a1a1a;
   --secondary-color: #d32f2f;
   --secondary-hover: #b71c1c;
-  --tertiary-color: #999999;
-  --tertiary-hover: #777777;
+  --tertiary-color: #666666;
+  --tertiary-hover: #555555;
   --border-gold: #c46902;
   --label-color: #0b274e;
   --highlight-color: #ffff00;
@@ -17,8 +17,8 @@
   --bg-light: #ffffff;
   --bg-highlight: #fffaf0;
   --bg-table-header: #e6e6e6;
-  --text-primary: #333333;
-  --text-secondary: #555555;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
   --border-color: #cccccc;
   --border-radius: 8px;
   --spacing-xs: 5px;
@@ -411,7 +411,7 @@ h3 {
 h4 {
   margin-bottom: var(--spacing-xs);
   font-size: 16px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-family: var(--font-serif);
   font-weight: 700;
 }

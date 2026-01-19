@@ -6,7 +6,8 @@ import { ImageManagementService } from 'src/app/core/services/image-management.s
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { Subscription } from 'rxjs';
+import { Subscription, of } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { BaseSectionComponent } from './base-section.component';
 
 @Directive()
@@ -14,6 +15,7 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   protected autoLoadSubscriptions: Subscription[] = [];
   private isLoadingData = false;
   private lastLoadedSectionKey: string | null = null;
+  private loadDebounceSubscription: Subscription | null = null;
 
   protected constructor(
     formularioService: FormularioService,
@@ -42,16 +44,46 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   override ngOnChanges(changes: SimpleChanges): void {
     super.ngOnChanges(changes);
     if (changes['seccionId'] && !this.isLoadingData) {
-      this.loadAutoSectionData();
+      this.debouncedLoadAutoSectionData();
     }
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    if (this.loadDebounceSubscription) {
+      this.loadDebounceSubscription.unsubscribe();
+    }
     this.autoLoadSubscriptions.forEach(sub => sub.unsubscribe());
+    super.ngOnDestroy();
   }
 
   protected override loadSectionData(): void {
     // La carga automática reemplaza la carga manual de BaseSectionComponent
+  }
+
+  private debouncedLoadAutoSectionData(forceRefresh: boolean = false): void {
+    if (this.loadDebounceSubscription) {
+      this.loadDebounceSubscription.unsubscribe();
+    }
+
+    const sectionKey = this.getSectionKey();
+    const parameters = this.getLoadParameters();
+    
+    if (!sectionKey || !parameters) {
+      return;
+    }
+
+    const ubigeoList = Array.isArray(parameters) ? parameters : [parameters];
+    const requestKey = `${sectionKey}_${JSON.stringify(ubigeoList)}`;
+
+    if (this.isLoadingData && this.lastLoadedSectionKey === requestKey && !forceRefresh) {
+      return;
+    }
+
+    this.loadDebounceSubscription = of({ sectionKey, ubigeoList, forceRefresh })
+      .pipe(debounceTime(300))
+      .subscribe(() => {
+        this.loadAutoSectionData(forceRefresh);
+      });
   }
 
   protected loadAutoSectionData(forceRefresh: boolean = false): void {
@@ -66,22 +98,22 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
       return;
     }
 
-    // Evitar bucle infinito: no cargar si ya está cargando la misma sección
-    if (this.isLoadingData && this.lastLoadedSectionKey === sectionKey && !forceRefresh) {
+    const ubigeoList = Array.isArray(parameters) ? parameters : [parameters];
+    const requestKey = `${sectionKey}_${JSON.stringify(ubigeoList)}`;
+
+    if (this.isLoadingData && this.lastLoadedSectionKey === requestKey && !forceRefresh) {
       console.warn(`%c  ⚠️ Carga en progreso para ${sectionKey}, evitando bucle`, 'color: #0288d1;');
       return;
     }
 
     this.isLoadingData = true;
-    this.lastLoadedSectionKey = sectionKey;
+    this.lastLoadedSectionKey = requestKey;
 
-    const ubigeoList = Array.isArray(parameters) ? parameters : [parameters];
     console.log(`%c  ubigeoList final:`, 'color: #0288d1;', ubigeoList);
     
     const subscription = this.autoLoader.loadSectionData(sectionKey, ubigeoList, forceRefresh)
       .subscribe(
         (loadedData) => {
-          // Log puntual: solo mostrar si hay datos
           if (Object.keys(loadedData).length > 0) {
             console.log(`%c[AutoLoad] ${sectionKey} cargado exitosamente`, 'color: #0288d1; font-weight: bold;');
             for (const [key, value] of Object.entries(loadedData)) {

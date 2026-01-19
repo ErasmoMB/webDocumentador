@@ -208,10 +208,12 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      this.seccionId = params['id'];
-      this.cargarSeccion();
-    });
+    this.subscriptions.push(
+      this.route.params.subscribe(params => {
+        this.seccionId = params['id'];
+        this.cargarSeccion();
+      })
+    );
     
     this.datos = this.formularioService.obtenerDatos();
     this.formData = { ...this.datos };
@@ -222,15 +224,17 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.geoInfo = this.datos['geoInfo'] || {};
     this.jsonFileName = this.datos['jsonFileName'] || '';
     
-    this.datos$.subscribe(datos => {
-      if (datos) {
-        this.datos = datos;
-        this.centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
-        this.comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-        this.geoInfo = datos['geoInfo'] || {};
-        this.jsonFileName = datos['jsonFileName'] || '';
-      }
-    });
+    this.subscriptions.push(
+      this.datos$.subscribe(datos => {
+        if (datos) {
+          this.datos = datos;
+          this.centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
+          this.comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
+          this.geoInfo = datos['geoInfo'] || {};
+          this.jsonFileName = datos['jsonFileName'] || '';
+        }
+      })
+    );
   }
 
   async cargarSeccion() {
