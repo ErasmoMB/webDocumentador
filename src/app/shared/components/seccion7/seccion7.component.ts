@@ -57,7 +57,7 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
     const petTablaInicial = this.datos[petTablaKey] || null;
-    this.datosAnteriores[petTablaKey] = petTablaInicial ? JSON.parse(JSON.stringify(petTablaInicial)) : null;
+    this.datosAnteriores[petTablaKey] = petTablaInicial;
     
     this.cargarFotografias();
     this.cargarTablasPEADistrital();
@@ -82,21 +82,15 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
       if (this.actualizandoDatos) return;
       if (!nuevosDatos) return;
       
-      const datosAnteriores = JSON.stringify(this.datos);
       this.actualizandoDatos = true;
       this.actualizarDatos();
       this.asegurarArraysValidos();
       this.cargarFotografias();
-      const datosNuevos = JSON.stringify(this.datos);
       
-      if (datosAnteriores !== datosNuevos) {
-        setTimeout(() => {
-          this.cdRef.detectChanges();
-          this.actualizandoDatos = false;
-        }, 0);
-      } else {
+      setTimeout(() => {
+        this.cdRef.detectChanges();
         this.actualizandoDatos = false;
-      }
+      }, 0);
     });
   }
 
@@ -168,25 +162,25 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     for (const campo of this.watchedFields) {
       const valorActual = (datosActuales as any)[campo] || null;
       const valorAnterior = this.datosAnteriores[campo] || null;
-      if (JSON.stringify(valorActual) !== JSON.stringify(valorAnterior)) {
+      if (valorActual !== valorAnterior) {
         hayCambios = true;
-        this.datosAnteriores[campo] = JSON.parse(JSON.stringify(valorActual));
+        this.datosAnteriores[campo] = valorActual;
       }
     }
     
-    if (JSON.stringify(petTablaActual) !== JSON.stringify(petTablaAnterior)) {
+    if (petTablaActual !== petTablaAnterior) {
       hayCambios = true;
-      this.datosAnteriores[petTablaAnteriorKey] = petTablaActual ? JSON.parse(JSON.stringify(petTablaActual)) : null;
+      this.datosAnteriores[petTablaAnteriorKey] = petTablaActual;
     }
 
-    if (JSON.stringify(peaTablaActual) !== JSON.stringify(peaTablaAnterior)) {
+    if (peaTablaActual !== peaTablaAnterior) {
       hayCambios = true;
-      this.datosAnteriores[peaTablaKey] = peaTablaActual ? JSON.parse(JSON.stringify(peaTablaActual)) : null;
+      this.datosAnteriores[peaTablaKey] = peaTablaActual;
     }
 
-    if (JSON.stringify(peaOcupadaTablaActual) !== JSON.stringify(peaOcupadaTablaAnterior)) {
+    if (peaOcupadaTablaActual !== peaOcupadaTablaAnterior) {
       hayCambios = true;
-      this.datosAnteriores[peaOcupadaTablaKey] = peaOcupadaTablaActual ? JSON.parse(JSON.stringify(peaOcupadaTablaActual)) : null;
+      this.datosAnteriores[peaOcupadaTablaKey] = peaOcupadaTablaActual;
     }
     
     if (grupoAISDActual !== grupoAISDAnterior || grupoAISDActual !== grupoAISDEnDatos || hayCambios) {
@@ -353,6 +347,86 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
 
     this.datos[petTablaKey] = actualizada;
     this.formularioService.actualizarDato(petTablaKey as any, actualizada);
+  }
+
+  onPETFieldChange(index: number, field: string, value: any): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const tabla = this.getTablaPET();
+
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+
+        if (total > 0) {
+          const casos = typeof tabla[index].casos === 'number' ? tabla[index].casos : parseInt(tabla[index].casos) || 0;
+          const porcentaje = ((casos / total) * 100)
+            .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            .replace('.', ',') + ' %';
+          tabla[index].porcentaje = porcentaje;
+        }
+
+        // CRÍTICO: Limpiar párrafo personalizado para que se regenere
+        const parrafoPETKey = prefijo ? `parrafoSeccion7_pet_completo${prefijo}` : 'parrafoSeccion7_pet_completo';
+        if (this.datos[parrafoPETKey]) {
+          delete this.datos[parrafoPETKey];
+          this.formularioService.actualizarDato(parrafoPETKey as any, null);
+        }
+      }
+
+      this.datos[petTablaKey] = [...tabla];
+      this.formularioService.actualizarDato(petTablaKey as any, tabla);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPEAFieldChange(index: number, field: string, value: any): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+    const tabla = this.getTablaPEA();
+
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+
+      if (field === 'casos' || field === 'hombres' || field === 'mujeres') {
+        const textoPEAKey = prefijo ? `textoDefinicionPEA${prefijo}` : 'textoDefinicionPEA';
+        if (this.datos[textoPEAKey]) {
+          delete this.datos[textoPEAKey];
+          this.formularioService.actualizarDato(textoPEAKey as any, null);
+        }
+      }
+
+      this.datos[peaTablaKey] = [...tabla];
+      this.formularioService.actualizarDato(peaTablaKey as any, tabla);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onPEAOcupadaFieldChange(index: number, field: string, value: any): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+    const tabla = this.getTablaPEAOcupada();
+
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+
+      if (field === 'casos' || field === 'hombres' || field === 'mujeres') {
+        const textoAnalisisKey = prefijo ? `textoAnalisisOcupacion${prefijo}` : 'textoAnalisisOcupacion';
+        if (this.datos[textoAnalisisKey]) {
+          delete this.datos[textoAnalisisKey];
+          this.formularioService.actualizarDato(textoAnalisisKey as any, null);
+        }
+      }
+
+      this.datos[peaOcupadaTablaKey] = [...tabla];
+      this.formularioService.actualizarDato(peaOcupadaTablaKey as any, tabla);
+      this.cdRef.detectChanges();
+    }
   }
 
   getPEATableSinTotal(): any[] {
@@ -735,9 +809,28 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
     this.cdRef.detectChanges();
   }
 
+  obtenerTextoSeccion7PETCompleto(): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    let textoPersonalizado = this.datos.parrafoSeccion7_pet_completo;
+    if (!textoPersonalizado && prefijo) {
+      textoPersonalizado = this.datos[`parrafoSeccion7_pet_completo${prefijo}`];
+    }
+    if (textoPersonalizado && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado;
+    }
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone del ____% de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el ____% de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un ____.`;
+  }
+
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {
-    if (this.datos.parrafoSeccion7_situacion_empleo_completo) {
-      return this.datos.parrafoSeccion7_situacion_empleo_completo;
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    let textoPersonalizado = this.datos.parrafoSeccion7_situacion_empleo_completo;
+    if (!textoPersonalizado && prefijo) {
+      textoPersonalizado = this.datos[`parrafoSeccion7_situacion_empleo_completo${prefijo}`];
+    }
+    if (textoPersonalizado && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -745,8 +838,13 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
   }
 
   obtenerTextoSeccion7IngresosCompleto(): string {
-    if (this.datos.parrafoSeccion7_ingresos_completo) {
-      return this.datos.parrafoSeccion7_ingresos_completo;
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    let textoPersonalizado = this.datos.parrafoSeccion7_ingresos_completo;
+    if (!textoPersonalizado && prefijo) {
+      textoPersonalizado = this.datos[`parrafoSeccion7_ingresos_completo${prefijo}`];
+    }
+    if (textoPersonalizado && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();

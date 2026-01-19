@@ -59,42 +59,64 @@ export class AutoBackendDataLoaderService {
     forceRefresh: boolean
   ): Observable<any> {
     const params = this.buildCacheParams(mapping.paramType, ubigeoOrCppList);
-    const requestKey = `${mapping.endpoint}_${JSON.stringify(params)}`;
+    const requestKey = `${fieldName}_${mapping.endpoint}_${JSON.stringify(params)}`;
     
-    const useCache = !forceRefresh;
+    console.log('[LOADFIELD] Iniciando para fieldName:', fieldName, 'endpoint:', mapping.endpoint, 'aggregatable:', mapping.aggregatable);
+    
+    // Si es aggregatable (múltiples CCPP), no cachear aquí, dejar que aggregateMultipleCpp maneje el cache individual
+    const useCache = !forceRefresh && !mapping.aggregatable;
     
     if (useCache) {
       const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
       if (cached) {
-        return of(mapping.transform ? mapping.transform(cached) : cached);
+        console.log('[LOADFIELD] Cache HIT para', fieldName, 'cached:', cached);
+        const transformed = mapping.transform ? mapping.transform(cached) : cached;
+        console.log('[LOADFIELD] Cache después de transform:', transformed);
+        return of(transformed);
       }
     }
 
-    if (this.loadingRequests.has(requestKey)) {
+    // Para fields NO aggregatable, reutilizar requests en progreso
+    if (!mapping.aggregatable && this.loadingRequests.has(requestKey)) {
+      console.log('[LOADFIELD] Ya hay request en progreso para', fieldName, 'clave:', requestKey);
       return this.loadingRequests.get(requestKey)!;
     }
 
+    console.log('[LOADFIELD] Llamando fetchAndTransform para', fieldName);
     const request$ = this.fetchAndTransform(sectionKey, mapping, ubigeoOrCppList).pipe(
       map(data => {
-        this.cacheService.saveResponse(mapping.endpoint, params, data);
-        const transformedData = mapping.transform ? mapping.transform(data) : data;
-        return transformedData;
+        console.log('[LOADFIELD] fetchAndTransform retornó data para', fieldName, ':', data);
+        // Solo cachear si NO es aggregatable (ya se cacheó en aggregateMultipleCpp)
+        if (!mapping.aggregatable) {
+          this.cacheService.saveResponse(mapping.endpoint, params, data);
+          const transformedData = mapping.transform ? mapping.transform(data) : data;
+          console.log('[LOADFIELD] transformedData para', fieldName, ':', transformedData);
+          return transformedData;
+        } else {
+          // Para aggregatable, aggregateMultipleCpp ya transformó los datos
+          console.log('[LOADFIELD] (aggregatable) data ya transformada:', data);
+          return data;
+        }
       }),
       catchError(err => {
+        console.log('[LOADFIELD] ERROR en', fieldName, ':', err);
         return of(null);
       }),
       shareReplay(1)
     );
 
-    this.loadingRequests.set(requestKey, request$);
-    
-    request$.subscribe({
-      complete: () => {
-        setTimeout(() => {
-          this.loadingRequests.delete(requestKey);
-        }, 100);
-      }
-    });
+    // Solo guardar en loadingRequests si es NO aggregatable
+    if (!mapping.aggregatable) {
+      this.loadingRequests.set(requestKey, request$);
+      
+      request$.subscribe({
+        complete: () => {
+          setTimeout(() => {
+            this.loadingRequests.delete(requestKey);
+          }, 100);
+        }
+      });
+    }
 
     return request$;
   }
@@ -104,24 +126,22 @@ export class AutoBackendDataLoaderService {
     mapping: DataMapping,
     ubigeoOrCppList: string | string[]
   ): Observable<any> {
-    console.log(`%c[LOADER] fetchAndTransform - sectionKey: ${sectionKey}`, 'color: #E91E63; font-weight: bold;');
-    console.log(`%c  ubigeoOrCppList:`, 'color: #E91E63;', ubigeoOrCppList);
-    console.log(`%c  endpoint: ${mapping.endpoint}, aggregatable: ${mapping.aggregatable}`, 'color: #E91E63;');
+    console.log('[FETCH] fetchAndTransform - sectionKey:', sectionKey, 'aggregatable:', mapping.aggregatable);
 
     if (Array.isArray(ubigeoOrCppList) && ubigeoOrCppList.length === 0) {
-      console.warn(`%c  ⚠️ Lista de CCPP vacía`, 'color: #E91E63;');
+      console.warn('[FETCH] Lista de CCPP vacía');
       return of([]);
     }
 
     if (Array.isArray(ubigeoOrCppList) && mapping.aggregatable) {
-      console.log(`%c  Agregando múltiples CCPP: ${ubigeoOrCppList.length} items`, 'color: #E91E63;');
+      console.log('[FETCH] Agregando múltiples CCPP:', ubigeoOrCppList.length);
       return this.aggregateMultipleCpp(sectionKey, mapping, ubigeoOrCppList);
     }
     
     const paramValue = Array.isArray(ubigeoOrCppList) 
       ? ubigeoOrCppList[0] 
       : ubigeoOrCppList;
-    console.log(`%c  Llamando endpoint con parámetro: ${paramValue}`, 'color: #E91E63;');
+    console.log('[FETCH] Llamando endpoint único con parámetro:', paramValue);
     return this.callEndpoint(mapping.endpoint, mapping.paramType, paramValue);
   }
 
@@ -136,15 +156,19 @@ export class AutoBackendDataLoaderService {
       const cached = this.cacheService.getCachedResponse(mapping.endpoint, params);
       
       if (cached) {
-        return of(mapping.transform ? mapping.transform(cached) : cached);
+        // Si hay cache, retornar el RAW (sin transformar aún)
+        return of(cached);
       }
 
       return this.callEndpoint(mapping.endpoint, mapping.paramType, cpp).pipe(
         map(data => {
+          console.log(`[AutoLoader] ${mapping.endpoint} para ${cpp}:`, data);
           this.cacheService.saveResponse(mapping.endpoint, params, data);
-          return mapping.transform ? mapping.transform(data) : data;
+          // NO transformar aquí, retornar datos raw para que agregateMultipleCpp los procese
+          return data;
         }),
         catchError(err => {
+          console.error(`[AutoLoader] Error en ${mapping.endpoint}:`, err);
           return of([]);
         })
       );
@@ -152,13 +176,23 @@ export class AutoBackendDataLoaderService {
 
     return forkJoin(requests).pipe(
       map(results => {
+        console.log('[AGGREGATE] results (sin transformar):', results);
+        
+        // Aquí agregamos los datos RAW
         if (sectionKey === 'seccion6_aisd' && mapping.endpoint === '/demograficos/datos') {
-          const resumen = this.agregarDemograficosDesdeRespuestas(results);
-          return resumen.items;
+          console.log('[AGGREGATE] Procesando datos demográficos - agregando RAW data');
+          const aggregated = this.agregarDemograficosDesdeRespuestas(results);
+          console.log('[AGGREGATE] aggregated.items:', aggregated.items);
+          // AHORA transformamos - pasamos aggregated.items (que es un array) al transform
+          const transformed = mapping.transform ? mapping.transform(aggregated.items) : aggregated.items;
+          console.log('[AGGREGATE] transformed items:', transformed);
+          return transformed;
         }
+        
         if (mapping.endpoint === '/aisd/centros-poblados') {
           return results.flat();
         }
+        
         const merged = this.mergeResults(results);
         return merged;
       })
@@ -255,8 +289,7 @@ export class AutoBackendDataLoaderService {
       ? (paramValue ? paramValue.toString().replace(/^0+/, '') || '0' : paramValue)
       : paramValue;
 
-    console.log(`%c[LOADER] Llamando endpoint: ${endpoint}`, 'color: #FF9800; font-weight: bold;');
-    console.log(`%c  Parámetro: ${param}=${normalizedParamValue}`, 'color: #FF9800;');
+    console.log(`[LOADER] Llamando endpoint: ${endpoint}, parámetro: ${param}=${normalizedParamValue}`);
 
     switch (endpoint) {
       case '/demograficos/datos':
@@ -452,6 +485,9 @@ export class AutoBackendDataLoaderService {
   }
 
   clearCache(): void {
+    // Limpiar el Map de requests en progreso para prevenir memory leaks
+    this.loadingRequests.clear();
+    // Limpiar el caché del servicio de cache
     this.cacheService.clearCache();
   }
 }

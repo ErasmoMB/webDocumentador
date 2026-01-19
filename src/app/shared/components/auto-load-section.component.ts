@@ -38,6 +38,7 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
 
   override ngOnInit(): void {
     super.ngOnInit();
+    console.log('[AutoLoad] ngOnInit llamado');
     this.loadAutoSectionData();
   }
 
@@ -90,11 +91,10 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     const sectionKey = this.getSectionKey();
     const parameters = this.getLoadParameters();
     
-    console.log(`%c[AutoLoad] loadAutoSectionData - sectionKey: ${sectionKey}`, 'color: #0288d1; font-weight: bold;');
-    console.log(`%c  parameters:`, 'color: #0288d1;', parameters);
+    console.log('[AutoLoad] loadAutoSectionData - sectionKey:', sectionKey, 'parameters:', parameters);
     
     if (!sectionKey || !parameters) {
-      console.warn(`%c  ⚠️ Saltando: sectionKey o parameters vacíos`, 'color: #0288d1;');
+      console.log('[AutoLoad] Saltando - sectionKey o parameters vacíos');
       return;
     }
 
@@ -102,20 +102,21 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     const requestKey = `${sectionKey}_${JSON.stringify(ubigeoList)}`;
 
     if (this.isLoadingData && this.lastLoadedSectionKey === requestKey && !forceRefresh) {
-      console.warn(`%c  ⚠️ Carga en progreso para ${sectionKey}, evitando bucle`, 'color: #0288d1;');
       return;
     }
 
     this.isLoadingData = true;
     this.lastLoadedSectionKey = requestKey;
-
-    console.log(`%c  ubigeoList final:`, 'color: #0288d1;', ubigeoList);
+    
+    console.log('[AutoLoad] Llamando autoLoader.loadSectionData() con:', sectionKey, ubigeoList);
     
     const subscription = this.autoLoader.loadSectionData(sectionKey, ubigeoList, forceRefresh)
       .subscribe(
         (loadedData) => {
+          console.log('[AutoLoad] SUBSCRIBE SUCCESS - loadedData recibido:', Object.keys(loadedData));
+          console.log('[AutoLoad] poblacionSexoAISD:', loadedData['poblacionSexoAISD']);
+          console.log('[AutoLoad] poblacionEtarioAISD:', loadedData['poblacionEtarioAISD']);
           if (Object.keys(loadedData).length > 0) {
-            console.log(`%c[AutoLoad] ${sectionKey} cargado exitosamente`, 'color: #0288d1; font-weight: bold;');
             for (const [key, value] of Object.entries(loadedData)) {
               if (Array.isArray(value) && value.length > 0) {
                 console.log(`  → ${key}: ${value.length} items`);
@@ -127,8 +128,11 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
           this.cdRef.detectChanges();
         },
         (error) => {
-          console.warn(`[✗] Error cargando datos para ${sectionKey}:`, error);
+          console.error('[AutoLoad] SUBSCRIBE ERROR:', error);
           this.isLoadingData = false;
+        },
+        () => {
+          console.log('[AutoLoad] SUBSCRIBE COMPLETE');
         }
       );
 

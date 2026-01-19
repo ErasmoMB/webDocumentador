@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-paragraph-editor',
   templateUrl: './paragraph-editor.component.html',
   styleUrls: ['./paragraph-editor.component.css']
 })
-export class ParagraphEditorComponent implements OnChanges {
+export class ParagraphEditorComponent implements OnInit, OnChanges {
   @Input() fieldId: string = '';
   @Input() label: string = '';
   @Input() hint: string = '';
@@ -15,20 +15,30 @@ export class ParagraphEditorComponent implements OnChanges {
   @Output() valueChange = new EventEmitter<string>();
 
   internalValue: string = '';
+  private previousValue: string = '';
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['value'] && changes['value'].currentValue !== this.internalValue) {
-      this.internalValue = changes['value'].currentValue || '';
-    }
-  }
+  constructor(private cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.internalValue = this.value || '';
+    this.previousValue = this.internalValue;
   }
 
-  onInput(event: Event): void {
-    const target = event.target as HTMLTextAreaElement;
-    this.internalValue = target.value;
-    this.valueChange.emit(target.value);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['value']) {
+      const newValue = changes['value'].currentValue || '';
+      // Solo actualizar si realmente cambió (comparar string)
+      if (newValue !== this.previousValue) {
+        this.internalValue = newValue;
+        this.previousValue = newValue;
+        this.cdRef.markForCheck();
+      }
+    }
+  }
+
+  onModelChange(newValue: string): void {
+    this.internalValue = newValue;
+    this.previousValue = newValue;
+    this.valueChange.emit(newValue);
   }
 }

@@ -27,6 +27,18 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
   private stateSubscription?: Subscription;
   private ultimoLogCCPP: string = '';
   
+  // CACHÉ para HTML resaltado - evita recalcular en cada render
+  private cacheHTMLSexo: SafeHtml | null = null;
+  private cacheHTMLEtario: SafeHtml | null = null;
+  private cacheTextoPoblacionSexo: string = '';
+  private cacheTextoPoblacionEtario: string = '';
+  
+  // CACHÉ para cálculos de grupos etarios
+  private cacheGrupoMayoritario: string = '';
+  private cacheGrupoSegundo: string = '';
+  private cacheGrupoMenoritario: string = '';
+  private cacheTablaEtarioHash: string = '';
+  
   override watchedFields: string[] = ['grupoAISD', 'poblacionSexoAISD', 'poblacionEtarioAISD', 'textoPoblacionSexoAISD', 'textoPoblacionEtarioAISD'];
   
   override readonly PHOTO_PREFIX = 'fotografiaDemografia';
@@ -244,10 +256,27 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
   }
 
   override ngOnDestroy(): void {
+    this.clearAllCaches();
     super.ngOnDestroy();
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+  }
+
+  /**
+   * Limpia todos los cachés específicos de Sección 6.
+   * Esto previene memory leaks durante navegación entre secciones.
+   */
+  protected override clearAllCaches(): void {
+    this.cacheHTMLSexo = null;
+    this.cacheHTMLEtario = null;
+    this.cacheTextoPoblacionSexo = '';
+    this.cacheTextoPoblacionEtario = '';
+    this.cacheGrupoMayoritario = '';
+    this.cacheGrupoSegundo = '';
+    this.cacheGrupoMenoritario = '';
+    this.cacheTablaEtarioHash = '';
+    super.clearAllCaches();
   }
 
   protected override detectarCambios(): boolean {
@@ -256,13 +285,14 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
     
+    // OPTIMIZACIÓN: Simple reference comparison en lugar de JSON.stringify
     const poblacionSexoActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'poblacionSexoAISD', this.seccionId) || [];
     const poblacionSexoAnterior = this.datosAnteriores.poblacionSexoAISD || [];
-    const hayCambioPoblacionSexo = JSON.stringify(poblacionSexoActual) !== JSON.stringify(poblacionSexoAnterior);
+    const hayCambioPoblacionSexo = poblacionSexoActual !== poblacionSexoAnterior;
     
     const poblacionEtarioActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'poblacionEtarioAISD', this.seccionId) || [];
     const poblacionEtarioAnterior = this.datosAnteriores.poblacionEtarioAISD || [];
-    const hayCambioPoblacionEtario = JSON.stringify(poblacionEtarioActual) !== JSON.stringify(poblacionEtarioAnterior);
+    const hayCambioPoblacionEtario = poblacionEtarioActual !== poblacionEtarioAnterior;
     
     const textoPoblacionSexoActual = datosActuales['textoPoblacionSexoAISD'] || null;
     const textoPoblacionSexoAnterior = this.datosAnteriores.textoPoblacionSexoAISD || null;
@@ -279,16 +309,30 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
         hayCambioTextoPoblacionSexo ||
         hayCambioTextoPoblacionEtario) {
       if (hayCambioPoblacionSexo) {
-        this.datosAnteriores.poblacionSexoAISD = JSON.parse(JSON.stringify(poblacionSexoActual));
+        // OPTIMIZACIÓN: Usar spread en lugar de JSON round-trip
+        this.datosAnteriores.poblacionSexoAISD = poblacionSexoActual && Array.isArray(poblacionSexoActual) 
+          ? poblacionSexoActual.map(item => ({...item})) 
+          : [];
+        // Invalidar caché
+        this.cacheHTMLSexo = null;
       }
       if (hayCambioPoblacionEtario) {
-        this.datosAnteriores.poblacionEtarioAISD = JSON.parse(JSON.stringify(poblacionEtarioActual));
+        this.datosAnteriores.poblacionEtarioAISD = poblacionEtarioActual && Array.isArray(poblacionEtarioActual)
+          ? poblacionEtarioActual.map(item => ({...item}))
+          : [];
+        // Invalidar cachés
+        this.cacheHTMLEtario = null;
+        this.cacheGrupoMayoritario = '';
+        this.cacheGrupoSegundo = '';
+        this.cacheGrupoMenoritario = '';
       }
       if (hayCambioTextoPoblacionSexo) {
         this.datosAnteriores.textoPoblacionSexoAISD = textoPoblacionSexoActual;
+        this.cacheHTMLSexo = null;
       }
       if (hayCambioTextoPoblacionEtario) {
         this.datosAnteriores.textoPoblacionEtarioAISD = textoPoblacionEtarioActual;
+        this.cacheHTMLEtario = null;
       }
       return true;
     }
@@ -303,14 +347,15 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     
     const poblacionSexo = this.getTablaSexo();
     if (poblacionSexo && Array.isArray(poblacionSexo) && poblacionSexo.length > 0) {
-      this.datosAnteriores.poblacionSexoAISD = JSON.parse(JSON.stringify(poblacionSexo));
+      // OPTIMIZACIÓN: Shallow copy con spread en lugar de JSON round-trip
+      this.datosAnteriores.poblacionSexoAISD = poblacionSexo.map(item => ({...item}));
     } else {
       this.datosAnteriores.poblacionSexoAISD = [];
     }
     
     const poblacionEtario = this.getTablaEtario();
     if (poblacionEtario && Array.isArray(poblacionEtario) && poblacionEtario.length > 0) {
-      this.datosAnteriores.poblacionEtarioAISD = JSON.parse(JSON.stringify(poblacionEtario));
+      this.datosAnteriores.poblacionEtarioAISD = poblacionEtario.map(item => ({...item}));
     } else {
       this.datosAnteriores.poblacionEtarioAISD = [];
     }
@@ -370,34 +415,52 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
   }
 
   getGrupoEtarioMayoritario(): string {
+    // OPTIMIZACIÓN: Cachear resultado para evitar recalcular
     const tablaEtario = this.getTablaEtario();
+    const hashActual = JSON.stringify(tablaEtario?.map(t => t.porcentaje) || []);
+    
+    if (this.cacheGrupoMayoritario && this.cacheTablaEtarioHash === hashActual) {
+      return this.cacheGrupoMayoritario;
+    }
+    
     if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '15 a 29 años';
     }
     
+    // OPTIMIZACIÓN: Usar reduce con inicializador correcto
     let mayorPorcentaje = 0;
     let grupoMayoritario = '15 a 29 años';
     
-    tablaEtario.forEach((item: any) => {
-      if (item.porcentaje) {
-        const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
-        if (!isNaN(porcentajeNum) && porcentajeNum > mayorPorcentaje) {
-          mayorPorcentaje = porcentajeNum;
-          grupoMayoritario = item.categoria || '15 a 29 años';
-        }
+    for (const item of tablaEtario) {
+      if (!item || !item.porcentaje) continue;
+      
+      const porcentajeNum = parseFloat(item.porcentaje.toString().replace(',', '.').replace(' %', '').trim());
+      if (!isNaN(porcentajeNum) && porcentajeNum > mayorPorcentaje) {
+        mayorPorcentaje = porcentajeNum;
+        grupoMayoritario = item.categoria || '15 a 29 años';
       }
-    });
+    }
     
-    return grupoMayoritario;
+    this.cacheGrupoMayoritario = grupoMayoritario;
+    this.cacheTablaEtarioHash = hashActual;
+    return this.cacheGrupoMayoritario;
   }
 
   getGrupoEtarioSegundo(): string {
     const tablaEtario = this.getTablaEtario();
+    
+    // OPTIMIZACIÓN: Cachear resultado
+    const hashActual = JSON.stringify(tablaEtario?.map(t => t.porcentaje) || []);
+    if (this.cacheGrupoSegundo && this.cacheTablaEtarioHash === hashActual) {
+      return this.cacheGrupoSegundo;
+    }
+    
     if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '0 a 14 años';
     }
     
-    const gruposOrdenados = [...tablaEtario]
+    // OPTIMIZACIÓN: Map + sort solo cuando es necesario
+    const gruposOrdenados = tablaEtario
       .filter((item: any) => item.porcentaje && item.categoria)
       .map((item: any) => ({
         categoria: item.categoria,
@@ -406,11 +469,19 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
       .filter((item: any) => !isNaN(item.porcentaje))
       .sort((a: any, b: any) => b.porcentaje - a.porcentaje);
     
-    return gruposOrdenados.length > 1 ? gruposOrdenados[1].categoria : '0 a 14 años';
+    this.cacheGrupoSegundo = gruposOrdenados.length > 1 ? gruposOrdenados[1].categoria : '0 a 14 años';
+    return this.cacheGrupoSegundo;
   }
 
   getGrupoEtarioMenoritario(): string {
     const tablaEtario = this.getTablaEtario();
+    
+    // OPTIMIZACIÓN: Cachear resultado
+    const hashActual = JSON.stringify(tablaEtario?.map(t => t.porcentaje) || []);
+    if (this.cacheGrupoMenoritario && this.cacheTablaEtarioHash === hashActual) {
+      return this.cacheGrupoMenoritario;
+    }
+    
     if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
       return '65 años a más';
     }
@@ -418,17 +489,18 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     let menorPorcentaje = Infinity;
     let grupoMenoritario = '65 años a más';
     
-    tablaEtario.forEach((item: any) => {
-      if (item.porcentaje) {
-        const porcentajeNum = parseFloat(item.porcentaje.replace(',', '.').replace(' %', '').trim());
-        if (!isNaN(porcentajeNum) && porcentajeNum < menorPorcentaje) {
-          menorPorcentaje = porcentajeNum;
-          grupoMenoritario = item.categoria || '65 años a más';
-        }
+    for (const item of tablaEtario) {
+      if (!item || !item.porcentaje) continue;
+      
+      const porcentajeNum = parseFloat(item.porcentaje.toString().replace(',', '.').replace(' %', '').trim());
+      if (!isNaN(porcentajeNum) && porcentajeNum < menorPorcentaje) {
+        menorPorcentaje = porcentajeNum;
+        grupoMenoritario = item.categoria || '65 años a más';
       }
-    });
+    }
     
-    return grupoMenoritario;
+    this.cacheGrupoMenoritario = grupoMenoritario;
+    return this.cacheGrupoMenoritario;
   }
 
   getPoblacionSexoSinTotal(): any[] {
@@ -600,6 +672,13 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
           const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
           tabla[index].porcentaje = porcentaje;
         }
+        
+        // ⚠️ IMPORTANTE: Limpiar párrafo personalizado para forzar regeneración
+        const fieldIdParrafo = this.getFieldIdTextoPoblacionSexo();
+        if (this.datos[fieldIdParrafo]) {
+          delete this.datos[fieldIdParrafo];
+          this.formularioService.actualizarDato(fieldIdParrafo as any, null);
+        }
       }
       
       this.datos[tablaKey] = [...tabla];
@@ -630,6 +709,13 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
           const casos = parseInt(value) || 0;
           const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
           tabla[index].porcentaje = porcentaje;
+        }
+        
+        // ⚠️ IMPORTANTE: Limpiar párrafo personalizado para forzar regeneración
+        const fieldIdParrafo = this.getFieldIdTextoPoblacionEtario();
+        if (this.datos[fieldIdParrafo]) {
+          delete this.datos[fieldIdParrafo];
+          this.formularioService.actualizarDato(fieldIdParrafo as any, null);
         }
       }
       
@@ -706,10 +792,18 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
   }
 
   obtenerTextoPoblacionSexoAISD(): string {
-    const fieldId = this.getFieldIdTextoPoblacionSexo();
-    const textoConPrefijo = this.datos[fieldId];
-    const textoSinPrefijo = this.datos.textoPoblacionSexoAISD;
-    const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
+    // PRIMERO: Buscar sin prefijo (como se guarda desde el editor)
+    let textoPersonalizado = this.datos['textoPoblacionSexoAISD'];
+    
+    // SEGUNDO: Si no existe, intentar con prefijo (por compatibilidad)
+    if (!textoPersonalizado && this.obtenerPrefijoGrupo()) {
+      textoPersonalizado = this.datos[`textoPoblacionSexoAISD${this.obtenerPrefijoGrupo()}`];
+    }
+    
+    // VALIDAR que sea string antes de usar trim()
+    if (textoPersonalizado && typeof textoPersonalizado === 'string' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado;
+    }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const totalPoblacion = this.getTotalPoblacionSexo();
@@ -718,24 +812,22 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     
     const textoPorDefecto = `Respecto a la población de la CC ${grupoAISD}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ${totalPoblacion} habitantes que residen permanentemente en la comunidad. De este conjunto, el ${porcentajeHombres} son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (${porcentajeMujeres}).`;
     
-    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
-      return textoPersonalizado
-        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
-        .replace(/total de\s*___/g, `total de ${totalPoblacion}`)
-        .replace(/existen un total de\s*___/g, `existen un total de ${totalPoblacion}`)
-        .replace(/el\s*___\s*son varones/g, `el ${porcentajeHombres} son varones`)
-        .replace(/\(\s*___\s*\)/g, `(${porcentajeMujeres})`)
-        .replace(/femeninos\s*\(\s*___\s*\)/g, `femeninos (${porcentajeMujeres})`);
-    }
-    
     return textoPorDefecto;
   }
 
   obtenerTextoPoblacionEtarioAISD(): string {
-    const fieldId = this.getFieldIdTextoPoblacionEtario();
-    const textoConPrefijo = this.datos[fieldId];
-    const textoSinPrefijo = this.datos.textoPoblacionEtarioAISD;
-    const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
+    // PRIMERO: Buscar sin prefijo (como se guarda desde el editor)
+    let textoPersonalizado = this.datos['textoPoblacionEtarioAISD'];
+    
+    // SEGUNDO: Si no existe, intentar con prefijo (por compatibilidad)
+    if (!textoPersonalizado && this.obtenerPrefijoGrupo()) {
+      textoPersonalizado = this.datos[`textoPoblacionEtarioAISD${this.obtenerPrefijoGrupo()}`];
+    }
+    
+    // VALIDAR que sea string antes de usar trim()
+    if (textoPersonalizado && typeof textoPersonalizado === 'string' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado;
+    }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     const grupoMayoritario = this.getGrupoEtarioMayoritario();
@@ -747,46 +839,52 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     
     const textoPorDefecto = `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${grupoAISD} es el de ${grupoMayoritario}, puesto que representa el ${porcentajeMayoritario} de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ${grupoSegundo} (${porcentajeSegundo}). Por otro lado, el conjunto minoritario está conformado por la población de ${grupoMenoritario}, pues solo representa un ${porcentajeMenoritario}.`;
     
-    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
-      return textoPersonalizado
-        .replace(/CC\s*___/g, `CC ${grupoAISD}`)
-        .replace(/es el de\s*___/g, `es el de ${grupoMayoritario}`)
-        .replace(/representa el\s*___/g, `representa el ${porcentajeMayoritario}`)
-        .replace(/bloque etario de\s*___/g, `bloque etario de ${grupoSegundo}`)
-        .replace(/\(\s*___\s*\)/g, `(${porcentajeSegundo})`)
-        .replace(/población de\s*___/g, `población de ${grupoMenoritario}`)
-        .replace(/representa un\s*___/g, `representa un ${porcentajeMenoritario}`);
-    }
-    
     return textoPorDefecto;
   }
 
   obtenerTextoPoblacionSexoAISDConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoPoblacionSexoAISD();
+    // OPTIMIZACIÓN: Cachear resultado para evitar recalcular en cada render
+    const textoActual = this.obtenerTextoPoblacionSexoAISD();
+    if (this.cacheTextoPoblacionSexo === textoActual && this.cacheHTMLSexo) {
+      return this.cacheHTMLSexo;
+    }
+    
+    const texto = textoActual;
     const grupoAISD = this.obtenerNombreComunidadActual();
     const totalPoblacion = this.getTotalPoblacionSexo();
     const porcentajeHombres = this.getPorcentajeHombres();
     const porcentajeMujeres = this.getPorcentajeMujeres();
     
     let html = this.escapeHtml(texto);
-    if (grupoAISD && grupoAISD !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
-    }
-    if (totalPoblacion && totalPoblacion !== '____' && totalPoblacion !== '0') {
-      html = html.replace(new RegExp(this.escapeRegex(totalPoblacion), 'g'), `<span class="data-calculated">${this.escapeHtml(totalPoblacion)}</span>`);
-    }
-    if (porcentajeHombres && porcentajeHombres !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeHombres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeHombres)}</span>`);
-    }
-    if (porcentajeMujeres && porcentajeMujeres !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeMujeres), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMujeres)}</span>`);
+    
+    // OPTIMIZACIÓN: Agrupar reemplazos con un mapa en lugar de múltiples RegExp
+    const reemplazos: Array<[string, string, string]> = [
+      [grupoAISD, 'data-section', grupoAISD],
+      [totalPoblacion, 'data-calculated', totalPoblacion],
+      [porcentajeHombres, 'data-calculated', porcentajeHombres],
+      [porcentajeMujeres, 'data-calculated', porcentajeMujeres]
+    ];
+    
+    for (const [valor, clase, display] of reemplazos) {
+      if (valor && valor !== '____' && valor !== '0') {
+        const regex = new RegExp(this.escapeRegex(valor), 'g');
+        html = html.replace(regex, `<span class="${clase}">${this.escapeHtml(display)}</span>`);
+      }
     }
     
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    this.cacheTextoPoblacionSexo = texto;
+    this.cacheHTMLSexo = this.sanitizer.bypassSecurityTrustHtml(html);
+    return this.cacheHTMLSexo;
   }
 
   obtenerTextoPoblacionEtarioAISDConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoPoblacionEtarioAISD();
+    // OPTIMIZACIÓN: Cachear resultado para evitar recalcular en cada render
+    const textoActual = this.obtenerTextoPoblacionEtarioAISD();
+    if (this.cacheTextoPoblacionEtario === textoActual && this.cacheHTMLEtario) {
+      return this.cacheHTMLEtario;
+    }
+    
+    const texto = textoActual;
     const grupoAISD = this.obtenerNombreComunidadActual();
     const grupoMayoritario = this.getGrupoEtarioMayoritario();
     const porcentajeMayoritario = this.getPorcentajeGrupoEtario(grupoMayoritario);
@@ -796,29 +894,28 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
     const porcentajeMenoritario = this.getPorcentajeGrupoEtario(grupoMenoritario);
     
     let html = this.escapeHtml(texto);
-    if (grupoAISD && grupoAISD !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
-    }
-    if (grupoMayoritario && grupoMayoritario !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoMayoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoMayoritario)}</span>`);
-    }
-    if (porcentajeMayoritario && porcentajeMayoritario !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeMayoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMayoritario)}</span>`);
-    }
-    if (grupoSegundo && grupoSegundo !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoSegundo), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoSegundo)}</span>`);
-    }
-    if (porcentajeSegundo && porcentajeSegundo !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeSegundo), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeSegundo)}</span>`);
-    }
-    if (grupoMenoritario && grupoMenoritario !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(grupoMenoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(grupoMenoritario)}</span>`);
-    }
-    if (porcentajeMenoritario && porcentajeMenoritario !== '____') {
-      html = html.replace(new RegExp(this.escapeRegex(porcentajeMenoritario), 'g'), `<span class="data-calculated">${this.escapeHtml(porcentajeMenoritario)}</span>`);
+    
+    // OPTIMIZACIÓN: Agrupar reemplazos en mapa
+    const reemplazos: Array<[string, string, string]> = [
+      [grupoAISD, 'data-section', grupoAISD],
+      [grupoMayoritario, 'data-backend', grupoMayoritario],
+      [porcentajeMayoritario, 'data-calculated', porcentajeMayoritario],
+      [grupoSegundo, 'data-backend', grupoSegundo],
+      [porcentajeSegundo, 'data-calculated', porcentajeSegundo],
+      [grupoMenoritario, 'data-backend', grupoMenoritario],
+      [porcentajeMenoritario, 'data-calculated', porcentajeMenoritario]
+    ];
+    
+    for (const [valor, clase, display] of reemplazos) {
+      if (valor && valor !== '____') {
+        const regex = new RegExp(this.escapeRegex(valor), 'g');
+        html = html.replace(regex, `<span class="${clase}">${this.escapeHtml(display)}</span>`);
+      }
     }
     
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    this.cacheTextoPoblacionEtario = texto;
+    this.cacheHTMLEtario = this.sanitizer.bypassSecurityTrustHtml(html);
+    return this.cacheHTMLEtario;
   }
 
   private escapeHtml(text: string): string {

@@ -62,6 +62,7 @@ import { DynamicTableComponent } from './shared/components/dynamic-table/dynamic
 import { ParagraphEditorComponent } from './shared/components/paragraph-editor/paragraph-editor.component';
 import { LoadingDirective } from './core/directives/loading.directive';
 import { DataSourceDirective } from './shared/directives/data-source.directive';
+import { DataHighlightDirective } from './shared/directives/data-highlight.directive';
 import { TableNumberDirective } from './shared/directives/table-number.directive';
 import { PhotoNumberDirective } from './shared/directives/photo-number.directive';
 import { DataSourcePipe } from './shared/pipes/data-source.pipe';
@@ -119,6 +120,7 @@ import { CacheService } from './core/services/cache.service';
     TableWrapperComponent,
     LoadingDirective,
     DataSourceDirective,
+    DataHighlightDirective,
     TableNumberDirective,
     PhotoNumberDirective,
     DataSourcePipe,

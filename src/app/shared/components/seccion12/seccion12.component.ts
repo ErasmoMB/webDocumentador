@@ -468,6 +468,7 @@ export class Seccion12Component extends AutoLoadSectionComponent implements OnDe
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    super.ngOnDestroy();
   }
 
   protected override onChangesCustom(changes: any): void {

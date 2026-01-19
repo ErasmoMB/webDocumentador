@@ -1,9 +1,11 @@
-import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy } from '@angular/core';
+import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy, Injector } from '@angular/core';
 import { FormularioService } from 'src/app/core/services/formulario.service';
 import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { CacheCleanupService } from 'src/app/core/services/cache-cleanup.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { FotoItem } from './image-upload/image-upload.component';
 import { PhotoGroupConfig } from '../utils/photo-group-config';
@@ -33,7 +35,8 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     protected sectionDataLoader: SectionDataLoaderService,
     protected imageService: ImageManagementService,
     protected photoNumberingService: PhotoNumberingService | null,
-    protected cdRef: ChangeDetectorRef
+    protected cdRef: ChangeDetectorRef,
+    protected injector?: Injector
   ) {}
 
   ngOnInit(): void {
@@ -94,8 +97,33 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   }
 
   ngOnDestroy(): void {
+    // Limpiar todos los cachés globales
+    try {
+      const injector = this.injector || (this as any).injector;
+      if (injector) {
+        const cacheCleanup = injector.get(CacheCleanupService, null);
+        if (cacheCleanup) {
+          cacheCleanup.cleanupAll();
+        }
+      }
+    } catch (error) {
+      // Si no se puede obtener el servicio, ignorar silenciosamente
+    }
+    
+    this.clearAllCaches();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Limpia todos los cachés de la sección para prevenir memory leaks.
+   * Las subclases pueden sobrescribir este método para agregar sus propios cachés.
+   * 
+   * IMPORTANTE: Siempre llamar a super.clearAllCaches() en subclases que lo sobrescriban.
+   */
+  protected clearAllCaches(): void {
+    // Método base - las subclases pueden sobrescribir para limpiar sus cachés específicos
+    // Ver: obtenerValorConPrefijo para el patrón
   }
 
   protected obtenerValorConPrefijo(campo: string): any {

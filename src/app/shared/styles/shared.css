@@ -408,6 +408,12 @@ h3 {
   font-weight: 700;
 }
 
+.section-subtitle {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 700;
+}
+
 h4 {
   margin-bottom: var(--spacing-xs);
   font-size: 16px;
@@ -473,8 +479,8 @@ li {
 
 .data-calculated {
   font-weight: bold;
-  color: #0b3d0b;
-  background-color: #c8e6c9;
+  color: #ffffff;
+  background-color: #1fb324;
   padding: 2px 6px;
   border-radius: 3px;
   display: inline-block;
