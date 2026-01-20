@@ -8,19 +8,22 @@ console.log('  process.env.USE_MOCK_DATA:', process.env.USE_MOCK_DATA || '(no de
 console.log('  process.env.NODE_ENV:', process.env.NODE_ENV || '(no definida)');
 console.log('Todas las variables process.env:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('MOCK') || k.includes('NODE')));
 
+const isRender = !!process.env.RENDER || process.env.NODE_ENV === 'production';
+const defaultApiUrl = isRender ? 'https://backend-api-lbs.onrender.com' : 'http://localhost:8000';
+
 const envVars = {
   USE_MOCK_DATA: process.env.USE_MOCK_DATA || 'false',
-  API_URL: process.env.API_URL || 'http://localhost:8000',
+  API_URL: process.env.API_URL || defaultApiUrl,
   MOCK_DATA_PATH: process.env.MOCK_DATA_PATH || 'assets/mockData',
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
 if (!process.env.API_URL) {
-  console.error('❌ ERROR: API_URL no está definida en las variables de entorno');
-  console.error('❌ En Render, ve a Environment y agrega:');
-  console.error('   Key: API_URL');
-  console.error('   Value: https://backend-api-lbs.onrender.com');
-  console.error('❌ Usando valor por defecto (localhost) - esto NO funcionará en producción');
+  if (isRender) {
+    console.warn('⚠️ API_URL no está definida, usando valor por defecto para Render:', defaultApiUrl);
+  } else {
+    console.warn('⚠️ API_URL no está definida, usando localhost (desarrollo)');
+  }
 }
 
 const envJsContent = `(function() {
