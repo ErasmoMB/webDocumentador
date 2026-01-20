@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: frontend-lbs
+    env: node
+    buildCommand: npm install && npm run build:prod
+    startCommand: npx serve dist/lbs -s -l $PORT
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_URL
+        sync: false
+      - key: USE_MOCK_DATA
+        value: false

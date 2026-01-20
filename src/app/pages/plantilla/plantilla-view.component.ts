@@ -290,7 +290,12 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
 
   volverASeccion() {
     const state = window.history.state;
-    const returnSection = state?.returnSection || localStorage.getItem('lastSectionId') || '3.1.1';
+    let returnSection = state?.returnSection || localStorage.getItem('lastSectionId') || '3.1.1';
+    
+    // Asegurar que 'introduccion' siempre sea '3.1.1'
+    if (returnSection === 'introduccion') {
+      returnSection = '3.1.1';
+    }
     
     this.router.navigate(['/seccion', returnSection]);
   }

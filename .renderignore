@@ -1,0 +1,10 @@
+node_modules/
+.git/
+.vscode/
+*.log
+.DS_Store
+dist/
+src/assets/mockData/
+scripts/
+*.md
+!README.md

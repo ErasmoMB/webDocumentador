@@ -184,7 +184,6 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('[S23] Error cargando datos PEA:', error);
       }
     );
   }

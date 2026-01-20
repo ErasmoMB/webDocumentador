@@ -25,6 +25,9 @@ export class BackendApiService {
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
+    if (error.status === 404) {
+      return throwError(() => error);
+    }
     if (error.status === 500) {
       const errorDetail = error.error?.detail || '';
       if (errorDetail.includes('Unknown column') || errorDetail.includes('Incorrect number of arguments')) {
@@ -35,10 +38,8 @@ export class BackendApiService {
       }
     }
     if (error.error instanceof ErrorEvent) {
-      console.error('Error del cliente:', error.error.message);
     } else {
       if (error.status !== 500 || !error.url?.includes('viviendas-ubicacion')) {
-        console.error(`Error del servidor: ${error.status}`, error.error);
       }
     }
     return throwError(() => error);

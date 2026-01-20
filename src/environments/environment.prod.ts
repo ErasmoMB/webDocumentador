@@ -1,8 +1,17 @@
+declare const window: any;
+
+const getEnvVar = (key: string, defaultValue: string): string => {
+  if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__[key]) {
+    return window.__ENV__[key];
+  }
+  return defaultValue;
+};
+
 export const environment = {
   production: true,
-  useMockData: false,
-  apiUrl: 'https://api.proyectopaka.com/api',
-  mockDataPath: 'assets/mockData',
+  useMockData: getEnvVar('USE_MOCK_DATA', 'false') === 'true',
+  apiUrl: getEnvVar('API_URL', 'https://api.proyectopaka.com/api'),
+  mockDataPath: getEnvVar('MOCK_DATA_PATH', 'assets/mockData'),
   mockDataFiles: {
     shared: {
       economia: 'economia.json',

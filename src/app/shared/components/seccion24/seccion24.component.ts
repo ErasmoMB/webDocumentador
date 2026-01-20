@@ -472,7 +472,6 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('[S24] Error cargando actividades económicas:', error);
       }
     );
   }

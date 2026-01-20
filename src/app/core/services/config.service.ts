@@ -26,10 +26,15 @@ export class ConfigService {
     if (typeof window !== 'undefined' && (window as any).__ENV__) {
       const env = (window as any).__ENV__;
       if (env.USE_MOCK_DATA !== undefined) {
-        this.config.useMockData = this.getEnvBoolean('USE_MOCK_DATA', true);
+        this.config.useMockData = this.getEnvBoolean('USE_MOCK_DATA', false);
       }
       if (env.API_URL) {
-        this.config.apiUrl = env.API_URL;
+        let apiUrl = env.API_URL;
+        apiUrl = apiUrl.replace(/\/api\/?$/, '');
+        if (apiUrl.endsWith('/')) {
+          apiUrl = apiUrl.slice(0, -1);
+        }
+        this.config.apiUrl = apiUrl;
       }
       if (env.MOCK_DATA_PATH) {
         this.config.mockDataPath = env.MOCK_DATA_PATH;

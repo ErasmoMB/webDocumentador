@@ -15,29 +15,13 @@ import {
   BorderStyle,
 } from 'docx';
 import { saveAs } from 'file-saver';
-import { ConfigService } from './config.service';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordGeneratorService {
-  private backendBaseUrl: string;
-
-  constructor(
-    private http: HttpClient,
-    private configService: ConfigService
-  ) {
-    const apiUrl = this.configService.getApiUrl();
-    if (apiUrl.includes('localhost:8000') || apiUrl.includes('127.0.0.1:8000')) {
-      this.backendBaseUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '') : apiUrl.replace(/\/api\/?$/, '');
-    } else {
-      this.backendBaseUrl = 'http://localhost:8000';
-    }
-    if (!this.backendBaseUrl || this.backendBaseUrl === 'http://localhost:4200' || this.backendBaseUrl.includes('4200')) {
-      this.backendBaseUrl = 'http://localhost:8000';
-    }
-  }
+  constructor(private http: HttpClient) {}
+  
   private asegurarString(valor: any): string {
     if (valor === null || valor === undefined) {
       return '';
@@ -896,7 +880,9 @@ export class WordGeneratorService {
   }
 
   private async crearImagen(elem: HTMLImageElement): Promise<Paragraph | null> {
+    console.log('[WORD] crearImagen - src:', elem.src?.substring(0, 100));
     if (!elem.src || elem.src === '____' || elem.src.includes('data:image/svg')) {
+      console.log('[WORD] crearImagen - Imagen rechazada (src inválido o SVG)');
       return null;
     }
 
@@ -909,6 +895,7 @@ export class WordGeneratorService {
       if (elem.src.startsWith('data:')) {
         const base64Data = elem.src.split(',')[1];
         if (!base64Data) {
+          console.log('[WORD] ❌ No hay datos base64 en data URL');
           return null;
         }
         const binaryString = atob(base64Data);
@@ -929,56 +916,170 @@ export class WordGeneratorService {
           imgHeight = elem.naturalHeight;
         }
       } else if (elem.src.includes('/imagenes/')) {
+        console.log('[WORD] Imagen encontrada en /imagenes/', elem.src);
+        
+        // Extraer el ID de imagen de la URL
+        // Formato: /imagenes/{id} o /api/imagenes/{id}
+        const urlParts = elem.src.split('/imagenes/');
+        if (!urlParts[1]) {
+          console.log('[WORD] ❌ No se pudo extraer ID de imagen');
+          return null;
+        }
+        const imageId = urlParts[1].split('?')[0]; // Remover query params
+        
         try {
-          const imageId = elem.src.split('/imagenes/')[1]?.split('?')[0]?.split('#')[0];
-          if (!imageId) {
-            return null;
-          }
-
-          const imageUrl = `${this.backendBaseUrl}/imagenes/${imageId}`;
-          const blob = await firstValueFrom(
-            this.http.get(imageUrl, { responseType: 'blob' })
-          );
-
-          if (!blob || blob.size === 0) {
-            return null;
-          }
-
-          arrayBuffer = await blob.arrayBuffer();
+          // Llamar al nuevo endpoint base64 para obtener la imagen como data URL
+          console.log('[WORD] 📥 Solicitando base64 para imagen:', imageId);
+          const response = await fetch(`http://localhost:8000/imagenes/${imageId}/base64`);
           
-          const blobType = blob.type || '';
-          if (blobType.includes('png')) type = 'png';
-          else if (blobType.includes('gif')) type = 'gif';
-          else if (blobType.includes('bmp')) type = 'bmp';
-          else type = 'jpg';
-
-          const img = new Image();
-          const objectUrl = URL.createObjectURL(blob);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const imgData = await response.json();
+          console.log('[WORD] ✅ Base64 recibido exitosamente');
+          
+          // Usar la data URL directamente - no hay problemas de CORS
+          const dataUrlImage = new Image();
           
           await new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
-              URL.revokeObjectURL(objectUrl);
-              reject(new Error('Timeout al cargar imagen'));
-            }, 10000);
-
-            img.onload = () => {
+              console.log('[WORD] ⚠️ Timeout cargando base64');
+              resolve();
+            }, 5000);
+            
+            dataUrlImage.onload = () => {
               clearTimeout(timeout);
-              imgWidth = img.naturalWidth || img.width || 500;
-              imgHeight = img.naturalHeight || img.height || 375;
-              URL.revokeObjectURL(objectUrl);
               resolve();
             };
-
-            img.onerror = () => {
+            
+            dataUrlImage.onerror = () => {
               clearTimeout(timeout);
-              URL.revokeObjectURL(objectUrl);
-              reject(new Error('Error al cargar imagen'));
+              console.log('[WORD] ❌ Error cargando base64');
+              reject(new Error('Error loading base64 image'));
             };
-
-            img.src = objectUrl;
+            
+            dataUrlImage.src = imgData.data_url;
           });
-
+          
+          imgWidth = dataUrlImage.naturalWidth || elem.width || 500;
+          imgHeight = dataUrlImage.naturalHeight || elem.height || 375;
+          
+          if (!imgWidth || !imgHeight || imgWidth === 0 || imgHeight === 0) {
+            console.log('[WORD] ❌ Dimensiones inválidas para base64');
+            return null;
+          }
+          
+          // Crear canvas y dibujar imagen desde data URL (sin problemas de CORS)
           const canvas = document.createElement('canvas');
+          const maxWidth = 500;
+          const maxHeight = 375;
+          let finalWidth = imgWidth;
+          let finalHeight = imgHeight;
+          
+          if (imgWidth > maxWidth || imgHeight > maxHeight) {
+            const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+            finalWidth = Math.round(imgWidth * ratio);
+            finalHeight = Math.round(imgHeight * ratio);
+          }
+          
+          canvas.width = finalWidth;
+          canvas.height = finalHeight;
+          
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) {
+            console.log('[WORD] ❌ No se pudo obtener contexto 2D');
+            return null;
+          }
+          
+          ctx.drawImage(dataUrlImage, 0, 0, finalWidth, finalHeight);
+          console.log('[WORD] ✅ Base64 dibujado en canvas exitosamente');
+          
+          // Convertir canvas a base64
+          type = imgData.mime_type === 'image/png' ? 'png' : 'jpg';
+          const mimeType = imgData.mime_type === 'image/png' ? 'image/png' : 'image/jpeg';
+
+          let base64: string;
+          try {
+            base64 = canvas.toDataURL(mimeType, 0.85);
+          if (!base64 || base64.length < 100) {
+            console.log('[WORD] ❌ base64 vacío');
+            return null;
+          }
+        } catch (toDataError: any) {
+          console.log('[WORD] ❌ Error toDataURL:', toDataError?.message);
+          return null;
+        }
+
+        const base64Data = base64.split(',')[1];
+        if (!base64Data) {
+          console.log('[WORD] ❌ No hay datos base64');
+          return null;
+        }
+
+        try {
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          arrayBuffer = bytes.buffer;
+          imgWidth = finalWidth;
+          imgHeight = finalHeight;
+          console.log('[WORD] ✅ Imagen convertida a binario:', bytes.buffer.byteLength, 'bytes');
+        } catch (conversionError: any) {
+          console.log('[WORD] ❌ Error al convertir base64 a binario:', conversionError?.message);
+          return null;
+        }
+        } catch (fetchError: any) {
+          console.log('[WORD] ❌ Error obteniendo base64 del servidor:', fetchError?.message);
+          return null;
+        }
+      } else {
+        // CASO GENERAL: Cualquier otra imagen (URLs externas, etc.)
+        console.log('[WORD] Intentando convertir imagen generic a canvas:', elem.src?.substring(0, 100));
+        
+        if (!elem.complete || elem.naturalWidth === 0 || elem.naturalHeight === 0) {
+          console.log('[WORD] Esperando a que imagen cargue (caso generic)...');
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                console.log('[WORD] ⚠️ Timeout en imagen generic');
+                resolve(); // Resolver aunque falle, continuar sin la imagen
+              }, 3000);
+
+              elem.onload = () => {
+                clearTimeout(timeout);
+                elem.onload = null;
+                elem.onerror = null;
+                resolve();
+              };
+              elem.onerror = () => {
+                clearTimeout(timeout);
+                elem.onload = null;
+                elem.onerror = null;
+                resolve(); // Resolver aunque falle
+              };
+            });
+          } catch (e) {
+            console.log('[WORD] Error esperando imagen:', e);
+          }
+        }
+
+        // Convertir imagen a canvas → base64
+        try {
+          const canvas = document.createElement('canvas');
+          const naturalWidth = elem.naturalWidth || elem.width || 500;
+          const naturalHeight = elem.naturalHeight || elem.height || 375;
+
+          if (!naturalWidth || !naturalHeight || naturalWidth === 0 || naturalHeight === 0) {
+            console.log('[WORD] ⚠️ Imagen sin dimensiones válidas, saltando');
+            return null;
+          }
+
+          imgWidth = naturalWidth;
+          imgHeight = naturalHeight;
+
           const maxWidth = 500;
           const maxHeight = 375;
           let finalWidth = imgWidth;
@@ -995,14 +1096,23 @@ export class WordGeneratorService {
 
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) {
+            console.log('[WORD] ⚠️ No se pudo obtener contexto 2D del canvas');
             return null;
           }
 
-          ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
+          ctx.drawImage(elem, 0, 0, finalWidth, finalHeight);
 
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-          const base64Data = compressedBase64.split(',')[1];
+          const base64 = canvas.toDataURL('image/jpeg', 0.7);
+          console.log('[WORD] ✅ Imagen convertida a base64 (', base64.length, 'bytes )');
+
+          if (!base64 || base64.length < 100) {
+            console.log('[WORD] ⚠️ Base64 generado muy pequeño');
+            return null;
+          }
+
+          const base64Data = base64.split(',')[1];
           if (!base64Data) {
+            console.log('[WORD] ⚠️ No se pudo extraer datos base64');
             return null;
           }
 
@@ -1015,16 +1125,15 @@ export class WordGeneratorService {
           type = 'jpg';
           imgWidth = finalWidth;
           imgHeight = finalHeight;
-
-        } catch (httpError: any) {
+        } catch (canvasError: any) {
+          console.log('[WORD] ❌ Error al convertir imagen a canvas:', canvasError?.message);
           return null;
         }
-      } else {
-        return null;
       }
 
       const imageData = new Uint8Array(arrayBuffer);
       if (imageData.length === 0) {
+        console.log('[WORD] ❌ imageData vacío');
         return null;
       }
 
@@ -1045,12 +1154,14 @@ export class WordGeneratorService {
         type,
       });
 
+      console.log('[WORD] ✅ Imagen creada exitosamente:', finalWidth, 'x', finalHeight, 'px');
       return new Paragraph({
         children: [image],
         alignment: AlignmentType.CENTER,
         spacing: { before: 150, after: 200 },
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('[WORD] ❌ Error en crearImagen:', error?.message || error, 'src:', elem.src?.substring(0, 100));
       return null;
     }
   }

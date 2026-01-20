@@ -583,7 +583,6 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('[S25] Error cargando datos vivienda:', error);
       }
     );
   }
@@ -615,7 +614,6 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
         }
       },
       (error: any) => {
-        console.error('[S25] Error cargando datos materiales:', error);
       }
     );
   }

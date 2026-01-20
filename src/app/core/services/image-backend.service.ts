@@ -36,12 +36,12 @@ export class ImageBackendService {
     private configService: ConfigService
   ) {
     const apiUrl = this.configService.getApiUrl();
-    if (apiUrl.includes('localhost:8000') || apiUrl.includes('127.0.0.1:8000')) {
-      this.baseUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '') : apiUrl.replace(/\/api\/?$/, '');
+    if (apiUrl.includes('/api')) {
+      this.baseUrl = apiUrl.replace(/\/api\/?$/, '');
     } else {
-      this.baseUrl = 'http://localhost:8000';
+      this.baseUrl = apiUrl;
     }
-    if (!this.baseUrl || this.baseUrl === 'http://localhost:4200' || this.baseUrl.includes('4200')) {
+    if (!this.baseUrl) {
       this.baseUrl = 'http://localhost:8000';
     }
   }
