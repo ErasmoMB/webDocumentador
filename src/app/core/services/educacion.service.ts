@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EducacionService {
-  private baseUrl = 'http://localhost:8000';
+  private baseUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    this.baseUrl = this.configService.getApiUrl();
+  }
 
   /**
    * Obtiene datos de educación por códigos de ubicación

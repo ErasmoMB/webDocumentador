@@ -15,12 +15,16 @@ import {
   BorderStyle,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordGeneratorService {
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {}
   
   private asegurarString(valor: any): string {
     if (valor === null || valor === undefined) {
@@ -928,9 +932,9 @@ export class WordGeneratorService {
         const imageId = urlParts[1].split('?')[0]; // Remover query params
         
         try {
-          // Llamar al nuevo endpoint base64 para obtener la imagen como data URL
-          console.log('[WORD] 📥 Solicitando base64 para imagen:', imageId);
-          const response = await fetch(`http://localhost:8000/imagenes/${imageId}/base64`);
+          const apiUrl = this.configService.getApiUrl();
+          const response = await fetch(`${apiUrl}/imagenes/${imageId}/base64`);
+          console.log('[WORD] 📥 Solicitando base64 para imagen:', imageId, 'desde:', apiUrl);
           
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

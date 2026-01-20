@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { ConfigService } from './config.service';
 
 export interface CentroPoblado {
   ubigeo: string;
@@ -49,9 +50,14 @@ export interface DetalleCentroPoblado {
   providedIn: 'root'
 })
 export class CentrosPobladosService {
-  private apiUrl = 'http://localhost:8000/centros-poblados';
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    this.apiUrl = `${this.configService.getApiUrl()}/centros-poblados`;
+  }
 
   /**
    * Obtiene datos de múltiples centros poblados por sus códigos UBIGEO
