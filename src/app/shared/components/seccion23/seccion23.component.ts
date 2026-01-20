@@ -153,40 +153,49 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private cargarDatosPEA(): void {
-    // Obtener UBIGEOs del grupo AISI desde la configuración
     const ubigeos = this.groupConfig.getAISICCPPActivos();
+    console.log('[S23] CCPP activos AISI:', ubigeos);
     
     if (!ubigeos || ubigeos.length === 0) {
+      console.warn('[S23] No hay CCPP activos para AISI');
       return;
     }
 
-    // Llamar al endpoint para obtener datos PEA agregados
     this.peaService.obtenerPorCodigos(ubigeos).subscribe(
       (response: any) => {
+        console.log('[S23] Respuesta del backend PEA:', response);
         if (response.success) {
-          // TABLA 3.41: PET según grupos de edad
           let petGruposEdad = response.tabla_3_41_pea_grupos_edad || [];
-          // Formatear porcentajes
           petGruposEdad = petGruposEdad.map((item: any) => ({
-            ...item,
-            porcentaje: this.formatearPorcentaje(item.porcentaje)
+            categoria: item.categoria || '',
+            orden: item.orden || 0,
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
+          console.log('[S23] petGruposEdad transformado:', petGruposEdad);
           this.formularioService.actualizarDato('petGruposEdadAISI', petGruposEdad);
+          this.datos['petGruposEdadAISI'] = petGruposEdad;
+          this.tableService.calcularPorcentajes(this.datos, this.petGruposEdadConfig);
 
-          // TABLA 3.42/3.43: Reorganizar datos de estado/sexo
           const datos_estado_sexo = response.tabla_3_42_3_43_pea_estado_sexo || [];
-          
-          // Agrupar por estado para las 2 tablas
           const peaDistritoSexo = this.agruparPorEstado(datos_estado_sexo);
+          console.log('[S23] peaDistritoSexo transformado:', peaDistritoSexo);
           this.formularioService.actualizarDato('peaDistritoSexoTabla', peaDistritoSexo);
-          
-          // peaOcupadaDesocupadaTabla usa la misma estructura
           this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
+          this.datos['peaDistritoSexoTabla'] = peaDistritoSexo;
+          this.datos['peaOcupadaDesocupadaTabla'] = peaDistritoSexo;
+
+          console.log('[S23] Datos después de guardar:', {
+            petGruposEdadAISI: this.datos['petGruposEdadAISI'],
+            peaDistritoSexoTabla: this.datos['peaDistritoSexoTabla'],
+            peaOcupadaDesocupadaTabla: this.datos['peaOcupadaDesocupadaTabla']
+          });
 
           this.cdRef.detectChanges();
         }
       },
       (error: any) => {
+        console.error('[S23] Error cargando datos PEA:', error);
       }
     );
   }

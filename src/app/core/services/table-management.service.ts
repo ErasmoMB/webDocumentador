@@ -131,14 +131,23 @@ export class TableManagementService {
       return valor && valor.toString().toLowerCase().includes('total');
     });
     
-    const total = totalItem ? parseFloat(totalItem[campoTotal]) || 0 : 0;
+    let total = totalItem ? parseFloat(totalItem[campoTotal]) || 0 : 0;
+    
+    if (total === 0) {
+      total = tabla.reduce((sum: number, item: any) => {
+        const valor = item[totalKey];
+        if (!valor || !valor.toString().toLowerCase().includes('total')) {
+          return sum + (parseFloat(item[campoTotal]) || 0);
+        }
+        return sum;
+      }, 0);
+    }
 
     if (total > 0 && campoPorcentaje) {
       tabla.forEach((item: any) => {
         const valor = item[totalKey];
         if (!valor || !valor.toString().toLowerCase().includes('total')) {
           const casos = parseFloat(item[campoTotal]) || 0;
-          // Redondear a 2 decimales y luego formatear para locale
           const porcentajeNumerico = (casos / total) * 100;
           const porcentajeRedondeado = Math.round(porcentajeNumerico * 100) / 100;
           const porcentaje = porcentajeRedondeado

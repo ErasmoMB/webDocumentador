@@ -59,7 +59,7 @@
             <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'nivel'">{{ item.nivel || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'tipoGestion'">{{ item.tipoGestion || '____' }}</td>
             <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'cantidadEstudiantes'">{{ item.cantidadEstudiantes || '____' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'calculated'" [fieldName]="'porcentaje'">{{ calcularPorcentajeEducacion(item) }}</td>
+            <td class="table-cell" [appDataSource]="'calculated'" [fieldName]="'porcentaje'">{{ calcularPorcentajeEducacion(item) }}</td>
         </tr>
         <tr *ngIf="getEducacionSinTotal().length > 0">
             <td class="table-cell" colspan="3"><strong>Total</strong></td>

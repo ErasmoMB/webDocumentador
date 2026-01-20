@@ -72,10 +72,9 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
 
   combustiblesCocinarConfig: TableConfig = {
     tablaKey: 'combustiblesCocinarCpTabla',
-    totalKey: 'categoria',
+    totalKey: 'nombre',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0,00 %' }],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -616,13 +615,16 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   private recalcularPorcentajes(items: any[]): any[] {
     if (!items || items.length === 0) return items;
     
-    // Calcular total de casos
-    const total = items.reduce((sum, item) => sum + (Number(item.casos) || 0), 0);
+    const itemsConPorcentajeInicial = items.map(item => ({
+      ...item,
+      porcentaje: '0,00 %'
+    }));
     
-    if (total === 0) return items;
+    const total = itemsConPorcentajeInicial.reduce((sum, item) => sum + (Number(item.casos) || 0), 0);
     
-    // Recalcular porcentajes
-    return items.map(item => ({
+    if (total === 0) return itemsConPorcentajeInicial;
+    
+    return itemsConPorcentajeInicial.map(item => ({
       ...item,
       porcentaje: `${((Number(item.casos) / total) * 100).toFixed(2).replace('.', ',')} %`
     }));
@@ -698,16 +700,22 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     );
 
     // Cargar energía para cocinar (3.51) - eliminar duplicados y recalcular porcentajes
+    console.log('[S26] CCPP activos AISI para energía cocinar:', codigos);
     this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
       (response: any) => {
+        console.log('[S26] Respuesta del backend energía cocinar:', response);
         if (response.success && response.data) {
           const combustiblesSinDuplicados = this.eliminarDuplicadosPorTipo(response.data, 'nombre');
+          console.log('[S26] combustibles sin duplicados (ANTES recalcularPorcentajes):', combustiblesSinDuplicados);
           this.datos.combustiblesCocinarCpTabla = this.recalcularPorcentajes(combustiblesSinDuplicados);
+          console.log('[S26] combustibles DESPUÉS recalcularPorcentajes:', this.datos.combustiblesCocinarCpTabla);
           this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos.combustiblesCocinarCpTabla);
+          this.tableService.calcularPorcentajes(this.datos, this.combustiblesCocinarConfig);
           this.cdRef.detectChanges();
         }
       },
       (error: any) => {
+        console.error('[S26] Error cargando datos energía cocinar:', error);
       }
     );
   }
@@ -716,17 +724,19 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.datos[tablaKey] || [];
     if (!tabla || tabla.length === 0) return;
     
+    const totalKey = tablaKey === 'combustiblesCocinarCpTabla' ? 'nombre' : 'categoria';
+    
     const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (categoria.includes('total')) return sum;
+      const key = item[totalKey]?.toString().toLowerCase() || '';
+      if (key.includes('total')) return sum;
       const casos = typeof item[campoCasos] === 'number' ? item[campoCasos] : parseInt(item[campoCasos]) || 0;
       return sum + casos;
     }, 0);
     
     if (total > 0) {
       tabla.forEach((item: any) => {
-        const categoria = item.categoria?.toString().toLowerCase() || '';
-        if (!categoria.includes('total')) {
+        const key = item[totalKey]?.toString().toLowerCase() || '';
+        if (!key.includes('total')) {
           const casos = typeof item[campoCasos] === 'number' ? item[campoCasos] : parseInt(item[campoCasos]) || 0;
           const porcentaje = ((casos / total) * 100)
             .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -736,8 +746,8 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       });
     } else {
       tabla.forEach((item: any) => {
-        const categoria = item.categoria?.toString().toLowerCase() || '';
-        if (!categoria.includes('total')) {
+        const key = item[totalKey]?.toString().toLowerCase() || '';
+        if (!key.includes('total')) {
           item[campoPorcentaje] = '0,00 %';
         }
       });

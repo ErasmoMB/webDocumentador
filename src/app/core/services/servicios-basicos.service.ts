@@ -28,7 +28,7 @@ export class ServiciosBasicosService {
    * @returns Observable con datos de energía de cocina
    */
   obtenerEnergiaCocinavPorCodigos(codigosUbigeo: string[]): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/energia-cocina/por-codigos`, {
+    return this.http.post(`${this.baseUrl}/energia-cocina/por-codigos`, {
       codigos_ubigeo: codigosUbigeo
     });
   }

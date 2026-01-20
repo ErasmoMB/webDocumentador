@@ -55,7 +55,6 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     totalKey: 'nombreIE',
     campoTotal: 'cantidadEstudiantes',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [{ nombreIE: '', nivel: '', tipoGestion: '', cantidadEstudiantes: 0, porcentaje: '0,00 %' }],
     calcularPorcentajes: true,
     camposParaCalcular: ['cantidadEstudiantes']
   };
@@ -512,22 +511,20 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
-    // Obtener datos del primer CPP del grupo
-    const cpp = codigos[0];
-    
-    this.educacionService.obtenerNivelesPorCpp(cpp).subscribe(
+    this.educacionService.obtenerEducacionPorCodigos(codigos).subscribe(
       (response: any) => {
         if (response.success && response.data && Array.isArray(response.data)) {
           const educacionData = response.data.map((item: any) => ({
-            nombreIE: '____',  // Manual
-            nivel: item.nivel_educativo,
-            tipoGestion: '____',  // Manual
-            cantidadEstudiantes: item.casos,
-            porcentaje: '____'  // Manual
+            nombreIE: '____',
+            nivel: item.nivel_educativo || '',
+            tipoGestion: '____',
+            cantidadEstudiantes: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
 
           this.datos.educacionCpTabla = educacionData;
           this.formularioService.actualizarDato('educacionCpTabla', educacionData);
+          this.tableService.calcularPorcentajes(this.datos, this.educacionConfig);
           this.cdRef.detectChanges();
         }
       },

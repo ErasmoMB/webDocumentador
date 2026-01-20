@@ -26,10 +26,6 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   
   private stateSubscription?: Subscription;
   private readonly regexCache = new Map<string, RegExp>();
-  private cppAnterior: string | null = null;
-  private nivelEducativoBatch: { [cpp: string]: any[] } = {};
-  private analfabetismoBatch: { [cpp: string]: any } = {};
-  private distritoToCppMap: { [distrito: string]: string } = {};
   
   override watchedFields: string[] = ['centroPobladoAISI', 'parrafoSeccion30_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'textoNivelEducativo', 'textoTasaAnalfabetismo'];
   
@@ -42,9 +38,6 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [
-      { categoria: '', casos: 0, porcentaje: '0,00 %' }
-    ],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -54,9 +47,6 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     totalKey: 'indicador',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [
-      { indicador: '', casos: 0, porcentaje: '0,00 %' }
-    ],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -96,29 +86,9 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
         }
       });
     } else {
-      // Cargar datos batch de todos los CPPs del grupo al iniciar
-      const cppsDelGrupo = this.getLoadParameters();
-      if (cppsDelGrupo && cppsDelGrupo.length > 0) {
-        // Crear mapeo de distritoi -> CPP (i comienza en 1)
-        cppsDelGrupo.forEach((cpp, index) => {
-          const distritoLabel = `distrito${index + 1}`;
-          this.distritoToCppMap[distritoLabel] = cpp;
-        });
-        this.cargarNivelEducativoBatch(cppsDelGrupo);
-        this.cargarAnalfabetismoBatch(cppsDelGrupo);
-      }
-      
+      this.cargarDatosEducacion();
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        // Cargar datos educativos solo cuando el CPP cambia
-        const distritoLabel = this.datos.centroPobladoAISI;
-        if (distritoLabel && distritoLabel !== this.cppAnterior) {
-          this.cppAnterior = distritoLabel;
-          // Convertir nombre de distrito a CPP real
-          const cppActual = this.distritoToCppMap[distritoLabel];
-          if (cppActual) {
-            this.actualizarDatosParaCpp(cppActual);
-          }
-        }
+        this.cargarDatosEducacion();
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -136,162 +106,48 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     return 'seccion30_aisi';
   }
 
-  /**
-   * Carga datos de nivel educativo desde el backend (Cuadro 3.58)
-   */
-  cargarNivelEducativo(): void {
-    const cpp = this.datos.centroPobladoAISI;
-    if (!cpp) {
-      return; // No hay CPP
-    }
-
-    this.educacionService.obtenerNivelEducativoPorCpp(cpp)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.success && response?.data && Array.isArray(response.data)) {
-            // Mapear datos del backend al formato esperado por la tabla
-            const nivelEducativoTabla = response.data.map((item: any) => ({
-              categoria: item.nivel || item.nombre || '',
-              casos: item.cantidad || 0,
-              porcentaje: `${(item.porcentaje || 0).toFixed(2).replace('.', ',')} %`
-            }));
-            
-            this.datos.nivelEducativoTabla = nivelEducativoTabla;
-            this.cdRef.detectChanges();
-          }
-        },
-        error: (error: any) => {
-        }
-      });
-  }
-
-  /**
-   * Carga datos de tasa de analfabetismo desde el backend (Cuadro 3.59)
-   */
-  cargarAnalfabetismo(): void {
-    const cpp = this.datos.centroPobladoAISI;
-    if (!cpp) {
-      return;
-    }
-    
-    // Si ya tenemos datos en el batch, usarlos
-    if (this.analfabetismoBatch[cpp]) {
-      this.actualizarDatosParaCpp(cpp);
+  private cargarDatosEducacion(): void {
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    if (!codigos || codigos.length === 0) {
       return;
     }
 
-    this.educacionService.obtenerAnalfabetismoPorCpp(cpp)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.success && response?.data) {
-            const data = response.data;
-            // Almacenar la tasa de analfabetismo para referencia
-            this.datos.tasaAnalfabetismo = data.tasa_analfabetismo || data.tasaAnalfabetismo || 0;
-            this.datos.totalPoblacion15Mas = data.total_poblacion_15_y_mas || data.totalPoblacion15yMas || 0;
-            
-            this.cdRef.detectChanges();
-          }
-        },
-        error: (error: any) => {
+    this.educacionService.obtenerEducacionPorCodigos(codigos).subscribe(
+      (response: any) => {
+        if (response.success && response.data && Array.isArray(response.data)) {
+          const nivelEducativoData = response.data.map((item: any) => ({
+            categoria: item.nivel_educativo || '',
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
+          }));
+
+          this.datos.nivelEducativoTabla = nivelEducativoData;
+          this.formularioService.actualizarDato('nivelEducativoTabla', nivelEducativoData);
+          this.tableService.calcularPorcentajes(this.datos, this.nivelEducativoConfig);
+          this.cdRef.detectChanges();
         }
-      });
-  }
-
-  /**
-   * Carga datos de nivel educativo para múltiples CPPs (batch)
-   */
-  cargarNivelEducativoBatch(cpps: string[]): void {
-    if (!cpps || cpps.length === 0) {
-      return;
-    }
-
-    this.educacionService.obtenerNivelEducativoMultiples(cpps)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.success && response?.data) {
-            this.nivelEducativoBatch = response.data;
-            
-            // Actualizar tablas con pequeño delay para que centroPobladoAISI esté disponible
-            setTimeout(() => {
-              this.actualizarTablasConDatosActuales();
-            }, 100);
-          }
-        },
-        error: (error: any) => {
-        }
-      });
-  }
-
-  /**
-   * Carga datos de analfabetismo para múltiples CPPs (batch)
-   */
-  cargarAnalfabetismoBatch(cpps: string[]): void {
-    if (!cpps || cpps.length === 0) {
-      return;
-    }
-
-    this.educacionService.obtenerAnalfabetismoMultiples(cpps)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.success && response?.data) {
-            this.analfabetismoBatch = response.data;
-            
-            // Actualizar tablas con pequeño delay para que centroPobladoAISI esté disponible
-            setTimeout(() => {
-              this.actualizarTablasConDatosActuales();
-            }, 100);
-          }
-        },
-        error: (error: any) => {
-        }
-      });
-  }
-
-  /**
-   * Actualiza las tablas con los datos del CPP actual usando datos batch ya cargados
-   */
-  actualizarTablasConDatosActuales(): void {
-    const distritoLabel = this.datos.centroPobladoAISI;
-    
-    if (distritoLabel) {
-      const cppActual = this.distritoToCppMap[distritoLabel];
-      if (cppActual) {
-        this.actualizarDatosParaCpp(cppActual);
+      },
+      (error: any) => {
+        console.error('[S30] Error cargando datos educación:', error);
       }
-    }
+    );
+
+    this.educacionService.obtenerAnalfabetismoPorCodigos(codigos).subscribe(
+      (response: any) => {
+        if (response.success) {
+          this.datos.tasaAnalfabetismo = response.tasa_analfabetismo || 0;
+          this.datos.totalPoblacion15Mas = response.total_poblacion_15_mas || 0;
+          this.formularioService.actualizarDato('tasaAnalfabetismo', this.datos.tasaAnalfabetismo);
+          this.formularioService.actualizarDato('totalPoblacion15Mas', this.datos.totalPoblacion15Mas);
+          this.cdRef.detectChanges();
+        }
+      },
+      (error: any) => {
+        console.error('[S30] Error cargando datos analfabetismo:', error);
+      }
+    );
   }
 
-  /**
-   * Actualiza las tablas de datos para un CPP específico usando datos ya cargados en batch
-   */
-  actualizarDatosParaCpp(cpp: string): void {
-    // Actualizar tabla de nivel educativo
-    if (this.nivelEducativoBatch[cpp]) {
-      const nivelEducativoTabla = this.nivelEducativoBatch[cpp].map((item: any) => ({
-        categoria: item.nivel || item.nombre || '',
-        casos: item.cantidad || 0,
-        porcentaje: `${(item.porcentaje || 0).toFixed(2).replace('.', ',')} %`
-      }));
-      
-      this.datos.nivelEducativoTabla = nivelEducativoTabla;
-      this.formularioService.actualizarDato('nivelEducativoTabla', nivelEducativoTabla);
-    }
-    
-    // Actualizar tasa de analfabetismo
-    if (this.analfabetismoBatch[cpp]) {
-      const data = this.analfabetismoBatch[cpp];
-      this.datos.tasaAnalfabetismo = data.tasa_analfabetismo || data.tasaAnalfabetismo || 0;
-      this.datos.totalPoblacion15Mas = data.total_poblacion_15_y_mas || data.totalPoblacion15yMas || 0;
-      this.formularioService.actualizarDato('tasaAnalfabetismo', this.datos.tasaAnalfabetismo);
-      this.formularioService.actualizarDato('totalPoblacion15Mas', this.datos.totalPoblacion15Mas);
-    } else {
-      this.datos.tasaAnalfabetismo = 0;
-      this.datos.totalPoblacion15Mas = 0;
-    }
-    
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
-  }
 
   /**
    * Calcula el nivel educativo mayoritario

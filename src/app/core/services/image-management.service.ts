@@ -113,7 +113,7 @@ export class ImageManagementService {
             imagenValue = foto.imagen;
           } else if (this.isImageId(foto.imagen)) {
             imagenValue = foto.imagen;
-          } else if (foto.imagen.includes('/api/imagenes/')) {
+          } else if (foto.imagen.includes('/imagenes/')) {
             const match = foto.imagen.match(/\/api\/imagenes\/([0-9a-f-]{36})/i);
             if (match && match[1]) {
               imagenValue = match[1];

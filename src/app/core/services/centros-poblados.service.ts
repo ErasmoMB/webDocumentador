@@ -49,7 +49,7 @@ export interface DetalleCentroPoblado {
   providedIn: 'root'
 })
 export class CentrosPobladosService {
-  private apiUrl = 'http://localhost:8000/api/centros-poblados';
+  private apiUrl = 'http://localhost:8000/centros-poblados';
 
   constructor(private http: HttpClient) { }
 

@@ -170,8 +170,7 @@ export class Seccion12Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected getLoadParameters(): string[] | null {
-    // Obtiene CCPP activos del distrito configurado en Sección 2 para AISI
-    const ccppDesdeGrupo = this.groupConfig.getAISICCPPActivos();
+    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
     if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
       return ccppDesdeGrupo;
     }

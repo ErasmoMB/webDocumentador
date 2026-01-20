@@ -43,7 +43,6 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
     totalKey: 'actividad',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    estructuraInicial: [{ actividad: '', casos: 0, porcentaje: '0,00 %' }],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -450,32 +449,34 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
 
   private cargarDatosActividadesEconomicas(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('[S24] CCPP activos AISI:', codigos);
     
     if (!codigos || codigos.length === 0) {
+      console.warn('[S24] No hay CCPP activos para AISI');
       return;
     }
 
     this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
       (response: any) => {
+        console.log('[S24] Respuesta del backend actividades:', response);
         if (response && response.success && response.actividades_economicas) {
           const actividades = response.actividades_economicas.map((item: any) => ({
             actividad: item.actividad || '',
-            casos: item.casos || 0,
-            porcentaje: this.formatearPorcentaje(item.porcentaje)
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
+          console.log('[S24] actividades transformado:', actividades);
 
-          // Actualizar datos locales primero
           this.datos['actividadesEconomicasAISI'] = actividades;
-          
-          // Actualizar en formularioService
           this.formularioService.actualizarDato('actividadesEconomicasAISI', actividades);
-          
-          // Forzar detección de cambios
+          this.tableService.calcularPorcentajes(this.datos, this.actividadesEconomicasConfig);
+
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
         }
       },
       (error: any) => {
+        console.error('[S24] Error cargando actividades económicas:', error);
       }
     );
   }

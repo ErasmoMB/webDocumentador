@@ -486,6 +486,13 @@ li {
   display: inline-block;
 }
 
+.table-cell.data-calculated,
+td.data-calculated {
+  display: table-cell !important;
+  width: auto;
+  text-align: center;
+}
+
 .text-justify {
   text-align: justify;
 }

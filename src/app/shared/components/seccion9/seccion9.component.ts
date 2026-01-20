@@ -119,7 +119,11 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
         (vieneNoVacio && actualEsPlaceholder)
       ) {
         if (fieldName === 'tiposMaterialesTabla' && Array.isArray(data)) {
-          const tabla = data.map((x: any) => ({ ...x }));
+          const tabla = data.map((x: any) => ({
+            ...x,
+            tipoMaterial: x.tipo_material || x.tipoMaterial || '',
+            categoria: x.categoria || ''
+          }));
           this.calcularPorcentajesPorCategoria(tabla);
           this.formularioService.actualizarDato(fieldKey as any, tabla);
           continue;
@@ -238,40 +242,60 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
   }
 
   getTotalViviendasEmpadronadas(): string {
-    const total = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'tablaAISD2TotalViviendasEmpadronadas', this.seccionId) 
-      || this.datos?.tablaAISD2TotalViviendasEmpadronadas 
-      || this.datos?.totalViviendasEmpadronadas 
-      || '____';
-    return total !== '____' && total !== null && total !== undefined ? total.toString() : '____';
+    // Buscar el Total en la tabla de condición de ocupación
+    const tabla = this.getTablaCondicionOcupacion();
+    if (tabla && Array.isArray(tabla)) {
+      const totalRow = tabla.find((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return categoria.includes('total');
+      });
+      if (totalRow && totalRow.casos !== undefined && totalRow.casos !== null && totalRow.casos !== '') {
+        return totalRow.casos.toString();
+      }
+    }
+    return '____';
   }
 
   getViviendasOcupadas(): string {
-    const ocupadas = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'tablaAISD2TotalViviendasOcupadas', this.seccionId)
-      || this.datos?.tablaAISD2TotalViviendasOcupadas 
-      || this.datos?.totalViviendasOcupadas 
-      || '____';
-    return ocupadas !== '____' && ocupadas !== null && ocupadas !== undefined ? ocupadas.toString() : '____';
+    // Buscar la fila "Ocupada" o "Vivienda Ocupada" en la tabla de condición de ocupación
+    const tabla = this.getTablaCondicionOcupacion();
+    if (tabla && Array.isArray(tabla)) {
+      const ocupadaRow = tabla.find((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return categoria.includes('ocupada');
+      });
+      if (ocupadaRow && ocupadaRow.casos !== undefined && ocupadaRow.casos !== null && ocupadaRow.casos !== '') {
+        return ocupadaRow.casos.toString();
+      }
+    }
+    return '____';
   }
 
   getPorcentajeViviendasOcupadas(): string {
-    const totalEmpadronadasRaw = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'tablaAISD2TotalViviendasEmpadronadas', this.seccionId)
-      || this.datos?.tablaAISD2TotalViviendasEmpadronadas 
-      || this.datos?.totalViviendasEmpadronadas 
-      || '0';
-    const totalOcupadasRaw = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'tablaAISD2TotalViviendasOcupadas', this.seccionId)
-      || this.datos?.tablaAISD2TotalViviendasOcupadas 
-      || this.datos?.totalViviendasOcupadas 
-      || '0';
-    
-    const totalEmpadronadas = parseInt(totalEmpadronadasRaw.toString()) || 0;
-    const totalOcupadas = parseInt(totalOcupadasRaw.toString()) || 0;
-    
-    if (totalEmpadronadas === 0) {
-      return '____';
+    const tabla = this.getTablaCondicionOcupacion();
+    if (tabla && Array.isArray(tabla)) {
+      const totalRow = tabla.find((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return categoria.includes('total');
+      });
+      const ocupadaRow = tabla.find((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return categoria.includes('ocupada');
+      });
+      
+      if (totalRow && ocupadaRow) {
+        const total = parseInt(totalRow.casos) || 0;
+        const ocupadas = parseInt(ocupadaRow.casos) || 0;
+        
+        if (total === 0) {
+          return '____';
+        }
+        
+        const porcentaje = ((ocupadas / total) * 100).toFixed(2).replace('.', ',') + ' %';
+        return porcentaje;
+      }
     }
-    
-    const porcentaje = ((totalOcupadas / totalEmpadronadas) * 100).toFixed(2).replace('.', ',') + ' %';
-    return porcentaje;
+    return '____';
   }
 
   getPorcentajeMaterial(categoria: string, tipoMaterial: string): string {
@@ -540,8 +564,11 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
 
       const suma = calculadas.reduce((sum, x) => sum + (x.porcentajeNum || 0), 0);
       const diff = Math.round((100 - suma) * 100) / 100;
+      
+      // Asegurar que el valor ajustado nunca sea negativo
       const idxAjuste = calculadas.length - 1;
-      calculadas[idxAjuste].porcentajeNum = Math.round(((calculadas[idxAjuste].porcentajeNum || 0) + diff) * 100) / 100;
+      const ajusteValor = (calculadas[idxAjuste].porcentajeNum || 0) + diff;
+      calculadas[idxAjuste].porcentajeNum = Math.max(0, Math.round(ajusteValor * 100) / 100);
 
       calculadas.forEach(({ item, porcentajeNum }) => {
         item.porcentaje = (porcentajeNum || 0)
@@ -603,8 +630,8 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
     
     let textoConResaltado = texto
       .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
-      .replace(this.obtenerRegExp(this.escapeRegex(totalViviendas)), `<span class="data-section">${this.escapeHtml(totalViviendas)}</span>`)
-      .replace(this.obtenerRegExp(this.escapeRegex(viviendasOcupadas)), `<span class="data-section">${this.escapeHtml(viviendasOcupadas)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(totalViviendas)), `<span class="data-calculated">${this.escapeHtml(totalViviendas)}</span>`)
+      .replace(this.obtenerRegExp(this.escapeRegex(viviendasOcupadas)), `<span class="data-calculated">${this.escapeHtml(viviendasOcupadas)}</span>`)
       .replace(this.obtenerRegExp(this.escapeRegex(porcentajeOcupadas)), `<span class="data-calculated">${this.escapeHtml(porcentajeOcupadas)}</span>`);
     
     return this.sanitizer.sanitize(1, textoConResaltado) as SafeHtml;

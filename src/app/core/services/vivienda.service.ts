@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ViviendaService {
-  private apiUrl = `${environment.apiUrl}/vivienda`;
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    const baseUrl = this.configService.getApiUrl();
+    this.apiUrl = `${baseUrl}/vivienda`;
+  }
 
   /**
    * Obtiene tipos de vivienda agregados para múltiples UBIGEOs

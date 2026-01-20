@@ -16,7 +16,7 @@ export class EducacionService {
    */
   obtenerEducacionPorCodigos(codigosUbigeo: string[]): Observable<any> {
     return this.http.post(`${this.baseUrl}/educacion/por-codigos`, {
-      codigos: codigosUbigeo
+      codigos_ubigeo: codigosUbigeo
     });
   }
 
@@ -59,5 +59,15 @@ export class EducacionService {
   obtenerAnalfabetismoMultiples(cpps: string[]): Observable<any> {
     const cppsStr = cpps.join(',');
     return this.http.get(`${this.baseUrl}/educacion/analfabetismo-multiples?cpps=${cppsStr}`);
+  }
+
+  /**
+   * Obtiene datos agregados de analfabetismo por códigos de ubicación
+   * @param codigosUbigeo Array de códigos CPP
+   */
+  obtenerAnalfabetismoPorCodigos(codigosUbigeo: string[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/educacion/analfabetismo/por-codigos`, {
+      codigos_ubigeo: codigosUbigeo
+    });
   }
 }

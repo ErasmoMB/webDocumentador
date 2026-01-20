@@ -91,15 +91,15 @@ export class AutoBackendDataLoaderService {
         // Limpiar contador de fallos si la solicitud fue exitosa
         this.failedRequests.delete(requestKey);
         
-        // Solo cachear si NO es aggregatable (ya se cacheó en aggregateMultipleCpp)
+        // Aplicar transform a TODOS (incluyendo agregatable)
+        const transformedData = mapping.transform ? mapping.transform(data) : data;
+        
+        // Solo cachear si NO es aggregatable
         if (!mapping.aggregatable) {
-          this.cacheService.saveResponse(mapping.endpoint, params, data);
-          const transformedData = mapping.transform ? mapping.transform(data) : data;
-          return transformedData;
-        } else {
-          // Para aggregatable, aggregateMultipleCpp ya transformó los datos
-          return data;
+          this.cacheService.saveResponse(mapping.endpoint, params, transformedData);
         }
+        
+        return transformedData;
       }),
       catchError(err => {
         // Incrementar contador de reintentos
@@ -140,7 +140,13 @@ export class AutoBackendDataLoaderService {
       return of([]);
     }
 
-    if (Array.isArray(ubigeoOrCppList) && mapping.aggregatable) {
+    // Si es POST y tenemos múltiples códigos, hacer POST con todos los códigos
+    if (mapping.method === 'POST' && Array.isArray(ubigeoOrCppList)) {
+      return this.callEndpointPost(mapping.endpoint, ubigeoOrCppList);
+    }
+
+    // Si es GET con múltiples códigos y aggregatable, hacer GET individual y agregar
+    if (Array.isArray(ubigeoOrCppList) && mapping.aggregatable && mapping.method !== 'POST') {
       return this.aggregateMultipleCpp(sectionKey, mapping, ubigeoOrCppList);
     }
     
@@ -388,6 +394,36 @@ export class AutoBackendDataLoaderService {
         );
       default:
         return of([]);
+    }
+  }
+
+  private callEndpointPost(
+    endpoint: string,
+    codigosUBIGEO: string[]
+  ): Observable<any> {
+    switch (endpoint) {
+      case '/servicios/por-codigos':
+        console.log('[AutoBackendDataLoader] POST /servicios/por-codigos con', codigosUBIGEO.length, 'códigos:', codigosUBIGEO);
+        return this.backendApi.postServiciosPorCodigos(codigosUBIGEO).pipe(
+          map(response => {
+            console.log('[AutoBackendDataLoader] Respuesta de /servicios/por-codigos:', response);
+            return response.data;
+          }),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of({});
+          })
+        );
+      case '/centros-poblados/por-codigos-ubigeo':
+        return this.backendApi.postCentrosPobladosPorCodigos(codigosUBIGEO).pipe(
+          map(response => response.data?.centros_poblados || []),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of([]);
+          })
+        );
+      default:
+        return of({});
     }
   }
 

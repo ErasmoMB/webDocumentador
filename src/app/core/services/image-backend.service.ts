@@ -58,7 +58,7 @@ export class ImageBackendService {
     formData.append('section_id', sectionId);
     formData.append('prefix', prefix);
 
-    return this.http.post<any>(`${this.baseUrl}/api/imagenes/upload`, formData).pipe(
+    return this.http.post<any>(`${this.baseUrl}/imagenes/upload`, formData).pipe(
       map(response => {
         if (response.success && response.data) {
           return response.data;
@@ -75,7 +75,7 @@ export class ImageBackendService {
       return imageId;
     }
     if (this.isImageId(imageId)) {
-      const url = `${this.baseUrl}/api/imagenes/${imageId}`;
+      const url = `${this.baseUrl}/imagenes/${imageId}`;
       return url;
     }
     return imageId;
@@ -88,14 +88,14 @@ export class ImageBackendService {
   }
 
   deleteImage(imageId: string): Observable<void> {
-    return this.http.delete<any>(`${this.baseUrl}/api/imagenes/${imageId}`).pipe(
+    return this.http.delete<any>(`${this.baseUrl}/imagenes/${imageId}`).pipe(
       map(() => undefined),
       catchError(this.handleError)
     );
   }
 
   deleteAllFormularioImages(formularioId: string): Observable<{ deleted_count: number }> {
-    return this.http.delete<any>(`${this.baseUrl}/api/imagenes/formulario/${formularioId}`).pipe(
+    return this.http.delete<any>(`${this.baseUrl}/imagenes/formulario/${formularioId}`).pipe(
       map(response => {
         if (response.success && response.data) {
           return response.data;
@@ -110,7 +110,7 @@ export class ImageBackendService {
   }
 
   listFormularioImages(formularioId: string): Observable<FormularioImagesResponse> {
-    return this.http.get<any>(`${this.baseUrl}/api/imagenes/formulario/${formularioId}`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/imagenes/formulario/${formularioId}`).pipe(
       map(response => {
         if (response.success && response.data) {
           return response.data;

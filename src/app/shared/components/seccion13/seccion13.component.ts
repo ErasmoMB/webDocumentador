@@ -237,6 +237,39 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
+  protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+
+    for (const [fieldName, data] of Object.entries(loadedData)) {
+      if (data === null || data === undefined) continue;
+      const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
+
+      const actual = this.datos[fieldKey];
+      const existeDato = actual !== undefined && actual !== null;
+      const sonArrays = Array.isArray(data) && Array.isArray(actual);
+
+      // Reemplaza si no existe, o si el contenido cambió (comparar JSON)
+      const debeActualizar = !existeDato ||
+        (sonArrays && JSON.stringify(data) !== JSON.stringify(actual)) ||
+        (!sonArrays && JSON.stringify(data) !== JSON.stringify(actual));
+
+      if (debeActualizar) {
+        this.formularioService.actualizarDato(fieldKey as any, data);
+        this.datos[fieldKey] = data;
+
+        // Calcular porcentajes para tabla de afiliación de salud cuando se carga
+        if (fieldName === 'afiliacionSaludTabla' && Array.isArray(data) && data.length > 0) {
+          // Esperar a que los datos se actualicen antes de calcular
+          Promise.resolve().then(() => {
+            this.calcularPorcentajesAfiliacionSalud();
+          });
+        }
+      }
+    }
+
+    this.actualizarDatos();
+  }
+
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();

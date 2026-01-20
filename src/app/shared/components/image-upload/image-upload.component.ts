@@ -718,8 +718,8 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   private extractImageId(value: string | null): string | null {
     if (!value) return null;
     if (this.isImageId(value)) return value;
-    if (value.includes('/api/imagenes/')) {
-      const match = value.match(/\/api\/imagenes\/([0-9a-f-]{36})/i);
+    if (value.includes('/imagenes/')) {
+      const match = value.match(/\/imagenes\/([0-9a-f-]{36})/i);
       if (match && match[1]) {
         return match[1];
       }

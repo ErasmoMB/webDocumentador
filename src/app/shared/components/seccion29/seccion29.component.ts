@@ -501,13 +501,19 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   cargarSegurosSalud(): void {
     const cpp = this.datos.centroPobladoAISI;
     if (!cpp) {
-      return; // No hay CPP
+      return;
     }
 
     this.saludService.obtenerSeguroSaludPorCpp(cpp).subscribe({
       next: (response: any) => {
-        if (response?.success && response?.data) {
-          this.datos.afiliacionSaludTabla = response.data;
+        if (response?.success && response?.data && Array.isArray(response.data)) {
+          const afiliacionData = response.data.map((item: any) => ({
+            ...item,
+            porcentaje: '0,00 %'
+          }));
+          this.datos.afiliacionSaludTabla = afiliacionData;
+          this.formularioService.actualizarDato('afiliacionSaludTabla', afiliacionData);
+          this.tableService.calcularPorcentajes(this.datos, this.afiliacionSaludConfig);
           this.cdRef.detectChanges();
         }
       },
@@ -524,10 +530,15 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
     this.saludService.obtenerSeguroSaludMultiples(cpps).subscribe({
       next: (response: any) => {
         if (response?.success && response?.data) {
-          // Si el CPP actual está en los datos, cargar para la tabla actual
           const cppActual = this.datos.centroPobladoAISI;
-          if (cppActual && response.data[cppActual]) {
-            this.datos.afiliacionSaludTabla = response.data[cppActual];
+          if (cppActual && response.data[cppActual] && Array.isArray(response.data[cppActual])) {
+            const afiliacionData = response.data[cppActual].map((item: any) => ({
+              ...item,
+              porcentaje: '0,00 %'
+            }));
+            this.datos.afiliacionSaludTabla = afiliacionData;
+            this.formularioService.actualizarDato('afiliacionSaludTabla', afiliacionData);
+            this.tableService.calcularPorcentajes(this.datos, this.afiliacionSaludConfig);
             this.cdRef.detectChanges();
           }
         }

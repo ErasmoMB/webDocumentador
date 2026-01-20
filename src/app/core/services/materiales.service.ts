@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MaterialesService {
-  private apiUrl = `${environment.apiUrl}/materiales`;
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    const baseUrl = this.configService.getApiUrl();
+    this.apiUrl = `${baseUrl}/materiales`;
+  }
 
   /**
    * Obtiene materiales de construcción agregados para múltiples UBIGEOs

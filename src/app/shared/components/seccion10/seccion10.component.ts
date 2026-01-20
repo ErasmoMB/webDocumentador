@@ -48,11 +48,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con abastecimiento de agua por red pública', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas con abastecimiento de agua por pilón', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas sin abastecimiento de agua por los medios mencionados', casos: 0, porcentaje: '0,00 %' }
-      ],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
     };
@@ -64,11 +59,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con saneamiento vía red pública', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas con saneamiento vía pozo séptico', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas sin saneamiento vía los medios mencionados', casos: 0, porcentaje: '0,00 %' }
-      ],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
     };
@@ -80,10 +70,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con acceso a electricidad', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Viviendas sin acceso a electricidad', casos: 0, porcentaje: '0,00 %' }
-      ],
       calcularPorcentajes: true,
       camposParaCalcular: ['casos']
     };
@@ -111,6 +97,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
 
   protected getLoadParameters(): string[] | null {
     const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    console.log('[S10] CCPP activos desde GroupConfig:', ccppDesdeGrupo);
     if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
       return ccppDesdeGrupo;
     }
@@ -461,6 +448,51 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
+
+  protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
+    console.log('[S10] Datos del backend:', loadedData);
+    
+    // El backend POST retorna datos ya separados por categoría
+    // Solo necesitamos resetear porcentajes y calcular
+    
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+
+    for (const [fieldName, data] of Object.entries(loadedData)) {
+      if (data === null || data === undefined) continue;
+      const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
+
+      const actual = this.datos[fieldKey];
+      const existeDato = actual !== undefined && actual !== null;
+      const sonArrays = Array.isArray(data) && Array.isArray(actual);
+
+      // Reemplaza si no existe, o si el contenido cambió (comparar JSON)
+      const debeActualizar = !existeDato ||
+        (sonArrays && JSON.stringify(data) !== JSON.stringify(actual)) ||
+        (!sonArrays && JSON.stringify(data) !== JSON.stringify(actual));
+
+      if (debeActualizar) {
+        this.formularioService.actualizarDato(fieldKey as any, data);
+        this.datos[fieldKey] = data;
+
+        // Calcular porcentajes SOLO si es tabla y hubo cambio
+        if (fieldName === 'abastecimientoAguaTabla' && Array.isArray(data)) {
+          console.log('[S10] Calculando porcentajes para abastecimientoAguaTabla');
+          this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+        }
+        if (fieldName === 'tiposSaneamientoTabla' && Array.isArray(data)) {
+          console.log('[S10] Calculando porcentajes para tiposSaneamientoTabla');
+          this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+        }
+        if (fieldName === 'alumbradoElectricoTabla' && Array.isArray(data)) {
+          console.log('[S10] Calculando porcentajes para alumbradoElectricoTabla');
+          this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
+        }
+      }
+    }
+
+    this.actualizarDatos();
+  }
+
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     // Recalcular porcentajes después de eliminar filas totales
@@ -534,6 +566,10 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         this.formularioService.actualizarDato(tablaKeyElectrica, datosFiltrados);
       }
     }
+  }
+
+  override ngOnInit() {
+    super.ngOnInit();
   }
 
   override ngOnDestroy() {
@@ -1075,7 +1111,8 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     if (loadedData['abastecimientoAguaTabla']) {
       this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
     }
-    if (loadedData['tiposSaneamientoTabla']) {
+    // Verificar tanto tiposSaneamientoTabla como saneamientoTabla
+    if (loadedData['tiposSaneamientoTabla'] || loadedData['saneamientoTabla']) {
       this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
     }
     if (loadedData['alumbradoElectricoTabla']) {

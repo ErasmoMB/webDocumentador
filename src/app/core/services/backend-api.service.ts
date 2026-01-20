@@ -113,6 +113,24 @@ export class BackendApiService {
     );
   }
 
+  postServiciosPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/servicios/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postCentrosPobladosPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/centros-poblados/por-codigos-ubigeo`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
   getResumenServicios(idUbigeo?: string): Observable<BackendResponse<any[]>> {
     const url = `${this.baseUrl}/servicios/resumen`;
     let params = new HttpParams();

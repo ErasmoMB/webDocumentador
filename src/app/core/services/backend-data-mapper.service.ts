@@ -6,6 +6,7 @@ export interface DataMapping {
   transform?: (data: any) => any;
   paramType?: 'id_ubigeo' | 'ubigeo';
   aggregatable?: boolean;
+  method?: 'GET' | 'POST';
 }
 
 export interface SectionDataConfig {
@@ -26,17 +27,19 @@ export class BackendDataMapperService {
     this.mappingConfigs.set('seccion6_aisd', {
       poblacionSexoAISD: {
         fieldName: 'poblacionSexoAISD',
-        endpoint: '/demograficos/datos',
+        endpoint: '/centros-poblados/por-codigos-ubigeo',
         paramType: 'id_ubigeo',
+        method: 'POST',
         aggregatable: true,
-        transform: (data) => this.transformPoblacionSexo(data)
+        transform: (data) => this.transformPoblacionSexoDesdeCentrosPoblados(data)
       },
       poblacionEtarioAISD: {
         fieldName: 'poblacionEtarioAISD',
-        endpoint: '/demograficos/datos',
+        endpoint: '/centros-poblados/por-codigos-ubigeo',
         paramType: 'id_ubigeo',
+        method: 'POST',
         aggregatable: true,
-        transform: (data) => this.transformPoblacionEtario(data)
+        transform: (data) => this.transformPoblacionEtarioDesdeCentrosPoblados(data)
       }
     });
 
@@ -195,228 +198,74 @@ export class BackendDataMapperService {
     this.mappingConfigs.set('seccion10_aisd', {
       abastecimientoAguaTabla: {
         fieldName: 'abastecimientoAguaTabla',
-        endpoint: '/servicios/basicos',
-        paramType: 'id_ubigeo',
+        endpoint: '/servicios/por-codigos',
+        method: 'POST',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          if (!data || typeof data !== 'object') {
             return [];
           }
           
-          // Categorías esperadas para AGUA
-          const categoriasEsperadas = [
-            'Red pública dentro de la vivienda',
-            'Red pública fuera de la vivienda',
-            'Pozo',
-            'Cisterna',
-            'Pilón de uso público',
-            'Río, acequia, manantial',
-            'Otro tipo',
-            'Sin acceso a red pública'
-          ];
+          const agua = data.Agua || [];
+          if (!Array.isArray(agua)) {
+            return [];
+          }
           
-          // Filtrar solo registros de AGUA
-          const agua = data.filter((item: any) => 
-            (item.categoria || '').toLowerCase() === 'agua'
-          );
-          
-          // Deduplicar tipos similares
-          const normalizarTipo = (tipo: string) => {
-            return (tipo || '')
-              .toLowerCase()
-              .trim()
-              .replace(/\s+/g, ' ')
-              .replace(/,\s*/g, ', ');
-          };
-          
-          const tiposMap = new Map<string, any>();
-          agua.forEach((item: any) => {
-            const tipoNorm = normalizarTipo(item.tipo);
-            if (tiposMap.has(tipoNorm)) {
-              tiposMap.get(tipoNorm).casos += item.casos || 0;
-            } else {
-              tiposMap.set(tipoNorm, {
-                tipoOriginal: item.tipo,
-                casos: item.casos || 0
-              });
-            }
-          });
-          
-          // Completar con categorías faltantes
-          const resultado: any[] = [];
-          categoriasEsperadas.forEach(cat => {
-            const catNorm = normalizarTipo(cat);
-            if (tiposMap.has(catNorm)) {
-              resultado.push({
-                categoria: tiposMap.get(catNorm).tipoOriginal,
-                casos: tiposMap.get(catNorm).casos
-              });
-            } else {
-              resultado.push({
-                categoria: cat,
-                casos: 0
-              });
-            }
-          });
-          
-          // Calcular porcentajes
-          const total = resultado.reduce((sum, item) => sum + (item.casos || 0), 0);
-          const final = resultado.map((item: any) => ({
-            categoria: item.categoria,
-            casos: item.casos,
-            porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
+          return agua.map((item: any) => ({
+            id_ubigeo: '000000000',
+            categoria: item.tipo || '',
+            tipo: item.tipo || '',
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
-          
-          return final;
         }
       },
       tiposSaneamientoTabla: {
         fieldName: 'tiposSaneamientoTabla',
-        endpoint: '/servicios/basicos',
-        paramType: 'id_ubigeo',
+        endpoint: '/servicios/por-codigos',
+        method: 'POST',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          if (!data || typeof data !== 'object') {
             return [];
           }
           
-          const categoriasEsperadas = [
-            'Red pública de desagüe',
-            'Con alcantarillado',
-            'Pozo séptico',
-            'Pozo negro',
-            'Río, acequia o similar',
-            'Sin alcantarillado',
-            'No tiene desagüe'
-          ];
+          const desague = data.Desagüe || [];
+          if (!Array.isArray(desague)) {
+            return [];
+          }
           
-          const desague = data.filter((item: any) => 
-            (item.categoria || '').toLowerCase() === 'desagüe'
-          );
-          
-          // Deduplicar tipos similares
-          const normalizarTipo = (tipo: string) => {
-            return (tipo || '')
-              .toLowerCase()
-              .trim()
-              .replace(/\s+/g, ' ')
-              .replace(/,\s*/g, ', ');
-          };
-          
-          const tiposMap = new Map<string, any>();
-          desague.forEach((item: any) => {
-            const tipoNorm = normalizarTipo(item.tipo);
-            if (tiposMap.has(tipoNorm)) {
-              tiposMap.get(tipoNorm).casos += item.casos || 0;
-            } else {
-              tiposMap.set(tipoNorm, {
-                tipoOriginal: item.tipo,
-                casos: item.casos || 0
-              });
-            }
-          });
-          
-          // Completar con categorías faltantes
-          const resultado: any[] = [];
-          categoriasEsperadas.forEach(cat => {
-            const catNorm = normalizarTipo(cat);
-            if (tiposMap.has(catNorm)) {
-              resultado.push({
-                categoria: tiposMap.get(catNorm).tipoOriginal,
-                casos: tiposMap.get(catNorm).casos
-              });
-            } else {
-              resultado.push({
-                categoria: cat,
-                casos: 0
-              });
-            }
-          });
-          
-          // Calcular porcentajes
-          const total = resultado.reduce((sum, item) => sum + (item.casos || 0), 0);
-          const final = resultado.map((item: any) => ({
-            categoria: item.categoria,
-            casos: item.casos,
-            porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
+          return desague.map((item: any) => ({
+            id_ubigeo: '000000000',
+            categoria: item.tipo || '',
+            tipo: item.tipo || '',
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
-          
-          return final;
         }
       },
       alumbradoElectricoTabla: {
         fieldName: 'alumbradoElectricoTabla',
-        endpoint: '/servicios/basicos',
-        paramType: 'id_ubigeo',
+        endpoint: '/servicios/por-codigos',
+        method: 'POST',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          if (!data || typeof data !== 'object') {
             return [];
           }
           
-          // Categorías esperadas para ALUMBRADO
-          const categoriasEsperadas = [
-            'Con alumbrado eléctrico',
-            'Sin alumbrado eléctrico',
-            'Gas',
-            'Vela',
-            'Kerosene/Petróleo',
-            'Otro tipo'
-          ];
+          const alumbrado = data.Alumbrado || [];
+          if (!Array.isArray(alumbrado)) {
+            return [];
+          }
           
-          // Filtrar solo registros de ALUMBRADO
-          const alumbrado = data.filter((item: any) => 
-            (item.categoria || '').toLowerCase() === 'alumbrado'
-          );
-          
-          // Deduplicar tipos similares
-          const normalizarTipo = (tipo: string) => {
-            return (tipo || '')
-              .toLowerCase()
-              .trim()
-              .replace(/\s+/g, ' ')
-              .replace(/,\s*/g, ', ');
-          };
-          
-          const tiposMap = new Map<string, any>();
-          alumbrado.forEach((item: any) => {
-            const tipoNorm = normalizarTipo(item.tipo);
-            if (tiposMap.has(tipoNorm)) {
-              tiposMap.get(tipoNorm).casos += item.casos || 0;
-            } else {
-              tiposMap.set(tipoNorm, {
-                tipoOriginal: item.tipo,
-                casos: item.casos || 0
-              });
-            }
-          });
-          
-          // Completar con categorías faltantes
-          const resultado: any[] = [];
-          categoriasEsperadas.forEach(cat => {
-            const catNorm = normalizarTipo(cat);
-            if (tiposMap.has(catNorm)) {
-              resultado.push({
-                categoria: tiposMap.get(catNorm).tipoOriginal,
-                casos: tiposMap.get(catNorm).casos
-              });
-            } else {
-              resultado.push({
-                categoria: cat,
-                casos: 0
-              });
-            }
-          });
-          
-          // Calcular porcentajes
-          const total = resultado.reduce((sum, item) => sum + (item.casos || 0), 0);
-          const final = resultado.map((item: any) => ({
-            categoria: item.categoria,
-            casos: item.casos,
-            porcentaje: total > 0 ? ((item.casos / total) * 100).toFixed(2) + ' %' : '0,00 %'
+          return alumbrado.map((item: any) => ({
+            id_ubigeo: '000000000',
+            categoria: item.tipo || '',
+            tipo: item.tipo || '',
+            casos: Number(item.casos) || 0,
+            porcentaje: '0,00 %'
           }));
-          
-          return final;
         }
       }
     });
@@ -913,6 +762,25 @@ export class BackendDataMapperService {
     return resultado;
   }
 
+  private transformPoblacionSexoDesdeCentrosPoblados(data: any[]): any[] {
+    if (!Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    
+    let totalHombres = 0;
+    let totalMujeres = 0;
+    
+    for (const centro of data) {
+      totalHombres += Number(centro?.hombres || 0);
+      totalMujeres += Number(centro?.mujeres || 0);
+    }
+    
+    return [
+      { sexo: 'Hombre', casos: totalHombres },
+      { sexo: 'Mujer', casos: totalMujeres }
+    ];
+  }
+
   private transformPoblacionEtario(data: any[]): any[] {
     if (!Array.isArray(data) || data.length === 0) {
       return [];
@@ -927,6 +795,34 @@ export class BackendDataMapperService {
       { categoria: '45-64 años', casos: d?.de_45_a_64 || 0 },
       { categoria: '65+ años', casos: d?.mayores_65 || 0 }
     ].filter(item => item.casos > 0);
+    return resultado;
+  }
+
+  private transformPoblacionEtarioDesdeCentrosPoblados(data: any[]): any[] {
+    if (!Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    
+    let total_6_14 = 0;
+    let total_15_29 = 0;
+    let total_30_44 = 0;
+    let total_45_64 = 0;
+    
+    for (const centro of data) {
+      total_6_14 += Number(centro?.de_6_a_14_anios || 0);
+      total_15_29 += Number(centro?.de_15_a_29 || 0);
+      total_30_44 += Number(centro?.de_30_a_44 || 0);
+      total_45_64 += Number(centro?.de_45_a_64 || 0);
+    }
+    
+    const resultado = [
+      { categoria: '0 a 14 años', casos: total_6_14 },
+      { categoria: '15 a 29 años', casos: total_15_29 },
+      { categoria: '30 a 44 años', casos: total_30_44 },
+      { categoria: '45 a 64 años', casos: total_45_64 },
+      { categoria: '65 años a más', casos: 0 }
+    ].filter(item => item.casos > 0);
+    
     return resultado;
   }
 
