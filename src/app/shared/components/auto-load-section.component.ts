@@ -38,12 +38,17 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.loadAutoSectionData();
+    // Solo cargar datos automáticamente si estamos en modo formulario
+    // En modo vista (plantilla), los datos ya están cargados desde formularioService
+    if (this.modoFormulario !== false) {
+      this.loadAutoSectionData();
+    }
   }
 
   override ngOnChanges(changes: SimpleChanges): void {
     super.ngOnChanges(changes);
-    if (changes['seccionId'] && !this.isLoadingData) {
+    // Solo cargar datos automáticamente si estamos en modo formulario
+    if (changes['seccionId'] && !this.isLoadingData && this.modoFormulario !== false) {
       this.debouncedLoadAutoSectionData();
     }
   }
@@ -87,6 +92,12 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   }
 
   protected loadAutoSectionData(forceRefresh: boolean = false): void {
+    // No cargar datos automáticamente en modo vista (plantilla)
+    // Los datos ya están disponibles desde formularioService
+    if (this.modoFormulario === false) {
+      return;
+    }
+    
     const sectionKey = this.getSectionKey();
     const parameters = this.getLoadParameters();
     
@@ -105,16 +116,21 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     this.lastLoadedSectionKey = requestKey;
     
     const subscription = this.autoLoader.loadSectionData(sectionKey, ubigeoList, forceRefresh)
-      .subscribe(
-        (loadedData) => {
+      .subscribe({
+        next: (loadedData) => {
           this.applyLoadedData(loadedData);
           this.isLoadingData = false;
           this.cdRef.detectChanges();
         },
-        (error) => {
+        error: (error) => {
+          // Silenciar errores en modo vista para no llenar la consola
           this.isLoadingData = false;
+          // Solo loguear errores en modo desarrollo o formulario
+          if (this.modoFormulario !== false) {
+            console.warn(`[AutoLoad] Error cargando datos para ${sectionKey}:`, error);
+          }
         }
-      );
+      });
 
     this.autoLoadSubscriptions.push(subscription);
   }

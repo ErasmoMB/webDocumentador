@@ -263,7 +263,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
-    return item?.porcentaje || '____';
+    const porcentaje = item?.porcentaje;
+    if (porcentaje === null || porcentaje === undefined) {
+      return '____';
+    }
+    return String(porcentaje);
   }
 
   getPorcentajeSinServiciosCC(): string {
@@ -274,7 +278,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
-    return item?.porcentaje || '____';
+    const porcentaje = item?.porcentaje;
+    if (porcentaje === null || porcentaje === undefined) {
+      return '____';
+    }
+    return String(porcentaje);
   }
 
   getTotalUnidadesDistrito(): string {
@@ -304,7 +312,22 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const porcentajeSinServiciosDistrito = this.getPorcentajeSinServiciosDistrito();
     const porcentajeHacinamientoDistrito = this.getPorcentajeHacinamientoDistrito();
     
-    return `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de [TOTAL_CC:${totalPersonas}] personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de [NBI_HACINAMIENTO_CC:viviendas con hacinamiento] (${porcentajeHacinamiento}%), seguido de la de [NBI_SERVICIOS_CC:viviendas sin servicios higiénicos] (${porcentajeSinServicios}%).\n\nPor otro lado, a nivel distrital de [DISTRITO:${distrito}], de un total de [TOTAL_DIST:${totalUnidades}] unidades de análisis, se sabe que el tipo de NBI más frecuente es la de [NBI_SERVICIOS_DIST:viviendas sin servicios higiénicos] (${porcentajeSinServiciosDistrito}%), seguida de la de [NBI_HACINAMIENTO_DIST:viviendas con hacinamiento] (${porcentajeHacinamientoDistrito}%). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
+    const formatoPorcentaje = (valor: string | number | null | undefined): string => {
+      if (valor === null || valor === undefined) {
+        return '';
+      }
+      const valorStr = String(valor);
+      if (!valorStr || valorStr === '____' || valorStr.trim() === '') {
+        return '';
+      }
+      return ` (${valorStr}%)`;
+    };
+    
+    const texto1 = `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de [TOTAL_CC:${totalPersonas}] personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de [NBI_HACINAMIENTO_CC:viviendas con hacinamiento]${formatoPorcentaje(porcentajeHacinamiento)}, seguido de la de [NBI_SERVICIOS_CC:viviendas sin servicios higiénicos]${formatoPorcentaje(porcentajeSinServicios)}.`;
+    
+    const texto2 = `Por otro lado, a nivel distrital de [DISTRITO:${distrito}], de un total de [TOTAL_DIST:${totalUnidades}] unidades de análisis, se sabe que el tipo de NBI más frecuente es la de [NBI_SERVICIOS_DIST:viviendas sin servicios higiénicos]${formatoPorcentaje(porcentajeSinServiciosDistrito)}, seguida de la de [NBI_HACINAMIENTO_DIST:viviendas con hacinamiento]${formatoPorcentaje(porcentajeHacinamientoDistrito)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
+    
+    return `${texto1}\n\n${texto2}`;
   }
 
   getPorcentajeSinServiciosDistrito(): string {
@@ -315,7 +338,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
-    return item?.porcentaje || '____';
+    const porcentaje = item?.porcentaje;
+    if (porcentaje === null || porcentaje === undefined) {
+      return '____';
+    }
+    return String(porcentaje);
   }
 
   getPorcentajeHacinamientoDistrito(): string {
@@ -326,7 +353,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
-    return item?.porcentaje || '____';
+    const porcentaje = item?.porcentaje;
+    if (porcentaje === null || porcentaje === undefined) {
+      return '____';
+    }
+    return String(porcentaje);
   }
 
   getFotografiasNBIVista(): FotoItem[] {
@@ -380,10 +411,18 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     html = html.split(`[DIST:${distrito}]`).join(`<span class="data-source">${this.escapeHtml(distrito)}</span>`);
     
     // Reemplazar porcentajes (VERDE - data-calculated con %)
-    html = html.split(`${porcentajeHacinamiento}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeHacinamiento)}%</span>`);
-    html = html.split(`${porcentajeSinServicios}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeSinServicios)}%</span>`);
-    html = html.split(`${porcentajeSinServiciosDistrito}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeSinServiciosDistrito)}%</span>`);
-    html = html.split(`${porcentajeHacinamientoDistrito}%`).join(`<span class="data-calculated">${this.escapeHtml(porcentajeHacinamientoDistrito)}%</span>`);
+    if (porcentajeHacinamiento && porcentajeHacinamiento !== '____' && porcentajeHacinamiento.trim() !== '') {
+      html = html.split(`(${porcentajeHacinamiento}%)`).join(`<span class="data-calculated">(${this.escapeHtml(porcentajeHacinamiento)}%)</span>`);
+    }
+    if (porcentajeSinServicios && porcentajeSinServicios !== '____' && porcentajeSinServicios.trim() !== '') {
+      html = html.split(`(${porcentajeSinServicios}%)`).join(`<span class="data-calculated">(${this.escapeHtml(porcentajeSinServicios)}%)</span>`);
+    }
+    if (porcentajeSinServiciosDistrito && porcentajeSinServiciosDistrito !== '____' && porcentajeSinServiciosDistrito.trim() !== '') {
+      html = html.split(`(${porcentajeSinServiciosDistrito}%)`).join(`<span class="data-calculated">(${this.escapeHtml(porcentajeSinServiciosDistrito)}%)</span>`);
+    }
+    if (porcentajeHacinamientoDistrito && porcentajeHacinamientoDistrito !== '____' && porcentajeHacinamientoDistrito.trim() !== '') {
+      html = html.split(`(${porcentajeHacinamientoDistrito}%)`).join(`<span class="data-calculated">(${this.escapeHtml(porcentajeHacinamientoDistrito)}%)</span>`);
+    }
     
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }

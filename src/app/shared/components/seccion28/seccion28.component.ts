@@ -77,6 +77,9 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // Primero actualizar datos para tener los datos guardados
+    this.actualizarDatos();
+    // Luego cargar educación solo si no hay datos guardados
     this.cargarEducacion();
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
@@ -123,13 +126,31 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
     
     let hayCambios = false;
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    const tablasConPrefijo = ['puestoSaludCpTabla', 'educacionCpTabla'];
     
     for (const campo of this.watchedFields) {
-      const valorActual = (datosActuales as any)[campo] || null;
-      const valorAnterior = this.datosAnteriores[campo] || null;
+      let valorActual: any = null;
+      let valorAnterior: any = null;
+      
+      if (tablasConPrefijo.includes(campo)) {
+        const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+        valorActual = (datosActuales as any)[campoConPrefijo] || (datosActuales as any)[campo] || null;
+        valorAnterior = this.datosAnteriores[campoConPrefijo] || this.datosAnteriores[campo] || null;
+      } else {
+        valorActual = (datosActuales as any)[campo] || null;
+        valorAnterior = this.datosAnteriores[campo] || null;
+      }
+      
       if (!this.compararValores(valorActual, valorAnterior)) {
         hayCambios = true;
-        this.datosAnteriores[campo] = this.clonarValor(valorActual);
+        if (tablasConPrefijo.includes(campo)) {
+          const campoConPrefijo = prefijo ? `${campo}${prefijo}` : campo;
+          this.datosAnteriores[campoConPrefijo] = this.clonarValor(valorActual);
+        } else {
+          this.datosAnteriores[campo] = this.clonarValor(valorActual);
+        }
       }
     }
     
@@ -511,6 +532,24 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
 
   // Cargar datos de educación desde el backend
   private cargarEducacion(): void {
+    const tablaKey = this.getTablaKeyEducacion();
+    const datosExistentes = this.datos[tablaKey] || this.datos.educacionCpTabla;
+    
+    // Solo cargar del backend si no hay datos guardados localmente
+    // Verificar si hay datos con contenido válido (no solo arrays vacíos o con valores por defecto)
+    if (datosExistentes && Array.isArray(datosExistentes) && datosExistentes.length > 0) {
+      const tieneDatosValidos = datosExistentes.some((item: any) => 
+        (item.nombreIE && item.nombreIE !== '____' && item.nombreIE.trim() !== '') || 
+        (item.cantidadEstudiantes && item.cantidadEstudiantes !== 0 && item.cantidadEstudiantes !== '0') ||
+        (item.tipoGestion && item.tipoGestion !== '____' && item.tipoGestion.trim() !== '')
+      );
+      
+      if (tieneDatosValidos) {
+        // Ya hay datos guardados con contenido válido editado por el usuario, no sobrescribir
+        return;
+      }
+    }
+    
     const codigos = this.groupConfig.getAISICCPPActivos();
     if (!codigos || codigos.length === 0) {
       return;
@@ -527,7 +566,6 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
             porcentaje: '0,00 %'
           }));
 
-          const tablaKey = this.getTablaKeyEducacion();
           this.datos[tablaKey] = educacionData;
           this.formularioService.actualizarDato(tablaKey as any, educacionData);
           this.tableService.calcularPorcentajes(this.datos, { ...this.educacionConfig, tablaKey });
@@ -620,9 +658,14 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
         }
       }
       
+      // Actualizar tanto en this.datos como en el formularioService
       this.datos[tablaKey] = [...tabla];
       this.formularioService.actualizarDato(tablaKey as any, tabla);
-      this.actualizarDatos();
+      
+      // Sincronizar this.datos con los datos del formularioService
+      const datosNuevos = this.formularioService.obtenerDatos();
+      this.datos = { ...datosNuevos };
+      
       this.cdRef.detectChanges();
     }
   }
@@ -632,7 +675,11 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.datos[tablaKey] || this.datos.educacionCpTabla || [];
     this.datos[tablaKey] = [...tabla];
     this.formularioService.actualizarDato(tablaKey as any, tabla);
-    this.actualizarDatos();
+    
+    // Sincronizar this.datos con los datos del formularioService
+    const datosNuevos = this.formularioService.obtenerDatos();
+    this.datos = { ...datosNuevos };
+    
     this.cdRef.detectChanges();
   }
 

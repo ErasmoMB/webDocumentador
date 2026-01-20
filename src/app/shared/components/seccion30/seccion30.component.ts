@@ -106,24 +106,14 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private cargarDatosEducacion(): void {
-    console.log('[S30] cargarDatosEducacion llamado', {
-      cargandoDatos: this.cargandoDatos,
-      datosYaCargados: this.datosYaCargados,
-      stack: new Error().stack
-    });
-
     if (this.cargandoDatos || this.datosYaCargados) {
-      console.log('[S30] Bloqueado: ya cargando o ya cargado');
       return;
     }
 
     const codigos = this.groupConfig.getAISICCPPActivos();
     if (!codigos || codigos.length === 0) {
-      console.log('[S30] Bloqueado: no hay códigos');
       return;
     }
-
-    console.log('[S30] Iniciando carga de datos educación');
     this.cargandoDatos = true;
     this.datosYaCargados = true;
 
@@ -224,7 +214,6 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      console.log('[S30] detectarCambios detectó cambios pero NO cargaremos datos automáticamente mientras cargan datos');
       return true;
     }
     

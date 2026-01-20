@@ -180,6 +180,9 @@ export class AutoBackendDataLoaderService {
         return of(cached);
       }
 
+      // Verificar si estamos en modo vista (plantilla) para silenciar errores
+      const isPlantillaView = typeof window !== 'undefined' && window.location.pathname.includes('/plantilla');
+      
       return this.callEndpoint(mapping.endpoint, mapping.paramType, cpp).pipe(
         map(data => {
           // Limpiar contador de fallos si fue exitoso
@@ -194,6 +197,11 @@ export class AutoBackendDataLoaderService {
           current.retries++;
           current.lastError = err;
           this.failedRequests.set(endpointKey, current);
+          
+          // Silenciar errores en modo vista (plantilla)
+          if (isPlantillaView) {
+            // No mostrar errores en consola cuando estamos en plantilla
+          }
           
           return of([]);
         })
@@ -299,7 +307,7 @@ export class AutoBackendDataLoaderService {
     endpoint: string,
     paramType: string | undefined,
     paramValue: string
-  ): Observable<any> {
+  ): Observable<any | null> {
     const param = paramType || 'id_ubigeo';
     
     // Solo normalizar id_ubigeo para endpoints de demografía
@@ -308,85 +316,138 @@ export class AutoBackendDataLoaderService {
       ? (paramValue ? paramValue.toString().replace(/^0+/, '') || '0' : paramValue)
       : paramValue;
 
+    // Verificar si estamos en modo vista (plantilla) para silenciar errores
+    const isPlantillaView = typeof window !== 'undefined' && window.location.pathname.includes('/plantilla');
+
+    // Función helper para agregar manejo silencioso de errores en modo vista
+    const addSilentErrorHandling = <T>(obs: Observable<T>): Observable<T | null> => {
+      if (isPlantillaView) {
+        return obs.pipe(
+          catchError(() => {
+            // Silenciar errores en modo vista (plantilla)
+            return of(null);
+          })
+        );
+      }
+      return obs;
+    };
 
     switch (endpoint) {
       case '/demograficos/datos':
-        return this.backendApi.getDatosDemograficos(normalizedParamValue).pipe(
-          map(response => {
-            return response.data;
-          })
+        return addSilentErrorHandling(
+          this.backendApi.getDatosDemograficos(normalizedParamValue).pipe(
+            map(response => {
+              return response.data;
+            })
+          )
         );
       case '/aisd/pet':
-        return this.backendApi.getPET(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getPET(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/economicos/principales':
-        return this.backendApi.getActividadesPrincipales(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getActividadesPrincipales(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisd/materiales-construccion':
-        return this.backendApi.getMaterialesConstruccion(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getMaterialesConstruccion(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/servicios/basicos':
-        return this.backendApi.getServiciosBasicos(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getServiciosBasicos(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/vistas/lenguas-ubicacion':
-        return this.backendApi.getLenguasPorUbicacion(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getLenguasPorUbicacion(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/vistas/religiones-ubicacion':
-        return this.backendApi.getReligionesPorUbicacion(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getReligionesPorUbicacion(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/vistas/nbi-ubicacion':
-        return this.backendApi.getNBIPorUbicacion(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getNBIPorUbicacion(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisi/informacion-referencial':
-        return this.backendApi.getInformacionReferencialAISI(paramValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getInformacionReferencialAISI(paramValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisi/centros-poblados':
-        return this.backendApi.getCentrosPobladosAISI(paramValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getCentrosPobladosAISI(paramValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisd/centros-poblados':
-        return this.backendApi.getCentrosPobladosAISD(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getCentrosPobladosAISD(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisi/pea-distrital':
-        return this.backendApi.getPEADistrital(paramValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getPEADistrital(paramValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/aisi/viviendas-censo':
-        return this.backendApi.getViviendasCenso(paramValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getViviendasCenso(paramValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/salud/seguro-salud':
-        return this.backendApi.getSeguroSalud(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getSeguroSalud(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/educacion/niveles':
-        return this.backendApi.getEducacion(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getEducacion(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/educacion/tasa-analfabetismo':
-        return this.backendApi.getTasaAnalfabetismo(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getTasaAnalfabetismo(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/lenguas/maternas':
-        return this.backendApi.getLenguasMaternas(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getLenguasMaternas(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/religiones':
-        return this.backendApi.getReligiones(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getReligiones(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       case '/nbi/por-ubigeo':
-        return this.backendApi.getNbi(normalizedParamValue).pipe(
-          map(response => response.data)
+        return addSilentErrorHandling(
+          this.backendApi.getNbi(normalizedParamValue).pipe(
+            map(response => response.data)
+          )
         );
       default:
         return of([]);

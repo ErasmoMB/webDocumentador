@@ -449,23 +449,19 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
 
   private cargarDatosActividadesEconomicas(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('[S24] CCPP activos AISI:', codigos);
     
     if (!codigos || codigos.length === 0) {
-      console.warn('[S24] No hay CCPP activos para AISI');
       return;
     }
 
     this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
       (response: any) => {
-        console.log('[S24] Respuesta del backend actividades:', response);
         if (response && response.success && response.actividades_economicas) {
           const actividades = response.actividades_economicas.map((item: any) => ({
             actividad: item.actividad || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S24] actividades transformado:', actividades);
 
           this.datos['actividadesEconomicasAISI'] = actividades;
           this.formularioService.actualizarDato('actividadesEconomicasAISI', actividades);

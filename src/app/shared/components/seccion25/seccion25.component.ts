@@ -559,23 +559,19 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
 
   private cargarDatosVivienda(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('[S25] CCPP activos AISI:', codigos);
     
     if (!codigos || codigos.length === 0) {
-      console.warn('[S25] No hay CCPP activos para AISI');
       return;
     }
 
     this.viviendaService.obtenerTiposVivienda(codigos).subscribe(
       (response: any) => {
-        console.log('[S25] Respuesta del backend vivienda:', response);
         if (response && response.success && response.tipos_vivienda) {
           const viviendas = response.tipos_vivienda.map((item: any) => ({
             categoria: item.tipo_vivienda || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S25] tiposVivienda transformado:', viviendas);
 
           const tablaKey = this.getTablaKeyTiposVivienda();
           this.datos[tablaKey] = viviendas;
@@ -594,16 +590,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
 
   private cargarDatosMateriales(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('[S25] CCPP activos AISI para materiales:', codigos);
     
     if (!codigos || codigos.length === 0) {
-      console.warn('[S25] No hay CCPP activos para materiales');
       return;
     }
 
     this.materialesService.obtenerMateriales(codigos).subscribe(
       (response: any) => {
-        console.log('[S25] Respuesta del backend materiales:', response);
         if (response && response.success && response.materiales_construccion) {
           const materiales = response.materiales_construccion.map((item: any) => ({
             categoria: item.categoria || '',
@@ -611,7 +604,6 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S25] materiales transformado:', materiales);
 
           const tablaKey = this.getTablaKeyMaterialesVivienda();
           this.datos[tablaKey] = materiales;

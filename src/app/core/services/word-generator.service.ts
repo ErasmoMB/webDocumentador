@@ -356,7 +356,11 @@ export class WordGeneratorService {
         case 'h5':
           return this.crearTitulo(text, HeadingLevel.HEADING_5);
         case 'p':
-          return this.crearParrafo(elem);
+          const parrafoResultado = this.crearParrafo(elem);
+          if (Array.isArray(parrafoResultado)) {
+            return parrafoResultado;
+          }
+          return parrafoResultado;
       case 'ul':
       case 'ol':
         return this.crearLista(elem);
@@ -374,14 +378,34 @@ export class WordGeneratorService {
             return await this.procesarFotoInfo(elem);
           }
         }
-        if (elem.classList.contains('text-justify') && text) {
-          const textoNormalizado = this.asegurarString(text).replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
-          if (textoNormalizado) {
-            return new Paragraph({
-              children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
-              alignment: AlignmentType.JUSTIFIED,
-              spacing: { after: 120, line: 360 }
-            });
+        if (elem.classList.contains('text-justify')) {
+          const tieneElementosHijos = elem.querySelectorAll('table, img, h1, h2, h3, h4, h5, app-image-upload, app-foto-info').length > 0;
+          if (!tieneElementosHijos && text) {
+            const textoStr = this.asegurarString(text);
+            const parrafosTexto = textoStr.split(/\n\s*\n+/).filter(p => p.trim());
+            
+            if (parrafosTexto.length > 1) {
+              return parrafosTexto.map(parrafoTexto => {
+                const textoNormalizado = parrafoTexto.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+                if (textoNormalizado) {
+                  return new Paragraph({
+                    children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { after: 120, line: 360 }
+                  });
+                }
+                return null;
+              }).filter(p => p !== null);
+            } else {
+              const textoNormalizado = textoStr.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+              if (textoNormalizado) {
+                return new Paragraph({
+                  children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
+                  alignment: AlignmentType.JUSTIFIED,
+                  spacing: { after: 120, line: 360 }
+                });
+              }
+            }
           }
         }
         return await this.procesarContenidoDiv(elem);
@@ -408,7 +432,7 @@ export class WordGeneratorService {
     });
   }
 
-  private crearParrafo(elem: HTMLElement): Paragraph {
+  private crearParrafo(elem: HTMLElement): Paragraph | Paragraph[] {
     try {
       const textoCompleto = this.extraerTextoCompleto(elem);
       const esTituloCentrado = elem.classList.contains('titulo-centrado') || 
@@ -417,38 +441,108 @@ export class WordGeneratorService {
       const esSource = elem.classList.contains('source');
       const tieneHighlight = elem.querySelector('.highlight');
 
-      const children: TextRun[] = [];
+      const textoStr = this.asegurarString(textoCompleto || '');
       
       if (tieneHighlight) {
         const partes = this.extraerTextoConHighlight(elem);
-        partes.forEach(parte => {
-          const textoStr = this.asegurarString(parte.texto || '');
-          if (textoStr) {
-            children.push(new TextRun({
-              text: textoStr,
-              bold: parte.esHighlight,
-              font: 'Arial'
-            }));
-          }
-        });
-      } else {
-        const textoStr = this.asegurarString(textoCompleto || '');
-        if (textoStr) {
-          const textoNormalizado = textoStr.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
-          children.push(new TextRun({ 
-            text: textoNormalizado || ' ',
-            font: 'Arial'
-          }));
+        const parrafosTexto = textoStr.split(/\n\s*\n+/).filter(p => p.trim());
+        
+        if (parrafosTexto.length > 1) {
+          return parrafosTexto.map((parrafoTexto, index) => {
+            const children: TextRun[] = [];
+            partes.forEach(parte => {
+              if (parrafoTexto.includes(parte.texto)) {
+                const textoParte = this.asegurarString(parte.texto || '');
+                if (textoParte) {
+                  children.push(new TextRun({
+                    text: textoParte.replace(/\s+/g, ' ').trim(),
+                    bold: parte.esHighlight,
+                    font: 'Arial'
+                  }));
+                }
+              }
+            });
+            
+            if (children.length === 0) {
+              const textoNormalizado = parrafoTexto.replace(/\s+/g, ' ').trim();
+              if (textoNormalizado) {
+                children.push(new TextRun({ 
+                  text: textoNormalizado,
+                  font: 'Arial'
+                }));
+              }
+            }
+            
+            return new Paragraph({
+              alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+              children: children.length > 0 ? children : [new TextRun({ text: ' ', font: 'Arial' })],
+              spacing: { 
+                after: esSource ? 200 : 120,
+                line: 360
+              },
+            });
+          });
+        } else {
+          const children: TextRun[] = [];
+          partes.forEach(parte => {
+            const textoParte = this.asegurarString(parte.texto || '');
+            if (textoParte) {
+              children.push(new TextRun({
+                text: textoParte.replace(/\s+/g, ' ').trim(),
+                bold: parte.esHighlight,
+                font: 'Arial'
+              }));
+            }
+          });
+          
+          return new Paragraph({
+            alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+            children: children.length > 0 ? children : [new TextRun({ text: ' ', font: 'Arial' })],
+            spacing: { 
+              after: esSource ? 200 : 120,
+              line: 360
+            },
+          });
         }
-      }
-
-      if (children.length === 0) {
-        children.push(new TextRun({ text: ' ', font: 'Arial' }));
+      } else {
+        if (textoStr) {
+          const parrafosTexto = textoStr.split(/\n\s*\n+/).filter(p => p.trim());
+          
+          if (parrafosTexto.length > 1) {
+            return parrafosTexto.map((parrafoTexto, index) => {
+              const textoNormalizado = parrafoTexto.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+              return new Paragraph({
+                alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+                children: [new TextRun({ 
+                  text: textoNormalizado || ' ',
+                  font: 'Arial'
+                })],
+                spacing: { 
+                  after: esSource ? 200 : 120,
+                  line: 360
+                },
+              });
+            });
+          } else {
+            const textoNormalizado = textoStr.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+            return new Paragraph({
+              alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+              children: [new TextRun({ 
+                text: textoNormalizado || ' ',
+                font: 'Arial'
+              })],
+              spacing: { 
+                after: esSource ? 200 : 120,
+                line: 360
+              },
+            });
+          }
+        }
       }
 
       return new Paragraph({
         alignment: esTituloCentrado ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
-        children: children,
+        children: [new TextRun({ text: ' ', font: 'Arial' })],
         spacing: { 
           after: esSource ? 200 : 120,
           line: 360
@@ -476,11 +570,17 @@ export class WordGeneratorService {
         const tagName = elemento.tagName.toLowerCase();
         
         if (tagName === 'br') {
-          texto += ' ';
+          texto += '\n';
         } else if (['span', 'strong', 'em', 'b', 'i', 'u'].includes(tagName)) {
-          texto += this.extraerTextoCompleto(elemento);
+          const textoSpan = this.extraerTextoCompleto(elemento);
+          texto += textoSpan;
         } else if (tagName === 'p') {
-          texto += this.extraerTextoCompleto(elemento) + ' ';
+          texto += this.extraerTextoCompleto(elemento) + '\n\n';
+        } else if (tagName === 'div') {
+          const textoDiv = this.extraerTextoCompleto(elemento);
+          if (textoDiv.trim()) {
+            texto += textoDiv + '\n\n';
+          }
         }
       }
     }
@@ -732,16 +832,12 @@ export class WordGeneratorService {
         }
         
         if (img && img.src && !img.src.includes('data:image/svg') && img.src !== '____') {
-          console.log('[SERVICE] Procesando imagen encontrada:', img.src.substring(0, 50));
           try {
             const imagen = await this.crearImagen(img);
             if (imagen) {
               contenido.push(imagen);
-            } else {
-              console.warn('[SERVICE] No se pudo crear imagen desde:', img.src.substring(0, 50));
             }
           } catch (error) {
-            console.error('[SERVICE] Error al procesar imagen en bucle:', error, img.src.substring(0, 50));
           }
         }
         
@@ -777,16 +873,12 @@ export class WordGeneratorService {
       
       for (const img of Array.from(imagenes)) {
         if (img && img.src && !img.src.includes('data:image/svg') && img.src !== '____') {
-          console.log('[SERVICE] Procesando imagen encontrada:', img.src.substring(0, 50));
           try {
             const imagen = await this.crearImagen(img);
             if (imagen) {
               contenido.push(imagen);
-            } else {
-              console.warn('[SERVICE] No se pudo crear imagen desde:', img.src.substring(0, 50));
             }
           } catch (error) {
-            console.error('[SERVICE] Error al procesar imagen en bucle:', error, img.src.substring(0, 50));
           }
         }
       }
@@ -805,20 +897,18 @@ export class WordGeneratorService {
 
   private async crearImagen(elem: HTMLImageElement): Promise<Paragraph | null> {
     if (!elem.src || elem.src === '____' || elem.src.includes('data:image/svg')) {
-      console.warn('[SERVICE] Imagen inválida o SVG:', elem.src?.substring(0, 50));
       return null;
     }
 
     try {
       let arrayBuffer: ArrayBuffer;
-      let type: 'png' | 'jpg' | 'gif' | 'bmp' = 'png';
+      let type: 'png' | 'jpg' | 'gif' | 'bmp' = 'jpg';
       let imgWidth = 500;
       let imgHeight = 375;
 
       if (elem.src.startsWith('data:')) {
         const base64Data = elem.src.split(',')[1];
         if (!base64Data) {
-          console.warn('[SERVICE] Imagen base64 sin datos válidos');
           return null;
         }
         const binaryString = atob(base64Data);
@@ -830,6 +920,7 @@ export class WordGeneratorService {
         
         const mimeType = elem.src.split(';')[0].split(':')[1];
         if (mimeType.includes('jpeg') || mimeType.includes('jpg')) type = 'jpg';
+        else if (mimeType.includes('png')) type = 'png';
         else if (mimeType.includes('gif')) type = 'gif';
         else if (mimeType.includes('bmp')) type = 'bmp';
         
@@ -837,85 +928,81 @@ export class WordGeneratorService {
           imgWidth = elem.naturalWidth;
           imgHeight = elem.naturalHeight;
         }
-      } else {
+      } else if (elem.src.includes('/imagenes/')) {
         try {
-          if (elem.complete && elem.naturalWidth > 0 && elem.naturalHeight > 0) {
-          } else {
-            await new Promise<void>((resolve, reject) => {
-              const timeout = setTimeout(() => {
-                reject(new Error('Timeout al cargar imagen'));
-              }, 10000);
-
-              const checkComplete = () => {
-                if (elem.complete && elem.naturalWidth > 0 && elem.naturalHeight > 0) {
-                  clearTimeout(timeout);
-                  elem.onload = null;
-                  elem.onerror = null;
-                  resolve();
-                }
-              };
-
-              elem.onload = () => {
-                checkComplete();
-              };
-
-              elem.onerror = () => {
-                clearTimeout(timeout);
-                elem.onload = null;
-                elem.onerror = null;
-                reject(new Error('Error al cargar imagen'));
-              };
-
-              checkComplete();
-            });
-          }
-
-          const naturalWidth = elem.naturalWidth || elem.width;
-          const naturalHeight = elem.naturalHeight || elem.height;
-
-          if (!naturalWidth || !naturalHeight || naturalWidth === 0 || naturalHeight === 0) {
-            console.error('[SERVICE] Imagen sin dimensiones válidas después de cargar:', naturalWidth, naturalHeight, elem.src.substring(0, 50));
+          const imageId = elem.src.split('/imagenes/')[1]?.split('?')[0]?.split('#')[0];
+          if (!imageId) {
             return null;
           }
 
-          imgWidth = naturalWidth;
-          imgHeight = naturalHeight;
+          const imageUrl = `${this.backendBaseUrl}/imagenes/${imageId}`;
+          const blob = await firstValueFrom(
+            this.http.get(imageUrl, { responseType: 'blob' })
+          );
+
+          if (!blob || blob.size === 0) {
+            return null;
+          }
+
+          arrayBuffer = await blob.arrayBuffer();
+          
+          const blobType = blob.type || '';
+          if (blobType.includes('png')) type = 'png';
+          else if (blobType.includes('gif')) type = 'gif';
+          else if (blobType.includes('bmp')) type = 'bmp';
+          else type = 'jpg';
+
+          const img = new Image();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              URL.revokeObjectURL(objectUrl);
+              reject(new Error('Timeout al cargar imagen'));
+            }, 10000);
+
+            img.onload = () => {
+              clearTimeout(timeout);
+              imgWidth = img.naturalWidth || img.width || 500;
+              imgHeight = img.naturalHeight || img.height || 375;
+              URL.revokeObjectURL(objectUrl);
+              resolve();
+            };
+
+            img.onerror = () => {
+              clearTimeout(timeout);
+              URL.revokeObjectURL(objectUrl);
+              reject(new Error('Error al cargar imagen'));
+            };
+
+            img.src = objectUrl;
+          });
 
           const canvas = document.createElement('canvas');
+          const maxWidth = 500;
+          const maxHeight = 375;
+          let finalWidth = imgWidth;
+          let finalHeight = imgHeight;
+
+          if (imgWidth > maxWidth || imgHeight > maxHeight) {
+            const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+            finalWidth = Math.round(imgWidth * ratio);
+            finalHeight = Math.round(imgHeight * ratio);
+          }
+
+          canvas.width = finalWidth;
+          canvas.height = finalHeight;
+
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) {
-            console.error('[SERVICE] No se pudo obtener contexto de canvas');
             return null;
           }
 
-          canvas.width = imgWidth;
-          canvas.height = imgHeight;
+          ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
 
-          try {
-            ctx.drawImage(elem, 0, 0, imgWidth, imgHeight);
-          } catch (drawError: any) {
-            console.error('[SERVICE] Error al dibujar imagen en canvas:', drawError?.message || drawError, elem.src.substring(0, 50));
-            return null;
-          }
-
-          const extension = elem.src.split('.').pop()?.toLowerCase();
-          const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
-          type = extension === 'png' ? 'png' : 'jpg';
-
-          let base64: string;
-          try {
-            base64 = canvas.toDataURL(mimeType, 0.95);
-            if (!base64 || base64.length < 100) {
-              throw new Error('Base64 inválido o muy corto');
-            }
-          } catch (toDataError: any) {
-            console.error('[SERVICE] Error al convertir canvas a base64:', toDataError?.message || toDataError, elem.src.substring(0, 50));
-            return null;
-          }
-
-          const base64Data = base64.split(',')[1];
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          const base64Data = compressedBase64.split(',')[1];
           if (!base64Data) {
-            console.error('[SERVICE] No se pudo extraer datos base64');
             return null;
           }
 
@@ -925,22 +1012,19 @@ export class WordGeneratorService {
             bytes[i] = binaryString.charCodeAt(i);
           }
           arrayBuffer = bytes.buffer;
+          type = 'jpg';
+          imgWidth = finalWidth;
+          imgHeight = finalHeight;
 
-          if (arrayBuffer.byteLength === 0) {
-            console.error('[SERVICE] ArrayBuffer vacío después de procesar imagen');
-            return null;
-          }
-
-          console.log('[SERVICE] Imagen procesada correctamente, tamaño:', arrayBuffer.byteLength, 'bytes, dimensiones:', imgWidth, 'x', imgHeight);
-        } catch (canvasError: any) {
-          console.error('[SERVICE] Error al procesar imagen con Canvas:', canvasError?.message || canvasError, elem.src.substring(0, 50));
+        } catch (httpError: any) {
           return null;
         }
+      } else {
+        return null;
       }
 
       const imageData = new Uint8Array(arrayBuffer);
       if (imageData.length === 0) {
-        console.error('[SERVICE] Datos de imagen vacíos');
         return null;
       }
 
@@ -961,14 +1045,12 @@ export class WordGeneratorService {
         type,
       });
 
-      console.log('[SERVICE] Imagen creada exitosamente, tipo:', type, 'tamaño:', imageData.length, 'bytes');
       return new Paragraph({
         children: [image],
         alignment: AlignmentType.CENTER,
         spacing: { before: 150, after: 200 },
       });
     } catch (error) {
-      console.error('[SERVICE] Error al procesar imagen:', error, elem.src?.substring(0, 50));
       return null;
     }
   }
@@ -1093,15 +1175,19 @@ export class WordGeneratorService {
 
     for (const nodo of nodos) {
       if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = this.asegurarString(nodo.textContent?.trim() || '');
+        const texto = this.asegurarString(nodo.textContent || '');
         if (texto) {
-          const textoNormalizado = texto.replace(/\s+/g, ' ').trim();
-          if (textoNormalizado) {
-            contenido.push(new Paragraph({
-              children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
-              alignment: AlignmentType.JUSTIFIED,
-              spacing: { after: 120, line: 360 }
-            }));
+          const parrafosTexto = texto.split(/\n\s*\n+/).filter(p => p.trim());
+          
+          for (const parrafoTexto of parrafosTexto) {
+            const textoNormalizado = parrafoTexto.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+            if (textoNormalizado) {
+              contenido.push(new Paragraph({
+                children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
+                alignment: AlignmentType.JUSTIFIED,
+                spacing: { after: 120, line: 360 }
+              }));
+            }
           }
         }
       } else if (nodo.nodeType === Node.ELEMENT_NODE) {

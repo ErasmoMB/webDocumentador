@@ -700,15 +700,11 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     );
 
     // Cargar energía para cocinar (3.51) - eliminar duplicados y recalcular porcentajes
-    console.log('[S26] CCPP activos AISI para energía cocinar:', codigos);
     this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
       (response: any) => {
-        console.log('[S26] Respuesta del backend energía cocinar:', response);
         if (response.success && response.data) {
           const combustiblesSinDuplicados = this.eliminarDuplicadosPorTipo(response.data, 'nombre');
-          console.log('[S26] combustibles sin duplicados (ANTES recalcularPorcentajes):', combustiblesSinDuplicados);
           this.datos.combustiblesCocinarCpTabla = this.recalcularPorcentajes(combustiblesSinDuplicados);
-          console.log('[S26] combustibles DESPUÉS recalcularPorcentajes:', this.datos.combustiblesCocinarCpTabla);
           this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos.combustiblesCocinarCpTabla);
           this.tableService.calcularPorcentajes(this.datos, this.combustiblesCocinarConfig);
           this.cdRef.detectChanges();

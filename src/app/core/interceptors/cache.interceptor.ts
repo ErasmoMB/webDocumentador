@@ -16,6 +16,9 @@ export class CacheInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const apiUrl = this.configService.getApiUrl();
     
+    // Verificar si estamos en la vista de plantilla (modo vista)
+    const isPlantillaView = typeof window !== 'undefined' && window.location.pathname.includes('/plantilla');
+    
     // Siempre interceptar respuestas del backend, incluso en modo mock (por si se conecta)
     if (req.url.startsWith(apiUrl)) {
       return next.handle(req).pipe(
@@ -27,13 +30,27 @@ export class CacheInterceptor implements HttpInterceptor {
             const responseData = event.body;
             
             if (responseData && responseData.success) {
-              console.log('✅ Respuesta exitosa cacheada:', url);
+              // Solo mostrar logs cuando no estamos en modo vista
+              if (!isPlantillaView) {
+                console.log('✅ Respuesta exitosa cacheada:', url);
+              }
               this.cacheService.saveResponse(url, params, responseData);
             }
           }
         }),
         catchError((error: HttpErrorResponse) => {
-          // Log de errores sin guardar en cache
+          // Silenciar completamente errores 500 en modo vista (plantilla) para no llenar la consola
+          // Estos errores son esperados cuando el backend no está disponible o tiene problemas
+          // Los datos ya están cargados desde formularioService en modo vista
+          if (isPlantillaView && error.status >= 500) {
+            // Retornar un observable vacío para evitar que se muestren más errores
+            // Esto previene que se propaguen errores adicionales en la consola
+            return new Observable<HttpEvent<any>>(observer => {
+              observer.complete();
+            });
+          }
+          
+          // Log de errores solo cuando no estamos en modo vista
           if (error.status === 0) {
             console.warn('⚠️ Conexión rechazada:', req.url);
           } else if (error.status >= 500) {

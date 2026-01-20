@@ -79,12 +79,6 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    console.log('[S29] onInitCustom llamado', {
-      modoFormulario: this.modoFormulario,
-      seccionId: this.seccionId,
-      centroPobladoAISI: this.datos.centroPobladoAISI
-    });
-    
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     
@@ -103,7 +97,6 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
       });
     } else {
       setTimeout(() => {
-        console.log('[S29] setTimeout ejecutando cargarSegurosSalud');
         if (this.datos.centroPobladoAISI) {
           this.cargarSegurosSalud();
         }
@@ -151,7 +144,6 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
-      console.log('[S29] detectarCambios detectó cambios pero NO cargaremos datos automáticamente cuando estamos en modo manual');
       return true;
     }
     
@@ -513,25 +505,14 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   }
 
   cargarSegurosSalud(): void {
-    console.log('[S29] cargarSegurosSalud llamado', {
-      cargandoSeguros: this.cargandoSeguros,
-      segurosYaCargados: this.segurosYaCargados,
-      cpp: this.datos.centroPobladoAISI,
-      stack: new Error().stack
-    });
-
     if (this.cargandoSeguros || this.segurosYaCargados) {
-      console.log('[S29] Bloqueado: ya cargando o ya cargado');
       return;
     }
 
     const cpp = this.datos.centroPobladoAISI;
     if (!cpp) {
-      console.log('[S29] Bloqueado: no hay CPP');
       return;
     }
-
-    console.log('[S29] Iniciando carga de seguros salud');
     this.cargandoSeguros = true;
     this.segurosYaCargados = true;
 

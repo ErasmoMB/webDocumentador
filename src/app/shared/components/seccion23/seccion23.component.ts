@@ -154,16 +154,13 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
 
   private cargarDatosPEA(): void {
     const ubigeos = this.groupConfig.getAISICCPPActivos();
-    console.log('[S23] CCPP activos AISI:', ubigeos);
     
     if (!ubigeos || ubigeos.length === 0) {
-      console.warn('[S23] No hay CCPP activos para AISI');
       return;
     }
 
     this.peaService.obtenerPorCodigos(ubigeos).subscribe(
       (response: any) => {
-        console.log('[S23] Respuesta del backend PEA:', response);
         if (response.success) {
           let petGruposEdad = response.tabla_3_41_pea_grupos_edad || [];
           petGruposEdad = petGruposEdad.map((item: any) => ({
@@ -172,24 +169,16 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S23] petGruposEdad transformado:', petGruposEdad);
           this.formularioService.actualizarDato('petGruposEdadAISI', petGruposEdad);
           this.datos['petGruposEdadAISI'] = petGruposEdad;
           this.tableService.calcularPorcentajes(this.datos, this.petGruposEdadConfig);
 
           const datos_estado_sexo = response.tabla_3_42_3_43_pea_estado_sexo || [];
           const peaDistritoSexo = this.agruparPorEstado(datos_estado_sexo);
-          console.log('[S23] peaDistritoSexo transformado:', peaDistritoSexo);
           this.formularioService.actualizarDato('peaDistritoSexoTabla', peaDistritoSexo);
           this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
           this.datos['peaDistritoSexoTabla'] = peaDistritoSexo;
           this.datos['peaOcupadaDesocupadaTabla'] = peaDistritoSexo;
-
-          console.log('[S23] Datos después de guardar:', {
-            petGruposEdadAISI: this.datos['petGruposEdadAISI'],
-            peaDistritoSexoTabla: this.datos['peaDistritoSexoTabla'],
-            peaOcupadaDesocupadaTabla: this.datos['peaOcupadaDesocupadaTabla']
-          });
 
           this.cdRef.detectChanges();
         }
