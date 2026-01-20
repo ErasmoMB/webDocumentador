@@ -11,7 +11,7 @@ import { CentrosPobladosActivosService } from './centros-poblados-activos.servic
 })
 export class AutoBackendDataLoaderService {
   private readonly CACHE_DURATION = 3600000;
-  private readonly MAX_RETRIES = 3;
+  private readonly MAX_RETRIES = 20;
   private loadingRequests: Map<string, Observable<any>> = new Map();
   private failedRequests: Map<string, { retries: number; lastError: any }> = new Map();
 

@@ -109,7 +109,7 @@
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
-        [tablaKey]="'actividadesEconomicasAISI'"
+        [tablaKey]="getTablaKeyActividadesEconomicas()"
         [totalKey]="'actividad'"
         [customFieldChangeHandler]="onActividadesEconomicasFieldChange.bind(this)"
         (tableUpdated)="onActividadesEconomicasTableUpdated()">

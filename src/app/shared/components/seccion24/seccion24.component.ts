@@ -67,6 +67,12 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasCache();
     this.eliminarFilasTotal();
     this.cargarDatosActividadesEconomicas();
+    
+    setTimeout(() => {
+      (window as any).debugCuadro344 = () => this.debugCuadro344();
+      console.log('💡 Para depurar el cuadro 3.44 (PEA Ocupada), ejecuta en consola: debugCuadro344()');
+    }, 1000);
+    
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -245,20 +251,24 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPorcentajeAgricultura(): string {
-    if (!this.datos?.actividadesEconomicasAISI || !Array.isArray(this.datos.actividadesEconomicasAISI)) {
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos?.actividadesEconomicasAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.actividadesEconomicasAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.actividad && item.actividad.toLowerCase().includes('agricultura')
     );
     return item?.porcentaje || '____';
   }
 
   getPorcentajeAdministracion(): string {
-    if (!this.datos?.actividadesEconomicasAISI || !Array.isArray(this.datos.actividadesEconomicasAISI)) {
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos?.actividadesEconomicasAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.actividadesEconomicasAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.actividad && item.actividad.toLowerCase().includes('administración')
     );
     return item?.porcentaje || '____';
@@ -415,13 +425,19 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getActividadesEconomicasSinTotal(): any[] {
-    if (!this.datos?.actividadesEconomicasAISI || !Array.isArray(this.datos.actividadesEconomicasAISI)) {
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos?.actividadesEconomicasAISI || [];
+    console.log('[S24] getActividadesEconomicasSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
+    if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S24] No hay datos o no es array');
       return [];
     }
-    return this.datos.actividadesEconomicasAISI.filter((item: any) => {
+    const filtered = tabla.filter((item: any) => {
       const actividad = item.actividad?.toString().toLowerCase() || '';
       return !actividad.includes('total');
     });
+    console.log('[S24] Filtrado:', filtered);
+    return filtered;
   }
 
   getTotalActividadesEconomicas(): string {
@@ -434,17 +450,63 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private eliminarFilasTotal(): void {
-    if (this.datos['actividadesEconomicasAISI'] && Array.isArray(this.datos['actividadesEconomicasAISI'])) {
-      const longitudOriginal = this.datos['actividadesEconomicasAISI'].length;
-      this.datos['actividadesEconomicasAISI'] = this.datos['actividadesEconomicasAISI'].filter((item: any) => {
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos['actividadesEconomicasAISI'];
+    if (tabla && Array.isArray(tabla)) {
+      const longitudOriginal = tabla.length;
+      const filtered = tabla.filter((item: any) => {
         const actividad = item.actividad?.toString().toLowerCase() || '';
         return !actividad.includes('total');
       });
-      if (this.datos['actividadesEconomicasAISI'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('actividadesEconomicasAISI', this.datos['actividadesEconomicasAISI']);
+      if (filtered.length !== longitudOriginal) {
+        this.datos[tablaKey] = filtered;
+        this.datos['actividadesEconomicasAISI'] = filtered;
+        this.formularioService.actualizarDato(tablaKey as any, filtered);
         this.cdRef.detectChanges();
       }
     }
+  }
+
+  debugCuadro344(): void {
+    console.log('=== DEBUG CUADRO 3.44 - PEA OCUPADA SEGÚN ACTIVIDAD ECONÓMICA ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
+    console.log('4. Tabla key esperada:', this.getTablaKeyActividadesEconomicas());
+    console.log('5. Datos actuales en formularioService:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - actividadesEconomicasAISI:', todosLosDatos['actividadesEconomicasAISI']);
+    console.log('   - actividadesEconomicasAISI_B1:', todosLosDatos['actividadesEconomicasAISI_B1']);
+    console.log('   - actividadesEconomicasAISI_B2:', todosLosDatos['actividadesEconomicasAISI_B2']);
+    console.log('6. Datos en this.datos:');
+    console.log('   - actividadesEconomicasAISI:', this.datos?.actividadesEconomicasAISI);
+    console.log('   - actividadesEconomicasAISI_B1:', this.datos?.['actividadesEconomicasAISI_B1']);
+    console.log('   - actividadesEconomicasAISI_B2:', this.datos?.['actividadesEconomicasAISI_B2']);
+    
+    if (codigos && codigos.length > 0) {
+      console.log('7. Probando llamada al backend...');
+      this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
+        (response: any) => {
+          console.log('✅ Respuesta del backend:', response);
+          if (response && response.success && response.actividades_economicas) {
+            console.log('✅ Datos recibidos:', response.actividades_economicas);
+            console.log('   Cantidad de registros:', response.actividades_economicas.length);
+            if (response.actividades_economicas.length > 0) {
+              console.log('   Primeros 20 registros:', response.actividades_economicas.slice(0, 20));
+            }
+          } else {
+            console.warn('⚠️ Respuesta sin success o sin actividades_economicas:', response);
+          }
+        },
+        (error: any) => {
+          console.error('❌ Error al llamar al backend:', error);
+        }
+      );
+    } else {
+      console.warn('⚠️ No hay códigos UBIGEO para probar');
+    }
+    console.log('=== FIN DEBUG ===');
   }
 
   private cargarDatosActividadesEconomicas(): void {
@@ -454,24 +516,40 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
+    console.log('[S24] Cargando actividades económicas con códigos:', codigos);
     this.peaActividadesService.obtenerActividadesOcupadas(codigos).subscribe(
       (response: any) => {
+        console.log('[S24] Respuesta completa:', response);
         if (response && response.success && response.actividades_economicas) {
-          const actividades = response.actividades_economicas.map((item: any) => ({
-            actividad: item.actividad || '',
-            casos: Number(item.casos) || 0,
-            porcentaje: '0,00 %'
-          }));
+          console.log('[S24] Datos recibidos (primeros 5):', response.actividades_economicas.slice(0, 5));
+          console.log('[S24] Estructura del primer item:', response.actividades_economicas[0]);
+          const actividades = response.actividades_economicas.map((item: any, index: number) => {
+            const actividad = item.actividad || item.nombre || item.categoria || '';
+            console.log(`[S24] Item ${index}: actividad='${actividad}', casos=${item.casos}, porcentaje=${item.porcentaje}`);
+            return {
+              actividad: actividad,
+              casos: Number(item.casos) || 0,
+              porcentaje: item.porcentaje ? `${item.porcentaje.toFixed(2).replace('.', ',')} %` : '0,00 %'
+            };
+          });
+          console.log('[S24] Datos procesados (primeros 5):', actividades.slice(0, 5));
 
+          const tablaKey = this.getTablaKeyActividadesEconomicas();
+          console.log('[S24] Guardando en tablaKey:', tablaKey);
+          this.datos[tablaKey] = actividades;
           this.datos['actividadesEconomicasAISI'] = actividades;
-          this.formularioService.actualizarDato('actividadesEconomicasAISI', actividades);
-          this.tableService.calcularPorcentajes(this.datos, this.actividadesEconomicasConfig);
+          this.formularioService.actualizarDato(tablaKey as any, actividades);
+          this.tableService.calcularPorcentajes(this.datos, { ...this.actividadesEconomicasConfig, tablaKey });
+          console.log('[S24] Datos guardados. Verificando:', this.datos[tablaKey]);
 
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
+        } else {
+          console.warn('[S24] Respuesta sin success o sin actividades_economicas:', response);
         }
       },
       (error: any) => {
+        console.error('[S24] Error cargando actividades económicas:', error);
       }
     );
   }
@@ -483,7 +561,8 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
   }
 
   onActividadesEconomicasFieldChange(index: number, field: string, value: any): void {
-    const tabla = this.datos.actividadesEconomicasAISI || [];
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos.actividadesEconomicasAISI || [];
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
       
@@ -509,17 +588,20 @@ export class Seccion24Component extends AutoLoadSectionComponent implements OnDe
         }
       }
       
+      this.datos[tablaKey] = [...tabla];
       this.datos.actividadesEconomicasAISI = [...tabla];
-      this.formularioService.actualizarDato('actividadesEconomicasAISI', tabla);
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
   onActividadesEconomicasTableUpdated(): void {
-    const tabla = this.datos.actividadesEconomicasAISI || [];
+    const tablaKey = this.getTablaKeyActividadesEconomicas();
+    const tabla = this.datos[tablaKey] || this.datos.actividadesEconomicasAISI || [];
+    this.datos[tablaKey] = [...tabla];
     this.datos.actividadesEconomicasAISI = [...tabla];
-    this.formularioService.actualizarDato('actividadesEconomicasAISI', tabla);
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }

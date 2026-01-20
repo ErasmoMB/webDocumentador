@@ -82,6 +82,15 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasCache();
     this.cargarDatosVivienda();
     this.cargarDatosMateriales();
+    
+    setTimeout(() => {
+      (window as any).debugCuadro345 = () => this.debugCuadro345();
+      (window as any).debugCuadro347 = () => this.debugCuadro347();
+      console.log('💡 Para depurar:');
+      console.log('   - Cuadro 3.45 (Condición Ocupación): debugCuadro345()');
+      console.log('   - Cuadro 3.47 (Materiales): debugCuadro347()');
+    }, 1000);
+    
     if (!this.modoFormulario) {
       this.stateSubscription = this.stateService.datos$.subscribe(() => {
         this.cargarFotografias();
@@ -424,13 +433,16 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   getCondicionOcupacionSinTotal(): any[] {
     const tablaKey = this.getTablaKeyCondicionOcupacion();
     const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
-    
+    console.log('[S25] getCondicionOcupacionSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S25] No hay datos o no es array');
       return [];
     }
-    return tabla.filter((item: any) => 
+    const filtered = tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
+    console.log('[S25] Filtrado:', filtered);
+    return filtered;
   }
 
   getTotalCondicionOcupacion(): number {
@@ -453,13 +465,16 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   getMaterialesViviendaSinTotal(): any[] {
     const tablaKey = this.getTablaKeyMaterialesVivienda();
     const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
-    
+    console.log('[S25] getMaterialesViviendaSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S25] No hay datos o no es array');
       return [];
     }
-    return tabla.filter((item: any) => 
+    const filtered = tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
+    console.log('[S25] Filtrado:', filtered);
+    return filtered;
   }
 
   // Agrupar materiales por categoría con subtotales
@@ -557,6 +572,55 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
+  debugCuadro345(): void {
+    console.log('=== DEBUG CUADRO 3.45 - CONDICIÓN DE OCUPACIÓN ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
+    console.log('4. Tabla key esperada:', this.getTablaKeyCondicionOcupacion());
+    console.log('5. Datos actuales:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - condicionOcupacionAISI:', todosLosDatos['condicionOcupacionAISI']);
+    console.log('   - condicionOcupacionAISI_B1:', todosLosDatos['condicionOcupacionAISI_B1']);
+    console.log('6. Datos en this.datos:', this.datos?.condicionOcupacionAISI);
+    console.log('⚠️ NOTA: No hay endpoint para condición de ocupación. Los datos deben ingresarse manualmente.');
+    console.log('=== FIN DEBUG ===');
+  }
+
+  debugCuadro347(): void {
+    console.log('=== DEBUG CUADRO 3.47 - MATERIALES DE CONSTRUCCIÓN ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
+    console.log('4. Tabla key esperada:', this.getTablaKeyMaterialesVivienda());
+    console.log('5. Datos actuales:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - materialesViviendaAISI:', todosLosDatos['materialesViviendaAISI']);
+    console.log('   - materialesViviendaAISI_B1:', todosLosDatos['materialesViviendaAISI_B1']);
+    console.log('6. Datos en this.datos:', this.datos?.materialesViviendaAISI);
+    
+    if (codigos && codigos.length > 0) {
+      console.log('7. Probando llamada al backend...');
+      this.materialesService.obtenerMateriales(codigos).subscribe(
+        (response: any) => {
+          console.log('✅ Respuesta del backend:', response);
+          if (response && response.success && response.materiales_construccion) {
+            console.log('✅ Datos recibidos:', response.materiales_construccion);
+            console.log('   Cantidad de registros:', response.materiales_construccion.length);
+          } else {
+            console.warn('⚠️ Respuesta sin success o sin data:', response);
+          }
+        },
+        (error: any) => {
+          console.error('❌ Error al llamar al backend:', error);
+        }
+      );
+    }
+    console.log('=== FIN DEBUG ===');
+  }
+
   private cargarDatosVivienda(): void {
     const codigos = this.groupConfig.getAISICCPPActivos();
     
@@ -564,25 +628,34 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
+    console.log('[S25] Cargando tipos de vivienda con códigos:', codigos);
     this.viviendaService.obtenerTiposVivienda(codigos).subscribe(
       (response: any) => {
+        console.log('[S25] Respuesta tipos vivienda:', response);
         if (response && response.success && response.tipos_vivienda) {
+          console.log('[S25] Datos recibidos:', response.tipos_vivienda);
           const viviendas = response.tipos_vivienda.map((item: any) => ({
             categoria: item.tipo_vivienda || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
+          console.log('[S25] Datos procesados:', viviendas);
 
           const tablaKey = this.getTablaKeyTiposVivienda();
+          console.log('[S25] Guardando en tablaKey:', tablaKey);
           this.datos[tablaKey] = viviendas;
           this.formularioService.actualizarDato(tablaKey as any, viviendas);
           this.tableService.calcularPorcentajes(this.datos, { ...this.tiposViviendaConfig, tablaKey });
+          console.log('[S25] Datos guardados. Verificando:', this.datos[tablaKey]);
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
+        } else {
+          console.warn('[S25] Respuesta sin success o sin tipos_vivienda:', response);
         }
       },
       (error: any) => {
+        console.error('[S25] Error cargando tipos vivienda:', error);
       }
     );
   }
@@ -594,26 +667,35 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
+    console.log('[S25] Cargando materiales con códigos:', codigos);
     this.materialesService.obtenerMateriales(codigos).subscribe(
       (response: any) => {
+        console.log('[S25] Respuesta materiales:', response);
         if (response && response.success && response.materiales_construccion) {
+          console.log('[S25] Datos recibidos:', response.materiales_construccion);
           const materiales = response.materiales_construccion.map((item: any) => ({
             categoria: item.categoria || '',
             tipoMaterial: item.tipo_material || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
+          console.log('[S25] Datos procesados:', materiales);
 
           const tablaKey = this.getTablaKeyMaterialesVivienda();
+          console.log('[S25] Guardando en tablaKey:', tablaKey);
           this.datos[tablaKey] = materiales;
           this.formularioService.actualizarDato(tablaKey as any, materiales);
           this.tableService.calcularPorcentajes(this.datos, { ...this.materialesViviendaConfig, tablaKey });
+          console.log('[S25] Datos guardados. Verificando:', this.datos[tablaKey]);
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
+        } else {
+          console.warn('[S25] Respuesta sin success o sin materiales_construccion:', response);
         }
       },
       (error: any) => {
+        console.error('[S25] Error cargando materiales:', error);
       }
     );
   }

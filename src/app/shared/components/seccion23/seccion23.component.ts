@@ -90,6 +90,17 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasCache();
     this.eliminarFilasTotal();
     this.cargarDatosPEA();
+    
+    setTimeout(() => {
+      (window as any).debugCuadro341 = () => this.debugCuadro341();
+      (window as any).debugCuadro342 = () => this.debugCuadro342();
+      (window as any).debugCuadro343 = () => this.debugCuadro343();
+      console.log('💡 Para depurar sección 23:');
+      console.log('   - Cuadro 3.41 (PET grupos edad): debugCuadro341()');
+      console.log('   - Cuadro 3.42 (PEA/No PEA): debugCuadro342()');
+      console.log('   - Cuadro 3.43 (PEA Ocupada/Desocupada): debugCuadro343()');
+    }, 1000);
+    
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {
@@ -152,6 +163,59 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
+  debugCuadro341(): void {
+    console.log('=== DEBUG CUADRO 3.41 - PET SEGÚN GRUPOS DE EDAD ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
+    console.log('4. Tabla key esperada:', this.getTablaKeyPetGruposEdad());
+    console.log('5. Datos actuales:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - petGruposEdadAISI:', todosLosDatos['petGruposEdadAISI']);
+    console.log('6. Datos en this.datos:', this.datos?.petGruposEdadAISI);
+    
+    if (codigos && codigos.length > 0) {
+      console.log('7. Probando llamada al backend...');
+      this.peaService.obtenerPorCodigos(codigos).subscribe(
+        (response: any) => {
+          console.log('✅ Respuesta del backend:', response);
+          if (response && response.success && response.tabla_3_41_pea_grupos_edad) {
+            console.log('✅ Datos recibidos (primeros 20):', response.tabla_3_41_pea_grupos_edad.slice(0, 20));
+          }
+        },
+        (error: any) => {
+          console.error('❌ Error al llamar al backend:', error);
+        }
+      );
+    }
+    console.log('=== FIN DEBUG ===');
+  }
+
+  debugCuadro342(): void {
+    console.log('=== DEBUG CUADRO 3.42 - PEA Y NO PEA SEGÚN SEXO ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Datos actuales:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - peaDistritoSexoTabla:', todosLosDatos['peaDistritoSexoTabla']);
+    console.log('4. Datos en this.datos:', this.datos?.peaDistritoSexoTabla);
+    console.log('=== FIN DEBUG ===');
+  }
+
+  debugCuadro343(): void {
+    console.log('=== DEBUG CUADRO 3.43 - PEA OCUPADA Y DESOCUPADA ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Datos actuales:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - peaOcupadaDesocupadaTabla:', todosLosDatos['peaOcupadaDesocupadaTabla']);
+    console.log('4. Datos en this.datos:', this.datos?.peaOcupadaDesocupadaTabla);
+    console.log('=== FIN DEBUG ===');
+  }
+
   private cargarDatosPEA(): void {
     const ubigeos = this.groupConfig.getAISICCPPActivos();
     
@@ -159,31 +223,42 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
+    console.log('[S23] Cargando datos PEA con códigos:', ubigeos);
     this.peaService.obtenerPorCodigos(ubigeos).subscribe(
       (response: any) => {
+        console.log('[S23] Respuesta completa:', response);
         if (response.success) {
+          console.log('[S23] Procesando cuadro 3.41 (PET grupos edad)...');
           let petGruposEdad = response.tabla_3_41_pea_grupos_edad || [];
+          console.log('[S23] Datos crudos 3.41 (primeros 20):', petGruposEdad.slice(0, 20));
           petGruposEdad = petGruposEdad.map((item: any) => ({
             categoria: item.categoria || '',
             orden: item.orden || 0,
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
+          console.log('[S23] Datos procesados 3.41:', petGruposEdad);
           this.formularioService.actualizarDato('petGruposEdadAISI', petGruposEdad);
           this.datos['petGruposEdadAISI'] = petGruposEdad;
           this.tableService.calcularPorcentajes(this.datos, this.petGruposEdadConfig);
 
+          console.log('[S23] Procesando cuadros 3.42 y 3.43 (PEA estado sexo)...');
           const datos_estado_sexo = response.tabla_3_42_3_43_pea_estado_sexo || [];
+          console.log('[S23] Datos crudos 3.42/3.43 (primeros 20):', datos_estado_sexo.slice(0, 20));
           const peaDistritoSexo = this.agruparPorEstado(datos_estado_sexo);
+          console.log('[S23] Datos procesados 3.42/3.43:', peaDistritoSexo);
           this.formularioService.actualizarDato('peaDistritoSexoTabla', peaDistritoSexo);
           this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
           this.datos['peaDistritoSexoTabla'] = peaDistritoSexo;
           this.datos['peaOcupadaDesocupadaTabla'] = peaDistritoSexo;
 
           this.cdRef.detectChanges();
+        } else {
+          console.warn('[S23] Respuesta sin success:', response);
         }
       },
       (error: any) => {
+        console.error('[S23] Error cargando datos PEA:', error);
       }
     );
   }
@@ -195,12 +270,29 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private agruparPorEstado(datos_estado_sexo: any[]): any[] {
+    console.log('[S23] agruparPorEstado - datos recibidos (primeros 20):', datos_estado_sexo.slice(0, 20));
     const estados: { [key: string]: any } = {};
 
     for (const item of datos_estado_sexo) {
-      const estado = item.estado || '';
+      console.log('[S23] Procesando item:', item);
+      let estado = item.estado || item.nombre || '';
       const sexo = item.sexo || '';
-      const cantidad = item.cantidad || 0;
+      let cantidad = item.cantidad || 0;
+      
+      // Asegurar que cantidad sea un número
+      if (typeof cantidad === 'string') {
+        cantidad = parseInt(cantidad) || 0;
+      } else if (typeof cantidad !== 'number') {
+        cantidad = Number(cantidad) || 0;
+      }
+      
+      // Si el estado está vacío, saltar este item
+      if (!estado || estado.trim() === '') {
+        console.warn('[S23] ⚠️ Item sin estado válido, saltando:', item);
+        continue;
+      }
+      
+      estado = estado.trim();
 
       if (!estados[estado]) {
         estados[estado] = {
@@ -214,14 +306,17 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         };
       }
 
-      if (sexo.toLowerCase() === 'hombre' || sexo.toLowerCase() === 'h') {
+      const sexoLower = sexo.toLowerCase().trim();
+      if (sexoLower === 'hombre' || sexoLower === 'h' || sexoLower === 'masculino' || sexoLower === 'm') {
         estados[estado].hombres += cantidad;
-      } else if (sexo.toLowerCase() === 'mujer' || sexo.toLowerCase() === 'm') {
+      } else if (sexoLower === 'mujer' || sexoLower === 'f' || sexoLower === 'femenino') {
         estados[estado].mujeres += cantidad;
       }
 
       estados[estado].casos += cantidad;
     }
+    
+    console.log('[S23] Estados agrupados:', estados);
 
     // Calcular porcentajes
     let totalGlobal = 0;
@@ -243,17 +338,25 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       }
     }
 
-    return Object.values(estados);
+    const resultado = Object.values(estados);
+    console.log('[S23] Resultado final agrupado:', resultado);
+    return resultado;
   }
 
   getPetGruposEdadSinTotal(): any[] {
-    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
+    const tablaKey = this.getTablaKeyPetGruposEdad();
+    const tabla = this.datos[tablaKey] || this.datos?.petGruposEdadAISI || [];
+    console.log('[S23] getPetGruposEdadSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
+    if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S23] No hay datos o no es array');
       return [];
     }
-    return this.datos.petGruposEdadAISI.filter((item: any) => {
+    const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
+    console.log('[S23] Filtrado:', filtered);
+    return filtered;
   }
 
   getTotalPetGruposEdad(): string {
@@ -266,13 +369,18 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPeaDistritoSexoSinTotal(): any[] {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
+    const tabla = this.datos?.peaDistritoSexoTabla || [];
+    console.log('[S23] getPeaDistritoSexoSinTotal - datos:', tabla);
+    if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S23] No hay datos o no es array');
       return [];
     }
-    return this.datos.peaDistritoSexoTabla.filter((item: any) => {
+    const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
+    console.log('[S23] Filtrado:', filtered);
+    return filtered;
   }
 
   getTotalPeaDistritoSexo(): string {
@@ -303,13 +411,18 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPeaOcupadaDesocupadaSinTotal(): any[] {
-    if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) {
+    const tabla = this.datos?.peaOcupadaDesocupadaTabla || [];
+    console.log('[S23] getPeaOcupadaDesocupadaSinTotal - datos:', tabla);
+    if (!tabla || !Array.isArray(tabla)) {
+      console.log('[S23] No hay datos o no es array');
       return [];
     }
-    return this.datos.peaOcupadaDesocupadaTabla.filter((item: any) => {
+    const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
+    console.log('[S23] Filtrado:', filtered);
+    return filtered;
   }
 
   getTotalPeaOcupadaDesocupada(): string {

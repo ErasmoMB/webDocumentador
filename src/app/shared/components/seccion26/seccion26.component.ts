@@ -96,9 +96,56 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
   }
 
+  debugTabla351(): void {
+    console.log('=== DEBUG TABLA 3.51 - COMBUSTIBLES PARA COCCIÓN ===');
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    console.log('1. Códigos UBIGEO activos:', codigos);
+    console.log('2. Sección ID:', this.seccionId);
+    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
+    console.log('4. Tabla key esperada:', this.getTablaKeyCombustiblesCocinar());
+    console.log('5. Datos actuales en formularioService:');
+    const todosLosDatos = this.formularioService.obtenerDatos();
+    console.log('   - combustiblesCocinarCpTabla:', todosLosDatos['combustiblesCocinarCpTabla']);
+    console.log('   - combustiblesCocinarCpTabla_B1:', todosLosDatos['combustiblesCocinarCpTabla_B1']);
+    console.log('   - combustiblesCocinarCpTabla_B2:', todosLosDatos['combustiblesCocinarCpTabla_B2']);
+    console.log('6. Datos en this.datos:');
+    console.log('   - combustiblesCocinarCpTabla:', this.datos?.combustiblesCocinarCpTabla);
+    console.log('   - combustiblesCocinarCpTabla_B1:', this.datos?.['combustiblesCocinarCpTabla_B1']);
+    console.log('   - combustiblesCocinarCpTabla_B2:', this.datos?.['combustiblesCocinarCpTabla_B2']);
+    
+    if (codigos && codigos.length > 0) {
+      console.log('7. Probando llamada al backend...');
+      this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
+        (response: any) => {
+          console.log('✅ Respuesta del backend:', response);
+          if (response.success && response.data) {
+            console.log('✅ Datos recibidos:', response.data);
+            console.log('   Cantidad de registros:', response.data.length);
+            if (response.data.length > 0) {
+              console.log('   Primeros 20 registros:', response.data.slice(0, 20));
+            }
+          } else {
+            console.warn('⚠️ Respuesta sin success o sin data:', response);
+          }
+        },
+        (error: any) => {
+          console.error('❌ Error al llamar al backend:', error);
+        }
+      );
+    } else {
+      console.warn('⚠️ No hay códigos UBIGEO para probar');
+    }
+    console.log('=== FIN DEBUG ===');
+  }
+
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
+    
+    setTimeout(() => {
+      (window as any).debugTabla351 = () => this.debugTabla351();
+      console.log('💡 Para depurar la tabla 3.51, ejecuta en consola: debugTabla351()');
+    }, 1000);
     
     // Cargar servicios básicos desde el backend
     if (!this.modoFormulario) {
@@ -702,12 +749,22 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     // Cargar energía para cocinar (3.51) - eliminar duplicados y recalcular porcentajes
     this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
       (response: any) => {
+        console.log('[S26] Respuesta energía cocinar:', response);
         if (response.success && response.data) {
+          console.log('[S26] Datos recibidos:', response.data);
+          const tablaKey = this.getTablaKeyCombustiblesCocinar();
+          console.log('[S26] Guardando en tablaKey:', tablaKey);
           const combustiblesSinDuplicados = this.eliminarDuplicadosPorTipo(response.data, 'nombre');
-          this.datos.combustiblesCocinarCpTabla = this.recalcularPorcentajes(combustiblesSinDuplicados);
-          this.formularioService.actualizarDato('combustiblesCocinarCpTabla', this.datos.combustiblesCocinarCpTabla);
+          const combustiblesConPorcentajes = this.recalcularPorcentajes(combustiblesSinDuplicados);
+          console.log('[S26] Datos procesados:', combustiblesConPorcentajes);
+          this.datos[tablaKey] = combustiblesConPorcentajes;
+          this.datos.combustiblesCocinarCpTabla = combustiblesConPorcentajes;
+          this.formularioService.actualizarDato(tablaKey as any, combustiblesConPorcentajes);
           this.tableService.calcularPorcentajes(this.datos, this.combustiblesCocinarConfig);
+          console.log('[S26] Datos guardados. Verificando:', this.datos[tablaKey]);
           this.cdRef.detectChanges();
+        } else {
+          console.warn('[S26] Respuesta sin success o sin data:', response);
         }
       },
       (error: any) => {
