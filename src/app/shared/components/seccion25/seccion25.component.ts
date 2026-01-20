@@ -163,22 +163,28 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getViviendasOcupadasPresentes(): string {
-    if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.condicionOcupacionAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('ocupada') && item.categoria.toLowerCase().includes('presentes')
     );
     return item?.casos?.toString() || '____';
   }
 
   getPorcentajeOcupadasPresentes(): string {
-    if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
     
     // Buscar la fila "Ocupado"
-    const item = this.datos.condicionOcupacionAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase() === 'ocupado'
     );
     
@@ -197,10 +203,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPorcentajePisosTierra(): string {
-    if (!this.datos?.materialesViviendaAISI || !Array.isArray(this.datos.materialesViviendaAISI)) {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.materialesViviendaAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('piso') && 
       item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('tierra')
     );
@@ -208,10 +217,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPorcentajePisosCemento(): string {
-    if (!this.datos?.materialesViviendaAISI || !Array.isArray(this.datos.materialesViviendaAISI)) {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return '____';
     }
-    const item = this.datos.materialesViviendaAISI.find((item: any) => 
+    const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('piso') && 
       item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('cemento')
     );
@@ -289,27 +301,44 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   }
 
   onMaterialesViviendaFieldChange(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.materialesViviendaConfig, index, field, value, false);
-    if (field === 'casos') {
-      this.calcularPorcentajesMaterialesViviendaAISI();
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesMaterialesViviendaAISI();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
     }
-    this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
   }
 
   onMaterialesViviendaTableUpdated() {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
     this.calcularPorcentajesMaterialesViviendaAISI();
-    this.formularioService.actualizarDato('materialesViviendaAISI', this.datos['materialesViviendaAISI']);
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   calcularPorcentajesMaterialesViviendaAISI() {
-    if (!this.datos['materialesViviendaAISI'] || this.datos['materialesViviendaAISI'].length === 0) {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    
+    if (!tabla || tabla.length === 0) {
       return;
     }
+    
     const categorias = ['paredes', 'techos', 'pisos'];
     categorias.forEach(categoria => {
-      const itemsCategoria = this.datos['materialesViviendaAISI'].filter((item: any) => 
+      const itemsCategoria = tabla.filter((item: any) => 
         item.categoria && item.categoria.toLowerCase().includes(categoria)
       );
       if (itemsCategoria.length > 0) {
@@ -329,6 +358,9 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
         }
       }
     });
+    
+    // Actualizar la tabla en datos
+    this.datos[tablaKey] = [...tabla];
   }
 
   obtenerTextoViviendaAISI(): string {
@@ -367,10 +399,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
 
   // Métodos para filtrar filas Total de tipos de vivienda
   getTiposViviendaSinTotal(): any[] {
-    if (!this.datos?.tiposViviendaAISI || !Array.isArray(this.datos.tiposViviendaAISI)) {
+    const tablaKey = this.getTablaKeyTiposVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.tiposViviendaAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.tiposViviendaAISI.filter((item: any) => 
+    return tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
   }
@@ -387,10 +422,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
 
   // Métodos para filtrar filas Total de condición de ocupación
   getCondicionOcupacionSinTotal(): any[] {
-    if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.condicionOcupacionAISI.filter((item: any) => 
+    return tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
   }
@@ -413,10 +451,13 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
 
   // Métodos para filtrar filas Total de materiales de vivienda
   getMaterialesViviendaSinTotal(): any[] {
-    if (!this.datos?.materialesViviendaAISI || !Array.isArray(this.datos.materialesViviendaAISI)) {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.materialesViviendaAISI.filter((item: any) => 
+    return tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
   }
@@ -477,35 +518,41 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   // Eliminar filas Total al cargar datos
   eliminarFilasTotal(): void {
     // Tipos de Vivienda
-    if (this.datos?.tiposViviendaAISI && Array.isArray(this.datos.tiposViviendaAISI)) {
-      const filtered = this.datos.tiposViviendaAISI.filter((item: any) => 
+    const tiposViviendaKey = this.getTablaKeyTiposVivienda();
+    const tiposVivienda = this.datos[tiposViviendaKey] || this.datos?.tiposViviendaAISI;
+    if (tiposVivienda && Array.isArray(tiposVivienda)) {
+      const filtered = tiposVivienda.filter((item: any) => 
         !item.categoria || !item.categoria.toLowerCase().includes('total')
       );
-      if (filtered.length !== this.datos.tiposViviendaAISI.length) {
-        this.datos.tiposViviendaAISI = filtered;
-        this.formularioService.actualizarDato('tiposViviendaAISI', filtered);
+      if (filtered.length !== tiposVivienda.length) {
+        this.datos[tiposViviendaKey] = filtered;
+        this.formularioService.actualizarDato(tiposViviendaKey as any, filtered);
       }
     }
 
     // Condición de Ocupación
-    if (this.datos?.condicionOcupacionAISI && Array.isArray(this.datos.condicionOcupacionAISI)) {
-      const filtered = this.datos.condicionOcupacionAISI.filter((item: any) => 
+    const condicionKey = this.getTablaKeyCondicionOcupacion();
+    const condicion = this.datos[condicionKey] || this.datos?.condicionOcupacionAISI;
+    if (condicion && Array.isArray(condicion)) {
+      const filtered = condicion.filter((item: any) => 
         !item.categoria || !item.categoria.toLowerCase().includes('total')
       );
-      if (filtered.length !== this.datos.condicionOcupacionAISI.length) {
-        this.datos.condicionOcupacionAISI = filtered;
-        this.formularioService.actualizarDato('condicionOcupacionAISI', filtered);
+      if (filtered.length !== condicion.length) {
+        this.datos[condicionKey] = filtered;
+        this.formularioService.actualizarDato(condicionKey as any, filtered);
       }
     }
 
     // Materiales de Vivienda
-    if (this.datos?.materialesViviendaAISI && Array.isArray(this.datos.materialesViviendaAISI)) {
-      const filtered = this.datos.materialesViviendaAISI.filter((item: any) => 
+    const materialesKey = this.getTablaKeyMaterialesVivienda();
+    const materiales = this.datos[materialesKey] || this.datos?.materialesViviendaAISI;
+    if (materiales && Array.isArray(materiales)) {
+      const filtered = materiales.filter((item: any) => 
         !item.categoria || !item.categoria.toLowerCase().includes('total')
       );
-      if (filtered.length !== this.datos.materialesViviendaAISI.length) {
-        this.datos.materialesViviendaAISI = filtered;
-        this.formularioService.actualizarDato('materialesViviendaAISI', filtered);
+      if (filtered.length !== materiales.length) {
+        this.datos[materialesKey] = filtered;
+        this.formularioService.actualizarDato(materialesKey as any, filtered);
       }
     }
   }
@@ -530,9 +577,10 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
           }));
           console.log('[S25] tiposVivienda transformado:', viviendas);
 
-          this.datos['tiposViviendaAISI'] = viviendas;
-          this.formularioService.actualizarDato('tiposViviendaAISI', viviendas);
-          this.tableService.calcularPorcentajes(this.datos, this.tiposViviendaConfig);
+          const tablaKey = this.getTablaKeyTiposVivienda();
+          this.datos[tablaKey] = viviendas;
+          this.formularioService.actualizarDato(tablaKey as any, viviendas);
+          this.tableService.calcularPorcentajes(this.datos, { ...this.tiposViviendaConfig, tablaKey });
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
@@ -565,9 +613,10 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
           }));
           console.log('[S25] materiales transformado:', materiales);
 
-          this.datos['materialesViviendaAISI'] = materiales;
-          this.formularioService.actualizarDato('materialesViviendaAISI', materiales);
-          this.tableService.calcularPorcentajes(this.datos, this.materialesViviendaConfig);
+          const tablaKey = this.getTablaKeyMaterialesVivienda();
+          this.datos[tablaKey] = materiales;
+          this.formularioService.actualizarDato(tablaKey as any, materiales);
+          this.tableService.calcularPorcentajes(this.datos, { ...this.materialesViviendaConfig, tablaKey });
           
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();

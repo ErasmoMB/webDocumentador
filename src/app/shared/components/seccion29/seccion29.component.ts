@@ -26,6 +26,8 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   
   private stateSubscription?: Subscription;
   private readonly regexCache = new Map<string, RegExp>();
+  private cargandoSeguros = false;
+  private segurosYaCargados = false;
   
   override watchedFields: string[] = ['centroPobladoAISI', 'natalidadMortalidadCpTabla', 'morbilidadCpTabla', 'afiliacionSaludTabla', 'textoNatalidadCP1', 'textoNatalidadCP2', 'textoMorbilidadCP', 'textoAfiliacionSalud'];
   
@@ -77,6 +79,12 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    console.log('[S29] onInitCustom llamado', {
+      modoFormulario: this.modoFormulario,
+      seccionId: this.seccionId,
+      centroPobladoAISI: this.datos.centroPobladoAISI
+    });
+    
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
     
@@ -94,14 +102,12 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
         }
       });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        // Cargar datos de seguros cuando el CPP cambia
+      setTimeout(() => {
+        console.log('[S29] setTimeout ejecutando cargarSegurosSalud');
         if (this.datos.centroPobladoAISI) {
           this.cargarSegurosSalud();
         }
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
+      }, 100);
     }
   }
 
@@ -117,10 +123,17 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected getLoadParameters(): string[] | null {
-    return this.groupConfig.getAISICCPPActivos();
+    return null;
+  }
+
+  protected override loadAutoSectionData(forceRefresh: boolean = false): void {
   }
 
   protected override detectarCambios(): boolean {
+    if (this.cargandoSeguros) {
+      return false;
+    }
+
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -138,6 +151,7 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
+      console.log('[S29] detectarCambios detectó cambios pero NO cargaremos datos automáticamente cuando estamos en modo manual');
       return true;
     }
     
@@ -499,10 +513,27 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
   }
 
   cargarSegurosSalud(): void {
-    const cpp = this.datos.centroPobladoAISI;
-    if (!cpp) {
+    console.log('[S29] cargarSegurosSalud llamado', {
+      cargandoSeguros: this.cargandoSeguros,
+      segurosYaCargados: this.segurosYaCargados,
+      cpp: this.datos.centroPobladoAISI,
+      stack: new Error().stack
+    });
+
+    if (this.cargandoSeguros || this.segurosYaCargados) {
+      console.log('[S29] Bloqueado: ya cargando o ya cargado');
       return;
     }
+
+    const cpp = this.datos.centroPobladoAISI;
+    if (!cpp) {
+      console.log('[S29] Bloqueado: no hay CPP');
+      return;
+    }
+
+    console.log('[S29] Iniciando carga de seguros salud');
+    this.cargandoSeguros = true;
+    this.segurosYaCargados = true;
 
     this.saludService.obtenerSeguroSaludPorCpp(cpp).subscribe({
       next: (response: any) => {
@@ -512,12 +543,13 @@ export class Seccion29Component extends AutoLoadSectionComponent implements OnDe
             porcentaje: '0,00 %'
           }));
           this.datos.afiliacionSaludTabla = afiliacionData;
-          this.formularioService.actualizarDato('afiliacionSaludTabla', afiliacionData);
           this.tableService.calcularPorcentajes(this.datos, this.afiliacionSaludConfig);
           this.cdRef.detectChanges();
         }
+        this.cargandoSeguros = false;
       },
       error: (error: any) => {
+        this.cargandoSeguros = false;
       }
     });
   }

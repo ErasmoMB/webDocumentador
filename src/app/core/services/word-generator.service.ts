@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import {
   Document,
   Packer,
@@ -14,11 +15,29 @@ import {
   BorderStyle,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import { ConfigService } from './config.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordGeneratorService {
+  private backendBaseUrl: string;
+
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    const apiUrl = this.configService.getApiUrl();
+    if (apiUrl.includes('localhost:8000') || apiUrl.includes('127.0.0.1:8000')) {
+      this.backendBaseUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '') : apiUrl.replace(/\/api\/?$/, '');
+    } else {
+      this.backendBaseUrl = 'http://localhost:8000';
+    }
+    if (!this.backendBaseUrl || this.backendBaseUrl === 'http://localhost:4200' || this.backendBaseUrl.includes('4200')) {
+      this.backendBaseUrl = 'http://localhost:8000';
+    }
+  }
   private asegurarString(valor: any): string {
     if (valor === null || valor === undefined) {
       return '';
@@ -38,15 +57,16 @@ export class WordGeneratorService {
 
   async generarDocumento(elemento: HTMLElement, nombreArchivo: string = 'documento'): Promise<void> {
     try {
-      console.log('[SERVICE] Iniciando generarDocumento con:', nombreArchivo);
-      console.log('[SERVICE] Elemento HTML:', elemento?.tagName);
-      
-      console.log('[SERVICE] Llamando a convertirHtmlADocx()...');
+      if (!elemento) {
+        throw new Error('El elemento HTML no es válido');
+      }
+
       const children = await this.convertirHtmlADocx(elemento);
-      console.log('[SERVICE] Conversión HTML a DOCX completada, elementos:', children.length);
-      console.log('[SERVICE] Tipos de elementos:', children.map((c: any) => c.constructor?.name).slice(0, 5));
+      
+      if (!children || children.length === 0) {
+        throw new Error('No se pudo generar contenido del documento. El documento está vacío.');
+      }
     
-      console.log('[SERVICE] Creando documento Word...');
       const doc = new Document({
       styles: {
         default: {
@@ -272,30 +292,20 @@ export class WordGeneratorService {
       ],
     });
 
-      console.log('[SERVICE] Documento creado, generando blob...');
       const blob = await Packer.toBlob(doc);
-      console.log('[SERVICE] Blob generado, tamaño:', blob.size);
-      console.log('[SERVICE] Guardando archivo:', `${nombreArchivo}.docx`);
       saveAs(blob, `${nombreArchivo}.docx`);
-      console.log('[SERVICE] ✓ Archivo guardado exitosamente');
     } catch (error: any) {
-      console.error('[SERVICE] ✗ Error en generarDocumento:', error);
-      console.error('[SERVICE] Mensaje:', error?.message);
-      console.error('[SERVICE] Stack:', error?.stack);
-      throw error;
+      console.error('[SERVICE] Error en generarDocumento:', error);
+      throw new Error(`Error al generar documento Word: ${error?.message || error?.toString() || 'Error desconocido'}`);
     }
   }
 
   private async convertirHtmlADocx(elemento: HTMLElement): Promise<any[]> {
-    console.log('[SERVICE] convertirHtmlADocx: Procesando', elemento.childNodes.length, 'nodos');
     const nodos = Array.from(elemento.childNodes);
     const contenido: any[] = [];
-    let nodeCount = 0;
 
     for (const nodo of nodos) {
       try {
-        nodeCount++;
-        if (nodeCount % 50 === 0) console.log('[SERVICE] Procesados', nodeCount, 'nodos...');
         if (nodo.nodeType === Node.TEXT_NODE) {
           const texto = this.asegurarString(nodo.textContent?.trim());
           if (texto) {
@@ -313,7 +323,7 @@ export class WordGeneratorService {
           }
         }
       } catch (error) {
-        console.error('Error procesando nodo en convertirHtmlADocx:', error);
+        console.warn('[SERVICE] Error procesando nodo, continuando:', error);
         continue;
       }
     }
@@ -325,12 +335,6 @@ export class WordGeneratorService {
     try {
       const tagName = elem.tagName.toLowerCase();
       const text = this.asegurarString(elem.innerText?.trim());
-      
-      console.log('[SERVICE] Procesando elemento:', tagName);
-
-      if (tagName === 'app-foto-info' || tagName === 'app-image-upload') {
-        return await this.procesarFotoInfo(elem);
-      }
 
       if (tagName.startsWith('app-')) {
         return await this.procesarContenidoDiv(elem);
@@ -365,7 +369,20 @@ export class WordGeneratorService {
           return await this.procesarGaleriaImagenes(elem);
         }
         if (elem.classList.contains('foto-info') || elem.classList.contains('foto-item')) {
-          return await this.procesarFotoInfo(elem);
+          const fotoItems = elem.querySelectorAll('.foto-item');
+          if (fotoItems.length > 0 || elem.classList.contains('foto-item')) {
+            return await this.procesarFotoInfo(elem);
+          }
+        }
+        if (elem.classList.contains('text-justify') && text) {
+          const textoNormalizado = this.asegurarString(text).replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+          if (textoNormalizado) {
+            return new Paragraph({
+              children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { after: 120, line: 360 }
+            });
+          }
         }
         return await this.procesarContenidoDiv(elem);
       default:
@@ -393,7 +410,7 @@ export class WordGeneratorService {
 
   private crearParrafo(elem: HTMLElement): Paragraph {
     try {
-      const texto = this.asegurarString(elem.innerText?.trim() || '');
+      const textoCompleto = this.extraerTextoCompleto(elem);
       const esTituloCentrado = elem.classList.contains('titulo-centrado') || 
                                elem.classList.contains('table-title') ||
                                elem.classList.contains('table-title-main');
@@ -415,11 +432,14 @@ export class WordGeneratorService {
           }
         });
       } else {
-        const textoStr = this.asegurarString(texto || '');
-        children.push(new TextRun({ 
-          text: textoStr || ' ',
-          font: 'Arial'
-        }));
+        const textoStr = this.asegurarString(textoCompleto || '');
+        if (textoStr) {
+          const textoNormalizado = textoStr.replace(/\s+/g, ' ').replace(/\n+/g, ' ').trim();
+          children.push(new TextRun({ 
+            text: textoNormalizado || ' ',
+            font: 'Arial'
+          }));
+        }
       }
 
       if (children.length === 0) {
@@ -441,6 +461,31 @@ export class WordGeneratorService {
         spacing: { after: 120, line: 360 }
       });
     }
+  }
+
+  private extraerTextoCompleto(elem: HTMLElement): string {
+    let texto = '';
+    const nodos = Array.from(elem.childNodes);
+    
+    for (const nodo of nodos) {
+      if (nodo.nodeType === Node.TEXT_NODE) {
+        const contenido = nodo.textContent || '';
+        texto += contenido;
+      } else if (nodo.nodeType === Node.ELEMENT_NODE) {
+        const elemento = nodo as HTMLElement;
+        const tagName = elemento.tagName.toLowerCase();
+        
+        if (tagName === 'br') {
+          texto += ' ';
+        } else if (['span', 'strong', 'em', 'b', 'i', 'u'].includes(tagName)) {
+          texto += this.extraerTextoCompleto(elemento);
+        } else if (tagName === 'p') {
+          texto += this.extraerTextoCompleto(elemento) + ' ';
+        }
+      }
+    }
+    
+    return texto;
   }
 
   private extraerTextoConHighlight(elem: HTMLElement): Array<{ texto: string; esHighlight: boolean }> {
@@ -660,62 +705,341 @@ export class WordGeneratorService {
   private async procesarFotoInfo(elem: HTMLElement): Promise<any[]> {
     const contenido: any[] = [];
     
-    const numero = this.asegurarString(elem.querySelector('.foto-numero')?.textContent?.trim());
-    const titulo = this.asegurarString(elem.querySelector('.foto-titulo')?.textContent?.trim());
-    const fuente = this.asegurarString(elem.querySelector('.foto-fuente')?.textContent?.trim());
-    const img = elem.querySelector('img') as HTMLImageElement;
+    const fotoItems = elem.querySelectorAll('.foto-item');
     
-    if (numero) {
-      contenido.push(new Paragraph({
-        children: [new TextRun({ text: this.asegurarString(numero), bold: true })],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 100 },
-      }));
-    }
-    
-    if (titulo) {
-      contenido.push(new Paragraph({
-        children: [new TextRun({ text: this.asegurarString(titulo) })],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 150 },
-      }));
-    }
-    
-    if (img && img.src) {
-      const imagen = await this.crearImagen(img);
-      if (imagen) {
-        contenido.push(imagen);
+    if (fotoItems.length > 0) {
+      for (const fotoItem of Array.from(fotoItems)) {
+        const item = fotoItem as HTMLElement;
+        const numero = this.asegurarString(item.querySelector('.foto-numero')?.textContent?.trim());
+        const titulo = this.asegurarString(item.querySelector('.foto-titulo')?.textContent?.trim());
+        const fuente = this.asegurarString(item.querySelector('.foto-fuente')?.textContent?.trim());
+        const img = item.querySelector('img') as HTMLImageElement;
+        
+        if (numero) {
+          contenido.push(new Paragraph({
+            children: [new TextRun({ text: this.asegurarString(numero), bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
+          }));
+        }
+        
+        if (titulo) {
+          contenido.push(new Paragraph({
+            children: [new TextRun({ text: this.asegurarString(titulo) })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 150 },
+          }));
+        }
+        
+        if (img && img.src && !img.src.includes('data:image/svg') && img.src !== '____') {
+          console.log('[SERVICE] Procesando imagen encontrada:', img.src.substring(0, 50));
+          try {
+            const imagen = await this.crearImagen(img);
+            if (imagen) {
+              contenido.push(imagen);
+            } else {
+              console.warn('[SERVICE] No se pudo crear imagen desde:', img.src.substring(0, 50));
+            }
+          } catch (error) {
+            console.error('[SERVICE] Error al procesar imagen en bucle:', error, img.src.substring(0, 50));
+          }
+        }
+        
+        if (fuente) {
+          contenido.push(new Paragraph({
+            children: [new TextRun({ text: this.asegurarString(fuente) })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 },
+          }));
+        }
       }
-    }
-    
-    if (fuente) {
-      contenido.push(new Paragraph({
-        children: [new TextRun({ text: this.asegurarString(fuente) })],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 300 },
-      }));
+    } else {
+      const numero = this.asegurarString(elem.querySelector('.foto-numero')?.textContent?.trim());
+      const titulo = this.asegurarString(elem.querySelector('.foto-titulo')?.textContent?.trim());
+      const fuente = this.asegurarString(elem.querySelector('.foto-fuente')?.textContent?.trim());
+      const imagenes = elem.querySelectorAll('img') as NodeListOf<HTMLImageElement>;
+      
+      if (numero) {
+        contenido.push(new Paragraph({
+          children: [new TextRun({ text: this.asegurarString(numero), bold: true })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }));
+      }
+      
+      if (titulo) {
+        contenido.push(new Paragraph({
+          children: [new TextRun({ text: this.asegurarString(titulo) })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 150 },
+        }));
+      }
+      
+      for (const img of Array.from(imagenes)) {
+        if (img && img.src && !img.src.includes('data:image/svg') && img.src !== '____') {
+          console.log('[SERVICE] Procesando imagen encontrada:', img.src.substring(0, 50));
+          try {
+            const imagen = await this.crearImagen(img);
+            if (imagen) {
+              contenido.push(imagen);
+            } else {
+              console.warn('[SERVICE] No se pudo crear imagen desde:', img.src.substring(0, 50));
+            }
+          } catch (error) {
+            console.error('[SERVICE] Error al procesar imagen en bucle:', error, img.src.substring(0, 50));
+          }
+        }
+      }
+      
+      if (fuente) {
+        contenido.push(new Paragraph({
+          children: [new TextRun({ text: this.asegurarString(fuente) })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 300 },
+        }));
+      }
     }
     
     return contenido;
   }
 
   private async crearImagen(elem: HTMLImageElement): Promise<Paragraph | null> {
-    if (!elem.src) return null;
+    if (!elem.src || elem.src === '____' || elem.src.includes('data:image/svg')) {
+      console.warn('[SERVICE] Imagen inválida o SVG:', elem.src?.substring(0, 50));
+      return null;
+    }
 
     try {
-      const response = await fetch(elem.src);
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      const extension = elem.src.split('.').pop()?.toLowerCase();
-
+      let arrayBuffer: ArrayBuffer;
       let type: 'png' | 'jpg' | 'gif' | 'bmp' = 'png';
-      if (extension === 'jpg' || extension === 'jpeg') type = 'jpg';
-      else if (extension === 'gif') type = 'gif';
-      else if (extension === 'bmp') type = 'bmp';
+      let imgWidth = 500;
+      let imgHeight = 375;
+
+      if (elem.src.startsWith('data:')) {
+        const base64Data = elem.src.split(',')[1];
+        if (!base64Data) {
+          console.warn('[SERVICE] Imagen base64 sin datos válidos');
+          return null;
+        }
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        arrayBuffer = bytes.buffer;
+        
+        const mimeType = elem.src.split(';')[0].split(':')[1];
+        if (mimeType.includes('jpeg') || mimeType.includes('jpg')) type = 'jpg';
+        else if (mimeType.includes('gif')) type = 'gif';
+        else if (mimeType.includes('bmp')) type = 'bmp';
+        
+        if (elem.naturalWidth && elem.naturalHeight) {
+          imgWidth = elem.naturalWidth;
+          imgHeight = elem.naturalHeight;
+        }
+      } else {
+        try {
+          if (elem.complete && elem.naturalWidth > 0 && elem.naturalHeight > 0) {
+          } else {
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error('Timeout al cargar imagen'));
+              }, 10000);
+
+              const checkComplete = () => {
+                if (elem.complete && elem.naturalWidth > 0 && elem.naturalHeight > 0) {
+                  clearTimeout(timeout);
+                  elem.onload = null;
+                  elem.onerror = null;
+                  resolve();
+                }
+              };
+
+              elem.onload = () => {
+                checkComplete();
+              };
+
+              elem.onerror = () => {
+                clearTimeout(timeout);
+                elem.onload = null;
+                elem.onerror = null;
+                reject(new Error('Error al cargar imagen'));
+              };
+
+              checkComplete();
+            });
+          }
+
+          const naturalWidth = elem.naturalWidth || elem.width;
+          const naturalHeight = elem.naturalHeight || elem.height;
+
+          if (!naturalWidth || !naturalHeight || naturalWidth === 0 || naturalHeight === 0) {
+            console.error('[SERVICE] Imagen sin dimensiones válidas después de cargar:', naturalWidth, naturalHeight, elem.src.substring(0, 50));
+            return null;
+          }
+
+          imgWidth = naturalWidth;
+          imgHeight = naturalHeight;
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) {
+            console.error('[SERVICE] No se pudo obtener contexto de canvas');
+            return null;
+          }
+
+          canvas.width = imgWidth;
+          canvas.height = imgHeight;
+
+          try {
+            ctx.drawImage(elem, 0, 0, imgWidth, imgHeight);
+          } catch (drawError: any) {
+            console.error('[SERVICE] Error al dibujar imagen en canvas:', drawError?.message || drawError, elem.src.substring(0, 50));
+            return null;
+          }
+
+          const extension = elem.src.split('.').pop()?.toLowerCase();
+          const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
+          type = extension === 'png' ? 'png' : 'jpg';
+
+          let base64: string;
+          try {
+            base64 = canvas.toDataURL(mimeType, 0.95);
+            if (!base64 || base64.length < 100) {
+              throw new Error('Base64 inválido o muy corto');
+            }
+          } catch (toDataError: any) {
+            console.error('[SERVICE] Error al convertir canvas a base64:', toDataError?.message || toDataError, elem.src.substring(0, 50));
+            return null;
+          }
+
+          const base64Data = base64.split(',')[1];
+          if (!base64Data) {
+            console.error('[SERVICE] No se pudo extraer datos base64');
+            return null;
+          }
+
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          arrayBuffer = bytes.buffer;
+
+          if (arrayBuffer.byteLength === 0) {
+            console.error('[SERVICE] ArrayBuffer vacío después de procesar imagen');
+            return null;
+          }
+
+          console.log('[SERVICE] Imagen procesada correctamente, tamaño:', arrayBuffer.byteLength, 'bytes, dimensiones:', imgWidth, 'x', imgHeight);
+        } catch (canvasError: any) {
+          console.error('[SERVICE] Error al procesar imagen con Canvas:', canvasError?.message || canvasError, elem.src.substring(0, 50));
+          return null;
+        }
+      }
+
+      const imageData = new Uint8Array(arrayBuffer);
+      if (imageData.length === 0) {
+        console.error('[SERVICE] Datos de imagen vacíos');
+        return null;
+      }
+
+      const maxWidth = 500;
+      const maxHeight = 375;
+      let finalWidth = imgWidth;
+      let finalHeight = imgHeight;
+
+      if (imgWidth > maxWidth || imgHeight > maxHeight) {
+        const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+        finalWidth = Math.round(imgWidth * ratio);
+        finalHeight = Math.round(imgHeight * ratio);
+      }
 
       const image = new ImageRun({
-        data: new Uint8Array(arrayBuffer),
-        transformation: { width: 500, height: 375 },
+        data: imageData,
+        transformation: { width: finalWidth, height: finalHeight },
+        type,
+      });
+
+      console.log('[SERVICE] Imagen creada exitosamente, tipo:', type, 'tamaño:', imageData.length, 'bytes');
+      return new Paragraph({
+        children: [image],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 150, after: 200 },
+      });
+    } catch (error) {
+      console.error('[SERVICE] Error al procesar imagen:', error, elem.src?.substring(0, 50));
+      return null;
+    }
+  }
+
+  private async crearImagenDesdeURL(url: string): Promise<Paragraph | null> {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout al cargar imagen desde URL'));
+        }, 10000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+            resolve();
+          } else {
+            reject(new Error('Imagen sin dimensiones válidas'));
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Error al cargar imagen desde URL'));
+        };
+        
+        img.src = url;
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) {
+        return null;
+      }
+
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+
+      const extension = url.split('.').pop()?.toLowerCase();
+      const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
+      const type: 'png' | 'jpg' = extension === 'png' ? 'png' : 'jpg';
+
+      const base64 = canvas.toDataURL(mimeType, 0.95);
+      const base64Data = base64.split(',')[1];
+      if (!base64Data) {
+        return null;
+      }
+
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const maxWidth = 500;
+      const maxHeight = 375;
+      let finalWidth = img.naturalWidth;
+      let finalHeight = img.naturalHeight;
+
+      if (finalWidth > maxWidth || finalHeight > maxHeight) {
+        const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+        finalWidth = Math.round(finalWidth * ratio);
+        finalHeight = Math.round(finalHeight * ratio);
+      }
+
+      const image = new ImageRun({
+        data: bytes,
+        transformation: { width: finalWidth, height: finalHeight },
         type,
       });
 
@@ -724,8 +1048,8 @@ export class WordGeneratorService {
         alignment: AlignmentType.CENTER,
         spacing: { before: 150, after: 200 },
       });
-    } catch (error) {
-      console.error('Error al procesar imagen:', error);
+    } catch (error: any) {
+      console.error('[SERVICE] Error en método alternativo:', error?.message || error, url.substring(0, 50));
       return null;
     }
   }
@@ -769,15 +1093,47 @@ export class WordGeneratorService {
 
     for (const nodo of nodos) {
       if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = this.asegurarString(nodo.textContent?.trim());
-        if (texto && texto.length > 0) {
-          contenido.push(new Paragraph({ children: [new TextRun(texto)] }));
+        const texto = this.asegurarString(nodo.textContent?.trim() || '');
+        if (texto) {
+          const textoNormalizado = texto.replace(/\s+/g, ' ').trim();
+          if (textoNormalizado) {
+            contenido.push(new Paragraph({
+              children: [new TextRun({ text: textoNormalizado, font: 'Arial' })],
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { after: 120, line: 360 }
+            }));
+          }
         }
       } else if (nodo.nodeType === Node.ELEMENT_NODE) {
         const elemento = nodo as HTMLElement;
-        const procesado = await this.procesarElemento(elemento);
-        if (procesado) {
-          contenido.push(...(Array.isArray(procesado) ? procesado : [procesado]));
+        const tagName = elemento.tagName.toLowerCase();
+        
+        if (tagName === 'app-image-upload' || tagName === 'app-foto-info') {
+          const fotoItems = elemento.querySelectorAll('.foto-item');
+          if (fotoItems.length > 0) {
+            const procesado = await this.procesarFotoInfo(elemento);
+            if (procesado && procesado.length > 0) {
+              contenido.push(...procesado);
+            }
+          } else {
+            const procesado = await this.procesarElemento(elemento);
+            if (procesado) {
+              if (Array.isArray(procesado)) {
+                contenido.push(...procesado.filter(p => p));
+              } else {
+                contenido.push(procesado);
+              }
+            }
+          }
+        } else {
+          const procesado = await this.procesarElemento(elemento);
+          if (procesado) {
+            if (Array.isArray(procesado)) {
+              contenido.push(...procesado.filter(p => p));
+            } else {
+              contenido.push(procesado);
+            }
+          }
         }
       }
     }

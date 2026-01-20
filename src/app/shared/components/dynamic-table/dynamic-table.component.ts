@@ -8,6 +8,7 @@ export interface TableColumn {
   type?: 'text' | 'number' | 'email' | 'date';
   placeholder?: string;
   readonly?: boolean;
+  formatter?: (value: any) => string;
 }
 
 @Component({
@@ -135,5 +136,13 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   getTableData(): any[] {
     const tablaKeyActual = this.tablaKey || this.config?.tablaKey;
     return this.datos[tablaKeyActual] || [];
+  }
+
+  getFormattedValue(item: any, col: TableColumn): string {
+    const value = item[col.field];
+    if (col.formatter) {
+      return col.formatter(value);
+    }
+    return value != null ? String(value) : '';
   }
 }

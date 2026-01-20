@@ -108,8 +108,6 @@ export class AutoBackendDataLoaderService {
         current.lastError = err;
         this.failedRequests.set(requestKey, current);
         
-        console.warn(`⚠️ Error en ${mapping.endpoint} (intento ${current.retries}/${this.MAX_RETRIES}):`, err.message || err);
-        
         return of(null);
       }),
       shareReplay(1)
@@ -196,8 +194,6 @@ export class AutoBackendDataLoaderService {
           current.retries++;
           current.lastError = err;
           this.failedRequests.set(endpointKey, current);
-          
-          console.warn(`⚠️ Error en ${mapping.endpoint} (cpp: ${cpp}, intento ${current.retries}/${this.MAX_RETRIES}):`, err.message || err);
           
           return of([]);
         })

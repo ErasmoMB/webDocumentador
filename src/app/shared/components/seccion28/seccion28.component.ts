@@ -165,6 +165,11 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     return prefijo ? `educacionCpTabla${prefijo}` : 'educacionCpTabla';
   }
 
+  getPuestoSaludTabla(): any[] {
+    const tablaKey = this.getTablaKeyPuestoSalud();
+    return this.datos[tablaKey] || this.datos.puestoSaludCpTabla || [];
+  }
+
   protected override tieneFotografias(): boolean {
     return true;
   }
@@ -522,9 +527,10 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
             porcentaje: '0,00 %'
           }));
 
-          this.datos.educacionCpTabla = educacionData;
-          this.formularioService.actualizarDato('educacionCpTabla', educacionData);
-          this.tableService.calcularPorcentajes(this.datos, this.educacionConfig);
+          const tablaKey = this.getTablaKeyEducacion();
+          this.datos[tablaKey] = educacionData;
+          this.formularioService.actualizarDato(tablaKey as any, educacionData);
+          this.tableService.calcularPorcentajes(this.datos, { ...this.educacionConfig, tablaKey });
           this.cdRef.detectChanges();
         }
       },
@@ -535,10 +541,13 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
 
   // Métodos para filtrar filas Total de educación
   getEducacionSinTotal(): any[] {
-    if (!this.datos?.educacionCpTabla || !Array.isArray(this.datos.educacionCpTabla)) {
+    const tablaKey = this.getTablaKeyEducacion();
+    const tabla = this.datos[tablaKey] || this.datos?.educacionCpTabla || [];
+    
+    if (!tabla || !Array.isArray(tabla)) {
       return [];
     }
-    return this.datos.educacionCpTabla.filter((item: any) => 
+    return tabla.filter((item: any) => 
       !item.nombreIE || !item.nombreIE.toLowerCase().includes('total')
     );
   }
@@ -560,27 +569,32 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   // Eliminar filas Total al cargar datos
   eliminarFilasTotal(): void {
     // Educación
-    if (this.datos?.educacionCpTabla && Array.isArray(this.datos.educacionCpTabla)) {
-      const filtered = this.datos.educacionCpTabla.filter((item: any) => 
+    const educacionKey = this.getTablaKeyEducacion();
+    const educacion = this.datos[educacionKey] || this.datos?.educacionCpTabla;
+    if (educacion && Array.isArray(educacion)) {
+      const filtered = educacion.filter((item: any) => 
         !item.nombreIE || !item.nombreIE.toLowerCase().includes('total')
       );
-      if (filtered.length !== this.datos.educacionCpTabla.length) {
-        this.datos.educacionCpTabla = filtered;
-        this.formularioService.actualizarDato('educacionCpTabla', filtered);
+      if (filtered.length !== educacion.length) {
+        this.datos[educacionKey] = filtered;
+        this.formularioService.actualizarDato(educacionKey as any, filtered);
       }
     }
   }
 
   onPuestoSaludTableUpdated(): void {
-    const tabla = this.datos.puestoSaludCpTabla || [];
-    this.datos.puestoSaludCpTabla = [...tabla];
-    this.formularioService.actualizarDato('puestoSaludCpTabla', tabla);
+    const tablaKey = this.getTablaKeyPuestoSalud();
+    const tabla = this.datos[tablaKey] || this.datos.puestoSaludCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   onEducacionFieldChange(index: number, field: string, value: any): void {
-    const tabla = this.datos.educacionCpTabla || [];
+    const tablaKey = this.getTablaKeyEducacion();
+    const tabla = this.datos[tablaKey] || this.datos.educacionCpTabla || [];
+    
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
       
@@ -606,17 +620,18 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
         }
       }
       
-      this.datos.educacionCpTabla = [...tabla];
-      this.formularioService.actualizarDato('educacionCpTabla', tabla);
+      this.datos[tablaKey] = [...tabla];
+      this.formularioService.actualizarDato(tablaKey as any, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
   onEducacionTableUpdated(): void {
-    const tabla = this.datos.educacionCpTabla || [];
-    this.datos.educacionCpTabla = [...tabla];
-    this.formularioService.actualizarDato('educacionCpTabla', tabla);
+    const tablaKey = this.getTablaKeyEducacion();
+    const tabla = this.datos[tablaKey] || this.datos.educacionCpTabla || [];
+    this.datos[tablaKey] = [...tabla];
+    this.formularioService.actualizarDato(tablaKey as any, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }

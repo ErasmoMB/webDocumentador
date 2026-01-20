@@ -566,6 +566,14 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     return 0;
   }
 
+  formatearPorcentaje(value: any): string {
+    if (value == null || value === undefined || value === '') {
+      return '';
+    }
+    const num = typeof value === 'number' ? value : parseFloat(String(value).replace('%', '').trim().replace(',', '.')) || 0;
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+  }
+
   getMorbilidadSinTotal(): any[] {
     const tabla = this.getTablaMorbilidad();
     if (!tabla || !Array.isArray(tabla)) {
@@ -683,7 +691,8 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       datosSinTotal.forEach((item: any) => {
         const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
         const porcentajeNumerico = (casos / total) * 100;
-        item.porcentaje = porcentajeNumerico;
+        // Redondear a 2 decimales
+        item.porcentaje = Math.round(porcentajeNumerico * 100) / 100;
       });
       
       const tablaKey = this.getTablaKeyAfiliacionSalud();

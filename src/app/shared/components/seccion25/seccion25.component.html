@@ -171,7 +171,7 @@
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
-        [tablaKey]="'tiposViviendaAISI'"
+        [tablaKey]="getTablaKeyTiposVivienda()"
         [totalKey]="'categoria'"
         [customFieldChangeHandler]="onTiposViviendaFieldChange.bind(this)"
         (tableUpdated)="onTiposViviendaTableUpdated()">
@@ -218,7 +218,7 @@
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
-        [tablaKey]="'condicionOcupacionAISI'"
+        [tablaKey]="getTablaKeyCondicionOcupacion()"
         [totalKey]="'categoria'"
         [customFieldChangeHandler]="onCondicionOcupacionFieldChange.bind(this)"
         (tableUpdated)="onCondicionOcupacionTableUpdated()">
@@ -269,7 +269,7 @@
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
           ]"
-          [tablaKey]="'materialesViviendaAISI'"
+          [tablaKey]="getTablaKeyMaterialesVivienda()"
           [totalKey]="'categoria'"
           [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
           (tableUpdated)="onMaterialesViviendaTableUpdated()">

@@ -120,42 +120,55 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit {
   }
 
   async exportarWord() {
-    console.clear();
+    const botonSelector = 'button[data-action="exportar-word"]';
     try {
-      console.log('[EXPORT] Iniciando exportación a Word...');
+      const botonExportar = document.querySelector(botonSelector) as HTMLButtonElement;
+      if (botonExportar) {
+        botonExportar.disabled = true;
+        botonExportar.textContent = 'Exportando...';
+      }
+
       if (this.resumenComponent) {
-        console.log('[EXPORT] Actualizando datos del resumen...');
         this.resumenComponent.actualizarDatos();
       }
       this.cdRef.detectChanges();
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('[EXPORT] Buscando elemento viewport-content...');
       const elemento = document.querySelector(".viewport-content") as HTMLElement || 
-                       document.querySelector(".preview") as HTMLElement;
+                       document.querySelector(".preview") as HTMLElement ||
+                       document.querySelector("app-resumen") as HTMLElement;
+      
       if (!elemento) {
-        console.error('[EXPORT] Error: No se encontró el contenido para exportar.');
         this.logger.error("No se encontró el contenido para exportar.");
         alert("No se pudo encontrar el contenido para exportar. Por favor, recarga la página e intenta nuevamente.");
+        if (botonExportar) {
+          botonExportar.disabled = false;
+          botonExportar.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar a Word';
+        }
         return;
       }
 
-      console.log('[EXPORT] Elemento encontrado, preparando nombre del archivo...');
       const nombreArchivo = `LBS${String(this.datos?.projectName || 'Documento')}`.replace(/\s+/g, '');
-      console.log('[EXPORT] Nombre del archivo:', nombreArchivo);
       
-      console.log('[EXPORT] Llamando a generarDocumento()...');
       await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
-      console.log('[EXPORT] ✓ Documento exportado correctamente');
       this.logger.info("Documento exportado correctamente");
+      
+      if (botonExportar) {
+        botonExportar.disabled = false;
+        botonExportar.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar a Word';
+      }
     } catch (error: any) {
-      console.error('[EXPORT] ✗ ERROR CAPTURADO:', error);
-      console.error('[EXPORT] Stack trace:', error?.stack);
-      console.error('[EXPORT] Mensaje:', error?.message);
+      console.error('[EXPORT] Error:', error);
       this.logger.error("Error al exportar a Word", error);
-      const mensajeError = error?.message || "Error desconocido";
-      alert(`Hubo un error al exportar el documento: ${mensajeError}. Por favor, intenta nuevamente.`);
+      const mensajeError = error?.message || error?.toString() || "Error desconocido al exportar";
+      alert(`Error al exportar: ${mensajeError}\n\nPor favor, revisa la consola del navegador (F12) para más detalles.`);
+      
+      const botonExportar = document.querySelector(botonSelector) as HTMLButtonElement;
+      if (botonExportar) {
+        botonExportar.disabled = false;
+        botonExportar.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar a Word';
+      }
     }
   }
 

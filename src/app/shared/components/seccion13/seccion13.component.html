@@ -243,7 +243,7 @@
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'SIS' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true, formatter: formatearPorcentaje.bind(this) }
           ]"
           [tablaKey]="getTablaKeyAfiliacionSalud()"
           [totalKey]="'categoria'"

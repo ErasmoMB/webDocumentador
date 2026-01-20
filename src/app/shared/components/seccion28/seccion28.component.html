@@ -14,11 +14,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of (datos.puestoSaludCpTabla || [])">
+        <tr *ngFor="let item of getPuestoSaludTabla()">
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
             <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'descripcion'">{{ item.descripcion || '____' }}</td>
         </tr>
-        <tr *ngIf="!datos.puestoSaludCpTabla || datos.puestoSaludCpTabla.length === 0">
+        <tr *ngIf="getPuestoSaludTabla().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
         </tr>
@@ -166,7 +166,7 @@
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Nombre' },
             { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Puesto de Salud Cahuacho' }
           ]"
-          [tablaKey]="'puestoSaludCpTabla'"
+          [tablaKey]="getTablaKeyPuestoSalud()"
           [totalKey]="'categoria'"
           (tableUpdated)="onPuestoSaludTableUpdated()">
         </app-dynamic-table>
@@ -238,7 +238,7 @@
             { field: 'cantidadEstudiantes', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
           ]"
-          [tablaKey]="'educacionCpTabla'"
+          [tablaKey]="getTablaKeyEducacion()"
           [totalKey]="'nombreIE'"
           [customFieldChangeHandler]="onEducacionFieldChange.bind(this)"
           (tableUpdated)="onEducacionTableUpdated()">

@@ -26,6 +26,8 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   
   private stateSubscription?: Subscription;
   private readonly regexCache = new Map<string, RegExp>();
+  private cargandoDatos = false;
+  private datosYaCargados = false;
   
   override watchedFields: string[] = ['centroPobladoAISI', 'parrafoSeccion30_indicadores_educacion_intro', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'textoNivelEducativo', 'textoTasaAnalfabetismo'];
   
@@ -86,12 +88,9 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
         }
       });
     } else {
-      this.cargarDatosEducacion();
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      setTimeout(() => {
         this.cargarDatosEducacion();
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
+      }, 100);
     }
   }
 
@@ -107,10 +106,26 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private cargarDatosEducacion(): void {
-    const codigos = this.groupConfig.getAISICCPPActivos();
-    if (!codigos || codigos.length === 0) {
+    console.log('[S30] cargarDatosEducacion llamado', {
+      cargandoDatos: this.cargandoDatos,
+      datosYaCargados: this.datosYaCargados,
+      stack: new Error().stack
+    });
+
+    if (this.cargandoDatos || this.datosYaCargados) {
+      console.log('[S30] Bloqueado: ya cargando o ya cargado');
       return;
     }
+
+    const codigos = this.groupConfig.getAISICCPPActivos();
+    if (!codigos || codigos.length === 0) {
+      console.log('[S30] Bloqueado: no hay códigos');
+      return;
+    }
+
+    console.log('[S30] Iniciando carga de datos educación');
+    this.cargandoDatos = true;
+    this.datosYaCargados = true;
 
     this.educacionService.obtenerEducacionPorCodigos(codigos).subscribe(
       (response: any) => {
@@ -122,13 +137,14 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
           }));
 
           this.datos.nivelEducativoTabla = nivelEducativoData;
-          this.formularioService.actualizarDato('nivelEducativoTabla', nivelEducativoData);
           this.tableService.calcularPorcentajes(this.datos, this.nivelEducativoConfig);
           this.cdRef.detectChanges();
         }
+        this.cargandoDatos = false;
       },
       (error: any) => {
         console.error('[S30] Error cargando datos educación:', error);
+        this.cargandoDatos = false;
       }
     );
 
@@ -137,8 +153,6 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
         if (response.success) {
           this.datos.tasaAnalfabetismo = response.tasa_analfabetismo || 0;
           this.datos.totalPoblacion15Mas = response.total_poblacion_15_mas || 0;
-          this.formularioService.actualizarDato('tasaAnalfabetismo', this.datos.tasaAnalfabetismo);
-          this.formularioService.actualizarDato('totalPoblacion15Mas', this.datos.totalPoblacion15Mas);
           this.cdRef.detectChanges();
         }
       },
@@ -177,10 +191,22 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected getLoadParameters(): string[] | null {
-    return this.groupConfig.getAISICCPPActivos();
+    return null;
+  }
+
+  protected override loadAutoSectionData(forceRefresh: boolean = false): void {
+  }
+
+  protected override actualizarDatosCustom(): void {
+    this.cargarFotografias();
+    this.actualizarFotografiasCache();
   }
 
   protected override detectarCambios(): boolean {
+    if (this.cargandoDatos) {
+      return false;
+    }
+
     const datosActuales = this.formularioService.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
@@ -198,15 +224,11 @@ export class Seccion30Component extends AutoLoadSectionComponent implements OnDe
     }
     
     if (centroPobladoAISIActual !== centroPobladoAISIAnterior || centroPobladoAISIActual !== centroPobladoAISIEnDatos || hayCambios) {
+      console.log('[S30] detectarCambios detectó cambios pero NO cargaremos datos automáticamente mientras cargan datos');
       return true;
     }
     
     return false;
-  }
-
-  protected override actualizarDatosCustom(): void {
-    this.cargarFotografias();
-    this.actualizarFotografiasCache();
   }
 
   protected override actualizarValoresConPrefijo(): void {

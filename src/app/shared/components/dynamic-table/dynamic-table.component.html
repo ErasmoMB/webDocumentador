@@ -12,7 +12,7 @@
           <input 
             [type]="col.type || 'text'"
             class="table-input"
-            [value]="item[col.field] || ''"
+            [value]="getFormattedValue(item, col)"
             (input)="onFieldChange(i, col.field, $any($event.target).value)"
             [placeholder]="col.placeholder || ''"
             [readonly]="col.readonly || false">
