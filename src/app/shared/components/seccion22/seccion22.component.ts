@@ -81,48 +81,114 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
   }
 
   private cargarDatosDesdeAPI(): void {
-    // Obtener UBIGEOs dinámicos del grupo AISI actual
     const ubigeos = this.getLoadParameters();
     
     if (!ubigeos || ubigeos.length === 0) {
+      console.log('[Seccion22] No hay UBIGEOs para cargar');
       return;
     }
 
-    // Cargar datos de todos los centros poblados del grupo AISI
+    console.log('[Seccion22] 🔵 ENVIANDO al backend:', {
+      endpoint: '/centros-poblados/por-codigos-ubigeo',
+      method: 'POST',
+      payload: { codigos_ubigeo: ubigeos },
+      cantidad_codigos: ubigeos.length
+    });
+
     this.centrosPobladosService.obtenerPorCodigos(ubigeos).subscribe(
       (centrosPoblados) => {
+        console.log('[Seccion22] 🟢 RECIBIDO del backend:', {
+          cantidad_centros: centrosPoblados?.length || 0,
+          datos_crudos: JSON.parse(JSON.stringify(centrosPoblados)),
+          primer_centro_ejemplo: centrosPoblados?.[0] ? {
+            ubigeo: centrosPoblados[0].ubigeo,
+            centro_poblado: centrosPoblados[0].centro_poblado,
+            hombres: centrosPoblados[0].hombres,
+            mujeres: centrosPoblados[0].mujeres,
+            de_6_a_14_anios: centrosPoblados[0].de_6_a_14_anios,
+            de_15_a_29: centrosPoblados[0].de_15_a_29,
+            tipos_datos: {
+              hombres: typeof centrosPoblados[0].hombres,
+              mujeres: typeof centrosPoblados[0].mujeres,
+              de_6_a_14_anios: typeof centrosPoblados[0].de_6_a_14_anios
+            }
+          } : null
+        });
+
         if (centrosPoblados && centrosPoblados.length > 0) {
-          // Agregar datos demográficos por sexo
           const poblacionSexo = this.agregarPoblacionPorSexo(centrosPoblados);
           const poblacionEtario = this.agregarPoblacionPorGrupoEtario(centrosPoblados);
           
-          // Actualizar los datos en el formulario service
+          console.log('[Seccion22] 📊 DATOS PROCESADOS:', {
+            poblacionSexo: JSON.parse(JSON.stringify(poblacionSexo)),
+            poblacionEtario: JSON.parse(JSON.stringify(poblacionEtario))
+          });
+          
           this.formularioService.actualizarDato('poblacionSexoAISI', poblacionSexo);
           this.formularioService.actualizarDato('poblacionEtarioAISI', poblacionEtario);
           
-          // Actualizar datos locales
           this.datos.poblacionSexoAISI = poblacionSexo;
           this.datos.poblacionEtarioAISI = poblacionEtario;
           
-          // Detectar cambios
           this.cdRef.detectChanges();
         }
       },
       (error) => {
+        console.error('[Seccion22] ❌ ERROR en petición:', error);
       }
     );
   }
 
-  /**
-   * Agrega datos de población por sexo de múltiples centros poblados
-   */
   private agregarPoblacionPorSexo(centrosPoblados: any[]): any[] {
     let totalHombres = 0;
     let totalMujeres = 0;
 
-    centrosPoblados.forEach(cp => {
-      totalHombres += cp.hombres || 0;
-      totalMujeres += cp.mujeres || 0;
+    console.log('[Seccion22] 🔍 Procesando población por sexo de', centrosPoblados.length, 'centros');
+
+    centrosPoblados.forEach((cp, index) => {
+      const hombresRaw = cp.hombres;
+      const mujeresRaw = cp.mujeres;
+      
+      let hombres = 0;
+      let mujeres = 0;
+      
+      try {
+        if (typeof hombresRaw === 'string') {
+          hombres = parseInt(hombresRaw, 10) || 0;
+        } else if (typeof hombresRaw === 'number') {
+          hombres = Math.floor(hombresRaw);
+        }
+      } catch (e) {
+        console.warn(`[Seccion22] Error parseando hombres del CP ${index}:`, hombresRaw, e);
+      }
+      
+      try {
+        if (typeof mujeresRaw === 'string') {
+          mujeres = parseInt(mujeresRaw, 10) || 0;
+        } else if (typeof mujeresRaw === 'number') {
+          mujeres = Math.floor(mujeresRaw);
+        }
+      } catch (e) {
+        console.warn(`[Seccion22] Error parseando mujeres del CP ${index}:`, mujeresRaw, e);
+      }
+      
+      if (index < 3) {
+        console.log(`[Seccion22] CP ${index} (${cp.centro_poblado}):`, {
+          hombres_raw: hombresRaw,
+          hombres_parsed: hombres,
+          mujeres_raw: mujeresRaw,
+          mujeres_parsed: mujeres
+        });
+      }
+      
+      totalHombres += hombres;
+      totalMujeres += mujeres;
+    });
+
+    console.log('[Seccion22] ✅ Totales calculados:', {
+      totalHombres,
+      totalMujeres,
+      totalGeneral: totalHombres + totalMujeres
     });
 
     return [
@@ -139,9 +205,6 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
     ];
   }
 
-  /**
-   * Agrega datos de población por grupo etario de múltiples centros poblados
-   */
   private agregarPoblacionPorGrupoEtario(centrosPoblados: any[]): any[] {
     let de0a14 = 0;
     let de15a29 = 0;
@@ -149,15 +212,68 @@ export class Seccion22Component extends AutoLoadSectionComponent implements OnDe
     let de45a64 = 0;
     let de65amas = 0;
 
-    centrosPoblados.forEach(cp => {
-      de0a14 += cp.de_6_a_14_anios || 0;
-      de15a29 += cp.de_15_a_29 || 0;
-      de30a44 += cp.de_30_a_44 || 0;
-      de45a64 += cp.de_45_a_64 || 0;
-      de65amas += cp.de_65_a_mas || 0;
+    console.log('[Seccion22] 🔍 Procesando población por grupo etario de', centrosPoblados.length, 'centros');
+
+    centrosPoblados.forEach((cp, index) => {
+      const parseValue = (value: any, fieldName: string): number => {
+        try {
+          if (value == null || value === undefined) return 0;
+          if (typeof value === 'string') {
+            const parsed = parseInt(value, 10);
+            if (isNaN(parsed)) {
+              console.warn(`[Seccion22] Valor inválido en ${fieldName} del CP ${index}:`, value);
+              return 0;
+            }
+            return parsed;
+          }
+          if (typeof value === 'number') {
+            return Math.floor(value);
+          }
+          return 0;
+        } catch (e) {
+          console.warn(`[Seccion22] Error parseando ${fieldName} del CP ${index}:`, value, e);
+          return 0;
+        }
+      };
+
+      const _0a14 = parseValue(cp.de_6_a_14_anios, 'de_6_a_14_anios');
+      const _15a29 = parseValue(cp.de_15_a_29, 'de_15_a_29');
+      const _30a44 = parseValue(cp.de_30_a_44, 'de_30_a_44');
+      const _45a64 = parseValue(cp.de_45_a_64, 'de_45_a_64');
+      const _65amas = parseValue(cp.de_65_a_mas, 'de_65_a_mas');
+
+      if (index < 3) {
+        console.log(`[Seccion22] CP ${index} (${cp.centro_poblado}) - Grupos etarios:`, {
+          '0-14_raw': cp.de_6_a_14_anios,
+          '0-14_parsed': _0a14,
+          '15-29_raw': cp.de_15_a_29,
+          '15-29_parsed': _15a29,
+          '30-44_raw': cp.de_30_a_44,
+          '30-44_parsed': _30a44,
+          '45-64_raw': cp.de_45_a_64,
+          '45-64_parsed': _45a64,
+          '65+_raw': cp.de_65_a_mas,
+          '65+_parsed': _65amas
+        });
+      }
+
+      de0a14 += _0a14;
+      de15a29 += _15a29;
+      de30a44 += _30a44;
+      de45a64 += _45a64;
+      de65amas += _65amas;
     });
 
     const total = de0a14 + de15a29 + de30a44 + de45a64 + de65amas;
+
+    console.log('[Seccion22] ✅ Totales por grupo etario:', {
+      '0-14': de0a14,
+      '15-29': de15a29,
+      '30-44': de30a44,
+      '45-64': de45a64,
+      '65+': de65amas,
+      total
+    });
 
     return [
       {
