@@ -8,8 +8,20 @@ console.log('  process.env.USE_MOCK_DATA:', process.env.USE_MOCK_DATA || '(no de
 console.log('  process.env.NODE_ENV:', process.env.NODE_ENV || '(no definida)');
 console.log('Todas las variables process.env:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('MOCK') || k.includes('NODE')));
 
-const isRender = !!process.env.RENDER || process.env.NODE_ENV === 'production';
+const isRender = !!process.env.RENDER || 
+                 !!process.env.RENDER_EXTERNAL_URL || 
+                 process.env.NODE_ENV === 'production' ||
+                 process.cwd().includes('/opt/render') ||
+                 !!process.env.PORT;
 const defaultApiUrl = isRender ? 'https://backend-api-lbs.onrender.com' : 'http://localhost:8000';
+
+console.log('🔍 Detección de entorno:');
+console.log('  isRender:', isRender);
+console.log('  RENDER:', process.env.RENDER);
+console.log('  RENDER_EXTERNAL_URL:', process.env.RENDER_EXTERNAL_URL);
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  PORT:', process.env.PORT);
+console.log('  defaultApiUrl:', defaultApiUrl);
 
 const envVars = {
   USE_MOCK_DATA: process.env.USE_MOCK_DATA || 'false',
