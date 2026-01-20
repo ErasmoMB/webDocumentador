@@ -303,24 +303,24 @@ export class BackendDataMapperService {
     this.mappingConfigs.set('seccion13_aisd', {
       afiliacionSaludTabla: {
         fieldName: 'afiliacionSaludTabla',
-        endpoint: '/salud/seguro-salud',
+        endpoint: '/salud/seguro-salud/por-codigos',
+        method: 'POST',
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          const datosArray = Array.isArray(data) ? data : (data?.data || []);
+          if (!Array.isArray(datosArray) || datosArray.length === 0) {
             return [];
           }
 
-          // Mapear tipos de seguro - mantener incluso si no hay datos de cantidad
           const tiposUnificados = new Map<string, any>();
           let totalCasos = 0;
           
-          data.forEach((item: any) => {
-            const tipo = (item.tipo_seguro || 'Sin categoría').trim();
-            const key = tipo.toLowerCase();
+          datosArray.forEach((item: any) => {
+            const categoria = (item.categoria || 'Sin categoría').trim();
+            const key = categoria.toLowerCase();
             
-            // IMPORTANTE: El backend retorna 'cantidad' no 'casos'
-            const cantidad = item.cantidad || item.casos || 0;
+            const cantidad = item.casos || item.cantidad || 0;
             totalCasos += cantidad;
             
             if (tiposUnificados.has(key)) {
@@ -328,19 +328,18 @@ export class BackendDataMapperService {
               existing.casos = (existing.casos || 0) + cantidad;
             } else {
               tiposUnificados.set(key, {
-                categoria: tipo,
+                categoria: categoria,
                 casos: cantidad,
-                porcentaje: 0  // Se recalculará después
+                porcentaje: item.porcentaje || 0
               });
             }
           });
 
-          // RECALCULAR porcentajes basándose en el total agregado
           const resultado = Array.from(tiposUnificados.values());
           resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100  // 2 decimales
-              : 0;
+            if (totalCasos > 0 && !item.porcentaje) {
+              item.porcentaje = Math.round((item.casos / totalCasos) * 10000) / 100;
+            }
           });
           
           resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
@@ -353,19 +352,21 @@ export class BackendDataMapperService {
     this.mappingConfigs.set('seccion14_aisd', {
       nivelEducativoTabla: {
         fieldName: 'nivelEducativoTabla',
-        endpoint: '/educacion/niveles',
+        endpoint: '/educacion/por-codigos',
+        method: 'POST',
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          const datosArray = Array.isArray(data) ? data : (data?.data || []);
+          if (!Array.isArray(datosArray) || datosArray.length === 0) {
             return [];
           }
 
           const nivelesMap = new Map<string, any>();
           let totalCasos = 0;
           
-          data.forEach((item: any) => {
-            const nivel = (item.nivel_educativo || 'Sin categoría').trim();
+          datosArray.forEach((item: any) => {
+            const nivel = (item.nivel_educativo || item.categoria || 'Sin categoría').trim();
             const key = nivel.toLowerCase();
             
             const cantidad = item.casos || item.cantidad || 0;
@@ -383,12 +384,14 @@ export class BackendDataMapperService {
             }
           });
 
-          // Recalcular porcentajes
           const resultado = Array.from(nivelesMap.values());
           resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
+            if (totalCasos > 0) {
+              const porcentajeNum = (item.casos / totalCasos) * 100;
+              item.porcentaje = porcentajeNum.toFixed(2).replace('.', ',') + ' %';
+            } else {
+              item.porcentaje = '0,00 %';
+            }
           });
           
           resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
@@ -398,47 +401,21 @@ export class BackendDataMapperService {
       },
       tasaAnalfabetismoTabla: {
         fieldName: 'tasaAnalfabetismoTabla',
-        endpoint: '/educacion/tasa-analfabetismo',
+        endpoint: '/educacion/tasa-analfabetismo/por-codigos',
+        method: 'POST',
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          const datosArray = Array.isArray(data) ? data : (data?.data || []);
+          if (!Array.isArray(datosArray) || datosArray.length === 0) {
             return [];
           }
 
-          const indicadoresMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          data.forEach((item: any) => {
-            const indicador = (item.indicador || 'Sin categoría').trim();
-            const key = indicador.toLowerCase();
-            
-            const cantidad = item.casos || 0;
-            totalCasos += cantidad;
-            
-            if (indicadoresMap.has(key)) {
-              const existing = indicadoresMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              indicadoresMap.set(key, {
-                indicador: indicador,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          // Recalcular porcentajes
-          const resultado = Array.from(indicadoresMap.values());
-          resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
+          return datosArray.map((item: any) => ({
+            indicador: item.indicador || 'Sin categoría',
+            casos: item.casos || 0,
+            porcentaje: item.porcentaje || 0
+          }));
         }
       }
     });
@@ -557,90 +534,40 @@ export class BackendDataMapperService {
     this.mappingConfigs.set('seccion18_aisd', {
       nbiCCAyrocaTabla: {
         fieldName: 'nbiCCAyrocaTabla',
-        endpoint: '/nbi/por-ubigeo',
+        endpoint: '/nbi/por-codigos',
+        method: 'POST',
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          const datosArray = Array.isArray(data) ? data : (data?.data || []);
+          if (!Array.isArray(datosArray) || datosArray.length === 0) {
             return [];
           }
 
-          const nbiMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          data.forEach((item: any) => {
-            const carencia = (item.carencia || 'Sin categoría').trim();
-            const key = carencia.toLowerCase();
-            
-            const cantidad = item.casos || 0;
-            totalCasos += cantidad;
-            
-            if (nbiMap.has(key)) {
-              const existing = nbiMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              nbiMap.set(key, {
-                categoria: carencia,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          const resultado = Array.from(nbiMap.values());
-          resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
+          return datosArray.map((item: any) => ({
+            categoria: item.carencia || item.categoria || 'Sin categoría',
+            casos: item.casos || 0,
+            porcentaje: item.porcentaje || 0
+          }));
         }
       },
       nbiDistritoCahuachoTabla: {
         fieldName: 'nbiDistritoCahuachoTabla',
-        endpoint: '/nbi/por-ubigeo',
+        endpoint: '/nbi/por-codigos',
+        method: 'POST',
         paramType: 'id_ubigeo',
         aggregatable: true,
         transform: (data) => {
-          if (!Array.isArray(data)) {
+          const datosArray = Array.isArray(data) ? data : (data?.data || []);
+          if (!Array.isArray(datosArray) || datosArray.length === 0) {
             return [];
           }
 
-          const nbiMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          data.forEach((item: any) => {
-            const carencia = (item.carencia || 'Sin categoría').trim();
-            const key = carencia.toLowerCase();
-            
-            const cantidad = item.casos || 0;
-            totalCasos += cantidad;
-            
-            if (nbiMap.has(key)) {
-              const existing = nbiMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              nbiMap.set(key, {
-                categoria: carencia,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          const resultado = Array.from(nbiMap.values());
-          resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
+          return datosArray.map((item: any) => ({
+            categoria: item.carencia || item.categoria || 'Sin categoría',
+            casos: item.casos || 0,
+            porcentaje: item.porcentaje || 0
+          }));
         }
       }
     });

@@ -132,6 +132,42 @@ export class BackendApiService {
     );
   }
 
+  postSeguroSaludPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/salud/seguro-salud/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postEducacionPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/educacion/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postTasaAnalfabetismoPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/educacion/tasa-analfabetismo/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postNBIPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/nbi/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
   getResumenServicios(idUbigeo?: string): Observable<BackendResponse<any[]>> {
     const url = `${this.baseUrl}/servicios/resumen`;
     let params = new HttpParams();

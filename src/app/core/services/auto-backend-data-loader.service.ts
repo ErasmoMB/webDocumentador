@@ -479,6 +479,74 @@ export class AutoBackendDataLoaderService {
             return of([]);
           })
         );
+      case '/salud/seguro-salud/por-codigos':
+        return this.backendApi.postSeguroSaludPorCodigos(codigosUBIGEO).pipe(
+          map(response => {
+            let data = response.data;
+            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+              return data.data;
+            }
+            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+              return data.data || [];
+            }
+            return Array.isArray(data) ? data : [];
+          }),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of([]);
+          })
+        );
+      case '/educacion/por-codigos':
+        return this.backendApi.postEducacionPorCodigos(codigosUBIGEO).pipe(
+          map(response => {
+            let data = response.data;
+            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+              return data.data;
+            }
+            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+              return data.data || [];
+            }
+            return Array.isArray(data) ? data : [];
+          }),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of([]);
+          })
+        );
+      case '/educacion/tasa-analfabetismo/por-codigos':
+        return this.backendApi.postTasaAnalfabetismoPorCodigos(codigosUBIGEO).pipe(
+          map(response => {
+            let data = response.data;
+            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+              return data.data;
+            }
+            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+              return data.data || [];
+            }
+            return Array.isArray(data) ? data : [];
+          }),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of([]);
+          })
+        );
+      case '/nbi/por-codigos':
+        return this.backendApi.postNBIPorCodigos(codigosUBIGEO).pipe(
+          map(response => {
+            let data = response.data;
+            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+              return data.data;
+            }
+            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+              return data.data || [];
+            }
+            return Array.isArray(data) ? data : [];
+          }),
+          catchError(error => {
+            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
+            return of([]);
+          })
+        );
       default:
         return of({});
     }
