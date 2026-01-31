@@ -1,4 +1,5 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector, effect } from '@angular/core';
+import { SectionReferenceValidationService, SectionReferenceError } from 'src/app/core/services/section-reference-validation.service';
 import { FormStateService } from 'src/app/core/services/state/form-state.service';
 import { FormPersistenceService } from 'src/app/core/services/state/form-persistence.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -117,6 +118,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   geoInfo: any = {};
   autocompleteData: any = {};
   testDataActive = false;
+  validationErrors: SectionReferenceError[] = [];
+  canNavigateValidation = true;
+  private validationDisposer?: { destroy: () => void };
   
   // Mobile view toggle
   mobileViewMode: 'preview' | 'form' = 'form'; // Por defecto mostrar formulario en mobile
@@ -140,7 +144,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     private environmentInjector: EnvironmentInjector,
     private injector: Injector,
     private formPersistence: FormPersistenceService,
-    private storage: StorageFacade
+    private storage: StorageFacade,
+    private validationService: SectionReferenceValidationService
   ) {}
 
   ngOnInit() {
@@ -180,6 +185,14 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       })
     );
+
+    this.validationDisposer = effect(() => {
+      this.validationErrors = Array.from(this.validationService.errors());
+      this.canNavigateValidation = this.validationService.isValid();
+      if (!this.canNavigateValidation) {
+        this.actualizarEstadoNavegacion();
+      }
+    }, { allowSignalWrites: true });
   }
 
   ngAfterViewInit(): void {
@@ -858,6 +871,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this.validationDisposer) {
+      this.validationDisposer.destroy();
+    }
   }
 
   obtenerValorConPrefijo(campo: string): any {
