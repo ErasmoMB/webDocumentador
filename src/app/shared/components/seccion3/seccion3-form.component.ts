@@ -9,7 +9,6 @@ import { TableManagementFacade } from 'src/app/core/services/tables/table-manage
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { Seccion3TextGeneratorService } from 'src/app/core/services/seccion3-text-generator.service';
 import { Seccion3FuentesManagementService } from 'src/app/core/services/seccion3-fuentes-management.service';
-import { Subscription } from 'rxjs';
 
 @Component({
     imports: [
@@ -27,7 +26,6 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   
   formData: any = {};
   fuentesSecundarias: string[] = [];
-  private subscription?: Subscription;
 
   entrevistadosConfig: TableConfig = {
     tablaKey: 'entrevistados',
@@ -92,9 +90,6 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
   }
 
   onFieldChange(fieldId: string, value: any) {
