@@ -1,13 +1,17 @@
 import { Injectable } from '@angular/core';
 import { FormularioDatos } from '../models/formulario.model';
 import { SectionAccessControlService } from './section-access-control.service';
+import { SectionReferenceValidationService, SectionReferenceError } from './section-reference-validation.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SectionNavigationService {
 
-  constructor(private accessControl: SectionAccessControlService) {}
+  constructor(
+    private accessControl: SectionAccessControlService,
+    private validationService: SectionReferenceValidationService
+  ) {}
 
   normalizarSeccionId(seccionId: string): string {
     // No normalizar, permitir que cada seccion tenga su propio flujo
@@ -71,6 +75,10 @@ export class SectionNavigationService {
       return null;
     }
 
+    if (!this.validationService.isValid()) {
+      return null;
+    }
+
     for (let i = index - 1; i >= 0; i--) {
       const candidate = secciones[i];
       // Saltar secciones intro cuando se navega con anterior/siguiente
@@ -87,6 +95,10 @@ export class SectionNavigationService {
     let index = secciones.indexOf(seccionId);
 
     if (index === -1) {
+      return null;
+    }
+
+    if (!this.validationService.isValid()) {
       return null;
     }
 
@@ -112,10 +124,19 @@ export class SectionNavigationService {
     const anterior = this.obtenerSeccionAnterior(seccionId, datos);
     const siguiente = this.obtenerSeccionSiguiente(seccionId, datos);
 
+    const canNavigate = this.validationService.isValid();
+
     return {
-      puedeIrAnterior: !!anterior,
-      puedeIrSiguiente: !!siguiente,
+      puedeIrAnterior: !!anterior && canNavigate,
+      puedeIrSiguiente: !!siguiente && canNavigate,
       esUltimaSeccion: !siguiente && index === secciones.length - 1
     };
+  }
+
+  /**
+   * Expone los errores de validación referencial
+   */
+  getValidationErrors(): readonly SectionReferenceError[] {
+    return this.validationService.errors();
   }
 }

@@ -56,6 +56,93 @@ describe('UIStoreContract', () => {
       expect(groups.length).toBe(1);
     });
 
+    it('getGroupsByType returns definitions', () => {
+      store.dispatch(Commands.addGroup('AISD', 'Test AISD'));
+      store.dispatch(Commands.addGroup('AISI', 'Test AISI'));
+      const aisdDefs = Selectors.getGroupsByType(store.getSnapshot(), 'AISD');
+      const aisiDefs = Selectors.getGroupsByType(store.getSnapshot(), 'AISI');
+      expect(aisdDefs.length).toBeGreaterThanOrEqual(1);
+      expect(aisiDefs.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('getGroupById resolves definition', () => {
+      store.dispatch(Commands.addGroup('AISD', 'Exacto'));
+      const aisdDefs = Selectors.getGroupsByType(store.getSnapshot(), 'AISD');
+      const created = aisdDefs.find(def => def.nombre === 'Exacto');
+      expect(created).toBeDefined();
+      const resolved = Selectors.getGroupById(store.getSnapshot(), 'AISD', created!.id);
+      expect(resolved?.nombre).toBe('Exacto');
+    });
+
+    it('getPopulatedCenterById returns entry and getAllPopulatedCenters lists all', () => {
+      const center = {
+        item: 1,
+        ubigeo: 999999,
+        codigo: 'CENTRO_X',
+        nombre: 'Centro X',
+        categoria: '',
+        poblacion: 0,
+        dpto: '',
+        prov: '',
+        dist: '',
+        este: 0,
+        norte: 0,
+        altitud: 0
+      };
+
+      store.dispatch({
+        type: 'groupConfig/registerCCPPBatch',
+        payload: { ccppList: [center] }
+      });
+
+      const allCenters = Selectors.getAllPopulatedCenters(store.getSnapshot());
+      expect(allCenters.some(entry => entry.codigo === 'CENTRO_X')).toBe(true);
+      const found = Selectors.getPopulatedCenterById(store.getSnapshot(), 'CENTRO_X');
+      expect(found).toBeDefined();
+      expect(found?.nombre).toBe('Centro X');
+    });
+
+    it('getGroupsByType works', () => {
+      store.dispatch(Commands.addGroup('AISD', 'AISD Group'));
+      const aisd = Selectors.getGroupsByType(store.getSnapshot(), 'AISD');
+      expect(aisd.length).toBe(1);
+      const aisi = Selectors.getGroupsByType(store.getSnapshot(), 'AISI');
+      expect(aisi.length).toBe(0);
+    });
+
+    it('getGroupById resolves definitions', () => {
+      store.dispatch(Commands.addGroup('AISD', 'Named'));
+      const created = Selectors.getGroupsByType(store.getSnapshot(), 'AISD')[0];
+      const resolved = Selectors.getGroupById(store.getSnapshot(), 'AISD', created.id);
+      expect(resolved?.nombre).toBe('Named');
+    });
+
+    it('getPopulatedCenterById returns registered entry', () => {
+      const center = {
+        item: 1,
+        ubigeo: 111111,
+        codigo: 'cp_001',
+        nombre: 'Centro 1',
+        categoria: '',
+        poblacion: 0,
+        dpto: '',
+        prov: '',
+        dist: '',
+        este: 0,
+        norte: 0,
+        altitud: 0
+      };
+
+      store.dispatch({
+        type: 'groupConfig/registerCCPPBatch',
+        payload: { ccppList: [center] }
+      });
+
+      const found = Selectors.getPopulatedCenterById(store.getSnapshot(), 'cp_001');
+      expect(found).toBeDefined();
+      expect(found?.nombre).toBe('Centro 1');
+    });
+
     it('getSectionNav works', () => {
       store.dispatch(Commands.initializeSection('s1'));
       const nav = Selectors.getSectionNav(store.getSnapshot(), 's1');

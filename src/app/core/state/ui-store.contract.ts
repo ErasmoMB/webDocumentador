@@ -27,7 +27,8 @@ import {
   INITIAL_PROJECT_STATE,
   generateFieldKey,
   generateTableKey,
-  generateImageGroupKey
+  generateImageGroupKey,
+  CCPPEntry
 } from './project-state.model';
 import { 
   ProjectStateCommand,
@@ -175,6 +176,27 @@ export const Selectors = {
       hasChildren: groups.some(child => child.parentId === g.id),
       parentId: g.parentId
     };
+  },
+
+  /** Obtiene todos los grupos de un tipo */
+  getGroupsByType: (state: ProjectState, tipo: 'AISD' | 'AISI'): readonly GroupDefinition[] => {
+    return tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
+  },
+
+  /** Obtiene un grupo definido (sin map a UI) */
+  getGroupById: (state: ProjectState, tipo: 'AISD' | 'AISI', groupId: string): GroupDefinition | null => {
+    const groups = tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
+    return groups.find(group => group.id === groupId) || null;
+  },
+
+  /** Obtiene un centro poblado registrado por su ID */
+  getPopulatedCenterById: (state: ProjectState, centerId: string): CCPPEntry | null => {
+    return state.ccppRegistry.byId[centerId] || null;
+  },
+
+  /** Obtiene todos los centros poblados registrados */
+  getAllPopulatedCenters: (state: ProjectState): readonly CCPPEntry[] => {
+    return state.ccppRegistry.allIds.map(id => state.ccppRegistry.byId[id]);
   },
 
   /** Obtiene grupos raíz (sin padre) */

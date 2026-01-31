@@ -33,7 +33,7 @@ import {
   Entrevistado
 } from './ui-store.contract';
 import { ProjectStateCommand, SectionContentCommand } from './commands.model';
-import { ProjectState } from './project-state.model';
+import { ProjectState, GroupDefinition, CCPPEntry } from './project-state.model';
 
 // Importar modelos y selectores de Fase 2
 import { 
@@ -175,6 +175,34 @@ export class ProjectStateFacade {
   readonly aisiRootGroups: Signal<GroupOption[]> = computed(() => 
     this.aisiGroups().filter(g => g.parentId === null)
   );
+
+  /**
+   * Signal helper: grupos completos por tipo
+   */
+  groupsByType(tipo: 'AISD' | 'AISI'): Signal<readonly GroupDefinition[]> {
+    return this.store.selectWith(Selectors.getGroupsByType, tipo);
+  }
+
+  /**
+   * Signal helper: buscar grupo por ID
+   */
+  groupById(tipo: 'AISD' | 'AISI', groupId: string): Signal<GroupDefinition | null> {
+    return this.store.selectWith(Selectors.getGroupById, tipo, groupId);
+  }
+
+  /**
+   * Signal helper: consultar centro poblado por ID
+   */
+  populatedCenterById(centerId: string): Signal<CCPPEntry | null> {
+    return this.store.selectWith(Selectors.getPopulatedCenterById, centerId);
+  }
+
+  /**
+   * Signal helper: lista completa de centros poblados
+   */
+  allPopulatedCenters(): Signal<readonly CCPPEntry[]> {
+    return this.store.select(Selectors.getAllPopulatedCenters);
+  }
 
   // ============================================================================
   // GRUPOS (Observables - para componentes legacy)

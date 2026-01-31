@@ -55,12 +55,22 @@ export interface ImageContent extends BaseContent {
 }
 
 /**
+ * Esquema mínimo para transportar referencias limpias a grupos y centros
+ */
+export interface TableRowReferenceData {
+  readonly groupReferenceId?: string;
+  readonly groupReferenceType?: 'AISD' | 'AISI';
+  readonly populatedCenterId?: string;
+  readonly ubigeoCode?: string;
+}
+
+/**
  * Fila de tabla
  */
 export interface TableRowData {
   readonly id: string;
   readonly orden: number;
-  readonly data: Readonly<Record<string, unknown>>;
+  readonly data: Readonly<TableRowReferenceData & Record<string, unknown>>;
 }
 
 /**

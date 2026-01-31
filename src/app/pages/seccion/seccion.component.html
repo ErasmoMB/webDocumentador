@@ -71,6 +71,14 @@
       <span class="badge badge-primary">{{ seccionTitulo }}</span>
     </div>
     <div class="formulario-content scrollbar-thin">
+      <div *ngIf="validationErrors.length > 0" class="validation-banner" style="background:#ffe5e5;border:1px solid #ffb3b3;border-radius:6px;margin-bottom:16px;padding:12px;">
+        <strong>Referencias inválidas detectadas:</strong>
+        <ul style="margin:8px 0 0;padding-left:18px;">
+          <li *ngFor="let error of validationErrors">
+            Sección {{ error.sectionId }} · Tabla {{ error.tableId }} · fila {{ error.rowId }} — {{ error.message }}
+          </li>
+        </ul>
+      </div>
       <ng-container #formHost></ng-container>
 
     </div>
