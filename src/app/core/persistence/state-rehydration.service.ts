@@ -1,0 +1,383 @@
+/**
+ * STATE REHYDRATION - PASO 7.4
+ * 
+ * Rehidrata el estado al iniciar la aplicación.
+ * 
+ * PRINCIPIOS:
+ * 1. Se ejecuta en APP_INITIALIZER (antes de que la app renderice)
+ * 2. Maneja errores sin bloquear la app
+ * 3. Aplica migraciones automáticamente
+ * 4. Provee opciones de recuperación ante corrupción
+ * 
+ * ARQUITECTURA:
+ * - Intenta cargar estado guardado
+ * - Si falla, intenta backup
+ * - Si todo falla, usa estado inicial
+ * - Siempre notifica resultado al usuario
+ */
+
+import { Injectable, inject, APP_INITIALIZER, Provider, signal } from '@angular/core';
+import { ProjectState, INITIAL_PROJECT_STATE } from '../state/project-state.model';
+import { UIStoreService } from '../state/ui-store.contract';
+import { PersistenceObserverService } from './persistence-observer.service';
+import { 
+  autoDeserialize, 
+  DeserializationResult 
+} from './state-serializer';
+import { STORAGE_KEYS } from './persistence.contract';
+
+// ============================================================================
+// REHYDRATION RESULT
+// ============================================================================
+
+export type RehydrationSource = 'storage' | 'backup' | 'initial' | 'none';
+
+export interface RehydrationResult {
+  readonly success: boolean;
+  readonly source: RehydrationSource;
+  readonly state: ProjectState;
+  readonly warnings: string[];
+  readonly migrationsApplied: string[];
+  readonly error: string | null;
+}
+
+export interface RehydrationOptions {
+  /** Si fallar silenciosamente (usar estado inicial sin error) */
+  readonly failSilently: boolean;
+  /** Si intentar backups ante fallo */
+  readonly tryBackups: boolean;
+  /** Índice máximo de backup a intentar */
+  readonly maxBackupAttempts: number;
+  /** Si mostrar notificación al usuario */
+  readonly notifyUser: boolean;
+}
+
+const DEFAULT_OPTIONS: RehydrationOptions = {
+  failSilently: true,
+  tryBackups: true,
+  maxBackupAttempts: 3,
+  notifyUser: true
+};
+
+// ============================================================================
+// REHYDRATION SERVICE
+// ============================================================================
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StateRehydrationService {
+  private readonly store = inject(UIStoreService);
+  private readonly persistence = inject(PersistenceObserverService);
+  
+  // Estado de rehidratación
+  private _rehydrationResult = signal<RehydrationResult | null>(null);
+  private _isRehydrating = signal(false);
+  
+  readonly rehydrationResult = this._rehydrationResult.asReadonly();
+  readonly isRehydrating = this._isRehydrating.asReadonly();
+  
+  // ============================================================================
+  // MAIN REHYDRATION
+  // ============================================================================
+  
+  /**
+   * Rehidrata el estado desde el storage.
+   * Se llama típicamente en APP_INITIALIZER.
+   */
+  async rehydrate(options: Partial<RehydrationOptions> = {}): Promise<RehydrationResult> {
+    const opts = { ...DEFAULT_OPTIONS, ...options };
+    this._isRehydrating.set(true);
+    
+    const warnings: string[] = [];
+    let migrationsApplied: string[] = [];
+    
+    try {
+      // 1. Intentar cargar desde storage principal
+      const mainResult = this.loadFromMainStorage();
+      
+      if (mainResult?.success && mainResult.state) {
+        migrationsApplied = mainResult.migrationsApplied;
+        if (mainResult.validation.warnings.length > 0) {
+          warnings.push(...mainResult.validation.warnings);
+        }
+        
+        const result: RehydrationResult = {
+          success: true,
+          source: 'storage',
+          state: mainResult.state,
+          warnings,
+          migrationsApplied,
+          error: null
+        };
+        
+        this.applyState(mainResult.state);
+        this._rehydrationResult.set(result);
+        this._isRehydrating.set(false);
+        return result;
+      }
+      
+      // 2. Si falló y tryBackups está habilitado, intentar backups
+      if (opts.tryBackups) {
+        const backupResult = this.tryLoadFromBackups(opts.maxBackupAttempts);
+        
+        if (backupResult?.success && backupResult.state) {
+          warnings.push('Estado restaurado desde backup');
+          migrationsApplied = backupResult.migrationsApplied;
+          
+          const result: RehydrationResult = {
+            success: true,
+            source: 'backup',
+            state: backupResult.state,
+            warnings,
+            migrationsApplied,
+            error: null
+          };
+          
+          this.applyState(backupResult.state);
+          this._rehydrationResult.set(result);
+          this._isRehydrating.set(false);
+          return result;
+        }
+      }
+      
+      // 3. No hay datos guardados o todos fallaron
+      if (opts.failSilently) {
+        const result: RehydrationResult = {
+          success: true,
+          source: this.hasAnyStoredData() ? 'initial' : 'none',
+          state: INITIAL_PROJECT_STATE,
+          warnings: this.hasAnyStoredData() 
+            ? ['No se pudo restaurar el estado guardado, usando estado inicial'] 
+            : [],
+          migrationsApplied: [],
+          error: null
+        };
+        
+        // No aplicamos estado inicial porque ya es el default
+        this._rehydrationResult.set(result);
+        this._isRehydrating.set(false);
+        return result;
+      }
+      
+      // 4. Fallo no silencioso
+      const result: RehydrationResult = {
+        success: false,
+        source: 'none',
+        state: INITIAL_PROJECT_STATE,
+        warnings,
+        migrationsApplied: [],
+        error: 'No se encontró estado guardado válido'
+      };
+      
+      this._rehydrationResult.set(result);
+      this._isRehydrating.set(false);
+      return result;
+      
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      
+      if (opts.failSilently) {
+        const result: RehydrationResult = {
+          success: true,
+          source: 'initial',
+          state: INITIAL_PROJECT_STATE,
+          warnings: [`Error durante rehidratación: ${errorMsg}`],
+          migrationsApplied: [],
+          error: null
+        };
+        
+        this._rehydrationResult.set(result);
+        this._isRehydrating.set(false);
+        return result;
+      }
+      
+      const result: RehydrationResult = {
+        success: false,
+        source: 'none',
+        state: INITIAL_PROJECT_STATE,
+        warnings,
+        migrationsApplied: [],
+        error: errorMsg
+      };
+      
+      this._rehydrationResult.set(result);
+      this._isRehydrating.set(false);
+      return result;
+    }
+  }
+  
+  // ============================================================================
+  // LOAD HELPERS
+  // ============================================================================
+  
+  private loadFromMainStorage(): DeserializationResult | null {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.PROJECT_STATE);
+      if (!raw) return null;
+      return autoDeserialize(raw);
+    } catch {
+      return null;
+    }
+  }
+  
+  private tryLoadFromBackups(maxAttempts: number): DeserializationResult | null {
+    for (let i = 0; i < maxAttempts; i++) {
+      const result = this.persistence.loadBackup(i);
+      if (result?.success) {
+        return result;
+      }
+    }
+    return null;
+  }
+  
+  private hasAnyStoredData(): boolean {
+    return !!localStorage.getItem(STORAGE_KEYS.PROJECT_STATE) ||
+           !!localStorage.getItem(STORAGE_KEYS.AUTO_BACKUP) ||
+           !!localStorage.getItem(STORAGE_KEYS.VERSION_HISTORY);
+  }
+  
+  // ============================================================================
+  // STATE APPLICATION
+  // ============================================================================
+  
+  private applyState(state: ProjectState): void {
+    // Usar el comando/método del store para cargar estado
+    // El store debe exponer un método para esto
+    if (typeof (this.store as any).loadState === 'function') {
+      (this.store as any).loadState(state);
+    } else if (typeof (this.store as any).dispatch === 'function') {
+      // Si hay sistema de comandos, usar LoadProjectCommand
+      // Por ahora, warning
+      console.warn('[Rehydration] Store does not expose loadState method');
+    }
+  }
+  
+  // ============================================================================
+  // MANUAL RECOVERY
+  // ============================================================================
+  
+  /**
+   * Intenta recuperar desde un backup específico.
+   */
+  recoverFromBackup(index: number): RehydrationResult {
+    const result = this.persistence.loadBackup(index);
+    
+    if (!result?.success || !result.state) {
+      return {
+        success: false,
+        source: 'none',
+        state: INITIAL_PROJECT_STATE,
+        warnings: [],
+        migrationsApplied: [],
+        error: result?.error || `Backup ${index} no disponible`
+      };
+    }
+    
+    this.applyState(result.state);
+    
+    return {
+      success: true,
+      source: 'backup',
+      state: result.state,
+      warnings: [`Recuperado desde backup #${index}`],
+      migrationsApplied: result.migrationsApplied,
+      error: null
+    };
+  }
+  
+  /**
+   * Reinicia al estado inicial limpiando persistencia.
+   */
+  resetToInitial(): RehydrationResult {
+    this.persistence.clearAll();
+    
+    return {
+      success: true,
+      source: 'initial',
+      state: INITIAL_PROJECT_STATE,
+      warnings: ['Estado reiniciado completamente'],
+      migrationsApplied: [],
+      error: null
+    };
+  }
+  
+  /**
+   * Exporta el estado actual como string para backup manual.
+   */
+  exportStateForBackup(): string | null {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.PROJECT_STATE);
+      return raw;
+    } catch {
+      return null;
+    }
+  }
+  
+  /**
+   * Importa estado desde string de backup manual.
+   */
+  importStateFromBackup(raw: string): RehydrationResult {
+    const result = autoDeserialize(raw);
+    
+    if (!result.success || !result.state) {
+      return {
+        success: false,
+        source: 'none',
+        state: INITIAL_PROJECT_STATE,
+        warnings: [],
+        migrationsApplied: [],
+        error: result.error || 'Formato de backup inválido'
+      };
+    }
+    
+    this.applyState(result.state);
+    
+    // Guardar el estado importado
+    this.persistence.saveNow();
+    
+    return {
+      success: true,
+      source: 'backup',
+      state: result.state,
+      warnings: ['Estado importado desde backup externo'],
+      migrationsApplied: result.migrationsApplied,
+      error: null
+    };
+  }
+}
+
+// ============================================================================
+// APP_INITIALIZER FACTORY
+// ============================================================================
+
+/**
+ * Factory para APP_INITIALIZER que rehidrata el estado.
+ */
+export function rehydrationInitializerFactory(
+  rehydration: StateRehydrationService
+): () => Promise<void> {
+  return async () => {
+    const result = await rehydration.rehydrate();
+    
+    if (!result.success) {
+      console.error('[App Init] Rehydration failed:', result.error);
+    } else if (result.warnings.length > 0) {
+      console.warn('[App Init] Rehydration warnings:', result.warnings);
+    }
+    
+    if (result.migrationsApplied.length > 0) {
+      console.info('[App Init] Applied migrations:', result.migrationsApplied);
+    }
+  };
+}
+
+/**
+ * Provider para incluir en app.module.ts
+ */
+export const REHYDRATION_INITIALIZER: Provider = {
+  provide: APP_INITIALIZER,
+  useFactory: rehydrationInitializerFactory,
+  deps: [StateRehydrationService],
+  multi: true
+};

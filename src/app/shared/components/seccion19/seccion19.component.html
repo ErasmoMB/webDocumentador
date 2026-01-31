@@ -3,27 +3,19 @@
 <div [innerHTML]="obtenerTextoOrganizacionConResaltado()"></div>
 
 <app-table-wrapper title="Autoridades y líderes sociales – CC {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.15">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Organización</th>
-            <th class="table-header">Cargo</th>
-            <th class="table-header">Nombres y Apellidos</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (getTablaAutoridades() || []); let i = index">
-            <td class="table-cell" *ngIf="shouldShowOrgCell(i, getTablaAutoridades())" [attr.rowspan]="getOrgRowSpan(item.organizacion, getTablaAutoridades())" [appDataSource]="'manual'" [fieldName]="'autoridades'">{{ item.organizacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'cargo'">{{ item.cargo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre || '____' }}</td>
-        </tr>
-        <tr *ngIf="!getTablaAutoridades() || getTablaAutoridades().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getTablaAutoridades()"
+  [config]="{
+    columns: [
+      { key: 'organizacion', header: 'Organización', align: 'left' },
+      { key: 'cargo', header: 'Cargo', align: 'left' },
+      { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
@@ -43,7 +35,7 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.15. Organización social y liderazgo</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -56,10 +48,11 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field mt-xl">
       <label class="label">Tabla Autoridades y Líderes Sociales</label>
       <app-dynamic-table
         [datos]="datos"
+        [sectionId]="seccionId"
         [config]="autoridadesConfig"
         [columns]="[
           { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'CC Ayroca' },
@@ -72,7 +65,7 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field mt-lg">
       <label class="label">Fotografías de Organización Social</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

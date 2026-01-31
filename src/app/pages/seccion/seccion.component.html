@@ -1,5 +1,31 @@
 <div class="seccion-container" [class.test-data-active]="testDataActive">
-  <div class="seccion-preview" [style.flex]="previewFlex">
+  <!-- Toggle para mobile (visible solo en mobile) -->
+  <div class="mobile-view-toggle">
+    <button 
+      class="toggle-btn" 
+      [class.active]="mobileViewMode === 'preview'"
+      (click)="toggleMobileView()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      Vista Previa
+    </button>
+    <button 
+      class="toggle-btn" 
+      [class.active]="mobileViewMode === 'form'"
+      (click)="toggleMobileView()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="9" y1="9" x2="15" y2="9"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+        <line x1="9" y1="17" x2="15" y2="17"/>
+      </svg>
+      Formulario
+    </button>
+  </div>
+
+  <div class="seccion-preview" [style.flex]="previewFlex" [class.mobile-hidden]="mobileViewMode === 'form'">
     <div class="preview-header">
       <div class="preview-header-titles">
         <h3 *ngIf="seccionPadreTitulo" class="seccion-padre-titulo">{{ seccionPadreTitulo }}</h3>
@@ -15,29 +41,20 @@
           </svg>
           Limpiar
         </button>
-        <button class="btn btn-test" (click)="llenarDatosPrueba()" title="Llenar todos los campos con datos de prueba">
+        <button class="btn btn-test" (click)="llenarDatosPrueba()" title="Llenar todos los campos con datos de ejemplo">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 11l3 3L22 4"/>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
           </svg>
-          Llenar Prueba
-        </button>
-        <button class="btn btn-ghost" (click)="irAPlantilla()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          Ver Plantilla Completa
+          Llenar Datos
         </button>
       </div>
     </div>
     <div class="preview-content scrollbar-thin">
       <div class="preview-document">
-        <div class="preview preview-static" *ngIf="getPreviewComponentType()">
+        <div class="preview preview-static">
           <div class="viewport-content">
-            <ng-container *ngComponentOutlet="getPreviewComponentType(); inputs: getPreviewComponentInputs()"></ng-container>
+            <ng-container #previewHost></ng-container>
           </div>
         </div>
       </div>
@@ -48,153 +65,13 @@
        [class.resizing]="isResizing"
        title="Arrastra para redimensionar"></div>
 
-  <div class="seccion-formulario" [style.flex]="formularioFlex">
+  <div class="seccion-formulario" [style.flex]="formularioFlex" [class.mobile-hidden]="mobileViewMode === 'preview'">
     <div class="formulario-header">
       <h3>Formulario de Datos</h3>
       <span class="badge badge-primary">{{ seccionTitulo }}</span>
     </div>
     <div class="formulario-content scrollbar-thin">
-      <ng-container *ngIf="seccionId === '3.1.1'">
-        <app-seccion1-form-wrapper [seccionId]="seccionId"></app-seccion1-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.2' || seccionId === '3.1.2.A' || seccionId === '3.1.2.B'">
-        <app-seccion2-form-wrapper [seccionId]="seccionId"></app-seccion2-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId?.includes('3.1.4.A.1.13') || seccionId?.includes('3.1.4.A.2.13') || seccionId?.includes('3.1.4.B.1.13') || seccionId?.includes('3.1.4.B.2.13') || seccionId?.includes('3.1.4.A.1.14') || seccionId?.includes('3.1.4.A.2.14') || seccionId?.includes('3.1.4.B.1.14') || seccionId?.includes('3.1.4.B.2.14')">
-        <app-seccion17-18-form-wrapper 
-          [seccionId]="seccionId">
-        </app-seccion17-18-form-wrapper>
-      </ng-container>
-
-      <!-- Formulario especializado para 3.1.4.B, 3.1.4.B.1 y 3.1.4.B.2 -->
-      <ng-container *ngIf="seccionId === '3.1.4.B' || seccionId === '3.1.4.B.1' || seccionId === '3.1.4.B.2'">
-        <app-seccion21 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion21>
-      </ng-container>
-
-      <!-- Formulario especializado para 3.1.3, 3.1.3.A y 3.1.3.B -->
-      <ng-container *ngIf="seccionId === '3.1.3' || seccionId === '3.1.3.A' || seccionId === '3.1.3.B'">
-        <app-seccion3 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion3>
-      </ng-container>
-
-      <!-- Formulario especializado para 3.1.4, 3.1.4.A y 3.1.4.A.1 -->
-      <ng-container *ngIf="seccionId === '3.1.4' || seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A.2'">
-        <app-seccion4-form-wrapper 
-          [seccionId]="seccionId">
-        </app-seccion4-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 1)">
-        <app-seccion5 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion5>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 2)">
-        <app-seccion6 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion6>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 3)">
-        <app-seccion7-form-wrapper [seccionId]="seccionId"></app-seccion7-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 4)">
-        <app-seccion8 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion8>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 5)">
-        <app-seccion9 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion9>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 6)">
-        <app-seccion10 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion10>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 7)">
-        <app-seccion11 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion11>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 8)">
-        <app-seccion12 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion12>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 9)">
-        <app-seccion13 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion13>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 10)">
-        <app-seccion14-form-wrapper 
-          [seccionId]="seccionId">
-        </app-seccion14-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 11)">
-        <app-seccion15-form-wrapper 
-          [seccionId]="seccionId">
-        </app-seccion15-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 12)">
-        <app-seccion16-form-wrapper 
-          [seccionId]="seccionId">
-        </app-seccion16-form-wrapper>
-      </ng-container>
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 13)">
-        <app-seccion17 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion17>
-      </ng-container>
-
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 14)">
-        <app-seccion18 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion18>
-      </ng-container>
-
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 15)">
-        <app-seccion19 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion19>
-      </ng-container>
-
-
-      <ng-container *ngIf="esSubseccionAISD(seccionId, 16)">
-        <app-seccion20 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion20>
-      </ng-container>
-
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.1' || seccionId === '3.1.4.B.2.1'">
-        <app-seccion22 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion22>
-      </ng-container>
-
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.2' || seccionId === '3.1.4.B.2.2'">
-        <app-seccion23 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion23>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.3' || seccionId === '3.1.4.B.2.3'">
-        <app-seccion24 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion24>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.4' || seccionId === '3.1.4.B.2.4'">
-        <app-seccion25 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion25>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.5' || seccionId === '3.1.4.B.2.5'">
-        <app-seccion26 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion26>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.6' || seccionId === '3.1.4.B.2.6'">
-        <app-seccion27 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion27>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.7' || seccionId === '3.1.4.B.2.7'">
-        <app-seccion28 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion28>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.8' || seccionId === '3.1.4.B.2.8'">
-        <app-seccion29 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion29>
-      </ng-container>
-
-      <ng-container *ngIf="seccionId === '3.1.4.B.1.9' || seccionId === '3.1.4.B.2.9'">
-        <app-seccion30-form-wrapper [seccionId]="seccionId"></app-seccion30-form-wrapper>
-      </ng-container>
+      <ng-container #formHost></ng-container>
 
     </div>
 

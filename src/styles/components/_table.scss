@@ -1,0 +1,282 @@
+// 🎯 COMPONENTE: Sistema Unificado de Tablas
+// Mobile-first, responsive, con variantes para vista y editable
+
+@use '../tokens/breakpoints' as *;
+@use '../tokens/colors' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/typography' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/radius' as *;
+
+// ============================================
+// TABLA BASE (Vista y Editable)
+// ============================================
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-table);
+  margin-bottom: var(--spacing-md);
+  
+  // Desktop: Estilos normales
+  @include desktop {
+    th, td {
+      padding: var(--spacing-table-cell);
+      text-align: left;
+      border: 1px solid var(--color-table-border);
+    }
+    
+    thead {
+      background-color: var(--color-table-header);
+    }
+    
+    th {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+    }
+  }
+  
+  // Mobile: Mantener estructura de tabla tradicional, solo responsive
+  @include mobile-only {
+    display: table;
+    width: 100%;
+    font-size: 0.875rem;
+    table-layout: auto;
+    
+    thead {
+      display: table-header-group;
+    }
+    
+    tbody {
+      display: table-row-group;
+    }
+    
+    tr {
+      display: table-row;
+    }
+    
+    th, td {
+      display: table-cell;
+      padding: var(--spacing-sm);
+      text-align: left;
+      border: 1px solid var(--color-table-border);
+      word-wrap: break-word;
+      word-break: break-word;
+      vertical-align: top;
+      max-width: 200px; // Limitar ancho máximo de celdas
+    }
+    
+    th {
+      background-color: var(--color-table-header);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      font-size: 0.8rem;
+    }
+    
+    // Asegurar que los inputs ocupen el ancho disponible
+    .table-input,
+    .table-textarea {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    
+    // Ocultar pseudo-elementos de data-label (no se usan en este enfoque)
+    td::before {
+      display: none !important;
+    }
+  }
+}
+
+// ============================================
+// VARIANTE: Tabla de Vista
+// ============================================
+
+.table--view {
+  th {
+    background-color: var(--color-table-header);
+  }
+  
+  tbody tr {
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: var(--color-table-row-hover);
+    }
+  }
+  
+  // Filas alternadas (striped)
+  &.table--striped {
+    tbody tr:nth-child(even) {
+      background-color: var(--color-table-row-striped);
+    }
+  }
+}
+
+// ============================================
+// VARIANTE: Tabla Editable
+// ============================================
+
+.table--editable {
+  .table-input,
+  .table-textarea {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-input);
+    font-size: var(--font-size-input);
+    font-family: var(--font-family-primary);
+    background-color: var(--color-input-background);
+    color: var(--color-text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    
+    // Mobile: Touch-friendly
+    @include mobile-only {
+      padding: var(--spacing-md);
+      font-size: 16px; // Evita zoom en iOS (mínimo 16px)
+      min-height: 44px; // Touch target mínimo
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: var(--color-input-border-focus);
+      box-shadow: 0 0 0 3px var(--color-primary-hover);
+    }
+    
+    &:read-only,
+    &[readonly] {
+      background-color: var(--color-input-background-readonly);
+      cursor: not-allowed;
+    }
+    
+    &:disabled {
+      background-color: var(--color-input-background-disabled);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+  
+  .table-textarea {
+    min-height: 60px;
+    resize: vertical;
+    font-family: inherit;
+    
+    @include mobile-only {
+      min-height: 80px;
+    }
+  }
+  
+  // Mejorar botones de acción en móvil
+  @include mobile-only {
+    .table-actions {
+      display: table-cell;
+      text-align: center;
+      vertical-align: middle;
+      width: auto;
+      min-width: 50px;
+      
+      .btn-icon {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+
+// ============================================
+// CLASES COMPATIBILIDAD (Legacy)
+// ============================================
+
+// Mantener compatibilidad con clases existentes
+.table-container {
+  @extend .table;
+  @extend .table--view;
+}
+
+.table-header {
+  // Los estilos ya están en .table th
+}
+
+.table-cell {
+  // Los estilos ya están en .table td
+}
+
+.editor-table {
+  @extend .table;
+  @extend .table--editable;
+}
+
+.table-input {
+  // Los estilos ya están en .table--editable .table-input
+}
+
+// ============================================
+// FILA TOTAL
+// ============================================
+
+.total-row {
+  background-color: var(--color-table-header-alt) !important;
+  font-weight: var(--font-weight-semibold);
+  
+  td {
+    background-color: var(--color-table-header-alt) !important;
+  }
+}
+
+// ============================================
+// COLORES ESPECIALES (Backend, Porcentajes)
+// ============================================
+
+.cell-from-bd {
+  background-color: var(--color-backend-data);
+  color: var(--color-text-inverse);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cell-percentage {
+  background-color: var(--color-percentage);
+  color: var(--color-percentage-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+// ============================================
+// RESPONSIVE: Tabla con muchas columnas
+// ============================================
+
+.table--scrollable {
+  @include mobile-only {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    .table {
+      min-width: 600px; // Ancho mínimo para scroll horizontal
+    }
+  }
+}
+
+// Wrapper para tablas que necesitan scroll horizontal en móvil
+.table-wrapper,
+.table-editor {
+  @include mobile-only {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    display: block;
+    
+    .table {
+      min-width: 100%;
+      // Si la tabla es muy ancha, permitir scroll horizontal
+      @media (max-width: 480px) {
+        min-width: max-content;
+      }
+    }
+  }
+}

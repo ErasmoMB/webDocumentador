@@ -52,21 +52,44 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getCantidadEstudiantesSinTotal()">
-            <td class="table-cell"><span *ngIf="item.institucion && item.institucion !== '____'" [appDataSource]="'section'" [fieldName]="'institucion'">{{ item.institucion }}</span><span *ngIf="!item.institucion || item.institucion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'section'" [fieldName]="'nivel'">{{ item.nivel }}</span><span *ngIf="!item.nivel || item.nivel === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.gestion && item.gestion !== '____'" [appDataSource]="'section'" [fieldName]="'gestion'">{{ item.gestion }}</span><span *ngIf="!item.gestion || item.gestion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.total !== undefined && item.total !== '____'" [appDataSource]="'section'" [fieldName]="'total'">{{ item.total }}</span><span *ngIf="item.total === undefined || item.total === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
+        <tr *ngFor="let item of getCantidadEstudiantesConPorcentajes()" [class.total-row]="item.institucion === 'Total'">
+            <td class="table-cell">
+                <span *ngIf="item.institucion && item.institucion !== '____'">
+                    <strong *ngIf="item.institucion === 'Total'">{{ item.institucion }}</strong>
+                    <span *ngIf="item.institucion !== 'Total'" [appDataSource]="'section'" [fieldName]="'institucion'">{{ item.institucion }}</span>
+                </span>
+                <span *ngIf="!item.institucion || item.institucion === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.nivel && item.nivel !== '____'" [appDataSource]="'section'" [fieldName]="'nivel'">
+                    <strong *ngIf="item.institucion === 'Total'">{{ item.nivel }}</strong>
+                    <span *ngIf="item.institucion !== 'Total'">{{ item.nivel }}</span>
+                </span>
+                <span *ngIf="!item.nivel || item.nivel === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.gestion && item.gestion !== '____'" [appDataSource]="'section'" [fieldName]="'gestion'">
+                    <strong *ngIf="item.institucion === 'Total'">{{ item.gestion }}</strong>
+                    <span *ngIf="item.institucion !== 'Total'">{{ item.gestion }}</span>
+                </span>
+                <span *ngIf="!item.gestion || item.gestion === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.total !== undefined && item.total !== '____'" [appDataSource]="item.institucion === 'Total' ? 'calculated' : 'section'" [fieldName]="'total'">
+                    <strong *ngIf="item.institucion === 'Total'">{{ item.total }}</strong>
+                    <span *ngIf="item.institucion !== 'Total'">{{ item.total }}</span>
+                </span>
+                <span *ngIf="item.total === undefined || item.total === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentaje" [appDataSource]="'calculated'" appDataHighlight="calculated">
+                    <strong *ngIf="item.institucion === 'Total'">{{ item.porcentaje }}</strong>
+                    <span *ngIf="item.institucion !== 'Total'">{{ item.porcentaje }}</span>
+                </span>
+                <span *ngIf="!item.porcentaje">____</span>
+            </td>
         </tr>
-        <tr class="total-row" *ngIf="getCantidadEstudiantesSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>____</strong></td>
-            <td class="table-cell"><strong>____</strong></td>
-            <td class="table-cell"><strong>{{ getTotalCantidadEstudiantes() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getCantidadEstudiantesSinTotal().length === 0">
+        <tr *ngIf="getCantidadEstudiantesConPorcentajes().length === 0">
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>
             <td class="table-cell">____</td>

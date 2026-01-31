@@ -3,91 +3,40 @@
 <p class="text-justify" *ngIf="!datos?.['textoFestividades'] || datos?.['textoFestividades'] === '____'">Las festividades desempeñan un papel central en la vida cultural y social de una comunidad, reflejando tradiciones profundamente arraigadas que fortalecen los lazos comunitarios. En el CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}, estas celebraciones son momentos de gran importancia que unen a la población en torno a sus costumbres y creencias.</p>
 
 <app-table-wrapper title="Festividades principales - CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" sectionId="3.1.4.B.1.15">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Festividad</th>
-            <th class="table-header">Fecha de celebración</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos?.['festividades'] || [])">
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'festividad'">{{ item.festividad || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'fecha'">{{ item.fecha || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
-            <td class="table-cell" [appDataSource]="'manual'">Carnavales</td>
-            <td class="table-cell" [appDataSource]="'manual'">Febrero</td>
-        </tr>
-        <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
-            <td class="table-cell" [appDataSource]="'manual'">Virgen de Copacabana</td>
-            <td class="table-cell" [appDataSource]="'manual'">Mayo - Junio</td>
-        </tr>
-        <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
-            <td class="table-cell" [appDataSource]="'manual'">Peregrinación de San Andrés</td>
-            <td class="table-cell" [appDataSource]="'manual'">Junio - Julio</td>
-        </tr>
-        <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
-            <td class="table-cell" [appDataSource]="'manual'">Aniversario del distrito</td>
-            <td class="table-cell" [appDataSource]="'manual'">09/06</td>
-        </tr>
-        <tr *ngIf="!datos?.['festividades'] || (datos?.['festividades'] || []).length === 0">
-            <td class="table-cell" [appDataSource]="'manual'">San Andrés</td>
-            <td class="table-cell" [appDataSource]="'manual'">30/11</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="datos?.['festividades'] || []"
+    [config]="{
+      columns: [
+        { key: 'festividad', header: 'Festividad', align: 'left' },
+        { key: 'fecha', header: 'Fecha de celebración', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
-<app-table-wrapper title="Mapa de actores del Proyecto de Exploración Minera {{ datos?.['projectName'] || 'Paka' }}" sectionId="3.1.4.B.1.15">
-<table class="table-container table-actors">
-    <colgroup>
-        <col style="width: 16%">
-        <col style="width: 14%">
-        <col style="width: 15%">
-        <col style="width: 18%">
-        <col style="width: 8%">
-        <col style="width: 8%">
-        <col style="width: 8%">
-        <col style="width: 13%">
-    </colgroup>
-    <thead>
-        <tr>
-            <th class="table-header">CATEGORIA</th>
-            <th class="table-header">ESPACIO</th>
-            <th class="table-header">CARGO</th>
-            <th class="table-header">ACTOR</th>
-            <th class="table-header" colspan="3">POSICIÓN</th>
-            <th class="table-header">PERCEPCIÓN</th>
-        </tr>
-        <tr>
-            <th class="table-header"></th>
-            <th class="table-header"></th>
-            <th class="table-header"></th>
-            <th class="table-header"></th>
-            <th class="table-header">A favor</th>
-            <th class="table-header">Neutro</th>
-            <th class="table-header">En contra</th>
-            <th class="table-header"></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos?.['mapaActores'] || []); let i = index">
-            <td class="table-cell" *ngIf="shouldShowCategoriaCell(i)" [attr.rowspan]="getCategoriaRowSpan(item.categoria)" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'espacio'">{{ item.espacio || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'cargo'">{{ item.cargo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'actor'">{{ item.actor || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'aFavor'">{{ item.aFavor === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'neutro'">{{ item.neutro === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'enContra'">{{ item.enContra === 'X' ? 'X' : '' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'percepcion'">{{ item.percepcion || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos?.['mapaActores'] || (datos?.['mapaActores'] || []).length === 0">
-            <td class="table-cell" colspan="8">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-table-wrapper title="Mapa de actores del Proyecto de Exploración Minera {{ datos?.['projectName'] || 'Paka' }}" sectionId="3.1.4.B.1.16">
+  <app-generic-table
+    [data]="datos?.['mapaActores'] || []"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'CATEGORIA', align: 'left' },
+        { key: 'espacio', header: 'ESPACIO', align: 'left' },
+        { key: 'cargo', header: 'CARGO', align: 'left' },
+        { key: 'actor', header: 'ACTOR', align: 'left' },
+        { key: 'aFavor', header: 'A favor', align: 'center' },
+        { key: 'neutro', header: 'Neutro', align: 'center' },
+        { key: 'enContra', header: 'En contra', align: 'center' },
+        { key: 'percepcion', header: 'PERCEPCIÓN', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 

@@ -1,71 +1,10 @@
+/* ✅ MIGRADO: Usa el Design System centralizado */
+/* Los estilos ahora están en src/styles/components/_table.scss y _button.scss */
+/* Este archivo se mantiene para compatibilidad, pero los estilos reales están centralizados */
+
 .table-editor {
   width: 100%;
 }
 
-.editor-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 10px;
-}
-
-.editor-table th {
-  background-color: #f5f5f5;
-  padding: 8px;
-  text-align: left;
-  border: 1px solid #ddd;
-  font-weight: 600;
-}
-
-.editor-table td {
-  padding: 8px;
-  border: 1px solid #ddd;
-}
-
-.table-input {
-  width: 100%;
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.table-input:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.btn-icon {
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon:hover {
-  background: #c82333;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-}
+/* Los estilos de .editor-table, .table-input, .btn-icon, .btn-secondary */
+/* ahora están en el Design System centralizado (src/styles/components/) */

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BackendApiService } from './backend-api.service';
-import { LoggerService } from './logger.service';
+import { BackendApiService } from './infrastructure/backend-api.service';
+import { LoggerService } from './infrastructure/logger.service';
 import { Observable, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { CentroPoblado } from '../models/api-response.model';

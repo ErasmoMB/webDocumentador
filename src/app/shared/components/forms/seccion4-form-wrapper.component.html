@@ -49,6 +49,7 @@
     <label class="label">Tabla de Ubicación Referencial</label>
     <app-dynamic-table
       [datos]="datos"
+      [sectionId]="seccionId"
       [config]="tablaAISD1Config"
       [columns]="[
         { field: 'localidad', label: 'Localidad', type: 'text', placeholder: 'Ej: ' + obtenerNombreComunidadActual() },
@@ -118,6 +119,7 @@
     <label class="label">Tabla de Población y Viviendas</label>
     <app-dynamic-table
       [datos]="datos"
+      [sectionId]="seccionId"
       [config]="tablaAISD2Config"
       [columns]="[
         { field: 'punto', label: 'Punto de Población (INEI)', type: 'text', placeholder: 'Ej: CAHUACHO' },

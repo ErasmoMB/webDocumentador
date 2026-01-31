@@ -6,32 +6,19 @@
 <p class="text-justify" [innerHTML]="obtenerTextoIdiomaConResaltado()"></p>
 
 <app-table-wrapper title="Lenguas maternas en población de 3 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.11">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getLenguasMaternaSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}%</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getLenguasMaternaSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalLenguasMaternas() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getLenguasMaternaSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getLenguasMaternasConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'" [fieldName]="'parrafoSeccion15_religion_completo'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
@@ -39,32 +26,19 @@
 <p class="text-justify" [innerHTML]="obtenerTextoSeccion15ReligionCompletoConResaltado()"></p>
 
 <app-table-wrapper title="Religión – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.11">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getReligionesSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}%</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getReligionesSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalReligiones() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getReligionesSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getReligionesConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">Fuente: <span [appDataSource]="'manual'">Plataforma Nacional de Datos Georreferenciados – Geo Perú</span></p>
 
@@ -84,10 +58,10 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">a. Idioma</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -100,29 +74,28 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Lenguas Maternas</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="lenguasMaternasConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="getTablaKeyLenguasMaternas()"
           [totalKey]="'categoria'"
-          [customFieldChangeHandler]="onLenguasMaternasFieldChange.bind(this)"
           (tableUpdated)="onLenguasMaternasTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="getLenguasMaternaSinTotal().length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
+        <div class="table-editor mt-sm" *ngIf="getLenguasMaternaSinTotal().length > 0">
+          <table class="table table--editable editor-table">
             <tbody>
               <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalLenguasMaternas()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalLenguasMaternas()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
               </tr>
             </tbody>
           </table>
@@ -130,10 +103,10 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">b. Religión</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -146,36 +119,35 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Religiones</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="religionesConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="getTablaKeyReligiones()"
           [totalKey]="'categoria'"
-          [customFieldChangeHandler]="onReligionesFieldChange.bind(this)"
           (tableUpdated)="onReligionesTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="getReligionesSinTotal().length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
+        <div class="table-editor mt-sm" *ngIf="getReligionesSinTotal().length > 0">
+          <table class="table table--editable editor-table">
             <tbody>
               <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalReligiones()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalReligiones()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Iglesia</label>
         <app-image-upload
           [fotografias]="fotografiasFormMulti"

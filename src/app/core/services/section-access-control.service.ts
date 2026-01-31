@@ -114,10 +114,14 @@ export class SectionAccessControlService {
 
     switch (groupType) {
       case 'AISD':
-        return !!config?.aisd && (config.aisd.ccppActivos?.length || 0) > 0;
+        if (!config?.aisd) return false;
+        const aisdGroups = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
+        return aisdGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
 
       case 'AISI':
-        return !!config?.aisi && (config.aisi.ccppActivos?.length || 0) > 0;
+        if (!config?.aisi) return false;
+        const aisiGroups = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
+        return aisiGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
 
       case 'BOTH':
         return this.groupValidation.isConfigValid();
@@ -175,8 +179,18 @@ export class SectionAccessControlService {
     const config = this.groupConfig.getConfig();
     const hasAISD = !!config?.aisd;
     const hasAISI = !!config?.aisi;
-    const aiesdCCPP = config?.aisd?.ccppActivos?.length || 0;
-    const aisiCCPP = config?.aisi?.ccppActivos?.length || 0;
+    
+    let aiesdCCPP = 0;
+    if (config?.aisd) {
+      const aisdGroups = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
+      aiesdCCPP = aisdGroups.reduce((total, grupo) => total + (grupo.ccppActivos?.length || 0), 0);
+    }
+    
+    let aisiCCPP = 0;
+    if (config?.aisi) {
+      const aisiGroups = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
+      aisiCCPP = aisiGroups.reduce((total, grupo) => total + (grupo.ccppActivos?.length || 0), 0);
+    }
 
     return `ACCESO: AISD=${hasAISD} (${aiesdCCPP} CCPP), AISI=${hasAISI} (${aisiCCPP} CCPP)`;
   }

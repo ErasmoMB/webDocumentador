@@ -1,22 +1,29 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { StateService } from 'src/app/core/services/state.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 
 @Component({
-  selector: 'app-seccion21',
-  templateUrl: './seccion21.component.html',
-  styleUrls: ['./seccion21.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion21',
+    templateUrl: './seccion21.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion21Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1';
@@ -31,21 +38,18 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   override readonly PHOTO_PREFIX = 'fotografiaCahuacho';
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService,
+    injector: Injector,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, undefined);
   }
 
-  protected override onInitCustom(): void {
+  protected override async onInitCustom(): Promise<void> {
+    
     this.actualizarFotografiasCache();
     this.debugCentrosPobladosAISI(); // Debug de centros poblados
     if (this.modoFormulario) {
@@ -55,17 +59,21 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
           this.cdRef.detectChanges();
         }, 0);
       }
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        if (this.seccionId) {
-          this.actualizarFotografiasFormMulti();
-          this.cdRef.detectChanges();
-        }
-      });
+      this.stateSubscription = this.stateAdapter.datos$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (this.seccionId) {
+            this.actualizarFotografiasFormMulti();
+            this.cdRef.detectChanges();
+          }
+        });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
+      this.stateSubscription = this.stateAdapter.datos$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.cargarFotografias();
+          this.cdRef.detectChanges();
+        });
     }
   }
 
@@ -91,7 +99,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     let hayCambios = false;
     
     for (const campo of this.watchedFields) {
@@ -112,7 +120,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override actualizarDatos(): void {
-    this.datos = this.formularioService.obtenerDatos();
+    this.datos = this.projectFacade.obtenerDatos();
     this.actualizarFotografiasCache();
     this.watchedFields.forEach(campo => {
       this.datosAnteriores[campo] = this.clonarValor((this.datos as any)[campo] || null);
@@ -143,6 +151,30 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   getTablaKeyUbicacionCp(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+  }
+
+  get ubicacionCpConfig(): any {
+    return {
+      tablaKey: this.getTablaKeyUbicacionCp(),
+      totalKey: 'localidad',
+      campoTotal: 'localidad',
+      estructuraInicial: [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }]
+    };
+  }
+
+  get columnasUbicacionCp(): any[] {
+    return [
+      { key: 'localidad', header: 'Localidad', align: 'left' },
+      { key: 'coordenadas', header: 'Coordenadas', align: 'left' },
+      { key: 'altitud', header: 'Altitud', align: 'left' },
+      { key: 'distrito', header: 'Distrito', align: 'left' },
+      { key: 'provincia', header: 'Provincia', align: 'left' },
+      { key: 'departamento', header: 'Departamento', align: 'left' }
+    ];
+  }
+
+  onTablaUpdated(): void {
+    this.cdRef.detectChanges();
   }
 
   /**
@@ -381,17 +413,26 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   protected override loadSectionData(): void {
     const fieldsToLoad = this.fieldMapping.getFieldsForSection(this.seccionId);
     if (fieldsToLoad.length > 0) {
-      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad).subscribe();
+      this.sectionDataLoader.loadSectionData(this.seccionId, fieldsToLoad)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }
   }
 
-  formatearParrafo(texto: string): string {
-    if (!texto) return '';
+  formatearParrafo(texto: string): SafeHtml {
+    // Logged: [Seccion21] formatearParrafo called - seccionId: {this.seccionId}, texto length: {texto?.length}
+    // Logged: [Seccion21] formatearParrafo texto: {texto}
+    if (!texto) {
+      // Logged: [Seccion21] formatearParrafo: texto vacío
+      return '';
+    }
     const parrafos = texto.split(/\n\n+/);
-    return parrafos.map(p => {
+    const resultado = parrafos.map(p => {
       const textoLimpio = p.trim().replace(/\n/g, '<br>');
       return `<p class="text-justify">${textoLimpio}</p>`;
     }).join('');
+    // Logged: [Seccion21] formatearParrafo resultado: {resultado}
+    return this.sanitizer.bypassSecurityTrustHtml(resultado);
   }
 
   override actualizarFotografiasCache() {
@@ -419,7 +460,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -430,19 +471,29 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
   }
 
   obtenerTextoSeccion21AISIIntroCompleto(): string {
+    // Logged: [Seccion21] obtenerTextoSeccion21AISIIntroCompleto - this.datos: {this.datos}
+    // Logged: [Seccion21] parrafoSeccion21_aisi_intro_completo: {this.datos?.parrafoSeccion21_aisi_intro_completo}
+    // Logged: [Seccion21] centroPobladoAISI: {this.datos?.centroPobladoAISI}
+    // Logged: [Seccion21] provinciaSeleccionada: {this.datos?.provinciaSeleccionada}
+    // Logged: [Seccion21] departamentoSeleccionado: {this.datos?.departamentoSeleccionado}
+    
     if (this.datos.parrafoSeccion21_aisi_intro_completo) {
+      // Logged: [Seccion21] Usando texto personalizado
       return this.datos.parrafoSeccion21_aisi_intro_completo;
     }
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
     const provincia = this.datos.provinciaSeleccionada || 'Caravelí';
     const departamento = this.datos.departamentoSeleccionado || 'Arequipa';
+    
+    // Logged: [Seccion21] Usando valores por defecto: {centroPoblado, provincia, departamento}
+    
     return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centroPoblado}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
   }
 
@@ -469,7 +520,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
       this.datos['ubicacionCpTabla'] = [
         { localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }
       ];
-      this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
+      this.onFieldChange('ubicacionCpTabla', this.datos['ubicacionCpTabla'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -480,7 +531,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
       this.inicializarUbicacionCp();
     }
     this.datos['ubicacionCpTabla'].push({ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' });
-    this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
+    this.onFieldChange('ubicacionCpTabla', this.datos['ubicacionCpTabla'], { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -489,7 +540,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     if (this.datos['ubicacionCpTabla'] && this.datos['ubicacionCpTabla'].length > 1) {
       this.datos['ubicacionCpTabla'].splice(index, 1);
       this.datos['ubicacionCpTabla'] = [...this.datos['ubicacionCpTabla']];
-      this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
+      this.onFieldChange('ubicacionCpTabla', this.datos['ubicacionCpTabla'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -502,7 +553,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     if (this.datos['ubicacionCpTabla'][index]) {
       this.datos['ubicacionCpTabla'][index][field] = value;
       this.datos['ubicacionCpTabla'] = [...this.datos['ubicacionCpTabla']];
-      this.formularioService.actualizarDato('ubicacionCpTabla', this.datos['ubicacionCpTabla']);
+      this.onFieldChange('ubicacionCpTabla', this.datos['ubicacionCpTabla'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -555,5 +606,6 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
     return clon;
   }
 }
+
 
 

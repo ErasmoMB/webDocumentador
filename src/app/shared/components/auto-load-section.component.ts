@@ -1,10 +1,8 @@
-import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Directive, OnDestroy } from '@angular/core';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Directive, OnDestroy, Injector } from '@angular/core';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { BackendDataMapperService } from 'src/app/core/services/backend-data-mapper.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Subscription, of } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -18,22 +16,13 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   private loadDebounceSubscription: Subscription | null = null;
 
   protected constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService | null,
     cdRef: ChangeDetectorRef,
-    protected autoLoader: AutoBackendDataLoaderService
+    protected autoLoader: AutoBackendDataLoaderService,
+    injector: Injector,
+    protected backendDataMapper?: BackendDataMapperService,
+    protected tableFacade?: TableManagementFacade
   ) {
-    super(
-      formularioService,
-      fieldMapping,
-      sectionDataLoader,
-      imageService,
-      photoNumberingService,
-      cdRef
-    );
+    super(cdRef, injector);
   }
 
   override ngOnInit(): void {
@@ -92,6 +81,12 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   }
 
   protected loadAutoSectionData(forceRefresh: boolean = false): void {
+    // ⚠️ BACKEND DESACTIVADO TEMPORALMENTE - Solo flujo frontend
+    // DESCOMENTAR cuando el backend esté listo:
+    // console.warn('⚠️ Carga automática de backend DESACTIVADA');
+    return;
+    
+    /* CÓDIGO COMENTADO - REACTIVAR CON BACKEND
     // No cargar datos automáticamente en modo vista (plantilla)
     // Los datos ya están disponibles desde formularioService
     if (this.modoFormulario === false) {
@@ -123,39 +118,85 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
           this.cdRef.detectChanges();
         },
         error: (error) => {
-          // Silenciar errores en modo vista para no llenar la consola
           this.isLoadingData = false;
-          // Solo loguear errores en modo desarrollo o formulario
-          if (this.modoFormulario !== false) {
-            console.warn(`[AutoLoad] Error cargando datos para ${sectionKey}:`, error);
-          }
         }
       });
 
     this.autoLoadSubscriptions.push(subscription);
+    */
   }
 
   protected applyLoadedData(loadedData: { [fieldName: string]: any }): void {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const sectionKey = this.getSectionKey();
 
     for (const [fieldName, data] of Object.entries(loadedData)) {
       if (data === null || data === undefined) continue;
 
+      // Obtener metadata de la tabla si está disponible (nuevo sistema)
+      const tableMetadata = this.backendDataMapper?.getTableMetadata(sectionKey, fieldName);
+      
       const fieldKey = prefijo ? `${fieldName}${prefijo}` : fieldName;
-      const datosActuales = this.datos[fieldKey];
+      const tablaKey = tableMetadata?.tablaKey || fieldName;
+      const tablaKeyConPrefijo = prefijo ? `${tablaKey}${prefijo}` : tablaKey;
+      
+      const datosActuales = this.datos[tablaKeyConPrefijo];
       const existeDato = datosActuales !== undefined && datosActuales !== null;
 
       const sonArrays = Array.isArray(data) && Array.isArray(datosActuales);
 
-      // Reemplaza si no existe, o si el contenido cambió (no solo si crece).
+      // Para tablas (arrays), verificar si es placeholder antes de actualizar
+      const esTabla = Array.isArray(data);
+      const actualEsPlaceholder = esTabla && this.esTablaPlaceholder(datosActuales);
+
+      // Reemplaza si no existe, o si el contenido cambió, o si viene tabla válida y actual es placeholder
       const debeActualizar = !existeDato ||
         (sonArrays && JSON.stringify(data) !== JSON.stringify(datosActuales)) ||
-        (!sonArrays && JSON.stringify(data) !== JSON.stringify(datosActuales));
+        (!sonArrays && JSON.stringify(data) !== JSON.stringify(datosActuales)) ||
+        (esTabla && data.length > 0 && actualEsPlaceholder);
 
       if (debeActualizar) {
-        this.formularioService.actualizarDato(fieldKey as any, data);
-        // IMPORTANTE: Actualizar this.datos inmediatamente para que recalcularPorcentajes tenga datos frescos
-        this.datos[fieldKey] = data;
+        // ✅ FASE 1: Eliminar porcentajes existentes antes de guardar datos mock
+        let datosLimpios = Array.isArray(data) ? [...data] : data;
+        const campoPorcentaje = tableMetadata?.tableConfig?.campoPorcentaje;
+        if (Array.isArray(datosLimpios) && campoPorcentaje) {
+          datosLimpios = datosLimpios.map((item: any) => {
+            const itemLimpio = { ...item };
+            // Eliminar porcentaje si existe (se calculará dinámicamente cuando el usuario edite)
+            delete itemLimpio[campoPorcentaje];
+            return itemLimpio;
+          });
+        }
+        
+        // Guardar con prefijo usando tablaKey
+        this.datos[tablaKeyConPrefijo] = datosLimpios;
+        
+        // ✅ FASE 1: NO calcular porcentajes automáticamente cuando se cargan datos mock
+        // Los porcentajes se calcularán dinámicamente cuando el usuario edite los datos
+        // Solo calcular porcentajes si es explícitamente necesario (datos del backend real)
+        // if (tableMetadata?.tableConfig.calcularPorcentajes && Array.isArray(datosLimpios) && this.tableFacade) {
+        //   const tableConfig: TableConfig = {
+        //     tablaKey: tablaKeyConPrefijo,
+        //     totalKey: tableMetadata.tableConfig.totalKey,
+        //     campoTotal: tableMetadata.tableConfig.campoTotal,
+        //     campoPorcentaje: tableMetadata.tableConfig.campoPorcentaje,
+        //     calcularPorcentajes: tableMetadata.tableConfig.calcularPorcentajes,
+        //     estructuraInicial: tableMetadata.tableConfig.estructuraInicial,
+        //     camposParaCalcular: tableMetadata.tableConfig.camposParaCalcular
+        //   };
+        //   this.calcularPorcentajesTabla(tablaKeyConPrefijo, tableConfig);
+        // }
+        
+        // Persistir
+        this.onFieldChange(tablaKeyConPrefijo as any, this.datos[tablaKeyConPrefijo]);
+        
+        // También actualizar sin prefijo para compatibilidad
+        if (prefijo) {
+          this.datos[tablaKey] = Array.isArray(this.datos[tablaKeyConPrefijo]) 
+            ? [...this.datos[tablaKeyConPrefijo]] 
+            : this.datos[tablaKeyConPrefijo];
+        }
+        
         // Invalidar cachés específicos cuando cambian tablas calculadas
         if (fieldName === 'peaOcupacionesTabla' && typeof (this as any).invalidarCachePEA === 'function') {
           (this as any).invalidarCachePEA();
@@ -166,6 +207,58 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
     // IMPORTANTE: Recalcular porcentajes DESPUÉS de actualizar todos los datos
     this.recalcularPorcentajesDelBackend(loadedData);
     this.actualizarDatos();
+  }
+
+  /**
+   * Calcula porcentajes para una tabla usando su configuración de metadata
+   */
+  protected calcularPorcentajesTabla(tablaKey: string, tableConfig: TableConfig): void {
+    if (!this.tableFacade) return;
+    
+    const tabla = this.datos[tablaKey];
+    if (!Array.isArray(tabla) || tabla.length === 0) return;
+    
+    this.tableFacade.calcularPorcentajes(this.datos, {
+      tablaKey: tablaKey,
+      totalKey: tableConfig.totalKey,
+      campoTotal: tableConfig.campoTotal,
+      campoPorcentaje: tableConfig.campoPorcentaje,
+      calcularPorcentajes: tableConfig.calcularPorcentajes
+    });
+  }
+
+  /**
+   * Verifica si una tabla es un placeholder (vacía o con solo valores por defecto)
+   * Puede ser sobrescrito en componentes específicos para lógica personalizada
+   */
+  protected esTablaPlaceholder(valor: any): boolean {
+    if (!Array.isArray(valor) || valor.length === 0) {
+      return true;
+    }
+
+    // Verificar si todas las filas tienen valores vacíos o cero
+    return valor.every((row: any) => {
+      if (!row) return true;
+      
+      // Verificar campos numéricos
+      const tieneCasos = row.casos !== undefined;
+      const casos = tieneCasos ? (typeof row.casos === 'number' ? row.casos : parseInt(row.casos) || 0) : null;
+      
+      // Verificar campos de texto
+      const tieneCategoria = row.categoria !== undefined;
+      const categoriaVacia = tieneCategoria ? (row.categoria?.toString().trim() || '') === '' : true;
+      
+      const tieneSexo = row.sexo !== undefined;
+      const sexoVacio = tieneSexo ? (row.sexo?.toString().trim() || '') === '' : true;
+      
+      const tieneIndicador = row.indicador !== undefined;
+      const indicadorVacio = tieneIndicador ? (row.indicador?.toString().trim() || '') === '' : true;
+      
+      const claveVacia = categoriaVacia && sexoVacio && indicadorVacio;
+      
+      // Es placeholder si la clave está vacía y los casos son 0 o null
+      return claveVacia && (casos === null || casos === 0);
+    });
   }
 
   /**

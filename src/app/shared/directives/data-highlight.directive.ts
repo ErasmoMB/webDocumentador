@@ -16,7 +16,8 @@ import { DataHighlightService } from 'src/app/core/services/data-highlight.servi
  * </tr>
  */
 @Directive({
-  selector: '[appDataHighlight]'
+  selector: '[appDataHighlight]',
+  standalone: true
 })
 export class DataHighlightDirective implements OnInit {
   @Input('appDataHighlight') dataType: 'calculated' | 'inherited' | 'database' | 'manual' = 'database';

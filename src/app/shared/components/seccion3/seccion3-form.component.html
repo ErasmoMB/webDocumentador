@@ -1,0 +1,123 @@
+<div class="form-group-section">
+  <h4 class="section-title">3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares</h4>
+  
+  <div class="form-group-section mt-lg">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <app-paragraph-editor
+      fieldId="parrafoSeccion3_metodologia"
+      label="Metodología"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="3"
+      [value]="obtenerTextoMetodologia()"
+      (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
+    </app-paragraph-editor>
+  </div>
+
+  <div class="form-group-section mt-xl">
+    <h4 class="section-title">A. Fuentes primarias</h4>
+    
+    <div class="form-group-section mt-md">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion3_fuentes_primarias"
+        label="Fuentes Primarias"
+        hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="obtenerTextoFuentesPrimarias()"
+        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field mt-lg">
+      <label class="label">Cantidad de Entrevistas</label>
+      <input 
+        type="number" 
+        class="input" 
+        placeholder="Ej: 18"
+        [value]="formData.cantidadEntrevistas || ''"
+        (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
+    </div>
+
+    <div class="form-field mt-md">
+      <label class="label">Fecha de Trabajo de Campo</label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ej: noviembre 2024"
+        [value]="formData.fechaTrabajoCampo || ''"
+        (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
+    </div>
+
+    <div class="form-field mt-lg">
+      <label class="label">Lista de Entrevistados</label>
+      <app-dynamic-table
+        [datos]="formData"
+        [sectionId]="seccionId"
+        [config]="entrevistadosConfig"
+        [columns]="columnasEntrevistados"
+        [tablaKey]="'entrevistados'"
+        [totalKey]="'nombre'"
+        (tableUpdated)="onTablaUpdated()">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-field mt-md">
+      <label class="label">Consultora / Fuente</label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ej: GEADES (2024)"
+        [value]="formData.consultora || ''"
+        (input)="onFieldChange('consultora', $any($event.target).value)">
+    </div>
+  </div>
+
+  <div class="form-group-section mt-xl">
+    <h4 class="section-title">B. Fuentes secundarias</h4>
+    
+    <div class="form-group-section mt-md">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion3_fuentes_secundarias"
+        label="Fuentes Secundarias - Texto Introductorio"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="2"
+        [value]="obtenerTextoFuentesSecundarias()"
+        (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">Lista de Fuentes Secundarias</h4>
+    
+      <div class="form-field fuente-item" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index">
+        <input 
+          type="text" 
+          class="input" 
+          [value]="fuente"
+          (input)="actualizarFuenteSecundaria(i, $any($event.target).value)">
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="eliminarFuenteSecundaria(i)">
+          Eliminar
+        </button>
+      </div>
+
+      <div class="form-field">
+        <button 
+          type="button" 
+          class="btn btn-primary btn-full" 
+          (click)="agregarFuenteSecundaria()">
+          Agregar Nueva Fuente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edición de Párrafos e Imágenes (del componente base) -->
+  <app-seccion3 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion3>
+</div>

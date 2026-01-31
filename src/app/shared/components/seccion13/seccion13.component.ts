@@ -1,23 +1,30 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { TableHandlerFactoryService } from 'src/app/core/services/table-handler-factory.service';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
 import { Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 @Component({
-  selector: 'app-seccion13',
-  templateUrl: './seccion13.component.html',
-  styleUrls: ['./seccion13.component.css']
+    imports: [
+        CoreSharedModule
+    ],
+    selector: 'app-seccion13',
+    templateUrl: './seccion13.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion13Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -74,19 +81,15 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
   }
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
   }
 
   protected getSectionKey(): string {
@@ -108,7 +111,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -254,14 +257,14 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
         (!sonArrays && JSON.stringify(data) !== JSON.stringify(actual));
 
       if (debeActualizar) {
-        this.formularioService.actualizarDato(fieldKey as any, data);
+        this.onFieldChange(fieldKey as any, data, { refresh: false });
         this.datos[fieldKey] = data;
 
         // Calcular porcentajes para tabla de afiliación de salud cuando se carga
         if (fieldName === 'afiliacionSaludTabla' && Array.isArray(data) && data.length > 0) {
           // Esperar a que los datos se actualicen antes de calcular
           Promise.resolve().then(() => {
-            this.calcularPorcentajesAfiliacionSalud();
+            this['calcularPorcentajesAfiliacionSalud']();
           });
         }
       }
@@ -274,9 +277,9 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
     this.eliminarFilasTotal();
-    this.calcularPorcentajesAfiliacionSalud();
+    this['calcularPorcentajesAfiliacionSalud']();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -294,7 +297,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total') && !categoria.includes('referencial');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKey, datosFiltrados);
+        this.onFieldChange(tablaKey, datosFiltrados);
       }
     }
   }
@@ -306,7 +309,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -317,7 +320,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
@@ -505,16 +508,14 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       tabla[rowIndex][field] = value;
       if (field !== 'casos' && field !== 'grupo') {
         this.calcularTotalesMorbilidad();
+        return;
       }
-      this.formularioService.actualizarDato(tablaKey, tabla);
+      this.onFieldChange(tablaKey, tabla, { refresh: false });
     }
   }
 
   onMorbilidadTableUpdated() {
     this.calcularTotalesMorbilidad();
-    const tablaKey = this.getTablaKeyMorbilidad();
-    const tabla = this.getTablaMorbilidad();
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.cdRef.detectChanges();
   }
 
@@ -533,7 +534,7 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       item.casos = total;
     });
     const tablaKey = this.getTablaKeyMorbilidad();
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
   }
 
   getAfiliacionSaludSinTotal(): any[] {
@@ -554,6 +555,16 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       return sum + casos;
     }, 0);
     return total.toString();
+  }
+
+  /**
+   * Obtiene la tabla Afiliación Salud con porcentajes calculados dinámicamente
+   * Cuadro 3.27
+   * Principio SOLID: Single Responsibility - Este método solo calcula porcentajes para Afiliación Salud
+   */
+  getAfiliacionSaludConPorcentajes(): any[] {
+    const tabla = this.getTablaAfiliacionSalud();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.27');
   }
 
   getPorcentajeNumerico(porcentaje: any): number {
@@ -642,33 +653,19 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
   onNatalidadMortalidadTableUpdated(): void {
     const tablaKey = this.getTablaKeyNatalidadMortalidad();
     const tabla = this.getTablaNatalidadMortalidad();
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
     this.cdRef.detectChanges();
   }
 
-  onAfiliacionSaludFieldChange(rowIndex: number, field: string, value: any): void {
-    const tablaKey = this.getTablaKeyAfiliacionSalud();
-    const tabla = this.getTablaAfiliacionSalud();
-    if (tabla && tabla[rowIndex]) {
-      tabla[rowIndex][field] = value;
-      
-      if (field === 'casos') {
-        this.calcularPorcentajesAfiliacionSalud();
-      }
-      
-      this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey, tabla);
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
+  // ✅ MIGRADO: Usa factory centralizado
+  onAfiliacionSaludFieldChange = this.createTableHandler('afiliacionSaludTabla', this.afiliacionSaludConfig);
 
   onAfiliacionSaludTableUpdated(): void {
     const tablaKey = this.getTablaKeyAfiliacionSalud();
     const tabla = this.getTablaAfiliacionSalud();
-    this.calcularPorcentajesAfiliacionSalud();
+    this['calcularPorcentajesAfiliacionSalud']();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -696,9 +693,10 @@ export class Seccion13Component extends AutoLoadSectionComponent implements OnDe
       });
       
       const tablaKey = this.getTablaKeyAfiliacionSalud();
-      this.formularioService.actualizarDato(tablaKey, tabla);
+      this.onFieldChange(tablaKey, tabla, { refresh: false });
     }
   }
 }
+
 
 

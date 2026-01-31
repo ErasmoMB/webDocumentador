@@ -1,9 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-paragraph-editor',
-  templateUrl: './paragraph-editor.component.html',
-  styleUrls: ['./paragraph-editor.component.css']
+    selector: 'app-paragraph-editor',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './paragraph-editor.component.html',
+    styleUrls: ['./paragraph-editor.component.css']
 })
 export class ParagraphEditorComponent implements OnInit, OnChanges {
   @Input() fieldId: string = '';

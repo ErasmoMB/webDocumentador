@@ -3,9 +3,10 @@ import { NavigationIndexService, IndexItem } from '../../services/navigation-ind
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-sidebar',
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css']
+    selector: 'app-sidebar',
+    templateUrl: './sidebar.component.html',
+    styleUrls: ['./sidebar.component.css'],
+    standalone: false
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Output() toggleState = new EventEmitter<boolean>();

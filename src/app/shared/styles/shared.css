@@ -7,6 +7,8 @@
   --primary-hover: #1a1a1a;
   --secondary-color: #d32f2f;
   --secondary-hover: #b71c1c;
+  --success-color: #28a745;
+  --success-hover: #218838;
   --tertiary-color: #666666;
   --tertiary-hover: #555555;
   --border-gold: #c46902;
@@ -30,6 +32,7 @@
   --shadow-button: 0px 2px 3px 2px rgba(0, 0, 0, 0.2);
   --font-serif: "Georgia", "Times New Roman", serif;
   --content-max-width: clamp(700px, 70vw, 1000px);
+  --spacing-2xl: 40px;
 }
 
 .container {
@@ -37,6 +40,10 @@
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
   height: calc(100vh - 90px);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .preview {
@@ -47,15 +54,18 @@
   background-color: var(--bg-light);
   box-shadow: var(--shadow-soft);
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .preview.preview-static {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: var(--content-max-width);
-  margin: 20px auto;
   width: 100%;
+  margin: 20px auto;
   min-height: 0;
 }
 
@@ -67,11 +77,13 @@
   padding-bottom: var(--spacing-2xl);
   padding-left: var(--spacing-xl);
   padding-right: var(--spacing-xl);
-  max-width: var(--content-max-width);
-  margin: 0 auto;
   width: 100%;
+  margin: 0 auto;
   min-height: 0;
   height: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .preview.preview-static .navigation-buttons {
@@ -331,10 +343,26 @@ textarea:focus {
 }
 
 table {
-  width: 100%;
+  width: 100% !important;
+  max-width: 100%;
   margin: var(--spacing-md) 0;
   border-spacing: 0;
   border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* Wrapper para scroll horizontal en tablas anchas */
+.table-wrapper,
+app-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: var(--spacing-md) 0;
+}
+
+.table-wrapper table,
+app-table-wrapper table {
+  margin: 0;
 }
 
 th,
@@ -342,6 +370,9 @@ td {
   text-align: center;
   padding: var(--spacing-sm);
   border: 1px solid var(--border-color);
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 th {
@@ -440,12 +471,15 @@ li {
 }
 
 .highlight {
-  font-weight: bold;
+  /* ✅ Colores desactivados - se implementarán al final */
+  /* font-weight: bold;
   color: var(--highlight-text);
-  background-color: var(--highlight-color);
+  background-color: var(--highlight-color); */
 }
 
-.data-manual {
+/* ✅ Resaltado amarillo para TODOS los campos con datos (manual y section) */
+.data-manual.has-data,
+.data-section.has-data {
   font-weight: bold;
   color: var(--highlight-text);
   background-color: var(--highlight-color);
@@ -453,36 +487,35 @@ li {
   border-radius: 3px;
 }
 
-.data-section {
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #00bcd4;
-  padding: 2px 4px;
-  border-radius: 3px;
+/* Campos sin datos no tienen resaltado */
+.data-manual:not(.has-data),
+.data-section:not(.has-data) {
+  font-weight: normal;
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
 }
 
 .data-backend {
-  font-weight: bold;
+  /* ✅ Colores desactivados - se implementarán al final */
+  /* font-weight: bold;
   color: #ffffff;
   background-color: #9c27b0;
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: 3px; */
 }
 
 .data-source {
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #9c27b0;
-  padding: 2px 4px;
-  border-radius: 3px;
+  /* ✅ Estilos removidos - no se debe resaltar el contenedor */
 }
 
 .data-calculated {
-  font-weight: bold;
+  /* ✅ Colores desactivados - se implementarán al final */
+  /* font-weight: bold;
   color: #ffffff;
   background-color: #1fb324;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 3px; */
   display: inline-block;
 }
 
@@ -656,8 +689,17 @@ td.data-calculated {
 }
 
 .table-row-total {
-  background-color: #d3d3d3;
+  background-color: #d4edda;
   font-weight: bold;
+}
+
+.total-row {
+  background-color: #d4edda;
+  font-weight: bold;
+}
+
+.total-row td {
+  background-color: #d4edda;
 }
 
 .fotografia-imagen {
@@ -866,6 +908,133 @@ td.data-calculated {
   margin-left: var(--spacing-lg);
 }
 
+/* Estilos para listas de fuentes y elementos */
+.fuente-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.fuente-item .input {
+  flex: 1;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Estilos para listas dinámicas (objetivos, items editables) */
+.dynamic-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.dynamic-list-header .section-title {
+  margin: 0;
+  flex: 1;
+  min-width: 150px;
+}
+
+.dynamic-list-item {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-form);
+}
+
+.dynamic-list-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.dynamic-list-item-header .label {
+  margin: 0;
+  font-weight: 600;
+  flex: 1;
+  min-width: 80px;
+}
+
+.dynamic-list-item textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Botón Agregar - Verde */
+.btn--add {
+  background-color: var(--success-color);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 0.9rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.btn--add:hover {
+  background-color: var(--success-hover);
+}
+
+/* Botón Eliminar - Rojo */
+.btn--remove {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.85rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.btn--remove:hover {
+  background-color: var(--secondary-hover);
+}
+
+/* Responsividad para listas dinámicas */
+@media (max-width: 480px) {
+  .dynamic-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .dynamic-list-header .section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .dynamic-list-header .btn--add {
+    width: 100%;
+  }
+  
+  .dynamic-list-item-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .dynamic-list-item-header .label {
+    text-align: center;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .dynamic-list-item-header .btn--remove {
+    width: 100%;
+  }
+}
+
 @media (max-width: 1024px) {
   .container {
     flex-direction: column;
@@ -879,19 +1048,47 @@ td.data-calculated {
     flex: 1;
     height: auto;
     max-height: none;
+    min-height: 400px;
+  }
+
+  .preview {
+    max-width: 100%;
+  }
+
+  .viewport-content {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
   }
 
   .navigation-buttons {
     flex-direction: row;
+    flex-wrap: wrap;
     padding: var(--spacing-sm);
     gap: var(--spacing-md);
+    justify-content: center;
   }
 
   .btn,
   .siguiente,
   .resumen,
   .atras {
-    width: 40%;
+    width: calc(50% - var(--spacing-sm));
+    min-width: 120px;
+  }
+
+  /* Botones eliminar optimizados para tablet */
+  .btn-danger,
+  .btn-eliminar {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
   }
 }
 
@@ -900,12 +1097,23 @@ td.data-calculated {
     flex-direction: column;
     gap: var(--spacing-xs);
     padding: var(--spacing-xs);
+    height: auto;
   }
 
   .preview,
   .formulario {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-md);
     border-radius: var(--spacing-sm);
+    height: auto;
+    min-height: 300px;
+  }
+
+  .preview {
+    max-width: 100%;
+  }
+
+  .viewport-content {
+    padding: var(--spacing-md);
   }
 
   .formulario {
@@ -914,7 +1122,8 @@ td.data-calculated {
 
   .navigation-buttons {
     flex-direction: column;
-    padding: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
   }
 
   .btn,
@@ -923,12 +1132,47 @@ td.data-calculated {
   .atras {
     width: 100%;
     font-size: 0.9rem;
-    padding: 8px 16px;
+    padding: 10px 16px;
+  }
+
+  /* Botones eliminar más compactos en mobile */
+  .btn-danger,
+  .btn-eliminar {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  /* Listas de elementos más compactas */
+  .foto-item,
+  .form-group-section > div {
+    padding: var(--spacing-md) !important;
+    margin-bottom: var(--spacing-md) !important;
+  }
+
+  /* Campos de formulario con botón eliminar */
+  .form-field {
+    gap: var(--spacing-xs);
+  }
+
+  /* Optimizar lista de fuentes en mobile */
+  .fuente-item {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .fuente-item .input {
+    width: 100%;
+  }
+
+  .fuente-item .btn-danger {
+    width: 100%;
+    justify-content: center;
   }
 
   .title {
-    font-size: 1.5rem;
-    padding: 8px;
+    font-size: 1.4rem;
+    padding: var(--spacing-sm);
   }
 
   .inputstyle,
@@ -937,11 +1181,12 @@ td.data-calculated {
   select,
   textarea {
     width: 100%;
+    font-size: 16px; /* Evita zoom en iOS */
   }
 
   .form-row {
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
   }
 
   .w-20,
@@ -954,6 +1199,7 @@ td.data-calculated {
 
   .section-header {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .section-number {
@@ -969,10 +1215,78 @@ td.data-calculated {
   .image-item {
     width: 100%;
   }
+
+  table {
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table th,
+  table td {
+    padding: var(--spacing-xs);
+    min-width: 80px;
+  }
+}
+
+/* Mobile pequeño */
+@media (max-width: 480px) {
+  :root {
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .preview,
+  .formulario {
+    padding: var(--spacing-sm);
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  .btn,
+  .siguiente,
+  .resumen,
+  .atras {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  /* Botones aún más compactos */
+  .btn-danger,
+  .btn-eliminar {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  /* Reducir padding de contenedores */
+  .foto-item,
+  .form-group-section > div {
+    padding: var(--spacing-sm) !important;
+  }
+
+  /* Títulos de sección más pequeños */
+  .section-title,
+  h4 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  h5 {
+    font-size: 0.9rem;
+  }
 }
 
 .table-row-total {
-  background-color: #d3d3d3;
+  background-color: #d4edda;
   font-weight: bold;
 }
 
@@ -1005,4 +1319,294 @@ input[readonly][data-field="porcentaje"],
   background-color: #C8E6C9 !important;
   color: #2E7D32;
   font-weight: 500;
+}
+
+/* ============================================ */
+/* RESPONSIVE: Media Queries Globales */
+/* ============================================ */
+
+/* Tablets y pantallas pequeñas (768px - 1024px) */
+@media (max-width: 1024px) {
+  :root {
+    --spacing-xl: 20px;
+    --spacing-2xl: 30px;
+  }
+
+  .container {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .viewport-content {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+    width: 100%;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  table {
+    width: 100% !important;
+  }
+
+  th, td {
+    padding: var(--spacing-xs);
+  }
+}
+
+/* Mobile landscape y tablets pequeñas (481px - 768px) */
+@media (max-width: 768px) {
+  :root {
+    --spacing-xl: 15px;
+    --spacing-2xl: 25px;
+  }
+
+  .container {
+    flex-direction: column;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .preview,
+  .formulario {
+    height: auto;
+    min-height: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .viewport-content {
+    padding: var(--spacing-md);
+    width: 100%;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    padding: var(--spacing-xs);
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+
+  /* Tablas responsive con scroll horizontal */
+  /* Nota: Las tablas con clase .table mantienen estructura tradicional en móvil */
+  .table-wrapper,
+  app-table-wrapper,
+  app-generic-table .table-wrapper,
+  .table-editor {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tablas legacy sin design system - mantener scroll horizontal */
+  table:not(.table):not(.editor-table) {
+    font-size: 0.85rem;
+    width: 100% !important;
+  }
+
+  /* Tablas con design system - respetar estilos del design system */
+  table.table,
+  table.editor-table {
+    /* Los estilos móviles están en src/styles/components/_table.scss */
+    /* Mantiene estructura de tabla tradicional con headers arriba */
+  }
+
+  /* Solo aplicar a tablas legacy */
+  table:not(.table):not(.editor-table) th,
+  table:not(.table):not(.editor-table) td {
+    padding: var(--spacing-xs);
+    font-size: 0.8rem;
+  }
+
+  table:not(.table):not(.editor-table) th {
+    font-size: 0.75rem;
+    padding: var(--spacing-xs);
+  }
+
+  table:not(.table):not(.editor-table) .table-cell {
+    padding: var(--spacing-xs) !important;
+  }
+}
+
+/* Mobile portrait (max 480px) */
+@media (max-width: 480px) {
+  :root {
+    --spacing-md: 10px;
+    --spacing-lg: 15px;
+    --spacing-xl: 20px;
+  }
+
+  .container {
+    padding: var(--spacing-xs);
+  }
+
+  .viewport-content {
+    padding: var(--spacing-sm);
+  }
+
+  .title {
+    font-size: 1.1rem;
+    padding: var(--spacing-xs);
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  /* Forzar wrap en textos largos */
+  p, span, div {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Reducir tamaño de inputs */
+  .inputstyle,
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    font-size: 16px; /* Evita zoom automático en iOS */
+  }
+
+  /* Tablas en mobile - más compactas con scroll */
+  /* Nota: Las tablas con clase .table mantienen estructura tradicional */
+  .table-wrapper,
+  app-table-wrapper,
+  .table-editor {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tablas legacy sin design system - mantener scroll horizontal */
+  table:not(.table):not(.editor-table) {
+    font-size: 0.75rem;
+    margin: var(--spacing-sm) 0;
+    width: 100% !important;
+    min-width: 600px;
+  }
+
+  /* Tablas con design system - respetar estilos del design system */
+  table.table,
+  table.editor-table {
+    /* Los estilos móviles están en src/styles/components/_table.scss */
+    /* Mantiene estructura de tabla tradicional con headers arriba */
+    min-width: auto !important;
+  }
+
+  /* Solo aplicar a tablas legacy */
+  table:not(.table):not(.editor-table) th,
+  table:not(.table):not(.editor-table) td {
+    padding: 6px 4px;
+    font-size: 0.7rem;
+  }
+
+  table:not(.table):not(.editor-table) th {
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+}
+
+/* Pantallas muy pequeñas (max 360px) */
+@media (max-width: 360px) {
+  .title {
+    font-size: 1rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+}
+
+/* Estilos para componentes de sección */
+.image-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  margin: 2em 0;
+}
+
+.editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.editor-table th {
+  background-color: #f5f5f5;
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #ddd;
+  font-weight: 600;
+}
+
+.editor-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.table-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.table-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-icon {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.btn-icon:hover {
+  background: #c82333;
 }

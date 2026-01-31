@@ -204,3 +204,53 @@
   background: #555;
 }
 
+/* ============================================ */
+/* RESPONSIVE: Mobile */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .sidebar-title {
+    font-size: 16px;
+    word-break: normal;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .index-text {
+    font-size: 12px;
+    word-break: normal;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .index-number {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    max-width: 280px;
+  }
+
+  .sidebar-header {
+    padding: 12px;
+  }
+
+  .sidebar-title {
+    font-size: 14px;
+  }
+
+  .index-entry-content {
+    padding: 10px 12px;
+  }
+
+  .index-text {
+    font-size: 11px;
+  }
+}

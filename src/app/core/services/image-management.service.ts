@@ -1,21 +1,50 @@
-import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
-import { PhotoNumberingService } from './photo-numbering.service';
-import { StateService } from './state.service';
-import { ImageBackendService } from './image-backend.service';
+import { Injectable, Injector } from '@angular/core';
 import { FotoItem } from '../../shared/components/image-upload/image-upload.component';
+import { ImageManagementFacade } from './images/image-management.facade';
+import { ImageLogicService } from './images/image-logic.service';
+import { ImageStorageService } from './images/image-storage.service';
+import { PhotoNumberingService } from './photo-numbering.service';
 
+/**
+ * @deprecated Este servicio ha sido dividido en servicios especializados siguiendo SRP.
+ * 
+ * **Migración:**
+ * - Usa `ImageManagementFacade` para compatibilidad hacia atrás
+ * - O usa directamente los servicios especializados:
+ *   - `ImageLogicService` - Validación y procesamiento de imágenes
+ *   - `ImageStorageService` - Carga y guardado de imágenes
+ * 
+ * **Ejemplo de migración:**
+ * ```typescript
+ * // ANTES
+ * constructor(private imageService: ImageManagementService) {}
+ * 
+ * // DESPUÉS (opción 1 - Facade)
+ * constructor(private imageFacade: ImageManagementFacade) {}
+ * 
+ * // DESPUÉS (opción 2 - Servicios especializados)
+ * constructor(
+ *   private imageLogic: ImageLogicService,
+ *   private imageStorage: ImageStorageService
+ * ) {}
+ * ```
+ * 
+ * **Fecha de deprecación:** 27 de enero de 2026
+ * **Fecha de eliminación planificada:** Después de migración completa (Fase 3)
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ImageManagementService {
+  private facade: ImageManagementFacade;
 
-  constructor(
-    private formularioService: FormularioService,
-    private photoNumberingService: PhotoNumberingService,
-    private stateService: StateService,
-    private imageBackendService: ImageBackendService
-  ) {}
+  constructor(private injector: Injector) {
+    const imageLogic = this.injector.get(ImageLogicService);
+    const imageStorage = this.injector.get(ImageStorageService);
+    const photoNumbering = this.injector.get(PhotoNumberingService);
+    
+    this.facade = new ImageManagementFacade(imageLogic, imageStorage, photoNumbering);
+  }
 
   loadImages(
     sectionId: string, 
@@ -23,37 +52,7 @@ export class ImageManagementService {
     groupPrefix: string = '', 
     maxPhotos: number = 10
   ): FotoItem[] {
-    const fotografias: FotoItem[] = [];
-    const datos = this.formularioService.obtenerDatos();
-    
-    for (let i = 1; i <= maxPhotos; i++) {
-      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
-      let imagen = datos[imagenKey];
-      if (i === 1 && !imagen) {
-        const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-        imagen = datos[imagenBaseKey];
-      }
-      if (this.isValidImage(imagen)) {
-        const imagenUrl = this.getImageUrl(imagen);
-        const titulo = datos[tituloKey] || `Foto ${i}`;
-        const fuente = datos[fuenteKey] || 'GEADES, 2024';
-        const numeroGlobal = this.photoNumberingService.getGlobalPhotoNumber(
-          sectionId,
-          i,
-          prefix,
-          groupPrefix
-        );
-        fotografias.push({
-          numero: numeroGlobal,
-          titulo,
-          fuente,
-          imagen: imagenUrl
-        });
-      }
-    }
-    return fotografias;
+    return this.facade.loadImages(sectionId, prefix, groupPrefix, maxPhotos);
   }
 
   saveImages(
@@ -63,123 +62,26 @@ export class ImageManagementService {
     groupPrefix: string = '',
     maxPhotos: number = 10
   ): void {
-    const datosAnteriores = this.formularioService.obtenerDatos();
-    let fotosAnteriores = 0;
-    for (let i = 1; i <= maxPhotos; i++) {
-      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
-      if (this.isValidImage(datosAnteriores[imagenKey])) {
-        fotosAnteriores++;
-      }
-    }
-
-    for (let i = 1; i <= maxPhotos; i++) {
-      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
-      const numeroKey = groupPrefix ? `${prefix}${i}Numero${groupPrefix}` : `${prefix}${i}Numero`;
-      this.formularioService.actualizarDato(imagenKey as any, '');
-      this.formularioService.actualizarDato(tituloKey as any, '');
-      this.formularioService.actualizarDato(fuenteKey as any, '');
-      this.formularioService.actualizarDato(numeroKey as any, '');
-    }
-
-    const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-    const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
-    const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
-    this.formularioService.actualizarDato(imagenBaseKey as any, '');
-    this.formularioService.actualizarDato(tituloBaseKey as any, '');
-    this.formularioService.actualizarDato(fuenteBaseKey as any, '');
-
-    let validIndex = 0;
-    images.forEach((foto) => {
-      if (this.isValidImage(foto.imagen)) {
-        validIndex++;
-        const num = validIndex;
-        const imagenKey = groupPrefix ? `${prefix}${num}Imagen${groupPrefix}` : `${prefix}${num}Imagen`;
-        const tituloKey = groupPrefix ? `${prefix}${num}Titulo${groupPrefix}` : `${prefix}${num}Titulo`;
-        const fuenteKey = groupPrefix ? `${prefix}${num}Fuente${groupPrefix}` : `${prefix}${num}Fuente`;
-        const numeroKey = groupPrefix ? `${prefix}${num}Numero${groupPrefix}` : `${prefix}${num}Numero`;
-
-        const numeroGlobal = foto.numero || this.photoNumberingService.getGlobalPhotoNumber(
-          sectionId,
-          num,
-          prefix,
-          groupPrefix
-        );
-        
-        let imagenValue = foto.imagen || '';
-        if (foto.imagen && typeof foto.imagen === 'string') {
-          if (foto.imagen.startsWith('data:image')) {
-            imagenValue = foto.imagen;
-          } else if (this.isImageId(foto.imagen)) {
-            imagenValue = foto.imagen;
-          } else if (foto.imagen.includes('/imagenes/')) {
-            const match = foto.imagen.match(/\/api\/imagenes\/([0-9a-f-]{36})/i);
-            if (match && match[1]) {
-              imagenValue = match[1];
-            } else {
-              imagenValue = foto.imagen;
-            }
-          }
-        }
-
-        this.formularioService.actualizarDato(numeroKey as any, numeroGlobal);
-        this.formularioService.actualizarDato(imagenKey as any, imagenValue);
-        this.formularioService.actualizarDato(tituloKey as any, foto.titulo || '');
-        this.formularioService.actualizarDato(fuenteKey as any, foto.fuente || '');
-
-        if (num === 1) {
-          const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-          const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
-          const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
-
-          this.formularioService.actualizarDato(imagenBaseKey as any, imagenValue);
-          this.formularioService.actualizarDato(tituloBaseKey as any, foto.titulo || '');
-          this.formularioService.actualizarDato(fuenteBaseKey as any, foto.fuente || '');
-        }
-      }
-    });
-
-    const datosActuales = this.formularioService.obtenerDatos();
-    if (datosActuales) {
-      this.stateService.setDatos(datosActuales);
-    }
+    this.facade.saveImages(sectionId, prefix, images, groupPrefix, maxPhotos);
   }
 
   getGroupPrefix(sectionId: string): string {
-    return this.photoNumberingService.getGroupPrefix(sectionId);
+    return this.facade.getGroupPrefix(sectionId);
   }
 
-  private isValidImage(imagen: any): boolean {
-    if (!imagen) return false;
-    if (typeof imagen === 'string') {
-      return imagen !== 'null' && imagen.trim() !== '' && 
-        (imagen.startsWith('data:image') || imagen.length > 100 || this.isImageId(imagen));
-    }
-    if (imagen instanceof File) {
-      return imagen.type.startsWith('image/');
-    }
-    return false;
+  isValidImage(imagen: any): boolean {
+    return this.facade.isValidImage(imagen);
   }
 
-  private isImageId(value: string): boolean {
-    if (typeof value !== 'string') return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(value);
+  isImageId(value: string): boolean {
+    return this.facade.isImageId(value);
   }
 
-  private getImageUrl(imagen: string): string {
-    if (!imagen) return '';
-    if (imagen.startsWith('data:image') || imagen.startsWith('http')) {
-      return imagen;
-    }
-    if (this.isImageId(imagen)) {
-      return this.imageBackendService.getImageUrl(imagen);
-    }
-    return imagen;
+  getImageUrl(imagen: string): string {
+    return this.facade.getImageUrl(imagen);
   }
 
   getFieldWithPrefix(baseField: string, groupPrefix: string = ''): string {
-    return groupPrefix ? `${baseField}${groupPrefix}` : baseField;
+    return this.facade.getFieldWithPrefix(baseField, groupPrefix);
   }
 }

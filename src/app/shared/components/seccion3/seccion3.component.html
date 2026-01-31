@@ -1,74 +1,51 @@
+<!-- ✅ REFACTORIZADO: Seccion3Component con Clean Architecture -->
+<!-- VISTA (cuando modoFormulario = false) -->
 <div *ngIf="!modoFormulario">
 <h3>3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral
     y otros similares</h3>
-<div *ngIf="datos.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_metodologia)"></div>
-<ng-template #metodologiaDefault>
-    <p class="text-justify">Para la descripción del aspecto socioeconómico se ha utilizado
-        una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado
-        las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como
-        de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que
-        luego son contrastados y completados con la consulta de diversas fuentes de información oficiales
-        actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale –
-        MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre
-        otros.</p>
-</ng-template>
-<h4>A. Fuentes primarias</h4>
-<div *ngIf="datos.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_primarias)"></div>
-<ng-template #fuentesPrimariasDefault>
-    <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ datos.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
-</ng-template>
-<p class="text-justify">A continuación, se muestra en el siguiente cuadro los cargos u
-    ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ datos.cantidadEntrevistas || '____' }}</span>
-    autoridades e
-    informantes que fueron entrevistados durante el trabajo de campo llevado a cabo en el mes de <span
-        [appDataSource]="getDataSourceType('fechaTrabajoCampo')" [fieldName]="'fechaTrabajoCampo'">{{ datos.fechaTrabajoCampo || '____' }}</span>. </p>
-<app-table-wrapper title="Lista de entrevistados" sectionId="3.1.3">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Nombres y Apellidos</th>
-            <th class="table-header">Cargo u Ocupación</th>
-            <th class="table-header">Organización</th>
-        </tr>
-    </thead>
-    <tbody>
-        <ng-container *ngIf="datos.entrevistados && datos.entrevistados.length > 0">
-            <tr *ngFor="let entrevistado of datos.entrevistados">
-                <td class="table-cell">{{ entrevistado.nombre || '____' }}</td>
-                <td class="table-cell">{{ entrevistado.cargo || '____' }}</td>
-                <td class="table-cell">{{ entrevistado.organizacion || '____' }}</td>
-            </tr>
-        </ng-container>
-        <ng-container *ngIf="!datos.entrevistados || datos.entrevistados.length === 0">
-            <tr>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-            </tr>
-            <tr>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-            </tr>
-            <tr>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-                <td class="table-cell">____</td>
-            </tr>
-        </ng-container>
-    </tbody>
-</table>
-</app-table-wrapper>
-<p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')" [fieldName]="'consultora'">{{ datos.consultora || 'GEADES (2024)' }}</span></p>
-<h4>B. Fuentes secundarias</h4>
-<div *ngIf="datos.parrafoSeccion3_fuentes_secundarias; else fuentesSecundariasDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion3_fuentes_secundarias)"></div>
-<ng-template #fuentesSecundariasDefault>
-    <p class="text-justify">En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:</p>
-</ng-template>
-<ul>
-    <li class="list-item" *ngFor="let fuente of obtenerFuentesSecundarias()">{{ fuente }}</li>
-    <li class="list-item" *ngIf="obtenerFuentesSecundarias().length === 0">____</li>
-</ul>
+<div *ngIf="viewModel$ | async as vm">
+  <div *ngIf="vm.data.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(vm.data.parrafoSeccion3_metodologia)"></div>
+  <ng-template #metodologiaDefault>
+      <p class="text-justify">Para la descripción del aspecto socioeconómico se ha utilizado
+          una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado
+          las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como
+          de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que
+          luego son contrastados y completados con la consulta de diversas fuentes de información oficiales
+          actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale –
+          MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre
+          otros.</p>
+  </ng-template>
+  <h4>A. Fuentes primarias</h4>
+  <div *ngIf="vm.data.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(vm.data.parrafoSeccion3_fuentes_primarias)"></div>
+  <ng-template #fuentesPrimariasDefault>
+      <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ vm.data.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
+  </ng-template>
+  <p class="text-justify">A continuación, se muestra en el siguiente cuadro los cargos u
+      ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ vm.data.cantidadEntrevistas || '____' }}</span>
+      autoridades e
+      informantes que fueron entrevistados durante el trabajo de campo llevado a cabo en el mes de <span
+          [appDataSource]="getDataSourceType('fechaTrabajoCampo')" [fieldName]="'fechaTrabajoCampo'">{{ vm.data.fechaTrabajoCampo || '____' }}</span>. </p>
+  <app-table-wrapper title="Lista de entrevistados" sectionId="3.1.3">
+    <app-generic-table
+      [data]="vm.data.entrevistados || []"
+      [config]="{
+        columns: [
+          { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' },
+          { key: 'cargo', header: 'Cargo u Ocupación', align: 'left' },
+          { key: 'organizacion', header: 'Organización', align: 'left' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')" [fieldName]="'consultora'">{{ vm.data.consultora || 'GEADES (2024)' }}</span></p>
+  <h4>B. Fuentes secundarias</h4>
+  <div class="text-justify" [innerHTML]="formatearParrafo(obtenerIntroFuentes())"></div>
+  <ul *ngIf="vm.data.fuentesSecundariasLista && vm.data.fuentesSecundariasLista.length > 0">
+      <li class="list-item" *ngFor="let fuente of vm.data.fuentesSecundariasLista">{{ fuente }}</li>
+  </ul>
 
 <app-image-upload
     [modoVista]="true"
@@ -82,137 +59,42 @@
 </app-image-upload>
 </div>
 
+<!-- FORMULARIO BÁSICO (cuando modoFormulario = true) -->
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
-  <div class="form-group-section">
+  <div *ngIf="viewModel$ | async as vm" class="form-group-section">
+    <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
 
-    <h4 class="section-title">3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares</h4>
-    
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
-      
-      <app-paragraph-editor
-        fieldId="parrafoSeccion3_metodologia"
-        label="Metodología"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="3"
-        [value]="obtenerTextoSeccion3Metodologia()"
-        (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
-      </app-paragraph-editor>
-    </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion3_metodologia"
+      label="Metodología"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="3"
+      [value]="vm.data.parrafoSeccion3_metodologia || ''"
+      (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
+    </app-paragraph-editor>
 
-    <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">A. Fuentes primarias</h4>
-      
-      <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
-        <app-paragraph-editor
-          fieldId="parrafoSeccion3_fuentes_primarias"
-          label="Fuentes Primarias"
-          hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
-          [rows]="3"
-          [value]="obtenerTextoSeccion3FuentesPrimarias()"
-          (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
-        </app-paragraph-editor>
-      </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion3_fuentes_primarias"
+      label="A. Fuentes Primarias"
+      hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
+      [rows]="3"
+      [value]="vm.data.parrafoSeccion3_fuentes_primarias || ''"
+      (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
+    </app-paragraph-editor>
 
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Cantidad de Entrevistas</label>
-        <input 
-          type="number" 
-          class="input" 
-          placeholder="Ej: 18"
-          [value]="datos.cantidadEntrevistas || ''"
-          (input)="onFieldChange('cantidadEntrevistas', $any($event.target).value)">
-      </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion3_fuentes_secundarias"
+      label="B. Fuentes Secundarias - Texto Introductorio"
+      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [rows]="2"
+      [value]="vm.data.parrafoSeccion3_fuentes_secundarias || ''"
+      (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
+    </app-paragraph-editor>
 
-      <div class="form-field" style="margin-top: 15px;">
-        <label class="label">Fecha de Trabajo de Campo</label>
-        <input 
-          type="text" 
-          class="input" 
-          placeholder="Ej: noviembre 2024"
-          [value]="datos.fechaTrabajoCampo || ''"
-          (input)="onFieldChange('fechaTrabajoCampo', $any($event.target).value)">
-      </div>
-
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Lista de Entrevistados</label>
-        <app-dynamic-table
-          [datos]="datos"
-          [config]="entrevistadosConfig"
-          [columns]="[
-            { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Ej: Miguel Ángel Sayaverde Rospigliosi' },
-            { field: 'cargo', label: 'Cargo u Ocupación', type: 'text', placeholder: 'Ej: Presidente' },
-            { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Ej: CC Ayroca' }
-          ]"
-          [tablaKey]="'entrevistados'"
-          [totalKey]="'nombre'"
-          (tableUpdated)="cdRef.detectChanges()">
-        </app-dynamic-table>
-      </div>
-
-      <div class="form-field" style="margin-top: 15px;">
-        <label class="label">Consultora / Fuente</label>
-        <input 
-          type="text" 
-          class="input" 
-          placeholder="Ej: GEADES (2024)"
-          [value]="datos.consultora || ''"
-          (input)="onFieldChange('consultora', $any($event.target).value)">
-      </div>
-    </div>
-
-    <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">B. Fuentes secundarias</h4>
-      
-      <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
-        <app-paragraph-editor
-          fieldId="parrafoSeccion3_fuentes_secundarias"
-          label="Fuentes Secundarias - Texto Introductorio"
-          hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-          [rows]="2"
-          [value]="obtenerTextoSeccion3FuentesSecundarias()"
-          (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
-        </app-paragraph-editor>
-      </div>
-
-      <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Lista de Fuentes Secundarias</h4>
-      
-      <div class="form-field" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;">
-        <input 
-          type="text" 
-          class="input" 
-          [value]="fuente"
-          (input)="actualizarFuenteSecundaria(i, $any($event.target).value)"
-          style="flex: 1;">
-        <button 
-          type="button" 
-          class="btn btn-danger" 
-          (click)="eliminarFuenteSecundaria(i)"
-          style="padding: 8px 16px; white-space: nowrap;">
-          Eliminar
-        </button>
-      </div>
-
-      <div class="form-field">
-        <button 
-          type="button" 
-          class="btn btn-primary" 
-          (click)="agregarFuenteSecundaria()"
-          style="width: 100%;">
-          Agregar Nueva Fuente
-        </button>
-      </div>
-    </div>
-
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías</label>
       <app-image-upload
-        [fotografias]="fotografiasFormMulti"
+        [fotografias]="fotografiasSeccion3"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX"
         [permitirMultiples]="true"
@@ -228,3 +110,4 @@
       </app-image-upload>
     </div>
   </div>
+</div>

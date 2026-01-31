@@ -1,0 +1,174 @@
+// 🎯 COMPONENTE: Sistema Unificado de Botones
+// Touch-friendly, responsive, con variantes
+
+@use '../tokens/breakpoints' as *;
+@use '../tokens/colors' as *;
+@use '../tokens/spacing' as *;
+@use '../tokens/typography' as *;
+@use '../tokens/shadows' as *;
+@use '../tokens/radius' as *;
+
+// ============================================
+// BOTÓN BASE
+// ============================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-primary);
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  min-height: 44px; // Touch-friendly mínimo
+  min-width: 44px;
+  
+  // Mobile: Más grande para touch
+  @include mobile-only {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-button-mobile);
+    min-height: 48px;
+    width: 100%; // Full width en móvil (opcional, se puede sobrescribir)
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-hover);
+  }
+}
+
+// ============================================
+// VARIANTES DE COLOR
+// ============================================
+
+.btn--primary {
+  background-color: var(--color-button-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-button);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--color-button-primary-hover);
+    box-shadow: var(--shadow-button-hover);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.btn--secondary {
+  background-color: var(--color-button-secondary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-button);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--color-button-secondary-hover);
+    box-shadow: var(--shadow-button-hover);
+  }
+}
+
+.btn--danger {
+  background-color: var(--color-button-danger);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-button);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--color-button-danger-hover);
+    box-shadow: var(--shadow-button-hover);
+  }
+}
+
+// ============================================
+// VARIANTES DE TAMAÑO
+// ============================================
+
+.btn--small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  min-height: 32px;
+  min-width: 32px;
+  
+  @include mobile-only {
+    min-height: 40px; // Aún touch-friendly
+  }
+}
+
+.btn--large {
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  min-height: 56px;
+  
+  @include mobile-only {
+    min-height: 60px;
+  }
+}
+
+// ============================================
+// BOTÓN ICONO (Circular)
+// ============================================
+
+.btn-icon {
+  background: var(--color-button-danger);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-button);
+  
+  // Mobile: Más grande para touch
+  @include mobile-only {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
+  }
+  
+  &:hover {
+    background: var(--color-button-danger-hover);
+    box-shadow: var(--shadow-button-hover);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-hover);
+  }
+}
+
+// ============================================
+// COMPATIBILIDAD LEGACY
+// ============================================
+
+.btn-secondary {
+  @extend .btn;
+  @extend .btn--secondary;
+}

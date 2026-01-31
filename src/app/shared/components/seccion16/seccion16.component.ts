@@ -1,22 +1,29 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { CentrosPobladosActivosService } from 'src/app/core/services/centros-poblados-activos.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-seccion16',
-  templateUrl: './seccion16.component.html',
-  styleUrls: ['./seccion16.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion16',
+    templateUrl: './seccion16.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion16Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -37,18 +44,15 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
   private readonly regexCache = new Map<string, RegExp>();
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private stateService: StateService,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
+    private centrosPobladosActivos: CentrosPobladosActivosService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, undefined);
   }
 
   protected getSectionKey(): string {
@@ -56,7 +60,10 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected getLoadParameters(): string[] | null {
-    const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const ccppDesdeGrupo = prefijo
+      ? this.centrosPobladosActivos.obtenerCodigosActivosPorPrefijo(prefijo)
+      : this.groupConfig.getAISDCCPPActivos();
     if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
       return ccppDesdeGrupo;
     }
@@ -64,7 +71,8 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const groupId = this.obtenerPrefijoGrupo() || null;
+    const datosActuales = this.projectFacade.getSectionFields(this.seccionId, groupId);
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -143,10 +151,17 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
+    
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
+    
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe((nuevosDatos) => {
+        if (!nuevosDatos) return;
+        this.datos = { ...this.datos, ...nuevosDatos };
         this.cargarFotografias();
-        this.cdRef.detectChanges();
+        this.cdRef.markForCheck();
       });
     }
   }
@@ -164,7 +179,7 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.fotografiasReservorioCache = this.imageService.loadImages(
       this.seccionId,
@@ -189,7 +204,7 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     );
     this.fotografiasReservorioFormMulti = [...fotografias];
     this.fotografiasReservorioCache = [...fotografias];
-    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   onFotografiasUsoSuelosChange(fotografias: FotoItem[]) {
@@ -202,7 +217,7 @@ export class Seccion16Component extends AutoLoadSectionComponent implements OnDe
     );
     this.fotografiasUsoSuelosFormMulti = [...fotografias];
     this.fotografiasUsoSuelosCache = [...fotografias];
-    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   getFieldIdAguaCompleto(): string {

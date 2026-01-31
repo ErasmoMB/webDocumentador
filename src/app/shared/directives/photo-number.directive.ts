@@ -2,7 +2,8 @@ import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 import { NumberingService } from 'src/app/core/services/numbering.service';
 
 @Directive({
-  selector: '[appPhotoNumber]'
+  selector: '[appPhotoNumber]',
+  standalone: true
 })
 export class PhotoNumberDirective implements OnInit {
   @Input() appPhotoNumber?: string;

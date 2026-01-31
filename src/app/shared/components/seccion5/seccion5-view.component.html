@@ -1,0 +1,38 @@
+<div class="document-view">
+  <h5>{{ obtenerSubseccionId() }}. Institucionalidad local</h5>
+
+  <!-- Párrafo informativo -->
+  <p class="text-justify">
+    {{ obtenerParrafoInstitucionalidad() }}
+  </p>
+
+  <app-table-wrapper [title]="(datos.tituloInstituciones || 'Instituciones existentes – CC ' + obtenerNombreComunidadActual())" [sectionId]="'3.1.4.A.1.1'">
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="institucionesConfig"
+      [columns]="columnasInstituciones"
+      [sectionId]="seccionId"
+      [tablaKey]="'tablepagina6'"
+      [modoVista]="true">
+    </app-dynamic-table>
+    <p class="text-justify data-source">
+      FUENTE: 
+      <span *ngIf="datos.fuenteInstituciones && datos.fuenteInstituciones !== '____'">{{ datos.fuenteInstituciones }}</span>
+      <span *ngIf="!datos.fuenteInstituciones || datos.fuenteInstituciones === '____'" [appDataSource]="'manual'">GEADES (2024)</span>
+    </p>
+  </app-table-wrapper>
+
+  <!-- Vista previa de fotografías (solo lectura) -->
+  <app-image-upload
+      [permitirMultiples]="true"
+      [modoVista]="true"
+      [fotografias]="fotografiasVista"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [mostrarTitulo]="true"
+      [mostrarFuente]="true"
+      [mostrarNumero]="true"
+      [tituloDefault]="'Local Comunal de la CC ' + obtenerNombreComunidadActual()"
+      [fuenteDefault]="'GEADES, 2024'">
+  </app-image-upload>
+</div>

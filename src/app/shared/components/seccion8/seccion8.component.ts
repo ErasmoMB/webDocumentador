@@ -1,23 +1,35 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
+import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { debugLog } from 'src/app/shared/utils/debug';
+// Clean Architecture imports
+import { LoadSeccion8UseCase, UpdateSeccion8DataUseCase, Seccion8ViewModel } from 'src/app/core/application/use-cases';
+import { Seccion8Data } from 'src/app/core/domain/entities';
 
 @Component({
-  selector: 'app-seccion8',
-  templateUrl: './seccion8.component.html',
-  styleUrls: ['./seccion8.component.css']
+    selector: 'app-seccion8',
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule,
+        ParagraphEditorComponent,
+        DynamicTableComponent,
+        ImageUploadComponent
+    ],
+    templateUrl: './seccion8.component.html'
 })
 export class Seccion8Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -48,6 +60,10 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
 
   private readonly regexCache = new Map<string, RegExp>();
 
+  // Clean Architecture ViewModel
+  seccion8ViewModel$ = this.loadSeccion8UseCase.execute();
+  seccion8ViewModel?: Seccion8ViewModel;
+
   peaOcupacionesConfig: TableConfig = {
     tablaKey: 'peaOcupacionesTabla',
     totalKey: 'categoria',
@@ -76,19 +92,53 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    // Clean Architecture dependencies
+    private loadSeccion8UseCase: LoadSeccion8UseCase,
+    private updateSeccion8DataUseCase: UpdateSeccion8DataUseCase
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    
+    // Subscribe to ViewModel for Clean Architecture
+    this.seccion8ViewModel$.subscribe(viewModel => {
+      this.seccion8ViewModel = viewModel;
+      this.cdRef.markForCheck();
+    });
+  }
+
+  // Clean Architecture methods
+  updateSeccion8Data(updates: Partial<Seccion8Data>): void {
+    if (this.seccion8ViewModel) {
+      const currentData = this.seccion8ViewModel.data;
+      const updatedData = { ...currentData, ...updates };
+      this.updateSeccion8DataUseCase.execute(updatedData).subscribe(updatedViewModel => {
+        this.seccion8ViewModel = updatedViewModel;
+        this.cdRef.markForCheck();
+      });
+    }
+  }
+
+  // Backward compatibility methods - delegate to Clean Architecture
+  obtenerTextoGanaderia(): string {
+    return this.seccion8ViewModel?.texts.ganaderiaText || this.datos.parrafoSeccion8_ganaderia_completo || '';
+  }
+
+  obtenerTextoAgricultura(): string {
+    return this.seccion8ViewModel?.texts.agriculturaText || this.datos.parrafoSeccion8_agricultura_completo || '';
+  }
+
+  obtenerTextoMercadoComercializacion(): string {
+    return this.seccion8ViewModel?.texts.mercadoComercializacionText || '';
+  }
+
+  obtenerTextoHabitosConsumo(): string {
+    return this.seccion8ViewModel?.texts.habitosConsumoText || '';
   }
 
   protected getSectionKey(): string {
@@ -104,7 +154,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -177,7 +227,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
       if (datosFiltrados.length !== longitudOriginal) {
         const tablaKey = this.getTablaKeyPEAOcupaciones();
         this.datos[tablaKey] = datosFiltrados;
-        this.formularioService.actualizarDato(tablaKey, datosFiltrados);
+        this.onFieldChange(tablaKey, datosFiltrados);
       }
     }
   }
@@ -233,6 +283,59 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     return this.totalPEACache;
   }
 
+  /**
+   * Obtiene la tabla PEA Ocupaciones con porcentajes calculados dinámicamente
+   * Similar a getPETConPorcentajes() y getPoblacionSexoConPorcentajes()
+   * Principio SOLID: Single Responsibility - Este método solo calcula porcentajes para PEA Ocupaciones
+   */
+  getPEAOcupacionesConPorcentajes(): any[] {
+    const tablaPEA = this.getPEAOcupacionesSinTotal();
+    if (!tablaPEA || !Array.isArray(tablaPEA) || tablaPEA.length === 0) {
+      return [];
+    }
+
+    // Calcular total dinámicamente como suma de casos en la tabla
+    const total = tablaPEA.reduce((sum, item) => {
+      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
+      return sum + casos;
+    }, 0);
+
+    if (total <= 0) {
+      debugLog('⚠️ Total casos en tabla PEA Ocupaciones <= 0, retornando porcentajes 0,00%');
+      return tablaPEA.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
+    }
+
+    // Calcular porcentajes basados en el total de la tabla
+    const tablaConPorcentajes = tablaPEA.map((item: any) => {
+      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
+      const porcentaje = (casos / total) * 100;
+      const porcentajeFormateado = porcentaje
+        .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace('.', ',') + ' %';
+
+      debugLog(`📊 Cálculo porcentaje PEA Ocupaciones ${item.categoria}: ${casos} / ${total} = ${porcentaje.toFixed(2)}%`);
+
+      return {
+        ...item,
+        casos,
+        porcentaje: porcentajeFormateado
+      };
+    });
+
+    // Agregar fila de total si no existe
+    const filaTotal = {
+      categoria: 'Total',
+      casos: total,
+      porcentaje: '100,00 %'
+    };
+    tablaConPorcentajes.push(filaTotal);
+
+    // Log específico para la tabla Cuadro 3.10
+    debugLog('📊 Cuadro N° 3.10 - PEA Ocupada según ocupaciones principales:', tablaConPorcentajes);
+    
+    return tablaConPorcentajes;
+  }
+
   private invalidarCachePEA(): void {
     this.peaOcupacionesCache = [];
     this.peaOcupacionesCacheKey = '';
@@ -285,56 +388,43 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     }));
   }
 
+  /**
+   * ✅ SOLID - REFACTORIZADO: Usa TableManagementFacade en lugar de cálculo manual
+   * ✅ SOLID - DRY: Elimina duplicación de lógica de cálculo
+   * ✅ SOLID - DIP: Depende de abstracción (facade) en lugar de implementación concreta
+   */
   onPEAOcupacionesFieldChange(index: number, field: string, value: any): void {
     const tablaKey = this.getTablaKeyPEAOcupaciones();
-    const tabla = this.getTablaPEAOcupaciones();
+    const configConTablaKey = { ...this.peaOcupacionesConfig, tablaKey };
 
-    if (index >= 0 && index < tabla.length) {
-      tabla[index][field] = value;
+    // ✅ SOLID - DIP: Usar facade para actualizar fila con cálculo automático
+    this.tableFacade.actualizarFila(
+      this.datos,
+      configConTablaKey,
+      index,
+      field,
+      value,
+      true // autoCalcular = true (usuario editó, calcular automáticamente)
+    );
 
-      if (field === 'casos') {
-        const total = tabla.reduce((sum: number, item: any) => {
-          const categoria = item.categoria?.toString().toLowerCase() || '';
-          if (categoria.includes('total')) return sum;
-          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
-          return sum + casos;
-        }, 0);
-
-        if (total > 0) {
-          tabla.forEach((item: any) => {
-            const categoria = item.categoria?.toString().toLowerCase() || '';
-            if (!categoria.includes('total')) {
-              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
-              const porcentaje = ((casos / total) * 100)
-                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                .replace('.', ',') + ' %';
-              item.porcentaje = porcentaje;
-            }
-          });
-        } else {
-          tabla.forEach((item: any) => {
-            const categoria = item.categoria?.toString().toLowerCase() || '';
-            if (!categoria.includes('total')) {
-              item.porcentaje = '0,00 %';
-            }
-          });
-        }
-
-        this.invalidarCachePEA();
-        
-        const fieldIdParrafo = 'textoAnalisisCuadro310';
-        if (this.datos[fieldIdParrafo]) {
-          delete this.datos[fieldIdParrafo];
-          this.formularioService.actualizarDato(fieldIdParrafo as any, null);
-        }
+    // Invalidar caché PEA
+    this.invalidarCachePEA();
+    
+    // Limpiar texto de análisis si cambió el campo 'casos'
+    if (field === 'casos') {
+      const fieldIdParrafo = 'textoAnalisisCuadro310';
+      if (this.datos[fieldIdParrafo]) {
+        delete this.datos[fieldIdParrafo];
+        this.onFieldChange(fieldIdParrafo as any, null);
       }
-
-      this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
-      this.eliminarFilasTotal();
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
     }
+
+    // Eliminar filas Total (si existen)
+    this.eliminarFilasTotal();
+    
+    // Actualizar datos y detectar cambios
+    this.onFieldChange(tablaKey as any, this.datos[tablaKey]);
+    this.cdRef.detectChanges();
   }
 
   onPEAOcupacionesTableUpdated() {
@@ -342,8 +432,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     this.eliminarFilasTotal();
     const tablaKey = this.getTablaKeyPEAOcupaciones();
     const tabla = this.getTablaPEAOcupaciones();
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
+    this.onFieldChange(tablaKey, tabla);
     this.cdRef.detectChanges();
   }
 
@@ -372,7 +461,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
 
   protected override onInitCustom(): void {
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
         this.fotografiasGanaderiaCache = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_GANADERIA, groupPrefix) || [];
@@ -396,7 +485,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -434,7 +523,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const provincia = this.datos.provinciaSeleccionada || 'Caravelí';
+    const provincia = this.datos.provinciaSeleccionada || '____';
     
     return `En la CC ${grupoAISD}, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.\n\nLa alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de ${provincia} para la venta; también se elabora yogurt, aunque en menor medida.\n\nA pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.`;
   }
@@ -442,7 +531,7 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
   obtenerTextoSeccion8GanaderiaCompletoConResaltado(): SafeHtml {
     const texto = this.obtenerTextoSeccion8GanaderiaCompleto();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const provincia = this.datos.provinciaSeleccionada || 'Caravelí';
+    const provincia = this.datos.provinciaSeleccionada || '____';
     
     let textoConResaltado = texto
       .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
@@ -724,4 +813,5 @@ export class Seccion8Component extends AutoLoadSectionComponent implements OnDes
     return this.fotografiasComercioCache;
   }
 }
+
 

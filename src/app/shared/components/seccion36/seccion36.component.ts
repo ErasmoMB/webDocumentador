@@ -1,12 +1,24 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef } from '@angular/core';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
+import { DataSourceDirective } from '../../directives/data-source.directive';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { FormularioDatos } from 'src/app/core/models/formulario.model';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
-  selector: 'app-seccion36',
-  templateUrl: './seccion36.component.html',
-  styleUrls: ['./seccion36.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        CoreSharedModule,
+        DataSourceDirective,
+    ],
+    selector: 'app-seccion36',
+    templateUrl: './seccion36.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion36Component implements OnInit, OnChanges, DoCheck {
   @Input() seccionId: string = '';
@@ -14,7 +26,7 @@ export class Seccion36Component implements OnInit, OnChanges, DoCheck {
   private datosAnteriores: any = {};
 
   constructor(
-    private formularioService: FormularioService,
+    private projectFacade: ProjectStateFacade,
     private cdRef: ChangeDetectorRef
   ) { }
 
@@ -29,7 +41,7 @@ export class Seccion36Component implements OnInit, OnChanges, DoCheck {
   }
 
   ngDoCheck() {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos() as FormularioDatos;
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = (this.datos as any)?.centroPobladoAISI || null;
@@ -41,7 +53,7 @@ export class Seccion36Component implements OnInit, OnChanges, DoCheck {
   }
 
   actualizarDatos() {
-    const datosNuevos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.projectFacade.obtenerDatos() as FormularioDatos;
     this.datos = datosNuevos;
     this.actualizarValoresConPrefijo();
     this.cdRef.detectChanges();

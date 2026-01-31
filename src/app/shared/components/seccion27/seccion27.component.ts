@@ -1,29 +1,38 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 
 @Component({
-  selector: 'app-seccion27',
-  templateUrl: './seccion27.component.html',
-  styleUrls: ['./seccion27.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        ParagraphEditorComponent,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion27',
+    templateUrl: './seccion27.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion27Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.6';
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private timeouts: number[] = [];
   private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'telecomunicacionesCpTabla', 'costoTransporteMinimo', 'costoTransporteMaximo', 'textoTransporteCP1', 'textoTransporteCP2', 'textoTelecomunicacionesCP1', 'textoTelecomunicacionesCP2', 'textoTelecomunicacionesCP3'];
@@ -46,36 +55,34 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
-  }  protected override onInitCustom(): void {
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+  }
+
+  protected override onInitCustom(): void {
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
-        setTimeout(() => {
+        this.timeouts.push(window.setTimeout(() => {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
-        }, 0);
+        }, 0));
       }
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this['stateAdapter'].datos$.subscribe(() => {
         if (this.seccionId) {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
         }
       });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this['stateAdapter'].datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -83,6 +90,7 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
   }
 
   override ngOnDestroy() {
+    this.timeouts.forEach(id => clearTimeout(id));
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -98,7 +106,7 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
@@ -139,6 +147,11 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
   getTablaKeyTelecomunicaciones(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `telecomunicacionesCpTabla${prefijo}` : 'telecomunicacionesCpTabla';
+  }
+
+  get telecomunicacionesCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyTelecomunicaciones();
+    return this.datos[tablaKey] || this.datos.telecomunicacionesCpTabla || [];
   }
 
   protected override tieneFotografias(): boolean {
@@ -264,7 +277,7 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -275,7 +288,7 @@ export class Seccion27Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];

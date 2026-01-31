@@ -1,23 +1,31 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { Subscription } from 'rxjs';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 @Component({
-  selector: 'app-seccion18',
-  templateUrl: './seccion18.component.html',
-  styleUrls: ['./seccion18.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion18',
+    templateUrl: './seccion18.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion18Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -51,19 +59,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
   }
 
   protected getSectionKey(): string {
@@ -91,7 +95,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -126,7 +130,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (this.datos['nbiCCAyrocaTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla']);
+        this.onFieldChange('nbiCCAyrocaTabla', this.datos['nbiCCAyrocaTabla'], { refresh: false });
         this.cdRef.detectChanges();
       }
     }
@@ -139,7 +143,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (this.datos['nbiDistritoCahuachoTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla']);
+        this.onFieldChange('nbiDistritoCahuachoTabla', this.datos['nbiDistritoCahuachoTabla'], { refresh: false });
         this.cdRef.detectChanges();
       }
     }
@@ -150,9 +154,29 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
   }
 
+  /**
+   * Helper para verificar si una tabla tiene contenido real (no solo estructura vacía)
+   */
+  private tieneContenidoRealNBI(tabla: any[]): boolean {
+    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return false;
+    return tabla.some(item => {
+      const categoria = item.categoria?.toString().trim() || '';
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return categoria !== '' || casos > 0;
+    });
+  }
+
   getTableNbiCCAyroca(): any[] {
-    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'nbiCCAyrocaTabla', this.seccionId);
-    return pref || this.datos.nbiCCAyrocaTabla || [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaConPrefijo = prefijo ? this.datos[`nbiCCAyrocaTabla${prefijo}`] : null;
+    
+    // Usar tabla con prefijo solo si tiene contenido real
+    if (tablaConPrefijo && this.tieneContenidoRealNBI(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    
+    // Fallback a tabla sin prefijo
+    return this.datos.nbiCCAyrocaTabla || [];
   }
 
   getNbiCCAyrocaSinTotal(): any[] {
@@ -175,14 +199,31 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla NBI CC Ayroca con porcentajes calculados dinámicamente
+   * Cuadro 3.33
+   */
+  getNbiCCAyrocaConPorcentajes(): any[] {
+    const tabla = this.getTableNbiCCAyroca();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.33');
+  }
+
   getTablaKeyNbiDistritoCahuacho(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
   }
 
   getTableNbiDistritoCahuacho(): any[] {
-    const pref = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'nbiDistritoCahuachoTabla', this.seccionId);
-    return pref || this.datos.nbiDistritoCahuachoTabla || [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaConPrefijo = prefijo ? this.datos[`nbiDistritoCahuachoTabla${prefijo}`] : null;
+    
+    // Usar tabla con prefijo solo si tiene contenido real
+    if (tablaConPrefijo && this.tieneContenidoRealNBI(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    
+    // Fallback a tabla sin prefijo
+    return this.datos.nbiDistritoCahuachoTabla || [];
   }
 
   getNbiDistritoCahuachoSinTotal(): any[] {
@@ -205,6 +246,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla NBI Distrito Cahuacho con porcentajes calculados dinámicamente
+   * Cuadro 3.34
+   */
+  getNbiDistritoCahuachoConPorcentajes(): any[] {
+    const tabla = this.getTableNbiDistritoCahuacho();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.34');
+  }
+
   override ngOnDestroy() {
     super.ngOnDestroy();
     if (this.stateSubscription) {
@@ -213,7 +263,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -263,11 +313,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
-    const porcentaje = item?.porcentaje;
-    if (porcentaje === null || porcentaje === undefined) {
-      return '____';
+    if (item?.porcentaje) {
+      return String(item.porcentaje);
     }
-    return String(porcentaje);
+    // Calcular porcentaje si no existe
+    const total = tabla.reduce((sum, item) => sum + (parseInt(item.casos) || 0), 0);
+    if (total === 0) return '____';
+    const casos = parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(2);
   }
 
   getPorcentajeSinServiciosCC(): string {
@@ -278,11 +332,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
-    const porcentaje = item?.porcentaje;
-    if (porcentaje === null || porcentaje === undefined) {
-      return '____';
+    if (item?.porcentaje) {
+      return String(item.porcentaje);
     }
-    return String(porcentaje);
+    // Calcular porcentaje si no existe
+    const total = tabla.reduce((sum, item) => sum + (parseInt(item.casos) || 0), 0);
+    if (total === 0) return '____';
+    const casos = parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(2);
   }
 
   getTotalUnidadesDistrito(): string {
@@ -338,11 +396,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('sin servicios higiénicos')
     );
-    const porcentaje = item?.porcentaje;
-    if (porcentaje === null || porcentaje === undefined) {
-      return '____';
+    if (item?.porcentaje) {
+      return String(item.porcentaje);
     }
-    return String(porcentaje);
+    // Calcular porcentaje si no existe
+    const total = tabla.reduce((sum, item) => sum + (parseInt(item.casos) || 0), 0);
+    if (total === 0) return '____';
+    const casos = parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(2);
   }
 
   getPorcentajeHacinamientoDistrito(): string {
@@ -353,11 +415,15 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     const item = tabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('hacinamiento')
     );
-    const porcentaje = item?.porcentaje;
-    if (porcentaje === null || porcentaje === undefined) {
-      return '____';
+    if (item?.porcentaje) {
+      return String(item.porcentaje);
     }
-    return String(porcentaje);
+    // Calcular porcentaje si no existe
+    const total = tabla.reduce((sum, item) => sum + (parseInt(item.casos) || 0), 0);
+    if (total === 0) return '____';
+    const casos = parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(2);
   }
 
   getFotografiasNBIVista(): FotoItem[] {
@@ -446,7 +512,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -457,7 +523,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.imageService.saveImages(
       this.seccionId,
@@ -478,11 +544,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
       tabla[index][field] = value;
       
       if (field === 'casos') {
-        this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+        this.tableFacade.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -491,9 +557,9 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   onNbiCCTableUpdated(): void {
     const tablaKey = this.getTablaKeyNbiCC();
     const tabla = this.getTableNbiCCAyroca();
-    this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+    this.tableFacade.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -506,11 +572,11 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
       tabla[index][field] = value;
       
       if (field === 'casos') {
-        this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+        this.tableFacade.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -519,9 +585,9 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   onNbiDistritoTableUpdated(): void {
     const tablaKey = this.getTablaKeyNbiDistrito();
     const tabla = this.getTableNbiDistritoCahuacho();
-    this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+    this.tableFacade.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -577,10 +643,10 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   protected override recalcularPorcentajesDelBackend(loadedData: { [fieldName: string]: any }): void {
     // Recalcular porcentajes para cada tabla que vino del backend
     if (loadedData['nbiCCAyrocaTabla']) {
-      this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
     }
     if (loadedData['nbiDistritoCahuachoTabla']) {
-      this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
     }
   }
 
@@ -591,12 +657,13 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
   private recalcularPorcentajesSiHayDatos(): void {
     const tablaNbiCC = this.getTableNbiCCAyroca();
     if (tablaNbiCC && tablaNbiCC.length > 0 && tablaNbiCC[0].casos) {
-      this.tableService.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.nbiCCAyrocaConfig);
     }
 
     const tablaDistrito = this.getTableNbiDistritoCahuacho();
     if (tablaDistrito && tablaDistrito.length > 0 && tablaDistrito[0].casos) {
-      this.tableService.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.nbiDistritoCahuachoConfig);
     }
   }
 }
+

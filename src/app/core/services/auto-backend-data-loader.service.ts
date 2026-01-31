@@ -1,10 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
-import { BackendApiService } from './backend-api.service';
+import { BackendApiService } from './infrastructure/backend-api.service';
 import { BackendDataMapperService, DataMapping, SectionDataConfig } from './backend-data-mapper.service';
-import { CacheService } from './cache.service';
+import { CacheService } from './infrastructure/cache.service';
 import { CentrosPobladosActivosService } from './centros-poblados-activos.service';
+import {
+  AutoGetEndpointHandler,
+  AutoPostEndpointHandler,
+  createAutoGetEndpointHandlers,
+  createAutoPostEndpointHandlers
+} from './auto-backend-endpoint-handlers';
+import { AutoAggregateHandler, createAutoAggregateHandlers } from './auto-backend-aggregate-handlers';
+import { AutoMergeKeyStrategy, createAutoMergeKeyStrategies } from './auto-backend-merge-key-strategies';
 
 @Injectable({
   providedIn: 'root'
@@ -15,12 +23,26 @@ export class AutoBackendDataLoaderService {
   private loadingRequests: Map<string, Observable<any>> = new Map();
   private failedRequests: Map<string, { retries: number; lastError: any }> = new Map();
 
+  private readonly getEndpointHandlers: Record<string, AutoGetEndpointHandler>;
+  private readonly postEndpointHandlers: Record<string, AutoPostEndpointHandler>;
+  private readonly aggregateHandlers: AutoAggregateHandler[];
+  private readonly mergeKeyStrategies: AutoMergeKeyStrategy[];
+
   constructor(
     private backendApi: BackendApiService,
     private dataMapper: BackendDataMapperService,
     private cacheService: CacheService,
     private centrosPobladosActivos: CentrosPobladosActivosService
-  ) {}
+  ) {
+    this.getEndpointHandlers = createAutoGetEndpointHandlers(this.backendApi);
+    this.postEndpointHandlers = createAutoPostEndpointHandlers(this.backendApi);
+    this.aggregateHandlers = createAutoAggregateHandlers({
+      mergeResults: (results) => this.mergeResults(results),
+      agregarDemograficosDesdeRespuestas: (results) => this.agregarDemograficosDesdeRespuestas(results)
+    });
+
+    this.mergeKeyStrategies = createAutoMergeKeyStrategies();
+  }
 
   loadSectionData(
     sectionKey: string,
@@ -66,7 +88,6 @@ export class AutoBackendDataLoaderService {
     // Verificar si ya hemos superado el límite de reintentos
     const failedRequest = this.failedRequests.get(requestKey);
     if (failedRequest && failedRequest.retries >= this.MAX_RETRIES) {
-      console.warn(`🚫 Reintentos agotados (${this.MAX_RETRIES}) para: ${mapping.endpoint} con parámetros:`, params);
       return of(null);
     }
     
@@ -169,7 +190,6 @@ export class AutoBackendDataLoaderService {
       // Verificar si ya hemos superado el límite de reintentos
       const failedRequest = this.failedRequests.get(endpointKey);
       if (failedRequest && failedRequest.retries >= this.MAX_RETRIES) {
-        console.warn(`🚫 Reintentos agotados (${this.MAX_RETRIES}) para: ${mapping.endpoint} con cpp: ${cpp}`);
         return of([]);
       }
       
@@ -210,18 +230,11 @@ export class AutoBackendDataLoaderService {
 
     return forkJoin(requests).pipe(
       map(results => {
-        if (sectionKey === 'seccion6_aisd' && mapping.endpoint === '/demograficos/datos') {
-          const aggregated = this.agregarDemograficosDesdeRespuestas(results);
-          const transformed = mapping.transform ? mapping.transform(aggregated.items) : aggregated.items;
-          return transformed;
-        }
-        
-        if (mapping.endpoint === '/aisd/centros-poblados') {
-          return results.flat();
-        }
-        
-        const merged = this.mergeResults(results);
-        return merged;
+        const handler =
+          this.aggregateHandlers.find(h => h.matches({ sectionKey, mapping, results })) ||
+          this.aggregateHandlers[this.aggregateHandlers.length - 1];
+
+        return handler.aggregate({ sectionKey, mapping, results });
       })
     );
   }
@@ -332,224 +345,20 @@ export class AutoBackendDataLoaderService {
       return obs;
     };
 
-    switch (endpoint) {
-      case '/demograficos/datos':
-        return addSilentErrorHandling(
-          this.backendApi.getDatosDemograficos(normalizedParamValue).pipe(
-            map(response => {
-              return response.data;
-            })
-          )
-        );
-      case '/aisd/pet':
-        return addSilentErrorHandling(
-          this.backendApi.getPET(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/economicos/principales':
-        return addSilentErrorHandling(
-          this.backendApi.getActividadesPrincipales(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisd/materiales-construccion':
-        return addSilentErrorHandling(
-          this.backendApi.getMaterialesConstruccion(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/servicios/basicos':
-        return addSilentErrorHandling(
-          this.backendApi.getServiciosBasicos(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/vistas/lenguas-ubicacion':
-        return addSilentErrorHandling(
-          this.backendApi.getLenguasPorUbicacion(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/vistas/religiones-ubicacion':
-        return addSilentErrorHandling(
-          this.backendApi.getReligionesPorUbicacion(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/vistas/nbi-ubicacion':
-        return addSilentErrorHandling(
-          this.backendApi.getNBIPorUbicacion(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisi/informacion-referencial':
-        return addSilentErrorHandling(
-          this.backendApi.getInformacionReferencialAISI(paramValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisi/centros-poblados':
-        return addSilentErrorHandling(
-          this.backendApi.getCentrosPobladosAISI(paramValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisd/centros-poblados':
-        return addSilentErrorHandling(
-          this.backendApi.getCentrosPobladosAISD(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisi/pea-distrital':
-        return addSilentErrorHandling(
-          this.backendApi.getPEADistrital(paramValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/aisi/viviendas-censo':
-        return addSilentErrorHandling(
-          this.backendApi.getViviendasCenso(paramValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/salud/seguro-salud':
-        return addSilentErrorHandling(
-          this.backendApi.getSeguroSalud(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/educacion/niveles':
-        return addSilentErrorHandling(
-          this.backendApi.getEducacion(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/educacion/tasa-analfabetismo':
-        return addSilentErrorHandling(
-          this.backendApi.getTasaAnalfabetismo(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/lenguas/maternas':
-        return addSilentErrorHandling(
-          this.backendApi.getLenguasMaternas(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/religiones':
-        return addSilentErrorHandling(
-          this.backendApi.getReligiones(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      case '/nbi/por-ubigeo':
-        return addSilentErrorHandling(
-          this.backendApi.getNbi(normalizedParamValue).pipe(
-            map(response => response.data)
-          )
-        );
-      default:
-        return of([]);
+    const handler = this.getEndpointHandlers[endpoint];
+    if (!handler) {
+      return of([]);
     }
+
+    return addSilentErrorHandling(handler({ paramValue, normalizedParamValue }));
   }
 
   private callEndpointPost(
     endpoint: string,
     codigosUBIGEO: string[]
   ): Observable<any> {
-    switch (endpoint) {
-      case '/servicios/por-codigos':
-        console.log('[AutoBackendDataLoader] POST /servicios/por-codigos con', codigosUBIGEO.length, 'códigos:', codigosUBIGEO);
-        return this.backendApi.postServiciosPorCodigos(codigosUBIGEO).pipe(
-          map(response => {
-            console.log('[AutoBackendDataLoader] Respuesta de /servicios/por-codigos:', response);
-            return response.data;
-          }),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of({});
-          })
-        );
-      case '/centros-poblados/por-codigos-ubigeo':
-        return this.backendApi.postCentrosPobladosPorCodigos(codigosUBIGEO).pipe(
-          map(response => response.data?.centros_poblados || []),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of([]);
-          })
-        );
-      case '/salud/seguro-salud/por-codigos':
-        return this.backendApi.postSeguroSaludPorCodigos(codigosUBIGEO).pipe(
-          map(response => {
-            let data = response.data;
-            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-              return data.data;
-            }
-            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
-              return data.data || [];
-            }
-            return Array.isArray(data) ? data : [];
-          }),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of([]);
-          })
-        );
-      case '/educacion/por-codigos':
-        return this.backendApi.postEducacionPorCodigos(codigosUBIGEO).pipe(
-          map(response => {
-            let data = response.data;
-            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-              return data.data;
-            }
-            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
-              return data.data || [];
-            }
-            return Array.isArray(data) ? data : [];
-          }),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of([]);
-          })
-        );
-      case '/educacion/tasa-analfabetismo/por-codigos':
-        return this.backendApi.postTasaAnalfabetismoPorCodigos(codigosUBIGEO).pipe(
-          map(response => {
-            let data = response.data;
-            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-              return data.data;
-            }
-            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
-              return data.data || [];
-            }
-            return Array.isArray(data) ? data : [];
-          }),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of([]);
-          })
-        );
-      case '/nbi/por-codigos':
-        return this.backendApi.postNBIPorCodigos(codigosUBIGEO).pipe(
-          map(response => {
-            let data = response.data;
-            if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-              return data.data;
-            }
-            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
-              return data.data || [];
-            }
-            return Array.isArray(data) ? data : [];
-          }),
-          catchError(error => {
-            console.error('[AutoBackendDataLoader] Error en POST', endpoint, error);
-            return of([]);
-          })
-        );
-      default:
-        return of({});
-    }
+    const handler = this.postEndpointHandlers[endpoint];
+    return handler ? handler(codigosUBIGEO) : of({});
   }
 
   private mergeResults(results: any[][]): any[] {
@@ -576,74 +385,8 @@ export class AutoBackendDataLoaderService {
       return '__single__';
     }
 
-    // Soporte para seguro de salud
-    const tipoSeguro = item.tipo_seguro?.toString() || '';
-    if (tipoSeguro) {
-      return `seg|${tipoSeguro}`;
-    }
-
-    const categoria = item.categoria?.toString() || '';
-    const tipoMaterial = (item.tipo_material ?? item.tipoMaterial)?.toString() || '';
-    if (categoria && tipoMaterial) {
-      return `mat|${categoria}|${tipoMaterial}`;
-    }
-
-    const servicio = item.servicio?.toString() || '';
-    const tipoServicio = item.tipo?.toString() || '';
-    if (servicio && tipoServicio) {
-      return `svc|${servicio}|${tipoServicio}`;
-    }
-
-    const actividad = item.actividad?.toString() || '';
-    if (actividad) {
-      return `act|${actividad}`;
-    }
-
-    const idioma = item.idioma?.toString() || '';
-    if (idioma) {
-      return `idi|${idioma}`;
-    }
-
-    const lenguaMaterna = item.lengua_materna?.toString() || '';
-    if (lenguaMaterna) {
-      return `lng|${lenguaMaterna}`;
-    }
-
-    const religion = item.religion?.toString() || '';
-    if (religion) {
-      return `rel|${religion}`;
-    }
-
-    const necesidad = item.necesidad?.toString() || '';
-    if (necesidad) {
-      return `nbi|${necesidad}`;
-    }
-
-    const carencia = item.carencia?.toString() || '';
-    if (carencia) {
-      return `car|${carencia}`;
-    }
-
-    const sexo = item.sexo?.toString() || '';
-    if (sexo) {
-      return `sex|${sexo}`;
-    }
-
-    const nivelEducativo = item.nivel_educativo?.toString() || '';
-    if (nivelEducativo) {
-      return `edu|${nivelEducativo}`;
-    }
-
-    const indicador = item.indicador?.toString() || '';
-    if (indicador) {
-      return `ind|${indicador}`;
-    }
-
-    if (categoria) {
-      return `cat|${categoria}`;
-    }
-
-    return '__single__';
+    const strategy = this.mergeKeyStrategies.find(s => s.matches(item)) || this.mergeKeyStrategies[this.mergeKeyStrategies.length - 1];
+    return strategy.key(item);
   }
 
   private sumNumericFields(target: any, source: any): any {
@@ -668,7 +411,6 @@ export class AutoBackendDataLoaderService {
     this.failedRequests.clear();
     // Limpiar el caché del servicio de cache
     this.cacheService.clearCache();
-    console.log('✨ Cache y reintentos limpiados completamente');
   }
 
   /**
@@ -686,7 +428,6 @@ export class AutoBackendDataLoaderService {
     });
 
     keysToDelete.forEach(key => this.failedRequests.delete(key));
-    console.log(`🔄 Reintentos reseteados para endpoint: ${endpoint} (${keysToDelete.length} registros limpiados)`);
   }
 
   /**
@@ -696,6 +437,5 @@ export class AutoBackendDataLoaderService {
   resetAllRetries(): void {
     const count = this.failedRequests.size;
     this.failedRequests.clear();
-    console.log(`🔄 Todos los reintentos reseteados (${count} registros limpiados)`);
   }
 }

@@ -44,13 +44,15 @@ export class GroupValidationService {
   }
 
   canAccessAISDSection(): boolean {
-    const aisd = this.groupConfig.getAISD();
-    return !!aisd && aisd.ccppActivos && aisd.ccppActivos.length > 0;
+    const aisdGroups = this.groupConfig.getAllAISD();
+    if (!aisdGroups || aisdGroups.length === 0) return false;
+    return aisdGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
   }
 
   canAccessAISISection(): boolean {
-    const aisi = this.groupConfig.getAISI();
-    return !!aisi && aisi.ccppActivos && aisi.ccppActivos.length > 0;
+    const aisiGroups = this.groupConfig.getAllAISI();
+    if (!aisiGroups || aisiGroups.length === 0) return false;
+    return aisiGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
   }
 
   getValidationErrors(): string[] {
@@ -61,12 +63,20 @@ export class GroupValidationService {
       errors.push('Debe configurar al menos una Comunidad Campesina o un Distrito');
     }
 
-    if (config?.aisd && (!config.aisd.ccppActivos || config.aisd.ccppActivos.length === 0)) {
-      errors.push('Comunidad Campesina configurada pero sin CCPP activos');
+    if (config?.aisd) {
+      const aisdGroups = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
+      const hasActiveCCPP = aisdGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
+      if (!hasActiveCCPP) {
+        errors.push('Comunidad Campesina configurada pero sin CCPP activos');
+      }
     }
 
-    if (config?.aisi && (!config.aisi.ccppActivos || config.aisi.ccppActivos.length === 0)) {
-      errors.push('Distrito configurado pero sin CCPP activos');
+    if (config?.aisi) {
+      const aisiGroups = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
+      const hasActiveCCPP = aisiGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
+      if (!hasActiveCCPP) {
+        errors.push('Distrito configurado pero sin CCPP activos');
+      }
     }
 
     return errors;

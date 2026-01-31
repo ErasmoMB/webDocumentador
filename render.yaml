@@ -2,9 +2,11 @@ services:
   - type: web
     name: frontend-lbs
     env: node
-    buildCommand: npm install && npm run build:prod
+    buildCommand: npm ci && npm run build:prod
     startCommand: npx serve dist/lbs -c dist/lbs/serve.json -s -l $PORT
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: NODE_ENV
         value: production
       - key: API_URL

@@ -28,24 +28,18 @@
 <p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP3 || datos.textoTelecomunicacionesCP3 === '____'">En lo que respecta a la telefonía móvil e internet, la cobertura es proporcionada por las operadoras Movistar, Claro y Entel, lo que facilita la comunicación dentro del área y con el exterior. Para el acceso a internet, la población principalmente se conecta a través de los datos móviles proporcionados por Movistar y Entel, lo que les permite mantenerse conectados para actividades cotidianas y laborales.</p>
 
 <app-table-wrapper title="Servicios de telecomunicaciones – CP {{ datos.centroPobladoAISI || 'Cahuacho' }}" sectionId="3.1.4.B.1.6">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Medio de comunicación</th>
-            <th class="table-header">Descripción</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos.telecomunicacionesCpTabla || [])">
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'medio'">{{ item.medio || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'descripcion'">{{ item.descripcion || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos.telecomunicacionesCpTabla || datos.telecomunicacionesCpTabla.length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="telecomunicacionesCpTablaVista"
+    [config]="{
+      columns: [
+        { key: 'medio', header: 'Medio de comunicación', align: 'left' },
+        { key: 'descripcion', header: 'Descripción', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
@@ -166,6 +160,7 @@
         <label class="label">Tabla Servicios de telecomunicaciones</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="telecomunicacionesConfig"
           [columns]="[
             { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Ej: Emisoras de radio' },

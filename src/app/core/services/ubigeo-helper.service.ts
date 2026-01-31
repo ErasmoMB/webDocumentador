@@ -1,22 +1,36 @@
 import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
+import { ProjectStateFacade } from '../state/project-state.facade';
 import { CentrosPobladosActivosService } from './centros-poblados-activos.service';
 
+/**
+ * UbigeoHelperService - Servicio para manejo de ubicaciones geográficas
+ * 
+ * ✅ FASE 4: Migrado a usar solo ProjectStateFacade (eliminada dependencia de LegacyDocumentSnapshotService)
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class UbigeoHelperService {
   constructor(
-    private formularioService: FormularioService,
+    private projectFacade: ProjectStateFacade,
     private centrosPobladosActivos: CentrosPobladosActivosService
   ) {}
+
+  private getDatos(): any {
+    return this.projectFacade.obtenerDatos();
+  }
+
+  private getJsonData(): any[] {
+    const datos = this.projectFacade.obtenerDatos();
+    return datos['centrosPobladosJSON'] || [];
+  }
 
   getIdUbigeoFromCentroPoblado(centroPoblado: any): string | null {
     return centroPoblado?.CODIGO?.toString() || null;
   }
 
   getIdUbigeoFromComunidadCampesina(seccionId: string): string | null {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.getDatos();
     const prefijo = this.getPrefijoFromSeccionId(seccionId);
     
     if (!prefijo || !prefijo.startsWith('_A')) {
@@ -45,7 +59,7 @@ export class UbigeoHelperService {
   }
 
   getIdUbigeoPrincipal(seccionId: string): string | null {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.getDatos();
     
     const codigosComunidad = this.getCodigosComunidad(seccionId);
     if (codigosComunidad.length > 0) {
@@ -54,7 +68,7 @@ export class UbigeoHelperService {
 
     const centroPobladoAISI = datos['centroPobladoAISI'];
     if (centroPobladoAISI) {
-      const jsonData = this.formularioService.obtenerJSON();
+      const jsonData = this.getJsonData();
       const cpAISI = jsonData.find((cp: any) => cp.CCPP === centroPobladoAISI);
       if (cpAISI && cpAISI.CODIGO) {
         return cpAISI.CODIGO.toString();
@@ -63,7 +77,7 @@ export class UbigeoHelperService {
 
     const distritoSeleccionado = datos['distritoSeleccionado'];
     if (distritoSeleccionado) {
-      const jsonData = this.formularioService.obtenerJSON();
+      const jsonData = this.getJsonData();
       const cp = jsonData.find((cp: any) => cp.DIST === distritoSeleccionado && cp.CATEGORIA === 'Capital distrital');
       if (cp && cp.CODIGO) {
         return cp.CODIGO.toString();
@@ -95,7 +109,7 @@ export class UbigeoHelperService {
     }
 
     const indiceComunidad = parseInt(match[1]) - 1;
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.getDatos();
     const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
 
     if (indiceComunidad >= 0 && indiceComunidad < comunidadesCampesinas.length) {

@@ -1,0 +1,129 @@
+// 🎯 UTILIDADES: Clases helper para desarrollo rápido
+// Reemplazan estilos inline comunes
+
+@use '../tokens/spacing' as *;
+@use '../tokens/colors' as *;
+@use '../tokens/breakpoints' as *;
+
+// ============================================
+// DISPLAY
+// ============================================
+
+.d-none { display: none !important; }
+.d-block { display: block !important; }
+.d-flex { display: flex !important; }
+.d-grid { display: grid !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+
+// Responsive display
+@include mobile-only {
+  .d-mobile-none { display: none !important; }
+}
+
+@include desktop {
+  .d-desktop-none { display: none !important; }
+}
+
+// ============================================
+// TEXT ALIGN
+// ============================================
+
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+// ============================================
+// WHITE SPACE
+// ============================================
+
+.white-space-pre-line {
+  white-space: pre-line !important;
+}
+
+.white-space-nowrap {
+  white-space: nowrap !important;
+}
+
+// ============================================
+// BACKGROUND COLORS
+// ============================================
+
+.bg-readonly {
+  background-color: var(--color-input-background-readonly) !important;
+}
+
+.bg-table-header {
+  background-color: var(--color-table-header) !important;
+}
+
+.bg-disabled {
+  background-color: var(--color-input-background-disabled) !important;
+}
+
+.bg-background-alt {
+  background-color: var(--color-background-alt) !important;
+}
+
+// ============================================
+// CURSOR
+// ============================================
+
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+// ============================================
+// FLEX UTILITIES
+// ============================================
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+.flex-row {
+  flex-direction: row !important;
+}
+
+.justify-center {
+  justify-content: center !important;
+}
+
+.justify-between {
+  justify-content: space-between !important;
+}
+
+.align-center {
+  align-items: center !important;
+}
+
+// ============================================
+// GRID UTILITIES
+// ============================================
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  
+  @include mobile-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ============================================
+// FONT WEIGHT
+// ============================================
+
+.font-bold {
+  font-weight: var(--font-weight-bold) !important;
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold) !important;
+}

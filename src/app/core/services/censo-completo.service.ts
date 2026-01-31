@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ConfigService } from './config.service';
-import { BackendApiService } from './backend-api.service';
+import { BackendApiService } from './infrastructure/backend-api.service';
 import { DataTransformerUtil } from '../utils/data-transformer.util';
 
 export interface CensoCompletoResponse {
@@ -84,7 +84,7 @@ export class CensoCompletoService {
   getSalud(cpp: string): Observable<CensoCompletoResponse> {
     return of({
       success: false,
-      message: 'Endpoint de salud no disponible en el backend',
+      message: 'Endpoint de salud ____ en el backend',
       data: null,
       status_code: 404
     });
@@ -113,7 +113,6 @@ export class CensoCompletoService {
         };
       }),
       catchError(error => {
-        console.error('Error al obtener datos por distrito:', error);
         return throwError(() => error);
       })
     );
@@ -135,7 +134,6 @@ export class CensoCompletoService {
         };
       }),
       catchError(error => {
-        console.error('Error al obtener datos por provincia:', error);
         return throwError(() => error);
       })
     );

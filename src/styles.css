@@ -1,6 +1,67 @@
 @import url('app/shared/styles/theme.css');
 @import url('app/shared/styles/shared.css');
 
+/* Optimización de performance para resize */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+}
+
+/* Prevenir scroll horizontal en toda la app */
+#root,
+app-root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Mejorar transiciones durante resize */
+.container,
+.preview,
+.formulario,
+.sidebar,
+.main-content {
+  transition-timing-function: ease-out;
+  will-change: auto;
+}
+
+/* Evitar layout shift durante resize */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+table {
+  width: 100%;
+  table-layout: auto;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Wrapper para tablas responsive */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -11,4 +72,21 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Responsive media queries globales */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
 }

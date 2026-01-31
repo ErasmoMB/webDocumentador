@@ -3,62 +3,28 @@
 <div [innerHTML]="obtenerTextoIDHConResaltado()"></div>
 
 <app-table-wrapper title="Componentes del IDH – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2019)" sectionId="3.1.4.A.1.13">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header" colspan="2">Población</th>
-            <th class="table-header" colspan="2">Índice de Desarrollo Humano</th>
-            <th class="table-header" colspan="2">Esperanza de vida al nacer</th>
-            <th class="table-header" colspan="2">Con Educación secundaria completa (Población 18 años)</th>
-            <th class="table-header" colspan="2">Años de educación (Población 25 y más)</th>
-            <th class="table-header" colspan="2">Ingreso familiar per cápita</th>
-        </tr>
-        <tr>
-            <th class="table-header">Habitantes</th>
-            <th class="table-header">Rank</th>
-            <th class="table-header">IDH</th>
-            <th class="table-header">Rank</th>
-            <th class="table-header">Años</th>
-            <th class="table-header">Rank</th>
-            <th class="table-header">Porcentaje</th>
-            <th class="table-header">Rank</th>
-            <th class="table-header">Años</th>
-            <th class="table-header">Rank</th>
-            <th class="table-header">N.S. mes</th>
-            <th class="table-header">Rank</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getIndiceDesarrolloHumanoTabla()">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'poblacion'">{{ item.poblacion || getTotalPoblacion() || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankIdh1'">{{ item.rankIdh1 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'idh'">{{ item.idh || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEsperanza'">{{ item.rankEsperanza || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'esperanzaVida'">{{ item.esperanzaVida || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEducacion1'">{{ item.rankEducacion1 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'educacion'">{{ item.educacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankEducacion2'">{{ item.rankEducacion2 || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'anosEducacion'">{{ item.anosEducacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankAnios'">{{ item.rankAnios || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'ingreso'">{{ item.ingreso || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'rankIngreso'">{{ item.rankIngreso || item.rankIngresoFinal || '____' }}</td>
-        </tr>
-        <tr *ngIf="getIndiceDesarrolloHumanoTabla().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getIndiceDesarrolloHumanoTabla()"
+  [config]="{
+    columns: [
+      { key: 'poblacion', header: 'Habitantes', align: 'right' },
+      { key: 'rankIdh1', header: 'Rank', align: 'center' },
+      { key: 'idh', header: 'IDH', align: 'right' },
+      { key: 'rankEsperanza', header: 'Rank', align: 'center' },
+      { key: 'esperanzaVida', header: 'Años', align: 'right' },
+      { key: 'rankEducacion1', header: 'Rank', align: 'center' },
+      { key: 'educacion', header: 'Porcentaje', align: 'right' },
+      { key: 'rankEducacion2', header: 'Rank', align: 'center' },
+      { key: 'anosEducacion', header: 'Años', align: 'right' },
+      { key: 'rankAnios', header: 'Rank', align: 'center' },
+      { key: 'ingreso', header: 'N.S. mes', align: 'right' },
+      { key: 'rankIngreso', header: 'Rank', align: 'center' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> PNUD Informe 2019</span></p>
 
@@ -78,7 +44,7 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.13. Índice de Desarrollo Humano distrital</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -91,10 +57,11 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field mt-xl">
       <label class="label">Tabla Índice de Desarrollo Humano</label>
       <app-dynamic-table
         [datos]="datos"
+        [sectionId]="seccionId"
         [config]="indiceDesarrolloHumanoConfig"
         [columns]="[
           { field: 'poblacion', label: 'Población', type: 'number', placeholder: '0' },
@@ -116,7 +83,7 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field mt-lg">
       <label class="label">Fotografías de IDH</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

@@ -1,198 +1,144 @@
 <div *ngIf="!modoFormulario">
-<h5>B.1.1. Aspectos demográficos</h5>
-<p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
-<p class="text-justify" *ngIf="datos.textoDemografiaAISI && datos.textoDemografiaAISI !== '____'">{{ datos.textoDemografiaAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoDemografiaAISI || datos.textoDemografiaAISI === '____'">Respecto a la población del CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, tomando en cuenta los Censos Nacionales 2017, existen <span [appDataSource]="'section'">{{ getTotalPoblacion() }}</span> habitantes que viven permanentemente en la localidad. De este conjunto, el <span class="data-calculated">{{ getPorcentajeMujeres() }}</span> son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (<span class="data-calculated">{{ getPorcentajeHombres() }}</span>).</p>
+  <h5>B.1.1. Aspectos demográficos</h5>
+  <p style="margin-top: 10px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
 
-<app-table-wrapper title="Población por sexo – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Sexo</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getPoblacionSexoSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'sexo'">{{ item.sexo || '0' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '0' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '0,00 %' }}</td>
-        </tr>
-        <tr class="total-row" *ngIf="getPoblacionSexoSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalPoblacionSexo() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="!datos.poblacionSexoAISI || datos.poblacionSexoAISI.length === 0">
-            <td class="table-cell">0</td>
-            <td class="table-cell">0</td>
-            <td class="table-cell">0,00 %</td>
-        </tr>
-    </tbody>
-</table>
-</app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoGrupoEtarioAISI'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+  <div *ngIf="viewModel$ | async as viewModel">
+    <p class="text-justify" *ngIf="viewModel.data.textoDemografiaAISI && viewModel.data.textoDemografiaAISI !== '____'">
+      {{ viewModel.data.textoDemografiaAISI }}
+    </p>
+    <p class="text-justify" *ngIf="!viewModel.data.textoDemografiaAISI || viewModel.data.textoDemografiaAISI === '____'">
+      {{ viewModel.texts.demografiaText }}
+    </p>
 
-<p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
-<p class="text-justify" *ngIf="datos.textoGrupoEtarioAISI && datos.textoGrupoEtarioAISI !== '____'">{{ datos.textoGrupoEtarioAISI }}</p>
-<p class="text-justify" *ngIf="!datos.textoGrupoEtarioAISI || datos.textoGrupoEtarioAISI === '____'">En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de 0 a 14 años, representando el <span class="data-calculated">{{ getPorcentajeGrupoEtario('0 a 14') }}</span> del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de 45 a 64 años (<span class="data-calculated">{{ getPorcentajeGrupoEtario('45 a 64') }}</span>). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de 15 a 29 años y los de 65 años a más, pues ambos grupos representan el <span class="data-calculated">{{ getPorcentajeGrupoEtario('15 a 29') }}</span> cada uno.</p>
+    <app-table-wrapper title="Población por sexo – CP {{ viewModel.data.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
+      <app-generic-table
+        [data]="viewModel.data.poblacionSexoAISI"
+        [config]="poblacionSexoConfig">
+      </app-generic-table>
+    </app-table-wrapper>
+    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</p>
 
-<app-table-wrapper title="Población por grupo etario – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getPoblacionEtarioSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '0' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '0' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '0,00 %' }}</td>
-        </tr>
-        <tr class="total-row" *ngIf="getPoblacionEtarioSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalPoblacionEtario() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="!datos.poblacionEtarioAISI || datos.poblacionEtarioAISI.length === 0">
-            <td class="table-cell">0</td>
-            <td class="table-cell">0</td>
-            <td class="table-cell">0,00 %</td>
-        </tr>
-    </tbody>
-</table>
-</app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+    <p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
+    <p class="text-justify" *ngIf="viewModel.data.textoGrupoEtarioAISI && viewModel.data.textoGrupoEtarioAISI !== '____'">
+      {{ viewModel.data.textoGrupoEtarioAISI }}
+    </p>
+    <p class="text-justify" *ngIf="!viewModel.data.textoGrupoEtarioAISI || viewModel.data.textoGrupoEtarioAISI === '____'">
+      {{ viewModel.texts.grupoEtarioText }}
+    </p>
 
-<app-image-upload
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="getFotografiasVista()"
-    [sectionId]="'3.1.4.B.1.1'"
-    [photoPrefix]="PHOTO_PREFIX_CAHUACHO_B11"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
-</app-image-upload>
+    <app-table-wrapper title="Población por grupo etario – CP {{ viewModel.data.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.1">
+      <app-generic-table
+        [data]="viewModel.data.poblacionEtarioAISI"
+        [config]="poblacionEtarioConfig">
+      </app-generic-table>
+    </app-table-wrapper>
+    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+
+    <app-image-upload
+      *ngIf="fotografiasInstitucionalidadCache.length > 0"
+      [fotografias]="fotografiasInstitucionalidadCache"
+      [sectionId]="'3.1.4.B.1.1'"
+      [photoPrefix]="'fotografiaCahuachoB11'"
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [mostrarNumero]="true"
+      [mostrarTitulo]="true"
+      [mostrarFuente]="true">
+    </app-image-upload>
+  </div>
 </div>
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
     <h4 class="section-title">B.1.1. Aspectos demográficos</h4>
-    
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">a. Población según sexo</h4>
-      
-      <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
-        <app-paragraph-editor
-          fieldId="textoDemografiaAISI"
-          label="Población según sexo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-          [rows]="4"
-          [value]="obtenerTextoDemografiaAISI()"
-          (valueChange)="onFieldChange('textoDemografiaAISI', $event)">
-        </app-paragraph-editor>
-      </div>
 
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Población por Sexo</label>
-        <app-dynamic-table
-          [datos]="datos"
-          [config]="poblacionSexoAISIConfig"
-          [columns]="[
-            { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombre' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
-          ]"
-          [tablaKey]="'poblacionSexoAISI'"
-          [totalKey]="'sexo'"
-          [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
-          (tableUpdated)="onPoblacionSexoTableUpdated()">
-        </app-dynamic-table>
+    <div *ngIf="viewModel$ | async as viewModel">
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">a. Población según sexo</h4>
 
-        <div class="table-editor" *ngIf="datos['poblacionSexoAISI'] && datos['poblacionSexoAISI'].length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
-            <tbody>
-              <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalPoblacionSexo()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="form-group-section" style="margin-top: 15px;">
+          <h4 class="section-title">Editar Párrafos</h4>
+
+          <app-paragraph-editor
+            fieldId="textoDemografiaAISI"
+            label="Población según sexo - Texto Completo"
+            hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+            [rows]="4"
+            [value]="obtenerTextoDemografiaAISI()"
+            (valueChange)="onFieldChange('textoDemografiaAISI', $event)">
+          </app-paragraph-editor>
+        </div>
+
+        <div class="form-field" style="margin-top: 20px;">
+          <label class="label">Tabla Población por Sexo</label>
+          <app-dynamic-table
+            [datos]="viewModel.data"
+            [sectionId]="seccionId"
+            [config]="poblacionSexoDynamicConfig"
+            [columns]="[
+              { field: 'sexo', label: 'Sexo', type: 'text', placeholder: 'Hombre' },
+              { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+              { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+            ]"
+            [tablaKey]="'poblacionSexoAISI'"
+            [totalKey]="'sexo'"
+            (tableUpdated)="onPoblacionSexoTableUpdated()">
+          </app-dynamic-table>
         </div>
       </div>
-    </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Población según grupo etario</h4>
-      
-      <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
-        <app-paragraph-editor
-          fieldId="textoGrupoEtarioAISI"
-          label="Población según grupo etario - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-          [rows]="4"
-          [value]="obtenerTextoGrupoEtarioAISI()"
-          (valueChange)="onFieldChange('textoGrupoEtarioAISI', $event)">
-        </app-paragraph-editor>
-      </div>
+      <div class="form-group-section" style="margin-top: 30px;">
+        <h4 class="section-title">b. Población según grupo etario</h4>
 
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Población por Grupo Etario</label>
-        <app-dynamic-table
-          [datos]="datos"
-          [config]="poblacionEtarioAISIConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
-          ]"
-          [tablaKey]="'poblacionEtarioAISI'"
-          [totalKey]="'categoria'"
-          [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
-          (tableUpdated)="onPoblacionEtarioTableUpdated()">
-        </app-dynamic-table>
+        <div class="form-group-section" style="margin-top: 15px;">
+          <h4 class="section-title">Editar Párrafos</h4>
 
-        <div class="table-editor" *ngIf="datos['poblacionEtarioAISI'] && datos['poblacionEtarioAISI'].length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
-            <tbody>
-              <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalPoblacionEtario()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
-              </tr>
-            </tbody>
-          </table>
+          <app-paragraph-editor
+            fieldId="textoGrupoEtarioAISI"
+            label="Población según grupo etario - Texto Completo"
+            hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+            [rows]="4"
+            [value]="obtenerTextoGrupoEtarioAISI()"
+            (valueChange)="onFieldChange('textoGrupoEtarioAISI', $event)">
+          </app-paragraph-editor>
+        </div>
+
+        <div class="form-field" style="margin-top: 20px;">
+          <label class="label">Tabla Población por Grupo Etario</label>
+          <app-dynamic-table
+            [datos]="viewModel.data"
+            [sectionId]="seccionId"
+            [config]="poblacionEtarioDynamicConfig"
+            [columns]="[
+              { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '0 a 14 años' },
+              { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+              { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+            ]"
+            [tablaKey]="'poblacionEtarioAISI'"
+            [totalKey]="'categoria'"
+            (tableUpdated)="onPoblacionEtarioTableUpdated()">
+          </app-dynamic-table>
         </div>
       </div>
-    </div>
 
-    <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Fotografías de Demografía AISI</label>
-      <app-image-upload
-        [fotografias]="fotografiasCahuachoB11FormMulti"
-        [sectionId]="'3.1.4.B.1.1'"
-        [photoPrefix]="PHOTO_PREFIX_CAHUACHO_B11"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Aspectos demográficos"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Aspectos demográficos"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+      <div class="form-field" style="margin-top: 30px;">
+        <label class="label">Fotografías de Demografía AISI</label>
+        <app-image-upload
+          [fotografias]="fotografiasCahuachoB11FormMulti"
+          [sectionId]="'3.1.4.B.1.1'"
+          [photoPrefix]="PHOTO_PREFIX_CAHUACHO_B11"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Aspectos demográficos"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Aspectos demográficos"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
 </div>

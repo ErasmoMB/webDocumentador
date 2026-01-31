@@ -3,7 +3,7 @@ import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { SectionAccessControlService } from '../services/section-access-control.service';
-import { LoggerService } from '../services/logger.service';
+import { LoggerService } from '../services/infrastructure/logger.service';
 
 @Injectable({
   providedIn: 'root'

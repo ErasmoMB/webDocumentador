@@ -21,8 +21,8 @@ export interface Grupo {
 }
 
 export interface GroupConfig {
-  aisd?: Grupo;
-  aisi?: Grupo;
+  aisd?: Grupo[];
+  aisi?: Grupo[];
   lastUpdated?: number;
 }
 

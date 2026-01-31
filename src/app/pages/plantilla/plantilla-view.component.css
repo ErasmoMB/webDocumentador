@@ -2,8 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100vh;
   overflow: hidden;
   background-color: var(--background);
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  position: relative;
+  padding-top: 80px; /* 80px (absolute header) */
 }
 
 .plantilla-header {
@@ -15,7 +21,18 @@
   background-color: var(--surface-elevated);
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
-  z-index: 10;
+  z-index: 1000;
+  width: 100%;
+  max-width: 1600px; /* Match main-content max-width */
+  margin: 0 auto; /* Center like main-content */
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  position: absolute;
+  top: 0px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%); /* Center the header */
 }
 
 .plantilla-header-left {
@@ -27,6 +44,8 @@
 .plantilla-header-left h1 {
   margin: 0;
   font-size: 1.5rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .plantilla-header-right {
@@ -83,23 +102,152 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .plantilla-header-left {
+    width: 100%;
+  }
+
+  .plantilla-header-left h1 {
+    font-size: 1.25rem;
   }
 
   .plantilla-header-right {
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: stretch;
   }
 
   .plantilla-header-right .btn {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 120px;
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .plantilla-container app-resumen .preview .viewport-content {
+    padding-left: var(--spacing-md) !important;
+    padding-right: var(--spacing-md) !important;
+    padding-top: var(--spacing-lg) !important;
   }
 
   .plantilla-content {
     padding: var(--spacing-lg);
   }
+}
+
+/* Tablets landscape y pantallas medianas */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .plantilla-header-left h1 {
+    font-size: 1.35rem;
+  }
+
+  .plantilla-header-right .btn {
+    font-size: 0.95rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .plantilla-header {
+    padding: var(--spacing-sm);
+  }
+
+  .plantilla-header-left h1 {
+    font-size: 1.1rem;
+  }
+
+  .plantilla-header-right {
+    flex-direction: column;
+  }
+
+  .plantilla-header-right .btn {
+    width: 100%;
+    min-width: unset;
+    font-size: 0.85rem;
+  }
+
+  .plantilla-container app-resumen .preview .viewport-content {
+    padding-left: var(--spacing-sm) !important;
+    padding-right: var(--spacing-sm) !important;
+  }
+
+  .plantilla-content {
+    padding: var(--spacing-md);
+  }
 
   .plantilla-document {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
+  }
+}
+
+/* Responsive header positioning to match main-content layout */
+@media (max-width: 768px) {
+  .plantilla-header {
+    left: 0;
+    right: 0;
+    transform: none;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .plantilla-header {
+    left: 0; /* Por defecto sin margen - se ajusta dinámicamente según sidebar */
+    right: 0;
+    transform: none;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (min-width: 1025px) {
+  .plantilla-header {
+    left: 0;
+    right: 0;
+    transform: none;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+/* Responsive para tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .plantilla-header {
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+
+  .plantilla-header-left h1 {
+    font-size: 1.4rem;
+  }
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .plantilla-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    top: 0px; /* Ajustar a la nueva posición */
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .plantilla-header-left {
+    justify-content: center;
+  }
+
+  .plantilla-header-left h1 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  .plantilla-header-right {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 

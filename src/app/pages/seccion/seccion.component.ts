@@ -1,178 +1,105 @@
-import { Component, OnInit, ChangeDetectorRef, AfterViewChecked, ViewChild, OnDestroy, Type } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector } from '@angular/core';
+import { FormStateService } from 'src/app/core/services/state/form-state.service';
+import { FormPersistenceService } from 'src/app/core/services/state/form-persistence.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { DataService } from 'src/app/core/services/data.service';
 import { ConfigService } from 'src/app/core/services/config.service';
 import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { StateService } from 'src/app/core/services/state.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
-import { MockDataService } from 'src/app/core/services/mock-data.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
+import { MockDataService } from 'src/app/core/services/infrastructure/mock-data.service';
+import { FormularioMockService } from 'src/app/core/services/formulario-mock.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { StorageFacade } from 'src/app/core/services/infrastructure/storage-facade.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { debugLog } from 'src/app/shared/utils/debug';
 import { Subscription } from 'rxjs';
 import { FormularioDatos, ComunidadCampesina } from 'src/app/core/models/formulario.model';
 import { FotoItem } from 'src/app/shared/components/image-upload/image-upload.component';
-import { Seccion1Component } from 'src/app/shared/components/seccion1/seccion1.component';
-import { Seccion2Component } from 'src/app/shared/components/seccion2/seccion2.component';
-import { Seccion3Component } from 'src/app/shared/components/seccion3/seccion3.component';
-import { Seccion4Component } from 'src/app/shared/components/seccion4/seccion4.component';
-import { Seccion5Component } from 'src/app/shared/components/seccion5/seccion5.component';
-import { Seccion6Component } from 'src/app/shared/components/seccion6/seccion6.component';
-import { Seccion7Component } from 'src/app/shared/components/seccion7/seccion7.component';
-import { Seccion8Component } from 'src/app/shared/components/seccion8/seccion8.component';
-import { Seccion9Component } from 'src/app/shared/components/seccion9/seccion9.component';
-import { Seccion10Component } from 'src/app/shared/components/seccion10/seccion10.component';
-import { Seccion11Component } from 'src/app/shared/components/seccion11/seccion11.component';
-import { Seccion12Component } from 'src/app/shared/components/seccion12/seccion12.component';
-import { Seccion13Component } from 'src/app/shared/components/seccion13/seccion13.component';
-import { Seccion14Component } from 'src/app/shared/components/seccion14/seccion14.component';
-import { Seccion15Component } from 'src/app/shared/components/seccion15/seccion15.component';
-import { Seccion16Component } from 'src/app/shared/components/seccion16/seccion16.component';
-import { Seccion17Component } from 'src/app/shared/components/seccion17/seccion17.component';
-import { Seccion18Component } from 'src/app/shared/components/seccion18/seccion18.component';
-import { Seccion19Component } from 'src/app/shared/components/seccion19/seccion19.component';
-import { Seccion20Component } from 'src/app/shared/components/seccion20/seccion20.component';
-import { Seccion21Component } from 'src/app/shared/components/seccion21/seccion21.component';
-import { Seccion22Component } from 'src/app/shared/components/seccion22/seccion22.component';
-import { Seccion23Component } from 'src/app/shared/components/seccion23/seccion23.component';
-import { Seccion24Component } from 'src/app/shared/components/seccion24/seccion24.component';
-import { Seccion25Component } from 'src/app/shared/components/seccion25/seccion25.component';
-import { Seccion26Component } from 'src/app/shared/components/seccion26/seccion26.component';
-import { Seccion27Component } from 'src/app/shared/components/seccion27/seccion27.component';
-import { Seccion28Component } from 'src/app/shared/components/seccion28/seccion28.component';
-import { Seccion29Component } from 'src/app/shared/components/seccion29/seccion29.component';
-import { Seccion30Component } from 'src/app/shared/components/seccion30/seccion30.component';
-import { Seccion31Component } from 'src/app/shared/components/seccion31/seccion31.component';
-import { Seccion32Component } from 'src/app/shared/components/seccion32/seccion32.component';
-import { Seccion33Component } from 'src/app/shared/components/seccion33/seccion33.component';
-import { Seccion34Component } from 'src/app/shared/components/seccion34/seccion34.component';
-import { Seccion35Component } from 'src/app/shared/components/seccion35/seccion35.component';
-import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion36.component';
+
+type ComponentLoader = () => Promise<Type<any>>;
 
 @Component({
-  selector: 'app-seccion',
-  templateUrl: './seccion.component.html',
-  styleUrls: ['./seccion.component.css']
+    selector: 'app-seccion',
+    templateUrl: './seccion.component.html',
+    styleUrls: ['./seccion.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
-export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
-  @ViewChild(Seccion1Component) set seccion1(comp: Seccion1Component) {
-    ViewChildHelper.registerComponent('seccion1', comp);
-  }
-  @ViewChild(Seccion2Component) set seccion2(comp: Seccion2Component) {
-    ViewChildHelper.registerComponent('seccion2', comp);
-  }
-  @ViewChild(Seccion3Component) set seccion3(comp: Seccion3Component) {
-    ViewChildHelper.registerComponent('seccion3', comp);
-  }
-  @ViewChild(Seccion4Component) set seccion4(comp: Seccion4Component) {
-    ViewChildHelper.registerComponent('seccion4', comp);
-  }
-  @ViewChild(Seccion5Component) set seccion5(comp: Seccion5Component) {
-    ViewChildHelper.registerComponent('seccion5', comp);
-  }
-  @ViewChild(Seccion6Component) set seccion6(comp: Seccion6Component) {
-    ViewChildHelper.registerComponent('seccion6', comp);
-  }
-  @ViewChild(Seccion7Component) set seccion7(comp: Seccion7Component) {
-    ViewChildHelper.registerComponent('seccion7', comp);
-  }
-  @ViewChild(Seccion8Component) set seccion8(comp: Seccion8Component) {
-    ViewChildHelper.registerComponent('seccion8', comp);
-  }
-  @ViewChild(Seccion9Component) set seccion9(comp: Seccion9Component) {
-    ViewChildHelper.registerComponent('seccion9', comp);
-  }
-  @ViewChild(Seccion10Component) set seccion10(comp: Seccion10Component) {
-    ViewChildHelper.registerComponent('seccion10', comp);
-  }
-  @ViewChild(Seccion11Component) set seccion11(comp: Seccion11Component) {
-    ViewChildHelper.registerComponent('seccion11', comp);
-  }
-  @ViewChild(Seccion12Component) set seccion12(comp: Seccion12Component) {
-    ViewChildHelper.registerComponent('seccion12', comp);
-  }
-  @ViewChild(Seccion13Component) set seccion13(comp: Seccion13Component) {
-    ViewChildHelper.registerComponent('seccion13', comp);
-  }
-  @ViewChild(Seccion14Component) set seccion14(comp: Seccion14Component) {
-    ViewChildHelper.registerComponent('seccion14', comp);
-  }
-  @ViewChild(Seccion15Component) set seccion15(comp: Seccion15Component) {
-    ViewChildHelper.registerComponent('seccion15', comp);
-  }
-  @ViewChild(Seccion16Component) set seccion16(comp: Seccion16Component) {
-    ViewChildHelper.registerComponent('seccion16', comp);
-  }
-  @ViewChild(Seccion17Component) set seccion17(comp: Seccion17Component) {
-    ViewChildHelper.registerComponent('seccion17', comp);
-  }
-  @ViewChild(Seccion18Component) set seccion18(comp: Seccion18Component) {
-    ViewChildHelper.registerComponent('seccion18', comp);
-  }
-  @ViewChild(Seccion19Component) set seccion19(comp: Seccion19Component) {
-    ViewChildHelper.registerComponent('seccion19', comp);
-  }
-  @ViewChild(Seccion20Component) set seccion20(comp: Seccion20Component) {
-    ViewChildHelper.registerComponent('seccion20', comp);
-  }
-  @ViewChild(Seccion21Component) set seccion21(comp: Seccion21Component) {
-    ViewChildHelper.registerComponent('seccion21', comp);
-  }
-  @ViewChild(Seccion22Component) set seccion22(comp: Seccion22Component) {
-    ViewChildHelper.registerComponent('seccion22', comp);
-  }
-  @ViewChild(Seccion23Component) set seccion23(comp: Seccion23Component) {
-    ViewChildHelper.registerComponent('seccion23', comp);
-  }
-  @ViewChild(Seccion24Component) set seccion24(comp: Seccion24Component) {
-    ViewChildHelper.registerComponent('seccion24', comp);
-  }
-  @ViewChild(Seccion25Component) set seccion25(comp: Seccion25Component) {
-    ViewChildHelper.registerComponent('seccion25', comp);
-  }
-  @ViewChild(Seccion26Component) set seccion26(comp: Seccion26Component) {
-    ViewChildHelper.registerComponent('seccion26', comp);
-  }
-  @ViewChild(Seccion27Component) set seccion27(comp: Seccion27Component) {
-    ViewChildHelper.registerComponent('seccion27', comp);
-  }
-  @ViewChild(Seccion28Component) set seccion28(comp: Seccion28Component) {
-    ViewChildHelper.registerComponent('seccion28', comp);
-  }
-  @ViewChild(Seccion29Component) set seccion29(comp: Seccion29Component) {
-    ViewChildHelper.registerComponent('seccion29', comp);
-  }
-  @ViewChild(Seccion30Component) set seccion30(comp: Seccion30Component) {
-    ViewChildHelper.registerComponent('seccion30', comp);
-  }
-  @ViewChild(Seccion31Component) set seccion31(comp: Seccion31Component) {
-    ViewChildHelper.registerComponent('seccion31', comp);
-  }
-  @ViewChild(Seccion32Component) set seccion32(comp: Seccion32Component) {
-    ViewChildHelper.registerComponent('seccion32', comp);
-  }
-  @ViewChild(Seccion33Component) set seccion33(comp: Seccion33Component) {
-    ViewChildHelper.registerComponent('seccion33', comp);
-  }
-  @ViewChild(Seccion34Component) set seccion34(comp: Seccion34Component) {
-    ViewChildHelper.registerComponent('seccion34', comp);
-  }
-  @ViewChild(Seccion35Component) set seccion35(comp: Seccion35Component) {
-    ViewChildHelper.registerComponent('seccion35', comp);
-  }
-  @ViewChild(Seccion36Component) set seccion36(comp: Seccion36Component) {
-    ViewChildHelper.registerComponent('seccion36', comp);
-  }
+export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('previewHost', { read: ViewContainerRef }) private previewHost?: ViewContainerRef;
+  @ViewChild('formHost', { read: ViewContainerRef }) private formHost?: ViewContainerRef;
+
+  private previewComponentRef?: ComponentRef<any>;
+  private formComponentRef?: ComponentRef<any>;
+  private viewInitialized = false;
+  private renderSeq = 0;
+  isSectionComponentLoading = false;
+  private readonly componentLoaders = {
+    seccion1: () => import('src/app/shared/components/seccion1/seccion1.component').then(m => m.Seccion1Component as unknown as Type<any>),
+    seccion2: () => import('src/app/shared/components/seccion2/seccion2.component').then(m => m.Seccion2Component as unknown as Type<any>),
+    seccion3: () => import('src/app/shared/components/seccion3/seccion3.component').then(m => m.Seccion3Component as unknown as Type<any>),
+    seccion4: () => import('src/app/shared/components/seccion4/seccion4.component').then(m => m.Seccion4Component as unknown as Type<any>),
+    seccion5: () => import('src/app/shared/components/seccion5/seccion5.component').then(m => m.Seccion5Component as unknown as Type<any>),
+    seccion6: () => import('src/app/shared/components/seccion6/seccion6.component').then(m => m.Seccion6Component as unknown as Type<any>),
+    seccion7View: () => import('src/app/shared/components/seccion7/seccion7-view.component').then(m => m.Seccion7ViewComponent as unknown as Type<any>),
+    seccion8: () => import('src/app/shared/components/seccion8/seccion8.component').then(m => m.Seccion8Component as unknown as Type<any>),
+    seccion9: () => import('src/app/shared/components/seccion9/seccion9.component').then(m => m.Seccion9Component as unknown as Type<any>),
+    seccion10: () => import('src/app/shared/components/seccion10/seccion10.component').then(m => m.Seccion10Component as unknown as Type<any>),
+    seccion11: () => import('src/app/shared/components/seccion11/seccion11.component').then(m => m.Seccion11Component as unknown as Type<any>),
+    seccion12: () => import('src/app/shared/components/seccion12/seccion12.component').then(m => m.Seccion12Component as unknown as Type<any>),
+    seccion13: () => import('src/app/shared/components/seccion13/seccion13.component').then(m => m.Seccion13Component as unknown as Type<any>),
+    seccion14: () => import('src/app/shared/components/seccion14/seccion14.component').then(m => m.Seccion14Component as unknown as Type<any>),
+    seccion15: () => import('src/app/shared/components/seccion15/seccion15.component').then(m => m.Seccion15Component as unknown as Type<any>),
+    seccion16: () => import('src/app/shared/components/seccion16/seccion16.component').then(m => m.Seccion16Component as unknown as Type<any>),
+    seccion17: () => import('src/app/shared/components/seccion17/seccion17.component').then(m => m.Seccion17Component as unknown as Type<any>),
+    seccion18: () => import('src/app/shared/components/seccion18/seccion18.component').then(m => m.Seccion18Component as unknown as Type<any>),
+    seccion19: () => import('src/app/shared/components/seccion19/seccion19.component').then(m => m.Seccion19Component as unknown as Type<any>),
+    seccion20: () => import('src/app/shared/components/seccion20/seccion20.component').then(m => m.Seccion20Component as unknown as Type<any>),
+    seccion21: () => import('src/app/shared/components/seccion21/seccion21.component').then(m => m.Seccion21Component as unknown as Type<any>),
+    seccion22: () => import('src/app/shared/components/seccion22/seccion22.component').then(m => m.Seccion22Component as unknown as Type<any>),
+    seccion23: () => import('src/app/shared/components/seccion23/seccion23.component').then(m => m.Seccion23Component as unknown as Type<any>),
+    seccion24: () => import('src/app/shared/components/seccion24/seccion24.component').then(m => m.Seccion24Component as unknown as Type<any>),
+    seccion25: () => import('src/app/shared/components/seccion25/seccion25.component').then(m => m.Seccion25Component as unknown as Type<any>),
+    seccion26: () => import('src/app/shared/components/seccion26/seccion26.component').then(m => m.Seccion26Component as unknown as Type<any>),
+    seccion27: () => import('src/app/shared/components/seccion27/seccion27.component').then(m => m.Seccion27Component as unknown as Type<any>),
+    seccion28: () => import('src/app/shared/components/seccion28/seccion28.component').then(m => m.Seccion28Component as unknown as Type<any>),
+    seccion29: () => import('src/app/shared/components/seccion29/seccion29.component').then(m => m.Seccion29Component as unknown as Type<any>),
+    seccion30: () => import('src/app/shared/components/seccion30/seccion30.component').then(m => m.Seccion30Component as unknown as Type<any>),
+    seccion31: () => import('src/app/shared/components/seccion31/seccion31.component').then(m => m.Seccion31Component as unknown as Type<any>),
+    seccion32: () => import('src/app/shared/components/seccion32/seccion32.component').then(m => m.Seccion32Component as unknown as Type<any>),
+    seccion33: () => import('src/app/shared/components/seccion33/seccion33.component').then(m => m.Seccion33Component as unknown as Type<any>),
+    seccion34: () => import('src/app/shared/components/seccion34/seccion34.component').then(m => m.Seccion34Component as unknown as Type<any>),
+    seccion35: () => import('src/app/shared/components/seccion35/seccion35.component').then(m => m.Seccion35Component as unknown as Type<any>),
+    seccion36: () => import('src/app/shared/components/seccion36/seccion36.component').then(m => m.Seccion36Component as unknown as Type<any>),
+
+    seccion2Form: () => import('src/app/shared/components/seccion2/seccion2-form.component').then(m => m.Seccion2FormComponent as unknown as Type<any>),
+    seccion3Form: () => import('src/app/shared/components/seccion3/seccion3-form.component').then(m => m.Seccion3FormComponent as unknown as Type<any>),
+
+    seccion1FormWrapper: () => import('src/app/shared/components/forms/seccion1-form-wrapper.component').then(m => m.Seccion1FormWrapperComponent as unknown as Type<any>),
+    seccion4FormWrapper: () => import('src/app/shared/components/forms/seccion4-form-wrapper.component').then(m => m.Seccion4FormWrapperComponent as unknown as Type<any>),
+    seccion7FormWrapper: () => import('src/app/shared/components/forms/seccion7-form-wrapper.component').then(m => m.Seccion7FormWrapperComponent as unknown as Type<any>),
+    seccion14FormWrapper: () => import('src/app/shared/components/forms/seccion14-form-wrapper.component').then(m => m.Seccion14FormWrapperComponent as unknown as Type<any>),
+    seccion15FormWrapper: () => import('src/app/shared/components/forms/seccion15-form-wrapper.component').then(m => m.Seccion15FormWrapperComponent as unknown as Type<any>),
+    seccion16FormWrapper: () => import('src/app/shared/components/forms/seccion16-form-wrapper.component').then(m => m.Seccion16FormWrapperComponent as unknown as Type<any>),
+    seccion17FormWrapper: () => import('src/app/shared/components/forms/seccion17-18-form-wrapper.component').then(m => m.Seccion17FormWrapperComponent as unknown as Type<any>),
+    seccion30FormWrapper: () => import('src/app/shared/components/forms/seccion30-form-wrapper.component').then(m => m.Seccion30FormWrapperComponent as unknown as Type<any>),
+  } satisfies Record<string, ComponentLoader>;
+
+  private readonly formRules = this.createFormRules();
   
   seccionId: string = '';
   seccionTitulo: string = '';
   seccionPadreTitulo: string = '';
   datos: FormularioDatos = {} as FormularioDatos;
   formData: Partial<FormularioDatos> = {};
-  datos$ = this.stateService.datos$;
+  datos$ = this.stateAdapter.datos$;
   private scrollRealizado: boolean = false;
   puedeIrAnterior: boolean = false;
   puedeIrSiguiente: boolean = false;
@@ -190,21 +117,30 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
   geoInfo: any = {};
   autocompleteData: any = {};
   testDataActive = false;
+  
+  // Mobile view toggle
+  mobileViewMode: 'preview' | 'form' = 'form'; // Por defecto mostrar formulario en mobile
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private formularioService: FormularioService,
+    private projectFacade: ProjectStateFacade,
+    private formularioMock: FormularioMockService,
     private dataService: DataService,
     private configService: ConfigService,
     private cdRef: ChangeDetectorRef,
     private textNormalization: TextNormalizationService,
-    private stateService: StateService,
-    private fieldMapping: FieldMappingService,
+    private stateAdapter: ReactiveStateAdapter,
+    private fieldMapping: FieldMappingFacade,
     private imageService: ImageManagementService,
     private navigationService: SectionNavigationService,
     private mockDataService: MockDataService,
-    private tableService: TableManagementService
+    private tableFacade: TableManagementFacade,
+    private formChange: FormChangeService,
+    private environmentInjector: EnvironmentInjector,
+    private injector: Injector,
+    private formPersistence: FormPersistenceService,
+    private storage: StorageFacade
   ) {}
 
   ngOnInit() {
@@ -215,9 +151,9 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
       })
     );
     
-    this.datos = this.formularioService.obtenerDatos();
+    this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     this.formData = { ...this.datos };
-    this.stateService.setDatos(this.datos);
+    this.stateAdapter.setDatos(this.datos);
     
     this.centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
@@ -237,9 +173,15 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     );
   }
 
+  ngAfterViewInit(): void {
+    this.viewInitialized = true;
+    // Render inicial (la primera navegación puede llegar antes de que exista el ViewContainerRef)
+    void this.renderSectionComponents();
+  }
+
   async cargarSeccion() {
     this.actualizarTitulo();
-    this.datos = this.formularioService.obtenerDatos();
+    this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     this.formData = { ...this.datos };
     this.centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
@@ -249,7 +191,9 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.actualizarEstadoNavegacion();
     this.scrollRealizado = false;
     this.cdRef.detectChanges();
-    
+
+    await this.renderSectionComponents();
+
     setTimeout(() => {
       this.actualizarComponenteSeccion();
       const seccion2 = ViewChildHelper.getComponent('seccion2');
@@ -260,7 +204,111 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
       if (seccion4 && seccion4['autocompleteData']) {
         this.autocompleteData = { ...this.autocompleteData, ...seccion4['autocompleteData'] };
       }
-    }, 100);
+    }, 50);
+  }
+
+  private async renderSectionComponents(): Promise<void> {
+    if (!this.viewInitialized) return;
+    if (!this.previewHost || !this.formHost) return;
+    if (!this.seccionId) return;
+
+    const currentSeq = ++this.renderSeq;
+    this.isSectionComponentLoading = true;
+
+    this.clearDynamicComponents();
+    this.cdRef.markForCheck();
+
+    try {
+      const previewRenderer = this.resolvePreviewRenderer(this.seccionId);
+      const formRenderer = this.resolveFormRenderer(this.seccionId);
+
+      const [previewType, formType] = await Promise.all([
+        previewRenderer ? previewRenderer.loader() : Promise.resolve(null),
+        formRenderer ? formRenderer.loader() : Promise.resolve(null),
+      ]);
+
+      if (currentSeq !== this.renderSeq) return;
+
+      if (previewRenderer && previewType) {
+        this.previewComponentRef = this.previewHost.createComponent(previewType, { environmentInjector: this.environmentInjector });
+        this.applyInputs(this.previewComponentRef, previewRenderer.inputs);
+        this.previewComponentRef.changeDetectorRef.detectChanges();
+        this.registerComponentForSection(this.seccionId, this.previewComponentRef.instance, true);
+      }
+
+      if (formRenderer && formType) {
+        this.formComponentRef = this.formHost.createComponent(formType, { environmentInjector: this.environmentInjector });
+        this.applyInputs(this.formComponentRef, formRenderer.inputs);
+        this.formComponentRef.changeDetectorRef.detectChanges();
+        // El registro preferente viene del preview, salvo casos especiales (seccion2/seccion3)
+        this.registerComponentForSection(this.seccionId, this.formComponentRef.instance, false);
+
+        // Algunos wrappers exponen el componente interno después de un ciclo de render
+        setTimeout(() => {
+          if (currentSeq !== this.renderSeq) return;
+          this.registerComponentForSection(this.seccionId, this.formComponentRef?.instance, false);
+        }, 0);
+      }
+    } finally {
+      if (currentSeq === this.renderSeq) {
+        this.isSectionComponentLoading = false;
+        this.cdRef.markForCheck();
+      }
+    }
+  }
+
+  private clearDynamicComponents(): void {
+    try {
+      this.previewComponentRef?.destroy();
+    } catch {}
+    try {
+      this.formComponentRef?.destroy();
+    } catch {}
+    this.previewComponentRef = undefined;
+    this.formComponentRef = undefined;
+    this.previewHost?.clear();
+    this.formHost?.clear();
+  }
+
+  private applyInputs(ref: ComponentRef<any>, inputs: { [key: string]: any } | undefined | null): void {
+    if (!inputs) return;
+    for (const [key, value] of Object.entries(inputs)) {
+      try {
+        ref.setInput(key, value);
+      } catch {
+        // Ignorar inputs desconocidos
+      }
+    }
+  }
+
+  private registerComponentForSection(seccionId: string, instance: any, preferPreview: boolean): void {
+    const componentId = this.resolveComponentId(seccionId);
+    if (!componentId || !instance) return;
+
+    // Mantener el comportamiento anterior: seccion2/seccion3 se registran desde el form wrapper
+    if (preferPreview && (componentId === 'seccion2' || componentId === 'seccion3')) {
+      return;
+    }
+
+    if (preferPreview && ViewChildHelper.hasComponent(componentId)) {
+      return;
+    }
+
+    // Casos especiales: wrappers que exponen componente interno
+    if (componentId === 'seccion2' && instance.seccion2Component) {
+      ViewChildHelper.registerComponent(componentId, instance.seccion2Component);
+      return;
+    }
+    if (componentId === 'seccion3' && instance.seccion3Component) {
+      ViewChildHelper.registerComponent(componentId, instance.seccion3Component);
+      return;
+    }
+    if (componentId === 'seccion7' && instance.seccion7InternalComponent) {
+      ViewChildHelper.registerComponent(componentId, instance.seccion7InternalComponent);
+      return;
+    }
+
+    ViewChildHelper.registerComponent(componentId, instance);
   }
 
   actualizarTitulo() {
@@ -366,84 +414,81 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.seccionPadreTitulo = seccionesPadre[this.seccionId] || '';
   }
 
-  getPreviewComponentType(): Type<any> | null {
-    if (this.esSubseccionAISD(this.seccionId, 1)) return Seccion5Component;
-    if (this.esSubseccionAISD(this.seccionId, 2)) return Seccion6Component;
-    if (this.esSubseccionAISD(this.seccionId, 3)) return Seccion7Component;
-    if (this.esSubseccionAISD(this.seccionId, 4)) return Seccion8Component;
-    if (this.esSubseccionAISD(this.seccionId, 5)) return Seccion9Component;
-    if (this.esSubseccionAISD(this.seccionId, 6)) return Seccion10Component;
-    if (this.esSubseccionAISD(this.seccionId, 7)) return Seccion11Component;
-    if (this.esSubseccionAISD(this.seccionId, 8)) return Seccion12Component;
-    if (this.esSubseccionAISD(this.seccionId, 9)) return Seccion13Component;
-    if (this.esSubseccionAISD(this.seccionId, 10)) return Seccion14Component;
-    if (this.esSubseccionAISD(this.seccionId, 11)) return Seccion15Component;
-    if (this.esSubseccionAISD(this.seccionId, 12)) return Seccion16Component;
-    if (this.esSubseccionAISD(this.seccionId, 13)) return Seccion17Component;
-    if (this.esSubseccionAISD(this.seccionId, 14)) return Seccion18Component;
-    if (this.esSubseccionAISD(this.seccionId, 15)) return Seccion19Component;
-    if (this.esSubseccionAISD(this.seccionId, 16)) return Seccion20Component;
+  private resolvePreviewRenderer(seccionId: string): { loader: ComponentLoader; inputs: { [key: string]: any } } | null {
+    if (!seccionId) return null;
 
-    const componentMap: { [key: string]: Type<any> } = {
-      '3.1.1': Seccion1Component,
-      '3.1.2': Seccion2Component,
-      '3.1.2.A': Seccion2Component,
-      '3.1.2.B': Seccion2Component,
-      '3.1.3': Seccion3Component,
-      '3.1.3.A': Seccion3Component,
-      '3.1.3.B': Seccion3Component,
-      '3.1.4.A': Seccion4Component,
-      '3.1.4.A.1': Seccion4Component,
-      '3.1.4.A.2': Seccion4Component,
-      '3.1.4.B': Seccion21Component,
-      '3.1.4.B.1': Seccion21Component,
-      '3.1.4.B.2': Seccion21Component,
-      '3.1.4.B.1.1': Seccion22Component,
-      '3.1.4.B.2.1': Seccion22Component,
-      '3.1.4.B.1.2': Seccion23Component,
-      '3.1.4.B.2.2': Seccion23Component,
-      '3.1.4.B.1.3': Seccion24Component,
-      '3.1.4.B.2.3': Seccion24Component,
-      '3.1.4.B.1.4': Seccion25Component,
-      '3.1.4.B.2.4': Seccion25Component,
-      '3.1.4.B.1.5': Seccion26Component,
-      '3.1.4.B.2.5': Seccion26Component,
-      '3.1.4.B.1.6': Seccion27Component,
-      '3.1.4.B.2.6': Seccion27Component,
-      '3.1.4.B.1.7': Seccion28Component,
-      '3.1.4.B.2.7': Seccion28Component,
-      '3.1.4.B.1.8': Seccion29Component,
-      '3.1.4.B.2.8': Seccion29Component,
-      '3.1.4.B.1.9': Seccion30Component,
-      '3.1.4.B.2.9': Seccion30Component,
-      '3.1.4.B.1.10': Seccion31Component,
-      '3.1.4.B.2.10': Seccion31Component,
-      '3.1.4.B.1.11': Seccion32Component,
-      '3.1.4.B.2.11': Seccion32Component,
-      '3.1.4.B.1.12': Seccion33Component,
-      '3.1.4.B.2.12': Seccion33Component,
-      '3.1.4.B.1.13': Seccion34Component,
-      '3.1.4.B.2.13': Seccion34Component,
-      '3.1.4.B.1.14': Seccion35Component,
-      '3.1.4.B.2.14': Seccion35Component,
-      '3.1.4.B.1.15': Seccion36Component,
-      '3.1.4.B.2.15': Seccion36Component
+    const inputs = this.getPreviewInputs(seccionId);
+
+    // ✅ AISD: Subsecciones dinámicas (A.1.X, A.2.X, A.3.X, etc.)
+    if (this.esSubseccionAISD(seccionId, 1)) return { loader: this.componentLoaders.seccion5, inputs };
+    if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders.seccion6, inputs };
+    if (this.esSubseccionAISD(seccionId, 3)) return { loader: this.componentLoaders.seccion7View, inputs };
+    if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders.seccion8, inputs };
+    if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders.seccion9, inputs };
+    if (this.esSubseccionAISD(seccionId, 6)) return { loader: this.componentLoaders.seccion10, inputs };
+    if (this.esSubseccionAISD(seccionId, 7)) return { loader: this.componentLoaders.seccion11, inputs };
+    if (this.esSubseccionAISD(seccionId, 8)) return { loader: this.componentLoaders.seccion12, inputs };
+    if (this.esSubseccionAISD(seccionId, 9)) return { loader: this.componentLoaders.seccion13, inputs };
+    if (this.esSubseccionAISD(seccionId, 10)) return { loader: this.componentLoaders.seccion14, inputs };
+    if (this.esSubseccionAISD(seccionId, 11)) return { loader: this.componentLoaders.seccion15, inputs };
+    if (this.esSubseccionAISD(seccionId, 12)) return { loader: this.componentLoaders.seccion16, inputs };
+    if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders.seccion17, inputs };
+    if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders.seccion18, inputs };
+    if (this.esSubseccionAISD(seccionId, 15)) return { loader: this.componentLoaders.seccion19, inputs };
+    if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20, inputs };
+
+    // ✅ AISI: Subsecciones dinámicas (B.1.X, B.2.X, B.3.X, etc.)
+    if (this.esSubseccionAISI(seccionId, 1)) return { loader: this.componentLoaders.seccion22, inputs };
+    if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23, inputs };
+    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24, inputs };
+    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
+    if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders.seccion26, inputs };
+    if (this.esSubseccionAISI(seccionId, 6)) return { loader: this.componentLoaders.seccion27, inputs };
+    if (this.esSubseccionAISI(seccionId, 7)) return { loader: this.componentLoaders.seccion28, inputs };
+    if (this.esSubseccionAISI(seccionId, 8)) return { loader: this.componentLoaders.seccion29, inputs };
+    if (this.esSubseccionAISI(seccionId, 9)) return { loader: this.componentLoaders.seccion30, inputs };
+    if (this.esSubseccionAISI(seccionId, 10)) return { loader: this.componentLoaders.seccion31, inputs };
+    if (this.esSubseccionAISI(seccionId, 11)) return { loader: this.componentLoaders.seccion32, inputs };
+    if (this.esSubseccionAISI(seccionId, 12)) return { loader: this.componentLoaders.seccion33, inputs };
+    if (this.esSubseccionAISI(seccionId, 13)) return { loader: this.componentLoaders.seccion34, inputs };
+    if (this.esSubseccionAISI(seccionId, 14)) return { loader: this.componentLoaders.seccion35, inputs };
+    if (this.esSubseccionAISI(seccionId, 15)) return { loader: this.componentLoaders.seccion36, inputs };
+
+    // ✅ Secciones raíz AISD (A.X) - cualquier grupo
+    if (seccionId.match(/^3\.1\.4\.A(\.\d+)?$/)) {
+      return { loader: this.componentLoaders.seccion4, inputs: { seccionId, modoFormulario: false } };
+    }
+
+    // ✅ Secciones raíz AISI (B.X) - cualquier grupo
+    if (seccionId.match(/^3\.1\.4\.B(\.\d+)?$/)) {
+      return { loader: this.componentLoaders.seccion21, inputs };
+    }
+
+    const componentMap: Partial<Record<string, ComponentLoader>> = {
+      '3.1.1': this.componentLoaders.seccion1,
+      '3.1.2': this.componentLoaders.seccion2,
+      '3.1.2.A': this.componentLoaders.seccion2,
+      '3.1.2.B': this.componentLoaders.seccion2,
+      '3.1.3': this.componentLoaders.seccion3,
+      '3.1.3.A': this.componentLoaders.seccion3,
+      '3.1.3.B': this.componentLoaders.seccion3,
     };
 
-    return componentMap[this.seccionId] || null;
+    const loader = componentMap[seccionId];
+    return loader ? { loader, inputs } : null;
   }
 
-  getPreviewComponentInputs(): { [key: string]: any } {
-    if (this.seccionId === '3.1.4.B' || this.seccionId === '3.1.4.B.1' || this.seccionId === '3.1.4.B.2') {
+  private getPreviewInputs(seccionId: string): { [key: string]: any } {
+    if (seccionId === '3.1.4.B' || seccionId === '3.1.4.B.1' || seccionId === '3.1.4.B.2') {
       return {};
     }
-    if (this.seccionId === '3.1.4.A' || this.seccionId === '3.1.4.A.1' || this.seccionId === '3.1.4.A.2') {
-      return { seccionId: this.seccionId, modoFormulario: false };
+    if (seccionId === '3.1.4.A' || seccionId === '3.1.4.A.1' || seccionId === '3.1.4.A.2') {
+      return { seccionId, modoFormulario: false };
     }
-    return { seccionId: this.seccionId };
+    return { seccionId };
   }
 
-  actualizarComponenteSeccion() {
+  private resolveComponentId(seccionId: string): string | undefined {
     const componentIdMap: { [key: string]: string } = {
       '3.1.1': 'seccion1',
       '3.1.2': 'seccion2',
@@ -522,7 +567,85 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
       '3.1.4.B.2.15': 'seccion36'
     };
 
-    const componentId = componentIdMap[this.seccionId];
+    return componentIdMap[seccionId];
+  }
+
+  private resolveFormRenderer(seccionId: string | undefined | null): { loader: ComponentLoader; inputs: { [key: string]: any } } | null {
+    if (!seccionId) return null;
+
+    for (const rule of this.formRules) {
+      if (rule.matches(seccionId)) {
+        return { loader: rule.loader, inputs: rule.inputs(seccionId) };
+      }
+    }
+
+    return null;
+  }
+
+  private createFormRules(): Array<{
+    matches: (seccionId: string) => boolean;
+    loader: ComponentLoader;
+    inputs: (seccionId: string) => { [key: string]: any };
+  }> {
+    const eq = (...ids: string[]) => (seccionId: string) => ids.includes(seccionId);
+    const hasAny = (...parts: string[]) => (seccionId: string) => parts.some(p => seccionId.includes(p));
+    const aisd = (numero: number) => (seccionId: string) => this.esSubseccionAISD(seccionId, numero);
+
+    const withSeccionId = (seccionId: string) => ({ seccionId });
+    const withModoFormulario = (seccionId: string) => ({ seccionId, modoFormulario: true });
+
+    return [
+      { matches: eq('3.1.1'), loader: this.componentLoaders.seccion1FormWrapper, inputs: withSeccionId },
+      { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders.seccion2Form, inputs: withSeccionId },
+      { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders.seccion3Form, inputs: withSeccionId },
+      {
+        matches: hasAny(
+          '3.1.4.A.1.13',
+          '3.1.4.A.2.13',
+          '3.1.4.B.1.13',
+          '3.1.4.B.2.13',
+          '3.1.4.A.1.14',
+          '3.1.4.A.2.14',
+          '3.1.4.B.1.14',
+          '3.1.4.B.2.14'
+        ),
+        loader: this.componentLoaders.seccion17FormWrapper,
+        inputs: withSeccionId
+      },
+      { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders.seccion21, inputs: withModoFormulario },
+      { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders.seccion4FormWrapper, inputs: withSeccionId },
+
+      { matches: aisd(1), loader: this.componentLoaders.seccion5, inputs: withModoFormulario },
+      { matches: aisd(2), loader: this.componentLoaders.seccion6, inputs: withModoFormulario },
+      { matches: aisd(3), loader: this.componentLoaders.seccion7FormWrapper, inputs: withSeccionId },
+      { matches: aisd(4), loader: this.componentLoaders.seccion8, inputs: withModoFormulario },
+      { matches: aisd(5), loader: this.componentLoaders.seccion9, inputs: withModoFormulario },
+      { matches: aisd(6), loader: this.componentLoaders.seccion10, inputs: withModoFormulario },
+      { matches: aisd(7), loader: this.componentLoaders.seccion11, inputs: withModoFormulario },
+      { matches: aisd(8), loader: this.componentLoaders.seccion12, inputs: withModoFormulario },
+      { matches: aisd(9), loader: this.componentLoaders.seccion13, inputs: withModoFormulario },
+      { matches: aisd(10), loader: this.componentLoaders.seccion14FormWrapper, inputs: withSeccionId },
+      { matches: aisd(11), loader: this.componentLoaders.seccion15FormWrapper, inputs: withSeccionId },
+      { matches: aisd(12), loader: this.componentLoaders.seccion16FormWrapper, inputs: withSeccionId },
+      { matches: aisd(13), loader: this.componentLoaders.seccion17, inputs: withModoFormulario },
+      { matches: aisd(14), loader: this.componentLoaders.seccion18, inputs: withModoFormulario },
+      { matches: aisd(15), loader: this.componentLoaders.seccion19, inputs: withModoFormulario },
+      { matches: aisd(16), loader: this.componentLoaders.seccion20, inputs: withModoFormulario },
+
+      { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders.seccion22, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders.seccion23, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.3', '3.1.4.B.2.3'), loader: this.componentLoaders.seccion24, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders.seccion25, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.5', '3.1.4.B.2.5'), loader: this.componentLoaders.seccion26, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.6', '3.1.4.B.2.6'), loader: this.componentLoaders.seccion27, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.7', '3.1.4.B.2.7'), loader: this.componentLoaders.seccion28, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.8', '3.1.4.B.2.8'), loader: this.componentLoaders.seccion29, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.9', '3.1.4.B.2.9'), loader: this.componentLoaders.seccion30FormWrapper, inputs: withSeccionId }
+    ];
+  }
+
+  actualizarComponenteSeccion() {
+    const componentId = this.resolveComponentId(this.seccionId);
     if (componentId) {
       const component = ViewChildHelper.getComponent(componentId);
       if (component && component['actualizarDatos']) {
@@ -539,9 +662,8 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     
     this.formData[fieldId] = valorLimpio;
     this.datos[fieldId] = valorLimpio;
-    this.formularioService.actualizarDato(fieldId as keyof FormularioDatos, valorLimpio);
-    this.datos = this.formularioService.obtenerDatos();
-    this.stateService.updateDato(fieldId as keyof FormularioDatos, valorLimpio);
+    this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
+    this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     
     this.actualizarComponenteSeccion();
     this.cdRef.markForCheck();
@@ -552,21 +674,80 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   limpiarDatos() {
-    if (confirm('ยฟEstá seguro que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
+    if (confirm('¿Está seguro que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
       try {
+        
+        // 1. Limpiar campos marcados como test data
         this.fieldMapping.clearTestDataFields();
-        this.formularioService.limpiarDatos();
         
-        this.datos = this.formularioService.obtenerDatos();
-        this.formData = { ...this.datos };
+        // 2. Limpiar FormStateService completamente
+        try {
+          const formState = this.injector.get(FormStateService, null);
+          if (formState) {
+            formState.resetForm();
+          }
+        } catch (e) {
+        }
+        
+        // 3. Limpiar FormPersistenceService (todas las secciones)
+        try {
+          this.formPersistence.clearAll();
+        } catch (e) {
+        }
+        
+        // 4. Resetear el estado del proyecto (fuente única de verdad)
+        this.projectFacade.reset();
+        
+        // 5. Resetear datos locales inmediatamente
+        this.datos = {} as FormularioDatos;
+        this.formData = {};
         this.testDataActive = false;
-        
-        this.cargarSeccion();
-        this.cdRef.detectChanges();
+
+        // 6. Limpiar todos los datos del localStorage y sessionStorage
+        setTimeout(async () => {
+          try {
+            debugLog('[DEBUG] Ejecutando limpieza completa de storages');
+            
+            // Guardar el flag de limpieza manual antes de limpiar
+            const manualFlag = this.storage.getItem('__datos_limpios_manualmente__');
+            
+            // Limpiar todas las claves relacionadas con formularios
+            const keysToRemove: string[] = [];
+            const allKeys = this.storage.keys();
+            for (const key of allKeys) {
+              // Mantener solo el flag de limpieza manual
+              if (key !== '__datos_limpios_manualmente__') {
+                keysToRemove.push(key);
+              }
+            }
+            
+            // Eliminar todas las claves excepto el flag
+            keysToRemove.forEach(key => this.storage.removeItem(key));
+            
+            // Restaurar el flag si existía
+            if (manualFlag === 'true') {
+              this.storage.setItem('__datos_limpios_manualmente__', 'true');
+            }
+            
+            // Limpiar sessionStorage completamente
+            sessionStorage.clear();
+            
+            // Limpiar caches del navegador
+            if (typeof caches !== 'undefined' && typeof caches.keys === 'function') {
+              const cacheNames = await caches.keys();
+              await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+            
+
+          } catch (err) {
+          } finally {
+            // Recargar la página para asegurar que todas las secciones se reseteen
+            window.location.reload();
+          }
+        }, 50);
         
         alert('Todos los datos han sido limpiados correctamente. El formulario está listo para volver a llenar desde cero.');
       } catch (error) {
-        console.error('Error al limpiar datos:', error);
         alert('Ocurrió un error al limpiar los datos. Por favor, intente nuevamente.');
       }
     }
@@ -576,6 +757,11 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.router.navigate(['/plantilla'], {
       state: { returnSection: this.seccionId }
     });
+  }
+
+  // Toggle entre vista previa y formulario en mobile
+  toggleMobileView() {
+    this.mobileViewMode = this.mobileViewMode === 'preview' ? 'form' : 'preview';
   }
 
   actualizarEstadoNavegacion() {
@@ -639,9 +825,10 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     event.preventDefault();
   }
 
-  ngAfterViewChecked() {
-    this.cdRef.detectChanges();
-  }
+  // REMOVIDO ngAfterViewChecked - causaba loop infinito de detección de cambios
+  // ngAfterViewChecked() {
+  //   this.cdRef.detectChanges();
+  // }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -655,8 +842,29 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.onFieldChange(fieldId, value);
   }
 
+  /**
+   * Verifica si una sección es una subsección AISD con número específico
+   * Soporta cualquier cantidad de grupos: A.1.X, A.2.X, A.3.X, etc.
+   * @param seccionId - ID de la sección (ej: '3.1.4.A.1.5', '3.1.4.A.3.12')
+   * @param numero - Número de subsección a verificar (1-16)
+   * @returns true si coincide con el patrón
+   */
   esSubseccionAISD(seccionId: string, numero: number): boolean {
+    // Patrón: 3.1.4.A.{cualquier_grupo}.{numero}
     const pattern = `^3\\.1\\.4\\.A\\.\\d+\\.${numero}$`;
+    return !!seccionId.match(new RegExp(pattern));
+  }
+
+  /**
+   * Verifica si una sección es una subsección AISI con número específico
+   * Soporta cualquier cantidad de grupos: B.1.X, B.2.X, B.3.X, etc.
+   * @param seccionId - ID de la sección (ej: '3.1.4.B.1.5', '3.1.4.B.3.9')
+   * @param numero - Número de subsección a verificar (1-15)
+   * @returns true si coincide con el patrón
+   */
+  esSubseccionAISI(seccionId: string, numero: number): boolean {
+    // Patrón: 3.1.4.B.{cualquier_grupo}.{numero}
+    const pattern = `^3\\.1\\.4\\.B\\.\\d+\\.${numero}$`;
     return !!seccionId.match(new RegExp(pattern));
   }
 
@@ -820,13 +1028,17 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   onFotografiasAISDChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+    const updates: Record<string, any> = {};
     fotografias.forEach((foto, index) => {
       const num = index + 1;
       const suffix = groupPrefix ? groupPrefix : '';
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Titulo${suffix}` as any, foto.titulo || '');
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Fuente${suffix}` as any, foto.fuente || '');
-      this.formularioService.actualizarDato(`fotografiaAISD${num}Imagen${suffix}` as any, foto.imagen || '');
+      updates[`fotografiaAISD${num}Titulo${suffix}`] = foto.titulo || '';
+      updates[`fotografiaAISD${num}Fuente${suffix}`] = foto.fuente || '';
+      updates[`fotografiaAISD${num}Imagen${suffix}`] = foto.imagen || '';
     });
+    if (Object.keys(updates).length > 0) {
+      this.formChange.persistFields(this.seccionId, 'form', updates);
+    }
   }
 
   onFotografiasEducacionIndicadoresChange(fotografias: FotoItem[]) {
@@ -990,9 +1202,9 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
       const mock = await this.mockDataService.getCapitulo3Datos();
       const datosMock = mock?.datos || {};
       const seccionFields = this.fieldMapping.getFieldsForSection(this.seccionId);
-      const datosActuales = this.formularioService.obtenerDatos();
+      const datosActuales = this.projectFacade.obtenerDatos();
 
-      const enrichedMock = this.formularioService.aplicarTransformacionesMock(datosMock);
+      const enrichedMock = this.formularioMock.aplicarTransformacionesMock(datosMock);
 
       const aliasMap: Record<string, string[]> = {
         textoPoblacionSexoAISD: ['textoPoblacionSexo'],
@@ -1011,6 +1223,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
 
       const fieldsConDatos: string[] = [];
       const camposTablaProcesados = new Set<string>();
+      const updates: Record<string, any> = {};
 
       const prefijoSeccion = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
       const camposConPrefijos = ['textoPoblacionSexoAISD', 'poblacionSexoAISD', 'textoPoblacionEtarioAISD', 'poblacionEtarioAISD', 'tablaAISD2TotalPoblacion', 'grupoAISD'];
@@ -1054,19 +1267,19 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
         }
 
         if (value === undefined && field === 'tablaAISD2TotalPoblacion') {
-          if (enrichedMock.tablaAISD2TotalPoblacion !== undefined) {
-            value = enrichedMock.tablaAISD2TotalPoblacion;
+          if (enrichedMock['tablaAISD2TotalPoblacion'] !== undefined) {
+            value = enrichedMock['tablaAISD2TotalPoblacion'];
           } else if (prefijoSeccion) {
             const campoConPrefijo = `tablaAISD2TotalPoblacion${prefijoSeccion}`;
             value = enrichedMock[campoConPrefijo];
           }
-          if (value === undefined && Array.isArray(enrichedMock.poblacionSexoAISD)) {
-            value = enrichedMock.poblacionSexoAISD.reduce((sum: number, item: any) => {
+          if (value === undefined && Array.isArray(enrichedMock['poblacionSexoAISD'])) {
+            value = enrichedMock['poblacionSexoAISD'].reduce((sum: number, item: any) => {
               const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
               return sum + casos;
             }, 0);
-          } else if (value === undefined && Array.isArray(enrichedMock.poblacionSexoTabla)) {
-            value = enrichedMock.poblacionSexoTabla.reduce((sum: number, item: any) => {
+          } else if (value === undefined && Array.isArray(enrichedMock['poblacionSexoTabla'])) {
+            value = enrichedMock['poblacionSexoTabla'].reduce((sum: number, item: any) => {
               const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
               return sum + casos;
             }, 0);
@@ -1084,7 +1297,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
             valorParaGuardar = JSON.parse(JSON.stringify(value));
           }
           
-          this.formularioService.actualizarDato(campoFinal as keyof FormularioDatos, valorParaGuardar);
+          updates[campoFinal] = valorParaGuardar;
           fieldsConDatos.push(campoFinal);
         }
       });
@@ -1115,7 +1328,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
                   ? `tablaAISD2Fila${i}${campo}${prefijo}`
                   : `tablaAISD2Fila${i}${campo}`;
                 
-                this.formularioService.actualizarDato(campoCompleto as keyof FormularioDatos, valorMock);
+                updates[campoCompleto] = valorMock;
                 if (!fieldsConDatos.includes(campoCompleto)) {
                   fieldsConDatos.push(campoCompleto);
                 }
@@ -1155,7 +1368,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
                   ? `tablaAISD1Fila${i}${campo}${prefijo}`
                   : `tablaAISD1Fila${i}${campo}`;
                 
-                this.formularioService.actualizarDato(campoCompleto as keyof FormularioDatos, valorMock);
+                updates[campoCompleto] = valorMock;
                 if (!fieldsConDatos.includes(campoCompleto)) {
                   fieldsConDatos.push(campoCompleto);
                 }
@@ -1174,7 +1387,7 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
           const tablepagina6Actual = datosActuales['tablepagina6'];
           if (this.esCampoVacio(tablepagina6Actual)) {
             const tablepagina6Data = JSON.parse(JSON.stringify(enrichedMock.tablepagina6));
-            this.formularioService.actualizarDato('tablepagina6', tablepagina6Data);
+            updates['tablepagina6'] = tablepagina6Data;
             if (!fieldsConDatos.includes('tablepagina6')) {
               fieldsConDatos.push('tablepagina6');
             }
@@ -1187,19 +1400,23 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
           const entrevistadosActual = datosActuales['entrevistados'];
           if (this.esCampoVacio(entrevistadosActual)) {
             const entrevistadosData = JSON.parse(JSON.stringify(enrichedMock.entrevistados));
-            this.formularioService.actualizarDato('entrevistados', entrevistadosData);
+            updates['entrevistados'] = entrevistadosData;
             if (!fieldsConDatos.includes('entrevistados')) {
               fieldsConDatos.push('entrevistados');
             }
           }
         }
       }
+
+      if (Object.keys(updates).length > 0) {
+        this.formChange.persistFields(this.seccionId, 'form', updates);
+      }
       
       this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
 
-      this.datos = this.formularioService.obtenerDatos();
+      this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
 
-      this.stateService.setDatos(this.datos);
+      this.stateAdapter.setDatos(this.datos);
       
       setTimeout(() => {
         this.actualizarComponenteSeccion();
@@ -1234,13 +1451,12 @@ export class SeccionComponent implements OnInit, AfterViewChecked, OnDestroy {
           }
           
           
-          this.datos = this.formularioService.obtenerDatos();
-          this.stateService.setDatos(this.datos);
+          this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
+          this.stateAdapter.setDatos(this.datos);
           this.cdRef.detectChanges();
         }, 100);
       }, 50);
     } catch (error) {
-      console.error('Error al llenar datos de prueba:', error);
       alert('No se pudieron cargar los datos de prueba. Por favor, intenta nuevamente.');
     }
   }

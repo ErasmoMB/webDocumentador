@@ -1,7 +1,8 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
-  selector: '[appLoading]'
+    selector: '[appLoading]',
+    standalone: false
 })
 export class LoadingDirective {
   private hasView = false;

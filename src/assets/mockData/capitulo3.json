@@ -6,10 +6,109 @@
     "departamentoSeleccionado": "Arequipa",
     "provinciaSeleccionada": "Caravelí",
     "distritoSeleccionado": "Cahuacho",
+    "leyCreacionDistrito": "8004",
+    "fechaCreacionDistrito": "22 de febrero de 1935",
+    "distritoAnterior": "Caravelí",
+    "origenPobladores1": "Caravelí",
+    "origenPobladores2": "Parinacochas",
+    "departamentoOrigen": "Ayacucho",
+    "anexosEjemplo": "Ayroca o Sóndor",
+    "centroPobladoAISI": "",
+    "distritosAISI": [
+      {
+        "id": "distrito-1",
+        "nombre": "Cahuacho",
+        "nombreOriginal": "Cahuacho",
+        "centrosPobladosSeleccionados": ["Cahuacho"],
+        "esNuevo": false
+      }
+    ],
+    "comunidadesCampesinas": [
+      {
+        "id": "cc-1",
+        "nombre": "CC Ayroca",
+        "distrito": "Cahuacho",
+        "provincia": "Caravelí",
+        "departamento": "Arequipa"
+      }
+    ],
     "aisdComponente1": "Yuracranra",
     "aisdComponente2": "Faldahuasi",
     "detalleProyecto": "el sur del Perú",
     "cantidadEntrevistas": 18,
+    "grupoAISI": "Cahuacho",
+    "ingresoFamiliarPerCapita": "S/ 1,200",
+    "rankingIngresoPerCapita": "Medio",
+    "petDistritalCahuacho": "",
+    "poblacionDistritalCahuacho": "",
+    "textoPoblacionEtarioAISD": "La población etaria de la CC Ayroca muestra una distribución típica de zonas rurales, con una mayor concentración en el grupo de 15 a 64 años, seguido del grupo de 0 a 14 años y el grupo de 65 años a más.",
+    "textoPoblacionSexo": "La distribución por sexo en la CC Ayroca es equilibrada, con 114 hombres y 111 mujeres, lo que refleja una composición demográfica balanceada en la comunidad (50.7% hombres y 49.3% mujeres).",
+    "textoAnalisisOcupacion": "",
+    "textoAnalisisPEA": "",
+    "textoDefinicionPEA": "",
+    "textoDetalePEA": "",
+    "textoIndiceDesempleo": "",
+    "textoPET": "",
+    "parrafoSeccion3_fuentes_secundarias": "En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:\n● Base de Datos de Pueblos Indígenas u Originarios – BDPI.\n● Censos Nacionales 2017 (XII de Población, VII de Vivienda y III de Comunidades Indígenas) ejecutados por el Instituto Nacional de Estadística e Informática (INEI).\n● Estadísticas de la Calidad Educativa (ESCALE) de la Unidad de Estadística del Ministerio de Educación (MINEDU).\n● Ministerio de Energía y Minas (MINEM).\n● Ministerio de Trabajo y Promoción del Empleo (MTPE).\n● Ministerio de Transporte y Comunicaciones (MTC).\n● Observatorio Socio Económico Laboral (OSEL).\n● Organismo Supervisor de Inversión Privada en Telecomunicaciones – OSIPTEL.\n● Programa de Naciones Unidas para el Desarrollo – PNUD.\n● Registro Nacional de Instituciones Prestadoras de Servicios de Salud (RENIPRESS).\n● Repositorio Digital de Información Multisectorial (REDINFORMA) – MIDIS.\n● Repositorio Único Nacional de Información en Salud (REUNIS).\n● Resultados Definitivos de la Población Económicamente Activa 2017 – INEI.\n● Sistema de Información Distrital para la Gestión Pública – INEI.",
+    "parrafoSeccion3_metodologia": "La metodología utilizada incluyó el enfoque cualitativo a través de entrevistas y observación participante, complementado con análisis cuantitativo de datos censales.",
+    "parrafoSeccion7_ingresos_completo": "Los ingresos familiares en la CC Ayroca provienen principalmente de la agricultura, ganadería y actividades no agrícolas, con un ingreso per cápita promedio de S/ 1,200 mensuales.",
+    "parrafoSeccion7_pet_completo": "",
+    "parrafoSeccion7_situacion_empleo_completo": "La situación del empleo en la CC Ayroca muestra que de la PEA se dedica a actividades agrícolas, con una tasa de desempleo y subempleo estacional significativo.",
+    "textoActividadesEconomicas": "Las principales actividades económicas en el CP Cahuacho son la agricultura, ganadería, comercio y servicios públicos, siendo la agricultura la más representativa de la PEA ocupada.",
+    "textoFuentesActividadesEconomicas": "Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.",
+    "textoAnalisisCuadro310": "Del análisis del Cuadro 3.10, se observa que la agricultura es la actividad económica predominante en el CP Cahuacho, seguida por la administración pública y el comercio.",
+    "textoViviendas": "En el CP Cahuacho existen 180 viviendas, de las cuales 165 son ocupadas por sus propietarios y 15 están desocupadas. La mayoría de las viviendas son de material noble (adobe y techo de calamina).",
+    "textoEstructura": "La estructura de las viviendas en el CP Cahuacho es predominantemente unifamiliar, con un promedio de 4.2 habitaciones por vivienda y servicios básicos de agua y desagüe de los casos.",
+    "textoFestividades": "Las festividades principales en el CP Cahuacho incluyen la fiesta patronal en honor a San Pedro (29 de junio), la fiesta de la Virgen del Carmen (16 de julio) y celebraciones locales durante Navidad y Año Nuevo.",
+    "parrafoSeccion8_agricultura_completo": "La agricultura en la CC Ayroca se basa principalmente en el cultivo de papa, maíz y quinua, utilizando técnicas tradicionales y sistemas de riego básico. La producción es destinada tanto al autoconsumo como a la comercialización en mercados locales.",
+    "parrafoSeccion8_ganaderia_completo": "La ganadería en la CC Ayroca se centra en el ganado vacuno, ovino y auquénido, con un sistema de pastoreo extensivo en las alturas. Los productos lácteos y cárnicos son importantes para la economía familiar.",
+    "textoHabitosConsumo1": "Los hábitos de consumo en la CC Ayroca están orientados hacia productos locales, con preferencia por alimentos tradicionales andinos como papa, maíz y carne de camélidos.",
+    "textoHabitosConsumo2": "El consumo de productos procesados es limitado debido a la lejanía de centros urbanos, lo que favorece el mantenimiento de tradiciones culinarias ancestrales.",
+    "textoMercadoComercializacion1": "La comercialización de productos agrícolas se realiza principalmente en el mercado de Caravelí, donde los comuneros venden sus excedentes los días domingos.",
+    "textoMercadoComercializacion2": "Los precios obtenidos son variables según la temporada, pero permiten cubrir necesidades básicas y generar un ingreso complementario para las familias.",
+    "costoTransporteMinimo": "5",
+    "costoTransporteMaximo": "10",
+    "cantidadAnalfabetos": "5",
+    "textoAnalfabetismo": "En la CC Ayroca, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de 5. Esto representa una tasa de analfabetismo en la comunidad.",
+    "parrafoSeccion4_comunidad_completo": "La CC Ayroca se encuentra ubicada predominantemente dentro del distrito de Cahuacho, provincia de Caravelí; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de Yuracranra y de Faldahuasi, del departamento de Arequipa. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo Ayroca, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo Ayroca. En cuanto al nombre \"Ayroca\", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP Cahuacho y al oeste del anexo Nauquipa. Asimismo, la CC Ayroca es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.",
+    "peaOcupacionesTabla": [
+      {
+        "categoria": "Agricultura, ganadería, silvicultura y pesca",
+        "casos": 50
+      },
+      {
+        "categoria": "Administración pública y defensa",
+        "casos": 11
+      },
+      {
+        "categoria": "Comercio",
+        "casos": 3
+      }
+    ],
+    "condicionOcupacionTabla": [
+      {
+        "categoria": "Ocupada",
+        "casos": 165
+      },
+      {
+        "categoria": "Desocupada",
+        "casos": 15
+      }
+    ],
+    "tiposMaterialesTabla": [
+      {
+        "categoria": "Adobe",
+        "casos": 120
+      },
+      {
+        "categoria": "Ladrillo",
+        "casos": 45
+      },
+      {
+        "categoria": "Madera",
+        "casos": 15
+      }
+    ],
     "tablaAISD1Coordenadas": "15° 45' S, 73° 22' W",
     "tablaAISD1Altitud": "3,600 m.s.n.m.",
     "tablaAISD1Fila1Localidad": "CC Ayroca",
@@ -73,59 +172,42 @@
       { "nombre": "Faldahuasi", "codigo": "0403060014", "poblacion": 1, "viviendasEmpadronadas": 4, "viviendasOcupadas": 1 }
     ],
     "textoInstitucionalidad": "Dentro de los límites de la CC Ayroca se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).",
-    "textoPoblacionSexo": "Respecto a la población de la CC Ayroca, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de 225 habitantes que residen permanentemente en la comunidad. De este conjunto, el 50,67 % son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (49,33 %).",
+    "textoPoblacionSexo": "Respecto a la población de la CC Ayroca, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de 225 habitantes que residen permanentemente en la comunidad. De este conjunto, el son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos ().",
     "poblacionSexoTabla": [
-      { "sexo": "Hombre", "casos": 114, "porcentaje": "50,67 %" },
-      { "sexo": "Mujer", "casos": 111, "porcentaje": "49,33 %" },
-      { "sexo": "Total", "casos": 225, "porcentaje": "100,00 %" }
+      { "sexo": "Hombre", "casos": 114 },
+      { "sexo": "Mujer", "casos": 111 }
     ],
-    "textoPoblacionEtario": "En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC Ayroca es el de 15 a 29 años, puesto que representa al 26,67 % de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de 0 a 14 años (26,22 %). Por otro lado, el conjunto minoritario está conformado por la población de 65 años a más, pues solo representa un 11,11 %.",
+    "textoPoblacionEtario": "En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC Ayroca es el de 15 a 29 años, puesto que representa el 26.7% de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de 0 a 14 años (26.2%). Por otro lado, el conjunto minoritario está conformado por la población de 65 años a más, pues solo representa un 11.1%.",
     "poblacionEtarioTabla": [
-      { "categoria": "0 a 14 años", "casos": 59, "porcentaje": "26,22 %" },
-      { "categoria": "15 a 29 años", "casos": 60, "porcentaje": "26,67 %" },
-      { "categoria": "30 a 44 años", "casos": 38, "porcentaje": "16,89 %" },
-      { "categoria": "45 a 64 años", "casos": 43, "porcentaje": "19,11 %" },
-      { "categoria": "65 años a más", "casos": 25, "porcentaje": "11,11 %" },
-      { "categoria": "Total", "casos": 225, "porcentaje": "100,00 %" }
+      { "categoria": "0 a 14 años", "casos": 59 },
+      { "categoria": "15 a 29 años", "casos": 60 },
+      { "categoria": "30 a 44 años", "casos": 38 },
+      { "categoria": "45 a 64 años", "casos": 43 },
+      { "categoria": "65 años a más", "casos": 25 }
     ],
-    "textoPET": "En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa N°27453 de fecha 22 de mayo del 2001 y ratificado por D.S. N°038-2001-RE, publicado el 31 de mayo de 2001, la población cumplidos los 14 años de edad se encuentran en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC Ayroca, considerada desde los 15 años a más, se compone del 73,78 % de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el 36,14 % de este grupo poblacional.\n\nPor otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un 15,06 %.",
-    "petTabla": [
-      { "categoria": "15 a 29 años", "casos": 60, "porcentaje": "36,14 %" },
-      { "categoria": "30 a 44 años", "casos": 38, "porcentaje": "22,89 %" },
-      { "categoria": "45 a 64 años", "casos": 43, "porcentaje": "25,90 %" },
-      { "categoria": "65 años a más", "casos": 25, "porcentaje": "15,06 %" },
-      { "categoria": "Total", "casos": 166, "porcentaje": "100,00 %" }
-    ],
-    "textoDetalePEA": "No obstante, los indicadores de la PEA, tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación Resultados Definitivos de la Población Económicamente Activa 2017 del INEI. Para ello es importante tomar en cuenta que la población distrital de Cahuacho, jurisdicción donde se ubica el AISD en cuestión, es de 610 personas, y que la PET (de 14 años a más) al mismo nivel está conformada por 461 personas.",
-    "textoDefinicionPEA": "La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de Cahuacho, jurisdicción que abarca a las poblaciones de la CC Ayroca. Para ello, se emplea la fuente \"Resultados Definitivos de la Población Económicamente Activa 2017\" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.",
-    "peaTabla": [
-      { "categoria": "PEA", "hombres": 184, "porcentajeHombres": "77,31 %", "mujeres": 92, "porcentajeMujeres": "41,26 %", "casos": 276, "porcentaje": "59,87 %" },
-      { "categoria": "No PEA", "hombres": 54, "porcentajeHombres": "22,69 %", "mujeres": 131, "porcentajeMujeres": "58,74 %", "casos": 185, "porcentaje": "40,13 %" },
-      { "categoria": "Total", "hombres": 238, "porcentajeHombres": "100,00 %", "mujeres": 223, "porcentajeMujeres": "100,00 %", "casos": 461, "porcentaje": "100,00 %" }
-    ],
-    "textoAnalisisPEA": "Del cuadro precedente, se aprecia que la PEA del distrito de Cahuacho representa un 59,87 % del total de la PET de la jurisdicción, mientras que la No PEA abarca el 40,13 % restante. Asimismo, se visualiza que los hombres se encuentran predominantemente dentro del indicador de PEA con un 77,31 %, mientras que, en el caso de las mujeres, se halla mayormente en el indicador de No PEA (58,74 %).",
+    "textoPET": "",
+    "petTabla": [],
+    "textoDetalePEA": "",
+    "textoDefinicionPEA": "",
+    "peaTabla": [],
+    "textoAnalisisPEA": "",
     "textoSituacionEmpleo": "En la CC Ayroca, la mayor parte de la población se dedica a actividades económicas de carácter independiente, siendo la ganadería la principal fuente de sustento. De manera complementaria, también se desarrolla la agricultura. Esta realidad implica que la mayoría de los comuneros se dediquen al trabajo por cuenta propia, centrado en la crianza de vacunos y ovinos como las principales especies ganaderas. Estas actividades son claves para la economía local, siendo la venta de ganado y derivados una fuente de ingresos importante para las familias. En el ámbito agrícola, las tierras comunales se destinan a la producción de cultivos como la papa, habas y cebada, productos que se destinan principalmente al autoconsumo y de manera esporádica a la comercialización en mercados cercanos.\n\nEl empleo dependiente en la CC Ayroca es mínimo y se encuentra limitado a aquellos que trabajan en instituciones públicas. Entre ellos se encuentran los docentes que laboran en las instituciones educativas locales, así como el personal que presta servicios en el puesto de salud. Estas ocupaciones representan un pequeño porcentaje de la fuerza laboral, ya que la mayoría de los comuneros siguen trabajando en actividades tradicionales como la ganadería y la agricultura, que forman parte de su modo de vida ancestral.",
     "textoIngresosPoblacion": "En la CC Ayroca, los ingresos de la población provienen principalmente de las actividades ganaderas y agrícolas, que son las fuentes económicas predominantes en la localidad. La venta de vacunos y ovinos, así como de productos agrícolas como papa, habas y cebada, proporciona ingresos variables, dependiendo de las condiciones climáticas y las fluctuaciones en los precios locales. Sin embargo, debido a la dependencia de estos sectores primarios, los ingresos no son estables ni regulares, pudiéndose verse afectados por factores como heladas, la falta de pasto en épocas de sequía o la baja demanda en los mercados.\n\nOtra parte de los ingresos proviene de los comuneros que participan en actividades de comercio de pequeña escala, vendiendo sus productos en mercados locales o en ferias regionales. No obstante, esta forma de generación de ingresos sigue siendo limitada y no representa una fuente principal para la mayoría de las familias. En cuanto a los pocos habitantes que se encuentran empleados de manera dependiente, tales como los maestros en las instituciones educativas y el personal del puesto de salud, sus ingresos son más regulares, aunque representan una porción pequeña de la población.\n\nAdicionalmente, cabe mencionar que, según informe del PNUD 2019, el distrito de Cahuacho alcanza a los poblados con con un ingreso familiar per cápita de S/. 391,06 mensuales, ocupando el puesto N°1191 en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.",
     "textoIndiceDesempleo": "El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en búsqueda de empleo, pero no logra obtenerlo. En este caso, se caracteriza el índice de desempleo del distrito de Cahuacho, el cual abarca los poblados de la CC Ayroca. Para ello, se emplea la fuente 'Resultados Definitivos de la Población Económicamente Activa 2017' del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).",
-    "peaOcupadaTabla": [
-      { "categoria": "PEA Ocupada", "hombres": 180, "porcentajeHombres": "97,83 %", "mujeres": 87, "porcentajeMujeres": "94,57 %", "casos": 267, "porcentaje": "96,74 %" },
-      { "categoria": "PEA Desocupada", "hombres": 4, "porcentajeHombres": "2,17 %", "mujeres": 5, "porcentajeMujeres": "5,43 %", "casos": 9, "porcentaje": "3,26 %" },
-      { "categoria": "Total", "hombres": 184, "porcentajeHombres": "100,00 %", "mujeres": 92, "porcentajeMujeres": "100,00 %", "casos": 276, "porcentaje": "100,00 %" }
-    ],
-    "textoAnalisisOcupacion": "Del cuadro precedente, se halla que en el distrito de Cahuacho la PEA Desocupada representa un 3,26 % de la total de la PEA de la jurisdicción, mientras que la PEA Ocupada abarca un 96,74 % restante. Asimismo, como se puede visualizar que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de 97,83 % y 94,57 %, respectivamente.",
+    "peaOcupadaTabla": [],
+    "textoAnalisisOcupacion": "Del cuadro precedente, se halla que en el distrito de Cahuacho la PEA Desocupada representa el 3.3% de la total de la PEA de la jurisdicción, mientras que la PEA Ocupada abarca el 96.7% restante. Asimismo, como se puede visualizar que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de 66.7% y 31.9%, respectivamente.",
     "textoActividadesEconomicas": "Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este item, se describe las ocupaciones principales existentes en los poblados de la CC Ayroca, que forma parte del AISD.",
     "textoFuentesActividadesEconomicas": "A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC Ayroca. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.",
     "peaOcupacionesTabla": [
-      { "categoria": "Trabajador independiente o por cuenta propia", "casos": 59, "porcentaje": "77,63 %" },
-      { "categoria": "Obrero", "casos": 12, "porcentaje": "15,79 %" },
-      { "categoria": "Empleado", "casos": 5, "porcentaje": "6,58 %" },
-      { "categoria": "Empleador o patrón", "casos": 0, "porcentaje": "0,00 %" },
-      { "categoria": "Trabajador en negocio de un familiar", "casos": 0, "porcentaje": "0,00 %" },
-      { "categoria": "Trabajador del hogar", "casos": 0, "porcentaje": "0,00 %" },
-      { "categoria": "Total", "casos": 76, "porcentaje": "100,00 %" }
+      { "categoria": "Trabajador independiente o por cuenta propia", "casos": 59 },
+      { "categoria": "Obrero", "casos": 12 },
+      { "categoria": "Empleado", "casos": 5 },
+      { "categoria": "Empleador o patrón", "casos": 0 },
+      { "categoria": "Trabajador en negocio de un familiar", "casos": 0 },
+      { "categoria": "Trabajador del hogar", "casos": 0 }
     ],
-    "textoAnalisisCuadro310": "Del cuadro anterior, se aprecia que, al momento de la aplicación de los Censos Nacionales 2017, la ocupación más frecuente dentro de la CC Ayroca es la de \"Trabajador independiente o por cuenta propia\" con un 77,63 %. Las siguientes ocupaciones que se hallan son la de obrero (15,79 %) y empleado (6,58 %). Ello se condice con las entrevistas aplicadas en campo, puesto que se recopiló información que indica que la mayor parte de la población se dedica a las actividades agropecuarias de subsistencia de manera independiente o por cuenta propia.",
-    "textoGanaderia1": "En la CC Ayroca, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como ovejas, gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.",
+    "textoAnalisisCuadro310": "Del cuadro anterior, se aprecia que, al momento de la aplicación de los Censos Nacionales 2017, la ocupación más frecuente dentro de la CC Ayroca es la de \"Trabajador independiente o por cuenta propia\" con un 77.4%. Las siguientes ocupaciones que se hallan son la de obrero (15.7%) y empleado (6.5%). Ello se condice con las entrevistas aplicadas en campo, puesto que se recopiló información que indica que la mayor parte de la población se dedica a las actividades agropecuarias de subsistencia de manera independiente o por cuenta propia.",
+    "textoGanaderia1": "En la CC Ayroca, la ganadería es la actividad económica predominante, con un 70% de la producción destinada al autoconsumo familiar y un 30% a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como ovejas, gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.",
     "textoGanaderia2": "La alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivado en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de Caravelí para la venta; también se elabora yogurt, aunque en menor medida.",
     "textoGanaderia3": "A pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.",
     "poblacionPecuariaTabla": [
@@ -134,10 +216,10 @@
       { "especie": "Gallinas", "cantidadPromedio": "5 – 10", "ventaUnidad": "S/. 20 – S/. 30" },
       { "especie": "Cuyes", "cantidadPromedio": "15 – 20", "ventaUnidad": "S/. 25 – S/. 30" }
     ],
-    "textoAgricultura1": "En la CC Ayroca, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 95 % según los entrevistados, se destina al autoconsumo, mientras que solo un 5 % se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectáreas de tierra.",
+    "textoAgricultura1": "En la CC Ayroca, la agricultura desempeña un papel complementario a la ganadería, y la mayor parte de la producción, cerca de un 85% según los entrevistados, se destina al autoconsumo, mientras que solo un 15% se comercializa. Los principales cultivos son la papa, habas, cebada y forraje (como avena y alfalfa), los cuales son esenciales para la dieta de las familias comuneras y en menor medida para la alimentación del ganado. Estos productos se cultivan en pequeñas parcelas, con cada familia disponiendo de un promedio de 1 ½ hectáreas de tierra.",
     "textoAgricultura2": "El sistema de riego utilizado en la comunidad es principalmente por gravedad, aprovechando las fuentes de agua disponibles en la zona. Sin embargo, la actividad agrícola enfrenta serios desafíos, como las heladas, que dañan los cultivos durante las temporadas frías, y las sequías, que disminuyen la disponibilidad de agua, afectando la capacidad productiva de las familias. Adicionalmente, se enfrentan plagas y enfermedades como roedores y el gusano blanco. Estas problemáticas, recurrentes en el ciclo agrícola, limitan tanto la cantidad como la calidad de los productos cosechados.",
     "caracteristicasAgriculturaTabla": [
-      { "categoria": "Destino de la producción (aprox.)", "detalle": "Autoconsumo: 95 %; Venta: 5 %" },
+      { "categoria": "Destino de la producción (aprox.)", "detalle": "Autoconsumo: 85%; Venta: 15%" },
       { "categoria": "Tipos de Cultivo", "detalle": "Papa, haba, cebada, avena, alfalfa" },
       { "categoria": "Cantidad de área para cultivar (en ha) por familia", "detalle": "1 ½ ha." },
       { "categoria": "Tipo de Riego", "detalle": "Gravedad" },
@@ -148,50 +230,43 @@
     "textoMercadoComercializacion2": "Esta dependencia de los intermediarios presenta diversas dificultades. Por un lado, los comuneros no tienen precisión sobre la comparación con otros mercados más grandes o si cuentan con un punto de venta dentro de la comunidad. Además, el transporte de los productos fuera de la comunidad aumenta los costos logísticos, dificultando la sustentabilidad de la actividad económica. Este sistema de comercialización se traduce en una vulnerabilidad económica para las familias, ya que dependen de los intermediarios para la venta de sus bienes.",
     "textoHabitosConsumo1": "En la CC Ayroca, los hábitos de consumo se caracterizan por una dieta basada principalmente en productos que se adquieren de comerciantes que visitan la comunidad periódicamente (quincenalmente, en promedio), así como en pequeñas bodegas locales. Entre los alimentos más consumidos destacan los abarrotes como el arroz, maíz y fideos, que forman parte esencial de la alimentación diaria de las familias. Estos productos son complementados con la producción local de papa y habas, que también son alimentos fundamentales en la dieta.",
     "textoHabitosConsumo2": "El consumo de papa y habas es especialmente importante, ya que ambos son productos locales y tradicionales, que no solo se destinan al autoconsumo, sino que también forman parte de la base alimentaria debido a su disponibilidad y bajo costo. La producción de estos alimentos es continua, lo que asegura su presencia en la mayoría de los hogares. Dentro de la CC Ayroca resaltan algunos platos tradicionales como el \"revuelto de habas\", cuy chactado y el chicharrón. Por otra parte, también destaca el consumo de frutas que son obtenidas a través de los comerciantes que visitan la comunidad, los cuales ofrecen productos adicionales como verduras y prendas en determinadas ocasiones.",
-    "textoViviendas": "Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC Ayroca se hallaron un total de 90 viviendas empadronadas. De estas, solamente 61 se encuentran ocupadas, representando un 67,78 %. Cabe mencionar que, para poder describir el aspecto de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.",
+    "textoViviendas": "Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC Ayroca se hallaron un total de 90 viviendas empadronadas. De estas, solamente 61 se encuentran ocupadas, representando un 67.8%. Cabe mencionar que, para poder describir el aspecto de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.",
     "condicionOcupacionTabla": [
-      { "categoria": "Viviendas ocupadas", "casos": 61, "porcentaje": "67,78 %" },
-      { "categoria": "Viviendas con otra condición", "casos": 29, "porcentaje": "32,22 %" },
-      { "categoria": "Total", "casos": 90, "porcentaje": "100,00 %" }
+      { "categoria": "Viviendas ocupadas", "casos": 61 },
+      { "categoria": "Viviendas con otra condición", "casos": 29 }
     ],
-    "textoEstructura": "Según la información recabada de los Censos Nacionales 2017, dentro de la CC Ayroca, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el 98,36 %. A ello le complementa el material de triplay / calamina / estera (1,64 %).\n\nRespecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un 96,72 %. El porcentaje restante consiste en triplay / estera / carrizo (1,64 %) y en tejas (1,64 %).\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (95,08 %). Por otra parte, el porcentaje restante (4,92 %) consiste en cemento.",
+    "textoEstructura": "Según la información recabada de los Censos Nacionales 2017, dentro de la CC Ayroca, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el 98.4%. A ello le complementa el material de triplay / calamina / estera (1.6%).\n\nRespecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un 96.7%. El porcentaje restante consiste en triplay / estera / carrizo (1.6%) y en tejas (1.6%).\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (95.1%). Por otra parte, el porcentaje restante (4.9%) consiste en cemento.",
     "tiposMaterialesTabla": [
-      { "categoria": "Materiales de las paredes de las viviendas", "tipoMaterial": "Adobe", "casos": 60, "porcentaje": "98,36 %" },
-      { "categoria": "Materiales de las paredes de las viviendas", "tipoMaterial": "Triplay / calamina / estera", "casos": 1, "porcentaje": "1,64 %" },
-      { "categoria": "", "tipoMaterial": "Total", "casos": 61, "porcentaje": "100,00 %" },
-      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Planchas de calamina, fibra de cemento o similares", "casos": 59, "porcentaje": "96,72 %" },
-      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Triplay / estera / carrizo", "casos": 1, "porcentaje": "1,64 %" },
-      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Tejas", "casos": 1, "porcentaje": "1,64 %" },
-      { "categoria": "", "tipoMaterial": "Total", "casos": 61, "porcentaje": "100,00 %" },
-      { "categoria": "Materiales de los pisos de las viviendas", "tipoMaterial": "Tierra", "casos": 58, "porcentaje": "95,08 %" },
-      { "categoria": "Materiales de los pisos de las viviendas", "tipoMaterial": "Cemento", "casos": 3, "porcentaje": "4,92 %" },
-      { "categoria": "", "tipoMaterial": "Total", "casos": 61, "porcentaje": "100,00 %" }
+      { "categoria": "Materiales de las paredes de las viviendas", "tipoMaterial": "Adobe", "casos": 60 },
+      { "categoria": "Materiales de las paredes de las viviendas", "tipoMaterial": "Triplay / calamina / estera", "casos": 1 },
+      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Planchas de calamina, fibra de cemento o similares", "casos": 59 },
+      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Triplay / estera / carrizo", "casos": 1 },
+      { "categoria": "Materiales de los techos de las viviendas", "tipoMaterial": "Tejas", "casos": 1 },
+      { "categoria": "Materiales de los pisos de las viviendas", "tipoMaterial": "Tierra", "casos": 58 },
+      { "categoria": "Materiales de los pisos de las viviendas", "tipoMaterial": "Cemento", "casos": 3 }
     ],
     "textoServiciosBasicos": "Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento. En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas con ocupantes presentes (61), tal como realizó el Censo Nacional 2017.",
-    "textoServiciosAgua": "Respecto al servicio de agua para consumo humano en la CC Ayroca, se cuenta con cobertura regular dicho recurso en la plataforma REDINFORMA, un 91,80 % de las viviendas cuenta con abastecimiento de agua por red pública. Ninguna vivienda cuenta con abastecimiento de agua por pilón, mientras que el 8,20 % restante no se abastece por ninguno de los medios mencionados.",
+    "textoServiciosAgua": "Respecto al servicio de agua para consumo humano en la CC Ayroca, se cuenta con cobertura regular dicho recurso en la plataforma REDINFORMA, un 91.8% de las viviendas cuenta con abastecimiento de agua por red pública. Ninguna vivienda cuenta con abastecimiento de agua por pilón, mientras que el 8.2% restante no se abastece por ninguno de los medios mencionados.",
     "abastecimientoAguaTabla": [
-      { "categoria": "Viviendas con abastecimiento de agua por red pública", "casos": 56, "porcentaje": "91,80 %" },
-      { "categoria": "Viviendas con abastecimiento de agua por pilón", "casos": 0, "porcentaje": "0,00 %" },
-      { "categoria": "Viviendas sin abastecimiento de agua por los medios mencionados", "casos": 5, "porcentaje": "8,20 %" },
-      { "categoria": "Total", "casos": 61, "porcentaje": "100,00 %" }
+      { "categoria": "Viviendas con abastecimiento de agua por red pública", "casos": 56 },
+      { "categoria": "Viviendas con abastecimiento de agua por pilón", "casos": 0 },
+      { "categoria": "Viviendas sin abastecimiento de agua por los medios mencionados", "casos": 5 }
     ],
     "textoServiciosAguaDetalle": "De las entrevistas aplicadas durante el trabajo de campo, se obtuvo la información de que la institución responsable de la administración del servicio de abastecimiento de agua y de su respectivo mantenimiento es la JASS Ayroca. Esta junta lleva a cabo una cloración del recurso hídrico para el consumo de las familias de la CC Ayroca y también realiza el cobro de una cuota mensual de S/. 4 para poder contar con recursos económicos y desarrollar sus actividades.",
-    "textoServiciosDesague": "Respecto al servicio de saneamiento en las viviendas de la CC Ayroca, se cuenta con cobertura regular. Es así que, según la plataforma REDINFORMA, un 77,05 % de las viviendas cuenta con saneamiento vía red pública. Ninguna vivienda tiene saneamiento vía pozo séptico, mientras que el 22,95 % restante no posee saneamiento vía de los dos medios mencionados.",
+    "textoServiciosDesague": "Respecto al servicio de saneamiento en las viviendas de la CC Ayroca, se cuenta con cobertura regular. Es así que, según la plataforma REDINFORMA, un 77.0% de las viviendas cuenta con saneamiento vía red pública. Ninguna vivienda tiene saneamiento vía pozo séptico, mientras que el 23.0% restante no posee saneamiento vía de los dos medios mencionados.",
     "tiposSaneamientoTabla": [
-      { "categoria": "Viviendas con saneamiento vía red pública", "casos": 47, "porcentaje": "77,05 %" },
-      { "categoria": "Viviendas con saneamiento vía pozo séptico", "casos": 0, "porcentaje": "0,00 %" },
-      { "categoria": "Viviendas sin saneamiento vía los medios mencionados", "casos": 14, "porcentaje": "22,95 %" },
-      { "categoria": "Total", "casos": 61, "porcentaje": "100,00 %" }
+      { "categoria": "Viviendas con saneamiento vía red pública", "casos": 47 },
+      { "categoria": "Viviendas con saneamiento vía pozo séptico", "casos": 0 },
+      { "categoria": "Viviendas sin saneamiento vía los medios mencionados", "casos": 14 }
     ],
     "textoServiciosDesagueDetalle": "Por medio de las entrevistas aplicadas, se recolectó la información de que la institución responsable de la administración del servicio de desagüe por red pública y de su mantenimiento es, al igual que con el agua, la JASS Ayroca. Las excretas son destinadas a una poza de oxidación, ubicada fuera del entorno urbano del anexo Ayroca.",
     "textoDesechosSolidos1": "La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de Cahuacho, aunque según los entrevistados, la recolección se realiza de manera manual, sin embargo, no existe una ruta establecida en la que la municipalidad gestione los desechos sólidos. Adicionalmente, a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en los indicadores ambientales. Estos son insuficientes en su capacidad.",
     "textoDesechosSolidos2": "Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema de reciclaje o tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.",
     "textoDesechosSolidos3": "Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en entornos próximos, especialmente en la recolección de estos residuos en la frecuencia. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que el anexo Ayroca en donde la población puede disponer sus desechos plásticos como botellas, aunque estos trpos son recolectados frecuentemente por el personal de la municipalidad.",
-    "textoElectricidad1": "Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas de la comunidad campesina en cuestión. Según la plataforma REDINFORMA, se cuenta con los siguientes datos: el 90,16 % de las viviendas cuenta con alumbrado eléctrico, mientras que el 9,84 % restante no tiene el referido servicio.",
+    "textoElectricidad1": "Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas de la comunidad campesina en cuestión. Según la plataforma REDINFORMA, se cuenta con los siguientes datos: el 90.2% de las viviendas cuenta con alumbrado eléctrico, mientras que el 9.8% restante no tiene el referido servicio.",
     "coberturaElectricaTabla": [
-      { "categoria": "Viviendas con acceso a electricidad", "casos": 55, "porcentaje": "90,16 %" },
-      { "categoria": "Viviendas sin acceso a electricidad", "casos": 6, "porcentaje": "9,84 %" },
-      { "categoria": "Total", "casos": 61, "porcentaje": "100,00 %" }
+      { "categoria": "Viviendas con acceso a electricidad", "casos": 55 },
+      { "categoria": "Viviendas sin acceso a electricidad", "casos": 6 }
     ],
     "textoElectricidad2": "Adicionalmente, con las entrevistas semiestructuradas se pudo validar que la empresa responsable de la provisión del servicio eléctrico y su respectivo mantenimiento es ADINELSA. Asimismo, según los entrevistados, el costo promedio por este servicio ronda entre S/. 20 y S/. 40 de acuerdo al medidor de cada vivienda. Por otro lado, cabe mencionar que son pocas las familias dentro de la CC Ayroca que cuentan con vale FISE.",
     "textoEnergiaParaCocinar": "En la CC Ayroca, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.\n\nDe manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.",
@@ -241,29 +316,25 @@
     "textoAlumnosPorSexoGrado": "De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC Ayroca según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.",
     "textoEducacion": "La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.",
     "nivelEducativoTabla": [
-      { "categoria": "Sin nivel o inicial", "casos": "10", "porcentaje": "6,02 %" },
-      { "categoria": "Primaria", "casos": "75", "porcentaje": "45,18 %" },
-      { "categoria": "Secundaria", "casos": "64", "porcentaje": "38,55 %" },
-      { "categoria": "Superior no Universitaria", "casos": "7", "porcentaje": "4,22 %" },
-      { "categoria": "Superior Universitaria", "casos": "10", "porcentaje": "6,02 %" },
-      { "categoria": "Total", "casos": "166", "porcentaje": "100,00 %" }
+      { "categoria": "Sin nivel o inicial", "casos": "10" },
+      { "categoria": "Primaria", "casos": "75" },
+      { "categoria": "Secundaria", "casos": "64" },
+      { "categoria": "Superior no Universitaria", "casos": "7" },
+      { "categoria": "Superior Universitaria", "casos": "10" }
     ],
-    "textoNivelEducativo": "En la CC Ayroca, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el 45,18 %. En segundo lugar, se hallan aquellos que cuentan con secundaria (38,55 %). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un 4,22 %.",
+    "textoNivelEducativo": "En la CC Ayroca, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el . En segundo lugar, se hallan aquellos que cuentan con secundaria (). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un .",
     "tasaAnalfabetismoTabla": [
-      { "indicador": "Sabe leer y escribir", "casos": "151", "porcentaje": "90,96 %" },
-      { "indicador": "No sabe leer ni escribir", "casos": "15", "porcentaje": "9,04 %" },
-      { "indicador": "Total", "casos": "166", "porcentaje": "100,00 %" }
+      { "indicador": "Sabe leer y escribir", "casos": "151" },
+      { "indicador": "No sabe leer ni escribir", "casos": "15" }
     ],
-    "textoAnalfabetismo": "En la CC Ayroca, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de 15. Esto representa una tasa de analfabetismo del 9,04 % en la comunidad.",
+    "textoAnalfabetismo": "En la CC Ayroca, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de 15. Esto representa una tasa de analfabetismo del en la comunidad.",
     "cantidadEstudiantesEducacionTabla": [
-      { "institucion": "IE Ayroca", "nivel": "Inicial - Jardin", "gestion": "Publica de gestion directa", "total": "5", "porcentaje": "19,23 %" },
-      { "institucion": "IE N°40270", "nivel": "Primaria", "gestion": "Publica de gestion directa", "total": "21", "porcentaje": "80,77 %" },
-      { "institucion": "Total", "nivel": "", "gestion": "", "total": "26", "porcentaje": "100,00 %" }
+      { "institucion": "IE Ayroca", "nivel": "Inicial - Jardin", "gestion": "Publica de gestion directa", "total": "5" },
+      { "institucion": "IE N°40270", "nivel": "Primaria", "gestion": "Publica de gestion directa", "total": "21" }
     ],
     "cantidadEstudiantesGeneroTabla": [
-      { "institucion": "IE Ayroca", "nivel": "Inicial - Jardín", "hombres": "3", "mujeres": "2", "total": "5", "porcentaje": "19,23 %" },
-      { "institucion": "IE N° 40270", "nivel": "Primaria", "hombres": "12", "mujeres": "9", "total": "21", "porcentaje": "80,77 %" },
-      { "institucion": "Total", "nivel": "", "hombres": "15", "mujeres": "11", "total": "26", "porcentaje": "100,00 %" }
+      { "institucion": "IE Ayroca", "nivel": "Inicial - Jardín", "hombres": "3", "mujeres": "2", "total": "5" },
+      { "institucion": "IE N° 40270", "nivel": "Primaria", "hombres": "12", "mujeres": "9", "total": "21" }
     ],
     "alumnosIEAyrocaTabla": [
       { "nombre": "IE Ayroca", "nivel": "Inicial – Jardín", "total": 9, "totalH": 5, "totalM": 4, "tresH": 4, "tresM": 2, "cuatroH": 1, "cuatroM": 1, "cincoH": 0, "cincoM": 1 }
@@ -289,12 +360,32 @@
       { "grupo": "Síntomas y signos que involucran el sistema digestivo y el abdomen", "edad0_11": "29", "edad12_17": "10", "edad18_29": "18", "edad30_59": "60", "edad60_mas": "44", "casos": "161" },
       { "grupo": "Síntomas y signos generales", "edad0_11": "32", "edad12_17": "4", "edad18_29": "7", "edad30_59": "16", "edad60_mas": "21", "casos": "80" }
     ],
-    "textoAfiliacionSalud": "Dentro del CP Cahuacho, la mayoría de los habitantes están afiliados a algún tipo de seguro de salud. En primer lugar, se hallan aquellos afiliados al Seguro Integral de Salud (SIS) con un 80,63%. En menor medida, se hallan aquellos afiliados a ESSALUD, quienes representan el 8,75%. Respecto a los que no cuentan con ningún tipo de seguro de salud, abarcan solamente el 7,50%.",
+    "textoAfiliacionSalud": "Dentro del CP Cahuacho, la mayoría de los habitantes están afiliados a algún tipo de seguro de salud. En primer lugar, se hallan aquellos afiliados al Seguro Integral de Salud (SIS) con un . En menor medida, se hallan aquellos afiliados a ESSALUD, quienes representan el . Respecto a los que no cuentan con ningún tipo de seguro de salud, abarcan solamente el .",
     "afiliacionSaludTabla": [
-      { "categoria": "Seguro Integral de Salud (SIS)", "casos": "190", "porcentaje": "84.44 %" },
-      { "categoria": "ESSALUD", "casos": "8", "porcentaje": "3.56 %" },
-      { "categoria": "Ningún seguro", "casos": "27", "porcentaje": "12.00 %" },
-      { "categoria": "Total referencial", "casos": "225", "porcentaje": "100.00 %" }
+      { "categoria": "Seguro Integral de Salud (SIS)", "casos": "190" },
+      { "categoria": "ESSALUD", "casos": "8" },
+      { "categoria": "Ningún seguro", "casos": "27" }
+    ],
+    "morbilidadCpTabla_B1": [
+      { "grupo": "Enfermedades infecciosas intestinales", "edad0_11": "55", "edad12_17": "6", "edad18_29": "9", "edad30_59": "59", "edad60_mas": "49", "casos": "178" },
+      { "grupo": "Obesidad y otros de hiperalimentación", "edad0_11": "16", "edad12_17": "10", "edad18_29": "21", "edad30_59": "103", "edad60_mas": "41", "casos": "191" },
+      { "grupo": "Infecciones agudas de las vías respiratorias superiores", "edad0_11": "348", "edad12_17": "93", "edad18_29": "111", "edad30_59": "327", "edad60_mas": "133", "casos": "1012" },
+      { "grupo": "Enfermedades de la cavidad bucal, de las glándulas salivales y de los maxilares", "edad0_11": "6", "edad12_17": "5", "edad18_29": "11", "edad30_59": "33", "edad60_mas": "8", "casos": "63" },
+      { "grupo": "Enfermedades del esófago, del estómago y del duodeno", "edad0_11": "1", "edad12_17": "9", "edad18_29": "18", "edad30_59": "58", "edad60_mas": "67", "casos": "153" },
+      { "grupo": "Artropatías", "edad0_11": "1", "edad12_17": "1", "edad18_29": "4", "edad30_59": "22", "edad60_mas": "77", "casos": "105" },
+      { "grupo": "Dorsopatías", "edad0_11": "0", "edad12_17": "3", "edad18_29": "7", "edad30_59": "60", "edad60_mas": "70", "casos": "140" },
+      { "grupo": "Otras enfermedades del sistema urinario", "edad0_11": "6", "edad12_17": "2", "edad18_29": "8", "edad30_59": "44", "edad60_mas": "28", "casos": "88" },
+      { "grupo": "Síntomas y signos que involucran el sistema digestivo y el abdomen", "edad0_11": "29", "edad12_17": "10", "edad18_29": "18", "edad30_59": "60", "edad60_mas": "44", "casos": "161" },
+      { "grupo": "Síntomas y signos generales", "edad0_11": "32", "edad12_17": "4", "edad18_29": "7", "edad30_59": "16", "edad60_mas": "21", "casos": "80" }
+    ],
+    "natalidadMortalidadCpTabla_B1": [
+      { "anio": "2023", "natalidad": "12", "mortalidad": "2" },
+      { "anio": "2024 (hasta 13/11)", "natalidad": "3", "mortalidad": "0" }
+    ],
+    "afiliacionSaludTabla_B1": [
+      { "categoria": "Seguro Integral de Salud (SIS)", "casos": "190" },
+      { "categoria": "ESSALUD", "casos": "8" },
+      { "categoria": "Ningún seguro", "casos": "27" }
     ],
     "telecomunicacionesTabla": [
       { "medio": "Emisoras de radio", "descripcion": "--" },
@@ -348,44 +439,38 @@
       }
     ],
     "tiposViviendaCpTabla": [
-      { "categoria": "Casa independiente", "casos": 164, "porcentaje": "100,00 %" },
-      { "categoria": "Total", "casos": 164, "porcentaje": "100,00 %" }
+      { "categoria": "Casa independiente", "casos": 164 }
     ],
     "condicionOcupacionCpTabla": [
-      { "categoria": "Ocupada, con personas presentes", "casos": 49, "porcentaje": "29,88 %" },
-      { "categoria": "Ocupada, con personas ausentes", "casos": 19, "porcentaje": "11,59 %" },
-      { "categoria": "Ocupada, de uso ocasional", "casos": 73, "porcentaje": "44,51 %" },
-      { "categoria": "Desocupada, abandonada o cerrada", "casos": 23, "porcentaje": "14,02 %" },
-      { "categoria": "Total", "casos": 164, "porcentaje": "100,00 %" }
+      { "categoria": "Ocupada, con personas presentes", "casos": 49 },
+      { "categoria": "Ocupada, con personas ausentes", "casos": 19 },
+      { "categoria": "Ocupada, de uso ocasional", "casos": 73 },
+      { "categoria": "Desocupada, abandonada o cerrada", "casos": 23 }
     ],
     "abastecimientoAguaCpTabla": [
-      { "categoria": "Red pública dentro de la vivienda", "casos": "48", "porcentaje": "97,96 %" },
-      { "categoria": "Red pública fuera de la vivienda, pero dentro de la edificación", "casos": "1", "porcentaje": "2,04 %" },
-      { "categoria": "Total", "casos": "49", "porcentaje": "100,00 %" }
+      { "categoria": "Red pública dentro de la vivienda", "casos": "48" },
+      { "categoria": "Red pública fuera de la vivienda, pero dentro de la edificación", "casos": "1" }
     ],
-    "textoDesagueCP": "Respecto al servicio de saneamiento en las viviendas de la capital distrital de Cahuacho, se cuenta con cobertura de dicho servicio. Es así que según los Censos Nacionales 2017, un 81,63 % de las viviendas cuenta con red pública de desagüe dentro de la mismas. De manera complementaria, un 10,20 % tiene pozo séptico, tanque séptico o biodigestor. Asimismo, se detalla otras categorías de saneamiento; letrina (con tratamiento) y pozo ciego o negro; campo abierto o al aire libre, todos ellos con un 2,04 % cada uno.",
+    "textoDesagueCP": "Respecto al servicio de saneamiento en las viviendas de la capital distrital de Cahuacho, se cuenta con cobertura de dicho servicio. Es así que según los Censos Nacionales 2017, un de las viviendas cuenta con red pública de desagüe dentro de la mismas. De manera complementaria, un tiene pozo séptico, tanque séptico o biodigestor. Asimismo, se detalla otras categorías de saneamiento; letrina (con tratamiento) y pozo ciego o negro; campo abierto o al aire libre, todos ellos con un cada uno.",
     "saneamientoCpTabla": [
-      { "categoria": "Red pública de desagüe dentro de la vivienda", "casos": "40", "porcentaje": "81,63 %" },
-      { "categoria": "Pozo séptico, tanque séptico o biodigestor", "casos": "5", "porcentaje": "10,20 %" },
-      { "categoria": "Letrina (con tratamiento)", "casos": "1", "porcentaje": "2,04 %" },
-      { "categoria": "Pozo ciego o negro", "casos": "1", "porcentaje": "2,04 %" },
-      { "categoria": "Campo abierto o al aire libre", "casos": "1", "porcentaje": "2,04 %" },
-      { "categoria": "Total", "casos": "49", "porcentaje": "100,00 %" }
+      { "categoria": "Red pública de desagüe dentro de la vivienda", "casos": "40" },
+      { "categoria": "Pozo séptico, tanque séptico o biodigestor", "casos": "5" },
+      { "categoria": "Letrina (con tratamiento)", "casos": "1" },
+      { "categoria": "Pozo ciego o negro", "casos": "1" },
+      { "categoria": "Campo abierto o al aire libre", "casos": "1" }
     ],
     "textoDesechosSolidosCP": "La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de Cahuacho, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de los residuos generan retos en la gestión eficiente de los mismos.\n\nCuando los desechos sólidos no recolectados, asimilados trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantas preocupaciones ambientales a largo plazo.\n\nAdemás, la localidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la población puede disponer sus desechos plásticos como botellas, aunque estos temporalmente no recolectados frecuentemente por el personal de la municipalidad.",
-    "textoElectricidadCP": "Se puede apreciar una amplia cobertura del alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, un 97,96 % de las viviendas cuenta con alumbrado eléctrico, mientras que el 2,04 % restante no tiene el referido servicio.",
+    "textoElectricidadCP": "Se puede apreciar una amplia cobertura del alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, un de las viviendas cuenta con alumbrado eléctrico, mientras que el restante no tiene el referido servicio.",
     "coberturaElectricaCpTabla": [
-      { "categoria": "Sí tiene alumbrado eléctrico", "casos": "48", "porcentaje": "97,96 %" },
-      { "categoria": "No tiene alumbrado eléctrico", "casos": "1", "porcentaje": "2,04 %" },
-      { "categoria": "Total", "casos": "49", "porcentaje": "100,00 %" }
+      { "categoria": "Sí tiene alumbrado eléctrico", "casos": "48" },
+      { "categoria": "No tiene alumbrado eléctrico", "casos": "1" }
     ],
-    "textoEnergiaCocinarCP": "Según los Censos Nacionales 2017, de un total de 53 hogares en el CP Cahuacho, se obtiene que un 81,63 % emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un 54,72 %, la bosta o estiércol en un 16,63 % y la electricidad con un 5,66 %. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.",
+    "textoEnergiaCocinarCP": "Según los Censos Nacionales 2017, de un total de 53 hogares en el CP Cahuacho, se obtiene que un emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un , la bosta o estiércol en un y la electricidad con un . Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.",
     "combustiblesCocinarCpTabla": [
-      { "categoria": "Leña", "casos": "43", "porcentaje": "81,63 %" },
-      { "categoria": "Gas (balón GLP)", "casos": "29", "porcentaje": "54,72 %" },
-      { "categoria": "Bosta, estiércol", "casos": "9", "porcentaje": "16,98 %" },
-      { "categoria": "Electricidad", "casos": "3", "porcentaje": "5,66 %" },
-      { "categoria": "Total referencial", "casos": "53", "porcentaje": "" }
+      { "categoria": "Leña", "casos": "43" },
+      { "categoria": "Gas (balón GLP)", "casos": "29" },
+      { "categoria": "Bosta, estiércol", "casos": "9" },
+      { "categoria": "Electricidad", "casos": "3" }
     ],
     "textoTransporteCP1": "En el CP Cahuacho, la infraestructura de transporte es limitada, pues solo se encuentran trochas carrozables que permiten llegar a la localidad. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás anexos dentro del distrito también son accesibles mediante trochas carrozables.",
     "textoTransporteCP2": "Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de Caravelí, a la cual parte cerca de las 10:30 am desde la capital distrital de Cahuacho. El costo por este servicio varía entre S/. 25 y S/. 30 por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los habitantes para desplazarse a ciudades más grandes.",
@@ -419,10 +504,9 @@
     ],
     "textoEducacionCP": "Dentro del CP Cahuacho se hallan instituciones educativas de todos los niveles de educación básica regular (inicial, primaria y secundaria). Entre las del Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la localidad es la IE Virgen Copacabana, la cual es de nivel secundaria, con un total de 28 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión:",
     "educacionCpTabla": [
-      { "nombreIE": "IE Cahuacho", "nivel": "Inicial - Jardín", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "6", "porcentaje": "11,11 %" },
-      { "nombreIE": "IE N°40271", "nivel": "Primaria", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "20", "porcentaje": "37,04 %" },
-      { "nombreIE": "IE Virgen de Copacabana", "nivel": "Secundaria", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "28", "porcentaje": "51,85 %" },
-      { "nombreIE": "Total", "nivel": "", "tipoGestion": "", "cantidadEstudiantes": "54", "porcentaje": "100,00 %" }
+      { "nombreIE": "IE Cahuacho", "nivel": "Inicial - Jardín", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "6" },
+      { "nombreIE": "IE N°40271", "nivel": "Primaria", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "20" },
+      { "nombreIE": "IE Virgen de Copacabana", "nivel": "Secundaria", "tipoGestion": "Pública de gestión directa", "cantidadEstudiantes": "28" }
     ],
     "textoRecreacionCP1": "En el CP Cahuacho, la infraestructura de recreación está compuesta por espacios que fomentan la interacción y el esparcimiento de la población. Una de las principales áreas es la extensión de las losas deportivas en la localidad, donde se utilizan para eventos de encuentro y socialización. Estos espacios son frecuentados por los habitantes para pasar tiempo en comunidad, especialmente durante las festividades y eventos culturales, así como en el día a día de la dinámica comunal.",
     "textoRecreacionCP2": "Adicionalmente, Cahuacho cuenta con una plaza de toros situada al este del poblado, que representa un importante centro de actividad durante las festividades taurinas y celebraciones locales. Este lugar es un espacio de reunión donde no solo acuden residentes como a visitantes de la zona, ofreciendo una oportunidad de recreación y participación en tradiciones locales.",
@@ -448,45 +532,40 @@
       { "grupo": "Síntomas y signos que involucran el sistema digestivo y el abdomen", "edad0_11": "29", "edad12_17": "10", "edad18_29": "18", "edad30_59": "80", "edad60_mas": "44", "casos": "181" },
       { "grupo": "Síntomas y signos generales", "edad0_11": "32", "edad12_17": "4", "edad18_29": "7", "edad30_59": "16", "edad60_mas": "21", "casos": "80" }
     ],
-    "textoAfiliacionSalud": "Dentro del CP Cahuacho, la mayoría de los habitantes están afiliados a algún tipo de seguro de salud. En primer lugar, se hallan aquellos afiliados al Seguro Integral de Salud (SIS) con un 80,63%. En menor medida, se hallan aquellos afiliados a ESSALUD, quienes representan el 8,75%. Respecto a los que no cuentan con ningún tipo de seguro de salud, abarcan solamente el 7,50%.",
+    "textoAfiliacionSalud": "Dentro del CP Cahuacho, la mayoría de los habitantes están afiliados a algún tipo de seguro de salud. En primer lugar, se hallan aquellos afiliados al Seguro Integral de Salud (SIS) con un . En menor medida, se hallan aquellos afiliados a ESSALUD, quienes representan el . Respecto a los que no cuentan con ningún tipo de seguro de salud, abarcan solamente el .",
     "afiliacionSaludTabla": [
-      { "categoria": "Seguro Integral de Salud (SIS)", "casos": "129", "porcentaje": "80,63 %" },
-      { "categoria": "ESSALUD", "casos": "14", "porcentaje": "8,75 %" },
-      { "categoria": "Seguro de fuerzas armadas o policiales", "casos": "4", "porcentaje": "2,50 %" },
-      { "categoria": "Seguro privado de salud", "casos": "2", "porcentaje": "1,25 %" },
-      { "categoria": "Ningún seguro", "casos": "12", "porcentaje": "7,50 %" },
-      { "categoria": "Total referencial", "casos": "160", "porcentaje": "" }
+      { "categoria": "Seguro Integral de Salud (SIS)", "casos": "129" },
+      { "categoria": "ESSALUD", "casos": "14" },
+      { "categoria": "Seguro de fuerzas armadas o policiales", "casos": "4" },
+      { "categoria": "Seguro privado de salud", "casos": "2" },
+      { "categoria": "Ningún seguro", "casos": "12" }
     ],
     "textoEducacion": "La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.",
-    "textoNivelEducativo": "En el CP Cahuacho, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria, pues representan el 42,86%. En segundo lugar, se hallan aquellos que cuentan con primaria (29,41%). Por otro lado, la categoría minoritaria corresponde a aquellos sin nivel educativo o que solo alcanzaron el inicial, con un 5,04%.",
+    "textoNivelEducativo": "En el CP Cahuacho, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es Sin nivel o inicial, pues representan el ____.",
     "nivelEducativoTabla": [
-      { "categoria": "Sin nivel o inicial", "casos": "6", "porcentaje": "5,04 %" },
-      { "categoria": "Primaria", "casos": "35", "porcentaje": "29,41 %" },
-      { "categoria": "Secundaria", "casos": "51", "porcentaje": "42,86 %" },
-      { "categoria": "Superior no Universitaria", "casos": "14", "porcentaje": "11,76 %" },
-      { "categoria": "Superior Universitaria", "casos": "13", "porcentaje": "10,92 %" },
-      { "categoria": "Total", "casos": "119", "porcentaje": "100,00 %" }
+      { "categoria": "Sin nivel o inicial", "casos": "6" },
+      { "categoria": "Primaria", "casos": "35" },
+      { "categoria": "Secundaria", "casos": "51" },
+      { "categoria": "Superior no Universitaria", "casos": "14" },
+      { "categoria": "Superior Universitaria", "casos": "13" }
     ],
-    "textoAnalfabetismo": "En el CP Cahuacho, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de 5. Esto representa una tasa de analfabetismo del 4,20% en esta localidad.",
+    "textoAnalfabetismo": "En el CP Cahuacho, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de 5. Esto representa una tasa de analfabetismo del en esta localidad.",
     "tasaAnalfabetismoTabla": [
-      { "indicador": "Sabe leer y escribir", "casos": "114", "porcentaje": "95,80 %" },
-      { "indicador": "No sabe leer ni escribir", "casos": "5", "porcentaje": "4,20 %" },
-      { "indicador": "Total", "casos": "119", "porcentaje": "100,00 %" }
+      { "indicador": "Sabe leer y escribir", "casos": "114" },
+      { "indicador": "No sabe leer ni escribir", "casos": "5" }
     ],
     "textoAspectosCulturales": "Los aspectos culturales juegan un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracterizan y describen la diversidad religiosa en el CP Cahuacho, explorando las principales creencias.",
-    "textoIdioma": "La lengua materna es la primera lengua u idioma que aprende una persona. De la data obtenida de los Censos Nacionales 2017, se aprecia que el castellano es la categoría mayoritaria, pues representa al 90,73% de la población de 3 años a más. En segundo lugar, se halla aquellos que tienen el quechua como primer idioma, con un 8,61%.",
+    "textoIdioma": "La lengua materna es la primera lengua u idioma que aprende una persona. De la data obtenida de los Censos Nacionales 2017, se aprecia que el castellano es la categoría mayoritaria, pues representa al de la población de 3 años a más. En segundo lugar, se halla aquellos que tienen el quechua como primer idioma, con un .",
     "lenguasMaternasTabla": [
-      { "categoria": "Castellano", "casos": "137", "porcentaje": "90,73 %" },
-      { "categoria": "Quechua", "casos": "13", "porcentaje": "8,61 %" },
-      { "categoria": "No escucha, ni habla", "casos": "1", "porcentaje": "0,66 %" },
-      { "categoria": "Total", "casos": "151", "porcentaje": "100,00 %" }
+      { "categoria": "Castellano", "casos": "137" },
+      { "categoria": "Quechua", "casos": "13" },
+      { "categoria": "No escucha, ni habla", "casos": "1" }
     ],
-    "textoReligion": "La religión desempeña un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracteriza y describe la diversidad religiosa en el CP Cahuacho, explorando las principales creencias.\n\nEn ese sentido, según los datos recopilados por los Censos Nacionales 2017, se obtiene que la religión mayoritaria es la católica representada por el 98,44% de la población de 12 años a más. A ello se complementan aquellos que son evangélicos o cristianos, ambas categorías con un 0,78% cada una.",
+    "textoReligion": "La religión desempeña un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracteriza y describe la diversidad religiosa en el CP Cahuacho, explorando las principales creencias.\n\nEn ese sentido, según los datos recopilados por los Censos Nacionales 2017, se obtiene que la religión mayoritaria es la católica representada por el de la población de 12 años a más. A ello se complementan aquellos que son evangélicos o cristianos, ambas categorías con un cada una.",
     "religionesTabla": [
-      { "categoria": "Católica", "casos": "126", "porcentaje": "98,44 %" },
-      { "categoria": "Evangélica", "casos": "1", "porcentaje": "0,78 %" },
-      { "categoria": "Cristiano", "casos": "1", "porcentaje": "0,78 %" },
-      { "categoria": "Total", "casos": "128", "porcentaje": "100,00 %" }
+      { "categoria": "Católica", "casos": "126" },
+      { "categoria": "Evangélica", "casos": "1" },
+      { "categoria": "Cristiano", "casos": "1" }
     ],
     "textoAgua": "En el CP Cahuacho, el agua destinada al consumo humano proviene principalmente de los ojos de agua de Pacapaccha y Tayaupico. Estas fuentes abastecen los reservorios de la localidad y se distribuye a la población local; estos son esenciales para el bienestar de los habitantes.\n\nEn cuanto al uso agrícola, se aprovechan fuentes naturales cercanas a las parcelas, tales como pozos, manantiales y ríos que facilitan el riego de cultivos de papa, cebada, habas, trigo y otros productos agrícolas. Para la ganadería, la población emplea principalmente las caudales de los ríos y quebradas, siendo el río Chaupo el más utilizado para abastecimiento, garantizando así su mantenimiento durante todo el año.",
     "textoUsosSuelos": "En cuanto al uso de los suelos, predomina la actividad agrícola y ganadera. La agricultura se centra en el cultivo de productos adaptados a la zona, tales como papa, oca, cebada, habas, trigo y otros. Para la ganadería también es importante, destacándose la crianza de vacunos y ovinos que complementan las fuentes de ingresos de la familia.\n\nRespecto al uso de recursos naturales, se destaca el empleo de plantas como el queñoa, lloque y eucalipto, utilizados como leña para cocinar y en la construcción de viviendas. Además, la zona es rica en hierbas medicinales de uso tradicional, como huamanripa, salvia Sara e hierbas circundantes, salvia Savi en épocas de lluvias; y otras hierbas como escozonera, ruda y toronjil, que son aprovechadas por la población para fines terapéuticos. La fauna silvestre también es un componente importante en el entorno de Cahuacho, con la presencia de animales como pumas, vizcachas, venados, lagartijas y aves andinas, que forman parte del ecosistema local y contribuyen a la riqueza natural de la región.",
@@ -496,12 +575,11 @@
       { "numero": "N° 3.42", "titulo": "Capilla San Andrés del CP Cahuacho", "ruta": "assets/fotografias/capilla-san-andres.jpg", "fuente": "GEADES, 2024" },
       { "numero": "N° 3.42", "titulo": "Cementerio del CP Cahuacho", "ruta": "assets/fotografias/cementerio-cahuacho.jpg", "fuente": "GEADES, 2024" }
     ],
-    "textoReligion": "En la actualidad, la confesión predominante dentro del CP Cahuacho es la católica. Según los datos de los Censos Nacionales 2017, la religión mayoritaria es la católica representada por el 98,44% de la población de 12 años a más. A ello se complementan aquellos que son evangélicos o cristianos, ambas categorías con un 0,78% cada una.",
+    "textoReligion": "En la actualidad, la confesión predominante dentro del CP Cahuacho es la católica. Según los datos de los Censos Nacionales 2017, la religión mayoritaria es la católica representada por el de la población de 12 años a más. A ello se complementan aquellos que son evangélicos o cristianos, ambas categorías con un cada una.",
     "religionesTabla": [
-      { "categoria": "Católica", "casos": "126", "porcentaje": "98,44 %" },
-      { "categoria": "Evangélica", "casos": "1", "porcentaje": "0,78 %" },
-      { "categoria": "Cristiano", "casos": "1", "porcentaje": "0,78 %" },
-      { "categoria": "Total", "casos": "128", "porcentaje": "100,00 %" }
+      { "categoria": "Católica", "casos": "126" },
+      { "categoria": "Evangélica", "casos": "1" },
+      { "categoria": "Cristiano", "casos": "1" }
     ],
     "textoFuentesAgua": "Las fuentes de agua en el CP Cahuacho son diversas, dependiendo del uso que se les dé. Para el consumo humano, el agua se obtiene principalmente de los ojos de agua de Pacapaccha y Tayaupico. Estas fuentes abastecen los reservorios de la localidad y se distribuye a la población local; estos son esenciales para el bienestar de los habitantes.\n\nEn cuanto al uso agrícola, se aprovechan fuentes naturales cercanas a las parcelas, tales como pozos, manantiales y ríos que facilitan el riego de cultivos de papa, cebada, habas, trigo y otros productos agrícolas. Para la ganadería, la población emplea principalmente las caudales de los ríos y quebradas, siendo el río Chaupo el más utilizado para abastecimiento, garantizando así su mantenimiento durante todo el año.",
     "textoTenenciaDelTierra": "En la CC Ayroca, la tenencia de la tierra es comunal, lo que significa que la comunidad es propietaria de la tierra superficial. Los comuneros no son propietarios individuales de la tierra, sino que la comunidad les cede los terrenos en calidad de posesi\u00f3n para que puedan vivir y trabajar en ellos. Este sistema de tenencia comunal asegura la equidad en la distribuci\u00f3n, aunque limita la posibilidad de transacciones privadas de terrenos.\n\nEn cuanto a los usos del suelo, la mayor parte del territorio est\u00e1 destinado a las actividades agr\u00edcolas y ganaderas, las cuales son el principal sustento econ\u00f3mico de la poblaci\u00f3n. La tierra es aprovechada para el cultivo de papa, haba y cebada, y para el pastoreo de vacunos y ovinos. Entre los bosques naturales que se aprovechan destaca la que\u00f1oa, eucalipto, lloque y tola, que son utilizados como le\u00f1a para la cocci\u00f3n de alimentos o en la construcci\u00f3n.\n\nAdem\u00e1s, seg\u00fan algunos comuneros, dentro del territorio de la comunidad existen diversas hierbas medicinales con efectos positivos para la salud. Entre ellas destacan la huamanripa, llanten mu\u00f1a y salvia. Estas son utilizadas en un primer nivel de atenci\u00f3n antes de acudir al establecimiento de salud local.",
@@ -509,21 +587,19 @@
     "indiceDesarrolloHumanoTabla": [
       { "poblacion": "762", "rankIdh1": "1686", "rankEsperanza": "934", "idh": "0.3870", "rankEducacion1": "29", "esperanzaVida": "83.27", "rankEducacion2": "1010", "educacion": "55.35", "rankAnios": "972", "anosEducacion": "6.18", "rankIngreso": "1191", "ingreso": "391.1", "rankIngresoFinal": "1191" }
     ],
-    "textoNecesidadesBasicasInsatisfechas": "En primer lugar, cabe mencionar que en la CC Ayroca se halla un total de 198 personas residentes en viviendas particulares. De este conjunto, se observa que el NBI m\u00e1s frecuente, seg\u00fan poblaci\u00f3n, es el de viviendas con hacinamiento (25,25 %), seguido de viviendas sin servicios higi\u00e9nicos (18,69 %).\n\nPor otro lado, a nivel distrital de Cahuacho, de un total de 215 unidades de an\u00e1lisis, se sabe que el tipo de NBI m\u00e1s frecuente es el de viviendas sin servicios higi\u00e9nicos (15,81 %), seguida de la de viviendas con hacinamiento (6,98 %). En este sentido, se aprecia que el orden de las NBI mayoritarias es inverso al comparar la CC Ayroca con el distrito de Cahuacho.",
+    "textoNecesidadesBasicasInsatisfechas": "En primer lugar, cabe mencionar que en la CC Ayroca se halla un total de 198 personas residentes en viviendas particulares. De este conjunto, se observa que el NBI más frecuente, según población, es el de viviendas con hacinamiento (54.35%), seguido de viviendas sin servicios higiénicos (40.22%).\n\nPor otro lado, a nivel distrital de Cahuacho, de un total de 215 unidades de análisis, se sabe que el tipo de NBI más frecuente es el de viviendas sin servicios higi\u00e9nicos (56.67%), seguida de la de viviendas con hacinamiento (25.00%). En este sentido, se aprecia que el orden de las NBI mayoritarias es inverso al comparar la CC Ayroca con el distrito de Cahuacho.",
     "nbiCCAyrocaTabla": [
-      { "categoria": "Poblaci\u00f3n en Viviendas con caracter\u00edsticas f\u00edsicas inadecuadas", "casos": "5", "porcentaje": "2,53 %" },
-      { "categoria": "Poblaci\u00f3n en Viviendas con hacinamiento", "casos": "50", "porcentaje": "25,25 %" },
-      { "categoria": "Poblaci\u00f3n en Viviendas sin servicios higi\u00e9nicos", "casos": "37", "porcentaje": "18,69 %" },
-      { "categoria": "Poblaci\u00f3n en Hogares con ni\u00f1os que no asisten a la escuela", "casos": "0", "porcentaje": "0,00 %" },
-      { "categoria": "Total referencial", "casos": "198", "porcentaje": "" }
+      { "categoria": "Poblaci\u00f3n en Viviendas con caracter\u00edsticas f\u00edsicas inadecuadas", "casos": "5" },
+      { "categoria": "Poblaci\u00f3n en Viviendas con hacinamiento", "casos": "50" },
+      { "categoria": "Poblaci\u00f3n en Viviendas sin servicios higi\u00e9nicos", "casos": "37" },
+      { "categoria": "Poblaci\u00f3n en Hogares con ni\u00f1os que no asisten a la escuela", "casos": "0" }
     ],
     "nbiDistritoCahuachoTabla": [
-      { "categoria": "Viviendas con caracter\u00edsticas f\u00edsicas inadecuadas", "casos": "6", "porcentaje": "2,79 %" },
-      { "categoria": "Viviendas con hacinamiento", "casos": "15", "porcentaje": "6,98 %" },
-      { "categoria": "Viviendas sin servicios higi\u00e9nicos", "casos": "34", "porcentaje": "15,81 %" },
-      { "categoria": "Hogares con ni\u00f1os que no asisten a la escuela", "casos": "0", "porcentaje": "0,00 %" },
-      { "categoria": "Hogares con alta dependencia econ\u00f3mica", "casos": "5", "porcentaje": "2,33 %" },
-      { "categoria": "Total referencial", "casos": "215", "porcentaje": "" }
+      { "categoria": "Viviendas con caracter\u00edsticas f\u00edsicas inadecuadas", "casos": "6" },
+      { "categoria": "Viviendas con hacinamiento", "casos": "15" },
+      { "categoria": "Viviendas sin servicios higi\u00e9nicos", "casos": "34" },
+      { "categoria": "Hogares con ni\u00f1os que no asisten a la escuela", "casos": "0" },
+      { "categoria": "Hogares con alta dependencia econ\u00f3mica", "casos": "5" }
     ],
     "textoOrganizacionSocial": "La organizaci\u00f3n social m\u00e1s importante y con mayor poder es la CC Ayroca. Esta comunidad cuenta con una estructura organizativa que incluye una junta directiva, encargada de la gesti\u00f3n y representaci\u00f3n legal de la comunidad. Por otra parte, la toma de decisiones clave se realiza en la asamblea general, en la cual participan y votan todos los comuneros activos que est\u00e1n debidamente inscritos en el padr\u00f3n comunal. Esta asamblea es el m\u00e1ximo \u00f3rgano de deliberaci\u00f3n, donde se discuten temas de inter\u00e9s comunitario, como el uso de la tierra, los proyectos de desarrollo y la organizaci\u00f3n de actividades econ\u00f3micas y sociales.\n\nAl momento del trabajo de campo, seg\u00fan los entrevistados, se cuenta con 65 comuneros calificados dentro de la CC Ayroca. Estos se encuentran inscritos en el padr\u00f3n, el cual es actualizado cada dos a\u00f1os antes de cada elecci\u00f3n para una nueva junta directiva. Asimismo, cabe mencionar que esta \u00faltima puede reelegirse por un per\u00edodo adicional, con la posibilidad de que una misma junta pueda gestionar por cuatro a\u00f1os como m\u00e1ximo.\n\nRespecto al rol de la mujer, es posible que estas puedan ser inscritas como comuneras calificadas dentro del padr\u00f3n comunal. No obstante, solo se permite la inscripci\u00f3n si estas mujeres son viudas o madres solteras. De lo contrario, es el var\u00f3n quien asume la responsabilidad. Por otra parte, dentro de la estructura interna de la comunidad campesina se cuenta con instancias especializadas como la JASS, la Asociaci\u00f3n de Vicu\u00f1as y la Junta de Usuarios de Riego. Cada una de ellas cuenta con funciones espec\u00edf\u00edcas y sus representantes tambi\u00e9n son electos democr\u00e1ticamente.\n\nTambi\u00e9n se hallan autoridades locales como el teniente gobernador, quien es el representante del gobierno central a nivel local. El teniente gobernador tiene la funci\u00f3n de coordinar y mediar entre las instituciones del Estado y la comunidad, as\u00ed como de velar por el orden p\u00fablico. Asimismo, el agente municipal es responsable de la supervisi\u00f3n y cumplimiento de las normativas municipales, as\u00ed como de brindar apoyo en la organizaci\u00f3n de actividades locales.",
     "autoridades": [
@@ -556,58 +632,53 @@
       { "localidad": "Cahuacho", "coordenadas": "18 L\nE: 663 078 m\nN: 8 285 498 m", "altitud": "3 423 msnm", "distrito": "Cahuacho", "provincia": "Caravel\u00ed", "departamento": "Arequipa" }
     ],
     
-    "textoDemografiaAISI": "Respecto a la poblaci\u00f3n del CP Cahuacho, tomando en cuenta los Censos Nacionales 2017, existen 160 habitantes que viven permanentemente en la localidad. De este conjunto, el 51,25 % son mujeres, por lo que se aprecia una leve mayor\u00eda de dicho grupo frente a sus pares masculinos (48,75 %).",
-    "poblacionSexoAISI": [
-      { "sexo": "Hombre", "casos": 78, "porcentaje": "48,75 %" },
-      { "sexo": "Mujer", "casos": 82, "porcentaje": "51,25 %" },
-      { "sexo": "Total", "casos": 160, "porcentaje": "100,00 %" }
-    ],
+    "textoDemografiaAISI": "Respecto a la población del CP Cahuacho, tomando en cuenta los Censos Nacionales 2017, existen 160 habitantes que viven permanentemente en la localidad. De este conjunto, el 51,25 % son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (48,75 %).",
+    "poblacionSexoAISI": [],
     "poblacionEtarioAISI": [
-      { "categoria": "0 a 14 a\u00f1os", "casos": 41, "porcentaje": "25,63 %" },
-      { "categoria": "15 a 29 a\u00f1os", "casos": 25, "porcentaje": "15,63 %" },
-      { "categoria": "30 a 44 a\u00f1os", "casos": 31, "porcentaje": "19,38 %" },
-      { "categoria": "45 a 64 a\u00f1os", "casos": 38, "porcentaje": "23,75 %" },
-      { "categoria": "65 a\u00f1os a m\u00e1s", "casos": 25, "porcentaje": "15,63 %" },
-      { "categoria": "Total", "casos": 160, "porcentaje": "100,00 %" }
+      { "categoria": "0 a 14 a\u00f1os", "casos": 41 },
+      { "categoria": "15 a 29 a\u00f1os", "casos": 25 },
+      { "categoria": "30 a 44 a\u00f1os", "casos": 31 },
+      { "categoria": "45 a 64 a\u00f1os", "casos": 38 },
+      { "categoria": "65 a\u00f1os a m\u00e1s", "casos": 25 }
     ],
     
-    "textoPEA_AISI": "La Poblaci\u00f3n Econ\u00f3micamente Activa (PEA) constituye un indicador fundamental para comprender la din\u00e1mica econ\u00f3mica y social de cualquier jurisdicci\u00f3n. En este apartado se presenta una descripci\u00f3n de la PEA del distrito de Cahuacho, que abarca a su capital distrital, el CP Cahuacho.",
-    "petGruposEdadAISI": [
-      { "categoria": "14 a 29 a\u00f1os", "casos": 28, "porcentaje": "22,95 %" },
-      { "categoria": "30 a 44 a\u00f1os", "casos": 31, "porcentaje": "25,41 %" },
-      { "categoria": "45 a 64 a\u00f1os", "casos": 38, "porcentaje": "31,15 %" },
-      { "categoria": "65 a\u00f1os a m\u00e1s", "casos": 25, "porcentaje": "20,49 %" },
-      { "categoria": "Total", "casos": 122, "porcentaje": "100,00 %" }
+    "textoPEA_AISI": "La Poblaci\u00f3n Econ\u00f3micamente Activa (PEA) constituye un indicador fundamental para comprender la din\u00e1mica econ\u00f3mica y social de cualquier jurisdicci\u00f3n. En este apartado se presenta una descripci\u00f3n de la PEA del distrito de Cahuacho, que abarca a su capital distrital, el CP Cahuacho.",    "textoPET_AISI": "",    "petGruposEdadAISI": [
+      { "categoria": "14 a 29 a\u00f1os", "casos": 28 },
+      { "categoria": "30 a 44 a\u00f1os", "casos": 31 },
+      { "categoria": "45 a 64 a\u00f1os", "casos": 38 },
+      { "categoria": "65 a\u00f1os a m\u00e1s", "casos": 25 }
     ],
     
     "peaDistritoSexoTabla": [
-      { "categoria": "PEA", "hombres": 184, "porcentajeHombres": "77,31 %", "mujeres": 92, "porcentajeMujeres": "41,26 %", "casos": 276, "porcentaje": "59,87 %" },
-      { "categoria": "No PEA", "hombres": 54, "porcentajeHombres": "22,69 %", "mujeres": 131, "porcentajeMujeres": "58,74 %", "casos": 185, "porcentaje": "40,13 %" },
-      { "categoria": "Total", "hombres": 238, "porcentajeHombres": "100,00 %", "mujeres": 223, "porcentajeMujeres": "100,00 %", "casos": 461, "porcentaje": "100,00 %" }
+      { "categoria": "PEA", "hombres": 184, "mujeres": 92, "casos": 276 },
+      { "categoria": "No PEA", "hombres": 54, "mujeres": 131, "casos": 185 }
     ],
-    "peaOcupadaDesocupadaTabla": [
-      { "categoria": "PEA Ocupada", "hombres": 180, "porcentajeHombres": "97,83 %", "mujeres": 87, "porcentajeMujeres": "94,57 %", "casos": 267, "porcentaje": "96,74 %" },
-      { "categoria": "PEA Desocupada", "hombres": 4, "porcentajeHombres": "2,17 %", "mujeres": 5, "porcentajeMujeres": "5,43 %", "casos": 9, "porcentaje": "3,26 %" },
-      { "categoria": "Total", "hombres": 184, "porcentajeHombres": "100,00 %", "mujeres": 92, "porcentajeMujeres": "100,00 %", "casos": 276, "porcentaje": "100,00 %" }
-    ],
+    "peaOcupadaDesocupadaTabla": [],
     "actividadesEconomicasAISI": [
-      { "actividad": "A. Agricultura, ganader\u00eda, silvicultura y pesca", "casos": 50, "porcentaje": "64,10 %" },
-      { "actividad": "B. Explotaci\u00f3n de minas y canteras", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "D. Suministro de electricidad, gas, vapor y aire acondicionado", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "F. Construcci\u00f3n", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "G. Comercio; reparaci\u00f3n de veh\u00edculos automotores", "casos": 3, "porcentaje": "3,85 %" },
-      { "actividad": "H. Transporte y almacenamiento", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "I. Alojamiento y servicio de comidas", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "J. Informaci\u00f3n y comunicaciones", "casos": 1, "porcentaje": "1,28 %" },
-      { "actividad": "O. Administraci\u00f3n p\u00fablica y defensa", "casos": 11, "porcentaje": "14,10 %" },
-      { "actividad": "P. Ense\u00f1anza", "casos": 3, "porcentaje": "3,85 %" },
-      { "actividad": "Q. Salud humana y asistencia social", "casos": 5, "porcentaje": "6,41 %" },
-      { "actividad": "Total", "casos": 78, "porcentaje": "100,00 %" }
+      { "actividad": "A. Agricultura, ganader\u00eda, silvicultura y pesca", "casos": 50 },
+      { "actividad": "B. Explotaci\u00f3n de minas y canteras", "casos": 1 },
+      { "actividad": "D. Suministro de electricidad, gas, vapor y aire acondicionado", "casos": 1 },
+      { "actividad": "F. Construcci\u00f3n", "casos": 1 },
+      { "actividad": "G. Comercio; reparaci\u00f3n de veh\u00edculos automotores", "casos": 3 },
+      { "actividad": "H. Transporte y almacenamiento", "casos": 1 },
+      { "actividad": "I. Alojamiento y servicio de comidas", "casos": 1 },
+      { "actividad": "J. Informaci\u00f3n y comunicaciones", "casos": 1 },
+      { "actividad": "O. Administraci\u00f3n p\u00fablica y defensa", "casos": 11 },
+      { "actividad": "P. Ense\u00f1anza", "casos": 3 },
+      { "actividad": "Q. Salud humana y asistencia social", "casos": 5 }
     ],
-    "textoActividadesEconomicasAISI": "Del cuadro anterior, se aprecia que la actividad econ\u00f3mica m\u00e1s frecuente dentro del CP Cahuacho es el grupo \u201cAgricultura, ganader\u00eda, silvicultura y pesca\u201d (64,10 %). Esto se condice con las entrevistas aplicadas en campo, pues los informantes declararon que la mayor\u00eda de la poblaci\u00f3n se dedica principalmente a la agricultura y a la ganader\u00eda. La segunda actividad m\u00e1s frecuente dentro de esta localidad es la de \u201cAdministraci\u00f3n p\u00fablica y defensa\u201d, con 14,10 %.",
+    "textoActividadesEconomicasAISI": "Del cuadro anterior, se aprecia que la actividad económica más frecuente dentro del CP Cahuacho es el grupo \u201cAgricultura, ganader\u00eda, silvicultura y pesca\u201d (64,10 %). Esto se condice con las entrevistas aplicadas en campo, pues los informantes declararon que la mayor\u00eda de la poblaci\u00f3n se dedica principalmente a la agricultura y a la ganader\u00eda. La segunda actividad m\u00e1s frecuente dentro de esta localidad es la de \u201cAdministraci\u00f3n p\u00fablica y defensa\u201d, con 14,10 %.",
     "textoMercadoProductos": "El CP Cahuacho no cuenta con un mercado formal que centralice las actividades comerciales de la localidad. El comercio en este lugar es incipiente y se lleva a cabo principalmente a través de pequeñas bodegas. Estas bodegas atienden la demanda cotidiana en la localidad, pero la oferta sigue siendo limitada y gran parte de los productos llega desde Caravel\u00ed.",
     "textoHabitosConsumo": "En la capital distrital de Cahuacho, los h\u00e1bitos de consumo est\u00e1n basados en alimentos tradicionales. Se consumen tub\u00e9rculos como papa y oca, verduras de producci\u00f3n local, carnes de animales menores y cuyes, adem\u00e1s de vacuno. Tambi\u00e9n se preparan platos tradicionales durante festividades como el cuy chactado, picante de cuy, sopa de mor\u00f3n con charqui, picante de quinua, mazamorra de quinua y chicha de cebada.",
-    "instituciones": [],
+    "instituciones": [
+      { "institucion": "Comunidad Campesina Ayroca", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Junta Administradora de Servicios de Saneamiento (JASS)", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Programa Pensión 65", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Programa Juntos", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Programa Qali Warma", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Puesto de Salud Ayroca", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" },
+      { "institucion": "Instituciones Educativas (IE N°40270 y otro)", "disponibilidad": "SI", "ubicacion": "Anexo Ayroca" }
+    ],
     "componente1Pagina5": "",
     "componente2Pagina5": "",
     "mapaActores": [
@@ -620,7 +691,11 @@
       { "categoria": "II. AUTORIDADES DE LA MUNICIPALIDAD LOCAL, DISTRITAL Y/O DEL ESTADO", "espacio": "Municipalidad Distrital de Cahuacho", "cargo": "Gerente Municipal de Cahuacho", "actor": "Mario Sergio Patiño Merma", "aFavor": "X", "neutro": "", "enContra": "", "percepcion": "Considera el proyecto como una oportunidad favorable para el distrito, destacando su carácter formal y transparente." },
       { "categoria": "II. AUTORIDADES DE LA MUNICIPALIDAD LOCAL, DISTRITAL Y/O DEL ESTADO", "espacio": "Subprefectura Distrital de Cahuacho", "cargo": "Subprefecto Distrital de Cahuacho", "actor": "Kelvin Elías De la Cruz Quispe", "aFavor": "", "neutro": "X", "enContra": "", "percepcion": "No se opone al proyecto, condicionado a un diálogo continuo y transparente con la comunidad y capital distrital para evitar malentendidos." },
       { "categoria": "II. AUTORIDADES DE LA MUNICIPALIDAD LOCAL, DISTRITAL Y/O DEL ESTADO", "espacio": "Anexo Ayroca", "cargo": "Teniente Gobernador de Ayroca", "actor": "Kelvin Quispe Merino", "aFavor": "X", "neutro": "", "enContra": "", "percepcion": "Apoya el proyecto, considerando que puede generar empleo local y fortalecer el crecimiento económico de los comuneros." }
-    ]
+    ],
+    "tasaAnalfabetismo": 2.22,
+    "totalPoblacion15Mas": 225,
+    "parrafoAISI": "En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP Cahuacho, capital distrital de la jurisdicción homónima, en la provincia de Caravelí, en el departamento de Arequipa. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.",
+    "parrafoSeccion21_aisi_intro_completo": "En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP Cahuacho, capital distrital de la jurisdicción homónima, en la provincia de Caravelí, en el departamento de Arequipa. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas."
   },
   "json": [
     { "ESTE": 660619, "NORTE": 8291215, "ALTITUD": 3599 }

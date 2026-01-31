@@ -1,23 +1,32 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
 import { Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { debugLog } from 'src/app/shared/utils/debug';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 @Component({
-  selector: 'app-seccion14',
-  templateUrl: './seccion14.component.html',
-  styleUrls: ['./seccion14.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion14',
+    templateUrl: './seccion14.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion14Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -65,19 +74,15 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   }
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     protected override autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
   }
 
   override getSectionKey(): string {
@@ -99,7 +104,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -169,7 +174,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     return pref || this.datos.tasaAnalfabetismoTabla || [];
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -180,7 +185,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
@@ -247,7 +252,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     this.calcularPorcentajesNivelEducativo();
     this.calcularPorcentajesTasaAnalfabetismo();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -265,7 +270,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyNivel, datosFiltrados);
+        this.onFieldChange(tablaKeyNivel, datosFiltrados, { refresh: false });
       }
     }
 
@@ -279,7 +284,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
         return !indicador.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyTasa, datosFiltrados);
+        this.onFieldChange(tablaKeyTasa, datosFiltrados, { refresh: false });
       }
     }
   }
@@ -315,7 +320,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = tabla;
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
   }
 
   calcularPorcentajesTasaAnalfabetismo(): void {
@@ -349,7 +354,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = tabla;
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
   }
 
   onNivelEducativoFieldChange(rowIndex: number, field: string, value: any) {
@@ -360,10 +365,11 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
       
       if (field === 'casos') {
         this.calcularPorcentajesNivelEducativo();
+      } else {
+        this.onFieldChange(tablaKey, tabla, { refresh: false });
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -374,7 +380,6 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaNivelEducativo();
     this.calcularPorcentajesNivelEducativo();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -387,10 +392,11 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
       
       if (field === 'casos') {
         this.calcularPorcentajesTasaAnalfabetismo();
+      } else {
+        this.onFieldChange(tablaKey, tabla, { refresh: false });
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -401,7 +407,6 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaTasaAnalfabetismo();
     this.calcularPorcentajesTasaAnalfabetismo();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -426,6 +431,15 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla Nivel Educativo con porcentajes calculados dinámicamente
+   * Cuadro 3.28
+   */
+  getNivelEducativoConPorcentajes(): any[] {
+    const tabla = this.getTablaNivelEducativo();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.28');
+  }
+
   getTasaAnalfabetismoSinTotal(): any[] {
     const tabla = this.getTablaTasaAnalfabetismo();
     if (!tabla || !Array.isArray(tabla)) {
@@ -444,6 +458,16 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
       return sum + casos;
     }, 0);
     return total.toString();
+  }
+
+  /**
+   * Obtiene la tabla Tasa de Analfabetismo con porcentajes calculados dinámicamente
+   * Cuadro 3.29
+   * Nota: Esta tabla usa 'indicador' en lugar de 'categoria' como campo de identificación
+   */
+  getTasaAnalfabetismoConPorcentajes(): any[] {
+    const tabla = this.getTablaTasaAnalfabetismo();
+    return TablePercentageHelper.calcularPorcentajesAnalfabetismo(tabla, '3.29');
   }
   override ngOnDestroy() {
     super.ngOnDestroy();
@@ -490,7 +514,7 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
     const porcentajeSecundaria = this.getPorcentajeSecundaria() || '____';
     const porcentajeSuperiorNoUniversitaria = this.getPorcentajeSuperiorNoUniversitaria() || '____';
     
-    const textoPorDefecto = `En la CC ${grupoAISD}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el ${porcentajePrimaria}. En segundo lugar, se hallan aquellos que cuentan con secundaria (${porcentajeSecundaria}). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un ${porcentajeSuperiorNoUniversitaria}.`;
+    const textoPorDefecto = `En la CC ${grupoAISD}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria, pues representan el ${porcentajePrimaria}. En segundo lugar, se hallan aquellos que cuentan con primaria (${porcentajeSecundaria}). Por otro lado, la categoría minoritaria corresponde a aquellos sin nivel educativo o que solo alcanzaron el inicial, con un ${porcentajeSuperiorNoUniversitaria}.`;
     
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
       return textoPersonalizado
@@ -612,4 +636,5 @@ export class Seccion14Component extends AutoLoadSectionComponent implements OnDe
   }
 
 }
+
 

@@ -1,30 +1,46 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { EducacionService } from 'src/app/core/services/educacion.service';
+import { EducacionService } from 'src/app/core/services/domain/educacion.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { debugLog } from 'src/app/shared/utils/debug';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+// Clean Architecture imports
+import { LoadSeccion28UseCase, UpdateSeccion28DataUseCase, Seccion28ViewModel } from 'src/app/core/application/use-cases';
+import { Seccion28Data } from 'src/app/core/domain/entities';
 
 @Component({
-  selector: 'app-seccion28',
-  templateUrl: './seccion28.component.html',
-  styleUrls: ['./seccion28.component.css']
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        ParagraphEditorComponent,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion28',
+    templateUrl: './seccion28.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion28Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.7';
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private timeouts: number[] = [];
   private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'puestoSaludCpTabla', 'educacionCpTabla', 'nombreIEMayorEstudiantes', 'cantidadEstudiantesIEMayor', 'textoSaludCP', 'textoEducacionCP', 'textoRecreacionCP1', 'textoRecreacionCP2', 'textoRecreacionCP3', 'textoDeporteCP1', 'textoDeporteCP2'];
@@ -41,6 +57,10 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   fotografiasEducacionFormMulti: FotoItem[] = [];
   fotografiasRecreacionFormMulti: FotoItem[] = [];
   fotografiasDeporteFormMulti: FotoItem[] = [];
+
+  // Clean Architecture ViewModel
+  seccion28ViewModel$ = this.loadSeccion28UseCase.execute();
+  seccion28ViewModel?: Seccion28ViewModel;
 
   puestoSaludConfig: TableConfig = {
     tablaKey: 'puestoSaludCpTabla',
@@ -60,20 +80,58 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService,
-    private educacionService: EducacionService
+    private educacionService: EducacionService,
+    // Clean Architecture dependencies
+    private loadSeccion28UseCase: LoadSeccion28UseCase,
+    private updateSeccion28DataUseCase: UpdateSeccion28DataUseCase
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    
+    // Subscribe to ViewModel for Clean Architecture
+    this.seccion28ViewModel$.subscribe(viewModel => {
+      this.seccion28ViewModel = viewModel;
+      this.cdRef.markForCheck();
+    });
+  }
+
+  // Clean Architecture methods
+  updateSeccion28Data(updates: Partial<Seccion28Data>): void {
+    if (this.seccion28ViewModel) {
+      const currentData = this.seccion28ViewModel.data;
+      const updatedData = { ...currentData, ...updates };
+      this.updateSeccion28DataUseCase.execute(updatedData).subscribe(updatedViewModel => {
+        this.seccion28ViewModel = updatedViewModel;
+        this.cdRef.markForCheck();
+      });
+    }
+  }
+
+  // Backward compatibility methods - delegate to Clean Architecture
+  obtenerTextoSalud(): string {
+    return this.seccion28ViewModel?.texts.saludText || this.datos.textoSaludCP || '';
+  }
+
+  obtenerTextoEducacion(): string {
+    return this.seccion28ViewModel?.texts.educacionText || this.datos.textoEducacionCP || '';
+  }
+
+  obtenerTextoRecreacion(): string {
+    return this.seccion28ViewModel?.texts.recreacionText || 
+           [this.datos.textoRecreacionCP1, this.datos.textoRecreacionCP2, this.datos.textoRecreacionCP3]
+           .filter(text => text).join('\n\n') || '';
+  }
+
+  obtenerTextoDeporte(): string {
+    return this.seccion28ViewModel?.texts.deporteText || 
+           [this.datos.textoDeporteCP1, this.datos.textoDeporteCP2]
+           .filter(text => text).join('\n\n') || '';
   }
 
   protected override onInitCustom(): void {
@@ -85,19 +143,19 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasCache();
     if (this.modoFormulario) {
       if (this.seccionId) {
-        setTimeout(() => {
+        this.timeouts.push(window.setTimeout(() => {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
-        }, 0);
+        }, 0));
       }
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this['stateAdapter'].datos$.pipe(takeUntil(this.destroy$)).subscribe(() => {
         if (this.seccionId) {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
         }
       });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this['stateAdapter'].datos$.pipe(takeUntil(this.destroy$)).subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -105,6 +163,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   }
 
   override ngOnDestroy() {
+    this.timeouts.forEach(id => clearTimeout(id));
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -120,7 +179,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
@@ -189,6 +248,35 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
   getPuestoSaludTabla(): any[] {
     const tablaKey = this.getTablaKeyPuestoSalud();
     return this.datos[tablaKey] || this.datos.puestoSaludCpTabla || [];
+  }
+
+  get puestoSaludCpTablaVista(): any[] {
+    return this.getPuestoSaludTabla();
+  }
+
+  get educacionCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyEducacion();
+    return this.datos[tablaKey] || this.datos.educacionCpTabla || [];
+  }
+
+  get columnasPuestoSalud(): any[] {
+    return [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'descripcion', header: 'Descripción', align: 'left' }
+    ];
+  }
+
+  get columnasEducacion(): any[] {
+    return [
+      { key: 'nombreIE', header: 'Nombre de la IE', align: 'left' },
+      { key: 'cantidadEstudiantes', header: 'Cantidad de estudiantes', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ];
+  }
+
+  onTablaUpdated(): void {
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
   }
 
   protected override tieneFotografias(): boolean {
@@ -420,7 +508,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -431,7 +519,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
@@ -555,7 +643,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
-    this.educacionService.obtenerEducacionPorCodigos(codigos).subscribe(
+    this.educacionService.obtenerEducacionPorCodigos(codigos).pipe(takeUntil(this.destroy$)).subscribe(
       (response: any) => {
         if (response.success && response.data && Array.isArray(response.data)) {
           const educacionData = response.data.map((item: any) => ({
@@ -567,8 +655,8 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
           }));
 
           this.datos[tablaKey] = educacionData;
-          this.formularioService.actualizarDato(tablaKey as any, educacionData);
-          this.tableService.calcularPorcentajes(this.datos, { ...this.educacionConfig, tablaKey });
+          this.onFieldChange(tablaKey as any, educacionData, { refresh: false });
+          this.tableFacade.calcularPorcentajes(this.datos, { ...this.educacionConfig, tablaKey });
           this.cdRef.detectChanges();
         }
       },
@@ -595,6 +683,16 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     return filtered.reduce((sum: number, item: any) => sum + (Number(item.cantidadEstudiantes) || 0), 0);
   }
 
+  /**
+   * Obtiene la tabla Educación CP con porcentajes calculados dinámicamente
+   * Cuadro 3.53
+   * Nota: Esta tabla usa 'cantidadEstudiantes' en lugar de 'casos' como campo numérico
+   */
+  getEducacionCpConPorcentajes(): any[] {
+    const tabla = this.educacionCpTablaVista;
+    return TablePercentageHelper.calcularPorcentajesEducacion(tabla, '3.53');
+  }
+
   calcularPorcentajeEducacion(item: any): string {
     const total = this.getTotalEducacion();
     if (total === 0 || !item.cantidadEstudiantes) {
@@ -615,7 +713,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== educacion.length) {
         this.datos[educacionKey] = filtered;
-        this.formularioService.actualizarDato(educacionKey as any, filtered);
+        this.onFieldChange(educacionKey as any, filtered, { refresh: false });
       }
     }
   }
@@ -624,7 +722,7 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyPuestoSalud();
     const tabla = this.datos[tablaKey] || this.datos.puestoSaludCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -660,10 +758,10 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
       
       // Actualizar tanto en this.datos como en el formularioService
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       
       // Sincronizar this.datos con los datos del formularioService
-      const datosNuevos = this.formularioService.obtenerDatos();
+      const datosNuevos = this.projectFacade.obtenerDatos();
       this.datos = { ...datosNuevos };
       
       this.cdRef.detectChanges();
@@ -674,10 +772,10 @@ export class Seccion28Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyEducacion();
     const tabla = this.datos[tablaKey] || this.datos.educacionCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     
     // Sincronizar this.datos con los datos del formularioService
-    const datosNuevos = this.formularioService.obtenerDatos();
+    const datosNuevos = this.projectFacade.obtenerDatos();
     this.datos = { ...datosNuevos };
     
     this.cdRef.detectChanges();

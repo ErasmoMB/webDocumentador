@@ -46,7 +46,7 @@ describe('SectionAccessControlService', () => {
   });
 
   it('allows AISD section when config has active ccpp', (done) => {
-    configSubject.next({ aisd: { nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: ['001'] } });
+    configSubject.next({ aisd: [{ nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: ['001'] }] });
     spyOn(mockGroupValidationService, 'getValidationState').and.returnValue(of({
       config: configSubject.value!,
       isValid: true,

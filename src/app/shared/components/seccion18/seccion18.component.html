@@ -3,53 +3,37 @@
 <div [innerHTML]="obtenerTextoNBIConResaltado()"></div>
 
 <app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.14">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getNbiCCAyrocaSinTotal()">
-            <td class="table-cell"><span class="data-source">{{ item.categoria || '____' }}</span></td>
-            <td class="table-cell"><span class="data-source">{{ item.casos || 0 }}</span></td>
-            <td class="table-cell"><span class="data-calculated">{{ item.porcentaje || 0 }}<span *ngIf="(item.porcentaje || item.porcentaje === 0) && item.porcentaje !== '____'">%</span></span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getNbiCCAyrocaSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalNbiCCAyroca() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getNbiCCAyrocaConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 
 <app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.14">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getNbiDistritoCahuachoSinTotal()">
-            <td class="table-cell"><span class="data-source">{{ item.categoria || '____' }}</span></td>
-            <td class="table-cell"><span class="data-source">{{ item.casos || 0 }}</span></td>
-            <td class="table-cell"><span class="data-calculated">{{ item.porcentaje || 0 }}<span *ngIf="(item.porcentaje || item.porcentaje === 0) && item.porcentaje !== '____'">%</span></span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getNbiDistritoCahuachoSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalNbiDistritoCahuacho() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getNbiDistritoCahuachoConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017</span></p>
 
@@ -69,7 +53,7 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -82,65 +66,63 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field mt-xl">
       <label class="label">Tabla NBI CC Ayroca</label>
       <app-dynamic-table
         [datos]="datos"
+        [sectionId]="seccionId"
         [config]="nbiCCAyrocaConfig"
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con hacinamiento' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
-        [tablaKey]="getTablaKeyNbiCC()"
         [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onNbiCCFieldChange.bind(this)"
         (tableUpdated)="onNbiCCTableUpdated()">
       </app-dynamic-table>
 
-      <div class="table-editor" *ngIf="datos['nbiCCAyrocaTabla'] && datos['nbiCCAyrocaTabla'].length > 0" style="margin-top: 10px;">
-        <table class="editor-table">
-          <tbody>
-            <tr class="total-row">
-              <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-              <td><input type="text" class="table-input" [value]="getTotalNbiCCAyroca()" readonly style="background-color: #f5f5f5;"></td>
-              <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="table-editor mt-sm" *ngIf="datos['nbiCCAyrocaTabla'] && datos['nbiCCAyrocaTabla'].length > 0">
+          <table class="table table--editable editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalNbiCCAyroca()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field mt-xl">
       <label class="label">Tabla NBI Distrito Cahuacho</label>
       <app-dynamic-table
         [datos]="datos"
+        [sectionId]="seccionId"
         [config]="nbiDistritoCahuachoConfig"
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas sin servicios higiénicos' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
         ]"
-        [tablaKey]="getTablaKeyNbiDistrito()"
         [totalKey]="'categoria'"
-        [customFieldChangeHandler]="onNbiDistritoFieldChange.bind(this)"
         (tableUpdated)="onNbiDistritoTableUpdated()">
       </app-dynamic-table>
 
-      <div class="table-editor" *ngIf="datos['nbiDistritoCahuachoTabla'] && datos['nbiDistritoCahuachoTabla'].length > 0" style="margin-top: 10px;">
-        <table class="editor-table">
-          <tbody>
-            <tr class="total-row">
-              <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-              <td><input type="text" class="table-input" [value]="getTotalNbiDistritoCahuacho()" readonly style="background-color: #f5f5f5;"></td>
-              <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="table-editor mt-sm" *ngIf="datos['nbiDistritoCahuachoTabla'] && datos['nbiDistritoCahuachoTabla'].length > 0">
+          <table class="table table--editable editor-table">
+            <tbody>
+              <tr class="total-row">
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalNbiDistritoCahuacho()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field mt-lg">
       <label class="label">Fotografías de NBI</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

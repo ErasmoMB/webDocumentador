@@ -1,23 +1,30 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 
 @Component({
-  selector: 'app-seccion19',
-  templateUrl: './seccion19.component.html',
-  styleUrls: ['./seccion19.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion19',
+    templateUrl: './seccion19.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion19Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -38,19 +45,15 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
   }
 
   protected getSectionKey(): string {
@@ -69,7 +72,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -81,10 +84,31 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     return prefijo ? `autoridades${prefijo}` : 'autoridades';
   }
 
+  /**
+   * Helper para verificar si la tabla de autoridades tiene contenido real
+   */
+  private tieneContenidoRealAutoridades(tabla: any[]): boolean {
+    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return false;
+    return tabla.some(item => {
+      const organizacion = item.organizacion?.toString().trim() || '';
+      const cargo = item.cargo?.toString().trim() || '';
+      const nombre = item.nombre?.toString().trim() || '';
+      return organizacion !== '' || cargo !== '' || nombre !== '';
+    });
+  }
+
   getTablaAutoridades(): any[] {
-    const tabaKey = this.getTablaKeyAutoridades();
-    const tabla = this.datos[tabaKey] || this.datos.autoridades || [];
-    return Array.isArray(tabla) ? tabla : [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaConPrefijo = prefijo ? this.datos[`autoridades${prefijo}`] : null;
+    
+    // Usar tabla con prefijo solo si tiene contenido real
+    if (tablaConPrefijo && this.tieneContenidoRealAutoridades(tablaConPrefijo)) {
+      return Array.isArray(tablaConPrefijo) ? tablaConPrefijo : [];
+    }
+    
+    // Fallback a tabla sin prefijo
+    const tablaSinPrefijo = this.datos.autoridades || [];
+    return Array.isArray(tablaSinPrefijo) ? tablaSinPrefijo : [];
   }
 
   getFieldIdTextoOrganizacion(): string {
@@ -100,7 +124,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -154,7 +178,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -165,7 +189,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.imageService.saveImages(
       this.seccionId,
@@ -243,7 +267,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyAutoridades();
     const tabla = this.getTablaAutoridades();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -296,4 +320,5 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
     return clon;
   }
 }
+
 

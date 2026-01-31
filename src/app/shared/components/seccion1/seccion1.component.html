@@ -29,23 +29,9 @@
         los siguientes:</p>
 </ng-template>
 <ul>
-    <li class="list-item" *ngIf="datos.objetivoSeccion1_1; else objetivo1Default">
-        {{ datos.objetivoSeccion1_1 }}
+    <li class="list-item" *ngFor="let objetivo of getObjetivosParaVista()">
+        <span [innerHTML]="formatearObjetivo(objetivo)"></span>
     </li>
-    <ng-template #objetivo1Default>
-        <li class="list-item">Describir los aspectos demográficos,
-            sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de
-            influencia social del proyecto de exploración minera <span [appDataSource]="'manual'" [fieldName]="'projectName'">{{ normalizarNombreProyecto(datos.projectName, false) || '____' }}</span>.</li>
-    </ng-template>
-    <li class="list-item" *ngIf="datos.objetivoSeccion1_2; else objetivo2Default">
-        {{ datos.objetivoSeccion1_2 }}
-    </li>
-    <ng-template #objetivo2Default>
-        <li class="list-item">Brindar información básica de los
-            poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base
-            para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración
-            y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.</li>
-    </ng-template>
 </ul>
 
 <app-image-upload
@@ -82,25 +68,37 @@
       (valueChange)="onFieldChange('parrafoSeccion1_4', $event)">
     </app-paragraph-editor>
 
-    <app-paragraph-editor
-      fieldId="objetivoSeccion1_1"
-      label="Objetivo 1"
-      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-      [rows]="3"
-      [value]="obtenerTextoObjetivo1()"
-      (valueChange)="onFieldChange('objetivoSeccion1_1', $event)">
-    </app-paragraph-editor>
+    <!-- Objetivos Dinámicos -->
+    <div class="form-group-section mt-lg">
+      <div class="dynamic-list-header">
+        <h4 class="section-title">Objetivos de la Línea Base Social</h4>
+        <button type="button" class="btn btn--add" (click)="agregarObjetivo()">
+          ➕ Agregar
+        </button>
+      </div>
+      
+      <div *ngFor="let objetivo of objetivos; let i = index; trackBy: trackByIndex" class="dynamic-list-item">
+        <div class="dynamic-list-item-header">
+          <label class="label">Objetivo {{ i + 1 }}</label>
+          <button 
+            type="button" 
+            class="btn btn--remove" 
+            (click)="eliminarObjetivo(i)"
+            *ngIf="objetivos.length > 1">
+            🗑️ Eliminar
+          </button>
+        </div>
+        <textarea 
+          class="input"
+          [ngModel]="objetivo"
+          (ngModelChange)="actualizarObjetivo(i, $event)"
+          (blur)="guardarObjetivoOnBlur()"
+          rows="3"
+          placeholder="Escriba el objetivo..."></textarea>
+      </div>
+    </div>
 
-    <app-paragraph-editor
-      fieldId="objetivoSeccion1_2"
-      label="Objetivo 2"
-      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-      [rows]="4"
-      [value]="obtenerTextoObjetivo2()"
-      (valueChange)="onFieldChange('objetivoSeccion1_2', $event)">
-    </app-paragraph-editor>
-
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field mt-lg">
       <label class="label">Fotografías</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

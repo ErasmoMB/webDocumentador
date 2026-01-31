@@ -1,3 +1,8 @@
+<!-- ✅ REFACTORIZADO: Seccion2Component contiene vista y formulario básico -->
+<!-- La vista completa está en Seccion2ViewComponent (usa este componente) -->
+<!-- El formulario completo está en Seccion2FormComponent (usa este componente) -->
+
+<!-- VISTA (cuando modoFormulario = false) -->
 <div *ngIf="!modoFormulario">
 <h3>3.1.2 Delimitación de las áreas de influencia social</h3>
 <div *ngIf="datos.parrafoSeccion2_introduccion; else introduccionDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion2_introduccion)"></div>
@@ -19,18 +24,44 @@
         influencia social directa e indirecta:</p>
 </ng-template>
 
+<!-- ✅ A. AISD - Grupos Identificados Automáticamente del JSON -->
 <h4>A. Áreas de influencia social directa (AISD)</h4>
-<div *ngIf="datos.parrafoSeccion2_aisd_completo; else aisdCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion2_aisd_completo)"></div>
-<ng-template #aisdCompletoDefault>
-    <p class="text-justify">El Área de influencia social directa (AISD) se delimita en torno a <span *ngIf="tieneUnaComunidad()">la comunidad campesina (CC)</span><span *ngIf="tieneMultiplesComunidades()">las comunidades campesinas (CC)</span> <span [appDataSource]="'section'" [fieldName]="'comunidadesCampesinas'">{{ obtenerTextoComunidades() || '____' }}</span><span *ngIf="tieneUnaComunidad()">, cuya área comunal se encuentra predominantemente en el distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || '____' }}</span> y en menor proporción en los distritos de <span [appDataSource]="'manual'" [fieldName]="'aisdComponente1'">{{ datos.aisdComponente1 || '____' }}</span> y de <span [appDataSource]="'manual'" [fieldName]="'aisdComponente2'">{{ datos.aisdComponente2 || '____' }}</span>, pertenecientes al departamento de <span [appDataSource]="'section'" [fieldName]="'departamentoSeleccionado'">{{ datos.departamentoSeleccionado || '____' }}</span></span><span *ngIf="tieneMultiplesComunidades()">, cuyas áreas comunales se encuentran predominantemente en el distrito de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || '____' }}</span> y en menor proporción en los distritos de <span [appDataSource]="'manual'" [fieldName]="'aisdComponente1'">{{ datos.aisdComponente1 || '____' }}</span> y de <span [appDataSource]="'manual'" [fieldName]="'aisdComponente2'">{{ datos.aisdComponente2 || '____' }}</span>, pertenecientes al departamento de <span [appDataSource]="'section'" [fieldName]="'departamentoSeleccionado'">{{ datos.departamentoSeleccionado || '____' }}</span></span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. {{ obtenerTextoComunidadesPosesion() || 'Esta comunidad posee' }} y gestiona<span *ngIf="tieneMultiplesComunidades()">n</span> las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto.</p>
-    <p class="text-justify">La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de {{ obtenerTextoComunidadesSingular() || 'esta comunidad' }} requiere<span *ngIf="tieneMultiplesComunidades()">n</span> una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de <span *ngIf="tieneUnaComunidad()">la comunidad</span><span *ngIf="tieneMultiplesComunidades()">las comunidades</span>.</p>
-    <p class="text-justify">Los impactos directos en {{ obtenerPrefijoCCImpactos() }}<span [appDataSource]="'section'" [fieldName]="'comunidadesCampesinas'">{{ obtenerTextoComunidadesImpactos() || '____' }}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y <span *ngIf="tieneUnaComunidad()">la comunidad</span><span *ngIf="tieneMultiplesComunidades()">las comunidades</span> promoverá<span *ngIf="tieneMultiplesComunidades()">n</span> un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de {{ obtenerPrefijoCCFinal() }}<span [appDataSource]="'section'" [fieldName]="'comunidadesCampesinas'">{{ obtenerTextoComunidadesFinal() || '____' }}</span>.</p>
+<div *ngIf="comunidadesCampesinas.length > 0; else sinAISD" class="grupos-aisd">
+  <div *ngFor="let comunidad of comunidadesCampesinas; let i = index" class="grupo-card">
+    <h5>{{ comunidad.id }}. {{ comunidad.nombre }}</h5>
+    <p class="centros-poblados" *ngIf="comunidad.centrosPobladosSeleccionados.length > 0">
+      <strong>Centros poblados:</strong> {{ comunidad.centrosPobladosSeleccionados.join(', ') }}
+    </p>
+    <p class="sin-centros" *ngIf="comunidad.centrosPobladosSeleccionados.length === 0">
+      <em>No hay centros poblados asignados</em>
+    </p>
+  </div>
+  <button type="button" class="btn btn--secondary" (click)="modoFormulario = true">
+    ➕ Agregar Otra Comunidad Campesina
+  </button>
+</div>
+<ng-template #sinAISD>
+  <p class="text-muted">Cargue el JSON de centros poblados en la Sección 1 para generar automáticamente las áreas de influencia.</p>
 </ng-template>
+
+<!-- ✅ B. AISI - Grupos Identificados de Valores DIST Únicos -->
 <h4>B. Áreas de influencia social indirecta (AISI)</h4>
-<div *ngIf="datos.parrafoSeccion2_aisi_completo; else aisiCompletoDefault" class="text-justify" [innerHTML]="formatearParrafo(datos.parrafoSeccion2_aisi_completo)"></div>
-<ng-template #aisiCompletoDefault>
-    <p class="text-justify">El Área de influencia social indirecta (AISI) se delimita en torno a <span *ngIf="obtenerDistritosSeleccionadosAISI().length === 1">la capital distrital de la jurisdicción de <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span></span><span *ngIf="obtenerDistritosSeleccionadosAISI().length > 1">las capitales distritales de las jurisdicciones de <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span></span>. <span *ngIf="obtenerDistritosSeleccionadosAISI().length === 1">Esta localidad se considera dentro del AISI debido a su función como centro administrativo y político de su respectivo distrito. Como capital distrital, el Centro Poblado (CP) <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span> es un punto focal para la interacción con las autoridades locales, quienes jugarán un papel crucial en la gestión y supervisión de las actividades del Proyecto. Además, la adquisición de bienes y servicios esporádicos en este centro poblado será esencial para el soporte logístico, lo que justifica su inclusión en el AISI.</span><span *ngIf="obtenerDistritosSeleccionadosAISI().length > 1">Estas localidades se consideran dentro del AISI debido a su función como centros administrativos y políticos de sus respectivos distritos. Como capitales distritales, los Centros Poblados (CP) de <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span> son puntos focales para la interacción con las autoridades locales, quienes jugarán un papel crucial en la gestión y supervisión de las actividades del Proyecto. Además, la adquisición de bienes y servicios esporádicos en estos centros poblados será esencial para el soporte logístico, lo que justifica su inclusión en el AISI.</span></p>
-    <p class="text-justify">La delimitación también se basa en la necesidad de establecer un diálogo continuo y efectivo con las autoridades políticas locales en <span *ngIf="obtenerDistritosSeleccionadosAISI().length === 1">el distrito de <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span></span><span *ngIf="obtenerDistritosSeleccionadosAISI().length > 1">los distritos de <span [appDataSource]="'section'" [fieldName]="'grupoAISI'">{{ obtenerTextoAISI() || '____' }}</span></span>. Esta interacción es vital para asegurar que las operaciones del Proyecto sean transparentes y alineadas con las normativas locales y las expectativas de la población. Asimismo, la compra esporádica de suministros y la contratación de servicios en <span *ngIf="obtenerDistritosSeleccionadosAISI().length === 1">este centro poblado</span><span *ngIf="obtenerDistritosSeleccionadosAISI().length > 1">estos centros poblados</span> contribuirá al dinamismo económico de <span *ngIf="obtenerDistritosSeleccionadosAISI().length === 1">la capital distrital</span><span *ngIf="obtenerDistritosSeleccionadosAISI().length > 1">las capitales distritales</span>, generando beneficios indirectos para esta población. De esta manera, la delimitación del AISI considera tanto la dimensión administrativa y política como la económica, garantizando un enfoque integral y sostenible en la implementación del Proyecto.</p>
+<div *ngIf="distritosAISI.length > 0; else sinAISI" class="grupos-aisi">
+  <div *ngFor="let distrito of distritosAISI; let i = index" class="grupo-card">
+    <h5>{{ distrito.id }}. {{ distrito.nombre }}</h5>
+    <p class="centros-poblados" *ngIf="distrito.centrosPobladosSeleccionados.length > 0">
+      <strong>Centros poblados:</strong> {{ distrito.centrosPobladosSeleccionados.join(', ') }}
+    </p>
+    <p class="sin-centros" *ngIf="distrito.centrosPobladosSeleccionados.length === 0">
+      <em>No hay centros poblados asignados</em>
+    </p>
+  </div>
+  <button type="button" class="btn btn--secondary" (click)="modoFormulario = true">
+    ➕ Agregar Otro Distrito
+  </button>
+</div>
+<ng-template #sinAISI>
+  <p class="text-muted">Cargue el JSON de centros poblados en la Sección 1 para generar automáticamente los distritos.</p>
 </ng-template>
 
 <app-image-upload
@@ -45,56 +76,61 @@
 </app-image-upload>
 </div>
 
+<!-- FORMULARIO BÁSICO (cuando modoFormulario = true) -->
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
-  <div class="form-group-section">
-    <!-- Sección de Distritos AISI -->
+    <div class="form-group-section">
+      <div class="form-header">
+        <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
+        <button type="button" class="btn btn--primary" (click)="llenarDatosPrueba()">
+          🔄 Llenar Datos de Prueba
+        </button>
+      </div>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion2_introduccion"
+        label="Introducción - Delimitación de Áreas"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="6"
+        [value]="obtenerTextoSeccion2Introduccion()"
+        (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
+      </app-paragraph-editor>
 
-    <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
-    
-    <app-paragraph-editor
-      fieldId="parrafoSeccion2_introduccion"
-      label="Introducción - Delimitación de Áreas"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="6"
-      [value]="obtenerTextoSeccion2Introduccion()"
-      (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
-    </app-paragraph-editor>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion2_aisd_completo"
+        label="A. Áreas de influencia social directa (AISD) - Texto Completo"
+        hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="10"
+        [value]="obtenerTextoSeccion2AISDCompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
+      </app-paragraph-editor>
 
-    <app-paragraph-editor
-      fieldId="parrafoSeccion2_aisd_completo"
-      label="A. Áreas de influencia social directa (AISD) - Texto Completo"
-      hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="10"
-      [value]="obtenerTextoSeccion2AISDCompleto()"
-      (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
-    </app-paragraph-editor>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion2_aisi_completo"
+        label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
+        hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoSeccion2AISICompleto()"
+        (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
+      </app-paragraph-editor>
 
-    <app-paragraph-editor
-      fieldId="parrafoSeccion2_aisi_completo"
-      label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
-      hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="8"
-      [value]="obtenerTextoSeccion2AISICompleto()"
-      (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
-    </app-paragraph-editor>
-
-    <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías</label>
-      <app-image-upload
-        [fotografias]="fotografiasFormMulti"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Fotografía de la sección 2"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Sección 2"
-        fuenteDefault="GEADES, 2024"
-        [requerido]="false"
-        (fotografiasChange)="onFotografiasChange($event)">
-      </app-image-upload>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías</label>
+        <app-image-upload
+          [fotografias]="fotografiasSeccion2 || []"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          [key]="imageUploadKey"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Fotografía de la sección 2"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Sección 2"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
     </div>
   </div>
-</div>

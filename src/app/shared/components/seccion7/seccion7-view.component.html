@@ -1,0 +1,248 @@
+<h5>A.1.3. Indicadores y distribución de la Población Económicamente Activa por rama de actividad, tipo de empleo, tasas e ingresos.</h5>
+
+<p class="section-subtitle"><strong>a. Población en edad de Trabajar (PET)</strong></p>
+<p class="text-justify" [innerHTML]="obtenerTextoSeccion7PETCompletoConResaltado()"></p>
+
+<app-table-wrapper [title]="(datos.cuadroTituloPET || 'PET según grupos de edad') + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of getPETConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+            <td class="table-cell">
+                <span *ngIf="item.categoria && item.categoria !== '____'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'manual'">{{ item.categoria }}</span>
+                </span>
+                <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'manual'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
+                </span>
+                <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
+                </span>
+                <span *ngIf="!item.porcentaje">____</span>
+            </td>
+        </tr>
+        <tr *ngIf="getPETConPorcentajes().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">Fuente: <span *ngIf="datos.cuadroFuentePET && datos.cuadroFuentePET !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePET }}</span><span *ngIf="!datos.cuadroFuentePET || datos.cuadroFuentePET === '____'" appDataHighlight="manual">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasPEAVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p class="text-justify" [innerHTML]="obtenerTextoDetalePEAConResaltado()"></p>
+
+<p class="section-subtitle"><strong>b. Población Económicamente Activa (PEA)</strong></p>
+<p class="text-justify" [innerHTML]="obtenerTextoDefinicionPEAConResaltado()"></p>
+
+<app-table-wrapper [title]="(datos.cuadroTituloPEA || 'Conformación de la PEA y No PEA, según sexo') + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" [sectionId]="seccionId">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categorías</th>
+            <th colspan="2" class="table-header">Sexo - Hombres</th>
+            <th colspan="2" class="table-header">Sexo - Mujeres</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+        <tr>
+            <th class="table-header"></th>
+            <th class="table-header">Hombres</th>
+            <th class="table-header">Porcentaje</th>
+            <th class="table-header">Mujeres</th>
+            <th class="table-header">Porcentaje</th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of getPEAConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+            <td class="table-cell">
+                <span *ngIf="item.categoria && item.categoria !== '____'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
+                </span>
+                <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.hombres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.hombres }}</span>
+                </span>
+                <span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentajeHombres" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeHombres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeHombres }}</span>
+                </span>
+                <span *ngIf="!item.porcentajeHombres">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.mujeres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.mujeres }}</span>
+                </span>
+                <span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentajeMujeres" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeMujeres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeMujeres }}</span>
+                </span>
+                <span *ngIf="!item.porcentajeMujeres">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
+                </span>
+                <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
+                </span>
+                <span *ngIf="!item.porcentaje">____</span>
+            </td>
+        </tr>
+        <tr *ngIf="getPEAConPorcentajes().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">Fuente: <span appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+
+<p class="text-justify" [innerHTML]="obtenerTextoAnalisisPEAConResaltado()"></p>
+
+<p class="section-subtitle"><strong>b.1. Situación del empleo (independiente o dependiente)</strong></p>
+<div class="text-justify" [innerHTML]="obtenerTextoSeccion7SituacionEmpleoCompletoConResaltado()"></div>
+
+<p class="section-subtitle"><strong>b.2. Ingresos de la población</strong></p>
+<div class="text-justify" [innerHTML]="obtenerTextoSeccion7IngresosCompletoConResaltado()"></div>
+
+<p class="section-subtitle"><strong>b.3. Índice de desempleo</strong></p>
+<p class="text-justify" [innerHTML]="obtenerTextoIndiceDesempleoConResaltado()"></p>
+
+<app-table-wrapper [title]="(datos.cuadroTituloPEAOcupada || 'Conformación de la PEA Ocupada y Desocupada, según sexo') + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" [sectionId]="seccionId">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Categorías</th>
+            <th colspan="2" class="table-header">Sexo - Hombres</th>
+            <th colspan="2" class="table-header">Sexo - Mujeres</th>
+            <th class="table-header">Casos</th>
+            <th class="table-header">Porcentaje</th>
+        </tr>
+        <tr>
+            <th class="table-header"></th>
+            <th class="table-header">Hombres</th>
+            <th class="table-header">Porcentaje</th>
+            <th class="table-header">Mujeres</th>
+            <th class="table-header">Porcentaje</th>
+            <th class="table-header"></th>
+            <th class="table-header"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of getPEAOcupadaConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+            <td class="table-cell">
+                <span *ngIf="item.categoria && item.categoria !== '____'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
+                </span>
+                <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.hombres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.hombres }}</span>
+                </span>
+                <span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentajeHombres" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeHombres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeHombres }}</span>
+                </span>
+                <span *ngIf="!item.porcentajeHombres">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.mujeres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.mujeres }}</span>
+                </span>
+                <span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentajeMujeres" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeMujeres }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeMujeres }}</span>
+                </span>
+                <span *ngIf="!item.porcentajeMujeres">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
+                </span>
+                <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+            </td>
+            <td class="table-cell">
+                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
+                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
+                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
+                </span>
+                <span *ngIf="!item.porcentaje">____</span>
+            </td>
+        </tr>
+        <tr *ngIf="getPEAOcupadaConPorcentajes().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">Fuente: <span *ngIf="datos.cuadroFuentePEAOcupada && datos.cuadroFuentePEAOcupada !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePEAOcupada }}</span><span *ngIf="!datos.cuadroFuentePEAOcupada || datos.cuadroFuentePEAOcupada === '____'" appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+
+<p class="text-justify" [innerHTML]="obtenerTextoAnalisisOcupacionConResaltado()"></p>

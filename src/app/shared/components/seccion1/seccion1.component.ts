@@ -1,20 +1,42 @@
-import { Component, OnDestroy, Input, SimpleChanges, OnInit } from '@angular/core';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { Component, OnDestroy, Input, SimpleChanges, OnInit, ChangeDetectionStrategy, Injector } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { DataOrchestratorService } from 'src/app/core/services/orchestration/data-orchestrator.service';
+import { GruposService } from 'src/app/core/services/domain/grupos.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
+import { from } from 'rxjs';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
+import { DataSourceDirective } from '../../directives/data-source.directive';
+import { DataHighlightDirective } from '../../directives/data-highlight.directive';
+import { TableNumberDirective } from '../../directives/table-number.directive';
+import { PhotoNumberDirective } from '../../directives/photo-number.directive';
+import { MockDataService } from '../../../core/services/infrastructure/mock-data.service';
+// ProjectState Integration
+import { UIStoreService, Selectors } from 'src/app/core/state/ui-store.contract';
+import { 
+  createJSONProcessingBatch, 
+  validateJSONStructure, 
+  getJSONStats,
+  NormalizedJSONResult 
+} from 'src/app/core/services/data/json-normalizer';
 
 @Component({
-  selector: 'app-seccion1',
-  templateUrl: './seccion1.component.html',
-  styleUrls: ['./seccion1.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion1',
+    templateUrl: './seccion1.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion1Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.1';
@@ -22,15 +44,27 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   
   override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
   
+  // ✅ ACTIVAR SINCRONIZACIÓN REACTIVA PARA SINCRONIZACIÓN PERFECTA
+  override useReactiveSync: boolean = true;
+  
   fotografiasSeccion1: FotoItem[] = [];
   private subscription?: Subscription;
   private stateSubscription?: Subscription;
+  private subscriptions: Subscription[] = [];
+
+  datosMock: any = {};
+  
+  // ✅ Array de objetivos dinámicos
+  objetivos: string[] = [];
+  
+  // Objetivos por defecto
+  private readonly objetivoDefault1 = 'Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera {projectName}.';
+  private readonly objetivoDefault2 = 'Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.';
   
   override watchedFields: string[] = [
     'parrafoSeccion1_principal',
     'parrafoSeccion1_4',
-    'objetivoSeccion1_1',
-    'objetivoSeccion1_2',
+    'objetivosSeccion1',
     'projectName',
     'distritoSeleccionado',
     'provinciaSeleccionada',
@@ -38,25 +72,187 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   ];
 
   constructor(
-    formularioService: FormularioService,
     private textNormalization: TextNormalizationService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private stateService: StateService
+    injector: Injector,
+    private stateAdapter: ReactiveStateAdapter,
+    private orchestrator: DataOrchestratorService,
+    private mockDataService: MockDataService,
+    private store: UIStoreService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(cdRef, injector);
   }
 
   protected override onInitCustom(): void {
+    // ✅ NO cargar mock data automáticamente - los datos vienen de persistencia
+    // this.loadData(); -- Desactivado para evitar sobrescribir datos persistidos
+    
+    // Inicializar objetivos desde datos guardados o por defecto
+    this.inicializarObjetivos();
+    
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
+        // ✅ Actualizar datos desde ProjectStateFacade para sincronización inmediata
+        this.actualizarDatos();
         this.cargarFotografias();
+        // ✅ En modo vista, siempre sincronizar objetivos desde datos persistidos
+        // Esto asegura que la vista refleje cambios del formulario
         this.cdRef.detectChanges();
       });
     }
+  }
+
+  private inicializarObjetivos(): void {
+    // Primero verificar si hay objetivos guardados como array
+    if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
+      this.objetivos = [...this.datos.objetivosSeccion1];
+      return;
+    }
+    
+    // Migrar desde campos antiguos si existen
+    const objetivosLegacy: string[] = [];
+    if (this.datos.objetivoSeccion1_1) {
+      objetivosLegacy.push(this.datos.objetivoSeccion1_1);
+    }
+    if (this.datos.objetivoSeccion1_2) {
+      objetivosLegacy.push(this.datos.objetivoSeccion1_2);
+    }
+    
+    if (objetivosLegacy.length > 0) {
+      this.objetivos = objetivosLegacy;
+      // Guardar en nuevo formato
+      this.onFieldChange('objetivosSeccion1', this.objetivos);
+      return;
+    }
+    
+    // Si no hay datos, usar objetivos por defecto
+    if (this.objetivos.length === 0) {
+      this.objetivos = [
+        this.getObjetivoDefault(0),
+        this.getObjetivoDefault(1)
+      ];
+    }
+  }
+
+  private getObjetivoDefault(index: number): string {
+    const proyecto = this.datos.projectName || '____';
+    const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto, false);
+    
+    if (index === 0) {
+      return this.objetivoDefault1.replace('{projectName}', proyectoNormalizado);
+    }
+    return this.objetivoDefault2;
+  }
+
+  agregarObjetivo(): void {
+    this.objetivos = [...this.objetivos, ''];
+    this.guardarObjetivos();
+    // ✅ Usar setTimeout para evitar interferencias con otros bindings
+    setTimeout(() => this.cdRef.detectChanges(), 0);
+  }
+
+  eliminarObjetivo(index: number): void {
+    if (this.objetivos.length > 1) {
+      this.objetivos = this.objetivos.filter((_, i) => i !== index);
+      this.guardarObjetivos();
+      // ✅ Usar setTimeout para evitar interferencias con otros bindings
+      setTimeout(() => this.cdRef.detectChanges(), 0);
+    }
+  }
+
+  // ✅ Solo actualiza el valor local, NO guarda (para evitar lag al escribir)
+  actualizarObjetivo(index: number, valor: string): void {
+    if (index >= 0 && index < this.objetivos.length) {
+      this.objetivos[index] = valor;
+      // NO llamar a guardarObjetivos() aquí - se hará on blur
+    }
+  }
+
+  // ✅ Guardar cuando el usuario sale del campo (blur)
+  guardarObjetivoOnBlur(): void {
+    this.guardarObjetivos();
+    // ✅ Usar setTimeout para evitar interferencias con otros bindings
+    setTimeout(() => this.cdRef.detectChanges(), 0);
+  }
+
+  // ✅ TrackBy más estable para evitar problemas de re-renderizado
+  trackByIndex(index: number, item: string): string {
+    return `${index}-${item?.substring(0, 10) || 'empty'}`;
+  }
+
+  private guardarObjetivos(): void {
+    // ✅ Crear copia profunda de los objetivos actuales
+    const objetivosACopiar = this.objetivos.map(o => o);
+
+    // ✅ Guardar en el estado SIN refresh para evitar que actualizarDatos() sobrescriba
+    // los cambios locales con datos potencialmente desactualizados del facade
+    this.onFieldChange('objetivosSeccion1', objetivosACopiar, { refresh: false });
+
+    // ✅ NO sincronizar inmediatamente con this.datos para evitar interferencias
+    // con otros campos del formulario. Dejar que el sistema de persistencia maneje esto.
+  }
+
+  getObjetivosParaVista(): string[] {
+    // ✅ En modo VISTA: leer siempre de this.datos (fuente de verdad persistida)
+    // En modo FORMULARIO: usar this.objetivos (para edición fluida)
+    
+    if (!this.modoFormulario) {
+      // MODO VISTA: leer de datos persistidos
+      if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
+        return (this.datos.objetivosSeccion1 as string[]).filter((o: string) => o && o.trim() !== '');
+      }
+    } else {
+      // MODO FORMULARIO: usar array local si existe
+      if (this.objetivos && this.objetivos.length > 0) {
+        const objetivosNoVacios = this.objetivos.filter((o: string) => o && o.trim() !== '');
+        if (objetivosNoVacios.length > 0) {
+          return objetivosNoVacios;
+        }
+      }
+    }
+    
+    // Fallback: Si hay objetivos guardados en datos, usarlos
+    if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
+      return this.datos.objetivosSeccion1;
+    }
+    
+    // Compatibilidad con formato antiguo
+    const objetivos: string[] = [];
+    if (this.datos.objetivoSeccion1_1) {
+      objetivos.push(this.datos.objetivoSeccion1_1);
+    } else {
+      objetivos.push(this.getObjetivoDefault(0));
+    }
+    if (this.datos.objetivoSeccion1_2) {
+      objetivos.push(this.datos.objetivoSeccion1_2);
+    } else {
+      objetivos.push(this.getObjetivoDefault(1));
+    }
+    
+    return objetivos;
+  }
+
+  formatearObjetivo(objetivo: string): string {
+    if (!objetivo) return '';
+    // Resaltar el nombre del proyecto si aparece
+    const proyecto = this.datos.projectName;
+    if (proyecto && objetivo.includes(proyecto)) {
+      return objetivo.replace(
+        proyecto, 
+        `<span class="data-manual has-data">${proyecto}</span>`
+      );
+    }
+    return objetivo;
+  }
+
+  private loadData(): void {
+    // ✅ Este método ahora solo se usa para el botón "Llenar Datos"
+    // NO se ejecuta automáticamente al iniciar
+    const datosSubscription = from(this.mockDataService.getCapitulo3Datos()).subscribe(datos => {
+      this.datosMock = datos;
+      this.cdRef.detectChanges();
+    });
+    this.subscriptions.push(datosSubscription);
   }
 
   override ngOnDestroy() {
@@ -66,6 +262,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    this.subscriptions.forEach(sub => sub.unsubscribe());
     super.ngOnDestroy();
   }
 
@@ -79,7 +276,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     let hayCambios = false;
     let necesitaRecargar = false;
     
@@ -134,35 +331,6 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     return this.textNormalization.capitalizarTexto(texto);
   }
 
-  cargarFotografias(): void {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    const fotos = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      groupPrefix
-    );
-    this.fotografiasSeccion1 = [...fotos];
-    this.fotografiasCache = [...fotos];
-    this.cdRef.markForCheck();
-  }
-
-  onFotografiasChange(fotografias: FotoItem[]) {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    
-    this.imageService.saveImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      fotografias,
-      groupPrefix
-    );
-    
-    this.fotografiasSeccion1 = [...fotografias];
-    this.fotografiasCache = [...fotografias];
-    this.fotografiasFormMulti = [...fotografias];
-    
-    this.cdRef.detectChanges();
-  }
-
   obtenerTextoParrafoPrincipal(): string {
     if (this.datos.parrafoSeccion1_principal) {
       return this.datos.parrafoSeccion1_principal;
@@ -184,25 +352,6 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     return 'Los objetivos de la presente línea de base social (LBS) son los siguientes:';
   }
 
-  obtenerTextoObjetivo1(): string {
-    if (this.datos.objetivoSeccion1_1) {
-      return this.datos.objetivoSeccion1_1;
-    }
-    
-    const proyecto = this.datos.projectName || '____';
-    const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto, false);
-    
-    return `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera ${proyectoNormalizado}.`;
-  }
-
-  obtenerTextoObjetivo2(): string {
-    if (this.datos.objetivoSeccion1_2) {
-      return this.datos.objetivoSeccion1_2;
-    }
-    
-    return 'Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.';
-  }
-
   onJSONFileSelected(event: any) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -213,32 +362,63 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     reader.onload = (e: any) => {
       try {
         const jsonContent = JSON.parse(e.target.result);
-        const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSON(jsonContent, file.name);
         
-        this.formularioService.guardarJSON(data);
-        this.formularioService.actualizarDato('centrosPobladosJSON', data);
-        this.formularioService.actualizarDato('jsonCompleto', jsonCompleto);
-        this.formularioService.actualizarDato('geoInfo', geoInfo);
-        this.formularioService.actualizarDato('jsonFileName', fileName);
+        // ===== FASE 1: ProjectState como fuente PRIMARIA =====
+        // Validar estructura JSON antes de procesar
+        const validation = validateJSONStructure(jsonContent);
+        if (!validation.valid) {
+          console.warn('[Seccion1] JSON validation failed:', validation.error);
+          alert(validation.error || 'Error al procesar el archivo JSON. Verifique el formato.');
+          return;
+        }
+
+        // Crear BatchCommand para ProjectState
+        const { batch, result } = createJSONProcessingBatch(jsonContent, {
+          fileName: file.name,
+          transactionId: `json_upload_${Date.now()}`
+        });
+
+        if (batch) {
+          // DISPATCH al ProjectState (FUENTE PRIMARIA)
+          this.store.dispatch(batch);
+          
+          // ✅ CRÍTICO: Inicializar árbol de secciones después de cargar JSON
+          // Esto genera las secciones dinámicas a.1, a.2, b.1, b.2 etc.
+          this.projectFacade.initializeSectionsTree();
+          
+          const stats = getJSONStats(result);
+          console.log(`[Seccion1] JSON procesado via ProjectState: ${stats.totalCCPP} CCPP, ${stats.totalGroups} grupos (Formato ${stats.format})`);
+        }
+
+        // ===== FALLBACK: Legacy para compatibilidad temporal =====
+        // Mantener sync con legacy hasta que toda la UI migre
+        const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSONLegacy(jsonContent, file.name, result);
+        
+        // Persistir centros poblados usando onFieldChange (que internamente usa projectFacade)
+        this.onFieldChange('centrosPobladosJSON', data);
+        this.onFieldChange('jsonCompleto', jsonCompleto);
+        this.onFieldChange('geoInfo', geoInfo);
+        this.onFieldChange('jsonFileName', fileName);
         
         if (comunidadesCampesinas && comunidadesCampesinas.length > 0) {
-          this.formularioService.actualizarDato('comunidadesCampesinas', comunidadesCampesinas);
+          this.onFieldChange('comunidadesCampesinas', comunidadesCampesinas);
         }
         
         if (geoInfo.DPTO) {
-          this.formularioService.actualizarDato('departamentoSeleccionado', geoInfo.DPTO);
+          this.onFieldChange('departamentoSeleccionado', geoInfo.DPTO);
         }
         if (geoInfo.PROV) {
-          this.formularioService.actualizarDato('provinciaSeleccionada', geoInfo.PROV);
+          this.onFieldChange('provinciaSeleccionada', geoInfo.PROV);
         }
         if (geoInfo.DIST) {
-          this.formularioService.actualizarDato('distritoSeleccionado', geoInfo.DIST);
+          this.onFieldChange('distritoSeleccionado', geoInfo.DIST);
         }
         
         this.actualizarDatos();
         this.cdRef.detectChanges();
         
       } catch (error) {
+        console.error('[Seccion1] Error processing JSON:', error);
         alert('Error al procesar el archivo JSON. Verifique el formato.');
       }
     };
@@ -246,14 +426,52 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     reader.readAsText(file);
   }
 
-  selectJSONFile() {
-    const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.click();
+  /**
+   * Procesa JSON para sistema legacy (fallback temporal)
+   * @deprecated Usar ProjectState como fuente primaria
+   */
+  private procesarJSONLegacy(
+    jsonContent: any, 
+    fileName: string,
+    normalizedResult?: NormalizedJSONResult
+  ): { 
+    data: any[], 
+    geoInfo: any, 
+    fileName: string, 
+    comunidadesCampesinas?: any[],
+    jsonCompleto?: any
+  } {
+    // Si tenemos resultado normalizado, usar esos datos
+    if (normalizedResult && normalizedResult.format !== 'unknown') {
+      const data = normalizedResult.rawData as any[];
+      const geoInfo = {
+        DPTO: normalizedResult.ubicacion.departamento,
+        PROV: normalizedResult.ubicacion.provincia,
+        DIST: normalizedResult.ubicacion.distrito
+      };
+      const comunidadesCampesinas = normalizedResult.groups.map(g => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: [...g.ccppIds]
+      }));
+      
+      return {
+        data,
+        geoInfo,
+        fileName,
+        comunidadesCampesinas: comunidadesCampesinas.length > 0 ? comunidadesCampesinas : undefined,
+        jsonCompleto: jsonContent
+      };
     }
+    
+    // Fallback: procesar con método legacy original cuando no hay resultado normalizado
+    return this.procesarJSONFallback(jsonContent, fileName);
   }
 
-  private procesarJSON(jsonContent: any, fileName: string): { 
+  /**
+   * Método legacy para procesar JSON (fallback cuando normalizer falla)
+   */
+  private procesarJSONFallback(jsonContent: any, fileName: string): { 
     data: any[], 
     geoInfo: any, 
     fileName: string, 
@@ -320,6 +538,13 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     };
   }
 
+  selectJSONFile() {
+    const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
   llenarDatosPrueba() {
     const datosPrueba = {
       projectName: 'Paka',
@@ -329,7 +554,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     };
     
     Object.keys(datosPrueba).forEach(key => {
-      this.formularioService.actualizarDato(key as any, (datosPrueba as any)[key]);
+      this.onFieldChange(key as any, (datosPrueba as any)[key]);
     });
     
     const jsonPrueba = [
@@ -349,17 +574,45 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
       }
     ];
     
-    this.formularioService.guardarJSON(jsonPrueba);
-    this.formularioService.actualizarDato('centrosPobladosJSON', jsonPrueba);
-    this.formularioService.actualizarDato('geoInfo', {
+    // FASE 1: Procesar via ProjectState primero
+    const { batch, result } = createJSONProcessingBatch(jsonPrueba, {
+      fileName: 'datos_prueba.json',
+      transactionId: 'test_data_fill'
+    });
+    
+    if (batch) {
+      this.store.dispatch(batch);
+      console.log('[Seccion1] Datos de prueba cargados via ProjectState');
+    }
+    
+    // Legacy fallback - usar onFieldChange que usa projectFacade internamente
+    this.onFieldChange('centrosPobladosJSON', jsonPrueba, { refresh: false });
+    this.onFieldChange('geoInfo', {
       DPTO: 'Arequipa',
       PROV: 'Caravelí',
       DIST: 'Cahuacho'
-    });
-    this.formularioService.actualizarDato('jsonFileName', 'datos_prueba.json');
+    }, { refresh: false });
+    this.onFieldChange('jsonFileName', 'datos_prueba.json', { refresh: false });
     
-    this.actualizarDatos();
+    // ✅ Llenar objetivos con valores por defecto usando el nombre del proyecto
+    const objetivosPrueba = [
+      `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera Paka.`,
+      `Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.`
+    ];
+    
+    // ✅ IMPORTANTE: Actualizar PRIMERO el array local
+    this.objetivos = [...objetivosPrueba];
+    // ✅ Luego guardar en el estado persistido SIN refresh
+    this.onFieldChange('objetivosSeccion1', [...objetivosPrueba], { refresh: false });
+    // ✅ Y sincronizar datos locales
+    this.datos.objetivosSeccion1 = [...objetivosPrueba];
+    // ✅ Limpiar campos legacy que podrían interferir
+    this.onFieldChange('objetivoSeccion1_1', null, { refresh: false });
+    this.onFieldChange('objetivoSeccion1_2', null, { refresh: false });
+    
+    // NO llamar actualizarDatos() porque podría sobrescribir con datos antiguos
     this.cdRef.detectChanges();
   }
 }
+
 

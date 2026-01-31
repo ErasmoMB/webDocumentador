@@ -1,12 +1,21 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from '../../modules/core-shared.module';
+import { Seccion1Component } from '../seccion1/seccion1.component';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { GruposService } from 'src/app/core/services/domain/grupos.service';
+import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-seccion1-form-wrapper',
-  templateUrl: './seccion1-form-wrapper.component.html',
-  styleUrls: ['./seccion1-form-wrapper.component.css']
+    standalone: true,
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion1Component],
+    selector: 'app-seccion1-form-wrapper',
+    templateUrl: './seccion1-form-wrapper.component.html',
+    styleUrls: ['./seccion1-form-wrapper.component.css']
 })
 export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
@@ -17,20 +26,24 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
   geoInfo: any = {};
   private subscription?: Subscription;
 
+  private projectFacade: ProjectStateFacade;
+  private stateAdapter: ReactiveStateAdapter;
+
   constructor(
-    private formularioService: FormularioService,
-    private stateService: StateService
+    private formChange: FormChangeService,
+    private gruposService: GruposService,
+    private injector: Injector,
+    private cdRef: ChangeDetectorRef
   ) {
+    this.projectFacade = this.injector.get(ProjectStateFacade);
+    this.stateAdapter = this.injector.get(ReactiveStateAdapter);
     this.actualizarDatos();
   }
 
   ngOnInit() {
+    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
+    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
     this.actualizarDatos();
-    this.subscription = this.stateService.datos$.subscribe(datos => {
-      if (datos) {
-        this.actualizarDatos();
-      }
-    });
   }
 
   ngOnDestroy() {
@@ -40,7 +53,7 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
   }
 
   actualizarDatos() {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.projectFacade.obtenerDatos();
     this.formData = { ...datos };
     this.centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
     this.geoInfo = datos['geoInfo'] || {};
@@ -52,9 +65,14 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     if (value !== undefined && value !== null && value !== 'undefined') {
       valorLimpio = value;
     }
+    // ✅ Actualizar localmente PRIMERO para sincronización inmediata
     this.formData[fieldId] = valorLimpio;
-    this.formularioService.actualizarDato(fieldId as any, valorLimpio);
-    this.actualizarDatos();
+    
+    // ✅ Persistir en background (no bloquea la UI)
+    this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
+    
+    // ✅ NO llamar actualizarDatos() aquí - ya tenemos el valor actualizado localmente
+    // Esto evita el problema de leer un valor desactualizado del storage
   }
 
   onJSONFileSelected(event: any) {
@@ -69,27 +87,43 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
         const jsonContent = JSON.parse(e.target.result);
         const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSON(jsonContent, file.name);
         
-        this.formularioService.guardarJSON(data);
-        this.formularioService.actualizarDato('centrosPobladosJSON', data);
-        this.formularioService.actualizarDato('jsonCompleto', jsonCompleto);
-        this.formularioService.actualizarDato('geoInfo', geoInfo);
-        this.formularioService.actualizarDato('jsonFileName', fileName);
+        // ✅ NUEVO: Cargar en GruposService para sistema AISD/AISI
+        this.gruposService.cargarCentrosPobladosDesdeJSON(jsonContent);
+        const totalCCPP = this.gruposService.getCentrosPoblados().length;
+        // ✅ [Sección 1] totalCCPP centros poblados cargados en GruposService desde file.name
         
+        // Persistir centros poblados JSON directamente usando formChange
+        const updates: Record<string, any> = {
+          centrosPobladosJSON: data,
+          jsonCompleto,
+          geoInfo,
+          jsonFileName: fileName
+        };
+
         if (comunidadesCampesinas && comunidadesCampesinas.length > 0) {
-          this.formularioService.actualizarDato('comunidadesCampesinas', comunidadesCampesinas);
+          updates['comunidadesCampesinas'] = comunidadesCampesinas;
         }
-        
+
         if (geoInfo.DPTO) {
-          this.formularioService.actualizarDato('departamentoSeleccionado', geoInfo.DPTO);
+          updates['departamentoSeleccionado'] = geoInfo.DPTO;
         }
         if (geoInfo.PROV) {
-          this.formularioService.actualizarDato('provinciaSeleccionada', geoInfo.PROV);
+          updates['provinciaSeleccionada'] = geoInfo.PROV;
         }
         if (geoInfo.DIST) {
-          this.formularioService.actualizarDato('distritoSeleccionado', geoInfo.DIST);
+          updates['distritoSeleccionado'] = geoInfo.DIST;
         }
+
+        this.formChange.persistFields(this.seccionId, 'form', updates);
         
-        this.actualizarDatos();
+        // ✅ Actualizar estado local del formulario para reflejar los cambios inmediatamente
+        this.centrosPobladosJSON = data;
+        this.geoInfo = geoInfo;
+        this.jsonFileName = fileName;
+        this.formData = { ...this.formData, ...updates };
+        
+        // ✅ Forzar detección de cambios ya que estamos dentro de FileReader callback
+        this.cdRef.detectChanges();
         
       } catch (error) {
         alert('Error al procesar el archivo JSON. Verifique el formato.');
@@ -98,6 +132,7 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     
     reader.readAsText(file);
   }
+
 
   selectJSONFile() {
     const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;

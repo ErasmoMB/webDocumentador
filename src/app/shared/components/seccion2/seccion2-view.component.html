@@ -1,0 +1,26 @@
+<div>
+  <h3>3.1.2 Delimitación de las áreas de influencia social</h3>
+  <div *ngIf="seccion2Component && seccion2Component.datos.parrafoSeccion2_introduccion; else introduccionDefault" 
+       class="text-justify" 
+       [innerHTML]="seccion2Component.formatearParrafo(seccion2Component.datos.parrafoSeccion2_introduccion)"></div>
+  <ng-template #introduccionDefault>
+    <p class="text-justify">En términos generales, la delimitación del ámbito de estudio
+      de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales,
+      individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los
+      recursos respecto de los cuales el proyecto de exploración minera tiene incidencia. </p>
+    <p class="text-justify">Asimismo, el área de influencia social de un Proyecto tiene en
+      consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho
+      proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina "grupos de interés" a
+      aquellos grupos humanos que son impactados por dicho Proyecto).</p>
+    <p class="text-justify">El criterio social para la delimitación de un área de
+      influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que
+      será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos,
+      expectativas, intereses y/o demandas del entorno social.
+    </p>
+    <p class="text-justify">En base a estos criterios se han identificado las áreas de
+      influencia social directa e indirecta:</p>
+  </ng-template>
+
+<!-- ✅ Componente de VISTA: Solo muestra contenido -->
+<!-- Delega toda la lógica y presentación a Seccion2Component -->
+<app-seccion2 [seccionId]="seccionId" [modoFormulario]="false"></app-seccion2>

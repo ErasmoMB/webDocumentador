@@ -1,4 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
+import { TableManagementFacade } from './tables/table-management.facade';
+import { TableInitializationService } from './tables/table-initialization.service';
+import { TableCalculationService } from './tables/table-calculation.service';
+import { TableValidationService } from './tables/table-validation.service';
+import { TableManipulationService } from './tables/table-manipulation.service';
+import { TableQueryService } from './tables/table-query.service';
+import { TableCalculationStrategyService } from './tables/table-calculation-strategy.service';
 
 export interface TableColumn {
   field: string;
@@ -10,87 +17,73 @@ export interface TableColumn {
 export interface TableConfig {
   tablaKey: string;
   totalKey: string;
-  campoTotal: string;
+  campoTotal?: string;
   campoPorcentaje?: string;
   estructuraInicial?: any[];
   calcularPorcentajes?: boolean;
   camposParaCalcular?: string[];
 }
 
+/**
+ * @deprecated FASE 2 - Migración SOLID: Este servicio está deprecated.
+ * 
+ * MIGRACIÓN OBLIGATORIA:
+ * - Usar TableManagementFacade para compatibilidad temporal
+ * - Migrar a servicios especializados según necesidad:
+ *   - TableInitializationService: Solo inicialización
+ *   - TableCalculationService: Solo cálculos
+ *   - TableValidationService: Solo validación
+ *   - TableManipulationService: Solo manipulación de filas
+ *   - TableQueryService: Solo consultas
+ * 
+ * Fecha de eliminación: Sprint 5
+ * 
+ * ANTES:
+ * ```typescript
+ * constructor(private tableService: TableManagementService) {}
+ * this.tableService.inicializarTabla(datos, config);
+ * ```
+ * 
+ * DESPUÉS:
+ * ```typescript
+ * constructor(
+ *   private tableFacade: TableManagementFacade,
+ *   // O servicios específicos:
+ *   private tableInit: TableInitializationService,
+ *   private tableCalc: TableCalculationService
+ * ) {}
+ * this.tableFacade.inicializarTabla(datos, config);
+ * // O mejor aún:
+ * this.tableInit.inicializarTabla(datos, config);
+ * ```
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class TableManagementService {
+  private facade: TableManagementFacade;
 
-  inicializarTabla(
-    datos: any,
-    config: TableConfig
-  ): void {
-    const { tablaKey, estructuraInicial } = config;
+  constructor(private injector: Injector) {
+    const init = this.injector.get(TableInitializationService);
+    const calc = this.injector.get(TableCalculationService);
+    const validation = this.injector.get(TableValidationService);
+    const manipulation = this.injector.get(TableManipulationService);
+    const query = this.injector.get(TableQueryService);
+    const calculationStrategy = this.injector.get(TableCalculationStrategyService);
     
-    if (!datos[tablaKey] || datos[tablaKey].length === 0) {
-      if (estructuraInicial && estructuraInicial.length > 0) {
-        datos[tablaKey] = JSON.parse(JSON.stringify(estructuraInicial));
-      } else {
-        const fila: any = { [config.totalKey]: '', [config.campoTotal]: 0 };
-        if (config.campoPorcentaje) {
-          fila[config.campoPorcentaje] = '0,00 %';
-        }
-        datos[tablaKey] = [fila];
-      }
-    }
+    this.facade = new TableManagementFacade(init, calc, validation, manipulation, query, calculationStrategy);
   }
 
-  agregarFila(
-    datos: any,
-    config: TableConfig,
-    nuevaFila?: any
-  ): void {
-    const { tablaKey, totalKey, campoTotal, campoPorcentaje } = config;
-    
-    if (!datos[tablaKey]) {
-      this.inicializarTabla(datos, config);
-    }
-    
-    const tabla = datos[tablaKey] || [];
-    const filaPorDefecto = nuevaFila || { 
-      [totalKey]: '', 
-      [campoTotal]: 0, 
-      ...(campoPorcentaje && { [campoPorcentaje]: '0,00 %' })
-    };
-    
-    const totalIndex = tabla.findIndex((item: any) => {
-      const valor = item[totalKey];
-      return valor && valor.toString().toLowerCase().includes('total');
-    });
-    
-    if (totalIndex >= 0) {
-      tabla.splice(totalIndex, 0, filaPorDefecto);
-    } else {
-      tabla.push(filaPorDefecto);
-    }
+  inicializarTabla(datos: any, config: TableConfig): void {
+    this.facade.inicializarTabla(datos, config);
   }
 
-  eliminarFila(
-    datos: any,
-    config: TableConfig,
-    index: number
-  ): boolean {
-    const { tablaKey, totalKey } = config;
-    const tabla = datos[tablaKey] || [];
+  agregarFila(datos: any, config: TableConfig, nuevaFila?: any): void {
+    this.facade.agregarFila(datos, config, nuevaFila);
+  }
 
-    if (!tabla.length) return false;
-
-    const item = tabla[index];
-    const valor = item?.[totalKey];
-
-    // No eliminar filas de totales si existen
-    if (valor && valor.toString().toLowerCase().includes('total')) {
-      return false;
-    }
-
-    tabla.splice(index, 1);
-    return true;
+  eliminarFila(datos: any, config: TableConfig, index: number): boolean {
+    return this.facade.eliminarFila(datos, config, index);
   }
 
   actualizarFila(
@@ -101,69 +94,11 @@ export class TableManagementService {
     value: any,
     autoCalcular: boolean = true
   ): void {
-    const { tablaKey, calcularPorcentajes, camposParaCalcular } = config;
-    
-    if (!datos[tablaKey]) {
-      this.inicializarTabla(datos, config);
-    }
-    
-    const tabla = datos[tablaKey] || [];
-    if (tabla[index]) {
-      tabla[index][field] = value;
-      
-      if (autoCalcular && config.calcularPorcentajes && config.camposParaCalcular?.includes(field)) {
-        this.calcularPorcentajes(datos, config);
-      }
-    }
+    this.facade.actualizarFila(datos, config, index, field, value, autoCalcular);
   }
 
-  calcularPorcentajes(
-    datos: any,
-    config: TableConfig
-  ): void {
-    const { tablaKey, totalKey, campoTotal, campoPorcentaje } = config;
-    const tabla = datos[tablaKey] || [];
-    
-    if (tabla.length === 0) return;
-
-    const totalItem = tabla.find((item: any) => {
-      const valor = item[totalKey];
-      return valor && valor.toString().toLowerCase().includes('total');
-    });
-    
-    let total = totalItem ? parseFloat(totalItem[campoTotal]) || 0 : 0;
-    
-    if (total === 0) {
-      total = tabla.reduce((sum: number, item: any) => {
-        const valor = item[totalKey];
-        if (!valor || !valor.toString().toLowerCase().includes('total')) {
-          return sum + (parseFloat(item[campoTotal]) || 0);
-        }
-        return sum;
-      }, 0);
-    }
-
-    if (total > 0 && campoPorcentaje) {
-      tabla.forEach((item: any) => {
-        const valor = item[totalKey];
-        if (!valor || !valor.toString().toLowerCase().includes('total')) {
-          const casos = parseFloat(item[campoTotal]) || 0;
-          const porcentajeNumerico = (casos / total) * 100;
-          const porcentajeRedondeado = Math.round(porcentajeNumerico * 100) / 100;
-          const porcentaje = porcentajeRedondeado
-            .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            .replace('.', ',') + ' %';
-          item[campoPorcentaje] = porcentaje;
-        }
-      });
-    } else if (campoPorcentaje) {
-      tabla.forEach((item: any) => {
-        const valor = item[totalKey];
-        if (!valor || !valor.toString().toLowerCase().includes('total')) {
-          item[campoPorcentaje] = '0,00 %';
-        }
-      });
-    }
+  calcularPorcentajes(datos: any, config: TableConfig): void {
+    this.facade.calcularPorcentajes(datos, config);
   }
 
   obtenerValorDeTabla(
@@ -173,15 +108,7 @@ export class TableManagementService {
     valorBusqueda: string,
     campoRetorno: string
   ): string {
-    const tabla = datos[tablaKey] || [];
-    if (!Array.isArray(tabla)) return '';
-    
-    const item = tabla.find((item: any) => {
-      const valor = item[campoBusqueda];
-      return valor && valor.toString().toLowerCase().includes(valorBusqueda.toLowerCase());
-    });
-    
-    return item?.[campoRetorno]?.toString() || '';
+    return this.facade.obtenerValorDeTabla(datos, tablaKey, campoBusqueda, valorBusqueda, campoRetorno);
   }
 
   obtenerValorDeTablaPorIndicador(
@@ -190,7 +117,7 @@ export class TableManagementService {
     indicador: string,
     campoRetorno: string
   ): string {
-    return this.obtenerValorDeTabla(datos, tablaKey, 'indicador', indicador, campoRetorno);
+    return this.facade.obtenerValorDeTablaPorIndicador(datos, tablaKey, indicador, campoRetorno);
   }
 
   obtenerValorDeTablaPorCategoria(
@@ -199,6 +126,6 @@ export class TableManagementService {
     categoria: string,
     campoRetorno: string
   ): string {
-    return this.obtenerValorDeTabla(datos, tablaKey, 'categoria', categoria, campoRetorno);
+    return this.facade.obtenerValorDeTablaPorCategoria(datos, tablaKey, categoria, campoRetorno);
   }
 }

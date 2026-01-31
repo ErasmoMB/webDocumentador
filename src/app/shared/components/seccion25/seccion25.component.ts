@@ -1,30 +1,48 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { ViviendaService } from 'src/app/core/services/vivienda.service';
-import { MaterialesService } from 'src/app/core/services/materiales.service';
+import { ViviendaService } from 'src/app/core/services/domain/vivienda.service';
+import { MaterialesService } from 'src/app/core/services/domain/materiales.service';
+import { IViviendaDataProvider, IMaterialesDataProvider } from 'src/app/core/services/domain/interfaces';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { debugLog } from 'src/app/shared/utils/debug';
+// Clean Architecture imports
+import { LoadSeccion25UseCase, UpdateSeccion25DataUseCase, Seccion25ViewModel } from 'src/app/core/application/use-cases';
+import { Seccion25Data } from 'src/app/core/domain/entities';
 
 @Component({
-  selector: 'app-seccion25',
-  templateUrl: './seccion25.component.html',
-  styleUrls: ['./seccion25.component.css']
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        ParagraphEditorComponent,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion25',
+    templateUrl: './seccion25.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion25Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private timeouts: number[] = [];
   private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'textoViviendaAISI', 'textoOcupacionViviendaAISI', 'textoEstructuraAISI'];
@@ -32,6 +50,10 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   override readonly PHOTO_PREFIX = 'fotografiaCahuachoB14';
   
   fotografiasInstitucionalidadCache: any[] = [];
+
+  // Clean Architecture ViewModel
+  seccion25ViewModel$ = this.loadSeccion25UseCase.execute();
+  seccion25ViewModel?: Seccion25ViewModel;
 
   tiposViviendaConfig: TableConfig = {
     tablaKey: 'tiposViviendaAISI',
@@ -61,20 +83,51 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService,
     private viviendaService: ViviendaService,
-    private materialesService: MaterialesService
+    private materialesService: MaterialesService,
+    // Clean Architecture dependencies
+    private loadSeccion25UseCase: LoadSeccion25UseCase,
+    private updateSeccion25DataUseCase: UpdateSeccion25DataUseCase
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, null as any, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    
+    // Subscribe to ViewModel for Clean Architecture
+    this.seccion25ViewModel$.subscribe(viewModel => {
+      this.seccion25ViewModel = viewModel;
+      this.cdRef.markForCheck();
+    });
+  }
+
+  // Clean Architecture methods
+  updateSeccion25Data(updates: Partial<Seccion25Data>): void {
+    if (this.seccion25ViewModel) {
+      const currentData = this.seccion25ViewModel.data;
+      const updatedData = { ...currentData, ...updates };
+      this.updateSeccion25DataUseCase.execute(updatedData).subscribe(updatedViewModel => {
+        this.seccion25ViewModel = updatedViewModel;
+        this.cdRef.markForCheck();
+      });
+    }
+  }
+
+  // Backward compatibility methods - delegate to Clean Architecture
+  obtenerTextoVivienda(): string {
+    return this.seccion25ViewModel?.texts.viviendaText || this.datos.textoViviendaAISI || '';
+  }
+
+  obtenerTextoOcupacionVivienda(): string {
+    return this.seccion25ViewModel?.texts.ocupacionViviendaText || this.datos.textoOcupacionViviendaAISI || '';
+  }
+
+  obtenerTextoEstructura(): string {
+    return this.seccion25ViewModel?.texts.estructuraText || this.datos.textoEstructuraAISI || '';
   }
 
   protected override onInitCustom(): void {
@@ -83,23 +136,18 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     this.cargarDatosVivienda();
     this.cargarDatosMateriales();
     
-    setTimeout(() => {
-      (window as any).debugCuadro345 = () => this.debugCuadro345();
-      (window as any).debugCuadro347 = () => this.debugCuadro347();
-      console.log('💡 Para depurar:');
-      console.log('   - Cuadro 3.45 (Condición Ocupación): debugCuadro345()');
-      console.log('   - Cuadro 3.47 (Materiales): debugCuadro347()');
-    }, 1000);
-    
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
+      this.stateSubscription = this.stateAdapter.datos$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.cargarFotografias();
+          this.cdRef.detectChanges();
+        });
     }
   }
 
   override ngOnDestroy() {
+    this.timeouts.forEach(id => clearTimeout(id));
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -115,7 +163,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
@@ -165,6 +213,49 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   getTablaKeyMaterialesVivienda(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `materialesViviendaAISI${prefijo}` : 'materialesViviendaAISI';
+  }
+
+  get tiposViviendaAISIVista(): any[] {
+    const tablaKey = this.getTablaKeyTiposVivienda();
+    return this.datos[tablaKey] || this.datos.tiposViviendaAISI || [];
+  }
+
+  get condicionOcupacionAISIVista(): any[] {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    return this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
+  }
+
+  get materialesViviendaAISIVista(): any[] {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    return this.datos[tablaKey] || this.datos.materialesViviendaAISI || [];
+  }
+
+  /**
+   * Obtiene la tabla Tipos de Vivienda AISI con porcentajes calculados dinámicamente
+   * Cuadro 3.44
+   */
+  getTiposViviendaAISIConPorcentajes(): any[] {
+    const tabla = this.tiposViviendaAISIVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.44');
+  }
+
+  /**
+   * Obtiene la tabla Condición de Ocupación AISI con porcentajes calculados dinámicamente
+   * Cuadro 3.45
+   */
+  getCondicionOcupacionAISIConPorcentajes(): any[] {
+    const tabla = this.condicionOcupacionAISIVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.45');
+  }
+
+  /**
+   * Obtiene la tabla Materiales Vivienda AISI con porcentajes calculados dinámicamente
+   * Cuadro 3.46
+   * Nota: Esta tabla tiene estructura especial con 'tipoMaterial' adicional
+   */
+  getMaterialesViviendaAISIConPorcentajes(): any[] {
+    const tabla = this.materialesViviendaAISIVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.46');
   }
 
   protected override tieneFotografias(): boolean {
@@ -293,7 +384,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -304,7 +395,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
   }
@@ -321,7 +412,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -332,7 +423,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
     this.calcularPorcentajesMaterialesViviendaAISI();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -433,15 +524,12 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   getCondicionOcupacionSinTotal(): any[] {
     const tablaKey = this.getTablaKeyCondicionOcupacion();
     const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
-    console.log('[S25] getCondicionOcupacionSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('[S25] No hay datos o no es array');
       return [];
     }
     const filtered = tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
-    console.log('[S25] Filtrado:', filtered);
     return filtered;
   }
 
@@ -465,15 +553,12 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
   getMaterialesViviendaSinTotal(): any[] {
     const tablaKey = this.getTablaKeyMaterialesVivienda();
     const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
-    console.log('[S25] getMaterialesViviendaSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('[S25] No hay datos o no es array');
       return [];
     }
     const filtered = tabla.filter((item: any) => 
       !item.categoria || !item.categoria.toLowerCase().includes('total')
     );
-    console.log('[S25] Filtrado:', filtered);
     return filtered;
   }
 
@@ -541,7 +626,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== tiposVivienda.length) {
         this.datos[tiposViviendaKey] = filtered;
-        this.formularioService.actualizarDato(tiposViviendaKey as any, filtered);
+        this.onFieldChange(tiposViviendaKey as any, filtered, { refresh: false });
       }
     }
 
@@ -554,7 +639,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== condicion.length) {
         this.datos[condicionKey] = filtered;
-        this.formularioService.actualizarDato(condicionKey as any, filtered);
+        this.onFieldChange(condicionKey as any, filtered, { refresh: false });
       }
     }
 
@@ -567,58 +652,9 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== materiales.length) {
         this.datos[materialesKey] = filtered;
-        this.formularioService.actualizarDato(materialesKey as any, filtered);
+        this.onFieldChange(materialesKey as any, filtered, { refresh: false });
       }
     }
-  }
-
-  debugCuadro345(): void {
-    console.log('=== DEBUG CUADRO 3.45 - CONDICIÓN DE OCUPACIÓN ===');
-    const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
-    console.log('4. Tabla key esperada:', this.getTablaKeyCondicionOcupacion());
-    console.log('5. Datos actuales:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - condicionOcupacionAISI:', todosLosDatos['condicionOcupacionAISI']);
-    console.log('   - condicionOcupacionAISI_B1:', todosLosDatos['condicionOcupacionAISI_B1']);
-    console.log('6. Datos en this.datos:', this.datos?.condicionOcupacionAISI);
-    console.log('⚠️ NOTA: No hay endpoint para condición de ocupación. Los datos deben ingresarse manualmente.');
-    console.log('=== FIN DEBUG ===');
-  }
-
-  debugCuadro347(): void {
-    console.log('=== DEBUG CUADRO 3.47 - MATERIALES DE CONSTRUCCIÓN ===');
-    const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
-    console.log('4. Tabla key esperada:', this.getTablaKeyMaterialesVivienda());
-    console.log('5. Datos actuales:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - materialesViviendaAISI:', todosLosDatos['materialesViviendaAISI']);
-    console.log('   - materialesViviendaAISI_B1:', todosLosDatos['materialesViviendaAISI_B1']);
-    console.log('6. Datos en this.datos:', this.datos?.materialesViviendaAISI);
-    
-    if (codigos && codigos.length > 0) {
-      console.log('7. Probando llamada al backend...');
-      this.materialesService.obtenerMateriales(codigos).subscribe(
-        (response: any) => {
-          console.log('✅ Respuesta del backend:', response);
-          if (response && response.success && response.materiales_construccion) {
-            console.log('✅ Datos recibidos:', response.materiales_construccion);
-            console.log('   Cantidad de registros:', response.materiales_construccion.length);
-          } else {
-            console.warn('⚠️ Respuesta sin success o sin data:', response);
-          }
-        },
-        (error: any) => {
-          console.error('❌ Error al llamar al backend:', error);
-        }
-      );
-    }
-    console.log('=== FIN DEBUG ===');
   }
 
   private cargarDatosVivienda(): void {
@@ -628,34 +664,29 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
-    console.log('[S25] Cargando tipos de vivienda con códigos:', codigos);
-    this.viviendaService.obtenerTiposVivienda(codigos).subscribe(
-      (response: any) => {
-        console.log('[S25] Respuesta tipos vivienda:', response);
-        if (response && response.success && response.tipos_vivienda) {
-          console.log('[S25] Datos recibidos:', response.tipos_vivienda);
+    this.viviendaService.obtenerTiposVivienda(codigos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (response: any) => {
+        if (response && response.success && response.tipos_vivienda && Array.isArray(response.tipos_vivienda) && response.tipos_vivienda.length > 0) {
           const viviendas = response.tipos_vivienda.map((item: any) => ({
             categoria: item.tipo_vivienda || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S25] Datos procesados:', viviendas);
-
           const tablaKey = this.getTablaKeyTiposVivienda();
-          console.log('[S25] Guardando en tablaKey:', tablaKey);
           this.datos[tablaKey] = viviendas;
-          this.formularioService.actualizarDato(tablaKey as any, viviendas);
-          this.tableService.calcularPorcentajes(this.datos, { ...this.tiposViviendaConfig, tablaKey });
-          console.log('[S25] Datos guardados. Verificando:', this.datos[tablaKey]);
-          
+          this.onFieldChange(tablaKey as any, viviendas, { refresh: false });
+          this.tableFacade.calcularPorcentajes(this.datos, { ...this.tiposViviendaConfig, tablaKey });
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
         } else {
-          console.warn('[S25] Respuesta sin success o sin tipos_vivienda:', response);
+          // No sobrescribir datos mock si no hay datos del backend
         }
       },
       (error: any) => {
         console.error('[S25] Error cargando tipos vivienda:', error);
+        // No sobrescribir datos mock en caso de error
       }
     );
   }
@@ -667,31 +698,25 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       return;
     }
 
-    console.log('[S25] Cargando materiales con códigos:', codigos);
-    this.materialesService.obtenerMateriales(codigos).subscribe(
-      (response: any) => {
-        console.log('[S25] Respuesta materiales:', response);
-        if (response && response.success && response.materiales_construccion) {
-          console.log('[S25] Datos recibidos:', response.materiales_construccion);
+    this.materialesService.obtenerMateriales(codigos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (response: any) => {
+        if (response && response.success && response.materiales_construccion && Array.isArray(response.materiales_construccion) && response.materiales_construccion.length > 0) {
           const materiales = response.materiales_construccion.map((item: any) => ({
             categoria: item.categoria || '',
             tipoMaterial: item.tipo_material || '',
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S25] Datos procesados:', materiales);
-
           const tablaKey = this.getTablaKeyMaterialesVivienda();
-          console.log('[S25] Guardando en tablaKey:', tablaKey);
           this.datos[tablaKey] = materiales;
-          this.formularioService.actualizarDato(tablaKey as any, materiales);
-          this.tableService.calcularPorcentajes(this.datos, { ...this.materialesViviendaConfig, tablaKey });
-          console.log('[S25] Datos guardados. Verificando:', this.datos[tablaKey]);
-          
+          this.onFieldChange(tablaKey as any, materiales, { refresh: false });
+          this.tableFacade.calcularPorcentajes(this.datos, { ...this.materialesViviendaConfig, tablaKey });
           this.cdRef.markForCheck();
           this.cdRef.detectChanges();
         } else {
-          console.warn('[S25] Respuesta sin success o sin materiales_construccion:', response);
+          // No sobrescribir datos mock si no hay datos del backend
         }
       },
       (error: any) => {
@@ -730,7 +755,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -740,7 +765,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyTiposVivienda();
     const tabla = this.datos[tablaKey] || this.datos.tiposViviendaAISI || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -775,7 +800,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey as any, tabla);
+      this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -785,7 +810,7 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyCondicionOcupacion();
     const tabla = this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -838,4 +863,5 @@ export class Seccion25Component extends AutoLoadSectionComponent implements OnDe
     return clon;
   }
 }
+
 

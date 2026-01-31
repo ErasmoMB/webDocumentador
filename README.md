@@ -1,27 +1,112 @@
-# LBS
+# webDocumentador
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.16.
+Sistema de documentación de proyectos construido con Angular 17+ y arquitectura basada en estado inmutable.
 
-## Development server
+## Stack Tecnológico
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+| Capa | Tecnología |
+|------|------------|
+| Framework | Angular 17 (Standalone + Signals) |
+| Estado | Inmutable con Reducers puros |
+| Tests | Jasmine + Karma (598 tests) |
+| Build | Angular CLI + esbuild |
+| E2E | Cypress |
 
-## Code scaffolding
+## Inicio Rápido
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+```bash
+# Instalar dependencias
+npm install
 
-## Build
+# Desarrollo
+npm start
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+# Tests unitarios
+npm test
 
-## Running unit tests
+# Build producción
+npm run build
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Arquitectura
 
-## Running end-to-end tests
+El sistema sigue una arquitectura de **estado centralizado inmutable** inspirada en Redux/NgRx pero simplificada:
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           UI LAYER                              │
+│  (Components solo leen Selectors y despachan Commands)          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              │      UIStoreContract        │
+              │  ┌─────────┐  ┌──────────┐  │
+              │  │Selectors│  │ dispatch │  │
+              │  │ (read)  │  │(command) │  │
+              │  └────┬────┘  └────┬─────┘  │
+              └───────┼────────────┼────────┘
+                      │            │
+              ┌───────┴────────────┴────────┐
+              │       ProjectState          │
+              │    (Signal<ProjectState>)   │
+              └──────────────┬──────────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              │         Reducers            │
+              │  (state, command) => state  │
+              └─────────────────────────────┘
+```
 
-## Further help
+## Estructura del Proyecto
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+```
+src/app/
+├── core/                      # Núcleo de la aplicación
+│   ├── state/                 # Sistema de estado
+│   │   ├── project-state.model.ts    # Modelo del estado
+│   │   ├── commands.model.ts         # Comandos disponibles
+│   │   ├── ui-store.contract.ts      # Contrato UI↔Store
+│   │   └── reducers/                 # Funciones reductoras
+│   │
+│   ├── persistence/           # Capa de persistencia
+│   │   ├── persistence.contract.ts   # Tipos y validación
+│   │   ├── storage.adapter.ts        # Adaptador localStorage
+│   │   └── persistence.service.ts    # Orquestador
+│   │
+│   ├── export/               # Sistema de exportación
+│   │   ├── export.contract.ts        # Tipos de exportación
+│   │   ├── document-builder.service.ts
+│   │   ├── pdf-renderer.service.ts
+│   │   └── json-exporter.service.ts
+│   │
+│   ├── domain/               # Entidades de dominio
+│   ├── application/          # Casos de uso
+│   └── infrastructure/       # Servicios externos
+│
+├── features/                 # Módulos de funcionalidad
+├── pages/                    # Páginas/rutas
+└── shared/                   # Componentes compartidos
+```
+
+## Documentación Detallada
+
+- [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Arquitectura completa del sistema
+- [DATA_FLOW.md](./docs/DATA_FLOW.md) - Flujo de datos detallado
+- [TECHNICAL_DECISIONS.md](./docs/TECHNICAL_DECISIONS.md) - Decisiones técnicas clave
+
+## Testing
+
+```bash
+# Tests unitarios
+npm test
+
+# Tests con coverage
+npm run test:coverage
+
+# Tests E2E
+npm run cypress:run
+```
+
+## Licencia
+
+Propiedad del equipo de desarrollo.

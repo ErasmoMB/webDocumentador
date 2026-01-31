@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
+import { ProjectStateFacade } from '../state/project-state.facade';
 
+/**
+ * PhotoNumberingService - Servicio para numeración de fotografías
+ * 
+ * ✅ FASE 4: Migrado a usar solo ProjectStateFacade
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -77,7 +82,9 @@ export class PhotoNumberingService {
     { id: '3.1.4.B.16', prefixes: ['fotografiaFestividades'], order: 20, hasGroup: true }
   ];
 
-  constructor(private formularioService: FormularioService) {
+  constructor(
+    private projectFacade: ProjectStateFacade
+  ) {
     this.printConfigurationSummary();
   }
 
@@ -138,7 +145,7 @@ export class PhotoNumberingService {
   }
 
   private countPhotosInSectionByPrefixes(prefixes: string[], hasGroup: boolean, specificGroupSuffix: string = ''): number {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.projectFacade.obtenerDatos();
     let count = 0;
 
     const groupSuffixes = specificGroupSuffix ? [specificGroupSuffix] : 

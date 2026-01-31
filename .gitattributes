@@ -1,0 +1,33 @@
+# Normaliza finales de línea y evita diffs ruidosos en Windows.
+# Por defecto, fuerza LF para archivos de texto.
+
+* text=auto eol=lf
+
+# Scripts Windows
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Archivos de configuración comunes
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary

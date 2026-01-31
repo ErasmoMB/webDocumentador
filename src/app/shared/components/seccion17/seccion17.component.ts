@@ -1,21 +1,28 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 
 @Component({
-  selector: 'app-seccion17',
-  templateUrl: './seccion17.component.html',
-  styleUrls: ['./seccion17.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion17',
+    templateUrl: './seccion17.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion17Component extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -37,17 +44,13 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    private tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef);
+    super(cdRef, injector);
   }
 
   protected override onInitCustom(): void {
@@ -55,7 +58,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
     this.cargarFotografias();
     this.inicializarPoblacionAutomatica();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.inicializarPoblacionAutomatica();
         this.cdRef.detectChanges();
@@ -92,14 +95,14 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
           rankIngreso: 0
         };
         this.datos[tablaKey] = [nuevaFila];
-        this.formularioService.actualizarDato(tablaKey as any, [nuevaFila]);
+        this.onFieldChange(tablaKey as any, [nuevaFila], { refresh: false });
       }
     } else if (tabla.length > 0 && (!tabla[0].poblacion || tabla[0].poblacion === 0)) {
       const totalPoblacion = this.getTotalPoblacion();
       if (totalPoblacion > 0) {
         tabla[0].poblacion = totalPoblacion;
         this.datos[tablaKey] = [...tabla];
-        this.formularioService.actualizarDato(tablaKey as any, tabla);
+        this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       }
     }
   }
@@ -112,7 +115,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     let hayCambios = false;
     
     for (const campo of this.watchedFields) {
@@ -181,7 +184,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
     );
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -192,7 +195,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     this.imageService.saveImages(
       this.seccionId,
@@ -337,4 +340,5 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
     return clon;
   }
 }
+
 

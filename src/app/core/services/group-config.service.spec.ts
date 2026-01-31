@@ -36,8 +36,9 @@ describe('GroupConfigService', () => {
       ccppActivos: ['001']
     };
     service.setAISD(grupo);
-    expect(service.getAISD()).toEqual(grupo);
-    expect(service.getAISDCCPPActivos()).toEqual(['001']);
+    // getAISD() devuelve el primer grupo del array (índice 0 por defecto)
+    expect(service.getAISD(0)).toEqual(grupo);
+    expect(service.getAISDCCPPActivos(0)).toEqual(['001']);
   });
 
   it('should update AISD active CCPP', () => {
@@ -48,8 +49,9 @@ describe('GroupConfigService', () => {
       ccppActivos: []
     };
     service.setAISD(grupo);
-    service.setAISDCCPPActivos(['010', '020']);
-    expect(service.getAISDCCPPActivos()).toEqual(['010', '020']);
+    // setAISDCCPPActivos actualiza el grupo en el índice 0 por defecto
+    service.setAISDCCPPActivos(['010', '020'], 0);
+    expect(service.getAISDCCPPActivos(0)).toEqual(['010', '020']);
   });
 
   it('should clear all config', () => {

@@ -1,14 +1,22 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from '../../modules/core-shared.module';
+import { Seccion15Component } from '../seccion15/seccion15.component';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-seccion15-form-wrapper',
-  templateUrl: './seccion15-form-wrapper.component.html',
-  styleUrls: ['./seccion15-form-wrapper.component.css']
+    standalone: true,
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion15Component],
+    selector: 'app-seccion15-form-wrapper',
+    templateUrl: './seccion15-form-wrapper.component.html',
+    styleUrls: ['./seccion15-form-wrapper.component.css']
 })
 export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
@@ -17,18 +25,21 @@ export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
   datos: any = {};
   private subscription?: Subscription;
 
+  private projectFacade: ProjectStateFacade;
+  private stateAdapter: ReactiveStateAdapter;
+
   constructor(
-    private formularioService: FormularioService,
-    private stateService: StateService
-  ) {}
+    private formChange: FormChangeService,
+    private injector: Injector
+  ) {
+    this.projectFacade = this.injector.get(ProjectStateFacade);
+    this.stateAdapter = this.injector.get(ReactiveStateAdapter);
+  }
 
   ngOnInit() {
+    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
+    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
     this.actualizarDatos();
-    this.subscription = this.stateService.datos$.subscribe(datos => {
-      if (datos) {
-        this.actualizarDatos();
-      }
-    });
   }
 
   ngOnDestroy() {
@@ -38,7 +49,7 @@ export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
   }
 
   actualizarDatos() {
-    this.datos = this.formularioService.obtenerDatos();
+    this.datos = this.projectFacade.obtenerDatos();
     this.formData = { ...this.datos };
   }
 
@@ -48,15 +59,15 @@ export class Seccion15FormWrapperComponent implements OnInit, OnDestroy {
       valorLimpio = value;
     }
     this.formData[fieldId] = valorLimpio;
-    this.formularioService.actualizarDato(fieldId as any, valorLimpio);
-    this.actualizarDatos();
+    this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
+    // ✅ No llamar actualizarDatos() aquí - causa pérdida de caracteres
   }
 
   actualizarLenguasMaternas(index: number, field: string, value: any) {
     const component = ViewChildHelper.getComponent('seccion15');
     if (component && component['actualizarLenguasMaternas']) {
       component['actualizarLenguasMaternas'](index, field, value);
-      this.actualizarDatos();
+      // ✅ No llamar actualizarDatos() aquí - causa pérdida de caracteres
     }
   }
 

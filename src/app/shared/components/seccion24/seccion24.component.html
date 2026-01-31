@@ -4,32 +4,10 @@
 <p class="text-justify">A partir de fuentes oficiales, se exploran las principales fuentes de ingresos y los sectores productivos más relevantes dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> (capital distrital). En esta ocasión, se recurre a los datos provistos por los Censos Nacionales 2017.</p>
 
 <app-table-wrapper title="PEA Ocupada según actividad económica – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.3">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Actividad Económica</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getActividadesEconomicasSinTotal()">
-            <td class="table-cell cell-from-bd">{{ item.actividad || '____' }}</td>
-            <td class="table-cell cell-from-bd">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-percentage">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="getActividadesEconomicasSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalActividadesEconomicas() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getActividadesEconomicasSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getActividadesEconomicasAISIConPorcentajes()"
+    [config]="actividadesEconomicasConfig">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoActividadesEconomicasAISI'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 <p class="text-justify" *ngIf="datos.textoActividadesEconomicasAISI && datos.textoActividadesEconomicasAISI !== '____'">{{ datos.textoActividadesEconomicasAISI }}</p>
@@ -37,7 +15,7 @@
 
 <app-image-upload
     *ngIf="fotografiasActividadesEconomicasCache.length > 0"
-    [fotografias]="getFotografiasActividadesEconomicasParaImageUpload()"
+    [fotografias]="fotografiasActividadesEconomicasCache"
     [sectionId]="'3.1.4.B.1.3'"
     [photoPrefix]="'fotografiaActividadesEconomicas'"
     [modoVista]="true"
@@ -54,7 +32,7 @@
 
 <app-image-upload
     *ngIf="fotografiasMercadoCache.length > 0"
-    [fotografias]="getFotografiasMercadoParaImageUpload()"
+    [fotografias]="fotografiasMercadoCache"
     [sectionId]="'3.1.4.B.1.3'"
     [photoPrefix]="'fotografiaMercado'"
     [modoVista]="true"
@@ -103,13 +81,14 @@
       <label class="label">Tabla PEA Ocupada según actividad económica</label>
       <app-dynamic-table
         [datos]="datos"
-        [config]="actividadesEconomicasConfig"
+        [sectionId]="seccionId"
+        [config]="actividadesEconomicasDynamicConfig"
         [columns]="[
           { field: 'actividad', label: 'Actividad Económica', type: 'text', placeholder: 'Ej: Agricultura, ganadería, silvicultura y pesca' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
-        [tablaKey]="getTablaKeyActividadesEconomicas()"
+        [tablaKey]="'actividadesEconomicasAISI'"
         [totalKey]="'actividad'"
         [customFieldChangeHandler]="onActividadesEconomicasFieldChange.bind(this)"
         (tableUpdated)="onActividadesEconomicasTableUpdated()">

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
+import { ProjectStateFacade } from '../state/project-state.facade';
+import { FormChangeService } from './state/form-change.service';
 
 export interface TableFieldMapping {
   baseField: string;
@@ -11,7 +12,10 @@ export interface TableFieldMapping {
 })
 export class TableAdapterService {
 
-  constructor(private formularioService: FormularioService) {}
+  constructor(
+    private projectFacade: ProjectStateFacade,
+    private formChange: FormChangeService
+  ) {}
 
   convertirCamposIndividualesAArray(
     datos: any,
@@ -71,7 +75,8 @@ export class TableAdapterService {
     prefijo: string = '',
     maxFilas: number = 20,
     usarIndiceFila: boolean = true,
-    actualizarServicio: boolean = true
+    actualizarServicio: boolean = true,
+    sectionId?: string
   ): void {
     const camposActualizados: any = {};
     
@@ -122,7 +127,7 @@ export class TableAdapterService {
     }
 
     if (actualizarServicio && Object.keys(camposActualizados).length > 0) {
-      this.formularioService.actualizarDatos(camposActualizados);
+      this.formChange.persistFields(sectionId, 'table', camposActualizados);
     }
 
     if (prefijo && mapping.baseField === 'tablaAISD2') {
@@ -130,7 +135,9 @@ export class TableAdapterService {
         .map(fila => (fila.codigo || fila.Codigo)?.toString().trim())
         .filter(codigo => codigo && codigo !== '');
       
-      this.formularioService.guardarFilasActivasTablaAISD2(codigosActivos, prefijo);
+      // Guardar códigos activos usando ProjectStateFacade
+      const fieldName = `filasActivasTablaAISD2${prefijo}`;
+      this.projectFacade.setField(sectionId || 'global', null, fieldName, codigosActivos);
     }
   }
 
@@ -141,13 +148,14 @@ export class TableAdapterService {
     prefijo: string = '',
     maxFilas: number = 20,
     usarIndiceFila: boolean = true,
-    actualizarServicio: boolean = true
+    actualizarServicio: boolean = true,
+    sectionId?: string
   ): void {
     const arrayData = this.convertirCamposIndividualesAArray(datos, mapping, prefijo, maxFilas, usarIndiceFila);
     datos[arrayKey] = arrayData;
     
     if (actualizarServicio) {
-      this.formularioService.actualizarDato(arrayKey, arrayData);
+      this.formChange.persistFields(sectionId, 'table', { [arrayKey]: arrayData });
     }
   }
 
@@ -158,10 +166,11 @@ export class TableAdapterService {
     prefijo: string = '',
     maxFilas: number = 20,
     usarIndiceFila: boolean = true,
-    actualizarServicio: boolean = true
+    actualizarServicio: boolean = true,
+    sectionId?: string
   ): void {
     const arrayData = datos[arrayKey] || [];
-    this.convertirArrayACamposIndividuales(datos, arrayData, mapping, prefijo, maxFilas, usarIndiceFila, actualizarServicio);
+    this.convertirArrayACamposIndividuales(datos, arrayData, mapping, prefijo, maxFilas, usarIndiceFila, actualizarServicio, sectionId);
   }
 
   private crearFilaVacia(fields: string[]): any {

@@ -14,36 +14,22 @@
 </ng-template>
 
 <app-table-wrapper title="Ubicación referencial – Centro Poblado {{ datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____' }}" sectionId="3.1.4.B">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Localidad</th>
-            <th class="table-header">Coordenadas</th>
-            <th class="table-header">Altitud</th>
-            <th class="table-header">Distrito</th>
-            <th class="table-header">Provincia</th>
-            <th class="table-header">Departamento</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (getFilasUbicacionCp() || [])" [ngClass]="{'capital-row': item.esCapital}">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'localidad'">{{ item.localidad || '____' }}</td>
-            <td class="table-cell" style="white-space: pre-line;" [appDataSource]="'data-section'" [fieldName]="'coordenadas'">{{ item.coordenadas || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'data-section'" [fieldName]="'altitud'">{{ item.altitud || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'distrito'">{{ item.distrito || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'provincia'">{{ item.provincia || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'departamento'">{{ item.departamento || '____' }}</td>
-        </tr>
-        <tr *ngIf="!getFilasUbicacionCp() || getFilasUbicacionCp().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getFilasUbicacionCp()"
+  [config]="{
+    columns: [
+      { key: 'localidad', header: 'Localidad', align: 'left' },
+      { key: 'coordenadas', header: 'Coordenadas', align: 'left' },
+      { key: 'altitud', header: 'Altitud', align: 'left' },
+      { key: 'distrito', header: 'Distrito', align: 'left' },
+      { key: 'provincia', header: 'Provincia', align: 'left' },
+      { key: 'departamento', header: 'Departamento', align: 'left' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
@@ -63,7 +49,7 @@
   <div class="form-group-section">
     <h4 class="section-title">B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -76,10 +62,10 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -92,10 +78,10 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-group-section" style="margin-top: 30px;">
+      <div class="form-group-section mt-xl">
         <h4 class="section-title">Datos para Generar Párrafos del Centro Poblado</h4>
         
-        <div class="form-field" style="margin-top: 15px;">
+        <div class="form-field mt-md">
           <label class="label">Ley N° de Creación del Distrito</label>
           <input type="text" class="form-control"
             [value]="datos.leyCreacionDistrito || ''"
@@ -103,7 +89,7 @@
             placeholder="Ej: 8004">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Fecha de Creación del Distrito</label>
           <input type="text" class="form-control"
             [value]="datos.fechaCreacionDistrito || ''"
@@ -111,7 +97,7 @@
             placeholder="Ej: 22 de febrero de 1935">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Distrito Anterior</label>
           <input type="text" class="form-control"
             [value]="datos.distritoAnterior || ''"
@@ -119,7 +105,7 @@
             placeholder="Ej: Caravelí">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Origen de Pobladores (Lugar/Provincia)</label>
           <input type="text" class="form-control"
             [value]="datos.origenPobladores1 || ''"
@@ -127,7 +113,7 @@
             placeholder="Ej: Caravelí">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Origen de Pobladores (Provincia)</label>
           <input type="text" class="form-control"
             [value]="datos.origenPobladores2 || ''"
@@ -135,7 +121,7 @@
             placeholder="Ej: Parinacochas">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Departamento de Origen</label>
           <input type="text" class="form-control"
             [value]="datos.departamentoOrigen || ''"
@@ -143,7 +129,7 @@
             placeholder="Ej: Arequipa">
         </div>
 
-        <div class="form-field" style="margin-top: 10px;">
+        <div class="form-field mt-sm">
           <label class="label">Anexos Ejemplo</label>
           <input type="text" class="form-control"
             [value]="datos.anexosEjemplo || ''"
@@ -152,81 +138,21 @@
         </div>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Ubicación CP</label>
-        <div class="table-editor" style="overflow-x: auto;">
-          <table class="editor-table">
-            <thead>
-              <tr>
-                <th>Localidad</th>
-                <th>Coordenadas</th>
-                <th>Altitud</th>
-                <th>Distrito</th>
-                <th>Provincia</th>
-                <th>Departamento</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of (datos['ubicacionCpTabla'] || []); let i = index">
-                <td>
-                  <input type="text" class="table-input" 
-                    [value]="item.localidad || ''"
-                    (input)="actualizarUbicacionCp(i, 'localidad', $any($event.target).value)"
-                    placeholder="Cahuacho">
-                </td>
-                <td>
-                  <textarea class="table-input" rows="2"
-                    [value]="item.coordenadas || ''"
-                    (input)="actualizarUbicacionCp(i, 'coordenadas', $any($event.target).value)"
-                    placeholder="Lat: -15.1234&#10;Lon: -73.5678"></textarea>
-                </td>
-                <td>
-                  <input type="text" class="table-input" 
-                    [value]="item.altitud || ''"
-                    (input)="actualizarUbicacionCp(i, 'altitud', $any($event.target).value)"
-                    placeholder="3500 m">
-                </td>
-                <td>
-                  <input type="text" class="table-input" 
-                    [value]="item.distrito || ''"
-                    (input)="actualizarUbicacionCp(i, 'distrito', $any($event.target).value)"
-                    placeholder="Cahuacho">
-                </td>
-                <td>
-                  <input type="text" class="table-input" 
-                    [value]="item.provincia || ''"
-                    (input)="actualizarUbicacionCp(i, 'provincia', $any($event.target).value)"
-                    placeholder="Caravelí">
-                </td>
-                <td>
-                  <input type="text" class="table-input" 
-                    [value]="item.departamento || ''"
-                    (input)="actualizarUbicacionCp(i, 'departamento', $any($event.target).value)"
-                    placeholder="Arequipa">
-                </td>
-                <td>
-                  <button type="button" class="btn-icon" (click)="eliminarUbicacionCp(i)" *ngIf="(datos['ubicacionCpTabla'] || []).length > 1" title="Eliminar fila">
-                    ×
-                  </button>
-                </td>
-              </tr>
-              <tr *ngIf="!datos['ubicacionCpTabla'] || datos['ubicacionCpTabla'].length === 0">
-                <td colspan="7" style="text-align: center; padding: 10px;">
-                  <button type="button" class="btn btn-secondary" (click)="inicializarUbicacionCp()">
-                    Agregar Primera Fila
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button type="button" class="btn btn-secondary" (click)="agregarUbicacionCp()" style="margin-top: 10px;">
-          + Agregar Fila
-        </button>
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="ubicacionCpConfig"
+          [columns]="columnasUbicacionCp"
+          [tablaKey]="'ubicacionCpTabla'"
+          [showAddButton]="true"
+          [showDeleteButton]="true"
+          (tableUpdated)="onTablaUpdated()">
+        </app-dynamic-table>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Cahuacho</label>
         <app-image-upload
           [fotografias]="fotografiasFormMulti"

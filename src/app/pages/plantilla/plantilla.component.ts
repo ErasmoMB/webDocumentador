@@ -1,18 +1,19 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { WordGeneratorService } from 'src/app/core/services/word-generator.service';
+import { WordGeneratorService } from 'src/app/core/services/word-generator.facade.service';
 import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { LoggerService } from 'src/app/core/services/logger.service';
+import { LoggerService } from 'src/app/core/services/infrastructure/logger.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { FormularioDatos, CentroPobladoData, Entrevistado } from 'src/app/core/models/formulario.model';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { FormularioService } from 'src/app/core/services/formulario.service';
 import { Seccion1Component } from 'src/app/shared/components/seccion1/seccion1.component';
-import { Seccion2Component } from 'src/app/shared/components/seccion2/seccion2.component';
-import { Seccion3Component } from 'src/app/shared/components/seccion3/seccion3.component';
+import { Seccion2ViewComponent } from 'src/app/shared/components/seccion2/seccion2-view.component';
+import { Seccion3ViewComponent } from 'src/app/shared/components/seccion3/seccion3-view.component';
 import { Seccion4Component } from 'src/app/shared/components/seccion4/seccion4.component';
 import { Seccion5Component } from 'src/app/shared/components/seccion5/seccion5.component';
 import { Seccion6Component } from 'src/app/shared/components/seccion6/seccion6.component';
-import { Seccion7Component } from 'src/app/shared/components/seccion7/seccion7.component';
+import { Seccion7ViewComponent } from 'src/app/shared/components/seccion7/seccion7-view.component';
 import { Seccion8Component } from 'src/app/shared/components/seccion8/seccion8.component';
 import { Seccion9Component } from 'src/app/shared/components/seccion9/seccion9.component';
 import { Seccion10Component } from 'src/app/shared/components/seccion10/seccion10.component';
@@ -45,18 +46,26 @@ import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion3
 
 
 @Component({
-  selector: 'app-resumen',
-  templateUrl: './plantilla.component.html',
+    selector: 'app-resumen',
+    templateUrl: './plantilla.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ResumenComponent implements OnInit, AfterViewInit {
   @ViewChild(Seccion1Component) set seccion1(comp: Seccion1Component) {
     ViewChildHelper.registerComponent('seccion1', comp);
   }
-  @ViewChild(Seccion2Component) set seccion2(comp: Seccion2Component) {
-    ViewChildHelper.registerComponent('seccion2', comp);
+  @ViewChild(Seccion2ViewComponent) set seccion2(comp: Seccion2ViewComponent) {
+    // El componente de vista contiene Seccion2Component internamente
+    if (comp && comp.seccion2Component) {
+      ViewChildHelper.registerComponent('seccion2', comp.seccion2Component);
+    }
   }
-  @ViewChild(Seccion3Component) set seccion3(comp: Seccion3Component) {
-    ViewChildHelper.registerComponent('seccion3', comp);
+  @ViewChild(Seccion3ViewComponent) set seccion3(comp: Seccion3ViewComponent) {
+    // El componente de vista contiene Seccion3Component internamente
+    if (comp && comp.seccion3Component) {
+      ViewChildHelper.registerComponent('seccion3', comp.seccion3Component);
+    }
   }
   @ViewChild(Seccion4Component) set seccion4(comp: Seccion4Component) {
     ViewChildHelper.registerComponent('seccion4', comp);
@@ -67,8 +76,11 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   @ViewChild(Seccion6Component) set seccion6(comp: Seccion6Component) {
     ViewChildHelper.registerComponent('seccion6', comp);
   }
-  @ViewChild(Seccion7Component) set seccion7(comp: Seccion7Component) {
-    ViewChildHelper.registerComponent('seccion7', comp);
+  @ViewChild(Seccion7ViewComponent) set seccion7(comp: Seccion7ViewComponent) {
+    // El componente de vista contiene la lógica de Seccion7 internamente
+    if (comp && comp.seccion7InternalComponent) {
+      ViewChildHelper.registerComponent('seccion7', comp.seccion7InternalComponent);
+    }
   }
   @ViewChild(Seccion8Component) set seccion8(comp: Seccion8Component) {
     ViewChildHelper.registerComponent('seccion8', comp);
@@ -119,6 +131,7 @@ export class ResumenComponent implements OnInit, AfterViewInit {
     ViewChildHelper.registerComponent('seccion23', comp);
   }
   @ViewChild(Seccion24Component) set seccion24(comp: Seccion24Component) {
+    // [Plantilla DEBUG] seccion24 ViewChild set: !!comp
     ViewChildHelper.registerComponent('seccion24', comp);
   }
   @ViewChild(Seccion25Component) set seccion25(comp: Seccion25Component) {
@@ -166,8 +179,10 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   verEjemploLabel: string = 'Ver Ejemplo';
   datosBackup: FormularioDatos | null = null;
   jsonBackup: CentroPobladoData[] | null = null;
+  private isUpdating: boolean = false;
 
   constructor(
+    private projectFacade: ProjectStateFacade,
     private formularioService: FormularioService,
     private router: Router,
     private cdRef: ChangeDetectorRef,
@@ -187,16 +202,25 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   }
 
   actualizarDatos() {
-    this.json = this.formularioService.obtenerJSON();
-    this.datos = this.formularioService.obtenerDatos();
-    if (this.datos && this.datos.entrevistados) {
-      this.entrevistados = this.datos.entrevistados;
-      this.entrevistados2 = this.datos.entrevistados;
+    if (this.isUpdating) {
+      return;
     }
-    
-    ViewChildHelper.updateAllComponents('actualizarDatos');
-    
-    this.cdRef.detectChanges();
+    this.isUpdating = true;
+    try {
+      const datosCompletos = this.projectFacade.obtenerDatos();
+      this.json = datosCompletos['centrosPobladosJSON'] || [];
+      this.datos = datosCompletos as FormularioDatos;
+      if (this.datos && this.datos.entrevistados) {
+        this.entrevistados = this.datos.entrevistados;
+        this.entrevistados2 = this.datos.entrevistados;
+      }
+      
+      ViewChildHelper.updateAllComponents('actualizarDatos');
+      
+      this.cdRef.detectChanges();
+    } finally {
+      this.isUpdating = false;
+    }
   }
 
   shouldShowOrgCell(index: number, lista: any[]): boolean {
@@ -413,20 +437,19 @@ export class ResumenComponent implements OnInit, AfterViewInit {
       this.logger.error("Error al exportar a Word", error);
       const mensajeError = error?.message || "Error desconocido";
       alert(`Hubo un error al exportar el documento: ${mensajeError}. Por favor, intenta nuevamente.`);
-      console.error("Detalles del error:", error);
     }
   }
 
   private hacerBackupSeguro(): boolean {
     try {
-      const datosActuales = this.formularioService.obtenerDatos();
+      const datosActuales = this.projectFacade.obtenerDatos() as FormularioDatos;
       const jsonActual = this.formularioService.obtenerJSON();
       
       if (datosActuales) {
-        this.datosBackup = JSON.parse(JSON.stringify(datosActuales));
+        this.datosBackup = structuredClone(datosActuales);
       }
       if (jsonActual !== null && jsonActual !== undefined) {
-        this.jsonBackup = JSON.parse(JSON.stringify(jsonActual));
+        this.jsonBackup = structuredClone(jsonActual);
       }
       return true;
     } catch (error) {
@@ -460,14 +483,16 @@ export class ResumenComponent implements OnInit, AfterViewInit {
           }
         }
         
-        this.datos = this.formularioService.obtenerDatos();
+        // Obtener datos actualizados desde el store
+        this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
         this.json = this.formularioService.obtenerJSON();
         this.modoEjemplo = true;
         this.verEjemploLabel = 'Volver a mis datos';
+        ViewChildHelper.updateAllComponents('actualizarDatos');
         this.cdRef.detectChanges();
       } else {
         if (this.datosBackup) {
-          this.formularioService.reemplazarDatos(this.datosBackup);
+          this.formularioService.actualizarDatos(this.datosBackup);
           if (this.jsonBackup !== null && this.jsonBackup !== undefined) {
             this.formularioService.guardarJSON(this.jsonBackup);
           }
@@ -476,7 +501,7 @@ export class ResumenComponent implements OnInit, AfterViewInit {
           this.formularioService.guardarJSON([]);
         }
         
-        this.datos = this.formularioService.obtenerDatos();
+        this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
         this.json = this.formularioService.obtenerJSON();
         this.modoEjemplo = false;
         this.verEjemploLabel = 'Ver Ejemplo';
@@ -499,7 +524,19 @@ export class ResumenComponent implements OnInit, AfterViewInit {
     try {
       const boton = event?.target as HTMLButtonElement;
       if (boton) { boton.disabled = true; boton.textContent = 'Generando...'; }
-      await this.wordGeneratorService.generarDocumentoEjemplo();
+
+      const estabaEnModoEjemplo = this.modoEjemplo;
+      if (!estabaEnModoEjemplo) {
+        await this.verEjemplo();
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+
+      await this.exportarWord();
+
+      if (!estabaEnModoEjemplo) {
+        await this.verEjemplo();
+      }
+
       if (boton) { boton.disabled = false; boton.textContent = 'Descargar ejemplo'; }
     } catch (error) {
       this.logger.error('Error al descargar ejemplo', error);

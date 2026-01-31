@@ -3,7 +3,7 @@ import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, Htt
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { CacheService } from '../services/cache.service';
+import { CacheService } from '../services/infrastructure/cache.service';
 import { ConfigService } from '../services/config.service';
 
 @Injectable()
@@ -32,7 +32,6 @@ export class CacheInterceptor implements HttpInterceptor {
             if (responseData && responseData.success) {
               // Solo mostrar logs cuando no estamos en modo vista
               if (!isPlantillaView) {
-                console.log('✅ Respuesta exitosa cacheada:', url);
               }
               this.cacheService.saveResponse(url, params, responseData);
             }
@@ -48,15 +47,6 @@ export class CacheInterceptor implements HttpInterceptor {
             return new Observable<HttpEvent<any>>(observer => {
               observer.complete();
             });
-          }
-          
-          // Log de errores solo cuando no estamos en modo vista
-          if (error.status === 0) {
-            console.warn('⚠️ Conexión rechazada:', req.url);
-          } else if (error.status >= 500) {
-            console.warn(`⚠️ Error ${error.status} del servidor:`, req.url);
-          } else if (error.status >= 400) {
-            console.warn(`⚠️ Error ${error.status} del cliente:`, req.url);
           }
           
           // Re-lanzar el error para que los interceptores posteriores lo manejen

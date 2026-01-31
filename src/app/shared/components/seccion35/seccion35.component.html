@@ -3,27 +3,19 @@
 <p class="text-justify" *ngIf="!datos?.['textoOrganizacionSocial'] || datos?.['textoOrganizacionSocial'] === '____'">____</p>
 
 <app-table-wrapper title="Autoridades políticas y sociales – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" sectionId="3.1.4.B.1.14">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Organización</th>
-            <th class="table-header">Cargo</th>
-            <th class="table-header">Nombres y Apellidos</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos?.['autoridades'] || []); let i = index">
-            <td class="table-cell" *ngIf="shouldShowOrgCell(i, datos?.['autoridades'] || [])" [attr.rowspan]="getOrgRowSpan(item.organizacion, datos?.['autoridades'] || [])" [appDataSource]="'manual'" [fieldName]="'organizacion'">{{ item.organizacion || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'cargo'">{{ item.cargo || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'nombre'">{{ item.nombre || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos?.['autoridades'] || (datos?.['autoridades'] || []).length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="datos?.['autoridades'] || []"
+    [config]="{
+      columns: [
+        { key: 'organizacion', header: 'Organización', align: 'left' },
+        { key: 'cargo', header: 'Cargo', align: 'left' },
+        { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormularioService } from '../../core/services/formulario.service';
+import { ProjectStateFacade } from '../../core/state/project-state.facade';
+import { StorageFacade } from '../../core/services/infrastructure/storage-facade.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface IndexItem {
@@ -30,7 +31,8 @@ export class NavigationIndexService {
 
   constructor(
     private router: Router,
-    private formularioService: FormularioService
+    private projectFacade: ProjectStateFacade,
+    private storage: StorageFacade
   ) {
     this.loadExpandedState();
   }
@@ -79,11 +81,11 @@ export class NavigationIndexService {
   }
 
   private saveExpandedState(expanded: Set<string>): void {
-    localStorage.setItem('sidebarExpanded', JSON.stringify(Array.from(expanded)));
+    this.storage.setItem('sidebarExpanded', JSON.stringify(Array.from(expanded)));
   }
 
   private loadExpandedState(): void {
-    const saved = localStorage.getItem('sidebarExpanded');
+    const saved = this.storage.getItem('sidebarExpanded');
     if (saved) {
       const expandedArray = JSON.parse(saved) as string[];
       const expanded = new Set<string>(expandedArray);
@@ -91,4 +93,3 @@ export class NavigationIndexService {
     }
   }
 }
-

@@ -1,6 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
+// Carga variables desde .env para builds locales (si existe)
+try {
+  require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+} catch (e) {
+  // Si dotenv no está disponible, continúa usando process.env
+}
+
 console.log('🔍 Generando env.js...');
 console.log('Variables de entorno disponibles:');
 console.log('  process.env.API_URL:', process.env.API_URL || '(no definida)');

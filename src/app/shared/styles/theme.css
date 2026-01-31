@@ -249,9 +249,58 @@ input, textarea, select {
 
 @media (max-width: 768px) {
   :root {
+    --spacing-sm: 8px;
     --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --header-height: 56px;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  h4 { font-size: 1rem; }
+
+  .btn {
+    padding: 12px var(--spacing-md);
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    --sidebar-width: 280px;
+    --spacing-lg: 20px;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+}
+
+/* Mobile pequeño */
+@media (max-width: 480px) {
+  :root {
+    --spacing-xs: 4px;
+    --spacing-sm: 6px;
+    --spacing-md: 10px;
+    --spacing-lg: 14px;
+    --header-height: 52px;
+  }
+
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.125rem; }
+
+  .btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
   }
 }
 

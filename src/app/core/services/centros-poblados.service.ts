@@ -65,44 +65,14 @@ export class CentrosPobladosService {
    * @returns Observable con lista de centros poblados
    */
   obtenerPorCodigos(codigos: string[]): Observable<CentroPoblado[]> {
-    console.log('[CentrosPobladosService] 🔵 REQUEST:', {
-      url: `${this.apiUrl}/por-codigos-ubigeo`,
-      method: 'POST',
-      payload: { codigos_ubigeo: codigos },
-      cantidad: codigos.length
-    });
-
     return this.http.post<any>(`${this.apiUrl}/por-codigos-ubigeo`, {
       codigos_ubigeo: codigos
     }).pipe(
       map(response => {
-        console.log('[CentrosPobladosService] 🟢 RESPONSE RAW:', {
-          response_completa: JSON.parse(JSON.stringify(response)),
-          centros_poblados_count: response?.centros_poblados?.length || 0,
-          primer_centro: response?.centros_poblados?.[0] ? {
-            ubigeo: response.centros_poblados[0].ubigeo,
-            centro_poblado: response.centros_poblados[0].centro_poblado,
-            hombres: response.centros_poblados[0].hombres,
-            mujeres: response.centros_poblados[0].mujeres,
-            de_6_a_14_anios: response.centros_poblados[0].de_6_a_14_anios,
-            tipos: {
-              hombres: typeof response.centros_poblados[0].hombres,
-              mujeres: typeof response.centros_poblados[0].mujeres,
-              de_6_a_14_anios: typeof response.centros_poblados[0].de_6_a_14_anios
-            }
-          } : null
-        });
-
         const centros = response.centros_poblados || [];
-        console.log('[CentrosPobladosService] 📦 Datos procesados:', {
-          cantidad: centros.length,
-          datos: JSON.parse(JSON.stringify(centros))
-        });
-
         return centros;
       }),
       catchError(error => {
-        console.error('[CentrosPobladosService] ❌ ERROR:', error);
         return of([]);
       })
     );
@@ -116,7 +86,6 @@ export class CentrosPobladosService {
   obtenerDetalle(ubigeo: string): Observable<DetalleCentroPoblado | null> {
     return this.http.get<DetalleCentroPoblado>(`${this.apiUrl}/detalle/${ubigeo}`).pipe(
       catchError(error => {
-        console.error(`Error obteniendo detalle para UBIGEO ${ubigeo}:`, error);
         return of(null);
       })
     );
@@ -195,7 +164,6 @@ export class CentrosPobladosService {
         };
       }),
       catchError(error => {
-        console.error('Error formateando datos:', error);
         return of(null);
       })
     );

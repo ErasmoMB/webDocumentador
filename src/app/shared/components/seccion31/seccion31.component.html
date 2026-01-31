@@ -7,27 +7,19 @@
 <p class="text-justify" *ngIf="!datos?.['textoIdioma'] || datos?.['textoIdioma'] === '____'">____</p>
 
 <app-table-wrapper title="Lenguas maternas en población de 3 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.10">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos?.['lenguasMaternasTabla'] || [])">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos?.['lenguasMaternasTabla'] || (datos?.['lenguasMaternasTabla'] || []).length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="datos?.['lenguasMaternasTabla'] || []"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
@@ -36,27 +28,19 @@
 <p class="text-justify" *ngIf="!datos?.['textoReligion'] || datos?.['textoReligion'] === '____'">____</p>
 
 <app-table-wrapper title="Religiones profesadas en población de 12 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.10">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (datos?.['religionesTabla'] || [])">
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="!datos?.['religionesTabla'] || (datos?.['religionesTabla'] || []).length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="datos?.['religionesTabla'] || []"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 

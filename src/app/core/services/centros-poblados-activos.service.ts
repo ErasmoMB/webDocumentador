@@ -1,17 +1,29 @@
 import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
-import { LoggerService } from './logger.service';
+import { ProjectStateFacade } from '../state/project-state.facade';
+import { LoggerService } from './infrastructure/logger.service';
+import { FormChangeService } from './state/form-change.service';
 
+/**
+ * CentrosPobladosActivosService - Servicio para manejo de centros poblados activos
+ * 
+ * ✅ FASE 4: Migrado a usar solo ProjectStateFacade (eliminada dependencia de LegacyDocumentSnapshotService)
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class CentrosPobladosActivosService {
   private readonly STORAGE_KEY = 'centros_poblados_activos';
+  private readonly SECTION_ID_SECCION2 = '3.1.2';
 
   constructor(
-    private formularioService: FormularioService,
-    private logger: LoggerService
+    private projectFacade: ProjectStateFacade,
+    private logger: LoggerService,
+    private formChange: FormChangeService
   ) {}
+
+  private getDatos(): any {
+    return this.projectFacade.obtenerDatos();
+  }
 
   obtenerCodigosActivos(comunidadId: string): string[] {
     try {
@@ -20,21 +32,37 @@ export class CentrosPobladosActivosService {
         return [];
       }
 
-      const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2(prefijo);
-      
-      if (filasActivas.length > 0) {
-        return filasActivas;
-      }
+      if (prefijo.startsWith('_A')) {
+        // Obtener filas activas desde ProjectStateFacade
+        const datos = this.getDatos();
+        const fieldName = `filasActivasTablaAISD2${prefijo}`;
+        const filasActivas = datos[fieldName] || [];
+        
+        if (filasActivas.length > 0) {
+          return filasActivas;
+        }
 
-      const datos = this.formularioService.obtenerDatos();
-      const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
-      const indiceComunidad = this.obtenerIndiceComunidad(comunidadId);
-      
-      if (indiceComunidad >= 0 && indiceComunidad < comunidadesCampesinas.length) {
-        const comunidad = comunidadesCampesinas[indiceComunidad];
-        return (comunidad.centrosPobladosSeleccionados || []).filter(
-          (codigo: string) => codigo && codigo.trim() !== ''
-        );
+        const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
+        const indiceComunidad = this.obtenerIndiceComunidad(comunidadId);
+        
+        if (indiceComunidad >= 0 && indiceComunidad < comunidadesCampesinas.length) {
+          const comunidad = comunidadesCampesinas[indiceComunidad];
+          return (comunidad.centrosPobladosSeleccionados || []).filter(
+            (codigo: string) => codigo && codigo.trim() !== ''
+          );
+        }
+      } else if (prefijo.startsWith('_B')) {
+        const datos = this.getDatos();
+        const distritos = datos['distritos'] || [];
+        const match = comunidadId.match(/^B(\d+)$/);
+        const indice = match ? parseInt(match[1]) - 1 : 0;
+        
+        if (indice >= 0 && indice < distritos.length) {
+          const distrito = distritos[indice];
+          return (distrito.centrosPobladosSeleccionados || []).filter(
+            (codigo: string) => codigo && codigo.trim() !== ''
+          );
+        }
       }
 
       return [];
@@ -55,7 +83,9 @@ export class CentrosPobladosActivosService {
         .map(c => c?.toString().trim())
         .filter(c => c && c !== '');
 
-      this.formularioService.guardarFilasActivasTablaAISD2(codigosLimpios, prefijo);
+      // Guardar usando ProjectStateFacade
+      const fieldName = `filasActivasTablaAISD2${prefijo}`;
+      this.projectFacade.setField(this.SECTION_ID_SECCION2, null, fieldName, codigosLimpios);
       
       this.sincronizarConSeccion2(comunidadId, codigosLimpios);
       
@@ -67,7 +97,7 @@ export class CentrosPobladosActivosService {
 
   sincronizarConSeccion2(comunidadId: string, codigos: string[]): void {
     try {
-      const datos = this.formularioService.obtenerDatos();
+      const datos = this.getDatos();
       const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
       const indiceComunidad = this.obtenerIndiceComunidad(comunidadId);
       
@@ -82,7 +112,7 @@ export class CentrosPobladosActivosService {
           return cc;
         });
         
-        this.formularioService.actualizarDato('comunidadesCampesinas', nuevasComunidades);
+        this.formChange.persistFields(this.SECTION_ID_SECCION2, 'form', { ['comunidadesCampesinas']: nuevasComunidades });
         this.logger.info(`Sincronizado con Sección 2: ${codigos.length} centros poblados`);
       }
     } catch (error) {
@@ -90,9 +120,10 @@ export class CentrosPobladosActivosService {
     }
   }
 
+
   obtenerIndiceComunidad(comunidadId: string): number {
     if (comunidadId.startsWith('cc_') || comunidadId.startsWith('cc_default_')) {
-      const datos = this.formularioService.obtenerDatos();
+      const datos = this.getDatos();
       const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
       
       if (comunidadId === 'cc_legacy') {
@@ -106,9 +137,14 @@ export class CentrosPobladosActivosService {
       return indice >= 0 ? indice : 0;
     }
     
-    const match = comunidadId.match(/^A(\d+)$/);
-    if (match) {
-      return parseInt(match[1]) - 1;
+    const matchA = comunidadId.match(/^A(\d+)$/);
+    if (matchA) {
+      return parseInt(matchA[1]) - 1;
+    }
+    
+    const matchB = comunidadId.match(/^B(\d+)$/);
+    if (matchB) {
+      return parseInt(matchB[1]) - 1;
     }
     
     return 0;
@@ -116,14 +152,19 @@ export class CentrosPobladosActivosService {
 
   obtenerPrefijoDeComunidadId(comunidadId: string): string {
     const indice = this.obtenerIndiceComunidad(comunidadId);
+    
+    if (comunidadId.startsWith('B') || comunidadId.match(/^B\d+$/)) {
+      return `_B${indice + 1}`;
+    }
+    
     return `_A${indice + 1}`;
   }
 
   obtenerComunidadIdDePrefijo(prefijo: string): string {
-    const match = prefijo.match(/_A(\d+)/);
-    if (match) {
-      const indice = parseInt(match[1]) - 1;
-      const datos = this.formularioService.obtenerDatos();
+    const matchA = prefijo.match(/_A(\d+)/);
+    if (matchA) {
+      const indice = parseInt(matchA[1]) - 1;
+      const datos = this.getDatos();
       const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
       
       if (indice >= 0 && indice < comunidadesCampesinas.length) {
@@ -132,10 +173,40 @@ export class CentrosPobladosActivosService {
       
       return `A${indice + 1}`;
     }
+    
+    const matchB = prefijo.match(/_B(\d+)/);
+    if (matchB) {
+      const indice = parseInt(matchB[1]) - 1;
+      const datos = this.getDatos();
+      const distritos = datos['distritos'] || [];
+      
+      if (indice >= 0 && indice < distritos.length) {
+        return distritos[indice].id || `B${indice + 1}`;
+      }
+      
+      return `B${indice + 1}`;
+    }
+    
     return '';
   }
 
   obtenerCodigosActivosPorPrefijo(prefijo: string): string[] {
+    if (prefijo.startsWith('_B')) {
+      const match = prefijo.match(/_B(\d+)/);
+      if (match) {
+        const indice = parseInt(match[1]) - 1;
+        const datos = this.getDatos();
+        const distritos = datos['distritos'] || [];
+        
+        if (indice >= 0 && indice < distritos.length) {
+          const distrito = distritos[indice];
+          return (distrito.centrosPobladosSeleccionados || []).filter(
+            (codigo: string) => codigo && codigo.trim() !== ''
+          );
+        }
+      }
+    }
+    
     const comunidadId = this.obtenerComunidadIdDePrefijo(prefijo);
     return this.obtenerCodigosActivos(comunidadId);
   }

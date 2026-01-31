@@ -1,18 +1,22 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from './infrastructure/logger.service';
+import { StorageFacade } from './infrastructure/storage-facade.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageMigrationService {
-  constructor(private logger: LoggerService) {}
+  constructor(
+    private logger: LoggerService,
+    private storage: StorageFacade
+  ) {}
 
   /**
    * Comprime todas las imágenes base64 en localStorage
    */
   async comprimirImagenesEnLocalStorage(): Promise<void> {
     try {
-      const datosStr = localStorage.getItem('formularioDatos');
+      const datosStr = this.storage.getItem('formularioDatos');
       if (!datosStr) {
         this.logger.info('No hay datos en localStorage para migrar');
         return;
@@ -30,7 +34,7 @@ export class ImageMigrationService {
       const datosNuevos = JSON.stringify(datos);
       const tamanioDespues = new Blob([datosNuevos]).size / (1024 * 1024);
       
-      localStorage.setItem('formularioDatos', datosNuevos);
+      this.storage.setItem('formularioDatos', datosNuevos);
       
       this.logger.info(`Migración completada:`);
       this.logger.info(`- Tamaño antes: ${tamanioAntes.toFixed(2)} MB`);
@@ -123,7 +127,7 @@ export class ImageMigrationService {
    * Obtiene el tamaño actual del localStorage en MB
    */
   obtenerTamanioLocalStorage(): number {
-    const datos = localStorage.getItem('formularioDatos');
+    const datos = this.storage.getItem('formularioDatos');
     if (!datos) return 0;
     return new Blob([datos]).size / (1024 * 1024);
   }
@@ -133,7 +137,7 @@ export class ImageMigrationService {
    */
   limpiarLocalStorage(): void {
     if (confirm('¿Estás seguro de que deseas borrar todos los datos guardados?')) {
-      localStorage.clear();
+      this.storage.clear();
       this.logger.info('localStorage limpiado');
       window.location.reload();
     }

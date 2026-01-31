@@ -103,7 +103,6 @@ export class ImageBackendService {
         return { deleted_count: 0 };
       }),
       catchError(error => {
-        console.warn('Error al eliminar imágenes del backend:', error);
         return of({ deleted_count: 0 });
       })
     );
@@ -122,11 +121,6 @@ export class ImageBackendService {
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {
-    if (error.error instanceof ErrorEvent) {
-      console.error('Error del cliente:', error.error.message);
-    } else {
-      console.error(`Error del servidor: ${error.status}`, error.error);
-    }
     return throwError(() => error);
   }
 }

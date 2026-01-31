@@ -1,31 +1,46 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
+import { TableHandlerFactoryService } from 'src/app/core/services/table-handler-factory.service';
 import { ServiciosBasicosService } from 'src/app/core/services/servicios-basicos.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { debugLog } from 'src/app/shared/utils/debug';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+// Clean Architecture imports
+import { LoadSeccion26UseCase, UpdateSeccion26DataUseCase, Seccion26ViewModel } from 'src/app/core/application/use-cases';
+import { Seccion26Data } from 'src/app/core/domain/entities';
 
 @Component({
-  selector: 'app-seccion26',
-  templateUrl: './seccion26.component.html',
-  styleUrls: ['./seccion26.component.css']
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        ParagraphEditorComponent,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion26',
+    templateUrl: './seccion26.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion26Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
   
-  private stateSubscription?: Subscription;
-  private readonly regexCache = new Map<string, RegExp>();
+  private stateSubscription?: Subscription;  private timeouts: number[] = [];  private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'abastecimientoAguaCpTabla', 'saneamientoCpTabla', 'coberturaElectricaCpTabla', 'combustiblesCocinarCpTabla', 'textoIntroServiciosBasicosAISI', 'textoServiciosAguaAISI', 'textoDesagueCP', 'textoDesechosSolidosCP', 'textoElectricidadCP', 'textoEnergiaCocinarCP'];
   
@@ -39,6 +54,10 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   fotografiasDesechosFormMulti: FotoItem[] = [];
   fotografiasElectricidadFormMulti: FotoItem[] = [];
   fotografiasCocinarFormMulti: FotoItem[] = [];
+
+  // Clean Architecture ViewModel
+  seccion26ViewModel$ = this.loadSeccion26UseCase.execute();
+  seccion26ViewModel?: Seccion26ViewModel;
 
   abastecimientoAguaConfig: TableConfig = {
     tablaKey: 'abastecimientoAguaCpTabla',
@@ -80,72 +99,67 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService,
-    private serviciosBasicosService: ServiciosBasicosService
+    private serviciosBasicosService: ServiciosBasicosService,
+    // Clean Architecture dependencies
+    private loadSeccion26UseCase: LoadSeccion26UseCase,
+    private updateSeccion26DataUseCase: UpdateSeccion26DataUseCase
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    
+    // Subscribe to ViewModel for Clean Architecture
+    this.seccion26ViewModel$.subscribe(viewModel => {
+      this.seccion26ViewModel = viewModel;
+      this.cdRef.markForCheck();
+    });
   }
 
-  debugTabla351(): void {
-    console.log('=== DEBUG TABLA 3.51 - COMBUSTIBLES PARA COCCIÓN ===');
-    const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
-    console.log('4. Tabla key esperada:', this.getTablaKeyCombustiblesCocinar());
-    console.log('5. Datos actuales en formularioService:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - combustiblesCocinarCpTabla:', todosLosDatos['combustiblesCocinarCpTabla']);
-    console.log('   - combustiblesCocinarCpTabla_B1:', todosLosDatos['combustiblesCocinarCpTabla_B1']);
-    console.log('   - combustiblesCocinarCpTabla_B2:', todosLosDatos['combustiblesCocinarCpTabla_B2']);
-    console.log('6. Datos en this.datos:');
-    console.log('   - combustiblesCocinarCpTabla:', this.datos?.combustiblesCocinarCpTabla);
-    console.log('   - combustiblesCocinarCpTabla_B1:', this.datos?.['combustiblesCocinarCpTabla_B1']);
-    console.log('   - combustiblesCocinarCpTabla_B2:', this.datos?.['combustiblesCocinarCpTabla_B2']);
-    
-    if (codigos && codigos.length > 0) {
-      console.log('7. Probando llamada al backend...');
-      this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
-        (response: any) => {
-          console.log('✅ Respuesta del backend:', response);
-          if (response.success && response.data) {
-            console.log('✅ Datos recibidos:', response.data);
-            console.log('   Cantidad de registros:', response.data.length);
-            if (response.data.length > 0) {
-              console.log('   Primeros 20 registros:', response.data.slice(0, 20));
-            }
-          } else {
-            console.warn('⚠️ Respuesta sin success o sin data:', response);
-          }
-        },
-        (error: any) => {
-          console.error('❌ Error al llamar al backend:', error);
-        }
-      );
-    } else {
-      console.warn('⚠️ No hay códigos UBIGEO para probar');
+  // Clean Architecture methods
+  updateSeccion26Data(updates: Partial<Seccion26Data>): void {
+    if (this.seccion26ViewModel) {
+      const currentData = this.seccion26ViewModel.data;
+      const updatedData = { ...currentData, ...updates };
+      this.updateSeccion26DataUseCase.execute(updatedData).subscribe(updatedViewModel => {
+        this.seccion26ViewModel = updatedViewModel;
+        this.cdRef.markForCheck();
+      });
     }
-    console.log('=== FIN DEBUG ===');
+  }
+
+  // Backward compatibility methods - delegate to Clean Architecture
+  obtenerTextoIntroServiciosBasicos(): string {
+    return this.seccion26ViewModel?.texts.introServiciosBasicosText || this.datos.textoIntroServiciosBasicosAISI || '';
+  }
+
+  obtenerTextoServiciosAgua(): string {
+    return this.seccion26ViewModel?.texts.serviciosAguaText || this.datos.textoServiciosAguaAISI || '';
+  }
+
+  obtenerTextoDesague(): string {
+    return this.seccion26ViewModel?.texts.desagueText || this.datos.textoDesagueCP || '';
+  }
+
+  obtenerTextoDesechosSolidos(): string {
+    return this.seccion26ViewModel?.texts.desechosSolidosText || this.datos.textoDesechosSolidosCP || '';
+  }
+
+  obtenerTextoElectricidad(): string {
+    return this.seccion26ViewModel?.texts.electricidadText || this.datos.textoElectricidadCP || '';
+  }
+
+  obtenerTextoEnergiaCocinar(): string {
+    return this.seccion26ViewModel?.texts.energiaCocinarText || this.datos.textoEnergiaCocinarCP || '';
   }
 
   protected override onInitCustom(): void {
     this.eliminarFilasTotal();
     this.actualizarFotografiasCache();
-    
-    setTimeout(() => {
-      (window as any).debugTabla351 = () => this.debugTabla351();
-      console.log('💡 Para depurar la tabla 3.51, ejecuta en consola: debugTabla351()');
-    }, 1000);
     
     // Cargar servicios básicos desde el backend
     if (!this.modoFormulario) {
@@ -154,19 +168,19 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     
     if (this.modoFormulario) {
       if (this.seccionId) {
-        setTimeout(() => {
+        this.timeouts.push(window.setTimeout(() => {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
-        }, 0);
+        }, 0));
       }
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.pipe(takeUntil(this.destroy$)).subscribe(() => {
         if (this.seccionId) {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
         }
       });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.pipe(takeUntil(this.destroy$)).subscribe(() => {
         this.cargarFotografias();
         this.actualizarFotografiasCache();
         this.cdRef.detectChanges();
@@ -175,6 +189,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   }
 
   override ngOnDestroy() {
+    this.timeouts.forEach(id => clearTimeout(id));
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -190,7 +205,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
@@ -248,6 +263,63 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     return prefijo ? `combustiblesCocinarCpTabla${prefijo}` : 'combustiblesCocinarCpTabla';
   }
 
+  get abastecimientoAguaCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyAbastecimientoAgua();
+    return this.datos[tablaKey] || this.datos.abastecimientoAguaCpTabla || [];
+  }
+
+  get saneamientoCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeySaneamiento();
+    return this.datos[tablaKey] || this.datos.saneamientoCpTabla || [];
+  }
+
+  get coberturaElectricaCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyCoberturaElectrica();
+    return this.datos[tablaKey] || this.datos.coberturaElectricaCpTabla || [];
+  }
+
+  /**
+   * Obtiene la tabla Abastecimiento Agua CP con porcentajes calculados dinámicamente
+   * Cuadro 3.47
+   */
+  getAbastecimientoAguaCpConPorcentajes(): any[] {
+    const tabla = this.abastecimientoAguaCpTablaVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.47');
+  }
+
+  /**
+   * Obtiene la tabla Saneamiento CP con porcentajes calculados dinámicamente
+   * Cuadro 3.48
+   */
+  getSaneamientoCpConPorcentajes(): any[] {
+    const tabla = this.saneamientoCpTablaVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.48');
+  }
+
+  /**
+   * Obtiene la tabla Cobertura Eléctrica CP con porcentajes calculados dinámicamente
+   * Cuadro 3.49
+   */
+  getCoberturaElectricaCpConPorcentajes(): any[] {
+    const tabla = this.coberturaElectricaCpTablaVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.49');
+  }
+
+  /**
+   * Obtiene la tabla Combustibles Cocinar CP con porcentajes calculados dinámicamente
+   * Cuadro 3.50
+   * Nota: Esta tabla usa 'nombre' en lugar de 'categoria' como campo de identificación
+   */
+  getCombustiblesCocinarCpConPorcentajes(): any[] {
+    const tabla = this.combustiblesCocinarCpTablaVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.50');
+  }
+
+  get combustiblesCocinarCpTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyCombustiblesCocinar();
+    return this.datos[tablaKey] || this.datos.combustiblesCocinarCpTabla || [];
+  }
+
   protected override tieneFotografias(): boolean {
     return true;
   }
@@ -266,7 +338,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       return '____';
     }
     const item = this.datos.condicionOcupacionAISI.find((item: any) => 
-      item.categoria && item.categoria.toLowerCase().includes('ocupado')
+      item.categoria?.toLowerCase().includes('ocupado') || item.categoria?.toLowerCase().includes('ocupada')
     );
     return item?.casos?.toString() || '____';
   }
@@ -276,9 +348,24 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       return '____';
     }
     const item = this.datos.abastecimientoAguaCpTabla.find((item: any) => 
-      item.tipo && item.tipo.toLowerCase().includes('dentro')
+      item.categoria && item.categoria.toLowerCase().includes('dentro')
     );
-    return item?.porcentaje || '____';
+    
+    if (item?.porcentaje) {
+      return item.porcentaje;
+    }
+    
+    // Calcular porcentaje si no existe
+    const total = this.datos.abastecimientoAguaCpTabla.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    
+    if (total === 0) return '____';
+    
+    const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(1) + '%';
   }
 
   getPorcentajeAguaRedPublicaFuera(): string {
@@ -286,9 +373,24 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       return '____';
     }
     const item = this.datos.abastecimientoAguaCpTabla.find((item: any) => 
-      item.tipo && item.tipo.toLowerCase().includes('fuera')
+      item.categoria && item.categoria.toLowerCase().includes('fuera')
     );
-    return item?.porcentaje || '____';
+    
+    if (item?.porcentaje) {
+      return item.porcentaje;
+    }
+    
+    // Calcular porcentaje si no existe
+    const total = this.datos.abastecimientoAguaCpTabla.reduce((sum: number, item: any) => {
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return sum + casos;
+    }, 0);
+    
+    if (total === 0) return '____';
+    
+    const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return porcentaje.toFixed(1) + '%';
   }
 
   getPorcentajeElectricidadSi(): string {
@@ -447,7 +549,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -458,7 +560,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
@@ -617,7 +719,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== this.datos.abastecimientoAguaCpTabla.length) {
         this.datos.abastecimientoAguaCpTabla = filtered;
-        this.formularioService.actualizarDato('abastecimientoAguaCpTabla', filtered);
+        this.onFieldChange('abastecimientoAguaCpTabla', filtered, { refresh: false });
       }
     }
 
@@ -628,7 +730,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== this.datos.saneamientoCpTabla.length) {
         this.datos.saneamientoCpTabla = filtered;
-        this.formularioService.actualizarDato('saneamientoCpTabla', filtered);
+        this.onFieldChange('saneamientoCpTabla', filtered, { refresh: false });
       }
     }
 
@@ -639,7 +741,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== this.datos.coberturaElectricaCpTabla.length) {
         this.datos.coberturaElectricaCpTabla = filtered;
-        this.formularioService.actualizarDato('coberturaElectricaCpTabla', filtered);
+        this.onFieldChange('coberturaElectricaCpTabla', filtered, { refresh: false });
       }
     }
 
@@ -650,7 +752,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
       );
       if (filtered.length !== this.datos.combustiblesCocinarCpTabla.length) {
         this.datos.combustiblesCocinarCpTabla = filtered;
-        this.formularioService.actualizarDato('combustiblesCocinarCpTabla', filtered);
+        this.onFieldChange('combustiblesCocinarCpTabla', filtered, { refresh: false });
       }
     }
   }
@@ -713,7 +815,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     }
 
     // Cargar servicios básicos (agua, desagüe, electricidad)
-    this.serviciosBasicosService.obtenerServiciosPorCodigos(codigos).subscribe(
+    this.serviciosBasicosService.obtenerServiciosPorCodigos(codigos).pipe(takeUntil(this.destroy$)).subscribe(
       (response: any) => {
         if (response.success && response.data) {
           const datos = response.data;
@@ -722,21 +824,21 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
           if (datos['Agua']) {
             const aguaSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Agua'], 'tipo');
             this.datos.abastecimientoAguaCpTabla = this.recalcularPorcentajes(aguaSinDuplicados);
-            this.formularioService.actualizarDato('abastecimientoAguaCpTabla', this.datos.abastecimientoAguaCpTabla);
+            this.onFieldChange('abastecimientoAguaCpTabla', this.datos.abastecimientoAguaCpTabla, { refresh: false });
           }
           
           // Procesar Desagüe (3.49) - eliminar duplicados y recalcular porcentajes
           if (datos['Desagüe']) {
             const desagueSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Desagüe'], 'tipo');
             this.datos.saneamientoCpTabla = this.recalcularPorcentajes(desagueSinDuplicados);
-            this.formularioService.actualizarDato('saneamientoCpTabla', this.datos.saneamientoCpTabla);
+            this.onFieldChange('saneamientoCpTabla', this.datos.saneamientoCpTabla, { refresh: false });
           }
           
           // Procesar Alumbrado (3.50) - eliminar duplicados y recalcular porcentajes
           if (datos['Alumbrado']) {
             const alumbradoSinDuplicados = this.eliminarDuplicadosPorTipo(datos['Alumbrado'], 'tipo');
             this.datos.coberturaElectricaCpTabla = this.recalcularPorcentajes(alumbradoSinDuplicados);
-            this.formularioService.actualizarDato('coberturaElectricaCpTabla', this.datos.coberturaElectricaCpTabla);
+            this.onFieldChange('coberturaElectricaCpTabla', this.datos.coberturaElectricaCpTabla, { refresh: false });
           }
 
           this.cdRef.detectChanges();
@@ -747,25 +849,19 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     );
 
     // Cargar energía para cocinar (3.51) - eliminar duplicados y recalcular porcentajes
-    this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).subscribe(
+    this.serviciosBasicosService.obtenerEnergiaCocinavPorCodigos(codigos).pipe(takeUntil(this.destroy$)).subscribe(
       (response: any) => {
-        console.log('[S26] Respuesta energía cocinar:', response);
         if (response.success && response.data) {
-          console.log('[S26] Datos recibidos:', response.data);
           const tablaKey = this.getTablaKeyCombustiblesCocinar();
-          console.log('[S26] Guardando en tablaKey:', tablaKey);
           const combustiblesSinDuplicados = this.eliminarDuplicadosPorTipo(response.data, 'nombre');
           const combustiblesConPorcentajes = this.recalcularPorcentajes(combustiblesSinDuplicados);
-          console.log('[S26] Datos procesados:', combustiblesConPorcentajes);
           this.datos[tablaKey] = combustiblesConPorcentajes;
           this.datos.combustiblesCocinarCpTabla = combustiblesConPorcentajes;
-          this.formularioService.actualizarDato(tablaKey as any, combustiblesConPorcentajes);
-          this.tableService.calcularPorcentajes(this.datos, this.combustiblesCocinarConfig);
-          console.log('[S26] Datos guardados. Verificando:', this.datos[tablaKey]);
+          this.onFieldChange(tablaKey as any, combustiblesConPorcentajes, { refresh: false });
+          this.tableFacade.calcularPorcentajes(this.datos, this.combustiblesCocinarConfig);
           this.cdRef.detectChanges();
         } else {
-          console.warn('[S26] Respuesta sin success o sin data:', response);
-        }
+          }
       },
       (error: any) => {
         console.error('[S26] Error cargando datos energía cocinar:', error);
@@ -773,7 +869,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     );
   }
 
-  private calcularPorcentajesTabla(tablaKey: string, campoCasos: string = 'casos', campoPorcentaje: string = 'porcentaje'): void {
+  private calcularPorcentajesTablaCustom(tablaKey: string, campoCasos: string = 'casos', campoPorcentaje: string = 'porcentaje'): void {
     const tabla = this.datos[tablaKey] || [];
     if (!tabla || tabla.length === 0) return;
     
@@ -807,30 +903,17 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
   }
 
-  onAbastecimientoAguaFieldChange(index: number, field: string, value: any): void {
-    const tablaKey = this.getTablaKeyAbastecimientoAgua();
-    const tabla = this.datos[tablaKey] || this.datos.abastecimientoAguaCpTabla || [];
-    if (index >= 0 && index < tabla.length) {
-      tabla[index][field] = value;
-      if (field === 'casos') {
-        this.calcularPorcentajesTabla(tablaKey);
-      } else {
-        this.datos[tablaKey] = [...tabla];
-        this.formularioService.actualizarDato(tablaKey as any, tabla);
-      }
-      this.actualizarDatos();
-      this.cdRef.detectChanges();
-    }
-  }
+  // ✅ MIGRADO: Usa factory centralizado
+  onAbastecimientoAguaFieldChange = this.createTableHandler('abastecimientoAguaTabla', this.abastecimientoAguaConfig);
 
   onAbastecimientoAguaTableUpdated(): void {
     const tablaKey = this.getTablaKeyAbastecimientoAgua();
     const tabla = this.datos[tablaKey] || this.datos.abastecimientoAguaCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -841,10 +924,10 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
       if (field === 'casos') {
-        this.calcularPorcentajesTabla(tablaKey);
+        this.calcularPorcentajesTablaCustom(tablaKey);
       } else {
         this.datos[tablaKey] = [...tabla];
-        this.formularioService.actualizarDato(tablaKey as any, tabla);
+        this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       }
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -855,7 +938,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeySaneamiento();
     const tabla = this.datos[tablaKey] || this.datos.saneamientoCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -866,10 +949,10 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
       if (field === 'casos') {
-        this.calcularPorcentajesTabla(tablaKey);
+        this.calcularPorcentajesTablaCustom(tablaKey);
       } else {
         this.datos[tablaKey] = [...tabla];
-        this.formularioService.actualizarDato(tablaKey as any, tabla);
+        this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       }
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -880,7 +963,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyCoberturaElectrica();
     const tabla = this.datos[tablaKey] || this.datos.coberturaElectricaCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -891,10 +974,10 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
       if (field === 'casos') {
-        this.calcularPorcentajesTabla(tablaKey);
+        this.calcularPorcentajesTablaCustom(tablaKey);
       } else {
         this.datos[tablaKey] = [...tabla];
-        this.formularioService.actualizarDato(tablaKey as any, tabla);
+        this.onFieldChange(tablaKey as any, tabla, { refresh: false });
       }
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -905,7 +988,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyCombustiblesCocinar();
     const tabla = this.datos[tablaKey] || this.datos.combustiblesCocinarCpTabla || [];
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey as any, tabla);
+    this.onFieldChange(tablaKey as any, tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }

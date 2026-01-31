@@ -1,30 +1,41 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { PeaService } from 'src/app/core/services/pea.service';
+import { PeaService } from 'src/app/core/services/domain/pea.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 @Component({
-  selector: 'app-seccion23',
-  templateUrl: './seccion23.component.html',
-  styleUrls: ['./seccion23.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        GenericTableComponent,
+        ParagraphEditorComponent,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion23',
+    templateUrl: './seccion23.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion23Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
   
   private stateSubscription?: Subscription;
+  private timeouts: number[] = [];
   private readonly regexCache = new Map<string, RegExp>();
   
   override watchedFields: string[] = ['centroPobladoAISI', 'distritoSeleccionado', 'petGruposEdadAISI', 'peaDistritoSexoTabla', 'peaOcupadaDesocupadaTabla', 'poblacionDistritalAISI', 'petDistritalAISI', 'ingresoPerCapitaAISI', 'rankingIngresoAISI', 'textoPEAAISI', 'textoPET_AISI', 'textoIndicadoresDistritalesAISI', 'textoPEA_AISI', 'textoAnalisisPEA_AISI', 'textoEmpleoAISI', 'textoIngresosAISI', 'textoIndiceDesempleoAISI'];
@@ -39,7 +50,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
     estructuraInicial: [
-      { categoria: '', casos: 0, porcentaje: '0,00 %' }
+      { categoria: '', casos: 0, porcentaje: '' }
     ],
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
@@ -51,7 +62,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
     estructuraInicial: [
-      { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+      { categoria: '', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' }
     ],
     calcularPorcentajes: false,
     camposParaCalcular: []
@@ -63,27 +74,39 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
     estructuraInicial: [
-      { categoria: '', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' }
+      { categoria: '', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' }
     ],
     calcularPorcentajes: false,
     camposParaCalcular: []
   };
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    injector: Injector,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private sanitizer: DomSanitizer,
     autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService,
     private peaService: PeaService
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+  }
+
+  // Métodos wrapper públicos para acceso desde template (evitar index signature issues)
+  getPoblacionDistritalFn(): string {
+    return this.datos.poblacionDistritalAISI || '____';
+  }
+
+  obtenerTextoPET_AISI(): string {
+    if (this.datos.textoPET_AISI && this.datos.textoPET_AISI !== '____') {
+      return this.datos.textoPET_AISI;
+    }
+    const centroPoblado = this.datos.centroPobladoAISI || '';
+    const porcentajePET = this['getPorcentajePETTotal']();
+    const porcentaje4564 = this['getPorcentajeGrupoPET']('45');
+    const porcentaje65 = this['getPorcentajeGrupoPET']('65');
+    return `La población en edad de trabajar (PET) en el CP ${centroPoblado} representa un ${porcentajePET} de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el ${porcentaje4564} de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el ${porcentaje65} de la PET.`;
   }
 
   protected override onInitCustom(): void {
@@ -91,34 +114,28 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     this.eliminarFilasTotal();
     this.cargarDatosPEA();
     
-    setTimeout(() => {
-      (window as any).debugCuadro341 = () => this.debugCuadro341();
-      (window as any).debugCuadro342 = () => this.debugCuadro342();
-      (window as any).debugCuadro343 = () => this.debugCuadro343();
-      console.log('💡 Para depurar sección 23:');
-      console.log('   - Cuadro 3.41 (PET grupos edad): debugCuadro341()');
-      console.log('   - Cuadro 3.42 (PEA/No PEA): debugCuadro342()');
-      console.log('   - Cuadro 3.43 (PEA Ocupada/Desocupada): debugCuadro343()');
-    }, 1000);
-    
     if (this.modoFormulario) {
       if (this.seccionId) {
-        setTimeout(() => {
+        this.timeouts.push(window.setTimeout(() => {
           this.actualizarFotografiasFormMulti();
           this.cdRef.detectChanges();
-        }, 0);
+        }, 0));
       }
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        if (this.seccionId) {
-          this.actualizarFotografiasFormMulti();
-          this.cdRef.detectChanges();
-        }
-      });
+      this.stateSubscription = this.stateAdapter.datos$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (this.seccionId) {
+            this.actualizarFotografiasFormMulti();
+            this.cdRef.detectChanges();
+          }
+        });
     } else {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
+      this.stateSubscription = this.stateAdapter.datos$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.cargarFotografias();
+          this.cdRef.detectChanges();
+        });
     }
   }
 
@@ -131,7 +148,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (this.datos['petGruposEdadAISI'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+        this.onFieldChange('petGruposEdadAISI', this.datos['petGruposEdadAISI'], { refresh: false });
         this.cdRef.detectChanges();
       }
     }
@@ -144,7 +161,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (this.datos['peaDistritoSexoTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+        this.onFieldChange('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla'], { refresh: false });
         this.cdRef.detectChanges();
       }
     }
@@ -157,105 +174,84 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (this.datos['peaOcupadaDesocupadaTabla'].length !== longitudOriginal) {
-        this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+        this.onFieldChange('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla'], { refresh: false });
         this.cdRef.detectChanges();
       }
     }
   }
 
   debugCuadro341(): void {
-    console.log('=== DEBUG CUADRO 3.41 - PET SEGÚN GRUPOS DE EDAD ===');
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Prefijo grupo:', this.obtenerPrefijoGrupo());
-    console.log('4. Tabla key esperada:', this.getTablaKeyPetGruposEdad());
-    console.log('5. Datos actuales:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - petGruposEdadAISI:', todosLosDatos['petGruposEdadAISI']);
-    console.log('6. Datos en this.datos:', this.datos?.petGruposEdadAISI);
-    
+    const todosLosDatos = this.projectFacade.obtenerDatos();
+    // logged: petGruposEdadAISI data
     if (codigos && codigos.length > 0) {
-      console.log('7. Probando llamada al backend...');
-      this.peaService.obtenerPorCodigos(codigos).subscribe(
-        (response: any) => {
-          console.log('✅ Respuesta del backend:', response);
+      this.peaService.obtenerPorCodigos(codigos)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (response: any) => {
           if (response && response.success && response.tabla_3_41_pea_grupos_edad) {
-            console.log('✅ Datos recibidos (primeros 20):', response.tabla_3_41_pea_grupos_edad.slice(0, 20));
-          }
+            }
         },
         (error: any) => {
           console.error('❌ Error al llamar al backend:', error);
         }
       );
     }
-    console.log('=== FIN DEBUG ===');
-  }
+    }
 
   debugCuadro342(): void {
-    console.log('=== DEBUG CUADRO 3.42 - PEA Y NO PEA SEGÚN SEXO ===');
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Datos actuales:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - peaDistritoSexoTabla:', todosLosDatos['peaDistritoSexoTabla']);
-    console.log('4. Datos en this.datos:', this.datos?.peaDistritoSexoTabla);
-    console.log('=== FIN DEBUG ===');
-  }
+    const todosLosDatos = this.projectFacade.obtenerDatos();
+    // logged: peaDistritoSexoTabla data
+    }
 
   debugCuadro343(): void {
-    console.log('=== DEBUG CUADRO 3.43 - PEA OCUPADA Y DESOCUPADA ===');
     const codigos = this.groupConfig.getAISICCPPActivos();
-    console.log('1. Códigos UBIGEO activos:', codigos);
-    console.log('2. Sección ID:', this.seccionId);
-    console.log('3. Datos actuales:');
-    const todosLosDatos = this.formularioService.obtenerDatos();
-    console.log('   - peaOcupadaDesocupadaTabla:', todosLosDatos['peaOcupadaDesocupadaTabla']);
-    console.log('4. Datos en this.datos:', this.datos?.peaOcupadaDesocupadaTabla);
-    console.log('=== FIN DEBUG ===');
-  }
+    const todosLosDatos = this.projectFacade.obtenerDatos();
+    // logged: peaOcupadaDesocupadaTabla data
+    }
 
   private cargarDatosPEA(): void {
+    // Si ya hay datos cargados (ej: desde mock), no sobrescribir
+    if (this.datos.petGruposEdadAISI && Array.isArray(this.datos.petGruposEdadAISI) && this.datos.petGruposEdadAISI.length > 0) {
+      return;
+    }
+    if (this.datos.peaDistritoSexoTabla && Array.isArray(this.datos.peaDistritoSexoTabla) && this.datos.peaDistritoSexoTabla.length > 0) {
+      return;
+    }
+
     const ubigeos = this.groupConfig.getAISICCPPActivos();
     
     if (!ubigeos || ubigeos.length === 0) {
       return;
     }
 
-    console.log('[S23] Cargando datos PEA con códigos:', ubigeos);
-    this.peaService.obtenerPorCodigos(ubigeos).subscribe(
-      (response: any) => {
-        console.log('[S23] Respuesta completa:', response);
+    this.peaService.obtenerPorCodigos(ubigeos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (response: any) => {
         if (response.success) {
-          console.log('[S23] Procesando cuadro 3.41 (PET grupos edad)...');
           let petGruposEdad = response.tabla_3_41_pea_grupos_edad || [];
-          console.log('[S23] Datos crudos 3.41 (primeros 20):', petGruposEdad.slice(0, 20));
           petGruposEdad = petGruposEdad.map((item: any) => ({
             categoria: item.categoria || '',
             orden: item.orden || 0,
             casos: Number(item.casos) || 0,
             porcentaje: '0,00 %'
           }));
-          console.log('[S23] Datos procesados 3.41:', petGruposEdad);
-          this.formularioService.actualizarDato('petGruposEdadAISI', petGruposEdad);
+          this.onFieldChange('petGruposEdadAISI', petGruposEdad, { refresh: false });
           this.datos['petGruposEdadAISI'] = petGruposEdad;
-          this.tableService.calcularPorcentajes(this.datos, this.petGruposEdadConfig);
+          this.tableFacade.calcularPorcentajes(this.datos, this.petGruposEdadConfig);
 
-          console.log('[S23] Procesando cuadros 3.42 y 3.43 (PEA estado sexo)...');
           const datos_estado_sexo = response.tabla_3_42_3_43_pea_estado_sexo || [];
-          console.log('[S23] Datos crudos 3.42/3.43 (primeros 20):', datos_estado_sexo.slice(0, 20));
           const peaDistritoSexo = this.agruparPorEstado(datos_estado_sexo);
-          console.log('[S23] Datos procesados 3.42/3.43:', peaDistritoSexo);
-          this.formularioService.actualizarDato('peaDistritoSexoTabla', peaDistritoSexo);
-          this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', peaDistritoSexo);
+          this.onFieldChange('peaDistritoSexoTabla', peaDistritoSexo, { refresh: false });
+          this.onFieldChange('peaOcupadaDesocupadaTabla', peaDistritoSexo, { refresh: false });
           this.datos['peaDistritoSexoTabla'] = peaDistritoSexo;
           this.datos['peaOcupadaDesocupadaTabla'] = peaDistritoSexo;
 
           this.cdRef.detectChanges();
         } else {
-          console.warn('[S23] Respuesta sin success:', response);
-        }
+          }
       },
       (error: any) => {
         console.error('[S23] Error cargando datos PEA:', error);
@@ -265,16 +261,14 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
 
   private formatearPorcentaje(valor: number | string): string {
     const num = typeof valor === 'string' ? parseFloat(valor) : valor;
-    if (isNaN(num)) return '0,00 %';
+    if (isNaN(num)) return '';
     return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
   }
 
   private agruparPorEstado(datos_estado_sexo: any[]): any[] {
-    console.log('[S23] agruparPorEstado - datos recibidos (primeros 20):', datos_estado_sexo.slice(0, 20));
     const estados: { [key: string]: any } = {};
 
     for (const item of datos_estado_sexo) {
-      console.log('[S23] Procesando item:', item);
       let estado = item.estado || item.nombre || '';
       const sexo = item.sexo || '';
       let cantidad = item.cantidad || 0;
@@ -288,7 +282,6 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       
       // Si el estado está vacío, saltar este item
       if (!estado || estado.trim() === '') {
-        console.warn('[S23] ⚠️ Item sin estado válido, saltando:', item);
         continue;
       }
       
@@ -316,8 +309,6 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       estados[estado].casos += cantidad;
     }
     
-    console.log('[S23] Estados agrupados:', estados);
-
     // Calcular porcentajes
     let totalGlobal = 0;
     for (const key in estados) {
@@ -339,23 +330,19 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     }
 
     const resultado = Object.values(estados);
-    console.log('[S23] Resultado final agrupado:', resultado);
     return resultado;
   }
 
   getPetGruposEdadSinTotal(): any[] {
     const tablaKey = this.getTablaKeyPetGruposEdad();
     const tabla = this.datos[tablaKey] || this.datos?.petGruposEdadAISI || [];
-    console.log('[S23] getPetGruposEdadSinTotal - tablaKey:', tablaKey, 'datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('[S23] No hay datos o no es array');
       return [];
     }
     const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
-    console.log('[S23] Filtrado:', filtered);
     return filtered;
   }
 
@@ -370,16 +357,13 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
 
   getPeaDistritoSexoSinTotal(): any[] {
     const tabla = this.datos?.peaDistritoSexoTabla || [];
-    console.log('[S23] getPeaDistritoSexoSinTotal - datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('[S23] No hay datos o no es array');
       return [];
     }
     const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
-    console.log('[S23] Filtrado:', filtered);
     return filtered;
   }
 
@@ -412,16 +396,13 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
 
   getPeaOcupadaDesocupadaSinTotal(): any[] {
     const tabla = this.datos?.peaOcupadaDesocupadaTabla || [];
-    console.log('[S23] getPeaOcupadaDesocupadaSinTotal - datos:', tabla);
     if (!tabla || !Array.isArray(tabla)) {
-      console.log('[S23] No hay datos o no es array');
       return [];
     }
     const filtered = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total');
     });
-    console.log('[S23] Filtrado:', filtered);
     return filtered;
   }
 
@@ -453,6 +434,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   override ngOnDestroy() {
+    this.timeouts.forEach(id => clearTimeout(id));
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -468,7 +450,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = this.datos.centroPobladoAISI || null;
@@ -521,6 +503,98 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     return prefijo ? `peaOcupadaDesocupadaTabla${prefijo}` : 'peaOcupadaDesocupadaTabla';
   }
 
+  /**
+   * Verifica si un array de datos tiene contenido real (no solo estructura inicial vacía)
+   */
+  private tieneContenidoReal(datos: any[], campoTexto: string): boolean {
+    if (!datos || !Array.isArray(datos) || datos.length === 0) return false;
+    return datos.some((item: any) => {
+      const texto = item[campoTexto];
+      return texto && texto !== '' && texto !== '____';
+    });
+  }
+
+  get petGruposEdadAISIVista(): any[] {
+    const tablaKey = this.getTablaKeyPetGruposEdad();
+    const datosConPrefijo = this.datos[tablaKey];
+    
+    // Si hay datos reales con prefijo, usarlos
+    if (this.tieneContenidoReal(datosConPrefijo, 'categoria')) {
+      return datosConPrefijo;
+    }
+    
+    // Fallback a datos sin prefijo (ej: del mock)
+    const datosSinPrefijo = this.datos.petGruposEdadAISI;
+    if (this.tieneContenidoReal(datosSinPrefijo, 'categoria')) {
+      return datosSinPrefijo;
+    }
+    
+    return [];
+  }
+
+  get peaDistritoSexoTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyPeaDistritoSexo();
+    const datosConPrefijo = this.datos[tablaKey];
+    
+    // Si hay datos reales con prefijo, usarlos
+    if (this.tieneContenidoReal(datosConPrefijo, 'categoria')) {
+      return datosConPrefijo;
+    }
+    
+    // Fallback a datos sin prefijo (ej: del mock)
+    const datosSinPrefijo = this.datos.peaDistritoSexoTabla;
+    if (this.tieneContenidoReal(datosSinPrefijo, 'categoria')) {
+      return datosSinPrefijo;
+    }
+    
+    return [];
+  }
+
+  /**
+   * Obtiene la tabla PET Grupos Edad AISI con porcentajes calculados dinámicamente
+   * Cuadro 3.40
+   */
+  getPetGruposEdadAISIConPorcentajes(): any[] {
+    const tabla = this.petGruposEdadAISIVista;
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.40');
+  }
+
+  /**
+   * Obtiene la tabla PEA Distrito Sexo con porcentajes calculados dinámicamente
+   * Cuadro 3.41
+   */
+  getPeaDistritoSexoConPorcentajes(): any[] {
+    const tabla = this.peaDistritoSexoTablaVista;
+    return TablePercentageHelper.calcularPorcentajesMultiples(tabla, '3.41');
+  }
+
+  /**
+   * Obtiene la tabla PEA Ocupada Desocupada con porcentajes calculados dinámicamente
+   * Cuadro 3.42
+   */
+  getPeaOcupadaDesocupadaConPorcentajes(): any[] {
+    const tabla = this.peaOcupadaDesocupadaTablaVista;
+    return TablePercentageHelper.calcularPorcentajesMultiples(tabla, '3.42');
+  }
+
+  get peaOcupadaDesocupadaTablaVista(): any[] {
+    const tablaKey = this.getTablaKeyPeaOcupadaDesocupada();
+    const datosConPrefijo = this.datos[tablaKey];
+    
+    // Si hay datos reales con prefijo, usarlos
+    if (this.tieneContenidoReal(datosConPrefijo, 'categoria')) {
+      return datosConPrefijo;
+    }
+    
+    // Fallback a datos sin prefijo (ej: del mock)
+    const datosSinPrefijo = this.datos.peaOcupadaDesocupadaTabla;
+    if (this.tieneContenidoReal(datosSinPrefijo, 'categoria')) {
+      return datosSinPrefijo;
+    }
+    
+    return [];
+  }
+
   protected override tieneFotografias(): boolean {
     return true;
   }
@@ -544,7 +618,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -577,31 +651,24 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     }, 0) || 0;
     
     if (!totalPoblacion || totalPoblacion === 0) {
-      return '0,00 %';
+      return '';
     }
     return this.formatearPorcentaje((totalPET / totalPoblacion) * 100);
   }
 
   getPorcentajeGrupoPET(categoria: string): string {
     if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) {
-      return '0,00 %';
+      return '';
     }
     const item = this.datos.petGruposEdadAISI.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase())
     );
-    return item?.porcentaje || '0,00 %';
-  }
-
-  getPoblacionDistrital(): string {
-    return this.datos?.poblacionDistritalAISI || '610';
-  }
-
-  obtenerTextoPET_AISI(): string {
+    return item?.porcentaje || '';
     if (this.datos.textoPET_AISI && this.datos.textoPET_AISI !== '____') {
       return this.datos.textoPET_AISI;
     }
     
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || '';
     const porcentajePET = this.getPorcentajePET();
     const porcentaje4564 = this.getPorcentajeGrupoPET('45 a 64');
     const porcentaje65 = this.getPorcentajeGrupoPET('65');
@@ -614,8 +681,8 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoIndicadoresDistritalesAISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const poblacionDistrital = this.getPoblacionDistrital();
+    const distrito = this.datos.distritoSeleccionado || '';
+    const poblacionDistrital = this.getPoblacionDistritalFn();
     const petDistrital = this.getPETDistrital();
     
     return `No obstante, los indicadores de la Población Económicamente Activa (PEA), tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de ${distrito}, jurisdicción donde se ubica el AISD en cuestión, es de ${poblacionDistrital} personas, y que la PET (de 14 años a más) al mismo nivel está conformada por ${petDistrital} personas.`;
@@ -626,8 +693,8 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoPEA_AISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
+    const centroPoblado = this.datos.centroPobladoAISI || '';
     
     return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de ${distrito}, jurisdicción que abarca a su capital distrital, el CP ${centroPoblado}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.`;
   }
@@ -637,7 +704,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoAnalisisPEA_AISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
     const porcentajePEA = this.getPorcentajePEA();
     const porcentajeNoPEA = this.getPorcentajeNoPEA();
     const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
@@ -651,7 +718,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoEmpleoAISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
     
     return `La mayor parte de la población de la capital distrital de ${distrito} se dedica a actividades agropecuarias, siendo la agricultura y la ganadería las principales fuentes de empleo independiente. En el sector agrícola, los cultivos predominantes son la papa, cebada, habas, trigo y oca, productos que abastecen tanto el consumo local como el comercio en menor medida. Asimismo, la ganadería juega un papel importante, con la crianza de vacunos y ovinos como las principales actividades ganaderas de la zona. Aunque en menor proporción, algunos pobladores también se dedican al comercio, complementando así su ingreso económico.\n\nEn cuanto al empleo dependiente, este sector es reducido y está conformado principalmente por trabajadores de la municipalidad distrital, quienes cumplen funciones administrativas y operativas; el personal de las instituciones educativas que ofrecen servicios de enseñanza en la localidad; y los empleados del puesto de salud que brindan atención básica a los habitantes. Este tipo de empleo proporciona estabilidad a un pequeño grupo de la población, pero no es la fuente principal de ingresos entre los habitantes. En general, el empleo independiente predomina como el principal medio de subsistencia para la mayoría de los pobladores.`;
   }
@@ -661,8 +728,8 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoIngresosAISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
+    const centroPoblado = this.datos.centroPobladoAISI || '';
     const ingresoPerCapita = this.getIngresoPerCapita();
     const rankingIngreso = this.getRankingIngreso();
     
@@ -674,8 +741,8 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoIndiceDesempleoAISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
+    const centroPoblado = this.datos.centroPobladoAISI || '';
     
     return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca al CP ${centroPoblado} (capital distrital). Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).`;
   }
@@ -685,7 +752,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoPEAAISI;
     }
     
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    const distrito = this.datos.distritoSeleccionado || '';
     const porcentajeDesempleo = this.getPorcentajeDesempleo();
     const porcentajeHombresOcupados = this.getPorcentajeHombresOcupados();
     const porcentajeMujeresOcupadas = this.getPorcentajeMujeresOcupadas();
@@ -694,47 +761,47 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   getPETDistrital(): string {
-    return this.datos?.petDistritalAISI || '461';
+    return this.datos?.petDistritalAISI || '';
   }
 
   getPorcentajePEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '0,00 %';
+      return '';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no')
     );
-    return item?.porcentaje || '0,00 %';
+    return item?.porcentaje || '';
   }
 
   getPorcentajeNoPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '0,00 %';
+      return '';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('no pea')
     );
-    return item?.porcentaje || '0,00 %';
+    return item?.porcentaje || '';
   }
 
   getPorcentajeHombresPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '0,00 %';
+      return '';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no')
     );
-    return item?.porcentajeHombres || '0,00 %';
+    return item?.porcentajeHombres || '';
   }
 
   getPorcentajeMujeresNoPEA(): string {
     if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) {
-      return '0,00 %';
+      return '';
     }
     const item = this.datos.peaDistritoSexoTabla.find((item: any) => 
       item.categoria && item.categoria.toLowerCase().includes('no pea')
     );
-    return item?.porcentajeMujeres || '0,00 %';
+    return item?.porcentajeMujeres || '';
   }
 
   getIngresoPerCapita(): string {
@@ -795,7 +862,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       this.datos['petGruposEdadAISI'] = [
         { categoria: '', casos: 0, porcentaje: '0,00 %' }
       ];
-      this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+      this.onFieldChange('petGruposEdadAISI', this.datos['petGruposEdadAISI'], { refresh: false });
       this.cdRef.detectChanges();
     }
   }
@@ -805,7 +872,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       this.inicializarPETGruposEdadAISI();
     }
     this.datos['petGruposEdadAISI'].push({ categoria: '', casos: 0, porcentaje: '0,00 %' });
-    this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+    this.onFieldChange('petGruposEdadAISI', this.datos['petGruposEdadAISI'], { refresh: false });
     this.calcularPorcentajesPETGruposEdadAISI();
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -816,7 +883,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       const item = this.datos['petGruposEdadAISI'][index];
       if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
         this.datos['petGruposEdadAISI'].splice(index, 1);
-        this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+        this.onFieldChange('petGruposEdadAISI', this.datos['petGruposEdadAISI'], { refresh: false });
         this.calcularPorcentajesPETGruposEdadAISI();
         this.actualizarDatos();
         this.cdRef.detectChanges();
@@ -833,7 +900,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       if (field === 'casos') {
         this.calcularPorcentajesPETGruposEdadAISI();
       }
-      this.formularioService.actualizarDato('petGruposEdadAISI', this.datos['petGruposEdadAISI']);
+      this.onFieldChange('petGruposEdadAISI', this.datos['petGruposEdadAISI'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -860,35 +927,35 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   inicializarPEADistritoSexo() {
-    this.tableService.inicializarTabla(this.datos, this.peaDistritoSexoConfig);
-    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.tableFacade.inicializarTabla(this.datos, this.peaDistritoSexoConfig);
+    this.onFieldChange('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla'], { refresh: false });
     this.cdRef.detectChanges();
   }
 
   agregarPEADistritoSexo() {
-    this.tableService.agregarFila(this.datos, this.peaDistritoSexoConfig);
+    this.tableFacade.agregarFila(this.datos, this.peaDistritoSexoConfig);
     this.calcularPorcentajesPEADistritoSexo();
-    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.onFieldChange('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla'], { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarPEADistritoSexo(index: number) {
-    const deleted = this.tableService.eliminarFila(this.datos, this.peaDistritoSexoConfig, index);
+    const deleted = this.tableFacade.eliminarFila(this.datos, this.peaDistritoSexoConfig, index);
     if (deleted) {
       this.calcularPorcentajesPEADistritoSexo();
-      this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+      this.onFieldChange('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
   actualizarPEADistritoSexo(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.peaDistritoSexoConfig, index, field, value, false);
+    this.tableFacade.actualizarFila(this.datos, this.peaDistritoSexoConfig, index, field, value, false);
     if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
       this.calcularPorcentajesPEADistritoSexo();
     }
-    this.formularioService.actualizarDato('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla']);
+    this.onFieldChange('peaDistritoSexoTabla', this.datos['peaDistritoSexoTabla'], { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -927,35 +994,35 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   }
 
   inicializarPEAOcupadaDesocupada() {
-    this.tableService.inicializarTabla(this.datos, this.peaOcupadaDesocupadaConfig);
-    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.tableFacade.inicializarTabla(this.datos, this.peaOcupadaDesocupadaConfig);
+    this.onFieldChange('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla'], { refresh: false });
     this.cdRef.detectChanges();
   }
 
   agregarPEAOcupadaDesocupada() {
-    this.tableService.agregarFila(this.datos, this.peaOcupadaDesocupadaConfig);
+    this.tableFacade.agregarFila(this.datos, this.peaOcupadaDesocupadaConfig);
     this.calcularPorcentajesPEAOcupadaDesocupada();
-    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.onFieldChange('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla'], { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
   eliminarPEAOcupadaDesocupada(index: number) {
-    const deleted = this.tableService.eliminarFila(this.datos, this.peaOcupadaDesocupadaConfig, index);
+    const deleted = this.tableFacade.eliminarFila(this.datos, this.peaOcupadaDesocupadaConfig, index);
     if (deleted) {
       this.calcularPorcentajesPEAOcupadaDesocupada();
-      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+      this.onFieldChange('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla'], { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
   }
 
   actualizarPEAOcupadaDesocupada(index: number, field: string, value: any) {
-    this.tableService.actualizarFila(this.datos, this.peaOcupadaDesocupadaConfig, index, field, value, false);
+    this.tableFacade.actualizarFila(this.datos, this.peaOcupadaDesocupadaConfig, index, field, value, false);
     if (field === 'hombres' || field === 'mujeres' || field === 'casos') {
       this.calcularPorcentajesPEAOcupadaDesocupada();
     }
-    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla']);
+    this.onFieldChange('peaOcupadaDesocupadaTabla', this.datos['peaOcupadaDesocupadaTabla'], { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -1021,7 +1088,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos.petGruposEdadAISI = [...tabla];
-      this.formularioService.actualizarDato('petGruposEdadAISI', tabla);
+      this.onFieldChange('petGruposEdadAISI', tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -1030,7 +1097,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
   onPetGruposEdadTableUpdated(): void {
     const tabla = this.datos.petGruposEdadAISI || [];
     this.datos.petGruposEdadAISI = [...tabla];
-    this.formularioService.actualizarDato('petGruposEdadAISI', tabla);
+    this.onFieldChange('petGruposEdadAISI', tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -1045,7 +1112,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos.peaDistritoSexoTabla = [...tabla];
-      this.formularioService.actualizarDato('peaDistritoSexoTabla', tabla);
+      this.onFieldChange('peaDistritoSexoTabla', tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -1055,7 +1122,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.datos.peaDistritoSexoTabla || [];
     this.datos.peaDistritoSexoTabla = [...tabla];
     this.calcularPorcentajesPEADistritoSexo();
-    this.formularioService.actualizarDato('peaDistritoSexoTabla', tabla);
+    this.onFieldChange('peaDistritoSexoTabla', tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -1070,7 +1137,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       }
       
       this.datos.peaOcupadaDesocupadaTabla = [...tabla];
-      this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', tabla);
+      this.onFieldChange('peaOcupadaDesocupadaTabla', tabla, { refresh: false });
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -1080,7 +1147,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.datos.peaOcupadaDesocupadaTabla || [];
     this.datos.peaOcupadaDesocupadaTabla = [...tabla];
     this.calcularPorcentajesPEAOcupadaDesocupada();
-    this.formularioService.actualizarDato('peaOcupadaDesocupadaTabla', tabla);
+    this.onFieldChange('peaOcupadaDesocupadaTabla', tabla, { refresh: false });
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -1129,4 +1196,5 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
     return clon;
   }
 }
+
 

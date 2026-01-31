@@ -11,32 +11,19 @@
 <p class="text-justify" *ngIf="!datos.textoServiciosAguaAISI || datos.textoServiciosAguaAISI === '____'">Respecto al servicio de agua para consumo humano en el CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'textoServiciosAguaAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeAguaRedPublicaDentro() }}</span> de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (<span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeAguaRedPublicaFuera() }}</span>) consta de red pública fuera de la vivienda, pero dentro de la edificación.</p>
 
 <app-table-wrapper title="Tipos de abastecimiento de agua en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.5">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getAbastecimientoAguaSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'tipo'">{{ item.tipo || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="getAbastecimientoAguaSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalAbastecimientoAgua() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getAbastecimientoAguaSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getAbastecimientoAguaCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'textoDesagueCP'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
@@ -46,32 +33,19 @@
 <p class="text-justify" *ngIf="!datos.textoDesagueCP || datos.textoDesagueCP === '____'">Por otra parte, se hallan otras categorías con porcentajes menores: red pública de desagüe fuera de la vivienda, pero dentro de la edificación; letrina (con tratamiento); pozo ciego o negro; y campo abierto o al aire libre, todas las cuales representan un 2,04 % cada una.</p>
 
 <app-table-wrapper title="Tipos de saneamiento en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.5">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getSaneamientoSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'tipo'">{{ item.tipo || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="getSaneamientoSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalSaneamiento() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getSaneamientoSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getSaneamientoCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'centroPobladoAISI' | dataSource"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
@@ -96,32 +70,19 @@
 <p class="text-justify" *ngIf="!datos.textoElectricidadCP || datos.textoElectricidadCP === '____'">Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, se cuenta con los siguientes datos: el <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeElectricidadSi() }}</span> de las viviendas cuenta con alumbrado eléctrico, mientras que el <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeElectricidadNo() }}</span> restante no tiene el referido servicio.</p>
 
 <app-table-wrapper title="Cobertura de alumbrado eléctrico en las viviendas – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.5">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getCoberturaElectricaSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'tipo'">{{ item.tipo || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="getCoberturaElectricaSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalCoberturaElectrica() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getCoberturaElectricaSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getCoberturaElectricaCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'centroPobladoAISI' | dataSource"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
@@ -141,32 +102,19 @@
 <p class="text-justify" *ngIf="!datos.textoEnergiaCocinarCP || datos.textoEnergiaCocinarCP === '____'">Según los Censos Nacionales 2017, de un total de <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'textoEnergiaCocinarCP'">{{ getTotalHogares() }}</span> hogares en el CP <span [appDataSource]="'centroPobladoAISI' | dataSource">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, se obtiene que un <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeLena() }}</span> emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeGas() }}</span>, la bosta o estiércol en un <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeBosta() }}</span> y la electricidad con un <span [appDataSource]="'section'" class="cell-percentage">{{ getPorcentajeElectricidadCocinar() }}</span>. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.</p>
 
 <app-table-wrapper title="Combustibles para cocción en los hogares – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.5">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getCombustiblesCocinarSinTotal()">
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'nombre'">{{ item.nombre || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'casos'">{{ item.casos || '____' }}</td>
-            <td class="table-cell cell-percentage" [appDataSource]="'section'" [fieldName]="'porcentaje'">{{ item.porcentaje || '____' }}</td>
-        </tr>
-        <tr *ngIf="getCombustiblesCocinarSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell cell-from-bd"><strong>{{ getTotalCombustiblesCocinar() }}</strong></td>
-            <td class="table-cell cell-percentage"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getCombustiblesCocinarSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getCombustiblesCocinarCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'casos', header: 'Casos', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
 
@@ -219,6 +167,7 @@
         <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="abastecimientoAguaConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública dentro de la vivienda' },
@@ -270,6 +219,7 @@
         <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="saneamientoConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Red pública de desagüe dentro de la vivienda' },
@@ -357,6 +307,7 @@
         <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="coberturaElectricaConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Si tiene alumbrado eléctrico' },
@@ -427,6 +378,7 @@
         <label class="label">Tabla Combustibles para cocción en los hogares</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="combustiblesCocinarConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Leña' },

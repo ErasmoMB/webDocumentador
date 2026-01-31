@@ -1,22 +1,23 @@
 import { Pipe, PipeTransform, Injector } from '@angular/core';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
+import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
 
 @Pipe({
-  name: 'dataSource',
-  pure: false
+    name: 'dataSource',
+    pure: false,
+    standalone: false
 })
 export class DataSourcePipe implements PipeTransform {
-  private fieldMappingService: FieldMappingService | null = null;
+  private fieldMappingFacade: FieldMappingFacade | null = null;
 
   constructor(private injector: Injector) {}
 
   transform(fieldName: string): 'manual' | 'section' | 'backend' {
-    if (!this.fieldMappingService) {
-      this.fieldMappingService = this.injector.get(FieldMappingService);
+    if (!this.fieldMappingFacade) {
+      this.fieldMappingFacade = this.injector.get(FieldMappingFacade);
     }
     
-    if (this.fieldMappingService) {
-      return this.fieldMappingService.getDataSourceType(fieldName);
+    if (this.fieldMappingFacade) {
+      return this.fieldMappingFacade.getDataSourceType(fieldName);
     }
     
     return 'manual';

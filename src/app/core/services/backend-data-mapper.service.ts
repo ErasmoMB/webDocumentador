@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { TABLES_REGISTRY, initializeTablesRegistry } from '../config/tables-registry.config';
+import { TableMetadata } from '../models/table-metadata.model';
+import { TableTransformFactoryService } from './table-transform-factory.service';
 
 export interface DataMapping {
   fieldName: string;
@@ -19,650 +22,48 @@ export interface SectionDataConfig {
 export class BackendDataMapperService {
   private readonly mappingConfigs: Map<string, SectionDataConfig> = new Map();
 
-  constructor() {
+  constructor(
+    private transformFactory: TableTransformFactoryService
+  ) {
     this.initializeMappings();
   }
 
   private initializeMappings(): void {
-    this.mappingConfigs.set('seccion6_aisd', {
-      poblacionSexoAISD: {
-        fieldName: 'poblacionSexoAISD',
-        endpoint: '/centros-poblados/por-codigos-ubigeo',
-        paramType: 'id_ubigeo',
-        method: 'POST',
-        aggregatable: true,
-        transform: (data) => this.transformPoblacionSexoDesdeCentrosPoblados(data)
-      },
-      poblacionEtarioAISD: {
-        fieldName: 'poblacionEtarioAISD',
-        endpoint: '/centros-poblados/por-codigos-ubigeo',
-        paramType: 'id_ubigeo',
-        method: 'POST',
-        aggregatable: true,
-        transform: (data) => this.transformPoblacionEtarioDesdeCentrosPoblados(data)
-      }
-    });
+    // Primero: Cargar mappings desde registry declarativo (nuevo sistema)
+    this.initializeMappingsFromRegistry();
+  }
 
-    this.mappingConfigs.set('seccion7_aisd', {
-      petTabla: {
-        fieldName: 'petTabla',
-        endpoint: '/demograficos/datos',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformPETTabla(data)
-      }
-    });
+  /**
+   * Inicializa mappings desde el registro declarativo (nuevo sistema)
+   */
+  private initializeMappingsFromRegistry(): void {
+    // Inicializar registry si no está inicializado
+    if (TABLES_REGISTRY.size === 0) {
+      initializeTablesRegistry();
+    }
 
-    this.mappingConfigs.set('seccion8_aisd', {
-      actividadesEconomicasAISD: {
-        fieldName: 'actividadesEconomicasAISD',
-        endpoint: '/economicos/principales',
-        paramType: 'id_ubigeo',
-        // Agregar múltiples CCPP suma sus casos por categoría
-        aggregatable: true,
-        transform: (data) => this.transformActividades(data)
-      },
-      peaOcupacionesTabla: {
-        fieldName: 'peaOcupacionesTabla',
-        endpoint: '/economicos/principales',
-        paramType: 'id_ubigeo',
-        // Agregar múltiples CCPP suma sus casos por categoría
-        aggregatable: true,
-        transform: (data) => this.transformPEAOcupaciones(data)
-      }
-    });
+    TABLES_REGISTRY.forEach((tables, sectionKey) => {
+      const sectionConfig: SectionDataConfig = {};
 
-    this.mappingConfigs.set('seccion4_aisd', {
-      tablaAISD2Datos: {
-        fieldName: 'tablaAISD2Datos',
-        endpoint: '/aisd/centros-poblados',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          if (!Array.isArray(data)) return [];
-          
-          const resultado = data.map((item: any) => ({
-            punto: item.centro_poblado || '____',
-            codigo: item.codigo || '____',
-            poblacion: item.poblacion || 0,
-            viviendasEmpadronadas: item.viviendas_empadronadas || 0,
-            viviendasOcupadas: item.viviendas_ocupadas || 0,
-            Punto: item.centro_poblado || '____',
-            Codigo: item.codigo || '____',
-            Poblacion: item.poblacion || 0,
-            ViviendasEmpadronadas: item.viviendas_empadronadas || 0,
-            ViviendasOcupadas: item.viviendas_ocupadas || 0
-          }));
-          
-          return resultado;
-        }
-      }
-    });
+      tables.forEach(table => {
+        // Crear transform usando factory
+        const transform = this.transformFactory.createTransform(table);
 
-    this.mappingConfigs.set('seccion9_aisd', {
-      condicionOcupacionTabla: {
-        fieldName: 'condicionOcupacionTabla',
-        endpoint: '/aisd/centros-poblados',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const arr = Array.isArray(data) ? data : [];
+        // Construir DataMapping desde TableMetadata
+        sectionConfig[table.fieldName] = {
+          fieldName: table.fieldName,
+          endpoint: table.endpoint,
+          method: table.method || 'GET',
+          paramType: table.paramType || 'id_ubigeo',
+          aggregatable: table.aggregatable || false,
+          transform: transform
+        };
+      });
 
-          const toNum = (v: any) => {
-            const n = typeof v === 'number' ? v : parseInt(v, 10);
-            return isNaN(n) ? 0 : n;
-          };
-
-          const emp = arr.reduce((sum, x) => sum + toNum(x?.viviendas_empadronadas), 0);
-          const ocu = arr.reduce((sum, x) => sum + toNum(x?.viviendas_ocupadas), 0);
-          const otras = Math.max(emp - ocu, 0);
-
-          const total = emp;
-          if (total <= 0) {
-            return [];
-          }
-
-          const pctOcu = total > 0 ? Math.round(((ocu / total) * 100) * 100) / 100 : 0;
-          const pctOtras = total > 0 ? Math.round(((otras / total) * 100) * 100) / 100 : 0;
-          const diff = Math.round((100 - (pctOcu + pctOtras)) * 100) / 100;
-          const pctOtrasAdj = Math.round((pctOtras + diff) * 100) / 100;
-
-          const formatPct = (v: number) =>
-            v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',') + ' %';
-
-          const resultado = [
-            { categoria: 'Viviendas ocupadas', casos: ocu, porcentaje: formatPct(pctOcu) },
-            { categoria: 'Viviendas con otra condición', casos: otras, porcentaje: formatPct(pctOtrasAdj) }
-          ];
-          
-          return resultado;
-        }
-      },
-      materialesConstruccionAISD: {
-        fieldName: 'materialesConstruccionAISD',
-        endpoint: '/aisd/materiales-construccion',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformMateriales(data)
-      },
-       tiposMaterialesTabla: {
-         fieldName: 'tiposMaterialesTabla',
-         endpoint: '/aisd/materiales-construccion',
-         paramType: 'id_ubigeo',
-         aggregatable: true,
-         transform: (data) => {
-           if (!Array.isArray(data)) return [];
-           
-           const norm = (s: any) =>
-             (s ?? '')
-               .toString()
-               .normalize('NFD')
-               .replace(/[\u0300-\u036f]/g, '')
-               .toLowerCase()
-               .replace(/\s+/g, ' ')
-               .trim();
-
-           // Agrupar por categoría normalizada + tipo material normalizado
-           const grouped = new Map<string, any>();
-           
-           data.forEach((item: any) => {
-             const catNorm = norm(item.categoria);
-             const tipoNorm = norm(item.tipo_material || item.tipoMaterial);
-             const key = `${catNorm}|||${tipoNorm}`;
-             const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos, 10) || 0;
-             
-             if (grouped.has(key)) {
-               grouped.get(key).casos += casos;
-             } else {
-               grouped.set(key, {
-                 categoria: item.categoria,
-                 tipoMaterial: item.tipo_material || item.tipoMaterial,
-                 casos: casos
-               });
-             }
-           });
-
-           // Convertir a array y ordenar por categoría
-           const filas = Array.from(grouped.values()).sort((a, b) => {
-             const catA = norm(a.categoria);
-             const catB = norm(b.categoria);
-             if (catA !== catB) return catA.localeCompare(catB);
-             return norm(a.tipoMaterial).localeCompare(norm(b.tipoMaterial));
-           });
-
-           return filas;
-         }
-       }
-    });
-
-    this.mappingConfigs.set('seccion10_aisd', {
-      abastecimientoAguaTabla: {
-        fieldName: 'abastecimientoAguaTabla',
-        endpoint: '/servicios/por-codigos',
-        method: 'POST',
-        aggregatable: true,
-        transform: (data) => {
-          if (!data || typeof data !== 'object') {
-            return [];
-          }
-          
-          const agua = data.Agua || [];
-          if (!Array.isArray(agua)) {
-            return [];
-          }
-          
-          return agua.map((item: any) => ({
-            id_ubigeo: '000000000',
-            categoria: item.tipo || '',
-            tipo: item.tipo || '',
-            casos: Number(item.casos) || 0,
-            porcentaje: '0,00 %'
-          }));
-        }
-      },
-      tiposSaneamientoTabla: {
-        fieldName: 'tiposSaneamientoTabla',
-        endpoint: '/servicios/por-codigos',
-        method: 'POST',
-        aggregatable: true,
-        transform: (data) => {
-          if (!data || typeof data !== 'object') {
-            return [];
-          }
-          
-          const desague = data.Desagüe || [];
-          if (!Array.isArray(desague)) {
-            return [];
-          }
-          
-          return desague.map((item: any) => ({
-            id_ubigeo: '000000000',
-            categoria: item.tipo || '',
-            tipo: item.tipo || '',
-            casos: Number(item.casos) || 0,
-            porcentaje: '0,00 %'
-          }));
-        }
-      },
-      alumbradoElectricoTabla: {
-        fieldName: 'alumbradoElectricoTabla',
-        endpoint: '/servicios/por-codigos',
-        method: 'POST',
-        aggregatable: true,
-        transform: (data) => {
-          if (!data || typeof data !== 'object') {
-            return [];
-          }
-          
-          const alumbrado = data.Alumbrado || [];
-          if (!Array.isArray(alumbrado)) {
-            return [];
-          }
-          
-          return alumbrado.map((item: any) => ({
-            id_ubigeo: '000000000',
-            categoria: item.tipo || '',
-            tipo: item.tipo || '',
-            casos: Number(item.casos) || 0,
-            porcentaje: '0,00 %'
-          }));
-        }
-      }
-    });
-
-    this.mappingConfigs.set('seccion15_aisd', {
-      lenguasAISD: {
-        fieldName: 'lenguasAISD',
-        endpoint: '/vistas/lenguas-ubicacion',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformLenguas(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion16_aisd', {
-      religionesAISD: {
-        fieldName: 'religionesAISD',
-        endpoint: '/vistas/religiones-ubicacion',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformReligiones(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion19_aisd', {
-      nbiAISD: {
-        fieldName: 'nbiAISD',
-        endpoint: '/vistas/nbi-ubicacion',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformNBI(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion13_aisd', {
-      afiliacionSaludTabla: {
-        fieldName: 'afiliacionSaludTabla',
-        endpoint: '/salud/seguro-salud/por-codigos',
-        method: 'POST',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const datosArray = Array.isArray(data) ? data : (data?.data || []);
-          if (!Array.isArray(datosArray) || datosArray.length === 0) {
-            return [];
-          }
-
-          const tiposUnificados = new Map<string, any>();
-          let totalCasos = 0;
-          
-          datosArray.forEach((item: any) => {
-            const categoria = (item.categoria || 'Sin categoría').trim();
-            const key = categoria.toLowerCase();
-            
-            const cantidad = item.casos || item.cantidad || 0;
-            totalCasos += cantidad;
-            
-            if (tiposUnificados.has(key)) {
-              const existing = tiposUnificados.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              tiposUnificados.set(key, {
-                categoria: categoria,
-                casos: cantidad,
-                porcentaje: item.porcentaje || 0
-              });
-            }
-          });
-
-          const resultado = Array.from(tiposUnificados.values());
-          resultado.forEach((item: any) => {
-            if (totalCasos > 0 && !item.porcentaje) {
-              item.porcentaje = Math.round((item.casos / totalCasos) * 10000) / 100;
-            }
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
-        }
-      }
-    });
-
-    this.mappingConfigs.set('seccion14_aisd', {
-      nivelEducativoTabla: {
-        fieldName: 'nivelEducativoTabla',
-        endpoint: '/educacion/por-codigos',
-        method: 'POST',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const datosArray = Array.isArray(data) ? data : (data?.data || []);
-          if (!Array.isArray(datosArray) || datosArray.length === 0) {
-            return [];
-          }
-
-          const nivelesMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          datosArray.forEach((item: any) => {
-            const nivel = (item.nivel_educativo || item.categoria || 'Sin categoría').trim();
-            const key = nivel.toLowerCase();
-            
-            const cantidad = item.casos || item.cantidad || 0;
-            totalCasos += cantidad;
-            
-            if (nivelesMap.has(key)) {
-              const existing = nivelesMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              nivelesMap.set(key, {
-                categoria: nivel,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          const resultado = Array.from(nivelesMap.values());
-          resultado.forEach((item: any) => {
-            if (totalCasos > 0) {
-              const porcentajeNum = (item.casos / totalCasos) * 100;
-              item.porcentaje = porcentajeNum.toFixed(2).replace('.', ',') + ' %';
-            } else {
-              item.porcentaje = '0,00 %';
-            }
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
-        }
-      },
-      tasaAnalfabetismoTabla: {
-        fieldName: 'tasaAnalfabetismoTabla',
-        endpoint: '/educacion/tasa-analfabetismo/por-codigos',
-        method: 'POST',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const datosArray = Array.isArray(data) ? data : (data?.data || []);
-          if (!Array.isArray(datosArray) || datosArray.length === 0) {
-            return [];
-          }
-
-          return datosArray.map((item: any) => ({
-            indicador: item.indicador || 'Sin categoría',
-            casos: item.casos || 0,
-            porcentaje: item.porcentaje || 0
-          }));
-        }
-      }
-    });
-
-    this.mappingConfigs.set('seccion21_aisi', {
-      informacionReferencialAISI: {
-        fieldName: 'informacionReferencialAISI',
-        endpoint: '/aisi/informacion-referencial',
-        paramType: 'ubigeo',
-        aggregatable: false,
-        transform: (data) => data
-      }
-    });
-
-    this.mappingConfigs.set('seccion22_aisi', {
-      centrosPobladosAISI: {
-        fieldName: 'centrosPobladosAISI',
-        endpoint: '/aisi/centros-poblados',
-        paramType: 'ubigeo',
-        aggregatable: false,
-        transform: (data) => this.transformCentrosPoblados(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion15_aisd', {
-      lenguasMaternasTabla: {
-        fieldName: 'lenguasMaternasTabla',
-        endpoint: '/lenguas/maternas',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          if (!Array.isArray(data)) {
-            return [];
-          }
-
-          const lenguasMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          data.forEach((item: any) => {
-            const lengua = (item.lengua_materna || 'Sin categoría').trim();
-            const key = lengua.toLowerCase();
-            
-            const cantidad = item.casos || 0;
-            totalCasos += cantidad;
-            
-            if (lenguasMap.has(key)) {
-              const existing = lenguasMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              lenguasMap.set(key, {
-                categoria: lengua,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          const resultado = Array.from(lenguasMap.values());
-          resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
-        }
-      },
-      religionesTabla: {
-        fieldName: 'religionesTabla',
-        endpoint: '/religiones',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          if (!Array.isArray(data)) {
-            return [];
-          }
-
-          const religionesMap = new Map<string, any>();
-          let totalCasos = 0;
-          
-          data.forEach((item: any) => {
-            const religion = (item.religion || 'Sin categoría').trim();
-            const key = religion.toLowerCase();
-            
-            const cantidad = item.casos || 0;
-            totalCasos += cantidad;
-            
-            if (religionesMap.has(key)) {
-              const existing = religionesMap.get(key);
-              existing.casos = (existing.casos || 0) + cantidad;
-            } else {
-              religionesMap.set(key, {
-                categoria: religion,
-                casos: cantidad,
-                porcentaje: 0
-              });
-            }
-          });
-
-          const resultado = Array.from(religionesMap.values());
-          resultado.forEach((item: any) => {
-            item.porcentaje = totalCasos > 0 
-              ? Math.round((item.casos / totalCasos) * 10000) / 100
-              : 0;
-          });
-          
-          resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-
-          return resultado;
-        }
-      }
-    });
-
-    this.mappingConfigs.set('seccion18_aisd', {
-      nbiCCAyrocaTabla: {
-        fieldName: 'nbiCCAyrocaTabla',
-        endpoint: '/nbi/por-codigos',
-        method: 'POST',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const datosArray = Array.isArray(data) ? data : (data?.data || []);
-          if (!Array.isArray(datosArray) || datosArray.length === 0) {
-            return [];
-          }
-
-          return datosArray.map((item: any) => ({
-            categoria: item.carencia || item.categoria || 'Sin categoría',
-            casos: item.casos || 0,
-            porcentaje: item.porcentaje || 0
-          }));
-        }
-      },
-      nbiDistritoCahuachoTabla: {
-        fieldName: 'nbiDistritoCahuachoTabla',
-        endpoint: '/nbi/por-codigos',
-        method: 'POST',
-        paramType: 'id_ubigeo',
-        aggregatable: true,
-        transform: (data) => {
-          const datosArray = Array.isArray(data) ? data : (data?.data || []);
-          if (!Array.isArray(datosArray) || datosArray.length === 0) {
-            return [];
-          }
-
-          return datosArray.map((item: any) => ({
-            categoria: item.carencia || item.categoria || 'Sin categoría',
-            casos: item.casos || 0,
-            porcentaje: item.porcentaje || 0
-          }));
-        }
-      }
-    });
-
-    this.mappingConfigs.set('seccion23_aisi', {
-      poblacionSexoAISI: {
-        fieldName: 'poblacionSexoAISI',
-        endpoint: '/demograficos/datos',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformPoblacionSexo(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion24_aisi', {
-      poblacionEtarioAISI: {
-        fieldName: 'poblacionEtarioAISI',
-        endpoint: '/demograficos/datos',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformPoblacionEtario(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion25_aisi', {
-      petAISI: {
-        fieldName: 'petAISI',
-        endpoint: '/aisd/pet',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformPET(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion26_aisi', {
-      peaDistrital: {
-        fieldName: 'peaDistrital',
-        endpoint: '/aisi/pea-distrital',
-        paramType: 'ubigeo',
-        aggregatable: false,
-        transform: (data) => data
-      }
-    });
-
-    this.mappingConfigs.set('seccion27_aisi', {
-      actividadesEconomicasAISI: {
-        fieldName: 'actividadesEconomicasAISI',
-        endpoint: '/economicos/principales',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformActividades(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion28_aisi', {
-      viviendasCensoAISI: {
-        fieldName: 'viviendasCensoAISI',
-        endpoint: '/aisi/viviendas-censo',
-        paramType: 'ubigeo',
-        aggregatable: false,
-        transform: (data) => data
-      }
-    });
-
-    this.mappingConfigs.set('seccion29_aisi', {
-      serviciosBasicosAISI: {
-        fieldName: 'serviciosBasicosAISI',
-        endpoint: '/servicios/basicos',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformServicios(data)
-      }
-    });
-
-    this.mappingConfigs.set('seccion30_aisi', {
-      lenguasAISI: {
-        fieldName: 'lenguasAISI',
-        endpoint: '/vistas/lenguas-ubicacion',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformLenguas(data)
-      },
-      religionesAISI: {
-        fieldName: 'religionesAISI',
-        endpoint: '/vistas/religiones-ubicacion',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformReligiones(data)
-      },
-      nbiAISI: {
-        fieldName: 'nbiAISI',
-        endpoint: '/vistas/nbi-ubicacion',
-        paramType: 'ubigeo',
-        aggregatable: true,
-        transform: (data) => this.transformNBI(data)
+      // Solo agregar si hay tablas configuradas
+      // Si ya existe en legacy, el registry tiene prioridad
+      if (Object.keys(sectionConfig).length > 0) {
+        this.mappingConfigs.set(sectionKey, sectionConfig);
       }
     });
   }
@@ -674,6 +75,28 @@ export class BackendDataMapperService {
   getMapping(sectionKey: string, fieldName: string): DataMapping | null {
     const config = this.getConfig(sectionKey);
     return config?.[fieldName] || null;
+  }
+
+  /**
+   * Obtiene metadata de una tabla específica desde el registry
+   */
+  getTableMetadata(sectionKey: string, fieldName: string): TableMetadata | undefined {
+    const tables = TABLES_REGISTRY.get(sectionKey);
+    return tables?.find(t => t.fieldName === fieldName);
+  }
+
+  /**
+   * Obtiene todas las tablas de una sección desde el registry
+   */
+  getSectionTables(sectionKey: string): TableMetadata[] {
+    return TABLES_REGISTRY.get(sectionKey) || [];
+  }
+
+  /**
+   * Verifica si una sección tiene tablas en el registry
+   */
+  hasTablesInRegistry(sectionKey: string): boolean {
+    return TABLES_REGISTRY.has(sectionKey) && (TABLES_REGISTRY.get(sectionKey)?.length || 0) > 0;
   }
 
   private transformPoblacionSexo(data: any[]): any[] {
@@ -793,19 +216,33 @@ export class BackendDataMapperService {
     if (!Array.isArray(data)) return [];
     return data.map(item => ({
       categoria: item.categoria || '',
-      tipo_material: item.tipo_material || '',
-      casos: item.casos || 0
-    }));
-  }
-
-  private transformServicios(data: any[]): any[] {
-    if (!Array.isArray(data)) return [];
-    return data.map(item => ({
-      servicio: item.servicio || '',
-      tipo: item.tipo || '',
+      tipo_material: item.tipo_material || item.tipoMaterial || '',
       casos: item.casos || 0,
       porcentaje: item.porcentaje || null
     }));
+  }
+
+  private transformServicios(data: any): any[] {
+    if (!data || typeof data !== 'object') return [];
+    
+    const servicios: any[] = [];
+    const categorias = ['Agua', 'Desagüe', 'Alumbrado'];
+    
+    categorias.forEach(categoria => {
+      const items = data[categoria] || [];
+      if (Array.isArray(items)) {
+        items.forEach((item: any) => {
+          servicios.push({
+            servicio: categoria,
+            tipo: item.tipo || '',
+            casos: item.casos || 0,
+            porcentaje: item.porcentaje || null
+          });
+        });
+      }
+    });
+    
+    return servicios;
   }
 
   private transformLenguas(data: any[]): any[] {
@@ -819,10 +256,11 @@ export class BackendDataMapperService {
 
   private transformReligiones(data: any[]): any[] {
     if (!Array.isArray(data)) return [];
+    // ✅ FASE 1: NO preservar porcentajes de datos mock - se calcularán dinámicamente
     return data.map(item => ({
       religion: item.religion || '',
-      casos: item.casos || 0,
-      porcentaje: item.porcentaje || null
+      casos: item.casos || 0
+      // porcentaje: item.porcentaje || null // ❌ ELIMINADO - se calculará dinámicamente
     }));
   }
 
@@ -855,12 +293,11 @@ export class BackendDataMapperService {
 
   private transformPEAOcupaciones(data: any[]): any[] {
     if (!Array.isArray(data)) return [];
-    // Backend devuelve {categoria: string, casos: number}
-    // Necesitamos {categoria: string, casos: number, porcentaje: string}
+    // ✅ FASE 1: NO preservar porcentajes de datos mock - se calcularán dinámicamente
     const items = data.map(item => ({
-      categoria: item.categoria || '',
-      casos: item.casos || 0,
-      porcentaje: null // Se calcula en el componente
+      categoria: item.actividad || item.categoria || '',
+      casos: item.casos || 0
+      // porcentaje: item.porcentaje || null // ❌ ELIMINADO - se calculará dinámicamente
     }));
     return items;
   }

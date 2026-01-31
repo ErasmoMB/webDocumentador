@@ -11,8 +11,9 @@ describe('GroupValidationService', () => {
   const mockGroupConfigService = {
     config$: undefined as any,
     getConfig: () => configSubject.value,
-    getAISD: () => configSubject.value?.aisd || null,
-    getAISI: () => configSubject.value?.aisi || null
+    getAISD: () => configSubject.value?.aisd?.[0] || null,
+    getAISI: () => configSubject.value?.aisi?.[0] || null,
+    getAllAISD: () => configSubject.value?.aisd || []
   } as GroupConfigService;
 
   beforeEach(() => {
@@ -37,7 +38,7 @@ describe('GroupValidationService', () => {
 
   it('should validate when AISD present with ccpp', () => {
     configSubject.next({
-      aisd: { nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: ['001'] }
+      aisd: [{ nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: ['001'] }]
     });
 
     expect(service.isConfigValid()).toBeTrue();
@@ -51,7 +52,7 @@ describe('GroupValidationService', () => {
 
   it('should report errors when configured without active ccpp', () => {
     configSubject.next({
-      aisd: { nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: [] }
+      aisd: [{ nombre: 'CC', tipo: 'AISD', ccppList: [], ccppActivos: [] }]
     });
     const errors = service.getValidationErrors();
     expect(errors.length).toBeGreaterThan(0);

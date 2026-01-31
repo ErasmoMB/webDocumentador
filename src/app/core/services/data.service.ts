@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
-import { CacheService } from './cache.service';
-import { BackendApiService } from './backend-api.service';
+import { CacheService } from './infrastructure/cache.service';
+import { BackendApiService } from './infrastructure/backend-api.service';
 import { MathUtil } from '../utils/math.util';
 import { DataTransformerUtil } from '../utils/data-transformer.util';
 import { 
@@ -14,6 +14,9 @@ import {
   PEAData 
 } from '../models/api-response.model';
 
+/**
+ * @deprecated Sprint 2: migrar a servicios de dominio + BackendApiService.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -34,7 +37,6 @@ export class DataService {
     const path = `${this.configService.getMockDataPath()}/shared/${filename}`;
     return this.http.get(path).pipe(
       catchError(error => {
-        console.error(`Error loading mockData: ${filename}`, error);
         return of({});
       })
     );
@@ -89,12 +91,10 @@ export class DataService {
           return this.getPoblacionFromCacheOrMock('', params);
         }),
         catchError((error) => {
-          console.warn('⚠️ Backend no disponible, usando cache o datos mock');
           return this.getPoblacionFromCacheOrMock('', params);
         })
       );
     }
-
     return this.getPoblacionFromCacheOrMock('', params);
   }
 
@@ -176,7 +176,6 @@ export class DataService {
           return this.getPoblacionDistritoFromCacheOrMock('', params, distrito);
         }),
         catchError((error) => {
-          console.warn('⚠️ Backend no disponible, usando cache o datos mock');
           return this.getPoblacionDistritoFromCacheOrMock('', params, distrito);
         })
       );
@@ -312,6 +311,20 @@ export class DataService {
         return of(defaultData);
       })
     );
+  }
+
+  getSeccionById(seccionId: number): Observable<any> {
+    // Placeholder para datos de sección; se puede vincular a mock o backend real
+    return of({
+      id: seccionId,
+      nombre: `Sección ${seccionId}`,
+      descripcion: 'Datos de sección cargados desde DataService'
+    });
+  }
+
+  saveSeccionData(seccionId: number, data: any): Observable<boolean> {
+    // Placeholder para persistencia; en producción llamaría al backend
+    return of(true);
   }
 
   private convertirFormatoMockAPoblacionData(data: any): PoblacionData {

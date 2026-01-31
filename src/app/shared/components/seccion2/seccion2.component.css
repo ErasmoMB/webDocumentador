@@ -1,105 +1,91 @@
-.aisi-multiple-districts {
-  margin-top: 20px;
-}
+/* ✅ ESTILOS PARA GRUPOS AISD Y AISI */
 
-.aisi-districts-selection {
-  margin-top: 15px;
-}
-
-.aisi-section-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+.grupos-aisd,
+.grupos-aisi {
+  margin: 20px 0;
   padding: 20px;
-  margin-bottom: 20px;
-  background-color: #f9f9f9;
-}
-
-.aisi-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.aisi-section-header h5 {
-  margin: 0;
-  color: #333;
-  font-size: 1.1em;
-  font-weight: 600;
-}
-
-.btn-remove-section {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s;
-}
-
-.btn-remove-section:hover {
-  background-color: #c82333;
-}
-
-.btn-add-section {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-top: 10px;
-}
-
-.btn-add-section:hover {
-  background-color: #218838;
-}
-
-.aisi-section-content {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.form-field {
-  margin-bottom: 15px;
-}
-
-.form-field label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #333;
-}
-
-.form-field .input,
-.form-field select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
   border-radius: 4px;
-  font-size: 14px;
 }
 
-.form-field .input:focus,
-.form-field select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+.grupo-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
-.required {
-  color: #dc3545;
+.grupo-card:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
 }
 
+.grupo-card h5 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.grupo-card .centros-poblados {
+  margin: 10px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.grupo-card .centros-poblados strong {
+  color: #333;
+}
+
+.grupo-card .sin-centros {
+  margin: 10px 0;
+  color: #999;
+  font-style: italic;
+}
+
+.btn--secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+.btn--secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.text-muted {
+  color: #999;
+  font-size: 0.95rem;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #dee2e6;
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 768px) {
+  .grupos-aisd,
+  .grupos-aisi {
+    padding: 15px;
+  }
+
+  .grupo-card {
+    padding: 12px;
+  }
+
+  .grupo-card h5 {
+    font-size: 1rem;
+  }
+}

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { GroupConfig, Grupo, CCPP } from '../models/group-config.model';
+import { StorageFacade } from './infrastructure/storage-facade.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,62 +12,140 @@ export class GroupConfigService {
   private configSubject = new BehaviorSubject<GroupConfig | null>(null);
   public config$: Observable<GroupConfig | null> = this.configSubject.asObservable();
 
-  constructor() {
+  constructor(private storage: StorageFacade) {
     this.loadFromStorage();
   }
 
   setAISD(grupo: Grupo): void {
     const current = this.configSubject.value || {};
-    const updated: GroupConfig = { ...current, aisd: grupo, lastUpdated: Date.now() };
+    // setAISD reemplaza el primer grupo (índice 0) o crea un nuevo array con el grupo
+    const gruposAISD = Array.isArray(current.aisd) ? [...current.aisd] : (current.aisd ? [current.aisd] : []);
+    if (gruposAISD.length > 0) {
+      gruposAISD[0] = grupo; // Reemplazar el primer elemento
+    } else {
+      gruposAISD.push(grupo); // Agregar si el array está vacío
+    }
+    const updated: GroupConfig = { ...current, aisd: gruposAISD, lastUpdated: Date.now() };
+    this.configSubject.next(updated);
+    this.saveToStorage(updated);
+  }
+
+  addAISD(grupo: Grupo): void {
+    const current = this.configSubject.value || {};
+    const gruposAISD = Array.isArray(current.aisd) ? [...current.aisd] : (current.aisd ? [current.aisd] : []);
+    gruposAISD.push(grupo);
+    const updated: GroupConfig = { ...current, aisd: gruposAISD, lastUpdated: Date.now() };
     this.configSubject.next(updated);
     this.saveToStorage(updated);
   }
 
   setAISI(grupo: Grupo): void {
     const current = this.configSubject.value || {};
-    const updated: GroupConfig = { ...current, aisi: grupo, lastUpdated: Date.now() };
+    // setAISI reemplaza el primer grupo (índice 0) o crea un nuevo array con el grupo
+    const gruposAISI = Array.isArray(current.aisi) ? [...current.aisi] : (current.aisi ? [current.aisi] : []);
+    if (gruposAISI.length > 0) {
+      gruposAISI[0] = grupo; // Reemplazar el primer elemento
+    } else {
+      gruposAISI.push(grupo); // Agregar si el array está vacío
+    }
+    const updated: GroupConfig = { ...current, aisi: gruposAISI, lastUpdated: Date.now() };
     this.configSubject.next(updated);
     this.saveToStorage(updated);
   }
 
-  setAISDCCPPActivos(ccppCodigos: string[]): void {
+  addAISI(grupo: Grupo): void {
+    const current = this.configSubject.value || {};
+    const gruposAISI = Array.isArray(current.aisi) ? [...current.aisi] : (current.aisi ? [current.aisi] : []);
+    gruposAISI.push(grupo);
+    const updated: GroupConfig = { ...current, aisi: gruposAISI, lastUpdated: Date.now() };
+    this.configSubject.next(updated);
+    this.saveToStorage(updated);
+  }
+
+  setAISDCCPPActivos(ccppCodigos: string[], indiceGrupo: number = 0): void {
     const current = this.configSubject.value;
     if (!current?.aisd) return;
-    const updated: GroupConfig = {
-      ...current,
-      aisd: { ...current.aisd, ccppActivos: ccppCodigos },
-      lastUpdated: Date.now()
-    };
-    this.configSubject.next(updated);
-    this.saveToStorage(updated);
+    const gruposAISD = Array.isArray(current.aisd) ? [...current.aisd] : [current.aisd];
+    if (indiceGrupo >= 0 && indiceGrupo < gruposAISD.length) {
+      gruposAISD[indiceGrupo] = { ...gruposAISD[indiceGrupo], ccppActivos: ccppCodigos };
+      const updated: GroupConfig = {
+        ...current,
+        aisd: gruposAISD,
+        lastUpdated: Date.now()
+      };
+      this.configSubject.next(updated);
+      this.saveToStorage(updated);
+    }
   }
 
-  setAISICCPPActivos(ccppCodigos: string[]): void {
+  setAISICCPPActivos(ccppCodigos: string[], indiceGrupo: number = 0): void {
     const current = this.configSubject.value;
     if (!current?.aisi) return;
-    const updated: GroupConfig = {
-      ...current,
-      aisi: { ...current.aisi, ccppActivos: ccppCodigos },
-      lastUpdated: Date.now()
-    };
-    this.configSubject.next(updated);
-    this.saveToStorage(updated);
+    const gruposAISI = Array.isArray(current.aisi) ? [...current.aisi] : [current.aisi];
+    if (indiceGrupo >= 0 && indiceGrupo < gruposAISI.length) {
+      gruposAISI[indiceGrupo] = { ...gruposAISI[indiceGrupo], ccppActivos: ccppCodigos };
+      const updated: GroupConfig = {
+        ...current,
+        aisi: gruposAISI,
+        lastUpdated: Date.now()
+      };
+      this.configSubject.next(updated);
+      this.saveToStorage(updated);
+    }
   }
 
-  getAISD(): Grupo | null {
-    return this.configSubject.value?.aisd || null;
+  getAISD(indice: number = 0): Grupo | null {
+    const grupos = this.configSubject.value?.aisd;
+    if (!grupos) return null;
+    const gruposArray = Array.isArray(grupos) ? grupos : [grupos];
+    return gruposArray[indice] || null;
   }
 
-  getAISI(): Grupo | null {
-    return this.configSubject.value?.aisi || null;
+  getAISI(indice: number = 0): Grupo | null {
+    const grupos = this.configSubject.value?.aisi;
+    if (!grupos) return null;
+    const gruposArray = Array.isArray(grupos) ? grupos : [grupos];
+    return gruposArray[indice] || null;
   }
 
-  getAISDCCPPActivos(): string[] {
-    return this.configSubject.value?.aisd?.ccppActivos || [];
+  getAllAISD(): Grupo[] {
+    const grupos = this.configSubject.value?.aisd;
+    if (!grupos) return [];
+    return Array.isArray(grupos) ? grupos : [grupos];
   }
 
-  getAISICCPPActivos(): string[] {
-    return this.configSubject.value?.aisi?.ccppActivos || [];
+  getAllAISI(): Grupo[] {
+    const grupos = this.configSubject.value?.aisi;
+    if (!grupos) return [];
+    return Array.isArray(grupos) ? grupos : [grupos];
+  }
+
+  getAISDCCPPActivos(indiceGrupo: number = 0): string[] {
+    const grupo = this.getAISD(indiceGrupo);
+    return grupo?.ccppActivos || [];
+  }
+
+  getAISICCPPActivos(indiceGrupo: number = 0): string[] {
+    const grupo = this.getAISI(indiceGrupo);
+    return grupo?.ccppActivos || [];
+  }
+
+  getAISDCCPPActivosPorPrefijo(prefijo: string): string[] {
+    const match = prefijo.match(/_A(\d+)/);
+    if (match) {
+      const indice = parseInt(match[1]) - 1;
+      return this.getAISDCCPPActivos(indice);
+    }
+    return [];
+  }
+
+  getAISICCPPActivosPorPrefijo(prefijo: string): string[] {
+    const match = prefijo.match(/_B(\d+)/);
+    if (match) {
+      const indice = parseInt(match[1]) - 1;
+      return this.getAISICCPPActivos(indice);
+    }
+    return [];
   }
 
   getConfig(): GroupConfig | null {
@@ -93,26 +172,24 @@ export class GroupConfigService {
 
   clearAll(): void {
     this.configSubject.next(null);
-    localStorage.removeItem(this.STORAGE_KEY);
+    this.storage.removeItem(this.STORAGE_KEY);
   }
 
   private saveToStorage(config: GroupConfig): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(config));
+      this.storage.setItem(this.STORAGE_KEY, JSON.stringify(config));
     } catch (error) {
-      console.error('[GroupConfigService] Error guardando config:', error);
     }
   }
 
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = this.storage.getItem(this.STORAGE_KEY);
       if (stored) {
         const config = JSON.parse(stored) as GroupConfig;
         this.configSubject.next(config);
       }
     } catch (error) {
-      console.error('[GroupConfigService] Error cargando config:', error);
     }
   }
 }

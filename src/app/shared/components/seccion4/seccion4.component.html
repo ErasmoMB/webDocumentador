@@ -1,175 +1,93 @@
-<div *ngIf="!modoFormulario">
-<h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
-<h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
+<div class="document-view" *ngIf="viewModel$ | async as vm">
+  <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
+  <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
 
-<!-- Párrafo: Introducción AISD -->
-<div [innerHTML]="obtenerTextoSeccion4IntroduccionAISDConResaltado()"></div>
+  <!-- Párrafos dinámicos procesados por TextGeneratorService -->
+  <div [innerHTML]="vm.texts.introduccionText"></div>
 
-<h5 *ngIf="seccionId.includes('3.1.4.A.1')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
-<h5 *ngIf="seccionId.includes('3.1.4.A.2')">A.2. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
-<h5 *ngIf="!seccionId.includes('3.1.4.A.1') && !seccionId.includes('3.1.4.A.2')">A.1. Comunidad Campesina {{ obtenerNombreComunidadActual() }}</h5>
+  <h5 class="cc-identifier">A.1. Comunidad Campesina {{ vm.data.comunidadesCampesinas?.[0]?.nombre || 'Comunidad' }}</h5>
 
-<!-- Párrafo: Comunidad Completo -->
-<div [innerHTML]="obtenerTextoSeccion4ComunidadCompletoConResaltado()"></div>
-<app-table-wrapper [title]="(datos.cuadroTituloAISD1 || 'Ubicación referencial') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Localidad</th>
-            <th class="table-header">Coordenadas</th>
-            <th class="table-header">Altitud</th>
-            <th class="table-header">Distrito</th>
-            <th class="table-header">Provincia</th>
-            <th class="table-header">Departamento</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let fila of getFilasTablaAISD1(); let i = index">
-            <td class="table-cell"><span *ngIf="fila.localidad !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Localidad'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Localidad', i, 'localidad')">{{ fila.localidad }}</span><span *ngIf="fila.localidad === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.coordenadas !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Coordenadas'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Coordenadas', i, 'coordenadas')">{{ fila.coordenadas }}</span><span *ngIf="fila.coordenadas === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.altitud !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Altitud'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Altitud', i, 'altitud')">{{ fila.altitud }}</span><span *ngIf="fila.altitud === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.distrito !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Distrito'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Distrito', i, 'distrito')">{{ fila.distrito }}</span><span *ngIf="fila.distrito === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.provincia !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Provincia'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Provincia', i, 'provincia')">{{ fila.provincia }}</span><span *ngIf="fila.provincia === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.departamento !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD1Fila' + (i+1) + 'Departamento'" (blur)="onCellEditTablaAISD1($event, 'tablaAISD1Fila' + (i+1) + 'Departamento', i, 'departamento')">{{ fila.departamento }}</span><span *ngIf="fila.departamento === '____'">____</span></td>
-        </tr>
-    </tbody>
-</table>
-</app-table-wrapper>
-<p class="text-justify">FUENTE: <span [appDataSource]="'manual'" [fieldName]="'cuadroFuenteAISD1'">{{ datos.cuadroFuenteAISD1 || 'GEADES (2024)' }}</span></p>
+  <div [innerHTML]="vm.texts.comunidadText"></div>
 
-<app-image-upload
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="getFotografiasUbicacionVista()"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_UBICACION"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
-</app-image-upload>
+  <!-- Tabla de Ubicación Referencial -->
+  <app-table-wrapper [title]="(vm.data.cuadroTituloAISD1 || 'Ubicación referencial') + ' – CC ' + (vm.data.comunidadesCampesinas?.[0]?.nombre || 'Comunidad')" [sectionId]="'3.1.4.A1'">
+    <app-generic-table
+      [data]="vm.tables.tablaAISD1"
+      [config]="{
+        columns: [
+          { key: 'localidad', header: 'Localidad', align: 'left' },
+          { key: 'coordenadas', header: 'Coordenadas', align: 'left' },
+          { key: 'altitud', header: 'Altitud', align: 'right' },
+          { key: 'distrito', header: 'Distrito', align: 'left' },
+          { key: 'provincia', header: 'Provincia', align: 'left' },
+          { key: 'departamento', header: 'Departamento', align: 'left' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="text-justify data-source">
+    FUENTE:
+    <span *ngIf="vm.sources.tablaAISD1Source">{{ vm.sources.tablaAISD1Source }}</span>
+    <span *ngIf="!vm.sources.tablaAISD1Source" [appDataSource]="'manual'">GEADES (2024)</span>
+  </p>
 
-<div [innerHTML]="obtenerTextoSeccion4CaracterizacionIndicadoresConResaltado()"></div>
-
-<app-table-wrapper [title]="(datos.cuadroTituloAISD2 || 'Cantidad total de población y viviendas') + ' – CC ' + obtenerNombreComunidadActual()" sectionId="3.1.4.A.1">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Punto de Población (INEI)</th>
-            <th class="table-header">Código</th>
-            <th class="table-header">Población</th>
-            <th class="table-header">Viviendas empadronadas</th>
-            <th class="table-header">Viviendas ocupadas</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let fila of getFilasTablaAISD2(); let i = index">
-            <td class="table-cell"><span *ngIf="fila.punto !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Punto'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Punto')">{{ fila.punto }}</span><span *ngIf="fila.punto === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.codigo !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Codigo'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Codigo')">{{ fila.codigo }}</span><span *ngIf="fila.codigo === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.poblacion !== '____'" [appDataSource]="'section'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'Poblacion'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'Poblacion')">{{ fila.poblacion }}</span><span *ngIf="fila.poblacion === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.viviendasEmpadronadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasEmpadronadas')">{{ fila.viviendasEmpadronadas }}</span><span *ngIf="fila.viviendasEmpadronadas === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="fila.viviendasOcupadas !== '____'" [appDataSource]="'manual'" [contentEditable]="true" [attr.data-field]="'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas'" (blur)="onCellEdit($event, 'tablaAISD2Fila' + (i+1) + 'ViviendasOcupadas')">{{ fila.viviendasOcupadas }}</span><span *ngIf="fila.viviendasOcupadas === '____'">____</span></td>
-        </tr>
-        <tr>
-            <th class="table-header">Total</th>
-            <th class="table-header"></th>
-            <th class="table-header"><span>{{ getTotalPoblacionAISD2() }}</span></th>
-            <th class="table-header"><span>{{ getTotalViviendasEmpadronadasAISD2() }}</span></th>
-            <th class="table-header"><span>{{ getTotalViviendasOcupadasAISD2() }}</span></th>
-        </tr>
-    </tbody>
-</table>
-</app-table-wrapper>
-<p class="text-justify">FUENTE: <span *ngIf="datos.cuadroFuenteAISD2 && datos.cuadroFuenteAISD2 !== '____'" [appDataSource]="'manual'" [fieldName]="'cuadroFuenteAISD2'">{{ datos.cuadroFuenteAISD2 }}</span><span *ngIf="!datos.cuadroFuenteAISD2" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span><span *ngIf="datos.cuadroFuenteAISD2 === '____'">____</span></p>
-
-<app-image-upload
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="getFotografiasPoblacionVista()"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_POBLACION"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
-</app-image-upload>
-</div>
-
-<!-- FORMULARIO (modoFormulario = true) -->
-<div *ngIf="modoFormulario" class="formulario-seccion">
-<h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
-
-<h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
-
-<!-- Párrafo: Introducción AISD -->
-<div class="form-section">
-  <h5>Editar Párrafos</h5>
-  <h6>Introducción AISD</h6>
-  <app-paragraph-editor
-      [fieldId]="'parrafoSeccion4_introduccion_aisd'"
-      label="Introducción AISD"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="4"
-      [value]="obtenerTextoSeccion4IntroduccionAISD()"
-      (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
-    </app-paragraph-editor>
-  </div>
-
-  <!-- Párrafo: Comunidad Completo -->
-  <div class="form-section">
-    <h6>Información de la Comunidad - Texto Completo</h6>
-    <app-paragraph-editor
-      [fieldId]="'parrafoSeccion4_comunidad_completo'"
-      label="Comunidad - Texto Completo"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="6"
-      [value]="obtenerTextoSeccion4ComunidadCompleto()"
-      (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
-    </app-paragraph-editor>
-  </div>
-
-  <!-- Párrafo: Caracterización Indicadores -->
-  <div class="form-section">
-    <h6>Caracterización de Indicadores</h6>
-    <app-paragraph-editor
-      [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
-      label="Caracterización de Indicadores"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-      [rows]="4"
-      [value]="obtenerTextoSeccion4CaracterizacionIndicadores()"
-      (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
-    </app-paragraph-editor>
-  </div>
-
-  <!-- Tabla AISD1 -->
-  <h5>Ubicación Referencial</h5>
-  <div class="form-section">
-    <h6>Fotografías - Ubicación</h6>
+  <!-- Fotografías de Ubicación -->
   <app-image-upload
-    [fotografias]="fotografiasUbicacionFormMulti"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_UBICACION"
-    [permitirMultiples]="true"
-    labelTitulo="Título de la fotografía"
-    labelFuente="Fuente de la fotografía"
-    labelImagen="Fotografía - Imagen"
-    [requerido]="false"
-    (fotografiasChange)="onFotografiasUbicacionChange($event)">
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX_UBICACION"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
   </app-image-upload>
-</div>
 
-<!-- Tabla AISD2 -->
-<h5>Cantidad total de población y viviendas</h5>
-<div class="form-section">
-  <h6>Fotografías - Población y Viviendas</h6>
+  <div [innerHTML]="vm.texts.caracterizacionText"></div>
+
+  <!-- Tabla de Población y Viviendas -->
+  <app-table-wrapper [title]="(vm.data.cuadroTituloAISD1 || 'Cantidad total de población y viviendas') + ' – CC ' + (vm.data.comunidadesCampesinas?.[0]?.nombre || 'Comunidad')" [sectionId]="'3.1.4.A2'">
+    <app-generic-table
+      [data]="vm.tables.tablaAISD2"
+      [config]="{
+        columns: [
+          { key: 'punto', header: 'Punto de Población (INEI)', align: 'left' },
+          { key: 'codigo', header: 'Código', align: 'left' },
+          { key: 'poblacion', header: 'Población', align: 'right' },
+          { key: 'viviendasEmpadronadas', header: 'Viviendas empadronadas', align: 'right' },
+          { key: 'viviendasOcupadas', header: 'Viviendas ocupadas', align: 'right' }
+        ],
+        totalRow: {
+          punto: 'Total',
+          poblacion: vm.calculations.totalesAISD2.poblacion,
+          viviendasEmpadronadas: vm.calculations.totalesAISD2.empadronadas,
+          viviendasOcupadas: vm.calculations.totalesAISD2.ocupadas
+        },
+        showFooter: true,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="text-justify data-source">
+    FUENTE:
+    <span *ngIf="vm.sources.tablaAISD2Source && vm.sources.tablaAISD2Source !== '____'">{{ vm.sources.tablaAISD2Source }}</span>
+    <span *ngIf="!vm.sources.tablaAISD2Source" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span>
+    <span *ngIf="vm.sources.tablaAISD2Source === '____'">____</span>
+  </p>
+
+  <!-- Fotografías de Población -->
   <app-image-upload
-    [fotografias]="fotografiasPoblacionFormMulti"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_POBLACION"
-    [permitirMultiples]="true"
-    labelTitulo="Título de la fotografía"
-    labelFuente="Fuente de la fotografía"
-    labelImagen="Fotografía - Imagen"
-    [requerido]="false"
-    (fotografiasChange)="onFotografiasPoblacionChange($event)">
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX_POBLACION"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
   </app-image-upload>
-</div>
 </div>

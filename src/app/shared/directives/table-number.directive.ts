@@ -2,7 +2,8 @@ import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 import { NumberingService } from 'src/app/core/services/numbering.service';
 
 @Directive({
-  selector: '[appTableNumber]'
+  selector: '[appTableNumber]',
+  standalone: true
 })
 export class TableNumberDirective implements OnInit {
   @Input() appTableNumber?: string;

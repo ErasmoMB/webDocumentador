@@ -3,24 +3,18 @@
 <div [innerHTML]="obtenerTextoFestividadesConResaltado()"></div>
 
 <app-table-wrapper title="Festividades principales – CC {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.16">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Festividad</th>
-            <th class="table-header">Fecha</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of (getTablaFestividades() || [])">
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'festividad'">{{ item.festividad || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'fecha'">{{ item.fecha || '____' }}</td>
-        </tr>
-        <tr *ngIf="!getTablaFestividades() || getTablaFestividades().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getTablaFestividades()"
+  [config]="{
+    columns: [
+      { key: 'festividad', header: 'Festividad', align: 'left' },
+      { key: 'fecha', header: 'Fecha', align: 'left' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
@@ -40,7 +34,7 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.16. Festividades, Costumbres y Turismo</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -53,10 +47,11 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field" style="margin-top: 30px;">
+    <div class="form-field mt-xl">
       <label class="label">Tabla Festividades</label>
       <app-dynamic-table
         [datos]="datos"
+        [sectionId]="seccionId"
         [config]="festividadesConfig"
         [columns]="[
           { field: 'festividad', label: 'Festividad', type: 'text', placeholder: 'Carnavales' },
@@ -68,7 +63,7 @@
       </app-dynamic-table>
     </div>
 
-    <div class="form-field" style="margin-top: 20px;">
+    <div class="form-field mt-lg">
       <label class="label">Fotografías de Festividades</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"

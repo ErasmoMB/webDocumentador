@@ -1,23 +1,31 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { GenericImageComponent } from '../generic-image/generic-image.component';
 import { Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 @Component({
-  selector: 'app-seccion15',
-  templateUrl: './seccion15.component.html',
-  styleUrls: ['./seccion15.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion15',
+    templateUrl: './seccion15.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion15Component extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '';
@@ -54,19 +62,15 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
   }
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
     private sanitizer: DomSanitizer
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
   }
 
   protected getSectionKey(): string {
@@ -88,7 +92,8 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const groupId = this.obtenerPrefijoGrupo() || null;
+    const datosActuales = this.projectFacade.getSectionFields(this.seccionId, groupId);
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -134,7 +139,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     this.datosAnteriores.grupoAISD = grupoAISD || null;
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     const fotos = this.imageService.loadImages(
       this.seccionId,
@@ -145,7 +150,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onFotografiasChange(fotografias: FotoItem[]) {
+  override onFotografiasChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.fotografiasFormMulti = [...fotografias];
     this.fotografiasCache = [...fotografias];
@@ -260,7 +265,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     this.calcularPorcentajesLenguasMaternas();
     this.calcularPorcentajesReligiones();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -278,7 +283,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyLenguas, datosFiltrados);
+        this.onFieldChange(tablaKeyLenguas, datosFiltrados, { refresh: false });
       }
     }
 
@@ -292,7 +297,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyReligiones, datosFiltrados);
+        this.onFieldChange(tablaKeyReligiones, datosFiltrados, { refresh: false });
       }
     }
   }
@@ -328,7 +333,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = tabla;
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
   }
 
   calcularPorcentajesReligiones(): void {
@@ -362,7 +367,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = tabla;
-    this.formularioService.actualizarDato(tablaKey, tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
   }
 
   onLenguasMaternasFieldChange(rowIndex: number, field: string, value: any) {
@@ -373,10 +378,11 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
       
       if (field === 'casos') {
         this.calcularPorcentajesLenguasMaternas();
+      } else {
+        this.onFieldChange(tablaKey, tabla, { refresh: false });
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -387,7 +393,6 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaLenguasMaternas();
     this.calcularPorcentajesLenguasMaternas();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -400,10 +405,11 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
       
       if (field === 'casos') {
         this.calcularPorcentajesReligiones();
+      } else {
+        this.onFieldChange(tablaKey, tabla, { refresh: false });
       }
       
       this.datos[tablaKey] = [...tabla];
-      this.formularioService.actualizarDato(tablaKey, tabla);
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }
@@ -414,7 +420,6 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const tabla = this.getTablaReligiones();
     this.calcularPorcentajesReligiones();
     this.datos[tablaKey] = [...tabla];
-    this.formularioService.actualizarDato(tablaKey, tabla);
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -439,6 +444,15 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla Lenguas Maternas con porcentajes calculados dinámicamente
+   * Cuadro 3.30
+   */
+  getLenguasMaternasConPorcentajes(): any[] {
+    const tabla = this.getTablaLenguasMaternas();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.30');
+  }
+
   getReligionesSinTotal(): any[] {
     const tabla = this.getTablaReligiones();
     if (!tabla || !Array.isArray(tabla)) {
@@ -457,6 +471,15 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
       return sum + casos;
     }, 0);
     return total.toString();
+  }
+
+  /**
+   * Obtiene la tabla Religiones con porcentajes calculados dinámicamente
+   * Cuadro 3.31
+   */
+  getReligionesConPorcentajes(): any[] {
+    const tabla = this.getTablaReligiones();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.31');
   }
 
   override ngOnDestroy() {
@@ -483,7 +506,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
       religionPrincipal = top2.primera.categoria?.toLowerCase() || 'el catolicismo';
     }
     
-    const textoPorDefecto = `La confesión predominante dentro de la CC ${grupoAISD} es ${religionPrincipal}. Según las entrevistas, la permanencia de ${religionPrincipal} como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
+    const textoPorDefecto = `En la actualidad, la confesión predominante dentro de la CC ${grupoAISD} es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la inexistencia de templos evangélicos o de otras confesiones. Esta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar se halla al sur del anexo ${grupoAISD}.`;
     
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
       return textoPersonalizado;
@@ -502,7 +525,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     
     const grupoAISD = this.obtenerNombreComunidadActual();
     
-    return `La confesión predominante dentro de la CC ${grupoAISD} es el catolicismo. Según las entrevistas, la permanencia del catolicismo como religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la no existencia de templos evangélicos u otras confesiones. Esta iglesia es descrita como el principal punto de encuentro religioso para la comunidad y desempeña un papel importante en la vida espiritual de sus habitantes. Otro espacio de valor espiritual es el cementerio, donde los comuneros entierran y visitan a sus difuntos. Este lugar se encuentra ubicado al sur del anexo ${grupoAISD}.`;
+    return `En la actualidad, la confesión predominante dentro de la CC ${grupoAISD} es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz de ${grupoAISD}, y a la inexistencia de templos evangélicos o de otras confesiones. Esta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar se halla al sur del anexo ${grupoAISD}.`;
   }
 
   obtenerTextoSeccion15ReligionCompletoConResaltado(): SafeHtml {
@@ -535,7 +558,7 @@ export class Seccion15Component extends AutoLoadSectionComponent implements OnDe
     const textoPersonalizado = this.datos[fieldId] || this.datos.textoIdioma;
     
     const top2 = this.obtenerTop2Lenguas();
-    let textoPorDefecto = 'Se entiende por lengua materna aquella que es la primera lengua que aprende una persona.';
+    let textoPorDefecto = 'La lengua materna es la primera lengua o idioma que aprende una persona. De la data obtenida de la Plataforma Nacional de Datos Georreferenciados – Geo Perú, se aprecia que el castellano es la categoría mayoritaria, pues representa al ____ % de la población de ____ años a más. En segundo lugar, se halla el ____, que es la lengua materna de un ____ % de los habitantes.';
     
     if (top2.primera) {
       const categoriaPrimera = top2.primera.categoria || 'la categoría mayoritaria';

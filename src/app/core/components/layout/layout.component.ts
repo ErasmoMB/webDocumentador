@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { StorageFacade } from 'src/app/core/services/infrastructure/storage-facade.service';
 import { Subscription } from 'rxjs';
 
 interface SidebarSection {
@@ -14,20 +15,33 @@ interface SidebarSection {
 }
 
 @Component({
-  selector: 'app-layout',
-  templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.css']
+    selector: 'app-layout',
+    templateUrl: './layout.component.html',
+    styleUrls: ['./layout.component.css'],
+    standalone: false
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   private subscription?: Subscription;
+  private resizeTimeout: any;
 
   constructor(
     private router: Router, 
     private activatedRoute: ActivatedRoute,
-    private formularioService: FormularioService,
-    private stateService: StateService
+    private projectFacade: ProjectStateFacade,
+    private stateAdapter: ReactiveStateAdapter,
+    private cdRef: ChangeDetectorRef,
+    private storage: StorageFacade
   ) {}
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    // Debounce para evitar llamadas excesivas
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.cdRef.detectChanges();
+    }, 100);
+  }
 
   ngOnInit() {
     // Exponer el componente globally para que SeccionComponent pueda acceder
@@ -37,7 +51,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.actualizarSeccionesAISI();
     this.actualizarSeccionesAISD();
     
-    this.subscription = this.stateService.datos$.subscribe(() => {
+    this.subscription = this.stateAdapter.datos$.subscribe(() => {
       this.actualizarSeccionesAISI();
       this.actualizarSeccionesAISD();
     });
@@ -50,10 +64,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
+    
+    // Limpiar timeout
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
   }
 
   generarSeccionesAISI(): SidebarSection[] {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.projectFacade.obtenerDatos();
     const distritosAISI = datos['distritosAISI'] || [];
 
     if (distritosAISI.length === 0) {
@@ -97,7 +116,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   generarSeccionesAISD(): SidebarSection[] {
-    const datos = this.formularioService.obtenerDatos();
+    const datos = this.projectFacade.obtenerDatos();
     const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
     
     if (comunidadesCampesinas.length === 0) {
@@ -263,17 +282,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private saveExpandedState() {
     const expandedIds: string[] = [];
     this.collectExpandedIds(this.sections, expandedIds);
-    localStorage.setItem('layoutExpandedSections', JSON.stringify(expandedIds));
+    this.storage.setItem('layoutExpandedSections', JSON.stringify(expandedIds));
   }
 
   private loadExpandedState() {
-    const saved = localStorage.getItem('layoutExpandedSections');
+    const saved = this.storage.getItem('layoutExpandedSections');
     if (saved) {
       try {
         const expandedIds = JSON.parse(saved) as string[];
         this.applyExpandedState(this.sections, expandedIds);
       } catch (e) {
-        console.error('Error loading expanded state:', e);
       }
     }
   }

@@ -56,11 +56,13 @@
     <div class="form-field">
       <label class="label">Comunidad Campesina (CC) AISD <span class="required">*</span></label>
       <input 
+        #nombreInput
         type="text" 
         class="input" 
         placeholder="Ingrese el nombre de la comunidad campesina"
-        [(ngModel)]="comunidad.nombre"
-        (blur)="actualizarNombreComunidad(comunidad.id, comunidad.nombre)">
+        [ngModel]="comunidad.nombre"
+        (ngModelChange)="comunidad.nombre = $event"
+        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
       <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
     </div>
   </div>

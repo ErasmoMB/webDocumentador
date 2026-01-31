@@ -2,36 +2,23 @@
 <h5>A.1.10. Indicadores de educación</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion14IndicadoresEducacionIntroConResaltado()"></div>
 
-<p style="margin-bottom: 10px;"><strong>a. Nivel Educativo de la población</strong></p>
+<p class="mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoNivelEducativoConResaltado()"></div>
 
 <app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getNivelEducativoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getNivelEducativoSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalNivelEducativo() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getNivelEducativoSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getNivelEducativoConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'categoria', header: 'Categoría', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
@@ -46,36 +33,23 @@
     [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Tasa de analfabetismo</strong></p>
+<p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoTasaAnalfabetismoConResaltado()"></div>
 
 <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CC {{ obtenerNombreComunidadActual() }} (2017)" sectionId="3.1.4.A.1.10">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Indicador</th>
-            <th class="table-header">Casos</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getTasaAnalfabetismoSinTotal()">
-            <td class="table-cell"><span *ngIf="item.indicador && item.indicador !== '____'" [appDataSource]="'backend'">{{ item.indicador }}</span><span *ngIf="!item.indicador || item.indicador === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'">{{ item.casos }}</span><span *ngIf="item.casos === undefined || item.casos === '____'">____</span></td>
-            <td class="table-cell"><span *ngIf="item.porcentaje && item.porcentaje !== '____'" [appDataSource]="'calculated'">{{ item.porcentaje }}</span><span *ngIf="!item.porcentaje || item.porcentaje === '____'">____</span></td>
-        </tr>
-        <tr class="total-row" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
-            <td class="table-cell"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalTasaAnalfabetismo() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getTasaAnalfabetismoSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+<app-generic-table
+  [data]="getTasaAnalfabetismoConPorcentajes()"
+  [config]="{
+    columns: [
+      { key: 'indicador', header: 'Indicador', align: 'left' },
+      { key: 'casos', header: 'Casos', align: 'right' },
+      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  }">
+</app-generic-table>
 </app-table-wrapper>
 <p class="source">Fuente:<span [appDataSource]="'manual'">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 </div>
@@ -84,7 +58,7 @@
   <div class="form-group-section">
     <h4 class="section-title">A.1.10. Indicadores de educación</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
       
       <app-paragraph-editor
@@ -97,10 +71,10 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">a. Nivel Educativo de la población</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -113,36 +87,36 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Nivel Educativo</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
+          [fieldName]="'nivelEducativoTabla'"
           [config]="nivelEducativoConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="getTablaKeyNivelEducativo()"
           [totalKey]="'categoria'"
-          [customFieldChangeHandler]="onNivelEducativoFieldChange.bind(this)"
           (tableUpdated)="onNivelEducativoTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="getNivelEducativoSinTotal().length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
+        <div class="table-editor mt-sm" *ngIf="getNivelEducativoSinTotal().length > 0">
+          <table class="table table--editable editor-table">
             <tbody>
               <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalNivelEducativo()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalNivelEducativo()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Indicadores de Educación</label>
         <app-image-upload
           [fotografias]="fotografiasFormMulti"
@@ -162,10 +136,10 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">b. Tasa de analfabetismo</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -178,29 +152,29 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Tasa de Analfabetismo</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
+          [fieldName]="'tasaAnalfabetismoTabla'"
           [config]="tasaAnalfabetismoConfig"
           [columns]="[
             { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
             { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
-          [tablaKey]="getTablaKeyTasaAnalfabetismo()"
           [totalKey]="'indicador'"
-          [customFieldChangeHandler]="onTasaAnalfabetismoFieldChange.bind(this)"
           (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" *ngIf="getTasaAnalfabetismoSinTotal().length > 0" style="margin-top: 10px;">
-          <table class="editor-table">
+        <div class="table-editor mt-sm" *ngIf="getTasaAnalfabetismoSinTotal().length > 0">
+          <table class="table table--editable editor-table">
             <tbody>
               <tr class="total-row">
-                <td><input type="text" class="table-input" value="Total" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" [value]="getTotalTasaAnalfabetismo()" readonly style="background-color: #f5f5f5;"></td>
-                <td><input type="text" class="table-input" value="100,00 %" readonly style="background-color: #f5f5f5;"></td>
+                <td><input type="text" class="table-input bg-readonly" value="Total" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" [value]="getTotalTasaAnalfabetismo()" readonly></td>
+                <td><input type="text" class="table-input bg-readonly" value="100,00 %" readonly></td>
               </tr>
             </tbody>
           </table>

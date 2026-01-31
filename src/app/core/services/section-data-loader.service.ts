@@ -1,10 +1,16 @@
 import { Injectable } from '@angular/core';
-import { FormularioService } from './formulario.service';
-import { FieldMappingService } from './field-mapping.service';
+import { ProjectStateFacade } from '../state/project-state.facade';
+import { FieldMappingFacade } from './field-mapping/field-mapping.facade';
+import { FormChangeService } from './state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
+/**
+ * SectionDataLoaderService - Servicio para carga de datos de secciones
+ * 
+ * ✅ FASE 4: Migrado a usar solo ProjectStateFacade
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -12,8 +18,9 @@ export class SectionDataLoaderService {
   private cache: Map<string, Observable<any>> = new Map();
 
   constructor(
-    private formularioService: FormularioService,
-    private fieldMappingService: FieldMappingService
+    private projectFacade: ProjectStateFacade,
+    private fieldMappingFacade: FieldMappingFacade,
+    private formChange: FormChangeService
   ) {}
 
   loadSectionData(seccionId: string, fieldsToLoad: string[]): Observable<any> {
@@ -27,16 +34,16 @@ export class SectionDataLoaderService {
     const observables: { [key: string]: Observable<any> } = {};
 
     fieldsToLoad.forEach(fieldName => {
-      const mapping = this.fieldMappingService.getMapping(fieldName);
+      const mapping = this.fieldMappingFacade.getMapping(fieldName);
       if (mapping && mapping.endpoint) {
-        observables[fieldName] = this.fieldMappingService.loadDataForField(fieldName, seccionId).pipe(
+        observables[fieldName] = this.fieldMappingFacade.loadDataForField(fieldName, seccionId).pipe(
           catchError(error => {
-            console.error(`❌ [SectionDataLoader] Error loading data for field ${fieldName}:`, error);
             return of(null);
           })
         );
       } else {
-        observables[fieldName] = of(this.formularioService.obtenerDatos()[fieldName as keyof FormularioService]);
+        const datos = this.projectFacade.obtenerDatos();
+        observables[fieldName] = of((datos as any)?.[fieldName]);
       }
     });
 
@@ -64,7 +71,6 @@ export class SectionDataLoaderService {
                 });
               
               if (esArrayVacio || esArrayConDatosVacios) {
-                console.warn(`⚠️ [SectionDataLoader] Ignorando ${fieldName} - array vacío o con datos vacíos:`, valor);
                 continue;
               }
               
@@ -78,9 +84,7 @@ export class SectionDataLoaderService {
           }
         }
         if (Object.keys(updatedData).length > 0) {
-          this.formularioService.actualizarDatos(updatedData);
-        } else {
-          console.warn(`⚠️ [SectionDataLoader] No hay datos válidos para guardar en ${seccionId}`);
+          this.formChange.persistFields(seccionId, 'form', updatedData);
         }
         return updatedData;
       }),
@@ -113,22 +117,22 @@ export class SectionDataLoaderService {
 
   loadFieldData(fieldName: string, seccionId: string): Observable<any> {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(seccionId);
-    return this.fieldMappingService.loadDataForField(fieldName, seccionId).pipe(
+    return this.fieldMappingFacade.loadDataForField(fieldName, seccionId).pipe(
       map(data => {
         if (data !== null) {
           if (prefijo && this.debeGuardarConPrefijo(fieldName)) {
             const campoConPrefijo = `${fieldName}${prefijo}` as any;
-            this.formularioService.actualizarDato(campoConPrefijo, data);
+            this.formChange.persistFields(seccionId, 'form', { [campoConPrefijo]: data });
           } else {
-            this.formularioService.actualizarDato(fieldName as any, data);
+            this.formChange.persistFields(seccionId, 'form', { [fieldName as any]: data });
           }
         }
         return data;
       }),
       catchError(error => {
-        console.warn(`Error loading data for field ${fieldName}`, error);
         return of(null);
       })
     );
   }
+
 }

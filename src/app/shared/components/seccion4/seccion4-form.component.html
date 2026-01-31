@@ -1,0 +1,104 @@
+<div class="formulario-seccion">
+  <header class="form-header">
+    <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
+    <h4>Edición: AISD - {{ obtenerNombreComunidad() }}</h4>
+  </header>
+
+  <div class="form-grid">
+    <!-- Editores de Párrafos -->
+    <section class="form-card">
+      <h5 class="section-subtitle">1. Narrativa y Caracterización</h5>
+      
+      <app-paragraph-editor
+          [fieldId]="'parrafoSeccion4_introduccion_aisd'"
+          label="Introducción AISD"
+          hint="Placeholder CC ___ se reemplaza automáticamente."
+          [rows]="4"
+          [value]="datos['parrafoSeccion4_introduccion_aisd']"
+          (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        [fieldId]="'parrafoSeccion4_comunidad_completo'"
+        label="Información Histórica y Ubicación"
+        [rows]="6"
+        [value]="datos['parrafoSeccion4_comunidad_completo']"
+        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
+        label="Contexto de Indicadores"
+        [rows]="3"
+        [value]="datos['parrafoSeccion4_caracterizacion_indicadores']"
+        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+      </app-paragraph-editor>
+    </section>
+
+    <!-- Tablas de Datos -->
+    <section class="form-card">
+      <h5 class="section-subtitle">2. Tablas Estadísticas</h5>
+      
+      <div class="table-edit-container">
+        <app-table-wrapper [title]="'Ubicación Referencial (Tabla A1)'" [sectionId]="'3.1.4.A1'" [hideNumber]="true">
+          <app-dynamic-table
+            [datos]="datos"
+            [sectionId]="seccionId"
+            [config]="tableCfg.getTablaAISD1Config()"
+            [columns]="tableCfg.getColumnasAISD1()"
+            [tablaKey]="'tablaAISD1Datos'"
+            [totalKey]="'localidad'"
+            [showAddButton]="true"
+            [showDeleteButton]="true"
+            (tableUpdated)="onTablaUpdated()">
+          </app-dynamic-table>
+        </app-table-wrapper>
+      </div>
+
+      <div class="table-edit-container" style="margin-top: 2rem;">
+        <app-table-wrapper [title]="'Población y Viviendas (Tabla A2)'" [sectionId]="'3.1.4.A2'" [hideNumber]="true">
+          <app-dynamic-table
+            [datos]="datos"
+            [sectionId]="seccionId"
+            [config]="tableCfg.getTablaAISD2Config()"
+            [columns]="tableCfg.getColumnasAISD2()"
+            [tablaKey]="'tablaAISD2Datos'"
+            [totalKey]="'punto'"
+            [showAddButton]="true"
+            [showDeleteButton]="true"
+            (tableUpdated)="onTablaUpdated()">
+          </app-dynamic-table>
+        </app-table-wrapper>
+      </div>
+    </section>
+
+    <!-- Gestión de Imágenes -->
+    <section class="form-card photos-section">
+      <h5 class="section-subtitle">3. Archivo Fotográfico</h5>
+      
+      <div class="photo-group-edit">
+        <h6>A. Ubicación Referencial</h6>
+        <app-image-upload
+          [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_UBICACION"
+          [permitirMultiples]="true"
+          [requerido]="false"
+          (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_UBICACION, $event)">
+        </app-image-upload>
+      </div>
+
+      <div class="photo-group-edit" style="margin-top: 2rem;">
+        <h6>B. Población y Viviendas</h6>
+        <app-image-upload
+          [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_POBLACION"
+          [permitirMultiples]="true"
+          [requerido]="false"
+          (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_POBLACION, $event)">
+        </app-image-upload>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,23 +1,35 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormularioService } from 'src/app/core/services/formulario.service';
-import { FieldMappingService } from 'src/app/core/services/field-mapping.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { TableManagementService, TableConfig } from 'src/app/core/services/table-management.service';
-import { StateService } from 'src/app/core/services/state.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { Subscription } from 'rxjs';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
+import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
+import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { TableWrapperComponent } from '../table-wrapper/table-wrapper.component';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+// Clean Architecture imports
+import { LoadSeccion10UseCase, UpdateSeccion10DataUseCase, Seccion10ViewModel } from 'src/app/core/application/use-cases';
+import { Seccion10Data } from 'src/app/core/domain/entities';
 
 @Component({
-  selector: 'app-seccion10',
-  templateUrl: './seccion10.component.html',
-  styleUrls: ['./seccion10.component.css']
+    imports: [
+        CommonModule,
+        FormsModule,
+        CoreSharedModule
+    ],
+    selector: 'app-seccion10',
+    templateUrl: './seccion10.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion10Component extends AutoLoadSectionComponent implements OnDestroy {
   // Component para gestionar servicios básicos - agua, saneamiento, electricidad, energía para cocinar
@@ -41,6 +53,10 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   fotografiasElectricidadCache: FotoItem[] = [];
 
   private readonly regexCache = new Map<string, RegExp>();
+
+  // Clean Architecture ViewModel
+  seccion10ViewModel$ = this.loadSeccion10UseCase.execute();
+  seccion10ViewModel?: Seccion10ViewModel;
 
   get abastecimientoAguaConfig(): TableConfig {
     return {
@@ -76,19 +92,61 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   }
 
   constructor(
-    formularioService: FormularioService,
-    fieldMapping: FieldMappingService,
-    sectionDataLoader: SectionDataLoaderService,
-    imageService: ImageManagementService,
-    photoNumberingService: PhotoNumberingService,
     cdRef: ChangeDetectorRef,
+    injector: Injector,
     protected override autoLoader: AutoBackendDataLoaderService,
-    private tableService: TableManagementService,
-    private stateService: StateService,
+    protected override tableFacade: TableManagementFacade,
+    private stateAdapter: ReactiveStateAdapter,
     private groupConfig: GroupConfigService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    // Clean Architecture dependencies
+    private loadSeccion10UseCase: LoadSeccion10UseCase,
+    private updateSeccion10DataUseCase: UpdateSeccion10DataUseCase
   ) {
-    super(formularioService, fieldMapping, sectionDataLoader, imageService, photoNumberingService, cdRef, autoLoader);
+    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    
+    // Subscribe to ViewModel for Clean Architecture
+    this.seccion10ViewModel$.subscribe(viewModel => {
+      this.seccion10ViewModel = viewModel;
+      this.cdRef.markForCheck();
+    });
+  }
+
+  // Clean Architecture methods
+  updateSeccion10Data(updates: Partial<Seccion10Data>): void {
+    if (this.seccion10ViewModel) {
+      const currentData = this.seccion10ViewModel.data;
+      const updatedData = { ...currentData, ...updates };
+      this.updateSeccion10DataUseCase.execute(updatedData).subscribe(updatedViewModel => {
+        this.seccion10ViewModel = updatedViewModel;
+        this.cdRef.markForCheck();
+      });
+    }
+  }
+
+  // Backward compatibility methods - delegate to Clean Architecture
+  obtenerTextoSeccion10ServiciosBasicosIntro(): string {
+    return this.seccion10ViewModel?.texts.serviciosBasicosIntroText || this.datos.parrafoSeccion10_servicios_basicos_intro || '';
+  }
+
+  obtenerTextoAgua(): string {
+    return this.seccion10ViewModel?.texts.aguaText || '';
+  }
+
+  obtenerTextoSaneamiento(): string {
+    return this.seccion10ViewModel?.texts.saneamientoText || '';
+  }
+
+  obtenerTextoElectricidad(): string {
+    return this.seccion10ViewModel?.texts.electricidadText || '';
+  }
+
+  obtenerTextoDesechosSolidos(): string {
+    return this.seccion10ViewModel?.texts.desechosSolidosText || '';
+  }
+
+  obtenerTextoEnergiaCocinar(): string {
+    return this.seccion10ViewModel?.texts.energiaCocinarText || '';
   }
 
   protected getSectionKey(): string {
@@ -97,7 +155,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
 
   protected getLoadParameters(): string[] | null {
     const ccppDesdeGrupo = this.groupConfig.getAISDCCPPActivos();
-    console.log('[S10] CCPP activos desde GroupConfig:', ccppDesdeGrupo);
+    // [S10] CCPP activos desde GroupConfig: ccppDesdeGrupo
     if (ccppDesdeGrupo && ccppDesdeGrupo.length > 0) {
       return ccppDesdeGrupo;
     }
@@ -105,7 +163,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.formularioService.obtenerDatos();
+    const datosActuales = this.projectFacade.obtenerDatos();
     const grupoAISDActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'grupoAISD', this.seccionId);
     const grupoAISDAnterior = this.datosAnteriores.grupoAISD || null;
     const grupoAISDEnDatos = this.datos.grupoAISD || null;
@@ -323,6 +381,16 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla Abastecimiento de Agua con porcentajes calculados dinámicamente
+   * Cuadro 3.15
+   * Principio SOLID: Single Responsibility - Este método solo calcula porcentajes para Abastecimiento de Agua
+   */
+  getAbastecimientoAguaConPorcentajes(): any[] {
+    const tabla = this.getTablaAbastecimientoAgua();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.15');
+  }
+
   private getTablaTiposSaneamiento(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
     const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'tiposSaneamientoTabla', this.seccionId) 
@@ -364,10 +432,48 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     return total.toString();
   }
 
+  /**
+   * Obtiene la tabla Tipos de Saneamiento con porcentajes calculados dinámicamente
+   * Cuadro 3.16
+   * Principio SOLID: Single Responsibility - Este método solo calcula porcentajes para Tipos de Saneamiento
+   */
+  getTiposSaneamientoConPorcentajes(): any[] {
+    const tabla = this.getTablaTiposSaneamiento();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.16');
+  }
+
+  /**
+   * Helper para verificar si la tabla de cobertura eléctrica tiene contenido real
+   */
+  private tieneContenidoRealCobertura(tabla: any[]): boolean {
+    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return false;
+    return tabla.some(item => {
+      const categoria = item.categoria?.toString().trim() || '';
+      const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+      return categoria !== '' || casos > 0;
+    });
+  }
+
   private getTablaCoberturaElectrica(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tabla = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'alumbradoElectricoTabla', this.seccionId) || this.datos.alumbradoElectricoTabla || [];
-    return tabla;
+    
+    // 1. Buscar con prefijo
+    const tablaConPrefijo = prefijo ? this.datos[`alumbradoElectricoTabla${prefijo}`] : null;
+    if (tablaConPrefijo && this.tieneContenidoRealCobertura(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    
+    // 2. Buscar sin prefijo (alumbradoElectricoTabla)
+    if (this.datos.alumbradoElectricoTabla && this.tieneContenidoRealCobertura(this.datos.alumbradoElectricoTabla)) {
+      return this.datos.alumbradoElectricoTabla;
+    }
+    
+    // 3. Fallback a clave del mock data (coberturaElectricaTabla)
+    if (this.datos.coberturaElectricaTabla && this.tieneContenidoRealCobertura(this.datos.coberturaElectricaTabla)) {
+      return this.datos.coberturaElectricaTabla;
+    }
+    
+    return [];
   }
 
   getTablaKeyCoberturaElectrica(): string {
@@ -400,6 +506,16 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       return sum + casos;
     }, 0);
     return total.toString();
+  }
+
+  /**
+   * Obtiene la tabla Cobertura Eléctrica con porcentajes calculados dinámicamente
+   * Cuadro 3.17
+   * Principio SOLID: Single Responsibility - Este método solo calcula porcentajes para Cobertura Eléctrica
+   */
+  getCoberturaElectricaConPorcentajes(): any[] {
+    const tabla = this.getTablaCoberturaElectrica();
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.17');
   }
 
   override obtenerPrefijoGrupo(): string {
@@ -450,7 +566,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
 
 
   protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {
-    console.log('[S10] Datos del backend:', loadedData);
+    // [S10] Datos del backend: loadedData
     
     // El backend POST retorna datos ya separados por categoría
     // Solo necesitamos resetear porcentajes y calcular
@@ -471,21 +587,21 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         (!sonArrays && JSON.stringify(data) !== JSON.stringify(actual));
 
       if (debeActualizar) {
-        this.formularioService.actualizarDato(fieldKey as any, data);
+        this.onFieldChange(fieldKey as any, data, { refresh: false });
         this.datos[fieldKey] = data;
 
         // Calcular porcentajes SOLO si es tabla y hubo cambio
         if (fieldName === 'abastecimientoAguaTabla' && Array.isArray(data)) {
-          console.log('[S10] Calculando porcentajes para abastecimientoAguaTabla');
-          this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+          // [S10] Calculando porcentajes para abastecimientoAguaTabla
+          this.tableFacade.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
         }
         if (fieldName === 'tiposSaneamientoTabla' && Array.isArray(data)) {
-          console.log('[S10] Calculando porcentajes para tiposSaneamientoTabla');
-          this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+          // [S10] Calculando porcentajes para tiposSaneamientoTabla
+          this.tableFacade.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
         }
         if (fieldName === 'alumbradoElectricoTabla' && Array.isArray(data)) {
-          console.log('[S10] Calculando porcentajes para alumbradoElectricoTabla');
-          this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
+          // [S10] Calculando porcentajes para alumbradoElectricoTabla
+          this.tableFacade.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
         }
       }
     }
@@ -499,7 +615,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     this.recalcularPorcentajesSiHayDatos();
     this.cargarFotografias();
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateService.datos$.subscribe(() => {
+      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
       });
@@ -510,17 +626,17 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     // Recalcular porcentajes si las tablas tienen datos
     const tablaAgua = this.getTablaAbastecimientoAgua();
     if (tablaAgua && tablaAgua.length > 0 && tablaAgua[0].casos) {
-      this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
     }
 
     const tablaSaneamiento = this.getTablaTiposSaneamiento();
     if (tablaSaneamiento && tablaSaneamiento.length > 0 && tablaSaneamiento[0].casos) {
-      this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
     }
 
     const tablaElectrica = this.getTablaCoberturaElectrica();
     if (tablaElectrica && tablaElectrica.length > 0 && tablaElectrica[0].casos) {
-      this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
     }
   }
 
@@ -535,7 +651,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyAgua, datosFiltrados);
+        this.onFieldChange(tablaKeyAgua, datosFiltrados);
       }
     }
     
@@ -549,7 +665,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeySaneamiento, datosFiltrados);
+        this.onFieldChange(tablaKeySaneamiento, datosFiltrados);
       }
     }
     
@@ -563,7 +679,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         return !categoria.includes('total');
       });
       if (datosFiltrados.length !== longitudOriginal) {
-        this.formularioService.actualizarDato(tablaKeyElectrica, datosFiltrados);
+        this.onFieldChange(tablaKeyElectrica, datosFiltrados);
       }
     }
   }
@@ -585,7 +701,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     }
   }
 
-  cargarFotografias(): void {
+  override cargarFotografias(): void {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     
     const fotosDesechos = this.imageService.loadImages(
@@ -619,16 +735,6 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
     this.cdRef.detectChanges();
   }
 
-  obtenerTextoSeccion10ServiciosBasicosIntro(): string {
-    if (this.datos.parrafoSeccion10_servicios_basicos_intro) {
-      return this.datos.parrafoSeccion10_servicios_basicos_intro;
-    }
-    
-    const viviendasOcupadas = this.getViviendasOcupadas();
-    
-    return `Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento. En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia el total de viviendas con ocupantes presentes (${viviendasOcupadas}), tal como realiza el Censo Nacional 2017.`;
-  }
-
   onAbastecimientoAguaFieldChange(index: number, field: string, value: any) {
     const tablaKey = this.getTablaKeyAbastecimientoAgua();
     let tabla = this.getTablaAbastecimientoAgua();
@@ -636,7 +742,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       tabla = [];
     }
     
-    this.tableService.actualizarFila(this.datos, this.abastecimientoAguaConfig, index, field, value, false);
+    this.tableFacade.actualizarFila(this.datos, this.abastecimientoAguaConfig, index, field, value, false);
     
     tabla = this.getTablaAbastecimientoAgua();
     
@@ -661,9 +767,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       }
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   onAbastecimientoAguaTableUpdated() {
@@ -689,9 +793,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalItem.porcentaje = '100,00 %';
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   onTiposSaneamientoFieldChange(index: number, field: string, value: any) {
@@ -701,7 +803,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       tabla = [];
     }
     
-    this.tableService.actualizarFila(this.datos, this.tiposSaneamientoConfig, index, field, value, false);
+    this.tableFacade.actualizarFila(this.datos, this.tiposSaneamientoConfig, index, field, value, false);
     
     tabla = this.getTablaTiposSaneamiento();
     
@@ -726,9 +828,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       }
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   onTiposSaneamientoTableUpdated() {
@@ -754,9 +854,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalItem.porcentaje = '100,00 %';
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   onCoberturaElectricaFieldChange(index: number, field: string, value: any) {
@@ -766,7 +864,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       tabla = [];
     }
     
-    this.tableService.actualizarFila(this.datos, this.coberturaElectricaConfig, index, field, value, false);
+    this.tableFacade.actualizarFila(this.datos, this.coberturaElectricaConfig, index, field, value, false);
     
     tabla = this.getTablaCoberturaElectrica();
     
@@ -791,9 +889,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       }
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   onCoberturaElectricaTableUpdated() {
@@ -819,9 +915,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
       totalItem.porcentaje = '100,00 %';
     }
     
-    this.formularioService.actualizarDato(tablaKey, tabla);
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    this.onFieldChange(tablaKey, tabla);
   }
 
   obtenerTextoServiciosAgua(): string {
@@ -1109,17 +1203,18 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
   protected override recalcularPorcentajesDelBackend(loadedData: { [fieldName: string]: any }): void {
     // Recalcular porcentajes para cada tabla que vino del backend
     if (loadedData['abastecimientoAguaTabla']) {
-      this.tableService.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.abastecimientoAguaConfig);
     }
     // Verificar tanto tiposSaneamientoTabla como saneamientoTabla
     if (loadedData['tiposSaneamientoTabla'] || loadedData['saneamientoTabla']) {
-      this.tableService.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.tiposSaneamientoConfig);
     }
     if (loadedData['alumbradoElectricoTabla']) {
-      this.tableService.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
+      this.tableFacade.calcularPorcentajes(this.datos, this.coberturaElectricaConfig);
     }
   }
 }
 // Cache rebuild trigger - 2026-01-19
+
 
 

@@ -1,35 +1,62 @@
 <div class="table-editor">
-  <table class="editor-table">
+  <table class="table table--editable editor-table">
     <thead>
       <tr>
         <th *ngFor="let col of columns">{{ col.label }}</th>
-        <th *ngIf="showDeleteButton"></th>
+        <th *ngIf="showDeleteButton && !modoVista"></th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of getTableData(); let i = index">
-        <td *ngFor="let col of columns">
-          <input 
-            [type]="col.type || 'text'"
-            class="table-input"
-            [value]="getFormattedValue(item, col)"
-            (input)="onFieldChange(i, col.field, $any($event.target).value)"
-            [placeholder]="col.placeholder || ''"
-            [readonly]="col.readonly || false">
+      <tr *ngFor="let item of tableData; let i = index; trackBy: trackByIndex">
+        <td *ngFor="let col of columns" [attr.data-label]="col.label">
+          <!-- Modo vista: mostrar solo texto -->
+          <span *ngIf="modoVista">{{ getFormattedValue(item, col) }}</span>
+          <!-- Modo edición: elementos interactivos -->
+          <ng-container *ngIf="!modoVista">
+            <!-- Select para SI/NO y otros tipos de selección -->
+            <select
+              *ngIf="col.type === 'select'"
+              class="table-input"
+              [value]="getFormattedValue(item, col)"
+              (change)="onFieldChange(i, col.field, $any($event.target).value)">
+              <option value="">-- Seleccionar --</option>
+              <option *ngFor="let value of col.allowedValues" [value]="value">{{ value }}</option>
+            </select>
+            <!-- Textarea para campos de tipo textarea -->
+            <textarea 
+              *ngIf="col.type === 'textarea'"
+              class="table-input table-textarea"
+              [value]="getFormattedValue(item, col)"
+              (blur)="onFieldChange(i, col.field, $any($event.target).value)"
+              [placeholder]="col.placeholder || ''"
+              [readonly]="col.readonly || false"
+              rows="2">
+            </textarea>
+            <!-- Input para otros tipos -->
+            <input 
+              *ngIf="col.type !== 'textarea' && col.type !== 'select'"
+              [type]="col.type || 'text'"
+              class="table-input"
+              [value]="getFormattedValue(item, col)"
+              (blur)="onFieldChange(i, col.field, $any($event.target).value)"
+              (keyup.enter)="onFieldChange(i, col.field, $any($event.target).value); $any($event.target).blur()"
+              [placeholder]="col.placeholder || ''"
+              [readonly]="col.readonly || false">
+          </ng-container>
         </td>
-        <td *ngIf="showDeleteButton">
+        <td *ngIf="showDeleteButton && !modoVista" class="table-actions" data-label="">
           <button 
             type="button" 
             class="btn-icon" 
             (click)="onDelete(i)" 
-            *ngIf="canDelete(i)"
+            *ngIf="canDelete(i) && !modoVista"
             title="Eliminar fila">
             ×
           </button>
         </td>
       </tr>
-      <tr *ngIf="!getTableData() || getTableData().length === 0">
-        <td [attr.colspan]="columns.length + (showDeleteButton ? 1 : 0)" style="text-align: center; padding: 10px;">
+      <tr *ngIf="(!tableData || tableData.length === 0) && !modoVista">
+        <td [attr.colspan]="columns.length + (showDeleteButton ? 1 : 0)" class="text-center p-md">
           <button type="button" class="btn btn-secondary" (click)="initializeTable()">
             Agregar Filas
           </button>
@@ -38,11 +65,10 @@
     </tbody>
   </table>
   <button 
-    *ngIf="showAddButton && (getTableData() && getTableData().length > 0)"
+    *ngIf="showAddButton && (tableData && tableData.length > 0) && !modoVista"
     type="button" 
-    class="btn btn-secondary" 
-    (click)="onAdd()" 
-    style="margin-top: 10px;">
+    class="btn btn-secondary mt-sm" 
+    (click)="onAdd()">
     + Agregar Fila
   </button>
 </div>

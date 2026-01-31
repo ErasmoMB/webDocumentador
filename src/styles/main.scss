@@ -1,0 +1,20 @@
+// 🎯 DESIGN SYSTEM: Archivo Principal
+// Importa todos los tokens y componentes en orden correcto
+
+// ============================================
+// 1. TOKENS (Valores base)
+// ============================================
+@use 'tokens/colors';
+@use 'tokens/spacing';
+@use 'tokens/typography';
+@use 'tokens/shadows';
+@use 'tokens/radius';
+@use 'tokens/breakpoints';
+
+// ============================================
+// 2. COMPONENTES (Sistemas reutilizables)
+// ============================================
+@use 'components/table';
+@use 'components/button';
+@use 'components/form';
+@use 'components/utilities';

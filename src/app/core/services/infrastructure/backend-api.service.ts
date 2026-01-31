@@ -1,0 +1,607 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ConfigService } from '../config.service';
+
+export interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  status_code: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BackendApiService {
+  private baseUrl: string;
+
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    this.baseUrl = this.configService.getApiUrl();
+  }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    if (error.status === 404) {
+      return throwError(() => error);
+    }
+    if (error.status === 500) {
+      const errorDetail = error.error?.detail || '';
+      if (errorDetail.includes('Unknown column') || errorDetail.includes('Incorrect number of arguments')) {
+        return throwError(() => error);
+      }
+      if (error.url?.includes('viviendas-ubicacion')) {
+        return throwError(() => error);
+      }
+    }
+    if (error.error instanceof ErrorEvent) {
+    } else {
+      if (error.status !== 500 || !error.url?.includes('viviendas-ubicacion')) {
+      }
+    }
+    return throwError(() => error);
+  }
+
+  private transformResponse<T>(data: BackendResponse<T>): BackendResponse<T>;
+  private transformResponse<T>(data: T): BackendResponse<T>;
+  private transformResponse<T>(data: BackendResponse<T> | T): BackendResponse<T> {
+    if (data && typeof data === 'object') {
+      const maybe = data as any;
+      if (
+        typeof maybe.success === 'boolean' &&
+        'data' in maybe &&
+        (typeof maybe.status_code === 'number' || typeof maybe.status_code === 'string')
+      ) {
+        return maybe as BackendResponse<T>;
+      }
+    }
+    return {
+      success: true,
+      message: 'Datos obtenidos correctamente',
+      data: data as T,
+      status_code: 200
+    };
+  }
+
+  getDatosDemograficos(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/demograficos/datos`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map((data: any) => this.transformResponse<any[]>(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPiramideDemografica(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/demograficos/piramide`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getUbicacionesConDatosDemograficos(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/demograficos/ubicaciones`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getServiciosBasicos(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/servicios/basicos`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postServiciosPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/servicios/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postCentrosPobladosPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/centros-poblados/por-codigos-ubigeo`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postSeguroSaludPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/salud/seguro-salud/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postEducacionPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/educacion/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postTasaAnalfabetismoPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/educacion/tasa-analfabetismo/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postNBIPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/nbi/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postMaterialesPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/materiales/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postViviendaPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/vivienda/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postEnergiaCocinaPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/energia-cocina/por-codigos`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  postPEAActividadesOcupadas(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/pea/actividades-ocupadas`;
+    const payload = { codigos_ubigeo: codigosUBIGEO };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getResumenServicios(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/servicios/resumen`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getActividadesEconomicas(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/economicos/actividades`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getActividadesPrincipales(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/economicos/principales`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getEducacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/educacion/niveles`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getTasaAnalfabetismo(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/educacion/tasa-analfabetismo`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getLenguasMaternas(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/lenguas/maternas`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getReligiones(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/religiones`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getEducacionPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/educacion/por-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getDepartamentos(): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/ubicaciones/departamentos`;
+    return this.http.get<any[]>(url).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getProvincias(codigoDepartamento?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/ubicaciones/provincias`;
+    let params = new HttpParams();
+    if (codigoDepartamento) {
+      params = params.set('codigo_departamento', codigoDepartamento);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getDistritos(codigoProvincia?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/ubicaciones/distritos`;
+    let params = new HttpParams();
+    if (codigoProvincia) {
+      params = params.set('codigo_provincia', codigoProvincia);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getCentrosPoblados(codigoDistrito?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/ubicaciones/centros-poblados`;
+    let params = new HttpParams();
+    if (codigoDistrito) {
+      params = params.set('codigo_distrito', codigoDistrito);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getResumenCompleto(idUbigeo: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/ubicaciones/resumen/${idUbigeo}`;
+    return this.http.get<any[]>(url).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getLenguas(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/lenguas`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getLenguasPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/lenguas-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getReligionesPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/religiones-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getTiposVivienda(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/viviendas`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getNbi(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/nbi/por-ubigeo`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getViviendasPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/viviendas-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getEnergiaCocina(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/energia-cocina`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getEnergiaCocinaPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/energia-cocina-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getNBI(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/nbi`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getNBIPorUbicacion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/vistas/nbi-ubicacion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getInformacionReferencialAISD(idUbigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisd/informacion-referencial`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getCentrosPobladosAISD(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/centros-poblados`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPoblacionPorSexo(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/poblacion-sexo`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPoblacionPorGrupoEtario(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/poblacion-etario`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPET(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/pet`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getMaterialesConstruccion(idUbigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisd/materiales-construccion`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getInformacionReferencialAISI(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/informacion-referencial`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getCentrosPobladosAISI(ubigeo?: string): Observable<BackendResponse<any[]>> {
+    const url = `${this.baseUrl}/aisi/centros-poblados`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any[]>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPEADistrital(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/pea-distrital`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getViviendasCenso(ubigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/aisi/viviendas-censo`;
+    let params = new HttpParams();
+    if (ubigeo) {
+      params = params.set('ubigeo', ubigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  getSeguroSalud(idUbigeo?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/salud/seguro-salud`;
+    let params = new HttpParams();
+    if (idUbigeo) {
+      params = params.set('id_ubigeo', idUbigeo);
+    }
+    return this.http.get<any>(url, { params }).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+}
+

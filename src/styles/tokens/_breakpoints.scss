@@ -1,0 +1,92 @@
+// 🎯 DESIGN TOKENS: Breakpoints y Mixins Responsive
+// Mobile-first approach
+
+$breakpoints: (
+  'xs': 0,
+  'sm': 576px,      // Mobile landscape
+  'md': 768px,      // Tablet
+  'lg': 992px,      // Desktop
+  'xl': 1200px,     // Large desktop
+  'xxl': 1400px,    // Extra large
+);
+
+// Mixin principal para media queries
+@mixin respond-to($breakpoint) {
+  $value: map-get($breakpoints, $breakpoint);
+  
+  @if $value {
+    @if $value == 0 {
+      @content;
+    } @else {
+      @media (min-width: $value) {
+        @content;
+      }
+    }
+  } @else {
+    @warn "Breakpoint `#{$breakpoint}` no existe en $breakpoints";
+  }
+}
+
+// Mixins específicos para casos comunes
+@mixin mobile-only {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet-only {
+  @media (min-width: 768px) and (max-width: 991px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 992px) {
+    @content;
+  }
+}
+
+@mixin desktop-large {
+  @media (min-width: 1200px) {
+    @content;
+  }
+}
+
+// Mixin para responsive font-size
+@mixin responsive-font-size($mobile, $tablet, $desktop) {
+  font-size: $mobile;
+  
+  @include respond-to('md') {
+    font-size: $tablet;
+  }
+  
+  @include respond-to('lg') {
+    font-size: $desktop;
+  }
+}
+
+// Mixin para responsive padding
+@mixin responsive-padding($mobile, $tablet, $desktop) {
+  padding: $mobile;
+  
+  @include respond-to('md') {
+    padding: $tablet;
+  }
+  
+  @include respond-to('lg') {
+    padding: $desktop;
+  }
+}
+
+// Mixin para responsive margin
+@mixin responsive-margin($mobile, $tablet, $desktop) {
+  margin: $mobile;
+  
+  @include respond-to('md') {
+    margin: $tablet;
+  }
+  
+  @include respond-to('lg') {
+    margin: $desktop;
+  }
+}

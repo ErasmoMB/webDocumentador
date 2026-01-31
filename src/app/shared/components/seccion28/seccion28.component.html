@@ -1,29 +1,23 @@
 <div *ngIf="!modoFormulario">
 <h5>B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h5>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
+<p class="mt-lg mb-sm"><strong>a. Infraestructura en salud</strong></p>
 <p class="text-justify" *ngIf="datos.textoSaludCP && datos.textoSaludCP !== '____'">{{ datos.textoSaludCP }}</p>
 <p class="text-justify" *ngIf="!datos.textoSaludCP || datos.textoSaludCP === '____'">Dentro de la capital distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local. Este puesto de salud es el principal punto de referencia para los habitantes de <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, ofreciendo servicios esenciales como consultas médicas, controles de salud y atención básica de emergencias. Aunque cuenta con limitaciones en cuanto a especialidades médicas y equipamiento, su presencia es fundamental para atender las necesidades de salud de la población, especialmente considerando la ausencia de otros centros de mayor capacidad en la zona.</p>
 
 <app-table-wrapper title="Principales características del Puesto de Salud {{ datos.centroPobladoAISI || 'Cahuacho' }}" sectionId="3.1.4.B.1.7">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Categoría</th>
-            <th class="table-header">Descripción</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getPuestoSaludTabla()">
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'descripcion'">{{ item.descripcion || '____' }}</td>
-        </tr>
-        <tr *ngIf="getPuestoSaludTabla().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="puestoSaludCpTablaVista"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'descripcion', header: 'Descripción', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
@@ -38,43 +32,26 @@
     [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
+<p class="mt-lg mb-sm"><strong>b. Infraestructura en educación</strong></p>
 <p class="text-justify" *ngIf="datos.textoEducacionCP && datos.textoEducacionCP !== '____'">{{ datos.textoEducacionCP }}</p>
 <p class="text-justify" *ngIf="!datos.textoEducacionCP || datos.textoEducacionCP === '____'">Dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan instituciones educativas que cubren todos los niveles de educación básica regular: inicial, primaria y secundaria. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la localidad es la <span [appDataSource]="'manual'" [fieldName]="'nombreIEMayorEstudiantes'">{{ datos.nombreIEMayorEstudiantes || 'IE Virgen de Copacabana' }}</span>, la cual es de nivel secundaria, con un total de <span [appDataSource]="'section'" [fieldName]="'cantidadEstudiantesIEMayor'">{{ datos.cantidadEstudiantesIEMayor || '28' }}</span> estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
 
 <app-table-wrapper title="Infraestructura educativa – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2023)" sectionId="3.1.4.B.1.7">
-<table class="table-container">
-    <thead>
-        <tr>
-            <th class="table-header">Nombre de IE</th>
-            <th class="table-header">Nivel</th>
-            <th class="table-header">Tipo de Gestión</th>
-            <th class="table-header">Cantidad de estudiantes</th>
-            <th class="table-header">Porcentaje</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of getEducacionSinTotal()">
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'nombreIE'">{{ item.nombreIE || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'nivel'">{{ item.nivel || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'manual'" [fieldName]="'tipoGestion'">{{ item.tipoGestion || '____' }}</td>
-            <td class="table-cell cell-from-bd" [appDataSource]="'backend'" [fieldName]="'cantidadEstudiantes'">{{ item.cantidadEstudiantes || '____' }}</td>
-            <td class="table-cell" [appDataSource]="'calculated'" [fieldName]="'porcentaje'">{{ calcularPorcentajeEducacion(item) }}</td>
-        </tr>
-        <tr *ngIf="getEducacionSinTotal().length > 0">
-            <td class="table-cell" colspan="3"><strong>Total</strong></td>
-            <td class="table-cell"><strong>{{ getTotalEducacion() }}</strong></td>
-            <td class="table-cell"><strong>100,00 %</strong></td>
-        </tr>
-        <tr *ngIf="getEducacionSinTotal().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-        </tr>
-    </tbody>
-</table>
+  <app-generic-table
+    [data]="getEducacionCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'nombreIE', header: 'Nombre de IE', align: 'left' },
+        { key: 'nivel', header: 'Nivel', align: 'left' },
+        { key: 'tipoGestion', header: 'Tipo de Gestión', align: 'left' },
+        { key: 'cantidadEstudiantes', header: 'Cantidad de estudiantes', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censo Educativo 2023 – ESCALE (MINEDU)</span></p>
 
@@ -89,7 +66,7 @@
     [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura en recreación</strong></p>
+<p class="mt-lg mb-sm"><strong>c. Infraestructura en recreación</strong></p>
 <p class="text-justify" *ngIf="datos.textoRecreacionCP1 && datos.textoRecreacionCP1 !== '____'">{{ datos.textoRecreacionCP1 }}</p>
 <p class="text-justify" *ngIf="!datos.textoRecreacionCP1 || datos.textoRecreacionCP1 === '____'">Dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con espacios destinados a la recreación de la población. Entre ellos destacan las plazas, las cuales funcionan como principales áreas de encuentro para la interacción y socialización, especialmente durante festividades y eventos culturales.</p>
 <p class="text-justify" *ngIf="datos.textoRecreacionCP2 && datos.textoRecreacionCP2 !== '____'">{{ datos.textoRecreacionCP2 }}</p>
@@ -108,7 +85,7 @@
     [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura en deporte</strong></p>
+<p class="mt-lg mb-sm"><strong>d. Infraestructura en deporte</strong></p>
 <p class="text-justify" *ngIf="datos.textoDeporteCP1 && datos.textoDeporteCP1 !== '____'">{{ datos.textoDeporteCP1 }}</p>
 <p class="text-justify" *ngIf="!datos.textoDeporteCP1 || datos.textoDeporteCP1 === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura deportiva consiste en instalaciones básicas para la práctica de actividades físicas y recreativas. Se destaca la losa deportiva ubicada detrás de la municipalidad, la cual es utilizada para diversos deportes colectivos como fútbol y vóley, y sirve como un espacio frecuente para eventos locales y recreación de niños y jóvenes.</p>
 <p class="text-justify" *ngIf="datos.textoDeporteCP2 && datos.textoDeporteCP2 !== '____'">{{ datos.textoDeporteCP2 }}</p>
@@ -141,10 +118,10 @@
   <div class="form-group-section">
     <h4 class="section-title">B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h4>
     
-    <div class="form-group-section" style="margin-top: 20px;">
+    <div class="form-group-section mt-lg">
       <h4 class="section-title">a. Infraestructura en salud</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -157,22 +134,20 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Principales características del Puesto de Salud</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="puestoSaludConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Nombre' },
-            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: 'Ej: Puesto de Salud Cahuacho' }
-          ]"
-          [tablaKey]="getTablaKeyPuestoSalud()"
+          [columns]="columnasPuestoSalud"
+          [tablaKey]="'puestoSaludCpTabla'"
           [totalKey]="'categoria'"
-          (tableUpdated)="onPuestoSaludTableUpdated()">
+          (tableUpdated)="onTablaUpdated()">
         </app-dynamic-table>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Infraestructura en salud</label>
         <app-image-upload
           [fotografias]="fotografiasSaludFormMulti"
@@ -192,10 +167,10 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">b. Infraestructura en educación</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -208,7 +183,7 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-row" style="margin-top: 20px;">
+      <div class="form-row mt-lg">
         <div class="form-field">
           <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
           <input type="text" class="input" 
@@ -226,43 +201,37 @@
         </div>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Tabla Infraestructura educativa</label>
         <app-dynamic-table
           [datos]="datos"
+          [sectionId]="seccionId"
           [config]="educacionConfig"
-          [columns]="[
-            { field: 'nombreIE', label: 'Nombre de IE', type: 'text', placeholder: 'Ej: IE Cahuacho' },
-            { field: 'nivel', label: 'Nivel', type: 'text', placeholder: 'Ej: Inicial - Jardín' },
-            { field: 'tipoGestion', label: 'Tipo de Gestión', type: 'text', placeholder: 'Ej: Pública de gestión directa' },
-            { field: 'cantidadEstudiantes', label: 'Cantidad de estudiantes', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
-          ]"
-          [tablaKey]="getTablaKeyEducacion()"
+          [columns]="columnasEducacion"
+          [tablaKey]="'educacionCpTabla'"
           [totalKey]="'nombreIE'"
-          [customFieldChangeHandler]="onEducacionFieldChange.bind(this)"
-          (tableUpdated)="onEducacionTableUpdated()">
+          (tableUpdated)="onTablaUpdated()">
         </app-dynamic-table>
 
-        <div class="table-editor" style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
-          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center;">
+        <div class="table-editor mt-sm p-md bg-readonly">
+          <div class="d-grid" style="grid-template-columns: 2fr 1fr 1fr; gap: var(--spacing-md); align-items: center;">
             <div>
               <label class="label">Total</label>
-              <input type="text" class="input" value="Total" readonly style="background-color: #e8e8e8;">
+              <input type="text" class="input bg-readonly" value="Total" readonly>
             </div>
             <div>
               <label class="label">Cantidad de estudiantes</label>
-              <input type="text" class="input" [value]="getTotalEducacion()" readonly style="background-color: #e8e8e8;">
+              <input type="text" class="input bg-readonly" [value]="getTotalEducacion()" readonly>
             </div>
             <div>
               <label class="label">Porcentaje</label>
-              <input type="text" class="input" value="100,00 %" readonly style="background-color: #e8e8e8;">
+              <input type="text" class="input bg-readonly" value="100,00 %" readonly>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Infraestructura en educación</label>
         <app-image-upload
           [fotografias]="fotografiasEducacionFormMulti"
@@ -282,10 +251,10 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">c. Infraestructura en recreación</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -316,7 +285,7 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Infraestructura en recreación</label>
         <app-image-upload
           [fotografias]="fotografiasRecreacionFormMulti"
@@ -336,10 +305,10 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
+    <div class="form-group-section mt-xl">
       <h4 class="section-title">d. Infraestructura en deporte</h4>
       
-      <div class="form-group-section" style="margin-top: 15px;">
+      <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
@@ -361,7 +330,7 @@
         </app-paragraph-editor>
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
+      <div class="form-field mt-lg">
         <label class="label">Fotografías de Infraestructura en deporte</label>
         <app-image-upload
           [fotografias]="fotografiasDeporteFormMulti"
