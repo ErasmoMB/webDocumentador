@@ -24,6 +24,9 @@ const allowlist = new Set([
   path.normalize(path.join(appRoot, 'core', 'services', 'formulario.service.ts')),
   // ✅ ReactiveStateAdapter es un puente autorizado para sincronizar con localStorage
   path.normalize(path.join(appRoot, 'core', 'services', 'state-adapters', 'reactive-state-adapter.service.ts')),
+  // ✅ Componentes coordinadores de plantilla (nivel alto)
+  path.normalize(path.join(appRoot, 'pages', 'plantilla', 'plantilla.component.ts')),
+  path.normalize(path.join(appRoot, 'pages', 'plantilla', 'plantilla-view.component.ts')),
 ]);
 
 const forbiddenMatchers = [

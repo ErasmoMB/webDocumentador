@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, OnDestroy, Injector, ChangeDetectionStrat
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SimpleChanges } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -85,15 +86,17 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   );
 
   /** Signal derivado: Texto AISD formateado para vista */
-  readonly textoAISDFormateado: Signal<string> = computed(() => {
+  readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoSeccion2AISDCompleto();
-    return this.formatearParrafo(texto);
+    const html = this.formatearParrafo(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
   /** Signal derivado: Texto AISI formateado para vista */
-  readonly textoAISIFormateado: Signal<string> = computed(() => {
+  readonly textoAISIFormateado: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoSeccion2AISICompleto();
-    return this.formatearParrafo(texto);
+    const html = this.formatearParrafo(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
   // ============================================================================
@@ -105,7 +108,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   constructor(
     cdRef: ChangeDetectorRef,
-    injector: Injector
+    injector: Injector,
+    private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);
     
@@ -444,6 +448,70 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   // ============================================================================
   // TEXTOS DERIVADOS PARA VISTA
   // ============================================================================
+  // MÉTODOS PARA GENERAR TEXTO SIN HTML (versión plana para edición)
+  // ============================================================================
+
+  /**
+   * Genera texto AISD **SIN HTML** para usar en el editor (texto plano)
+   */
+  generarTextoAISDSinHTML(params: { 
+    comunidades: string; 
+    distrito: string; 
+    componente1?: string; 
+    componente2?: string; 
+    departamento?: string 
+  }): string {
+    const comunidades = params.comunidades || '____';
+    const distrito = params.distrito || '____';
+    const componente1 = params.componente1 || '____';
+    const componente2 = params.componente2 || '____';
+    const departamento = params.departamento || '____';
+
+    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) ${comunidades}, cuya área comunal se encuentra predominantemente en el distrito de ${distrito} y en menor proporción en los distritos de ${componente1} y de ${componente2}, pertenecientes al departamento de ${departamento}. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC ${comunidades}, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC ${comunidades}.`;
+  }
+
+  /**
+   * Obtiene texto AISD para edición (sin HTML)
+   */
+  obtenerTextoSeccion2AISDParaEdicion(): string {
+    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisd_completo'];
+    if (manual && manual.trim().length > 0) return manual;
+
+    const comunidades = this.obtenerTextoComunidades();
+    const datos = this.projectFacade.obtenerDatos();
+    const geoInfo = datos?.['geoInfo'] || {};
+    const distrito = geoInfo.DIST || '____';
+    const departamento = geoInfo.DPTO || '____';
+    const componente1 = datos?.['aisdComponente1'] || '____';
+    const componente2 = datos?.['aisdComponente2'] || '____';
+
+    return this.generarTextoAISDSinHTML({ 
+      comunidades, 
+      distrito, 
+      componente1, 
+      componente2, 
+      departamento 
+    });
+  }
+
+  /**
+   * Obtiene texto AISI para edición (sin HTML)
+   */
+  obtenerTextoSeccion2AISIParaEdicion(): string {
+    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisi_completo'];
+    if (manual && manual.trim().length > 0) return manual;
+
+    const datos = this.projectFacade.obtenerDatos();
+    const geoInfo = datos?.['geoInfo'] || {};
+    const centroPoblado = geoInfo.DIST || '____';
+    const distrito = geoInfo.DIST || '____';
+    const provincia = geoInfo.PROV || '____';
+    const departamento = geoInfo.DPTO || '____';
+
+    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el ${centroPoblado}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+  }
+
+  // ============================================================================
 
   /**
    * Genera texto AISD completo para vista
@@ -489,8 +557,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const geoInfo = datos?.['geoInfo'] || {};
     const distrito = geoInfo.DIST || '____';
     const departamento = geoInfo.DPTO || '____';
-    const componente1 = '____';
-    const componente2 = '____';
+    const componente1 = datos?.['aisdComponente1'] || '____';
+    const componente2 = datos?.['aisdComponente2'] || '____';
 
     return this.generarTextoAISDCompleto({ 
       comunidades, 

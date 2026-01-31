@@ -84,6 +84,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion3Form: () => import('src/app/shared/components/seccion3/seccion3-form.component').then(m => m.Seccion3FormComponent as unknown as Type<any>),
 
     seccion1FormWrapper: () => import('src/app/shared/components/forms/seccion1-form-wrapper.component').then(m => m.Seccion1FormWrapperComponent as unknown as Type<any>),
+    seccion2FormWrapper: () => import('src/app/shared/components/forms/seccion2-form-wrapper.component').then(m => m.Seccion2FormWrapperComponent as unknown as Type<any>),
     seccion4FormWrapper: () => import('src/app/shared/components/forms/seccion4-form-wrapper.component').then(m => m.Seccion4FormWrapperComponent as unknown as Type<any>),
     seccion7FormWrapper: () => import('src/app/shared/components/forms/seccion7-form-wrapper.component').then(m => m.Seccion7FormWrapperComponent as unknown as Type<any>),
     seccion14FormWrapper: () => import('src/app/shared/components/forms/seccion14-form-wrapper.component').then(m => m.Seccion14FormWrapperComponent as unknown as Type<any>),
@@ -637,7 +638,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return [
       { matches: eq('3.1.1'), loader: this.componentLoaders.seccion1FormWrapper, inputs: withSeccionId },
-      { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders.seccion2Form, inputs: withSeccionId },
+      { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders.seccion2FormWrapper, inputs: withSeccionId },
       { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders.seccion3Form, inputs: withSeccionId },
       {
         matches: hasAny(

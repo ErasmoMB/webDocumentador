@@ -49,4 +49,51 @@
 
 </div>
 
+<!-- FORMULARIO (cuando modoFormulario = true) -->
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_introduccion"
+      label="Introducción - Delimitación de Áreas"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="8"
+      [value]="obtenerTextoSeccion2Introduccion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
+    </app-paragraph-editor>
 
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisd_completo"
+      label="Área de Influencia Social Directa (AISD)"
+      hint="Edite el texto completo de AISD. Deje vacío para usar el texto automáticamente generado."
+      [rows]="6"
+      [value]="obtenerTextoSeccion2AISDParaEdicion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
+    </app-paragraph-editor>
+
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisi_completo"
+      label="Área de Influencia Social Indirecta (AISI)"
+      hint="Edite el texto completo de AISI. Deje vacío para usar el texto automáticamente generado."
+      [rows]="6"
+      [value]="obtenerTextoSeccion2AISIParaEdicion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
+    </app-paragraph-editor>
+
+    <div class="form-field mt-lg">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasSeccion2"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Fotografía de la sección 2"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Sección 2"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">

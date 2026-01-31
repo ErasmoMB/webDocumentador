@@ -659,14 +659,49 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
       `Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.`
     ];
 
+    // ✅ GENERAR SIEMPRE el párrafo principal con datos de prueba
+    // Solo preservar si el usuario lo editó manualmente (no contiene "____")
+    const parrafoPrincipalActual = this.datos.parrafoSeccion1_principal;
+    const esParrafoPersonalizado = parrafoPrincipalActual && 
+      !parrafoPrincipalActual.includes('____') && 
+      parrafoPrincipalActual.trim().length > 0 &&
+      parrafoPrincipalActual !== this.obtenerTextoParrafoPrincipal(); // No es el texto por defecto
+    
+    let nuevoParrafoPrincipal: string | null = null;
+    
+    // Si NO es personalizado, generar uno nuevo con los datos de prueba
+    if (!esParrafoPersonalizado) {
+      const proyecto = datosPrueba.projectName;
+      const distrito = datosPrueba.distritoSeleccionado;
+      const provincia = datosPrueba.provinciaSeleccionada;
+      const departamento = datosPrueba.departamentoSeleccionado;
+      
+      nuevoParrafoPrincipal = `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ${proyecto}, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.\n\nEl proyecto ${proyecto} se encuentra ubicado en el distrito de ${distrito}, en la provincia de ${provincia}, en el departamento de ${departamento}, bajo la administración del Gobierno Regional de ${departamento}, en el sur del Perú.\n\nEste estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
+      
+      // ✅ CRÍTICO: Guardar el párrafo PRIMERO
+      // Actualizar this.datos directamente para que esté disponible inmediatamente
+      this.datos.parrafoSeccion1_principal = nuevoParrafoPrincipal;
+      
+      // Guardar en el facade (con refresh: true para que se persista inmediatamente)
+      this.onFieldChange('parrafoSeccion1_principal', nuevoParrafoPrincipal, { refresh: true });
+    }
+
     // Guardar objetivos y limpiar legacy
     this.onFieldChange('objetivosSeccion1', [...objetivosPrueba], { refresh: false });
     this.onFieldChange('objetivoSeccion1_1', null, { refresh: false });
     this.onFieldChange('objetivoSeccion1_2', null, { refresh: false });
 
-    // Forzar sincronización local de datos y objetivos
-    this.actualizarDatos();
+    // Sincronizar objetivos localmente
     this.inicializarObjetivos();
+    
+    // ✅ PRESERVAR párrafo principal después de inicializar objetivos (por si actualizarDatos lo sobrescribió)
+    if (nuevoParrafoPrincipal && (!this.datos.parrafoSeccion1_principal || this.datos.parrafoSeccion1_principal.includes('____'))) {
+      this.datos.parrafoSeccion1_principal = nuevoParrafoPrincipal;
+      this.cdRef.detectChanges();
+    }
+
+    // Solo cargar fotografías y detectar cambios
+    this.cargarFotografias();
     this.cdRef.detectChanges();
   }
 }

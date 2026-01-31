@@ -43,8 +43,8 @@
             type="checkbox" 
             [id]="'aisd_cb_' + comunidad.id + '_' + j"
             [name]="'aisd_cb_' + comunidad.id + '_' + j"
-            [checked]="estaCentroPobladoSeleccionadoComunidad(comunidad.id, cp.codigo?.toString() || '')"
-            (change)="toggleCentroPobladoComunidad(comunidad.id, cp.codigo?.toString() || '')"
+            [checked]="estaCentroPobladoSeleccionadoComunidad(comunidad.id, cp.codigo.toString() || '')"
+            (change)="toggleCentroPobladoComunidad(comunidad.id, cp.codigo.toString() || '')"
             style="margin-right: 8px;">
           <label [for]="'aisd_cb_' + comunidad.id + '_' + j" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
         </div>
@@ -124,8 +124,8 @@
             type="checkbox" 
             [id]="'aisi_cb_' + distrito.id + '_' + k"
             [name]="'aisi_cb_' + distrito.id + '_' + k"
-            [checked]="estaCentroPobladoSeleccionadoDistrito(distrito.id, cp.codigo?.toString() || '')"
-            (change)="toggleCentroPobladoDistrito(distrito.id, cp.codigo?.toString() || '')"
+            [checked]="estaCentroPobladoSeleccionadoDistrito(distrito.id, cp.codigo.toString() || '')"
+            (change)="toggleCentroPobladoDistrito(distrito.id, cp.codigo.toString() || '')"
             style="margin-right: 8px;">
           <label [for]="'aisi_cb_' + distrito.id + '_' + k" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
         </div>
@@ -171,9 +171,9 @@
         type="text"
         class="input"
         placeholder="Ingrese un distrito adicional"
-        [value]="seccion2Component?.datos?.['aisdComponente1']"
+        [value]="seccion2Component.datos['aisdComponente1']"
         (input)="onFieldChange('aisdComponente1', getInputValue($event))"
-        (blur)="onFieldChange('aisdComponente1', seccion2Component?.datos?.['aisdComponente1'])">
+        (blur)="onFieldChange('aisdComponente1', seccion2Component.datos['aisdComponente1'])">
       <small class="form-hint">Escribe el nombre del distrito adicional manualmente.</small>
     </div>
     <div class="form-field">
@@ -184,9 +184,9 @@
         type="text"
         class="input"
         placeholder="Ingrese otro distrito adicional"
-        [value]="seccion2Component?.datos?.['aisdComponente2']"
+        [value]="seccion2Component.datos['aisdComponente2']"
         (input)="onFieldChange('aisdComponente2', getInputValue($event))"
-        (blur)="onFieldChange('aisdComponente2', seccion2Component?.datos?.['aisdComponente2'])">
+        (blur)="onFieldChange('aisdComponente2', seccion2Component.datos['aisdComponente2'])">
       <small class="form-hint">Escribe otro distrito extra si lo necesitas.</small>
     </div>
   </div>
@@ -202,7 +202,7 @@
     label="Introducción - Delimitación de Áreas"
     hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
     [rows]="6"
-    [value]="seccion2Component?.datos?.['parrafoSeccion2_introduccion']"
+    [value]="seccion2Component.datos['parrafoSeccion2_introduccion']"
     (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
   </app-paragraph-editor>
 
@@ -211,7 +211,7 @@
     label="A. Áreas de influencia social directa (AISD) - Texto Completo"
     hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
     [rows]="10"
-    [value]="seccion2Component?.datos?.['parrafoSeccion2_aisd_completo']"
+    [value]="seccion2Component.datos['parrafoSeccion2_aisd_completo']"
     (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
   </app-paragraph-editor>
 
@@ -220,7 +220,7 @@
     label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
     hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
     [rows]="8"
-    [value]="seccion2Component?.datos?.['parrafoSeccion2_aisi_completo']"
+    [value]="seccion2Component.datos['parrafoSeccion2_aisi_completo']"
     (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
   </app-paragraph-editor>
 

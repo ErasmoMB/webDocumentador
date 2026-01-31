@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, AfterViewInit, ChangeDetectorRef, effect, Signal, computed, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -30,6 +30,110 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   autocompleteData: any = {};
   private subscription?: Subscription;
 
+  // ============================================================================
+  // SIGNALS - Lee directamente desde el estado de grupos
+  // ============================================================================
+  
+  readonly aisdGroupsSignal: Signal<readonly any[]> = this.projectFacade.groupsByType('AISD');
+  readonly aisiGroupsSignal: Signal<readonly any[]> = this.projectFacade.groupsByType('AISI');
+  
+  readonly allCentrosSignal = this.projectFacade.allPopulatedCenters();
+  
+  /** Signal derivado: Comunidades mapeadas desde grupos AISD */
+  readonly comunidadesSignal: Signal<ComunidadCampesina[]> = computed(() => {
+    const grupos = this.aisdGroupsSignal();
+    const centros = this.allCentrosSignal();
+    
+    console.log('🔍 [comunidadesSignal] computed() ejecutado - grupos AISD:', grupos.length);
+    
+    if (grupos.length === 0) {
+      return [];
+    }
+    
+    // Mapear cada grupo AISD a ComunidadCampesina
+    const resultado = grupos
+      .filter((g: any) => g && g.nombre)
+      .map((grupo: any) => {
+        // Convertir ccppIds a nombres de centros
+        const centrosNombres: string[] = [];
+        
+        if (grupo.ccppIds && Array.isArray(grupo.ccppIds)) {
+          grupo.ccppIds.forEach((codigo: string) => {
+            const centro = centros.find((c: any) => c.codigo === codigo);
+            if (centro) {
+              centrosNombres.push(centro.nombre);
+            }
+          });
+        }
+        
+        console.log(`   Grupo AISD "${grupo.nombre}" → ${centrosNombres.length} centros:`, centrosNombres);
+        
+        return {
+          id: grupo.id,
+          nombre: grupo.nombre,
+          nombreOriginal: grupo.nombre,
+          centrosPobladosSeleccionados: centrosNombres,
+          esNuevo: false
+        };
+      });
+    
+    console.log('✅ [comunidadesSignal] Total comunidades mappadas:', resultado.length);
+    return resultado;
+  });
+  /** Signal derivado: Distritos mapeados desde grupos AISI */
+  readonly distritosSignal: Signal<Distrito[]> = computed(() => {
+    const grupos = this.aisiGroupsSignal();
+    const centros = this.allCentrosSignal();
+    
+    console.log('🔍 [distritosSignal] computed() ejecutado - grupos AISI:', grupos.length, 'centros:', centros.length);
+    
+    if (grupos.length === 0) {
+      console.log('⚠️  [distritosSignal] Sin grupos AISI, devolviendo default');
+      // Si no hay grupos AISI, devolver default
+      return [{
+        id: `dist_${Date.now()}`,
+        nombre: 'Distrito 1',
+        nombreOriginal: 'Distrito 1',
+        centrosPobladosSeleccionados: [],
+        esNuevo: true
+      }];
+    }
+    
+    // Mapear cada grupo AISI a Distrito
+    const resultado = grupos
+      .filter((g: any) => g && g.nombre)
+      .map((grupo: any) => {
+        // Convertir ccppIds a nombres de centros
+        // Los ccppIds ahora son directamente los códigos CODIGO del CCPP
+        const centrosNombres: string[] = [];
+        
+        if (grupo.ccppIds && Array.isArray(grupo.ccppIds)) {
+          grupo.ccppIds.forEach((codigo: string) => {
+            const centro = centros.find((c: any) => c.codigo === codigo);
+            
+            if (centro) {
+              centrosNombres.push(centro.nombre);
+            } else {
+              console.warn(`⚠️  Centro poblado no encontrado con codigo=${codigo}`);
+            }
+          });
+        }
+        
+        console.log(`   Grupo AISI "${grupo.nombre}" → ${centrosNombres.length} centros:`, centrosNombres);
+        
+        return {
+          id: grupo.id,
+          nombre: grupo.nombre,
+          nombreOriginal: grupo.nombre,
+          centrosPobladosSeleccionados: centrosNombres,
+          esNuevo: false
+        };
+      });
+    
+    console.log('✅ [distritosSignal] Total distritos mappados:', resultado.length);
+    return resultado;
+  });
+
   constructor(
     private projectFacade: ProjectStateFacade,
     private stateAdapter: ReactiveStateAdapter,
@@ -37,13 +141,35 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
     private formChange: FormChangeService,
     private gruposService: GruposService,
     // ✅ NUEVO SERVICIO
-    private centrosPobladosSearch: CentrosPobladosSearchService
-  ) {}
+    private centrosPobladosSearch: CentrosPobladosSearchService,
+    private injector: Injector
+  ) {
+    // ✅ REACTIVIDAD: Effect que escucha cambios en comunidades AISD
+    effect(() => {
+      const comunidades = this.comunidadesSignal();
+      this.comunidadesCampesinas = [...comunidades]; // Actualizar array local para la UI
+      console.log('🔄 [Wrapper] Comunidades actualizadas:', comunidades.length, comunidades.map((c: any) => c.nombre));
+      this.cdRef.markForCheck();
+    });
+    
+    // ✅ REACTIVIDAD: Effect que escucha cambios en distritos AISI
+    effect(() => {
+      const distritos = this.distritosSignal();
+      this.distritosAISI = [...distritos]; // Actualizar array local para la UI
+      console.log('🔄 [Wrapper] Distritos actualizados:', distritos.length, distritos.map((d: any) => d.nombre));
+      this.cdRef.markForCheck();
+    });
+  }
 
   ngOnInit() {
-    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
-    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
+    // ✅ Cargar datos iniciales (incluyendo AISD)
     this.actualizarDatos();
+    
+    // ✅ Inicializar comunidades desde el Signal
+    this.comunidadesCampesinas = [...this.comunidadesSignal()];
+    
+    // ✅ Inicializar distritosAISI desde el Signal
+    this.distritosAISI = [...this.distritosSignal()];
   }
 
   ngOnDestroy() {
@@ -59,8 +185,11 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   actualizarDatos() {
     const datos = this.projectFacade.obtenerDatos();
     this.formData = { ...datos };
-    const comunidadesRaw = datos['comunidadesCampesinas'] || [];
     
+    // ============================================================================
+    // PROCESAR COMUNIDADES CAMPESINAS (AISD)
+    // ============================================================================
+    const comunidadesRaw = datos['comunidadesCampesinas'] || [];
     if (comunidadesRaw.length > 0) {
       this.comunidadesCampesinas = comunidadesRaw.map((cc: any) => ({
         ...cc,
@@ -71,16 +200,11 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
       }));
     }
 
-    const distritosRaw = datos['distritosAISI'] || [];
-    if (distritosRaw.length > 0) {
-      this.distritosAISI = distritosRaw.map((d: any) => ({
-        ...d,
-        centrosPobladosSeleccionados: (d.centrosPobladosSeleccionados || []).map((c: any) => {
-          if (c === null || c === undefined) return '';
-          return c.toString().trim();
-        }).filter((codigo: string) => codigo !== '')
-      }));
-    }
+    // ============================================================================
+    // DISTRITOS (AISI) - Manejados por distritosSignal computed
+    // ============================================================================
+    // Los distritos se actualizan automáticamente via el Signal
+    // No necesitamos hacer nada aquí
     
     this.centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
   }
@@ -236,7 +360,7 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
     this.formChange.persistFields(this.seccionId, 'form', { [field]: value });
     
     if (this.seccion2Component && this.seccion2Component['onAutocompleteInput']) {
-      this.seccion2Component.onAutocompleteInput(field, value);
+      this.seccion2Component['onAutocompleteInput'](field, value);
       if (this.seccion2Component['autocompleteData']) {
         this.autocompleteData = { ...this.seccion2Component['autocompleteData'] };
         this.cdRef.detectChanges();
@@ -247,7 +371,7 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
 
   onFocusDistritoAdicional(field: string) {
     if (this.seccion2Component && this.seccion2Component['onFocusDistritoAdicional']) {
-      this.seccion2Component.onFocusDistritoAdicional(field);
+      this.seccion2Component['onFocusDistritoAdicional'](field);
       if (this.seccion2Component['autocompleteData']) {
         this.autocompleteData = { ...this.seccion2Component['autocompleteData'] };
         this.cdRef.detectChanges();
@@ -257,7 +381,7 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
 
   cerrarSugerenciasAutocomplete(field: string) {
     if (this.seccion2Component && this.seccion2Component['cerrarSugerenciasAutocomplete']) {
-      this.seccion2Component.cerrarSugerenciasAutocomplete(field);
+      this.seccion2Component['cerrarSugerenciasAutocomplete'](field);
       if (this.seccion2Component['autocompleteData']) {
         this.autocompleteData = { ...this.seccion2Component['autocompleteData'] };
         this.cdRef.detectChanges();
@@ -267,7 +391,7 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
 
   seleccionarSugerencia(field: string, sugerencia: any) {
     if (this.seccion2Component && this.seccion2Component['seleccionarSugerencia']) {
-      this.seccion2Component.seleccionarSugerencia(field, sugerencia);
+      this.seccion2Component['seleccionarSugerencia'](field, sugerencia);
       if (this.seccion2Component['autocompleteData']) {
         this.autocompleteData = { ...this.seccion2Component['autocompleteData'] };
         this.cdRef.detectChanges();
@@ -281,16 +405,28 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   }
 
   obtenerComunidades(): ComunidadCampesina[] {
-    if (this.seccion2Component && this.seccion2Component['comunidadesCampesinas']) {
-      this.comunidadesCampesinas = this.seccion2Component['comunidadesCampesinas'];
-      return this.comunidadesCampesinas;
+    // ✅ Obtener comunidades desde datos persistidos
+    const datos = this.projectFacade.obtenerDatos();
+    const comunidadesRaw = datos['comunidadesCampesinas'] || [];
+    
+    if (comunidadesRaw.length > 0) {
+      this.comunidadesCampesinas = comunidadesRaw.map((cc: any) => ({
+        ...cc,
+        centrosPobladosSeleccionados: (cc.centrosPobladosSeleccionados || []).map((c: any) => {
+          if (c === null || c === undefined) return '';
+          return c.toString().trim();
+        }).filter((codigo: string) => codigo !== '')
+      }));
     }
+    
     return this.comunidadesCampesinas;
   }
 
   // ===== MÉTODOS PARA DISTRITOS AISI =====
 
   obtenerDistritos(): Distrito[] {
+    // ✅ Devolver distritos desde el array local que se actualiza via Signal
+    // El array se actualiza automáticamente cuando distritosSignal cambia (via effect en constructor)
     return this.distritosAISI;
   }
 

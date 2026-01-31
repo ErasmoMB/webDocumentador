@@ -206,7 +206,7 @@ export function normalizeFormatA(jsonArray: CentroPobladoData[]): NormalizedJSON
     id: `aisd_default_${Date.now()}`,
     nombre: ubicacion.distrito || 'Grupo Principal',
     tipo: 'AISD',
-    ccppIds: normalizedCCPP.map(c => c.id)
+    ccppIds: normalizedCCPP.map(c => c.codigo) // ✅ Usar codigo, no id
   }] : [];
 
   return {
@@ -248,6 +248,7 @@ export function generateGroupId(tipo: 'AISD' | 'AISI', nombre: string, index: nu
 
 /**
  * Normaliza JSON en Formato B (objeto con grupos)
+ * Crea grupos AISD de las keys y grupos AISI de los distritos únicos
  */
 export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>): NormalizedJSONResult {
   const allCCPP: NormalizedCCPP[] = [];
@@ -255,6 +256,9 @@ export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>
   let rawData: CentroPobladoData[] = [];
   
   const keys = Object.keys(jsonObject);
+  
+  // Map para agrupar CCPP por distrito: { "SAN PEDRO": [ccppIds], "LIMA": [ccppIds] }
+  const ccppIdsByDistrict: Record<string, string[]> = {};
   
   keys.forEach((groupKey, index) => {
     const groupCCPP = jsonObject[groupKey];
@@ -265,14 +269,35 @@ export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>
     allCCPP.push(...normalizedGroupCCPP);
     rawData = rawData.concat(groupCCPP);
     
-    // Crear grupo
+    // Crear grupo AISD
     const groupName = cleanGroupName(groupKey);
     groups.push({
       id: generateGroupId('AISD', groupName, index),
       nombre: groupName,
       tipo: 'AISD',
-      ccppIds: normalizedGroupCCPP.map(c => c.id)
+      ccppIds: normalizedGroupCCPP.map(c => c.codigo) // ✅ Usar codigo, no id
     });
+    
+    // Agrupar CCPP por distrito para crear grupos AISI
+    normalizedGroupCCPP.forEach(ccpp => {
+      const districtName = ccpp.dist || 'Sin Distrito';
+      if (!ccppIdsByDistrict[districtName]) {
+        ccppIdsByDistrict[districtName] = [];
+      }
+      ccppIdsByDistrict[districtName].push(ccpp.codigo); // ✅ Usar codigo, no id
+    });
+  });
+  
+  // Crear grupos AISI (distritos únicos)
+  let aisiIndex = 0;
+  Object.entries(ccppIdsByDistrict).forEach(([districtName, ccppIds]) => {
+    groups.push({
+      id: generateGroupId('AISI', districtName, aisiIndex),
+      nombre: districtName,
+      tipo: 'AISI',
+      ccppIds: ccppIds
+    });
+    aisiIndex++;
   });
 
   const ubicacion = extractUbicacion(rawData);
