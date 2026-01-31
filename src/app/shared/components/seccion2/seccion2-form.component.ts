@@ -21,8 +21,7 @@ import { Commands } from 'src/app/core/state/ui-store.contract';
     imports: [
         CommonModule,
         FormsModule,
-        CoreSharedModule,
-        Seccion2Component
+        CoreSharedModule
     ],
     selector: 'app-seccion2-form',
     templateUrl: './seccion2-form.component.html'
@@ -169,6 +168,28 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
       this.actualizarDatos();
       this.cdRef.detectChanges();
     }, 0);
+  }
+
+  // Delegar cambios de fotografías al componente Seccion2 para mantener la misma lógica
+  onFotografiasChange(fotos: any[]) {
+    if (this.seccion2Component && this.seccion2Component['onFotografiasChange']) {
+      this.seccion2Component.onFotografiasChange(fotos);
+    }
+    // Refrescar datos locales
+    setTimeout(() => this.actualizarDatos(), 0);
+  }
+
+  // Helpers con tipos definidos para evitar errores estrictos en templates
+  get photoPrefix(): string {
+    return (this.seccion2Component && this.seccion2Component.PHOTO_PREFIX) || 'fotografiaSeccion2';
+  }
+
+  get key(): number {
+    return (this.seccion2Component && this.seccion2Component.imageUploadKey) ?? 0;
+  }
+
+  get fotografias(): any[] {
+    return (this.seccion2Component && this.seccion2Component.fotografiasSeccion2) || [];
   }
 
   obtenerCentrosPobladosSeleccionadosComunidad(id: string): string[] {

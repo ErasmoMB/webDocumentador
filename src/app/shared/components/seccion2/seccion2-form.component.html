@@ -191,6 +191,61 @@
     </div>
   </div>
 
-  <!-- Edición de Párrafos e Imágenes (del componente base) -->
-  <app-seccion2 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion2>
+  <!-- Edición de Párrafos e Imágenes (mover los editores aquí para que sólo estén en el formulario) -->
+
+  <div class="form-header" style="margin-top: 20px; display:flex; justify-content:space-between; align-items:center;">
+    <h4 class="section-title" style="margin: 0;">Editar Párrafos</h4>
+    <div>
+      <button type="button" class="btn btn--primary" (click)="seccion2Component.llenarDatosPrueba()">
+        🔄 Llenar Datos de Prueba
+      </button>
+    </div>
+  </div>
+
+  <app-paragraph-editor
+    fieldId="parrafoSeccion2_introduccion"
+    label="Introducción - Delimitación de Áreas"
+    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="6"
+    [value]="formData['parrafoSeccion2_introduccion']"
+    (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
+  </app-paragraph-editor>
+
+  <app-paragraph-editor
+    fieldId="parrafoSeccion2_aisd_completo"
+    label="A. Áreas de influencia social directa (AISD) - Texto Completo"
+    hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="10"
+    [value]="formData['parrafoSeccion2_aisd_completo']"
+    (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
+  </app-paragraph-editor>
+
+  <app-paragraph-editor
+    fieldId="parrafoSeccion2_aisi_completo"
+    label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
+    hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+    [rows]="8"
+    [value]="formData['parrafoSeccion2_aisi_completo']"
+    (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
+  </app-paragraph-editor>
+
+  <div class="form-field" style="margin-top: 20px;">
+    <label class="label">Fotografías</label>
+    <app-image-upload
+      [fotografias]="fotografias"
+      [sectionId]="seccionId"
+      [photoPrefix]="photoPrefix"
+      [permitirMultiples]="true"
+      [key]="key"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Fotografía de la sección 2"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Sección 2"
+      fuenteDefault="GEADES, 2024"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasChange($event)">
+    </app-image-upload>
+  </div>
 </div>

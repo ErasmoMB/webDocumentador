@@ -220,10 +220,10 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       datosNuevos = this.projectFacade.getSectionFields('global', null);
     }
 
-    // Si no hay datos nuevos, resetear this.datos para limpiar completamente
-    if (!datosNuevos || Object.keys(datosNuevos).length === 0) {
-      this.datos = {};
-    } else {
+    // Si hay datos nuevos, actualizarlos en this.datos (merge parcial).
+    // NO resetear this.datos a {} si no hay datos nuevos: esto evita sobrescrituras
+    // temporales que causan la pérdida de valores editados localmente.
+    if (datosNuevos && Object.keys(datosNuevos).length > 0) {
       Object.keys(datosNuevos).forEach(key => {
         const valor = datosNuevos[key];
 
@@ -336,6 +336,10 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   }
 
   protected onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    // ✅ Actualizar this.datos localmente PRIMERO para que esté disponible inmediatamente
+    // Esto evita que otros campos se vacíen cuando se re-renderiza el componente
+    this.datos[fieldId] = value;
+    
     const injector = this.injector;
     this.persistence.persistFieldChange(
       injector,

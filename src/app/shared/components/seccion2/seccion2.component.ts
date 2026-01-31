@@ -29,7 +29,6 @@ import {
     CommonModule,
     FormsModule,
     ImageUploadComponent,
-    ParagraphEditorComponent,
     CoreSharedModule
   ],
   standalone: true
@@ -70,6 +69,10 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     description: ''
   };
 
+  // ✅ Propiedades cacheadas para evitar llamadas repetidas en el template
+  textoAISDFormateado: string = '';
+  textoAISIFormateado: string = '';
+
   // Inyectar servicios necesarios
   private readonly loadSeccion2UseCase = this.injector.get(LoadSeccion2UseCase);
   private readonly updateSeccion2DataUseCase = this.injector.get(UpdateSeccion2DataUseCase);
@@ -87,21 +90,11 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override onInitCustom(): void {
-    console.log('Seccion2Component - onInitCustom called for seccion:', this.seccionId);
-    
     // Inicializar datos desde datos guardados o por defecto
     this.inicializarDatosSeccion2();
     
-    if (!this.modoFormulario) {
-      const stateSubscription = this.stateAdapter.datos$.subscribe(() => {
-        // ✅ Actualizar datos desde ProjectStateFacade para sincronización inmediata
-        this.actualizarDatos();
-        this.cargarFotografias();
-        // ✅ En modo vista, siempre sincronizar datos desde estado persistido
-        this.cdRef.detectChanges();
-      });
-      this.subscriptions.push(stateSubscription);
-    }
+    // ✅ Actualizar textos cacheados iniciales
+    this.actualizarTextosCacheados();
   }
 
   override ngOnDestroy(): void {
@@ -110,7 +103,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   private inicializarDatosSeccion2(): void {
     // ✅ PASO 1: Obtener JSON cargado en Sección 1 desde el estado global
-    const jsonCargado = this.projectFacade.obtenerDatos()?.centrosPobladosJSON;
+    const jsonCargado = this.projectFacade.obtenerDatos()?.['centrosPobladosJSON'];
     
     if (jsonCargado && Array.isArray(jsonCargado) && jsonCargado.length > 0) {
       // ✅ PASO 2: Parsear JSON para identificar AISD (KEYs) y AISI (DIST únicos)
@@ -148,7 +141,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   // ✅ PARSEAR JSON Y GENERAR GRUPOS AUTOMÁTICAMENTE
-  private parsearJsonYGenerarGrupos(jsonData: any[]): void {
+  private parsearJsonYGenerarGrupos(jsonData: any): void {
     // ✅ IDENTIFICAR AISD (Comunidades Campesinas)
     // Si el JSON viene como estructura con KEYs, extraer los grupos
     let aisdGrupos: ComunidadCampesina[] = [];
@@ -164,7 +157,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
           aisdGrupos.push({
             id: `A.${indiceA}`,
             nombre: keyAISD,
-            centrosPobladosSeleccionados: centrosPoblados.map((cp: any) => cp.CCPP || cp.nombre || '')
+            centrosPobladosSeleccionados: (centrosPoblados as any[]).map((cp: any) => cp.CCPP || cp.nombre || '')
           });
           todosLosCentrosPoblados = [...todosLosCentrosPoblados, ...centrosPoblados];
           indiceA++;
@@ -176,8 +169,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       // Crear un grupo AISD genérico
       aisdGrupos.push({
         id: 'A.1',
-        nombre: this.projectFacade.obtenerDatos()?.projectName || 'Grupo AISD 1',
-        centrosPobladosSeleccionados: jsonData.map((cp: any) => cp.CCPP || cp.nombre || '')
+        nombre: this.projectFacade.obtenerDatos()?.['projectName'] || 'Grupo AISD 1',
+        centrosPobladosSeleccionados: (jsonData as any[]).map((cp: any) => cp.CCPP || cp.nombre || '')
       });
     }
 
@@ -245,7 +238,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   // ✅ OBTENER TODOS LOS CENTROS POBLADOS DISPONIBLES (del JSON)
   obtenerTodosCentrosPoblados(): string[] {
-    const jsonCargado = this.projectFacade.obtenerDatos()?.centrosPobladosJSON;
+    const jsonCargado = this.projectFacade.obtenerDatos()?.['centrosPobladosJSON'];
     if (!jsonCargado) return [];
 
     const centrosPoblados = new Set<string>();
@@ -275,13 +268,27 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     // ✅ Si hay datos actualizados, refrescar las comunidades y distritos
     this.inicializarDatosSeccion2();
     this.cargarFotografias();
+    // ✅ Actualizar textos cacheados para evitar llamadas en el template
+    this.actualizarTextosCacheados();
+  }
+
+  /**
+   * Actualiza los textos cacheados para AISD y AISI
+   * Evita llamadas repetidas a métodos en el template
+   */
+  private actualizarTextosCacheados(): void {
+    const textoAISD = this.obtenerTextoSeccion2AISDCompleto();
+    const textoAISI = this.obtenerTextoSeccion2AISICompleto();
+    this.textoAISDFormateado = this.formatearParrafo(textoAISD);
+    this.textoAISIFormateado = this.formatearParrafo(textoAISI);
   }
 
   protected override onChangesCustom(changes: SimpleChanges): void {
     if (changes['modoFormulario'] && !this.modoFormulario) {
       setTimeout(() => {
         this.cargarFotografias();
-        this.cdRef.detectChanges();
+        this.actualizarTextosCacheados();
+        this.cdRef.markForCheck();
       }, 0);
     }
   }
@@ -517,12 +524,12 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return this.textGenerator.obtenerTextoComunidadesFinal(this.comunidadesCampesinas);
   }
 
-  generarTextoAISDCompleto(): string {
-    const comunidades = '____';
-    const distrito = '____';
-    const componente1 = '____';
-    const componente2 = '____';
-    const departamento = '____';
+  generarTextoAISDCompleto(params: { comunidades: string; distrito: string; componente1?: string; componente2?: string; departamento?: string }): string {
+    const comunidades = params.comunidades || '____';
+    const distrito = params.distrito || '____';
+    const componente1 = params.componente1 || '____';
+    const componente2 = params.componente2 || '____';
+    const departamento = params.departamento || '____';
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
     const manualClass = this.dataHighlightService.getManualClass();
@@ -533,18 +540,51 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoSeccion2Introduccion(): string {
-    return 'Texto introducción';
+    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_introduccion'];
+    if (manual && manual.trim().length > 0) return manual;
+
+    return `En términos generales, la delimitación del ámbito de estudio de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales, individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los recursos respecto de los cuales el proyecto de exploración minera tiene incidencia.\n\nAsimismo, el área de influencia social de un proyecto tiene en consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina “grupos de interés” a aquellos grupos humanos que son impactados por dicho proyecto).\n\nEl criterio social para la delimitación de un área de influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos, expectativas, intereses y/o demandas del entorno social.\n\nEn base a estos criterios se han identificado las áreas de influencia social directa e indirecta:`;
   }
 
   obtenerTextoSeccion2AISDCompleto(): string {
-    return 'Texto AISD completo';
+    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisd_completo'];
+    if (manual && manual.trim().length > 0) return manual;
+
+    // Construir a partir de datos: usar la primera comunidad como representativa
+    const comunidades = this.comunidadesCampesinas.map(c => c.nombre).join(', ') || '____';
+    let distrito = (this['geoInfo'] && this['geoInfo'].DIST) || '____';
+    if (distrito === '____' && this.comunidadesCampesinas.length > 0) {
+      // intentar extraer del primer centro poblado
+      const primeros = this.comunidadesCampesinas[0].centrosPobladosSeleccionados || [];
+      distrito = primeros.length > 0 ? primeros[0] : distrito;
+    }
+
+    // intentar obtener componentes adicionales (otros distritos mencionados)
+    const departamentos = new Set<string>();
+    this.comunidadesCampesinas.forEach(cc => {
+      (cc.centrosPobladosSeleccionados || []).forEach((cp: any) => {
+        if (cp && cp.DEPTO) departamentos.add(cp.DEPTO);
+      });
+    });
+
+    const departamento = departamentos.size > 0 ? Array.from(departamentos)[0] : (this['geoInfo']?.DPTO || '____');
+
+    const comps = (this.comunidadesCampesinas.length > 1) ? this.comunidadesCampesinas.slice(1).map(c => c.nombre).slice(0,2) : [];
+    const componente1 = comps[0] || '____';
+    const componente2 = comps[1] || '____';
+
+    return this.generarTextoAISDCompleto({ comunidades, distrito, componente1, componente2, departamento });
   }
 
   obtenerTextoSeccion2AISICompleto(): string {
-    const centroPoblado = '____';
-    const distrito = '____';
-    const provincia = '____';
-    const departamento = '____';
+    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisi_completo'];
+    if (manual && manual.trim().length > 0) return manual;
+
+    const primerDistrito = this.distritosAISI.length > 0 ? this.distritosAISI[0] : null;
+    const centroPoblado = primerDistrito && primerDistrito.centrosPobladosSeleccionados && primerDistrito.centrosPobladosSeleccionados.length > 0 ? primerDistrito.centrosPobladosSeleccionados[0] : (this['geoInfo']?.DIST || '____');
+    const distrito = primerDistrito ? primerDistrito.nombre : (this['geoInfo']?.DIST || '____');
+    const provincia = this['geoInfo']?.PROV || '____';
+    const departamento = this['geoInfo']?.DPTO || '____';
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
 
@@ -633,11 +673,9 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
       'El área de influencia social indirecta comprende los distritos adyacentes que podrían recibir impactos indirectos.', 
       { refresh: false });
 
-    this.modoFormulario = false;
-    this.cdRef.detectChanges();
-  }
-    this.onFieldChange('comunidadesCampesinas', comunidadesPrueba, { refresh: false });
-    this.onFieldChange('distritosAISI', distritosPrueba, { refresh: false });
+    // ✅ LLENAR CAMPOS ADICIONALES
+    const comunidadesJSON = centrosPobladosJSON;
+
     this.onFieldChange('centrosPobladosJSON', comunidadesJSON, { refresh: false });
     this.onFieldChange('geoInfo', {
       DPTO: 'Arequipa',
@@ -646,11 +684,7 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
     }, { refresh: false });
     this.onFieldChange('jsonFileName', 'datos_prueba_seccion2.json', { refresh: false });
     
-    // ✅ Actualizar estado local
-    this.comunidadesCampesinas = comunidadesPrueba;
-    this.distritosAISI = distritosPrueba;
-    
-    // ✅ Forzar actualización de UI
+    this.modoFormulario = false;
     this.cdRef.detectChanges();
   }
 }

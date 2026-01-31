@@ -71,6 +71,9 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     'departamentoSeleccionado'
   ];
 
+  // Último nombre de proyecto conocido (fallback estable)
+  private lastProjectName: string | null = null;
+
   constructor(
     private textNormalization: TextNormalizationService,
     cdRef: ChangeDetectorRef,
@@ -89,23 +92,52 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     
     // Inicializar objetivos desde datos guardados o por defecto
     this.inicializarObjetivos();
+    // Inicializar lastProjectName desde datos si existe
+    if (this.datos && this.datos.projectName) {
+      this.lastProjectName = this.datos.projectName;
+    }
     
     if (!this.modoFormulario) {
-      this.stateSubscription = this.stateAdapter.datos$.subscribe(() => {
-        // ✅ Actualizar datos desde ProjectStateFacade para sincronización inmediata
-        this.actualizarDatos();
+      // Suscripción más prudente: solo sincroniza lo que realmente cambió
+      this.stateSubscription = this.stateAdapter.datos$.subscribe((datos: any) => {
+        console.debug('[Seccion1] stateAdapter.datos$ -> recibidos datos:', datos && { projectName: datos.projectName, objetivosSeccion1: datos.objetivosSeccion1, parrafo: datos.parrafoSeccion1_principal });
+        if (!datos) return;
+
+        // Si los objetivos en persistencia difieren de los locales, sincronizarlos
+        const objetivosPersistidos = datos.objetivosSeccion1;
+        if (objetivosPersistidos && Array.isArray(objetivosPersistidos)) {
+          const sonDiferentes = objetivosPersistidos.length !== this.objetivos.length ||
+            objetivosPersistidos.some((o: string, i: number) => o !== this.objetivos[i]);
+          if (sonDiferentes) {
+              this.objetivos = [...objetivosPersistidos];
+              this.datos.objetivosSeccion1 = [...objetivosPersistidos];
+              console.debug('[Seccion1] sincronizados objetivos desde datos persistidos:', this.objetivos);
+            }
+        }
+
+          // Actualizar fallback estable del nombre del proyecto
+          if (datos.projectName) {
+            this.lastProjectName = datos.projectName;
+            console.debug('[Seccion1] lastProjectName actualizado:', this.lastProjectName);
+          }
+
+          // Si cambió el nombre del proyecto, o campos principales, refrescar todos los datos
+        if (datos.projectName !== this.datos.projectName || datos.distritoSeleccionado !== this.datos.distritoSeleccionado || datos.provinciaSeleccionada !== this.datos.provinciaSeleccionada || datos.departamentoSeleccionado !== this.datos.departamentoSeleccionado) {
+          this.actualizarDatos();
+        }
+
         this.cargarFotografias();
-        // ✅ En modo vista, siempre sincronizar objetivos desde datos persistidos
-        // Esto asegura que la vista refleje cambios del formulario
         this.cdRef.detectChanges();
       });
     }
   }
 
   private inicializarObjetivos(): void {
+    console.debug('[Seccion1] inicializarObjetivos - datos actuales:', { projectName: this.datos.projectName, objetivos: this.datos.objetivosSeccion1 });
     // Primero verificar si hay objetivos guardados como array
     if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
       this.objetivos = [...this.datos.objetivosSeccion1];
+      console.debug('[Seccion1] inicializarObjetivos - usando objetivos desde this.datos:', this.objetivos);
       return;
     }
     
@@ -131,11 +163,12 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
         this.getObjetivoDefault(0),
         this.getObjetivoDefault(1)
       ];
+      console.debug('[Seccion1] inicializarObjetivos - usando objetivos por defecto:', this.objetivos);
     }
   }
 
   private getObjetivoDefault(index: number): string {
-    const proyecto = this.datos.projectName || '____';
+    const proyecto = this.lastProjectName || this.datos.projectName || '____';
     const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto, false);
     
     if (index === 0) {
@@ -145,6 +178,9 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   agregarObjetivo(): void {
+    // ✅ IMPORTANTE: Sincronizar PRIMERO desde datos persistidos antes de modificar
+    this.sincronizarObjetivosDesdeData();
+    
     this.objetivos = [...this.objetivos, ''];
     this.guardarObjetivos();
     // ✅ Usar setTimeout para evitar interferencias con otros bindings
@@ -153,6 +189,9 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
 
   eliminarObjetivo(index: number): void {
     if (this.objetivos.length > 1) {
+      // ✅ IMPORTANTE: Sincronizar PRIMERO desde datos persistidos antes de modificar
+      this.sincronizarObjetivosDesdeData();
+      
       this.objetivos = this.objetivos.filter((_, i) => i !== index);
       this.guardarObjetivos();
       // ✅ Usar setTimeout para evitar interferencias con otros bindings
@@ -193,27 +232,21 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   getObjetivosParaVista(): string[] {
-    // ✅ En modo VISTA: leer siempre de this.datos (fuente de verdad persistida)
-    // En modo FORMULARIO: usar this.objetivos (para edición fluida)
-    
-    if (!this.modoFormulario) {
-      // MODO VISTA: leer de datos persistidos
-      if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
-        return (this.datos.objetivosSeccion1 as string[]).filter((o: string) => o && o.trim() !== '');
-      }
-    } else {
-      // MODO FORMULARIO: usar array local si existe
-      if (this.objetivos && this.objetivos.length > 0) {
-        const objetivosNoVacios = this.objetivos.filter((o: string) => o && o.trim() !== '');
-        if (objetivosNoVacios.length > 0) {
-          return objetivosNoVacios;
-        }
+    // Priorizar el array local `this.objetivos` si tiene contenido válido.
+    // Esto evita que la vista muestre valores por defecto cuando hay una breve
+    // desincronización entre persistencia y estado local al agregar/eliminar.
+    if (this.objetivos && Array.isArray(this.objetivos)) {
+      const objetivosNoVaciosLocal = this.objetivos.filter((o: string) => o && o.trim() !== '');
+      if (objetivosNoVaciosLocal.length > 0) {
+        // Reemplazar placeholders '____' por el nombre de proyecto disponible
+        const proyecto = this.datos.projectName || this.lastProjectName || '____';
+        return objetivosNoVaciosLocal.map(o => (o || '').replace(/____/g, proyecto));
       }
     }
-    
-    // Fallback: Si hay objetivos guardados en datos, usarlos
+
+    // Si no hay array local, usar datos persistidos
     if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
-      return this.datos.objetivosSeccion1;
+      return (this.datos.objetivosSeccion1 as string[]).filter((o: string) => o && o.trim() !== '');
     }
     
     // Compatibilidad con formato antiguo
@@ -308,6 +341,32 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
 
   protected override actualizarDatosCustom(): void {
     this.cargarFotografias();
+    
+    // ✅ Sincronizar objetivos desde datos persistidos cuando cambian los datos
+    // Esto es importante cuando se usa "Llenar Datos" desde la página principal
+    this.sincronizarObjetivosDesdeData();
+  }
+
+  /**
+   * Sincroniza el array local `this.objetivos` con los datos persistidos
+   * Lee directamente del projectFacade para obtener los datos más recientes
+   */
+  private sincronizarObjetivosDesdeData(): void {
+    // ✅ Leer datos frescos directamente del projectFacade (fuente de verdad)
+    const datosFrescos = this.projectFacade.obtenerDatos();
+    const objetivosGuardados = datosFrescos['objetivosSeccion1'];
+    
+    if (objetivosGuardados && Array.isArray(objetivosGuardados) && objetivosGuardados.length > 0) {
+      // Verificar si los objetivos son diferentes
+      const sonDiferentes = objetivosGuardados.length !== this.objetivos.length ||
+        objetivosGuardados.some((obj: string, i: number) => obj !== this.objetivos[i]);
+      
+      if (sonDiferentes) {
+        this.objetivos = [...objetivosGuardados];
+        // También actualizar this.datos para mantener consistencia
+        this.datos.objetivosSeccion1 = [...objetivosGuardados];
+      }
+    }
   }
 
   override getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
@@ -599,18 +658,15 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
       `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera Paka.`,
       `Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.`
     ];
-    
-    // ✅ IMPORTANTE: Actualizar PRIMERO el array local
-    this.objetivos = [...objetivosPrueba];
-    // ✅ Luego guardar en el estado persistido SIN refresh
+
+    // Guardar objetivos y limpiar legacy
     this.onFieldChange('objetivosSeccion1', [...objetivosPrueba], { refresh: false });
-    // ✅ Y sincronizar datos locales
-    this.datos.objetivosSeccion1 = [...objetivosPrueba];
-    // ✅ Limpiar campos legacy que podrían interferir
     this.onFieldChange('objetivoSeccion1_1', null, { refresh: false });
     this.onFieldChange('objetivoSeccion1_2', null, { refresh: false });
-    
-    // NO llamar actualizarDatos() porque podría sobrescribir con datos antiguos
+
+    // Forzar sincronización local de datos y objetivos
+    this.actualizarDatos();
+    this.inicializarObjetivos();
     this.cdRef.detectChanges();
   }
 }

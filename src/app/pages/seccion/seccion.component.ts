@@ -146,8 +146,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.route.params.subscribe(params => {
-        this.seccionId = params['id'];
-        this.cargarSeccion();
+        const newSeccionId = params['id'];
+        // Solo recargar si la sección realmente cambió
+        if (this.seccionId !== newSeccionId) {
+          this.seccionId = newSeccionId;
+          // Ejecutar cargarSeccion como async pero sin bloquear
+          void this.cargarSeccion();
+        }
       })
     );
     
@@ -168,6 +173,10 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
           this.comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
           this.geoInfo = datos['geoInfo'] || {};
           this.jsonFileName = datos['jsonFileName'] || '';
+
+          // ✅ Actualizar estado de navegación cuando los datos cambian (habilita/deshabilita Anterior/Siguiente)
+          this.actualizarEstadoNavegacion();
+          this.cdRef.markForCheck();
         }
       })
     );
@@ -175,8 +184,10 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.viewInitialized = true;
-    // Render inicial (la primera navegación puede llegar antes de que exista el ViewContainerRef)
-    void this.renderSectionComponents();
+    // Renderizar los componentes ahora que la vista está lista
+    if (this.seccionId) {
+      void this.renderSectionComponents();
+    }
   }
 
   async cargarSeccion() {
@@ -190,12 +201,14 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
     this.actualizarEstadoNavegacion();
     this.scrollRealizado = false;
-    this.cdRef.detectChanges();
 
     await this.renderSectionComponents();
 
     setTimeout(() => {
-      this.actualizarComponenteSeccion();
+      // Scroll al inicio de los contenedores al cambiar de sección
+      this.scrollContainersToTop();
+      
+      // No llamar actualizarComponenteSeccion aquí para evitar bucles
       const seccion2 = ViewChildHelper.getComponent('seccion2');
       if (seccion2 && seccion2['autocompleteData']) {
         this.autocompleteData = seccion2['autocompleteData'];
@@ -205,6 +218,21 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.autocompleteData = { ...this.autocompleteData, ...seccion4['autocompleteData'] };
       }
     }, 50);
+  }
+  
+  /**
+   * Scroll al inicio de los contenedores de preview y formulario
+   */
+  private scrollContainersToTop(): void {
+    const previewContent = document.querySelector('.preview-content');
+    const formularioContent = document.querySelector('.formulario-content');
+    
+    if (previewContent) {
+      previewContent.scrollTop = 0;
+    }
+    if (formularioContent) {
+      formularioContent.scrollTop = 0;
+    }
   }
 
   private async renderSectionComponents(): Promise<void> {
@@ -663,14 +691,12 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.formData[fieldId] = valorLimpio;
     this.datos[fieldId] = valorLimpio;
     this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
-    this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     
+    // ✅ Después de cambiar campos, actualizar estado de navegación para reflejar nuevas secciones disponibles
+    this.actualizarEstadoNavegacion();
+
     this.actualizarComponenteSeccion();
     this.cdRef.markForCheck();
-    
-    setTimeout(() => {
-      this.cdRef.detectChanges();
-    }, 0);
   }
 
   limpiarDatos() {
@@ -1406,6 +1432,26 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           }
         }
+      }
+
+      // Asegurar que el párrafo principal de la Sección 1 incluya el nombre
+      // del proyecto cuando se están cargando datos de prueba. Esto evita
+      // que la vista muestre el texto por defecto con '____' durante la
+      // ventana de sincronización asíncrona.
+      if (!updates['parrafoSeccion1_principal']) {
+        const projectCandidate = updates['projectName'] || enrichedMock?.projectName || enrichedMock?.['nombreProyecto'] || 'Paka';
+        updates['parrafoSeccion1_principal'] = `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera ${projectCandidate}.`;
+      }
+
+      // Si estamos llenando la sección 3.1.1, asegurarnos de que los objetivos
+      // también se establezcan con el nombre del proyecto para evitar que se
+      // muestren placeholders ('____') antes de la sincronización completa.
+      if (this.seccionId === '3.1.1' && !updates['objetivosSeccion1']) {
+        const projectCandidateObj = updates['projectName'] || enrichedMock?.projectName || enrichedMock?.['nombreProyecto'] || 'Paka';
+        updates['objetivosSeccion1'] = [
+          `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera ${projectCandidateObj}.`,
+          `Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.`
+        ];
       }
 
       if (Object.keys(updates).length > 0) {
