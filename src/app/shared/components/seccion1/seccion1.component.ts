@@ -412,15 +412,23 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   onJSONFileSelected(event: any) {
+    console.log('🎯 [Seccion1] onJSONFileSelected llamado');
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     
-    if (!file) return;
+    if (!file) {
+      console.warn('⚠️ [Seccion1] No se seleccionó ningún archivo');
+      return;
+    }
+
+    console.log('📁 [Seccion1] Archivo seleccionado:', file.name, file.size, 'bytes');
 
     const reader = new FileReader();
     reader.onload = (e: any) => {
       try {
+        console.log('📖 [Seccion1] Leyendo contenido del archivo...');
         const jsonContent = JSON.parse(e.target.result);
+        console.log('✅ [Seccion1] JSON parseado correctamente');
         
         // ===== FASE 1: ProjectState como fuente PRIMARIA =====
         // Validar estructura JSON antes de procesar
@@ -431,15 +439,36 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
           return;
         }
 
+        console.log('🔧 [Seccion1] Creando batch command...');
         // Crear BatchCommand para ProjectState
         const { batch, result } = createJSONProcessingBatch(jsonContent, {
           fileName: file.name,
           transactionId: `json_upload_${Date.now()}`
         });
 
+        console.log('🔍 [Seccion1] Batch creado:', batch ? 'SÍ' : 'NO');
         if (batch) {
-          // DISPATCH al ProjectState (FUENTE PRIMARIA)
+          console.log('📤 [Seccion1] Despachando batch con', batch.payload.commands.length, 'comandos');
+          const groupCommands = batch.payload.commands.filter(c => c.type === 'groupConfig/addGroup');
+          console.log('📤 [Seccion1] Comandos de grupos:', groupCommands.length);
+          groupCommands.forEach((c: any, i: number) => {
+            console.log(`   ${i + 1}. ${c.payload.tipo}: "${c.payload.nombre}" (${c.payload.ccppIds?.length || 0} centros)`);
+          });
+          
           this.store.dispatch(batch);
+          console.log('✅ [Seccion1] Batch despachado al store');
+          
+          // ✅ Verificar que los grupos se crearon
+          setTimeout(() => {
+            try {
+              const gruposAISD = this.projectFacade.aisdGroups();
+              const gruposAISI = this.projectFacade.aisiGroups();
+              console.log('✅ [Seccion1] Después del dispatch - Grupos AISD:', gruposAISD.length, gruposAISD.map(g => g.nombre));
+              console.log('✅ [Seccion1] Después del dispatch - Grupos AISI:', gruposAISI.length, gruposAISI.map(g => g.nombre));
+            } catch (error) {
+              console.error('❌ [Seccion1] Error al leer grupos después del dispatch:', error);
+            }
+          }, 100);
           
           // ✅ CRÍTICO: Inicializar árbol de secciones después de cargar JSON
           // Esto genera las secciones dinámicas a.1, a.2, b.1, b.2 etc.
@@ -447,6 +476,8 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
           
           const stats = getJSONStats(result);
           console.log(`[Seccion1] JSON procesado via ProjectState: ${stats.totalCCPP} CCPP, ${stats.totalGroups} grupos (Formato ${stats.format})`);
+        } else {
+          console.warn('⚠️ [Seccion1] No se pudo crear el batch command');
         }
 
         // ===== FALLBACK: Legacy para compatibilidad temporal =====

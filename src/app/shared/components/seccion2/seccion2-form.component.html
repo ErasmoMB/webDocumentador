@@ -65,7 +65,8 @@
         class="input" 
         placeholder="Ingrese el nombre de la comunidad campesina"
         [ngModel]="comunidad.nombre"
-        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
+        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)"
+        (keyup.enter)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
       <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
     </div>
   </div>

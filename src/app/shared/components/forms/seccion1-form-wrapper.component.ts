@@ -1,14 +1,15 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, effect, Signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { Seccion1Component } from '../seccion1/seccion1.component';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { GruposService } from 'src/app/core/services/domain/grupos.service';
 import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { UIStoreService } from 'src/app/core/state/ui-store.contract';
+import { createJSONProcessingBatch, validateJSONStructure, getJSONStats } from 'src/app/core/services/data/json-normalizer';
 
 @Component({
     standalone: true,
@@ -27,23 +28,58 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
   private subscription?: Subscription;
 
   private projectFacade: ProjectStateFacade;
-  private stateAdapter: ReactiveStateAdapter;
+  private store: UIStoreService;
+
+  readonly formDataSignal: Signal<Record<string, any>>;
+  readonly jsonFileNameSignal: Signal<string>;
+  readonly centrosPobladosJSONSignal: Signal<any[]>;
+  readonly geoInfoSignal: Signal<any>;
 
   constructor(
     private formChange: FormChangeService,
     private gruposService: GruposService,
     private injector: Injector,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    store: UIStoreService
   ) {
     this.projectFacade = this.injector.get(ProjectStateFacade);
-    this.stateAdapter = this.injector.get(ReactiveStateAdapter);
-    this.actualizarDatos();
+    this.store = store;
+
+    this.formDataSignal = computed(() => {
+      return this.projectFacade.selectSectionFields(this.seccionId, null)();
+    });
+
+    this.jsonFileNameSignal = computed(() => {
+      const value = this.projectFacade.selectField(this.seccionId, null, 'jsonFileName')();
+      return value || '';
+    });
+
+    this.centrosPobladosJSONSignal = computed(() => {
+      const value = this.projectFacade.selectField(this.seccionId, null, 'centrosPobladosJSON')();
+      return Array.isArray(value) ? value : [];
+    });
+
+    this.geoInfoSignal = computed(() => {
+      const value = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')();
+      return value || {};
+    });
+
+    effect(() => {
+      const formData = this.formDataSignal();
+      const jsonFileName = this.jsonFileNameSignal();
+      const centrosPobladosJSON = this.centrosPobladosJSONSignal();
+      const geoInfo = this.geoInfoSignal();
+
+      this.formData = { ...formData };
+      this.jsonFileName = jsonFileName;
+      this.centrosPobladosJSON = [...centrosPobladosJSON];
+      this.geoInfo = { ...geoInfo };
+      
+      this.cdRef.markForCheck();
+    });
   }
 
   ngOnInit() {
-    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
-    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
-    this.actualizarDatos();
   }
 
   ngOnDestroy() {
@@ -52,77 +88,89 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     }
   }
 
-  actualizarDatos() {
-    const datos = this.projectFacade.obtenerDatos();
-    this.formData = { ...datos };
-    this.centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
-    this.geoInfo = datos['geoInfo'] || {};
-    this.jsonFileName = datos['jsonFileName'] || '';
-  }
-
   onFieldChange(fieldId: string, value: any) {
     let valorLimpio = '';
     if (value !== undefined && value !== null && value !== 'undefined') {
       valorLimpio = value;
     }
-    // ✅ Actualizar localmente PRIMERO para sincronización inmediata
     this.formData[fieldId] = valorLimpio;
-    
-    // ✅ Persistir en background (no bloquea la UI)
     this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
-    
-    // ✅ NO llamar actualizarDatos() aquí - ya tenemos el valor actualizado localmente
-    // Esto evita el problema de leer un valor desactualizado del storage
   }
 
   onJSONFileSelected(event: any) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e: any) => {
       try {
         const jsonContent = JSON.parse(e.target.result);
-        const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSON(jsonContent, file.name);
         
-        // ✅ NUEVO: Cargar en GruposService para sistema AISD/AISI
+        const validation = validateJSONStructure(jsonContent);
+        if (!validation.valid) {
+          alert(validation.error || 'Error al procesar el archivo JSON. Verifique el formato.');
+          return;
+        }
+
+        const { batch, result } = createJSONProcessingBatch(jsonContent, {
+          fileName: file.name,
+          transactionId: `json_upload_${Date.now()}`
+        });
+
+        if (batch) {
+          this.store.dispatch(batch);
+          
+          setTimeout(() => {
+            try {
+              this.projectFacade.aisdGroups();
+              this.projectFacade.aisiGroups();
+            } catch (error) {
+              // Silently handle error
+            }
+          }, 100);
+          
+          this.projectFacade.initializeSectionsTree();
+        }
+
+        const rawData = result.rawData || [];
+        const ubicacion = result.ubicacion;
+        
         this.gruposService.cargarCentrosPobladosDesdeJSON(jsonContent);
-        const totalCCPP = this.gruposService.getCentrosPoblados().length;
-        // ✅ [Sección 1] totalCCPP centros poblados cargados en GruposService desde file.name
         
-        // Persistir centros poblados JSON directamente usando formChange
         const updates: Record<string, any> = {
-          centrosPobladosJSON: data,
-          jsonCompleto,
-          geoInfo,
-          jsonFileName: fileName
+          centrosPobladosJSON: rawData,
+          jsonCompleto: jsonContent,
+          jsonFileName: file.name
         };
 
-        if (comunidadesCampesinas && comunidadesCampesinas.length > 0) {
-          updates['comunidadesCampesinas'] = comunidadesCampesinas;
-        }
-
-        if (geoInfo.DPTO) {
-          updates['departamentoSeleccionado'] = geoInfo.DPTO;
-        }
-        if (geoInfo.PROV) {
-          updates['provinciaSeleccionada'] = geoInfo.PROV;
-        }
-        if (geoInfo.DIST) {
-          updates['distritoSeleccionado'] = geoInfo.DIST;
+        if (ubicacion) {
+          const geoInfo: any = {};
+          if (ubicacion.departamento) {
+            geoInfo.DPTO = ubicacion.departamento;
+            updates['departamentoSeleccionado'] = ubicacion.departamento;
+          }
+          if (ubicacion.provincia) {
+            geoInfo.PROV = ubicacion.provincia;
+            updates['provinciaSeleccionada'] = ubicacion.provincia;
+          }
+          if (ubicacion.distrito) {
+            geoInfo.DIST = ubicacion.distrito;
+            updates['distritoSeleccionado'] = ubicacion.distrito;
+          }
+          updates['geoInfo'] = geoInfo;
+          this.geoInfo = geoInfo;
         }
 
         this.formChange.persistFields(this.seccionId, 'form', updates);
         
-        // ✅ Actualizar estado local del formulario para reflejar los cambios inmediatamente
-        this.centrosPobladosJSON = data;
-        this.geoInfo = geoInfo;
-        this.jsonFileName = fileName;
+        this.centrosPobladosJSON = [...rawData];
+        this.jsonFileName = file.name;
         this.formData = { ...this.formData, ...updates };
         
-        // ✅ Forzar detección de cambios ya que estamos dentro de FileReader callback
         this.cdRef.detectChanges();
         
       } catch (error) {
@@ -139,72 +187,5 @@ export class Seccion1FormWrapperComponent implements OnInit, OnDestroy {
     if (fileInput) {
       fileInput.click();
     }
-  }
-
-  private procesarJSON(jsonContent: any, fileName: string): { 
-    data: any[], 
-    geoInfo: any, 
-    fileName: string, 
-    comunidadesCampesinas?: any[],
-    jsonCompleto?: any
-  } {
-    let centrosPoblados: any[] = [];
-    let geoInfo: any = {};
-    let comunidadesCampesinas: any[] = [];
-    let jsonCompleto: any = null;
-    
-    if (Array.isArray(jsonContent)) {
-      centrosPoblados = jsonContent;
-      jsonCompleto = jsonContent;
-    } else if (typeof jsonContent === 'object') {
-      jsonCompleto = jsonContent;
-      const keys = Object.keys(jsonContent);
-      
-      if (keys.length > 0) {
-        for (const grupoKey of keys) {
-          const grupoData = jsonContent[grupoKey];
-          
-          if (Array.isArray(grupoData)) {
-            const centrosGrupo = grupoData;
-            centrosPoblados = centrosPoblados.concat(centrosGrupo);
-            
-            const codigosGrupo = centrosGrupo
-              .map((cp: any) => {
-                const codigo = cp.CODIGO;
-                if (codigo === null || codigo === undefined) return '';
-                return codigo.toString().trim();
-              })
-              .filter((codigo: string) => codigo !== '');
-            
-            let nombreComunidad = grupoKey;
-            if (nombreComunidad.toUpperCase().startsWith('CCPP ')) {
-              nombreComunidad = nombreComunidad.substring(5).trim();
-            }
-            
-            const comunidadId = `cc_${nombreComunidad.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
-            comunidadesCampesinas.push({
-              id: comunidadId,
-              nombre: nombreComunidad,
-              centrosPobladosSeleccionados: codigosGrupo
-            });
-          }
-        }
-      }
-    }
-    
-    if (centrosPoblados.length > 0) {
-      const primer = centrosPoblados[0];
-      if (primer.DPTO) geoInfo.DPTO = primer.DPTO;
-      if (primer.PROV) geoInfo.PROV = primer.PROV;
-      if (primer.DIST) geoInfo.DIST = primer.DIST;
-    }
-    
-    return { 
-      data: centrosPoblados, 
-      geoInfo, 
-      fileName, 
-      comunidadesCampesinas: comunidadesCampesinas.length > 0 ? comunidadesCampesinas : undefined,
-      jsonCompleto
-    };
   }
 }

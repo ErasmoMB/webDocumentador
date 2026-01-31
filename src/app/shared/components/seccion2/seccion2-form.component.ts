@@ -93,10 +93,48 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
   // ============================================================================
 
   eliminarComunidadCampesina(id: string) {
+    // Verificar que haya al menos una comunidad antes de eliminar
+    const grupos = this.aisdGroups();
+    if (grupos.length <= 1) {
+      console.warn('⚠️ [Seccion2Form] No se puede eliminar la última comunidad');
+      alert('No se puede eliminar la última comunidad. Debe haber al menos una comunidad campesina.');
+      return;
+    }
+    
+    // Confirmar eliminación
+    if (!confirm('¿Está seguro de que desea eliminar esta comunidad campesina?')) {
+      return;
+    }
+    
+    // Llamar directamente al ProjectStateFacade para eliminar
+    this.projectFacade.removeGroup('AISD', id, true);
+    console.log(`❌ [Seccion2Form] Eliminada comunidad: ${id}`);
+    
+    // Persistir cambios después de eliminar
+    setTimeout(() => {
+      const gruposActualizados = this.aisdGroups();
+      const comunidadesParaPersistir = gruposActualizados.map(g => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: g.ccppIds || []
+      }));
+      
+      this.formChange.persistFields(this.seccionId, 'form', {
+        comunidadesCampesinas: comunidadesParaPersistir
+      }, {
+        updateLegacy: true,
+        updateState: true,
+        notifySync: true,
+        persist: true
+      });
+    }, 100);
+    
+    // También delegar a Seccion2Component si está disponible (para compatibilidad)
     if (this.seccion2Component) {
       this.seccion2Component.eliminarComunidadCampesina(id);
-      this.cdRef.markForCheck();
     }
+    
+    this.cdRef.markForCheck();
   }
 
   agregarComunidadCampesina() {
@@ -109,10 +147,39 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
   actualizarNombreComunidad(id: string, nombre: string) {
     const nombreLimpio = (nombre || '').trim();
     
+    if (!nombreLimpio) {
+      console.warn('⚠️ [Seccion2Form] El nombre no puede estar vacío');
+      return;
+    }
+    
+    // Llamar directamente al ProjectStateFacade para actualizar el grupo
+    this.projectFacade.renameGroup('AISD', id, nombreLimpio);
+    console.log(`📝 [Seccion2Form] Renombrada comunidad ${id} → ${nombreLimpio}`);
+    
+    // Persistir también en FormularioService para que persista al recargar
+    // Obtener todos los grupos actualizados y persistirlos
+    const gruposActualizados = this.aisdGroups();
+    const comunidadesParaPersistir = gruposActualizados.map(g => ({
+      id: g.id,
+      nombre: g.nombre,
+      centrosPobladosSeleccionados: g.ccppIds || []
+    }));
+    
+    this.formChange.persistFields(this.seccionId, 'form', {
+      comunidadesCampesinas: comunidadesParaPersistir
+    }, {
+      updateLegacy: true,
+      updateState: true,
+      notifySync: true,
+      persist: true
+    });
+    
+    // También delegar a Seccion2Component si está disponible (para compatibilidad)
     if (this.seccion2Component) {
       this.seccion2Component.actualizarNombreComunidad(id, nombreLimpio);
     }
     
+    // Forzar actualización de la vista
     this.cdRef.markForCheck();
   }
 
@@ -147,24 +214,122 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
   // ============================================================================
 
   toggleCentroPobladoComunidad(id: string, codigo: string) {
+    const grupo = this.aisdGroups().find(g => g.id === id);
+    if (!grupo) return;
+
+    const codigoNormalizado = codigo?.toString().trim();
+    if (!codigoNormalizado) return;
+
+    const existe = grupo.ccppIds.includes(codigoNormalizado);
+    
+    if (existe) {
+      // Remover centro poblado
+      this.projectFacade.dispatch({
+        type: 'groupConfig/removeCCPPFromGroup',
+        payload: { tipo: 'AISD', groupId: id, ccppId: codigoNormalizado }
+      });
+      console.log(`➖ [Seccion2Form] Centro ${codigoNormalizado} removido de comunidad ${id}`);
+    } else {
+      // Agregar centro poblado
+      this.projectFacade.dispatch({
+        type: 'groupConfig/addCCPPToGroup',
+        payload: { tipo: 'AISD', groupId: id, ccppId: codigoNormalizado }
+      });
+      console.log(`➕ [Seccion2Form] Centro ${codigoNormalizado} agregado a comunidad ${id}`);
+    }
+    
+    // Persistir cambios después de un pequeño delay para asegurar que el estado se actualizó
+    setTimeout(() => {
+      const gruposActualizados = this.aisdGroups();
+      const comunidadesParaPersistir = gruposActualizados.map(g => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: g.ccppIds || []
+      }));
+      
+      this.formChange.persistFields(this.seccionId, 'form', {
+        comunidadesCampesinas: comunidadesParaPersistir
+      }, {
+        updateLegacy: true,
+        updateState: true,
+        notifySync: true,
+        persist: true
+      });
+    }, 50);
+    
+    // También delegar a Seccion2Component si está disponible (para compatibilidad)
     if (this.seccion2Component) {
       this.seccion2Component.toggleCentroPobladoComunidad(id, codigo);
-      this.cdRef.markForCheck();
     }
+    
+    this.cdRef.markForCheck();
   }
 
   seleccionarTodosCentrosPobladosComunidad(id: string) {
+    // Llamar directamente al ProjectStateFacade
+    const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
+    this.projectFacade.dispatch({
+      type: 'groupConfig/setGroupCCPP',
+      payload: { tipo: 'AISD', groupId: id, ccppIds: codigos }
+    });
+    console.log(`✅ [Seccion2Form] Todos los centros seleccionados para comunidad ${id}`);
+    
+    // Persistir cambios
+    const gruposActualizados = this.aisdGroups();
+    const comunidadesParaPersistir = gruposActualizados.map(g => ({
+      id: g.id,
+      nombre: g.nombre,
+      centrosPobladosSeleccionados: g.ccppIds || []
+    }));
+    
+    this.formChange.persistFields(this.seccionId, 'form', {
+      comunidadesCampesinas: comunidadesParaPersistir
+    }, {
+      updateLegacy: true,
+      updateState: true,
+      notifySync: true,
+      persist: true
+    });
+    
+    // También delegar a Seccion2Component si está disponible (para compatibilidad)
     if (this.seccion2Component) {
       this.seccion2Component.seleccionarTodosCentrosPobladosComunidad(id);
-      this.cdRef.markForCheck();
     }
+    
+    this.cdRef.markForCheck();
   }
 
   deseleccionarTodosCentrosPobladosComunidad(id: string) {
+    // Llamar directamente al ProjectStateFacade
+    this.projectFacade.dispatch({
+      type: 'groupConfig/setGroupCCPP',
+      payload: { tipo: 'AISD', groupId: id, ccppIds: [] }
+    });
+    console.log(`❌ [Seccion2Form] Todos los centros deseleccionados para comunidad ${id}`);
+    
+    // Persistir cambios
+    const gruposActualizados = this.aisdGroups();
+    const comunidadesParaPersistir = gruposActualizados.map(g => ({
+      id: g.id,
+      nombre: g.nombre,
+      centrosPobladosSeleccionados: g.ccppIds || []
+    }));
+    
+    this.formChange.persistFields(this.seccionId, 'form', {
+      comunidadesCampesinas: comunidadesParaPersistir
+    }, {
+      updateLegacy: true,
+      updateState: true,
+      notifySync: true,
+      persist: true
+    });
+    
+    // También delegar a Seccion2Component si está disponible (para compatibilidad)
     if (this.seccion2Component) {
       this.seccion2Component.deseleccionarTodosCentrosPobladosComunidad(id);
-      this.cdRef.markForCheck();
     }
+    
+    this.cdRef.markForCheck();
   }
 
   toggleCentroPobladoDistrito(id: string, codigo: string) {
@@ -223,26 +388,11 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene centros poblados visibles para una comunidad
+   * Muestra todos los centros poblados disponibles para que el usuario pueda seleccionar
    */
   obtenerCentrosPobladosDeComunidad(comunidadId: string): CCPPEntry[] {
-    const grupo = this.aisdGroups().find(g => g.id === comunidadId);
-    
-    if (!grupo) {
-      return [];
-    }
-    
-    // Si el nombre es genérico, mostrar todos
-    if (!grupo.nombre || grupo.nombre.startsWith('Comunidad Campesina')) {
-      return this.obtenerTodosLosCentrosPoblados();
-    }
-    
-    // Intentar filtrar por nombre (lógica simplificada)
-    const todosLosCentros = this.allPopulatedCenters();
-    const centrosFiltrados = todosLosCentros.filter(c => 
-      c.nombre?.toLowerCase().includes(grupo.nombre.toLowerCase())
-    );
-    
-    return centrosFiltrados.length > 0 ? centrosFiltrados as CCPPEntry[] : this.obtenerTodosLosCentrosPoblados();
+    // Siempre mostrar todos los centros poblados disponibles para selección
+    return this.obtenerTodosLosCentrosPoblados();
   }
 
   /**

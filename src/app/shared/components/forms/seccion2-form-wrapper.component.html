@@ -16,7 +16,7 @@
       </button>
     </div>
 
-    <div class="form-field" *ngIf="obtenerCentrosPobladosDeComunidad(comunidad.id).length > 0">
+    <div class="form-field" *ngIf="obtenerCentrosPobladosVisibles(comunidad).length > 0">
       <label class="label">Seleccionar Centros Poblados para AISD <span class="required">*</span></label>
       <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <button 
@@ -61,8 +61,8 @@
         class="input" 
         placeholder="Ingrese el nombre de la comunidad campesina"
         [ngModel]="comunidad.nombre"
-        (ngModelChange)="comunidad.nombre = $event"
-        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
+        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)"
+        (keyup.enter)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
       <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
     </div>
   </div>
@@ -84,7 +84,7 @@
        style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h5 style="margin: 0; color: #333;">Distrito {{ i + 1 }}</h5>
+      <h5 style="margin: 0; color: #333;">{{ distrito.nombre || ('Distrito ' + (i + 1)) }}</h5>
       <button 
         type="button" 
         class="btn btn-danger" 

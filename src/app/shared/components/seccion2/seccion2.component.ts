@@ -87,6 +87,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   /** Signal derivado: Texto AISD formateado para vista */
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
+    // Leer grupos directamente para que el signal sea reactivo
+    const grupos = this.aisdGroups();
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
@@ -94,9 +96,28 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
   /** Signal derivado: Texto AISI formateado para vista */
   readonly textoAISIFormateado: Signal<SafeHtml> = computed(() => {
+    // Leer grupos directamente para que el signal sea reactivo
+    const grupos = this.aisiGroups();
     const texto = this.obtenerTextoSeccion2AISICompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
+  /** Signal derivado: Hash de campos de fotografías para detectar cambios */
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+      
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
   });
 
   // ============================================================================
@@ -113,7 +134,7 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   ) {
     super(cdRef, injector);
     
-    // ✅ REACTIVIDAD: Registrar effect para loguear cambios en grupos
+    // ✅ REACTIVIDAD: Registrar effect para loguear cambios en grupos y forzar actualización de vista
     effect(() => {
       const aisd = this.aisdGroups();
       const aisi = this.aisiGroups();
@@ -129,6 +150,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         );
         console.log(`   Grupo ${grupo.nombre} → centros:`, centrosActivos);
       });
+      
+      // Forzar actualización de la vista cuando cambian los grupos
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+
+    // ✅ REACTIVIDAD: Effect para recargar fotografías cuando cambian título o fuente
+    effect(() => {
+      this.photoFieldsHash();
+      this.cargarFotografias();
+      this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
 
@@ -531,8 +562,14 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
     const manualClass = this.dataHighlightService.getManualClass();
+    
+    // Usar data-manual has-data para nombres de comunidades (resaltado amarillo claro)
+    // cuando tienen datos (no son '____')
+    const comunidadesClass = comunidades !== '____' 
+      ? `${manualClass} has-data` 
+      : highlightClass;
 
-    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) <span class="${highlightClass}">${comunidades}</span>, cuya área comunal se encuentra predominantemente en el distrito de <span class="${highlightClass}">${distrito}</span> y en menor proporción en los distritos de <span class="${manualClass}">${componente1}</span> y de <span class="${manualClass}">${componente2}</span>, pertenecientes al departamento de <span class="${highlightClass}">${departamento}</span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC <span class="${highlightClass}">${comunidades}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC <span class="${highlightClass}">${comunidades}</span>.`;
+    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) <span class="${comunidadesClass}">${comunidades}</span>, cuya área comunal se encuentra predominantemente en el distrito de <span class="${highlightClass}">${distrito}</span> y en menor proporción en los distritos de <span class="${manualClass}">${componente1}</span> y de <span class="${manualClass}">${componente2}</span>, pertenecientes al departamento de <span class="${highlightClass}">${departamento}</span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC <span class="${comunidadesClass}">${comunidades}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC <span class="${comunidadesClass}">${comunidades}</span>.`;
   }
 
   /**
@@ -576,16 +613,48 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisi_completo'];
     if (manual && manual.trim().length > 0) return manual;
 
+    // ✅ Obtener grupos AISI directamente desde signals
+    const gruposAISI = this.aisiGroups();
+    // ✅ Incluir TODOS los distritos que tengan nombre, incluso los que empiezan con "Distrito"
+    // Solo filtrar los que están vacíos o son placeholders sin nombre asignado
+    const distritosNombres = gruposAISI
+      .map(g => g.nombre?.trim())
+      .filter(nombre => nombre && nombre !== '' && nombre !== 'Distrito');
+
     const datos = this.projectFacade.obtenerDatos();
     const geoInfo = datos?.['geoInfo'] || {};
-    const centroPoblado = geoInfo.DIST || '____';
-    const distrito = geoInfo.DIST || '____';
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
+    const manualClass = this.dataHighlightService.getManualClass();
 
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${highlightClass}">${centroPoblado}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    // Formatear lista de distritos
+    let textoDistritos = '____';
+    if (distritosNombres.length === 1) {
+      textoDistritos = distritosNombres[0];
+    } else if (distritosNombres.length === 2) {
+      textoDistritos = `${distritosNombres[0]} y ${distritosNombres[1]}`;
+    } else if (distritosNombres.length > 2) {
+      const ultimo = distritosNombres[distritosNombres.length - 1];
+      const anteriores = distritosNombres.slice(0, -1).join(', ');
+      textoDistritos = `${anteriores} y ${ultimo}`;
+    }
+
+    // Aplicar clase de resaltado si hay distritos cargados
+    const distritosClass = distritosNombres.length > 0 
+      ? `${manualClass} has-data`
+      : highlightClass;
+
+    // Generar texto según cantidad de distritos
+    if (distritosNombres.length === 1) {
+      return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${distritosClass}">${textoDistritos}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    } else if (distritosNombres.length > 1) {
+      return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por los distritos de <span class="${distritosClass}">${textoDistritos}</span>, capitales distritales de sus respectivas jurisdicciones, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que estas localidades son los centros políticos de las jurisdicciones donde se ubica el Proyecto, así como al hecho de que mantienen una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, son las localidades de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    }
+
+    // Fallback si no hay distritos
+    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${highlightClass}">____</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
   }
 
   /**

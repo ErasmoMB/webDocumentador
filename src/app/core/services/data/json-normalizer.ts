@@ -382,8 +382,8 @@ export function createRegisterCCPPCommand(result: NormalizedJSONResult): Registe
  * Crea AddGroupCommands desde el resultado normalizado
  */
 export function createGroupCommands(result: NormalizedJSONResult): AddGroupCommand[] {
-  return result.groups.map(group => ({
-    type: 'groupConfig/addGroup',
+  const commands = result.groups.map(group => ({
+    type: 'groupConfig/addGroup' as const,
     payload: {
       tipo: group.tipo,
       nombre: group.nombre,
@@ -391,6 +391,11 @@ export function createGroupCommands(result: NormalizedJSONResult): AddGroupComma
       ccppIds: [...group.ccppIds]
     }
   }));
+  
+  console.log('🔧 [createGroupCommands] Creando', commands.length, 'comandos de grupos:', 
+    commands.map(c => `${c.payload.tipo}: ${c.payload.nombre} (${c.payload.ccppIds.length} centros)`));
+  
+  return commands;
 }
 
 /**

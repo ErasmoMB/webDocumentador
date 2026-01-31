@@ -607,16 +607,33 @@ export class ProjectStateFacade {
     }
     
     // Extraer grupos AISD desde groupConfig
+    // ✅ Solo sobrescribir si hay grupos en el store, de lo contrario mantener los de localStorage
     if (state.groupConfig?.aisd && state.groupConfig.aisd.length > 0) {
       result['grupoAISD'] = state.groupConfig.aisd[0]?.nombre || '';
       result['gruposAISD'] = state.groupConfig.aisd.map((g: any) => g.nombre);
+      // ✅ CRÍTICO: Extraer comunidadesCampesinas en el mismo formato que distritosAISI
+      result['comunidadesCampesinas'] = state.groupConfig.aisd.map((g: any) => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
+      }));
     }
+    // ✅ Si no hay grupos AISD en el store pero sí hay en localStorage, mantener los de localStorage
+    // (ya fueron asignados en la línea 598)
     
     // Extraer grupos AISI (distritos) desde groupConfig
+    // ✅ Solo sobrescribir si hay grupos en el store, de lo contrario mantener los de localStorage
     if (state.groupConfig?.aisi && state.groupConfig.aisi.length > 0) {
-      result['distritosAISI'] = state.groupConfig.aisi;
+      result['distritosAISI'] = state.groupConfig.aisi.map((g: any) => ({
+        id: g.id,
+        nombre: g.nombre,
+        nombreOriginal: g.nombre,
+        centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
+      }));
       result['distritoSeleccionado'] = state.groupConfig.aisi[0]?.nombre || '';
     }
+    // ✅ Si no hay grupos AISI en el store pero sí hay en localStorage, mantener los de localStorage
+    // (ya fueron asignados en la línea 598)
     
     // Extraer ubicación desde globalRegistry
     if (state.globalRegistry?.ubicacion) {
