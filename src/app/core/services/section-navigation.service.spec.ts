@@ -43,11 +43,11 @@ describe('SectionNavigationService', () => {
       }]
     };
 
-    // Build a custom order including a blocked marker
+    // Build a custom order including a blocked marker (3.1.3 y 3.1.3.A son la misma sección)
     spyOn(service, 'obtenerTodasLasSecciones').and.returnValue([
       '3.1.1',
       '3.1.2.A',
-      '3.1.3.A',
+      '3.1.3',
       '3.1.4.A',
       '3.1.4.A.1.blocked',
       '3.1.4.A.1.2'
@@ -63,7 +63,7 @@ describe('SectionNavigationService', () => {
     spyOn(service, 'obtenerTodasLasSecciones').and.returnValue([
       '3.1.1',
       '3.1.2.A',
-      '3.1.3.A',
+      '3.1.3',
       '3.1.4.A.blocked',
       '3.1.4.A.1.1'
     ]);
@@ -73,6 +73,6 @@ describe('SectionNavigationService', () => {
     });
 
     const prev = service.obtenerSeccionAnterior('3.1.4.A.1.1', baseDatos);
-    expect(prev).toBe('3.1.3.A');
+    expect(prev).toBe('3.1.3');
   });
 });

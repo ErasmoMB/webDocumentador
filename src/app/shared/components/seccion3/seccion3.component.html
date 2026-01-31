@@ -1,10 +1,8 @@
-<!-- ✅ REFACTORIZADO: Seccion3Component con Clean Architecture -->
-<!-- VISTA (cuando modoFormulario = false) -->
 <div *ngIf="!modoFormulario">
 <h3>3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral
     y otros similares</h3>
-<div *ngIf="viewModel$ | async as vm">
-  <div *ngIf="vm.data.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(vm.data.parrafoSeccion3_metodologia)"></div>
+<div>
+  <div *ngIf="viewModel().data.parrafoSeccion3_metodologia; else metodologiaDefault" class="text-justify" [innerHTML]="formatearParrafo(viewModel().data.parrafoSeccion3_metodologia)"></div>
   <ng-template #metodologiaDefault>
       <p class="text-justify">Para la descripción del aspecto socioeconómico se ha utilizado
           una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado
@@ -16,18 +14,18 @@
           otros.</p>
   </ng-template>
   <h4>A. Fuentes primarias</h4>
-  <div *ngIf="vm.data.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(vm.data.parrafoSeccion3_fuentes_primarias)"></div>
+  <div *ngIf="viewModel().data.parrafoSeccion3_fuentes_primarias; else fuentesPrimariasDefault" class="text-justify" [innerHTML]="formatearParrafo(viewModel().data.parrafoSeccion3_fuentes_primarias)"></div>
   <ng-template #fuentesPrimariasDefault>
-      <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ vm.data.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
+      <p class="text-justify">Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ viewModel().data.cantidadEntrevistas || '____' }}</span> entrevistas en profundidad a informantes calificados y autoridades locales.</p>
   </ng-template>
   <p class="text-justify">A continuación, se muestra en el siguiente cuadro los cargos u
-      ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ vm.data.cantidadEntrevistas || '____' }}</span>
+      ocupaciones principales de las <span [appDataSource]="getDataSourceType('cantidadEntrevistas')" [fieldName]="'cantidadEntrevistas'">{{ viewModel().data.cantidadEntrevistas || '____' }}</span>
       autoridades e
       informantes que fueron entrevistados durante el trabajo de campo llevado a cabo en el mes de <span
-          [appDataSource]="getDataSourceType('fechaTrabajoCampo')" [fieldName]="'fechaTrabajoCampo'">{{ vm.data.fechaTrabajoCampo || '____' }}</span>. </p>
+          [appDataSource]="getDataSourceType('fechaTrabajoCampo')" [fieldName]="'fechaTrabajoCampo'">{{ viewModel().data.fechaTrabajoCampo || '____' }}</span>. </p>
   <app-table-wrapper title="Lista de entrevistados" sectionId="3.1.3">
     <app-generic-table
-      [data]="vm.data.entrevistados || []"
+      [data]="viewModel().data.entrevistados || []"
       [config]="{
         columns: [
           { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' },
@@ -40,11 +38,11 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')" [fieldName]="'consultora'">{{ vm.data.consultora || 'GEADES (2024)' }}</span></p>
+  <p class="text-justify">Fuente: <span [appDataSource]="getDataSourceType('consultora')" [fieldName]="'consultora'">{{ viewModel().data.consultora || 'GEADES (2024)' }}</span></p>
   <h4>B. Fuentes secundarias</h4>
   <div class="text-justify" [innerHTML]="formatearParrafo(obtenerIntroFuentes())"></div>
-  <ul *ngIf="vm.data.fuentesSecundariasLista && vm.data.fuentesSecundariasLista.length > 0">
-      <li class="list-item" *ngFor="let fuente of vm.data.fuentesSecundariasLista">{{ fuente }}</li>
+  <ul *ngIf="viewModel().data.fuentesSecundariasLista && viewModel().data.fuentesSecundariasLista.length > 0">
+      <li class="list-item" *ngFor="let fuente of viewModel().data.fuentesSecundariasLista">{{ fuente }}</li>
   </ul>
 
 <app-image-upload
@@ -59,9 +57,8 @@
 </app-image-upload>
 </div>
 
-<!-- FORMULARIO BÁSICO (cuando modoFormulario = true) -->
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
-  <div *ngIf="viewModel$ | async as vm" class="form-group-section">
+  <div class="form-group-section">
     <h4 class="section-title" style="margin-top: 20px;">Editar Párrafos</h4>
 
     <app-paragraph-editor
@@ -69,7 +66,7 @@
       label="Metodología"
       hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
       [rows]="3"
-      [value]="vm.data.parrafoSeccion3_metodologia || ''"
+      [value]="viewModel().data.parrafoSeccion3_metodologia || ''"
       (valueChange)="onFieldChange('parrafoSeccion3_metodologia', $event)">
     </app-paragraph-editor>
 
@@ -78,7 +75,7 @@
       label="A. Fuentes Primarias"
       hint="Edite el texto completo. El número de entrevistas se agregará automáticamente. Deje vacío para usar el texto por defecto."
       [rows]="3"
-      [value]="vm.data.parrafoSeccion3_fuentes_primarias || ''"
+      [value]="viewModel().data.parrafoSeccion3_fuentes_primarias || ''"
       (valueChange)="onFieldChange('parrafoSeccion3_fuentes_primarias', $event)">
     </app-paragraph-editor>
 
@@ -87,7 +84,7 @@
       label="B. Fuentes Secundarias - Texto Introductorio"
       hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
       [rows]="2"
-      [value]="vm.data.parrafoSeccion3_fuentes_secundarias || ''"
+      [value]="viewModel().data.parrafoSeccion3_fuentes_secundarias || ''"
       (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
     </app-paragraph-editor>
 

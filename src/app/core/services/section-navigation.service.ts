@@ -13,8 +13,13 @@ export class SectionNavigationService {
     private validationService: SectionReferenceValidationService
   ) {}
 
+  /**
+   * 3.1.3, 3.1.3.A y 3.1.3.B comparten la misma vista (sección 3); en el flujo Anterior/Siguiente se tratan como una sola.
+   */
   normalizarSeccionId(seccionId: string): string {
-    // No normalizar, permitir que cada seccion tenga su propio flujo
+    if (seccionId === '3.1.3.A' || seccionId === '3.1.3.B') {
+      return '3.1.3';
+    }
     return seccionId;
   }
 
@@ -29,7 +34,7 @@ export class SectionNavigationService {
     const secciones: string[] = [
       '3.1.1',
       '3.1.2.A',
-      '3.1.3.A',
+      '3.1.3',
       '3.1.4.A'
     ];
 
@@ -69,7 +74,8 @@ export class SectionNavigationService {
 
   obtenerSeccionAnterior(seccionId: string, datos: FormularioDatos): string | null {
     const secciones = this.obtenerTodasLasSecciones(datos);
-    let index = secciones.indexOf(seccionId);
+    const idParaIndice = this.normalizarSeccionId(seccionId);
+    let index = secciones.indexOf(idParaIndice);
 
     if (index === -1) {
       return null;
@@ -92,7 +98,8 @@ export class SectionNavigationService {
 
   obtenerSeccionSiguiente(seccionId: string, datos: FormularioDatos): string | null {
     const secciones = this.obtenerTodasLasSecciones(datos);
-    let index = secciones.indexOf(seccionId);
+    const idParaIndice = this.normalizarSeccionId(seccionId);
+    let index = secciones.indexOf(idParaIndice);
 
     if (index === -1) {
       return null;
@@ -118,9 +125,9 @@ export class SectionNavigationService {
     puedeIrSiguiente: boolean; 
     esUltimaSeccion: boolean 
   } {
-    const seccionNormalizada = this.normalizarSeccionId(seccionId);
+    const idParaIndice = this.normalizarSeccionId(seccionId);
     const secciones = this.obtenerTodasLasSecciones(datos);
-    const index = secciones.indexOf(seccionNormalizada);
+    const index = secciones.indexOf(idParaIndice);
     const anterior = this.obtenerSeccionAnterior(seccionId, datos);
     const siguiente = this.obtenerSeccionSiguiente(seccionId, datos);
 

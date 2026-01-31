@@ -213,6 +213,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.geoInfo = this.datos['geoInfo'] || {};
     this.jsonFileName = this.datos['jsonFileName'] || '';
     this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
+    this.sincronizarStoreConDatosPersistidos();
     this.actualizarEstadoNavegacion();
     this.scrollRealizado = false;
 
@@ -804,8 +805,29 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mobileViewMode = this.mobileViewMode === 'preview' ? 'form' : 'preview';
   }
 
+  /**
+   * Sincroniza el store (fields) con los datos persistidos en localStorage
+   * para que los formularios que leen por signals vean los datos al cargar/recargar.
+   */
+  private sincronizarStoreConDatosPersistidos(): void {
+    const seccionFields = this.fieldMapping.getFieldsForSection(this.seccionId);
+    if (!seccionFields?.length) return;
+    const sectionData: Record<string, any> = {};
+    for (const field of seccionFields) {
+      const value = (this.datos as Record<string, any>)[field];
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value) && value.length === 0) continue;
+        sectionData[field] = value;
+      }
+    }
+    if (Object.keys(sectionData).length > 0) {
+      this.projectFacade.setFields(this.seccionId, null, sectionData);
+    }
+  }
+
   actualizarEstadoNavegacion() {
-    const estado = this.navigationService.actualizarEstadoNavegacion(this.seccionId, this.datos);
+    const datosActualizados = this.projectFacade.obtenerDatos() as FormularioDatos;
+    const estado = this.navigationService.actualizarEstadoNavegacion(this.seccionId, datosActualizados);
     this.puedeIrAnterior = estado.puedeIrAnterior;
     this.puedeIrSiguiente = estado.puedeIrSiguiente;
     this.esUltimaSeccion = estado.esUltimaSeccion;
@@ -1270,8 +1292,21 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const prefijoSeccion = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
       const camposConPrefijos = ['textoPoblacionSexoAISD', 'poblacionSexoAISD', 'textoPoblacionEtarioAISD', 'poblacionEtarioAISD', 'tablaAISD2TotalPoblacion', 'grupoAISD'];
+      
+      // Campos que NO se deben llenar con datos de prueba (mantienen texto por defecto o se gestionan manualmente)
+      const camposExcluidos = [
+        'parrafoSeccion3_metodologia',
+        'parrafoSeccion3_fuentes_primarias',
+        'parrafoSeccion3_fuentes_secundarias',
+        'fuentesSecundariasLista'
+      ];
 
       seccionFields.forEach(field => {
+        // Saltar campos excluidos
+        if (camposExcluidos.includes(field)) {
+          return;
+        }
+        
         const campoFinal = (prefijoSeccion && camposConPrefijos.includes(field)) ? `${field}${prefijoSeccion}` : field;
         const valorActual = (datosActuales as any)[campoFinal] || (datosActuales as any)[field];
         
@@ -1473,6 +1508,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (Object.keys(updates).length > 0) {
         this.formChange.persistFields(this.seccionId, 'form', updates);
+        this.projectFacade.setFields(this.seccionId, null, updates);
       }
       
       this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
@@ -1480,6 +1516,12 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
 
       this.stateAdapter.setDatos(this.datos);
+      
+      // Sincronizar de inmediato el formulario de sección 3 para que el cuadro de entrevistados se vea sin recargar
+      const esSeccion3 = this.seccionId === '3.1.3' || this.seccionId === '3.1.3.A' || this.seccionId === '3.1.3.B';
+      if (esSeccion3 && this.formComponentRef?.instance?.sincronizarDesdeStore) {
+        setTimeout(() => this.formComponentRef?.instance?.sincronizarDesdeStore(), 0);
+      }
       
       setTimeout(() => {
         this.actualizarComponenteSeccion();

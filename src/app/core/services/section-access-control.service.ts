@@ -88,7 +88,7 @@ export class SectionAccessControlService {
         const available: string[] = [];
 
         // Secciones sin restricción siempre disponibles
-        available.push('3.1.1', '3.1.2.A', '3.1.3.A');
+        available.push('3.1.1', '3.1.2.A', '3.1.3', '3.1.3.A');
 
         // Secciones AISD
         if (config?.aisd && validation.hasAISD) {

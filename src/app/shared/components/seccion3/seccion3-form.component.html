@@ -93,12 +93,13 @@
     <div class="form-group-section mt-lg">
       <h4 class="section-title">Lista de Fuentes Secundarias</h4>
     
-      <div class="form-field fuente-item" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index">
+      <div class="form-field fuente-item" *ngFor="let fuente of obtenerListaFuentesSecundarias(); let i = index; trackBy: trackByIndex">
         <input 
           type="text" 
           class="input" 
           [value]="fuente"
-          (input)="actualizarFuenteSecundaria(i, $any($event.target).value)">
+          (blur)="actualizarFuenteSecundaria(i, $any($event.target).value)"
+          (keyup.enter)="actualizarFuenteSecundaria(i, $any($event.target).value); $any($event.target).blur()">
         <button 
           type="button" 
           class="btn btn-danger" 
@@ -116,6 +117,26 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <div class="form-field" style="margin-top: 20px;">
+    <label class="label">Fotografías</label>
+    <app-image-upload
+      [fotografias]="fotografias"
+      [sectionId]="seccionId"
+      [photoPrefix]="photoPrefix"
+      [permitirMultiples]="true"
+      [key]="key"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Fotografía de la sección 3"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Sección 3"
+      fuenteDefault="GEADES, 2024"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasChange($event)">
+    </app-image-upload>
   </div>
 
   <!-- Edición de Párrafos e Imágenes (del componente base) -->

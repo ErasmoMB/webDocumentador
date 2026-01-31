@@ -3,11 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Seccion3Component } from './seccion3.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 
-/**
- * Componente de VISTA para Sección 3
- * Solo muestra contenido (sin formularios)
- * Responsabilidad única: Presentación de datos
- */
 @Component({
     imports: [
         CommonModule,
@@ -24,6 +19,5 @@ export class Seccion3ViewComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
-    // El componente hijo se inicializa automáticamente
   }
 }
