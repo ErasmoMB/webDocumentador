@@ -27,14 +27,14 @@
 <!-- ✅ A. AISD - Grupos Identificados Automáticamente del JSON -->
 <h4>A. Áreas de influencia social directa (AISD)</h4>
 
-<!-- Mostrar párrafo AISD: usar propiedad cacheada -->
-<div class="text-justify" [innerHTML]="textoAISDFormateado"></div>
+<!-- Mostrar párrafo AISD: usar signal derivado -->
+<div class="text-justify" [innerHTML]="textoAISDFormateado()"></div>
 
 <!-- ✅ B. AISI - Grupos Identificados de Valores DIST Únicos -->
 <h4>B. Áreas de influencia social indirecta (AISI)</h4>
 
-<!-- Mostrar párrafo AISI: usar propiedad cacheada -->
-<div class="text-justify" [innerHTML]="textoAISIFormateado"></div>
+<!-- Mostrar párrafo AISI: usar signal derivado -->
+<div class="text-justify" [innerHTML]="textoAISIFormateado()"></div>
 
 <app-image-upload
     [modoVista]="true"
