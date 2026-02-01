@@ -71,14 +71,22 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
       const fuentesSecundariasLista = this.fuentesSecundariasListaSignal();
       const entrevistados = this.entrevistadosSignal();
       
+      console.log(`🔄 [Seccion3] effect re-ejecutado - fuentesSecundariasLista del signal:`, fuentesSecundariasLista);
+      
       const formDataCopy = { ...formData };
       
-      const entrevistadosLocales = this.formData?.['entrevistados'];
-      if (Array.isArray(entrevistadosLocales) && entrevistadosLocales.length > 0) {
-        formDataCopy['entrevistados'] = [...entrevistadosLocales];
-      } else if (Array.isArray(entrevistados) && entrevistados.length > 0) {
-        formDataCopy['entrevistados'] = [...entrevistados];
-      }
+      // ✅ CRÍTICO: SIEMPRE actualizar desde los signals (prioridad del estado)
+      // Esto asegura que los cambios se reflejen inmediatamente
+      formDataCopy['entrevistados'] = Array.isArray(entrevistados) && entrevistados.length > 0 
+        ? [...entrevistados] 
+        : formDataCopy['entrevistados'] || [];
+      
+      // ✅ SINCRONIZAR FUENTES SECUNDARIAS desde el signal
+      formDataCopy['fuentesSecundariasLista'] = Array.isArray(fuentesSecundariasLista) && fuentesSecundariasLista.length > 0
+        ? [...fuentesSecundariasLista]
+        : [];
+      
+      console.log(`🔄 [Seccion3] formData.fuentesSecundariasLista actualizado:`, formDataCopy['fuentesSecundariasLista']);
       
       this.formData = formDataCopy;
       this.fuentesSecundarias = this.fuentesManagement.inicializarFuentes(formData);
@@ -125,38 +133,74 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
 
   actualizarFuenteSecundaria(index: number, valor: string): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    console.log(`📝 [Seccion3] actualizarFuenteSecundaria() - índice: ${index}, valor: "${valor}"`);
+    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
+    
     if (listaActual[index] !== valor) {
       listaActual[index] = valor;
+      console.log(`📝 [Seccion3] listaActual después:`, listaActual);
+      
       this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
+      console.log(`✅ [Seccion3] setField() llamado`);
+      
       this.formChange.persistFields(this.seccionId, 'form', { 
         fuentesSecundariasLista: listaActual 
       });
+      console.log(`✅ [Seccion3] persistFields() llamado`);
+      
       this.cdRef.markForCheck();
+      console.log(`✅ [Seccion3] markForCheck() llamado`);
     }
   }
 
   eliminarFuenteSecundaria(index: number): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    console.log(`📝 [Seccion3] eliminarFuenteSecundaria() - índice: ${index}`);
+    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
+    
     listaActual.splice(index, 1);
+    console.log(`📝 [Seccion3] listaActual después:`, listaActual);
+    
     this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
+    console.log(`✅ [Seccion3] setField() llamado`);
+    
     this.formChange.persistFields(this.seccionId, 'form', { 
       fuentesSecundariasLista: listaActual 
     });
+    console.log(`✅ [Seccion3] persistFields() llamado`);
+    
     this.cdRef.markForCheck();
+    console.log(`✅ [Seccion3] markForCheck() llamado`);
   }
 
   agregarFuenteSecundaria(): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    console.log(`📝 [Seccion3] agregarFuenteSecundaria()`);
+    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
+    
     listaActual.push('');
+    console.log(`📝 [Seccion3] listaActual después:`, listaActual);
+    
     this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
+    console.log(`✅ [Seccion3] setField() llamado`);
+    
     this.formChange.persistFields(this.seccionId, 'form', { 
       fuentesSecundariasLista: listaActual 
     });
+    console.log(`✅ [Seccion3] persistFields() llamado`);
+    
     this.cdRef.markForCheck();
+    console.log(`✅ [Seccion3] markForCheck() llamado`);
   }
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  trackByFuente(index: number, fuente: string): string {
+    // Track por el contenido de la fuente, no por índice
+    // Esto asegura que Angular re-renderiza correctamente cuando se elimina
+    return fuente || `empty-${index}`;
   }
 
   obtenerTablaEntrevistados(): any[] {
@@ -179,13 +223,21 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   }
 
   onTablaUpdated(): void {
+    console.log(`📝 [Seccion3] onTablaUpdated() llamado`);
+    console.log(`📝 [Seccion3] formData.entrevistados antes:`, this.formData.entrevistados);
+    
     setTimeout(() => {
       const entrevistados = this.formData.entrevistados || [];
+      console.log(`📝 [Seccion3] entrevistados a guardar:`, entrevistados);
+      
       if (Array.isArray(entrevistados)) {
         // ✅ Usar setTableData() para tablas, que es el comando apropiado
         this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistados);
+        console.log(`✅ [Seccion3] setTableData() llamado con ${entrevistados.length} filas`);
+        
         // Persistir también en FormularioService (legacy storage)
         this.formChange.persistFields(this.seccionId, 'form', { entrevistados });
+        console.log(`✅ [Seccion3] persistFields() llamado`);
       }
       this.cdRef.markForCheck();
     }, 0);

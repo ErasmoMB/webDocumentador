@@ -72,22 +72,29 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     if (this.isProcessingPipeline) return;
     this.isProcessingPipeline = true;
     try {
-      this.llenarTablaAutomaticamenteSiNecesario();
+      this.autoLlenarTablas();
       this.cargarTodosLosGrupos();
     } finally {
       this.isProcessingPipeline = false;
     }
   }
 
-  private llenarTablaAutomaticamenteSiNecesario(): void {
+  /** Auto-llena las tablas AISD1 y AISD2 si están vacías o desincronizadas */
+  private autoLlenarTablas(): void {
     const prefijo = this.obtenerPrefijoGrupo();
-    const flagKey = `tablaAISD2DatosLlena${prefijo}`;
-    const dataKey = `tablaAISD2Datos${prefijo}`;
+    const dataKeyA2 = `tablaAISD2Datos${prefijo}`;
+    const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
     
-    if (!prefijo?.startsWith('_A') || this.datos[flagKey]) return;
+    if (!prefijo?.startsWith('_A')) return;
 
     const codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
     if (!codigosComunidad || codigosComunidad.length === 0) return;
+
+    const tablaA2Actual = this.datos[dataKeyA2];
+    const filasActuales = Array.isArray(tablaA2Actual) ? tablaA2Actual.length : 0;
+    
+    // ✅ Sincronizar solo si hay diferencia entre filas actuales y códigos seleccionados
+    if (filasActuales === codigosComunidad.length && filasActuales > 0) return;
 
     const jsonCompleto = this.datos['jsonCompleto'];
     if (!jsonCompleto) return;
@@ -104,10 +111,10 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
         viviendasOcupadas: '0'
       }));
       
-      this.onFieldChange(dataKey as any, filas, { refresh: false });
-      this.onFieldChange(flagKey as any, true, { refresh: false });
+      // ✅ SIEMPRE guardar con prefijo
+      this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
 
-      const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
+      // Llenar tabla A1 (Capital) - también con prefijo
       const actualA1 = this.datos[dataKeyA1] || [];
       if (actualA1.length === 0 || (actualA1.length === 1 && !actualA1[0].localidad)) {
         const nombreComunidad = this.obtenerNombreComunidad();

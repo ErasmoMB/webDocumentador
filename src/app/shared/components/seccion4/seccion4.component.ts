@@ -57,18 +57,17 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     this.formDataSignal = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
     this.tablaAISD1Signal = computed(() => {
-      const a1 = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD1Datos_A1')();
-      const a2 = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD1Datos_A2')();
-      const base = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD1Datos')();
-      const arr = Array.isArray(a1) && a1.length > 0 ? a1 : (Array.isArray(a2) && a2.length > 0 ? a2 : (Array.isArray(base) ? base : []));
-      return arr;
+      // ✅ SIEMPRE leer con prefijo. Sin fallbacks a versiones sin prefijo.
+      const prefijo = this.obtenerPrefijoGrupo();
+      const conPrefijo = this.projectFacade.selectField(this.seccionId, null, `tablaAISD1Datos${prefijo}`)();
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
     });
+
     this.tablaAISD2Signal = computed(() => {
-      const a1 = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD2Datos_A1')();
-      const a2 = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD2Datos_A2')();
-      const base = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD2Datos')();
-      const arr = Array.isArray(a1) && a1.length > 0 ? a1 : (Array.isArray(a2) && a2.length > 0 ? a2 : (Array.isArray(base) ? base : []));
-      return arr;
+      // ✅ SIEMPRE leer con prefijo. Sin fallbacks a versiones sin prefijo.
+      const prefijo = this.obtenerPrefijoGrupo();
+      const conPrefijo = this.projectFacade.selectField(this.seccionId, null, `tablaAISD2Datos${prefijo}`)();
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
     });
 
     this.photoFieldsHash = computed(() => {
@@ -89,10 +88,11 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       const legacyData = this.projectFacade.obtenerDatos();
       const data = { ...legacyData, ...sectionData };
       const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-      const fromStore1 = this.tablaAISD1Signal();
-      const fromStore2 = this.tablaAISD2Signal();
-      const tablaAISD1 = (Array.isArray(fromStore1) && fromStore1.length > 0) ? fromStore1 : (data['tablaAISD1Datos'] ?? data['tablaAISD1Datos_A1'] ?? data['tablaAISD1Datos_A2'] ?? []);
-      const tablaAISD2 = (Array.isArray(fromStore2) && fromStore2.length > 0) ? fromStore2 : (data['tablaAISD2Datos'] ?? data['tablaAISD2Datos_A1'] ?? data['tablaAISD2Datos_A2'] ?? []);
+      
+      // ✅ SIEMPRE usar datos con prefijo. Sin fallbacks.
+      const tablaAISD1 = this.tablaAISD1Signal();
+      const tablaAISD2 = this.tablaAISD2Signal();
+      
       const totales = this.dataSrv.calcularTotalesAISD2(Array.isArray(tablaAISD2) ? tablaAISD2 : []);
       return {
         data: {
