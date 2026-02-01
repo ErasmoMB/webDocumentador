@@ -151,6 +151,7 @@ export class Seccion9Component extends AutoLoadSectionComponent implements OnDes
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   protected override applyLoadedData(loadedData: { [fieldName: string]: any }): void {

@@ -1,0 +1,75 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.9. Indicadores de educación</h4>
+    
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="parrafoSeccion30_indicadores_educacion_intro"
+        label="Introducción - Indicadores de Educación"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="datos['parrafoSeccion30_indicadores_educacion_intro'] || ''"
+        (valueChange)="onFieldChange('parrafoSeccion30_indicadores_educacion_intro', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoNivelEducativo"
+        label="Nivel Educativo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="datos['textoNivelEducativo'] || ''"
+        (valueChange)="onFieldChange('textoNivelEducativo', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoTasaAnalfabetismo"
+        label="Tasa de Analfabetismo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="3"
+        [value]="datos['textoTasaAnalfabetismo'] || ''"
+        (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field mt-xl">
+      <label class="label">Tabla Población de 15 años a más según nivel educativo alcanzado</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="nivelEducativoDynamicConfig"
+          (tableUpdated)="onNivelEducativoTableUpdated()">
+        </app-dynamic-table>
+    </div>
+
+    <div class="form-field mt-xl">
+      <label class="label">Tabla Tasa de analfabetismo en población de 15 años a más</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="tasaAnalfabetismoDynamicConfig"
+          (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
+        </app-dynamic-table>
+    </div>
+
+    <div class="form-field mt-lg">
+      <label class="label">Fotografías de Indicadores de educación</label>
+      <app-image-upload
+        [fotografias]="fotografiasCache"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Indicadores de educación"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Indicadores de educación"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

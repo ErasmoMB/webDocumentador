@@ -620,6 +620,7 @@ export class Seccion10Component extends AutoLoadSectionComponent implements OnDe
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   private recalcularPorcentajesSiHayDatos(): void {

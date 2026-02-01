@@ -1,0 +1,58 @@
+<div>
+  <h5>B.1.9. Indicadores de educación</h5>
+  <div *ngIf="datos['parrafoSeccion30_indicadores_educacion_intro']; else indicadoresEducacionIntroDefault" class="text-justify" [innerHTML]="datos['parrafoSeccion30_indicadores_educacion_intro']"></div>
+  <ng-template #indicadoresEducacionIntroDefault>
+    <p class="text-justify">La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.</p>
+  </ng-template>
+
+  <p class="mt-lg mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
+  <p class="text-justify">En el CP <span>{{ datos['centroPobladoAISI'] || '____' }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria, pues representan el <span>{{ datos['porcentajeMayoritarioNivel'] || '____' }}</span>. En segundo lugar, se hallan aquellos que cuentan con primaria (<span>{{ datos['porcentajeSegundoNivel'] || '____' }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos sin nivel educativo o que solo alcanzaron el inicial, con un <span>{{ datos['porcentajeMinoritarioNivel'] || '____' }}</span>.</p>
+
+  <app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CP {{ datos['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
+    <app-generic-table
+      [data]="datos['nivelEducativoTabla'] || []"
+      [config]="{
+        columns: [
+          { key: 'nivel', header: 'Nivel Educativo', width: '50%' },
+          { key: 'casos', header: 'Casos', width: '25%', align: 'center' },
+          { key: 'porcentaje', header: 'Porcentaje', width: '25%', align: 'center' }
+        ],
+        showHeader: true,
+        showFooter: false
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+
+  <p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
+  <p class="text-justify">En el CP <span>{{ datos['centroPobladoAISI'] || '____' }}</span>, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de <span>{{ datos['cantidadAnalfabetos'] || '____' }}</span>. Esto representa una tasa de analfabetismo del <span>{{ datos['tasaAnalfabetismo'] || '____' }}<span *ngIf="datos['tasaAnalfabetismo'] !== undefined && datos['tasaAnalfabetismo'] !== null">%</span></span> en esta localidad.</p>
+
+  <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CP {{ datos['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
+    <app-generic-table
+      [data]="datos['tasaAnalfabetismoTabla'] || []"
+      [config]="{
+        columns: [
+          { key: 'grupo', header: 'Grupo', width: '25%' },
+          { key: 'total', header: 'Total', width: '20%', align: 'center' },
+          { key: 'alfabetos', header: 'Alfabetos', width: '20%', align: 'center' },
+          { key: 'analfabetos', header: 'Analfabetos', width: '20%', align: 'center' },
+          { key: 'tasaAnalfabetismo', header: 'Tasa', width: '15%', align: 'center' }
+        ],
+        showHeader: true,
+        showFooter: false
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

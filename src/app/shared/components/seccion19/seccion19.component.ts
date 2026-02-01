@@ -77,6 +77,7 @@ export class Seccion19Component extends AutoLoadSectionComponent implements OnDe
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   getTablaKeyAutoridades(): string {

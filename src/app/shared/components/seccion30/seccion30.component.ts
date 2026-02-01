@@ -1,18 +1,19 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { LoadSeccion30UseCase, UpdateSeccion30DataUseCase, Seccion30ViewModel } from '../../../core/application/use-cases';
-import { Seccion30Data, NivelEducativoData, TasaAnalfabetismoData } from '../../../core/domain/entities';
+import { Seccion30Data } from '../../../core/domain/entities';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { GenericTableComponent, TableColumn, TableConfig } from '../generic-table/generic-table.component';
+import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 
 @Component({
   selector: 'app-seccion30',
-  standalone: true,
+  templateUrl: './seccion30.component.html',
   imports: [
     CommonModule,
     FormsModule,
@@ -22,48 +23,27 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
     ImageUploadComponent,
     CoreSharedModule
   ],
-  templateUrl: './seccion30.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  standalone: true
 })
 export class Seccion30Component implements OnInit, OnDestroy {
   @Input() seccionId: string = '3.1.4.B.1.9';
   @Input() modoFormulario: boolean = false;
 
-  // View model
   viewModel$!: Observable<Seccion30ViewModel>;
-  private subscription?: Subscription;
-
-  // Backward compatibility properties
-  fotografiasCahuachoB19FormMulti: FotoItem[] = [];
-  fotografiasInstitucionalidadCache: any[] = [];
+  private subscriptions: Subscription[] = [];
 
   readonly PHOTO_PREFIX_CAHUACHO_B19 = 'fotografiaCahuachoB19';
   readonly PHOTO_PREFIX = 'fotografiaCahuachoB19';
+  fotografiasCahuachoB19FormMulti: FotoItem[] = [];
 
-  // Table configurations
-  nivelEducativoConfig: TableConfig = {
-    columns: [
-      { key: 'nivel', header: 'Nivel Educativo', width: '50%' },
-      { key: 'casos', header: 'Casos', width: '25%', align: 'center' as const },
-      { key: 'porcentaje', header: 'Porcentaje', width: '25%', align: 'center' as const }
-    ],
-    showHeader: true,
-    showFooter: false
-  };
+  // Form data - properties that will be populated from ViewModel
+  centroPobladoAISI: string = '';
+  parrafoSeccion30_indicadores_educacion_intro: string = '';
+  nivelEducativoTabla: any[] = [];
+  tasaAnalfabetismoTabla: any[] = [];
+  textoNivelEducativo: string = '';
+  textoTasaAnalfabetismo: string = '';
 
-  tasaAnalfabetismoConfig: TableConfig = {
-    columns: [
-      { key: 'grupo', header: 'Grupo', width: '25%' },
-      { key: 'total', header: 'Total', width: '20%', align: 'center' as const },
-      { key: 'alfabetos', header: 'Alfabetos', width: '20%', align: 'center' as const },
-      { key: 'analfabetos', header: 'Analfabetos', width: '20%', align: 'center' as const },
-      { key: 'tasaAnalfabetismo', header: 'Tasa', width: '15%', align: 'center' as const }
-    ],
-    showHeader: true,
-    showFooter: false
-  };
-
-  // Dynamic table configurations for editing
   nivelEducativoDynamicConfig = {
     tablaKey: 'nivelEducativoTabla',
     totalKey: 'nivel',
@@ -84,86 +64,135 @@ export class Seccion30Component implements OnInit, OnDestroy {
   constructor(
     private loadSeccion30UseCase: LoadSeccion30UseCase,
     private updateSeccion30DataUseCase: UpdateSeccion30DataUseCase,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private projectFacade: ProjectStateFacade
   ) {}
 
   ngOnInit(): void {
     this.loadData();
+    this.loadFotografias();
+    this.logGrupoActual();
   }
 
   ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadData(): void {
     this.viewModel$ = this.loadSeccion30UseCase.execute();
-    this.subscription = this.viewModel$.subscribe(viewModel => {
-      this.updateFotografiasCache();
+    const subscription = this.viewModel$.subscribe(viewModel => {
+      this.centroPobladoAISI = viewModel.data.centroPobladoAISI || '';
+      this.parrafoSeccion30_indicadores_educacion_intro = viewModel.data.parrafoSeccion30_indicadores_educacion_intro || '';
+      this.nivelEducativoTabla = viewModel.data.nivelEducativoTabla || [];
+      this.tasaAnalfabetismoTabla = viewModel.data.tasaAnalfabetismoTabla || [];
+      this.textoNivelEducativo = viewModel.data.textoNivelEducativo || '';
+      this.textoTasaAnalfabetismo = viewModel.data.textoTasaAnalfabetismo || '';
       this.cdRef.detectChanges();
     });
+    this.subscriptions.push(subscription);
   }
 
-  // Backward compatibility getters
+  private loadFotografias(): void {
+    // TODO: Implement photo loading using PhotoService
+    this.fotografiasCahuachoB19FormMulti = [];
+  }
+
+  private logGrupoActual(): void {
+    const match = this.seccionId.match(/^3\.1\.4\.B\.(\d+)/);
+    if (!match) return;
+    
+    const numeroGrupo = parseInt(match[1], 10);
+    const datos = this.projectFacade.obtenerDatos();
+    
+    const distritos = datos['distritosAISI'] || [];
+    if (distritos.length === 0) {
+      console.log('%c⚠️ No hay distritos cargados. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    const distritoActual = distritos[numeroGrupo - 1];
+    if (!distritoActual) {
+      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}. Distritos disponibles: ${distritos.length}`, 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    console.clear();
+    console.log(`%c[DEBUG AISI] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
+    console.log(`%c🗺️ GRUPO AISI: B.${numeroGrupo} - ${distritoActual.nombre || 'Sin nombre'}`, 'color: #dc2626; font-weight: bold; font-size: 14px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #b91c1c; font-weight: bold');
+    
+    const centrosPobladosSeleccionados = distritoActual.centrosPobladosSeleccionados || [];
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      return;
+    }
+    
+    const jsonCompleto = datos['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      let encontrado = false;
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !encontrado) {
+            centrosDetalles.push(centro);
+            encontrado = true;
+          }
+        }
+      });
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    }
+  }
+
   get datos(): any {
-    // This will be populated by the view model subscription
-    let currentData: Seccion30Data | null = null;
-    this.subscription = this.viewModel$.subscribe(vm => currentData = vm.data);
-    return currentData || {};
+    return {
+      centroPobladoAISI: this.centroPobladoAISI,
+      parrafoSeccion30_indicadores_educacion_intro: this.parrafoSeccion30_indicadores_educacion_intro,
+      nivelEducativoTabla: this.nivelEducativoTabla,
+      tasaAnalfabetismoTabla: this.tasaAnalfabetismoTabla,
+      textoNivelEducativo: this.textoNivelEducativo,
+      textoTasaAnalfabetismo: this.textoTasaAnalfabetismo
+    };
   }
 
-  get centroPobladoAISI(): string {
-    return this.datos.centroPobladoAISI || 'Cahuacho';
+  get fotografiasInstitucionalidadCache(): FotoItem[] {
+    return this.fotografiasCahuachoB19FormMulti;
   }
 
-  get nivelEducativoTabla(): NivelEducativoData[] {
-    return this.datos.nivelEducativoTabla || [];
-  }
-
-  get tasaAnalfabetismoTabla(): TasaAnalfabetismoData[] {
-    return this.datos.tasaAnalfabetismoTabla || [];
-  }
-
-  get textoNivelEducativo(): string {
-    return this.datos.textoNivelEducativo || '';
-  }
-
-  get textoTasaAnalfabetismo(): string {
-    return this.datos.textoTasaAnalfabetismo || '';
-  }
-
-  // Event handlers
-  onFieldChange(field: keyof Seccion30Data, value: any): void {
+  // Template helper methods
+  onFieldChange(field: string, value: any): void {
     this.updateSeccion30DataUseCase.execute({ [field]: value }).subscribe();
   }
 
   onFotografiasChange(fotografias: FotoItem[]): void {
     this.fotografiasCahuachoB19FormMulti = fotografias;
-    // Update the data through use case
     this.updateSeccion30DataUseCase.execute({
       fotografiasCahuachoB19: fotografias
     }).subscribe();
   }
 
   onNivelEducativoTableUpdated(): void {
-    // Table updated, data is already persisted through the dynamic table
+    this.updateSeccion30DataUseCase.execute({
+      nivelEducativoTabla: this.nivelEducativoTabla
+    }).subscribe();
   }
 
   onTasaAnalfabetismoTableUpdated(): void {
-    // Table updated, data is already persisted through the dynamic table
-  }
-
-  // Backward compatibility methods
-  private updateFotografiasCache(): void {
-    // Update cache from current data
-    this.fotografiasInstitucionalidadCache = this.datos.fotografiasCahuachoB19 || [];
-  }
-
-  // Text getters for template compatibility
-  obtenerTextoNivelEducativo(): string {
-    return this.datos.textoNivelEducativo || '';
-  }
-
-  obtenerTextoTasaAnalfabetismo(): string {
-    return this.datos.textoTasaAnalfabetismo || '';
+    this.updateSeccion30DataUseCase.execute({
+      tasaAnalfabetismoTabla: this.tasaAnalfabetismoTabla
+    }).subscribe();
   }
 }
+

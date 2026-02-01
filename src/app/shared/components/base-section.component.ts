@@ -141,11 +141,15 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.bootstrapSectionState();
       if (this.useReactiveSync) this.initializeReactiveSync();
       this.initializeLegacyStateSync();
+      // Llamar a onInitCustom cuando cambia el seccionId para ejecutar lógica personalizada
+      this.onInitCustom();
     }
 
     if (changes['modoFormulario']) {
       // Reinicializar suscripción cuando cambia el modo
       this.initializeLegacyStateSync();
+      // Marcar para detección de cambios cuando modoFormulario cambia
+      this.cdRef.markForCheck();
     }
 
     if (changes['modoFormulario'] && !this.modoFormulario) {
@@ -475,5 +479,174 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       config,
       afterChange
     );
+  }
+
+  /**
+   * Log en consola del grupo AISD/AISI actual y sus centros poblados.
+   * Detecta automáticamente si es AISD (A.x) o AISI (B.x) según el seccionId.
+   * Funciona para cualquier subsección dentro del grupo (A.1.1, A.1.2, ..., A.1.16, etc.)
+   */
+  protected logGrupoActual(): void {
+    // Detectar si es AISD (A.x) o AISI (B.x)
+    const matchAISD = this.seccionId.match(/^3\.1\.4\.A\.(\d+)/);
+    const matchAISI = this.seccionId.match(/^3\.1\.4\.B\.(\d+)/);
+    
+    if (matchAISD) {
+      this.logGrupoAISD(parseInt(matchAISD[1], 10));
+    } else if (matchAISI) {
+      this.logGrupoAISI(parseInt(matchAISI[1], 10));
+    }
+  }
+
+  /**
+   * Log interno para grupo AISD
+   */
+  private logGrupoAISD(numeroGrupo: number): void {
+    const datos = this.projectFacade.obtenerDatos();
+    
+    console.log(`%c[DEBUG] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
+    console.log(`%c[DEBUG] Estructura de datos:`, 'color: #666; font-size: 12px');
+    console.log('- comunidadesCampesinas:', datos['comunidadesCampesinas']);
+    console.log('- centrosPobladosJSON:', datos['centrosPobladosJSON']);
+    console.log('- jsonCompleto:', datos['jsonCompleto']);
+    
+    const comunidades = datos['comunidadesCampesinas'] || [];
+    console.log(`%c[DEBUG] Total comunidades cargadas: ${comunidades.length}`, 'color: #999; font-size: 11px');
+    
+    if (comunidades.length === 0) {
+      console.log('%c⚠️ No hay comunidades cargadas. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    const comunidadActual = comunidades[numeroGrupo - 1];
+    console.log(`%c[DEBUG] Buscando comunidad en índice ${numeroGrupo - 1}:`, 'color: #999; font-size: 11px', comunidadActual);
+    
+    if (!comunidadActual) {
+      console.log(`%c⚠️ No existe comunidad A.${numeroGrupo}. Comunidades disponibles: ${comunidades.length}`, 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    console.log(`%c🏘️ GRUPO AISD: A.${numeroGrupo} - ${comunidadActual.nombre || 'Sin nombre'}`, 'color: #2563eb; font-weight: bold; font-size: 14px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #7c3aed; font-weight: bold');
+    
+    const centrosPobladosSeleccionados = comunidadActual.centrosPobladosSeleccionados || [];
+    console.log(`[DEBUG] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      console.log('%c[INFO] Debes asignar centros poblados a esta comunidad en la sección 2', 'color: #f59e0b; font-size: 11px');
+      return;
+    }
+    
+    const jsonCompleto = datos['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      let encontrado = false;
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !encontrado) {
+            centrosDetalles.push(centro);
+            encontrado = true;
+          }
+        }
+      });
+      
+      if (!encontrado) {
+        console.log(`  [DEBUG] Centro con código ${codigo} no encontrado en jsonCompleto`);
+      }
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    } else {
+      console.log('  (Sin centros poblados encontrados en el JSON)');
+    }
+  }
+
+  /**
+   * Log interno para grupo AISI
+   */
+  private logGrupoAISI(numeroGrupo: number): void {
+    const datos = this.projectFacade.obtenerDatos();
+    
+    console.clear();
+    
+    console.log(`%c[DEBUG AISI] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
+    console.log(`%c[DEBUG AISI] Estructura de datos:`, 'color: #666; font-size: 12px');
+    console.log('- distritosAISI:', datos['distritosAISI']);
+    console.log('- centrosPobladosJSON:', datos['centrosPobladosJSON']);
+    console.log('- jsonCompleto:', datos['jsonCompleto']);
+    
+    const distritos = datos['distritosAISI'] || [];
+    console.log(`%c[DEBUG AISI] Total distritos cargados: ${distritos.length}`, 'color: #999; font-size: 11px');
+    
+    if (distritos.length === 0) {
+      console.log('%c⚠️ No hay distritos cargados. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    const distritoActual = distritos[numeroGrupo - 1];
+    console.log(`%c[DEBUG AISI] Buscando distrito en índice ${numeroGrupo - 1}:`, 'color: #999; font-size: 11px', distritoActual);
+    
+    if (!distritoActual) {
+      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}. Distritos disponibles: ${distritos.length}`, 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    console.log(`%c🗺️ GRUPO AISI: B.${numeroGrupo} - ${distritoActual.nombre || 'Sin nombre'}`, 'color: #dc2626; font-weight: bold; font-size: 14px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #b91c1c; font-weight: bold');
+    
+    const centrosPobladosSeleccionados = distritoActual.centrosPobladosSeleccionados || [];
+    console.log(`[DEBUG AISI] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      console.log('%c[INFO AISI] Debes asignar centros poblados a este distrito en la sección 2', 'color: #f59e0b; font-size: 11px');
+      return;
+    }
+    
+    const jsonCompleto = datos['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      let encontrado = false;
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !encontrado) {
+            centrosDetalles.push(centro);
+            encontrado = true;
+          }
+        }
+      });
+      
+      if (!encontrado) {
+        console.log(`  [DEBUG AISI] Centro con código ${codigo} no encontrado en jsonCompleto`);
+      }
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    } else {
+      console.log('  (Sin centros poblados encontrados en el JSON)');
+    }
   }
 }

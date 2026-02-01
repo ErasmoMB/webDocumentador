@@ -100,6 +100,7 @@ export class Seccion18Component extends AutoLoadSectionComponent implements OnDe
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   override obtenerPrefijoGrupo(): string {

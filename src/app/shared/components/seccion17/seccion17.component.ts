@@ -64,6 +64,7 @@ export class Seccion17Component extends BaseSectionComponent implements OnDestro
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   getTotalPoblacion(): number {

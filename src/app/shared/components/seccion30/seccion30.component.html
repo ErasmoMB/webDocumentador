@@ -1,44 +1,65 @@
-<div *ngIf="viewModel$ | async as vm">
-  <div *ngIf="!modoFormulario">
-    <h5>B.1.9. Indicadores de educación</h5>
-    <div *ngIf="vm.data.parrafoSeccion30_indicadores_educacion_intro; else indicadoresEducacionIntroDefault" class="text-justify" [innerHTML]="vm.parrafoSeccion30_indicadores_educacion_intro"></div>
-    <ng-template #indicadoresEducacionIntroDefault>
-        <p class="text-justify">La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.</p>
-    </ng-template>
+<div *ngIf="!modoFormulario">
+  <h5>B.1.9. Indicadores de educación</h5>
+  <div *ngIf="datos.parrafoSeccion30_indicadores_educacion_intro; else indicadoresEducacionIntroDefault" class="text-justify" [innerHTML]="datos.parrafoSeccion30_indicadores_educacion_intro"></div>
+  <ng-template #indicadoresEducacionIntroDefault>
+    <p class="text-justify">La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.</p>
+  </ng-template>
 
-    <p class="mt-lg mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
-    <p class="text-justify">En el CP <span>{{ vm.data.centroPobladoAISI || '____' }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria, pues representan el <span>{{ vm.nivelMayoritario?.porcentaje || '____' }}</span>. En segundo lugar, se hallan aquellos que cuentan con primaria (<span>{{ vm.nivelSegundo?.porcentaje || '____' }}</span>). Por otro lado, la categoría minoritaria corresponde a aquellos sin nivel educativo o que solo alcanzaron el inicial, con un <span>{{ vm.nivelMinoritario?.porcentaje || '____' }}</span>.</p>
+  <p class="mt-lg mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
+  <p class="text-justify">En el CP <span>{{ datos.centroPobladoAISI || '____' }}</span>, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria. A continuación se presentan los datos de nivel educativo según el censo nacional.</p>
 
-    <app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CP {{ vm.data.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
-      <app-generic-table
-        [data]="vm.nivelEducativoAISIConPorcentajes"
-        [config]="nivelEducativoConfig">
-      </app-generic-table>
-    </app-table-wrapper>
-    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+  <app-table-wrapper title="Población de 15 años a más según nivel educativo alcanzado – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
+    <app-generic-table
+      [data]="datos.nivelEducativoTabla || []"
+      [config]="{
+        columns: [
+          { key: 'nivel', header: 'Nivel Educativo', width: '50%' },
+          { key: 'casos', header: 'Casos', width: '25%', align: 'center' },
+          { key: 'porcentaje', header: 'Porcentaje', width: '25%', align: 'center' }
+        ],
+        showHeader: true,
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
 
-    <p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
-    <p class="text-justify">En el CP <span>{{ vm.data.centroPobladoAISI || '____' }}</span>, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de <span>{{ vm.data['cantidadAnalfabetos'] || '____' }}</span>. Esto representa una tasa de analfabetismo del <span>{{ vm.data['tasaAnalfabetismo'] || '____' }}<span *ngIf="vm.data['tasaAnalfabetismo'] !== undefined && vm.data['tasaAnalfabetismo'] !== null">%</span></span> en esta localidad.</p>
+  <p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
+  <p class="text-justify">En el CP <span>{{ datos.centroPobladoAISI || '____' }}</span>, tomando en cuenta a la población de 15 años a más, se presentan los datos de tasa de analfabetismo según el censo nacional.</p>
 
-    <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CP {{ vm.data.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
-      <app-generic-table
-        [data]="vm.tasaAnalfabetismoAISIConPorcentajes"
-        [config]="tasaAnalfabetismoConfig">
-      </app-generic-table>
-    </app-table-wrapper>
-    <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
+  <app-table-wrapper title="Tasa de analfabetismo en población de 15 años a más – CP {{ datos.centroPobladoAISI || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.9">
+    <app-generic-table
+      [data]="datos.tasaAnalfabetismoTabla || []"
+      [config]="{
+        columns: [
+          { key: 'grupo', header: 'Grupo', width: '25%' },
+          { key: 'total', header: 'Total', width: '20%', align: 'center' },
+          { key: 'alfabetos', header: 'Alfabetos', width: '20%', align: 'center' },
+          { key: 'analfabetos', header: 'Analfabetos', width: '20%', align: 'center' },
+          { key: 'tasaAnalfabetismo', header: 'Tasa', width: '15%', align: 'center' }
+        ],
+        showHeader: true,
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</p>
 
-    <app-image-upload
-        [modoVista]="true"
-        [permitirMultiples]="true"
-        [fotografias]="vm.fotografiasVista"
-        [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
-        [labelTitulo]="'Título'"
-        [labelFuente]="'Fuente'"
-        [labelImagen]="'Imagen'">
-    </app-image-upload>
-  </div>
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasInstitucionalidadCache"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
@@ -52,7 +73,7 @@
         label="Introducción - Indicadores de Educación"
         hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
         [rows]="4"
-        [value]="vm.data.parrafoSeccion30_indicadores_educacion_intro || ''"
+        [value]="datos.parrafoSeccion30_indicadores_educacion_intro || ''"
         (valueChange)="onFieldChange('parrafoSeccion30_indicadores_educacion_intro', $event)">
       </app-paragraph-editor>
 
@@ -61,7 +82,7 @@
         label="Nivel Educativo - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="3"
-        [value]="vm.data.textoNivelEducativo || ''"
+        [value]="datos.textoNivelEducativo || ''"
         (valueChange)="onFieldChange('textoNivelEducativo', $event)">
       </app-paragraph-editor>
 
@@ -70,29 +91,29 @@
         label="Tasa de Analfabetismo - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="3"
-        [value]="vm.data.textoTasaAnalfabetismo || ''"
+        [value]="datos.textoTasaAnalfabetismo || ''"
         (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field mt-xl">
       <label class="label">Tabla Población de 15 años a más según nivel educativo alcanzado</label>
-        <app-dynamic-table
-          [datos]="vm.data"
-          [sectionId]="seccionId"
-          [config]="nivelEducativoDynamicConfig"
-          (tableUpdated)="onNivelEducativoTableUpdated()">
-        </app-dynamic-table>
+      <app-dynamic-table
+        [datos]="datos"
+        [sectionId]="seccionId"
+        [config]="nivelEducativoDynamicConfig"
+        (tableUpdated)="onNivelEducativoTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field mt-xl">
       <label class="label">Tabla Tasa de analfabetismo en población de 15 años a más</label>
-        <app-dynamic-table
-          [datos]="vm.data"
-          [sectionId]="seccionId"
-          [config]="tasaAnalfabetismoDynamicConfig"
-          (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
-        </app-dynamic-table>
+      <app-dynamic-table
+        [datos]="datos"
+        [sectionId]="seccionId"
+        [config]="tasaAnalfabetismoDynamicConfig"
+        (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
+      </app-dynamic-table>
     </div>
 
     <div class="form-field mt-lg">

@@ -186,6 +186,7 @@ export class Seccion26Component extends AutoLoadSectionComponent implements OnDe
         this.cdRef.detectChanges();
       });
     }
+    this.logGrupoActual();
   }
 
   override ngOnDestroy() {

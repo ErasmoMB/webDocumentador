@@ -51,7 +51,7 @@ export class Seccion21Component extends AutoLoadSectionComponent implements OnDe
   protected override async onInitCustom(): Promise<void> {
     
     this.actualizarFotografiasCache();
-    this.debugCentrosPobladosAISI(); // Debug de centros poblados
+    this.logGrupoActual(); // Debug de centros poblados
     if (this.modoFormulario) {
       if (this.seccionId) {
         setTimeout(() => {

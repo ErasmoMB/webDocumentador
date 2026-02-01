@@ -137,6 +137,7 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
           this.cdRef.detectChanges();
         });
     }
+    this.logGrupoActual();
   }
 
   private eliminarFilasTotal(): void {

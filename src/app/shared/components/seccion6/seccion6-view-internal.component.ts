@@ -66,6 +66,8 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
       this.cargarFotografias();
       this.cdRef.detectChanges();
     });
+    
+    this.logGrupoActual();
   }
 
   override ngOnDestroy() {

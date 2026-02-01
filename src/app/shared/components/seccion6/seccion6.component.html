@@ -119,7 +119,6 @@
           [columns]="columnasPoblacionSexo"
           [tablaKey]="getTablaKeyPoblacionSexo()"
           [totalKey]="'sexo'"
-          [customFieldChangeHandler]="onPoblacionSexoFieldChange.bind(this)"
           (tableUpdated)="onPoblacionSexoTableUpdated()">
         </app-dynamic-table>
         <div class="table-editor" *ngIf="vm.tables.poblacionSexoData.length > 0" style="margin-top: 10px;">
@@ -190,7 +189,7 @@
           [columns]="columnasPoblacionEtario"
           [tablaKey]="getTablaKeyPoblacionEtario()"
           [totalKey]="'categoria'"
-          [customFieldChangeHandler]="onPoblacionEtarioFieldChange.bind(this)"
+
           (tableUpdated)="onPoblacionEtarioTableUpdated()">
         </app-dynamic-table>
         <div class="table-editor" *ngIf="vm.tables.poblacionEtarioData.length > 0" style="margin-top: 10px;">
