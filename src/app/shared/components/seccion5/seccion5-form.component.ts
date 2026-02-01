@@ -1,11 +1,9 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
-import { ImageUploadComponent } from '../image-upload/image-upload.component';
+import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
@@ -16,15 +14,19 @@ import { Seccion5TextGeneratorService } from 'src/app/core/services/domain/secci
     imports: [
         CommonModule,
         FormsModule,
-        CoreSharedModule
+        CoreSharedModule,
+        ParagraphEditorComponent,
+        DynamicTableComponent
     ],
     selector: 'app-seccion5-form',
     templateUrl: './seccion5-form.component.html'
 })
 export class Seccion5FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
+  @Input() override modoFormulario: boolean = false;
   
   override readonly PHOTO_PREFIX = 'fotografiaInstitucionalidad';
+  override useReactiveSync: boolean = true;
 
   override watchedFields: string[] = [
     'parrafoSeccion5_institucionalidad',
@@ -40,59 +42,100 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     'grupoAISD_A2'
   ];
 
-  private stateSubscription?: Subscription;
+  // ✅ SIGNALS: Datos reactivos puros
+  readonly formularioDataSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly parrafoSignal: Signal<string> = computed(() => {
+    const formData = this.formularioDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Intentar leer con prefijo primero, luego sin prefijo
+    const fieldKey = `parrafoSeccion5_institucionalidad${prefijo}`;
+    const fieldKeyNoPrefix = 'parrafoSeccion5_institucionalidad';
+    
+    const manual = formData[fieldKey] || formData[fieldKeyNoPrefix];
+    if (manual && manual.trim().length > 0) return manual;
+    
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.textGenerator.obtenerTextoInstitucionalidad(formData, nombreComunidad);
+  });
+
+  readonly institucionesTableSignal: Signal<any[]> = computed(() => {
+    const formData = this.formularioDataSignal();
+    const instituciones = formData['institucionesSeccion5'];
+    return Array.isArray(instituciones) ? instituciones : [];
+  });
+
+  // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
+  // Este Signal dispara un effect() que sincroniza cargarFotografias() reactivamente
+  // Siguiendo el patrón de Sección 4 (referencia)
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+      
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
+
+  readonly viewModel: Signal<any> = computed(() => {
+    return {
+      formulario: this.formularioDataSignal(),
+      parrafo: this.parrafoSignal(),
+      instituciones: this.institucionesTableSignal()
+    };
+  });
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
     public tableCfg: Seccion5TableConfigService,
     private dataSrv: Seccion5DataService,
-    private textGenSrv: Seccion5TextGeneratorService,
-    private stateAdapter: ReactiveStateAdapter
+    private textGenerator: Seccion5TextGeneratorService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX, label: 'Institucionalidad' }
     ];
-  }
 
-  private isProcessingPipeline = false;
+    // ✅ EFFECT 1: Auto-sync form data changes
+    effect(() => {
+      const formData = this.formularioDataSignal();
+      this.datos = { ...formData };
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
+    // Este efecto replica el patrón de Sección 4 (MODO IDEAL)
+    effect(() => {
+      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
+      this.cargarFotografias();  // Recarga fotografías reactivamente
+      
+      // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasFormMulti
+      // Esto asegura que el template se renderice con las nuevas imágenes
+      this.fotografiasFormMulti = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+  }
 
   protected override onInitCustom(): void {
-    this.initDataPipeline();
-    this.subscribeToStateChanges();
-  }
-
-  private initDataPipeline(): void {
-    if (this.isProcessingPipeline) return;
-    this.isProcessingPipeline = true;
-    try {
-      this.cargarTodosLosGrupos();
-    } finally {
-      this.isProcessingPipeline = false;
-    }
-  }
-
-  private subscribeToStateChanges(): void {
-    // ✅ Formularios NO deben suscribirse a cambios del store
-    // Son la fuente de los cambios, no consumidores
-    // La sincronización reactiva ya está manejada por BaseSectionComponent
+    this.cargarFotografias();
+    // ✅ Sincronizar fotografiasFormMulti con fotografiasCache después de cargar
+    this.fotografiasFormMulti = [...this.fotografiasCache];
   }
 
   override ngOnDestroy(): void {
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-    }
     this.guardarTodosLosGrupos();
     super.ngOnDestroy();
-  }
-
-  // ✅ Obtiene párrafo con fallback a texto por defecto
-  obtenerParrafoInstitucionalidad(): string {
-    return this.textGenSrv.obtenerTextoInstitucionalidad(
-      this.datos,
-      this.obtenerNombreComunidadActual()
-    );
   }
 
   // ✅ Configuración dinámica de tabla
@@ -106,37 +149,50 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
 
   // ✅ Sincronizar tabla cuando se actualiza (agregar/eliminar filas)
   onTablaActualizada(): void {
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    const institucionesActuales = this.institucionesTableSignal();
+    this.onFieldChange('institucionesSeccion5', institucionesActuales, { refresh: false });
+    this.cdRef.markForCheck();
   }
 
   // ✅ Obtiene nombre de comunidad actual (con fallback)
   override obtenerNombreComunidadActual(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
+    const formData = this.formularioDataSignal();
+    return this.dataSrv.obtenerNombreComunidadActual(formData, this.seccionId);
+  }
+
+  // ✅ Override: PhotoCoordinator maneja TODO la persistencia
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    // 🔧 PATRÓN CORRECTO: Solo llamar a super() que usa PhotoCoordinator
+    // PhotoCoordinator se encarga de:
+    // - Guardar todas las imágenes via ImageManagementFacade
+    // - Actualizar fotografiasFormMulti y fotografiasCache
+    super.onFotografiasChange(fotografias, customPrefix);
+    
+    // ✅ Actualizar referencias locales (para templates que usan fotografiasFormMulti)
+    this.fotografiasFormMulti = fotografias;
+    
+    // ✅ Marcar para detección de cambios
+    this.cdRef.markForCheck();
+  }
+
+  obtenerParrafoInstitucionalidad(): string {
+    return this.parrafoSignal();
   }
 
   obtenerSubseccionId(): string {
-    const index = this.seccionId.includes('.A.1') ? '1' : (this.seccionId.includes('.A.2') ? '2' : '1');
-    return `A.${index}.1`;
+    return this.seccionId.split('.').pop() || '1';
   }
 
   // ✅ Métodos obligatorios de BaseSectionComponent
   protected override detectarCambios(): boolean {
-    const actual = JSON.stringify(this.projectFacade.obtenerDatos());
-    const anterior = JSON.stringify(this.datosAnteriores);
-    if (actual !== anterior) {
-      this.datosAnteriores = JSON.parse(actual);
-      return true;
-    }
-    return false;
+    return false;  // Cambios detectados automáticamente por Signals
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) {
-      this.datos.grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
-      this.datos.tablepagina6 = this.obtenerValorConPrefijo('tablepagina6');
-      this.datos.parrafoSeccion5_institucionalidad = this.obtenerValorConPrefijo('parrafoSeccion5_institucionalidad');
-    }
+    // No necesario: Los Signals ya están sincronizados
+  }
+
+  protected override actualizarDatosCustom(): void {
+    this.cargarFotografias();
   }
 }
