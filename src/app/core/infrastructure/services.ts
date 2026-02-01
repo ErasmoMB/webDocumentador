@@ -1705,6 +1705,49 @@ export class Seccion30TextGeneratorService extends ISeccion30TextGeneratorServic
   }
 }
 
+// Seccion4: implementación que lee del store para que /seccion/3.1.4.A muestre la sección 4
+@Injectable({
+  providedIn: 'root'
+})
+export class Seccion4DataServiceAdapter extends ISeccion4DataService {
+  constructor(private projectFacade: ProjectStateFacade) {
+    super();
+  }
+
+  getSeccion4Data(): Observable<Seccion4Data> {
+    const datos = this.projectFacade.obtenerDatos() as Record<string, any>;
+    const seccion4Data: Seccion4Data = {
+      parrafoSeccion4_introduccion_aisd: datos['parrafoSeccion4_introduccion_aisd'] ?? '',
+      parrafoSeccion4_comunidad_completo: datos['parrafoSeccion4_comunidad_completo'] ?? '',
+      parrafoSeccion4_caracterizacion_indicadores: datos['parrafoSeccion4_caracterizacion_indicadores'] ?? '',
+      grupoAISD: datos['grupoAISD'] ?? '',
+      distritoSeleccionado: datos['distritoSeleccionado'] ?? '',
+      provinciaSeleccionada: datos['provinciaSeleccionada'] ?? '',
+      departamentoSeleccionado: datos['departamentoSeleccionado'] ?? '',
+      aisdComponente1: datos['aisdComponente1'] ?? '',
+      aisdComponente2: datos['aisdComponente2'] ?? '',
+      coordenadasAISD: datos['coordenadasAISD'] ?? '',
+      altitudAISD: datos['altitudAISD'] ?? '',
+      tablaAISD1Datos: Array.isArray(datos['tablaAISD1Datos']) ? datos['tablaAISD1Datos'] : (datos['tablaAISD1Datos_A1'] ?? []),
+      tablaAISD2Datos: Array.isArray(datos['tablaAISD2Datos']) ? datos['tablaAISD2Datos'] : (datos['tablaAISD2Datos_A1'] ?? []),
+      cuadroFuenteAISD1: datos['cuadroFuenteAISD1'] ?? '',
+      cuadroTituloAISD1: datos['cuadroTituloAISD1'] ?? '',
+      jsonCompleto: datos['jsonCompleto'],
+      comunidadesCampesinas: Array.isArray(datos['comunidadesCampesinas']) ? datos['comunidadesCampesinas'] : []
+    };
+    return of(seccion4Data);
+  }
+
+  updateSeccion4Data(updates: Partial<Seccion4Data>): Observable<Seccion4Data> {
+    const sectionId = '3.1.4.A';
+    const updatesRecord = updates as Record<string, unknown>;
+    if (Object.keys(updatesRecord).length > 0) {
+      this.projectFacade.setFields(sectionId, null, updatesRecord);
+    }
+    return this.getSeccion4Data();
+  }
+}
+
 // Import and export Seccion4 services
 import { Seccion4DataService as Seccion4DataServiceImpl } from '../services/domain/seccion4-data.service';
 import { Seccion4TextGeneratorService as Seccion4TextGeneratorServiceImpl } from '../services/domain/seccion4-text-generator.service';
@@ -1713,7 +1756,7 @@ import { Seccion4TextGeneratorService as Seccion4TextGeneratorServiceImpl } from
 import { Seccion5DataService as Seccion5DataServiceImpl } from '../services/domain/seccion5-data.service';
 import { Seccion5TextGeneratorService as Seccion5TextGeneratorServiceImpl } from '../services/domain/seccion5-text-generator.service';
 
-export { Seccion4DataServiceImpl as Seccion4DataService };
+export { Seccion4DataServiceAdapter as Seccion4DataService };
 export { Seccion4TextGeneratorServiceImpl as Seccion4TextGeneratorService };
 
 export { Seccion5DataServiceImpl as Seccion5DataService };

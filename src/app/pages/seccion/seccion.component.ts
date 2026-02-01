@@ -1295,6 +1295,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       
       // Campos que NO se deben llenar con datos de prueba (mantienen texto por defecto o se gestionan manualmente)
       const camposExcluidos = [
+        'parrafoSeccion1_principal',
+        'parrafoSeccion1_4',
         'parrafoSeccion3_metodologia',
         'parrafoSeccion3_fuentes_primarias',
         'parrafoSeccion3_fuentes_secundarias',
@@ -1486,18 +1488,6 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
-      // Asegurar que el párrafo principal de la Sección 1 incluya el nombre
-      // del proyecto cuando se están cargando datos de prueba. Esto evita
-      // que la vista muestre el texto por defecto con '____' durante la
-      // ventana de sincronización asíncrona.
-      if (!updates['parrafoSeccion1_principal']) {
-        const projectCandidate = updates['projectName'] || enrichedMock?.projectName || enrichedMock?.['nombreProyecto'] || 'Paka';
-        updates['parrafoSeccion1_principal'] = `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera ${projectCandidate}.`;
-      }
-
-      // Si estamos llenando la sección 3.1.1, asegurarnos de que los objetivos
-      // también se establezcan con el nombre del proyecto para evitar que se
-      // muestren placeholders ('____') antes de la sincronización completa.
       if (this.seccionId === '3.1.1' && !updates['objetivosSeccion1']) {
         const projectCandidateObj = updates['projectName'] || enrichedMock?.projectName || enrichedMock?.['nombreProyecto'] || 'Paka';
         updates['objetivosSeccion1'] = [

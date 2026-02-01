@@ -23,11 +23,20 @@ export class SectionNavigationService {
     return seccionId;
   }
 
-  esSeccionIntro(seccionId: string): boolean {
-    // Verifica si es una sección intro (A.1, A.2, B.1, B.2, etc.)
-    // Formato: 3.1.4.A.{n} o 3.1.4.B.{n} sin puntos adicionales
-    const match = seccionId.match(/^3\.1\.4\.[AB]\.(\d+)$/);
-    return !!match;
+  /**
+   * Secciones intro AISD (3.1.4.A.1, 3.1.4.A.2, ...) se saltan en Anterior/Siguiente:
+   * desde 3.1.4.A se va directo a 3.1.4.A.1.1 hasta 3.1.4.A.1.16.
+   */
+  private esSeccionIntroAISD(seccionId: string): boolean {
+    return /^3\.1\.4\.A\.\d+$/.test(seccionId);
+  }
+
+  /**
+   * Sección intro AISI (3.1.4.B) se salta en Anterior/Siguiente:
+   * después de 3.1.4.A.1.16 va directo a 3.1.4.B.1, luego 3.1.4.B.1.1 hasta 3.1.4.B.1.9.
+   */
+  private esSeccionIntroAISI(seccionId: string): boolean {
+    return seccionId === '3.1.4.B';
   }
 
   obtenerTodasLasSecciones(datos: FormularioDatos): string[] {
@@ -87,8 +96,7 @@ export class SectionNavigationService {
 
     for (let i = index - 1; i >= 0; i--) {
       const candidate = secciones[i];
-      // Saltar secciones intro cuando se navega con anterior/siguiente
-      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntro(candidate)) {
+      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntroAISD(candidate) && !this.esSeccionIntroAISI(candidate)) {
         return candidate;
       }
     }
@@ -111,8 +119,7 @@ export class SectionNavigationService {
 
     for (let i = index + 1; i < secciones.length; i++) {
       const candidate = secciones[i];
-      // Saltar secciones intro cuando se navega con anterior/siguiente
-      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntro(candidate)) {
+      if (this.accessControl.canAccessSection(candidate) && !this.esSeccionIntroAISD(candidate) && !this.esSeccionIntroAISI(candidate)) {
         return candidate;
       }
     }

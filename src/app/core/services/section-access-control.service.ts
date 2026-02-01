@@ -109,6 +109,18 @@ export class SectionAccessControlService {
    * Verifica sincronizadamente (sin Observable) si una sección está disponible
    */
   canAccessSection(sectionId: string): boolean {
+    // Siempre permitir navegar a las pantallas de configuración y subsecciones del primer bloque AISD/AISI
+    if (sectionId === '3.1.4.A' || sectionId === '3.1.4.B' || sectionId === '3.1.4.B.1') {
+      return true;
+    }
+    // Desde 3.1.4.A debe continuar con 3.1.4.A.1.1 hasta 3.1.4.A.1.16 (siempre accesibles)
+    if (/^3\.1\.4\.A\.1\.(1[0-6]|[1-9])$/.test(sectionId)) {
+      return true;
+    }
+    // Desde 3.1.4.B.1 debe seguir hasta 3.1.4.B.1.9 (siempre accesibles)
+    if (/^3\.1\.4\.B\.1\.([1-9])$/.test(sectionId)) {
+      return true;
+    }
     const groupType = getSectionGroupType(sectionId);
     const config = this.groupConfig.getConfig();
 
