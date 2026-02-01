@@ -143,6 +143,90 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     super.ngOnInit();
     this.cargarFotografias();
     this.subscribeToTableSync();
+    
+    // Console.log para mostrar el grupo AISD y sus centros poblados
+    this.logGrupoAISD();
+  }
+
+  /** Log en consola del grupo AISD actual y sus centros poblados */
+  private logGrupoAISD(): void {
+    const match = this.seccionId.match(/^3\.1\.4\.A\.(\d+)/);
+    if (!match) return;
+    
+    const numeroGrupo = parseInt(match[1], 10);
+    const datos = this.projectFacade.obtenerDatos();
+    
+    // DEBUG: Mostrar estructura de datos
+    console.log(`%c[DEBUG] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
+    console.log(`%c[DEBUG] Estructura de datos:`, 'color: #666; font-size: 12px');
+    console.log('- comunidadesCampesinas:', datos['comunidadesCampesinas']);
+    console.log('- centrosPobladosJSON:', datos['centrosPobladosJSON']);
+    console.log('- jsonCompleto:', datos['jsonCompleto']);
+    
+    const comunidades = datos['comunidadesCampesinas'] || [];
+    console.log(`%c[DEBUG] Total comunidades cargadas: ${comunidades.length}`, 'color: #999; font-size: 11px');
+    
+    if (comunidades.length === 0) {
+      console.log('%c⚠️ No hay comunidades cargadas. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    const comunidadActual = comunidades[numeroGrupo - 1];
+    console.log(`%c[DEBUG] Buscando comunidad en índice ${numeroGrupo - 1}:`, 'color: #999; font-size: 11px', comunidadActual);
+    
+    if (!comunidadActual) {
+      console.log(`%c⚠️ No existe comunidad A.${numeroGrupo}. Comunidades disponibles: ${comunidades.length}`, 'color: #f59e0b; font-weight: bold');
+      return;
+    }
+    
+    console.log(`%c🏘️ GRUPO AISD: A.${numeroGrupo} - ${comunidadActual.nombre || 'Sin nombre'}`, 'color: #2563eb; font-weight: bold; font-size: 14px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #7c3aed; font-weight: bold');
+    
+    // Verificar qué contiene centrosPobladosSeleccionados
+    const centrosPobladosSeleccionados = comunidadActual.centrosPobladosSeleccionados || [];
+    console.log(`[DEBUG] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      console.log('%c[INFO] Debes asignar centros poblados a esta comunidad en la sección 2', 'color: #f59e0b; font-size: 11px');
+      return;
+    }
+    
+    // Si centrosPobladosSeleccionados contiene strings (códigos), buscar en jsonCompleto
+    const jsonCompleto = datos['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any, index: number) => {
+      // Buscar en jsonCompleto
+      let encontrado = false;
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !encontrado) {
+            centrosDetalles.push(centro);
+            encontrado = true;
+          }
+        }
+      });
+      
+      if (!encontrado) {
+        console.log(`  [DEBUG] Centro con código ${codigo} no encontrado en jsonCompleto`);
+      }
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    } else {
+      console.log('  (Sin centros poblados encontrados en el JSON)');
+    }
   }
 
   /** Seccion4 tiene varios grupos de fotos (Ubicación, Población); cargar todos para la vista */

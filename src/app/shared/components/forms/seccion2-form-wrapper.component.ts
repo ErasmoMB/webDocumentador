@@ -578,10 +578,9 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   }
 
   obtenerCentrosPobladosVisibles(comunidad: ComunidadCampesina): any[] {
-    if (comunidad && (comunidad.esNueva || !comunidad.centrosPobladosSeleccionados || comunidad.centrosPobladosSeleccionados.length === 0)) {
-      return this.obtenerTodosLosCentrosPoblados();
-    }
-    return this.obtenerCentrosPobladosDeComunidad(comunidad.id);
+    // Siempre retornar TODOS los centros poblados disponibles
+    // Los checkboxes mostrarán cuáles están seleccionados basado en estaCentroPobladoSeleccionadoComunidad()
+    return this.obtenerTodosLosCentrosPoblados();
   }
 
   estaCentroPobladoSeleccionadoComunidad(id: string, codigo: string): boolean {
@@ -796,10 +795,9 @@ export class Seccion2FormWrapperComponent implements OnInit, OnDestroy, AfterVie
   }
 
   obtenerCentrosPobladosVisiblesDistrito(distrito: Distrito): any[] {
-    if (distrito && (distrito.esNuevo || !distrito.centrosPobladosSeleccionados || distrito.centrosPobladosSeleccionados.length === 0)) {
-      return this.obtenerTodosLosCentrosPoblados();
-    }
-    return this.obtenerCentrosPobladosDeDistrito(distrito.id);
+    // Siempre retornar TODOS los centros poblados disponibles
+    // Los checkboxes mostrarán cuáles están seleccionados basado en estaCentroPobladoSeleccionadoDistrito()
+    return this.obtenerTodosLosCentrosPoblados();
   }
 
   estaCentroPobladoSeleccionadoDistrito(id: string, codigo: string): boolean {
