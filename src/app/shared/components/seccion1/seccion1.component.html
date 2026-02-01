@@ -29,8 +29,8 @@
         los siguientes:</p>
 </ng-template>
 <ul>
-    <li class="list-item" *ngFor="let objetivo of getObjetivosParaVista()">
-        <span [innerHTML]="formatearObjetivo(objetivo)"></span>
+    <li class="list-item" *ngFor="let objetivo of obtenerObjetivosParaVista()">
+        <span>{{ objetivo }}</span>
     </li>
 </ul>
 
@@ -47,6 +47,81 @@
 </div>
 
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">Información del Proyecto</h4>
+    
+    <div class="form-field">
+      <label class="label">Nombre del Proyecto <span class="required">*</span></label>
+      <input 
+        type="text" 
+        class="input" 
+        placeholder="Ej: Paka"
+        [value]="datos['projectName'] || ''"
+        (input)="onFieldChange('projectName', $any($event.target).value)">
+    </div>
+  </div>
+
+  <div class="form-group-section">
+    <h4 class="section-title">Cargar Datos de Centros Poblados</h4>
+    
+    <div class="form-field">
+      <label class="label">Subir UBIGEO de Centro Poblado <span class="required">*</span></label>
+      <div class="file-upload-wrapper">
+        <input 
+          type="file" 
+          id="jsonFileInput" 
+          accept=".json" 
+          (change)="onJSONFileSelected($event)"
+          style="display: none;">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="selectJSONFile()">
+          Seleccionar archivo
+        </button>
+        <span *ngIf="datos['jsonFileName']" class="file-name">{{ datos['jsonFileName'] }}</span>
+        <span *ngIf="!datos['jsonFileName']" class="file-name">Ningún archivo seleccionado</span>
+      </div>
+      <small class="form-hint">Seleccione un archivo JSON con datos de centros poblados</small>
+    </div>
+
+    <div class="form-field" *ngIf="datos['centrosPobladosJSON']?.length > 0">
+      <label class="label">Información Geográfica</label>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="label">Departamento <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="input" 
+            [value]="datos['departamentoSeleccionado'] || datos['geoInfo']?.DPTO || ''"
+            (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)"
+            placeholder="Ingrese el departamento">
+          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+        </div>
+        <div class="form-field">
+          <label class="label">Provincia <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="input" 
+            [value]="datos['provinciaSeleccionada'] || datos['geoInfo']?.PROV || ''"
+            (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)"
+            placeholder="Ingrese la provincia">
+          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+        </div>
+        <div class="form-field">
+          <label class="label">Distrito <span class="required">*</span></label>
+          <input 
+            type="text" 
+            class="input" 
+            [value]="datos['distritoSeleccionado'] || datos['geoInfo']?.DIST || ''"
+            (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)"
+            placeholder="Ingrese el distrito">
+          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="form-group-section">
     <h4 class="section-title">Editar Párrafos</h4>
     
@@ -77,14 +152,14 @@
         </button>
       </div>
       
-      <div *ngFor="let objetivo of objetivos; let i = index; trackBy: trackByIndex" class="dynamic-list-item">
+      <div *ngFor="let objetivo of objetivosSignal(); let i = index; trackBy: trackByIndex" class="dynamic-list-item">
         <div class="dynamic-list-item-header">
           <label class="label">Objetivo {{ i + 1 }}</label>
           <button 
             type="button" 
             class="btn btn--remove" 
             (click)="eliminarObjetivo(i)"
-            *ngIf="objetivos.length > 1">
+            *ngIf="objetivosSignal().length > 1">
             🗑️ Eliminar
           </button>
         </div>
@@ -92,7 +167,6 @@
           class="input"
           [ngModel]="objetivo"
           (ngModelChange)="actualizarObjetivo(i, $event)"
-          (blur)="guardarObjetivoOnBlur()"
           rows="3"
           placeholder="Escriba el objetivo..."></textarea>
       </div>

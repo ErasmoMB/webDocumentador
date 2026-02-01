@@ -1,26 +1,13 @@
-import { Component, OnDestroy, Input, SimpleChanges, OnInit, ChangeDetectionStrategy, Injector } from '@angular/core';
+import { Component, OnDestroy, Input, SimpleChanges, ChangeDetectionStrategy, Injector, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
-import { DataOrchestratorService } from 'src/app/core/services/orchestration/data-orchestrator.service';
 import { GruposService } from 'src/app/core/services/domain/grupos.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
-import { Subscription } from 'rxjs';
-import { from } from 'rxjs';
-import { GenericTableComponent } from '../generic-table/generic-table.component';
-import { GenericImageComponent } from '../generic-image/generic-image.component';
-import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { DataSourceDirective } from '../../directives/data-source.directive';
-import { DataHighlightDirective } from '../../directives/data-highlight.directive';
-import { TableNumberDirective } from '../../directives/table-number.directive';
-import { PhotoNumberDirective } from '../../directives/photo-number.directive';
-import { MockDataService } from '../../../core/services/infrastructure/mock-data.service';
-// ProjectState Integration
-import { UIStoreService, Selectors } from 'src/app/core/state/ui-store.contract';
+import { UIStoreService } from 'src/app/core/state/ui-store.contract';
 import { 
   createJSONProcessingBatch, 
   validateJSONStructure, 
@@ -43,19 +30,9 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   @Input() override modoFormulario: boolean = false;
   
   override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
-  
-  // ✅ ACTIVAR SINCRONIZACIÓN REACTIVA PARA SINCRONIZACIÓN PERFECTA
   override useReactiveSync: boolean = true;
   
   fotografiasSeccion1: FotoItem[] = [];
-  private subscription?: Subscription;
-  private stateSubscription?: Subscription;
-  private subscriptions: Subscription[] = [];
-
-  datosMock: any = {};
-  
-  // ✅ Array de objetivos dinámicos
-  objetivos: string[] = [];
   
   // Objetivos por defecto
   private readonly objetivoDefault1 = 'Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera {projectName}.';
@@ -71,105 +48,59 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     'departamentoSeleccionado'
   ];
 
-  // Último nombre de proyecto conocido (fallback estable)
-  private lastProjectName: string | null = null;
+  // ✅ SIGNALS PUROS
+  readonly objetivosSignal: Signal<string[]> = computed(() => {
+    const fromStore = this.projectFacade.selectField(this.seccionId, null, 'objetivosSeccion1')();
+    if (Array.isArray(fromStore) && fromStore.length > 0) {
+      return fromStore;
+    }
+    // Fallback a valores por defecto
+    return [
+      this.getObjetivoDefault(0),
+      this.getObjetivoDefault(1)
+    ];
+  });
+
+  readonly projectNameSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '____';
+  });
+
+  readonly geoInfoSignal: Signal<any> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+  });
 
   constructor(
     private textNormalization: TextNormalizationService,
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private stateAdapter: ReactiveStateAdapter,
-    private orchestrator: DataOrchestratorService,
-    private mockDataService: MockDataService,
+    private gruposService: GruposService,
     private store: UIStoreService
   ) {
     super(cdRef, injector);
+
+    // ✅ EFFECT: Sincronizar cambios reactivos (sin subscriptions manuales)
+    effect(() => {
+      const objetivos = this.objetivosSignal();
+      const projectName = this.projectNameSignal();
+      const geoInfo = this.geoInfoSignal();
+      
+      console.log('[Seccion1] Datos actualizados reactivamente:', {
+        objetivos: objetivos.length,
+        projectName,
+        geoInfo: Object.keys(geoInfo).length
+      });
+      
+      this.cdRef.markForCheck();
+    });
   }
 
   protected override onInitCustom(): void {
-    // ✅ NO cargar mock data automáticamente - los datos vienen de persistencia
-    // this.loadData(); -- Desactivado para evitar sobrescribir datos persistidos
-    
-    // Inicializar objetivos desde datos guardados o por defecto
-    this.inicializarObjetivos();
-    // Inicializar lastProjectName desde datos si existe
-    if (this.datos && this.datos.projectName) {
-      this.lastProjectName = this.datos.projectName;
-    }
-    
-    if (!this.modoFormulario) {
-      // Suscripción más prudente: solo sincroniza lo que realmente cambió
-      this.stateSubscription = this.stateAdapter.datos$.subscribe((datos: any) => {
-        console.debug('[Seccion1] stateAdapter.datos$ -> recibidos datos:', datos && { projectName: datos.projectName, objetivosSeccion1: datos.objetivosSeccion1, parrafo: datos.parrafoSeccion1_principal });
-        if (!datos) return;
-
-        // Si los objetivos en persistencia difieren de los locales, sincronizarlos
-        const objetivosPersistidos = datos.objetivosSeccion1;
-        if (objetivosPersistidos && Array.isArray(objetivosPersistidos)) {
-          const sonDiferentes = objetivosPersistidos.length !== this.objetivos.length ||
-            objetivosPersistidos.some((o: string, i: number) => o !== this.objetivos[i]);
-          if (sonDiferentes) {
-              this.objetivos = [...objetivosPersistidos];
-              this.datos.objetivosSeccion1 = [...objetivosPersistidos];
-              console.debug('[Seccion1] sincronizados objetivos desde datos persistidos:', this.objetivos);
-            }
-        }
-
-          // Actualizar fallback estable del nombre del proyecto
-          if (datos.projectName) {
-            this.lastProjectName = datos.projectName;
-            console.debug('[Seccion1] lastProjectName actualizado:', this.lastProjectName);
-          }
-
-          // Si cambió el nombre del proyecto, o campos principales, refrescar todos los datos
-        if (datos.projectName !== this.datos.projectName || datos.distritoSeleccionado !== this.datos.distritoSeleccionado || datos.provinciaSeleccionada !== this.datos.provinciaSeleccionada || datos.departamentoSeleccionado !== this.datos.departamentoSeleccionado) {
-          this.actualizarDatos();
-        }
-
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
-    }
-  }
-
-  private inicializarObjetivos(): void {
-    console.debug('[Seccion1] inicializarObjetivos - datos actuales:', { projectName: this.datos.projectName, objetivos: this.datos.objetivosSeccion1 });
-    // Primero verificar si hay objetivos guardados como array
-    if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
-      this.objetivos = [...this.datos.objetivosSeccion1];
-      console.debug('[Seccion1] inicializarObjetivos - usando objetivos desde this.datos:', this.objetivos);
-      return;
-    }
-    
-    // Migrar desde campos antiguos si existen
-    const objetivosLegacy: string[] = [];
-    if (this.datos.objetivoSeccion1_1) {
-      objetivosLegacy.push(this.datos.objetivoSeccion1_1);
-    }
-    if (this.datos.objetivoSeccion1_2) {
-      objetivosLegacy.push(this.datos.objetivoSeccion1_2);
-    }
-    
-    if (objetivosLegacy.length > 0) {
-      this.objetivos = objetivosLegacy;
-      // Guardar en nuevo formato
-      this.onFieldChange('objetivosSeccion1', this.objetivos);
-      return;
-    }
-    
-    // Si no hay datos, usar objetivos por defecto
-    if (this.objetivos.length === 0) {
-      this.objetivos = [
-        this.getObjetivoDefault(0),
-        this.getObjetivoDefault(1)
-      ];
-      console.debug('[Seccion1] inicializarObjetivos - usando objetivos por defecto:', this.objetivos);
-    }
+    this.cargarFotografias();
   }
 
   private getObjetivoDefault(index: number): string {
-    const proyecto = this.lastProjectName || this.datos.projectName || '____';
-    const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto, false);
+    const proyecto = this.projectNameSignal();
+    const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto === '____' ? undefined : proyecto, false);
     
     if (index === 0) {
       return this.objetivoDefault1.replace('{projectName}', proyectoNormalizado);
@@ -177,126 +108,47 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     return this.objetivoDefault2;
   }
 
+  // ✅ CRUD: Agregar objetivo
   agregarObjetivo(): void {
-    // ✅ IMPORTANTE: Sincronizar PRIMERO desde datos persistidos antes de modificar
-    this.sincronizarObjetivosDesdeData();
-    
-    this.objetivos = [...this.objetivos, ''];
-    this.guardarObjetivos();
-    // ✅ Usar setTimeout para evitar interferencias con otros bindings
-    setTimeout(() => this.cdRef.detectChanges(), 0);
+    const actuales = this.objetivosSignal();
+    const nuevos = [...actuales, ''];
+    this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
+    this.onFieldChange('objetivosSeccion1', nuevos);
+    this.cdRef.markForCheck();
   }
 
+  // ✅ CRUD: Eliminar objetivo
   eliminarObjetivo(index: number): void {
-    if (this.objetivos.length > 1) {
-      // ✅ IMPORTANTE: Sincronizar PRIMERO desde datos persistidos antes de modificar
-      this.sincronizarObjetivosDesdeData();
-      
-      this.objetivos = this.objetivos.filter((_, i) => i !== index);
-      this.guardarObjetivos();
-      // ✅ Usar setTimeout para evitar interferencias con otros bindings
-      setTimeout(() => this.cdRef.detectChanges(), 0);
+    const actuales = this.objetivosSignal();
+    if (actuales.length > 1) {
+      const nuevos = actuales.filter((_, i) => i !== index);
+      this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
+      this.onFieldChange('objetivosSeccion1', nuevos);
+      this.cdRef.markForCheck();
     }
   }
 
-  // ✅ Solo actualiza el valor local, NO guarda (para evitar lag al escribir)
+  // ✅ CRUD: Actualizar objetivo
   actualizarObjetivo(index: number, valor: string): void {
-    if (index >= 0 && index < this.objetivos.length) {
-      this.objetivos[index] = valor;
-      // NO llamar a guardarObjetivos() aquí - se hará on blur
+    const actuales = this.objetivosSignal();
+    if (index >= 0 && index < actuales.length && actuales[index] !== valor) {
+      const nuevos = [...actuales];
+      nuevos[index] = valor;
+      this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
+      this.onFieldChange('objetivosSeccion1', nuevos);
+      this.cdRef.markForCheck();
     }
   }
 
-  // ✅ Guardar cuando el usuario sale del campo (blur)
-  guardarObjetivoOnBlur(): void {
-    this.guardarObjetivos();
-    // ✅ Usar setTimeout para evitar interferencias con otros bindings
-    setTimeout(() => this.cdRef.detectChanges(), 0);
+  // ✅ Para vista: retorna los objetivos con reemplazo de placeholders
+  obtenerObjetivosParaVista(): string[] {
+    const proyecto = this.projectNameSignal();
+    return this.objetivosSignal().map(o => (o || '').replace(/____/g, proyecto));
   }
 
-  // ✅ TrackBy más estable para evitar problemas de re-renderizado
-  trackByIndex(index: number, item: string): string {
-    return `${index}-${item?.substring(0, 10) || 'empty'}`;
-  }
-
-  private guardarObjetivos(): void {
-    // ✅ Crear copia profunda de los objetivos actuales
-    const objetivosACopiar = this.objetivos.map(o => o);
-
-    // ✅ Guardar en el estado SIN refresh para evitar que actualizarDatos() sobrescriba
-    // los cambios locales con datos potencialmente desactualizados del facade
-    this.onFieldChange('objetivosSeccion1', objetivosACopiar, { refresh: false });
-
-    // ✅ NO sincronizar inmediatamente con this.datos para evitar interferencias
-    // con otros campos del formulario. Dejar que el sistema de persistencia maneje esto.
-  }
-
-  getObjetivosParaVista(): string[] {
-    // Priorizar el array local `this.objetivos` si tiene contenido válido.
-    // Esto evita que la vista muestre valores por defecto cuando hay una breve
-    // desincronización entre persistencia y estado local al agregar/eliminar.
-    if (this.objetivos && Array.isArray(this.objetivos)) {
-      const objetivosNoVaciosLocal = this.objetivos.filter((o: string) => o && o.trim() !== '');
-      if (objetivosNoVaciosLocal.length > 0) {
-        // Reemplazar placeholders '____' por el nombre de proyecto disponible
-        const proyecto = this.datos.projectName || this.lastProjectName || '____';
-        return objetivosNoVaciosLocal.map(o => (o || '').replace(/____/g, proyecto));
-      }
-    }
-
-    // Si no hay array local, usar datos persistidos
-    if (this.datos.objetivosSeccion1 && Array.isArray(this.datos.objetivosSeccion1) && this.datos.objetivosSeccion1.length > 0) {
-      return (this.datos.objetivosSeccion1 as string[]).filter((o: string) => o && o.trim() !== '');
-    }
-    
-    // Compatibilidad con formato antiguo
-    const objetivos: string[] = [];
-    if (this.datos.objetivoSeccion1_1) {
-      objetivos.push(this.datos.objetivoSeccion1_1);
-    } else {
-      objetivos.push(this.getObjetivoDefault(0));
-    }
-    if (this.datos.objetivoSeccion1_2) {
-      objetivos.push(this.datos.objetivoSeccion1_2);
-    } else {
-      objetivos.push(this.getObjetivoDefault(1));
-    }
-    
-    return objetivos;
-  }
-
-  formatearObjetivo(objetivo: string): string {
-    if (!objetivo) return '';
-    // Resaltar el nombre del proyecto si aparece
-    const proyecto = this.datos.projectName;
-    if (proyecto && objetivo.includes(proyecto)) {
-      return objetivo.replace(
-        proyecto, 
-        `<span class="data-manual has-data">${proyecto}</span>`
-      );
-    }
-    return objetivo;
-  }
-
-  private loadData(): void {
-    // ✅ Este método ahora solo se usa para el botón "Llenar Datos"
-    // NO se ejecuta automáticamente al iniciar
-    const datosSubscription = from(this.mockDataService.getCapitulo3Datos()).subscribe(datos => {
-      this.datosMock = datos;
-      this.cdRef.detectChanges();
-    });
-    this.subscriptions.push(datosSubscription);
-  }
-
-  override ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-    }
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-    super.ngOnDestroy();
+  // ✅ TrackBy para listas
+  trackByIndex(index: number): number {
+    return index;
   }
 
   protected override onChangesCustom(changes: SimpleChanges): void {
@@ -341,32 +193,6 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
 
   protected override actualizarDatosCustom(): void {
     this.cargarFotografias();
-    
-    // ✅ Sincronizar objetivos desde datos persistidos cuando cambian los datos
-    // Esto es importante cuando se usa "Llenar Datos" desde la página principal
-    this.sincronizarObjetivosDesdeData();
-  }
-
-  /**
-   * Sincroniza el array local `this.objetivos` con los datos persistidos
-   * Lee directamente del projectFacade para obtener los datos más recientes
-   */
-  private sincronizarObjetivosDesdeData(): void {
-    // ✅ Leer datos frescos directamente del projectFacade (fuente de verdad)
-    const datosFrescos = this.projectFacade.obtenerDatos();
-    const objetivosGuardados = datosFrescos['objetivosSeccion1'];
-    
-    if (objetivosGuardados && Array.isArray(objetivosGuardados) && objetivosGuardados.length > 0) {
-      // Verificar si los objetivos son diferentes
-      const sonDiferentes = objetivosGuardados.length !== this.objetivos.length ||
-        objetivosGuardados.some((obj: string, i: number) => obj !== this.objetivos[i]);
-      
-      if (sonDiferentes) {
-        this.objetivos = [...objetivosGuardados];
-        // También actualizar this.datos para mantener consistencia
-        this.datos.objetivosSeccion1 = [...objetivosGuardados];
-      }
-    }
   }
 
   override getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
@@ -717,20 +543,11 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
       this.onFieldChange('parrafoSeccion1_principal', nuevoParrafoPrincipal, { refresh: true });
     }
 
-    // Guardar objetivos y limpiar legacy
+    // ✅ Guardar objetivos y limpiar legacy
     this.onFieldChange('objetivosSeccion1', [...objetivosPrueba], { refresh: false });
     this.onFieldChange('objetivoSeccion1_1', null, { refresh: false });
     this.onFieldChange('objetivoSeccion1_2', null, { refresh: false });
-
-    // Sincronizar objetivos localmente
-    this.inicializarObjetivos();
     
-    // ✅ PRESERVAR párrafo principal después de inicializar objetivos (por si actualizarDatos lo sobrescribió)
-    if (nuevoParrafoPrincipal && (!this.datos.parrafoSeccion1_principal || this.datos.parrafoSeccion1_principal.includes('____'))) {
-      this.datos.parrafoSeccion1_principal = nuevoParrafoPrincipal;
-      this.cdRef.detectChanges();
-    }
-
     // Solo cargar fotografías y detectar cambios
     this.cargarFotografias();
     this.cdRef.detectChanges();
