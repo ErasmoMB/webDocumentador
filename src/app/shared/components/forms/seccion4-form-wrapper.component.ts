@@ -2,21 +2,14 @@ import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion4FormComponent } from '../seccion4/seccion4-form.component';
+import { Seccion4Component } from '../seccion4/seccion4.component';
 import { BaseSectionComponent } from '../base-section.component';
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion4FormComponent],
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion4Component],
     selector: 'app-seccion4-form-wrapper',
-    template: `
-    <app-seccion4-form 
-      [seccionId]="seccionId" 
-      [modoFormulario]="true">
-    </app-seccion4-form>
-  `,
-    styles: [`
-    :host { display: block; width: 100%; }
-  `]
+    template: `<app-seccion4 [seccionId]="seccionId" [modoFormulario]="true"></app-seccion4>`,
+    styles: [`:host { display: block; width: 100%; }`]
 })
 export class Seccion4FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
