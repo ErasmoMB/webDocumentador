@@ -54,7 +54,11 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
     ];
 
-    this.formDataSignal = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
+    this.formDataSignal = computed(() => {
+      const sectionData = this.projectFacade.selectSectionFields(this.seccionId, null)();
+      const seccion2Data = this.projectFacade.selectSectionFields('3.1.2', null)();
+      return { ...sectionData, comunidadesCampesinas: seccion2Data['comunidadesCampesinas'] || sectionData['comunidadesCampesinas'] };
+    });
 
     this.tablaAISD1Signal = computed(() => {
       // ✅ SIEMPRE leer con prefijo. Sin fallbacks a versiones sin prefijo.
@@ -89,7 +93,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       const data = { ...legacyData, ...sectionData };
       const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
       
-      // ✅ SIEMPRE usar datos con prefijo. Sin fallbacks.
       const tablaAISD1 = this.tablaAISD1Signal();
       const tablaAISD2 = this.tablaAISD2Signal();
       
@@ -97,7 +100,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       return {
         data: {
           ...data,
-          comunidadesCampesinas: data['comunidadesCampesinas'] ?? [],
+          comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? data['comunidadesCampesinas'] ?? [],
           cuadroTituloAISD1: data['cuadroTituloAISD1'],
           tablaAISD1Datos: tablaAISD1,
           tablaAISD2Datos: tablaAISD2
@@ -129,6 +132,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       const sectionData = this.formDataSignal();
       const legacyData = this.projectFacade.obtenerDatos();
       this.datos = { ...legacyData, ...sectionData };
+      this.datos['comunidadesCampesinas'] = sectionData['comunidadesCampesinas'] || legacyData['comunidadesCampesinas'] || [];
       this.cdRef.markForCheck();
     });
 

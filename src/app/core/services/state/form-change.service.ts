@@ -138,7 +138,10 @@ export class FormChangeService {
   restoreSectionState(sectionId: string | undefined, currentData: Record<string, any>): void {
     const resolvedSectionId = sectionId || 'global';
     const saved = this.formPersistence.loadSectionState(resolvedSectionId);
-    if (!saved) return;
+
+    if (!saved) {
+      return;
+    }
 
     const updates: Record<string, any> = {};
     Object.keys(saved).forEach(groupId => {
@@ -157,6 +160,12 @@ export class FormChangeService {
       const formularioService = this.formularioService;
       if (formularioService) {
         formularioService.actualizarDatos(updates as any);
+      }
+
+      // ✅ CRÍTICO: También actualizar ProjectStateFacade
+      const facade = this.projectFacade;
+      if (facade) {
+        facade.setFields(resolvedSectionId, null, updates);
       }
     }
 

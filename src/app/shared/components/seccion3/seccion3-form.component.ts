@@ -96,6 +96,10 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // ✅ CRÍTICO: Restaurar datos desde localStorage cuando se inicializa
+    console.log(`🔄 [Seccion3FormComponent] ngOnInit() - Restaurando datos desde localStorage`);
+    this.formChange.restoreSectionState(this.seccionId, this.formData);
+    this.cdRef.markForCheck();
   }
 
   ngOnDestroy() {

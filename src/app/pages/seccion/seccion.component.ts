@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector, effect } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector, effect, Signal, computed } from '@angular/core';
 import { SectionReferenceValidationService, SectionReferenceError } from 'src/app/core/services/section-reference-validation.service';
 import { FormStateService } from 'src/app/core/services/state/form-state.service';
 import { FormPersistenceService } from 'src/app/core/services/state/form-persistence.service';
@@ -120,12 +120,33 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   geoInfo: any = {};
   autocompleteData: any = {};
   testDataActive = false;
-  validationErrors: SectionReferenceError[] = [];
+  readonly validationErrors: SectionReferenceError[] = [];
   canNavigateValidation = true;
-  private validationDisposer?: { destroy: () => void };
   
   // Mobile view toggle
   mobileViewMode: 'preview' | 'form' = 'form'; // Por defecto mostrar formulario en mobile
+
+  // ✅ FASE 1: Signals para validación - inicializados al nivel de clase (no en ngOnInit)
+  readonly validationErrorsSignal: Signal<readonly SectionReferenceError[]> = computed(() => 
+    Array.from(this.validationService.errors())
+  );
+  
+  readonly isValidSignal: Signal<boolean> = computed(() => 
+    this.validationService.isValid()
+  );
+
+  // ✅ FASE 1: Effect a nivel de clase para monitorear validación
+  // Se ejecuta automáticamente cuando los signals cambian (no en ngOnInit)
+  private readonly validationEffect = effect(() => {
+    // ✅ Leer los valores sin intentar mutar (readonly arrays)
+    const errors = this.validationErrorsSignal();
+    const isValid = this.isValidSignal();
+    
+    // ✅ Solo actualizar el estado de navegación cuando validación cambia
+    if (!isValid) {
+      this.actualizarEstadoNavegacion();
+    }
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -207,13 +228,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.validationDisposer = effect(() => {
-      this.validationErrors = Array.from(this.validationService.errors());
-      this.canNavigateValidation = this.validationService.isValid();
-      if (!this.canNavigateValidation) {
-        this.actualizarEstadoNavegacion();
-      }
-    }, { allowSignalWrites: true });
+    // ✅ FASE 1: Validación ahora se monitorea via effect() a nivel de clase
+    // No crear effect aquí (anti-pattern). El effect se ejecuta automáticamente
+    // cuando this.validationService.errors() y this.validationService.isValid() cambian
   }
 
   ngAfterViewInit(): void {
@@ -1037,10 +1054,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   // }
 
   ngOnDestroy() {
+    // ✅ FASE 1: Effect() a nivel de clase se limpia automáticamente
+    // No es necesario disposer porque Angular maneja el cleanup
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    if (this.validationDisposer) {
-      this.validationDisposer.destroy();
-    }
   }
 
   obtenerValorConPrefijo(campo: string): any {

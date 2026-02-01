@@ -88,6 +88,48 @@
       (valueChange)="onFieldChange('parrafoSeccion3_fuentes_secundarias', $event)">
     </app-paragraph-editor>
 
+    <!-- ✅ FASE 1: Interfaz de edición de fuentes secundarias -->
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">
+        B. Fuentes Secundarias - Lista
+        <span class="badge badge-info" style="margin-left: 8px;">{{ obtenerFuentesSecundariasParaEditar().length }} fuentes</span>
+      </label>
+      <div class="fuentes-secundarias-editor">
+        <div *ngIf="obtenerFuentesSecundariasParaEditar().length === 0" class="alert alert-info">
+          No hay fuentes secundarias registradas. Use el botón "Agregar fuente" para comenzar.
+        </div>
+        
+        <div *ngFor="let fuente of obtenerFuentesSecundariasParaEditar(); let i = index" class="fuente-item" style="display: flex; gap: 8px; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px; border-left: 3px solid #007bff;">
+          <div style="flex: 1;">
+            <input 
+              type="text" 
+              class="form-control" 
+              [value]="fuente"
+              (change)="onFuenteInputChange(i, $event)"
+              (blur)="onFuenteInputChange(i, $event)"
+              placeholder="Ingrese la fuente secundaria"
+              style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <button 
+            type="button"
+            class="btn btn-sm btn-danger"
+            (click)="eliminarFuenteSecundaria(i)"
+            title="Eliminar esta fuente"
+            style="padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            ✕ Eliminar
+          </button>
+        </div>
+        
+        <button 
+          type="button"
+          class="btn btn-sm btn-success"
+          (click)="agregarFuenteSecundaria()"
+          style="margin-top: 12px; padding: 10px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          + Agregar fuente
+        </button>
+      </div>
+    </div>
+
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías</label>
       <app-image-upload

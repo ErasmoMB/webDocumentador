@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Signal, computed } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -58,7 +58,13 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
     private formChange: FormChangeService,
     private gruposService: GruposService,
     private centrosPobladosSearch: CentrosPobladosSearchService
-  ) {}
+  ) {
+    effect(() => {
+      const aisd = this.aisdGroups();
+      const aisi = this.aisiGroups();
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit() {
     // ✅ Formulario reactivo: los signals se actualizan automáticamente
@@ -480,8 +486,8 @@ export class Seccion2FormComponent implements OnInit, OnDestroy {
   // ============================================================================
 
   onFotografiasChange(fotos: any[]) {
-    if (this.seccion2Component) {
-      this.seccion2Component.onFotografiasChange(fotos);
+    if (this.seccion2Component && typeof (this.seccion2Component as any).onFotografiasChange === 'function') {
+      (this.seccion2Component as any).onFotografiasChange(fotos);
     }
   }
 

@@ -836,4 +836,12 @@ export class ProjectStateFacade {
       sectionContentReducer(state, command)
     );
   }
+
+  /**
+   * ✅ FASE 1: Resetea una sección específica
+   * Limpia todos los campos de la sección sin afectar otras secciones
+   */
+  resetSection(sectionId: string): void {
+    this.store.dispatch(Commands.resetSection(sectionId, false));
+  }
 }

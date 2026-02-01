@@ -201,5 +201,67 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
     ];
   }
 
+  // ✅ MÉTODOS PARA GESTIÓN DE FUENTES SECUNDARIAS
+
+  /**
+   * Agrega una nueva fuente secundaria a la lista
+   */
+  agregarFuenteSecundaria(): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    const nuevaFuente = 'Nueva fuente secundaria';
+    const fuentesActualizadas = [...fuentesActuales, nuevaFuente];
+    
+    console.log('[Seccion3] agregarFuenteSecundaria - guardando:', fuentesActualizadas);
+    this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas);
+    this.cdRef.markForCheck();
+  }
+
+  /**
+   * Actualiza una fuente secundaria existente
+   */
+  actualizarFuenteSecundaria(index: number, valor: string): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    if (index >= 0 && index < fuentesActuales.length) {
+      const fuentesActualizadas = [...fuentesActuales];
+      fuentesActualizadas[index] = valor;
+      
+      console.log('[Seccion3] actualizarFuenteSecundaria[' + index + '] - guardando:', fuentesActualizadas);
+      this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas);
+      this.cdRef.markForCheck();
+    }
+  }
+
+  /**
+   * Elimina una fuente secundaria de la lista
+   */
+  eliminarFuenteSecundaria(index: number): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    if (index >= 0 && index < fuentesActuales.length) {
+      const fuentesActualizadas = fuentesActuales.filter((_, i) => i !== index);
+      
+      console.log('[Seccion3] eliminarFuenteSecundaria[' + index + '] - guardando:', fuentesActualizadas);
+      this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas);
+      this.cdRef.markForCheck();
+    }
+  }
+
+  /**
+   * Obtiene la lista actual de fuentes secundarias
+   */
+  obtenerFuentesSecundariasParaEditar(): string[] {
+    return this.fuentesSecundariasListaSignal() || [];
+  }
+
+  /**
+   * Maneja el evento change/blur de un input de fuente
+   * Extrae el valor correctamente y actualiza la fuente
+   */
+  onFuenteInputChange(index: number, event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement && inputElement.value !== undefined) {
+      this.actualizarFuenteSecundaria(index, inputElement.value);
+    }
+  }
+
 }
 
