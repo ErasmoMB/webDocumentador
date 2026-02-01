@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { CacheInterceptor } from './interceptors/cache.interceptor';
 import { GlobalErrorHandler } from './handlers/global-error.handler';
+import { PersistenceObserverService } from './persistence/persistence-observer.service';
 
 /**
  * CoreModule
@@ -27,7 +28,10 @@ import { GlobalErrorHandler } from './handlers/global-error.handler';
     {
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
-    }
+    },
+    // ✅ CRÍTICO: Inyectar PersistenceObserverService para que su effect() se ejecute
+    // Esto garantiza que la persistencia automática funcione desde el inicio de la app
+    PersistenceObserverService
   ]
 })
 export class CoreModule {

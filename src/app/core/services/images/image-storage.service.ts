@@ -129,6 +129,7 @@ export class ImageStorageService {
     });
 
     if (Object.keys(updates).length > 0) {
+      this.projectFacade.setFields(sectionId, null, updates);
       this.formChange.persistFields(sectionId, 'form', updates);
     }
 

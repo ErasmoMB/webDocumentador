@@ -14,7 +14,7 @@
           label="Introducción AISD"
           hint="Placeholder CC ___ se reemplaza automáticamente."
           [rows]="4"
-          [value]="datos['parrafoSeccion4_introduccion_aisd']"
+          [value]="getTextoIntroduccionEfectivo()"
           (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
       </app-paragraph-editor>
 
@@ -22,7 +22,7 @@
         [fieldId]="'parrafoSeccion4_comunidad_completo'"
         label="Información Histórica y Ubicación"
         [rows]="6"
-        [value]="datos['parrafoSeccion4_comunidad_completo']"
+        [value]="getTextoComunidadEfectivo()"
         (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
       </app-paragraph-editor>
 
@@ -30,7 +30,7 @@
         [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
         label="Contexto de Indicadores"
         [rows]="3"
-        [value]="datos['parrafoSeccion4_caracterizacion_indicadores']"
+        [value]="getTextoCaracterizacionEfectivo()"
         (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
       </app-paragraph-editor>
     </section>

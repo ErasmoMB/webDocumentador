@@ -1,6 +1,4 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, Signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
@@ -8,23 +6,29 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
 import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
+import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/seccion4-text-generator.service';
 
 @Component({
+    standalone: true,
     imports: [
         CommonModule,
         FormsModule,
         CoreSharedModule
     ],
     selector: 'app-seccion4-form',
-    templateUrl: './seccion4-form.component.html'
+    templateUrl: './seccion4-form.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion4FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
   
   readonly PHOTO_PREFIX_UBICACION = 'fotografiaUbicacionReferencial';
   readonly PHOTO_PREFIX_POBLACION = 'fotografiaPoblacionViviendas';
+
+  override useReactiveSync = true;
 
   override watchedFields: string[] = [
     'tablaAISD1Datos', 'tablaAISD2Datos',
@@ -34,20 +38,28 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     'parrafoSeccion4_caracterizacion_indicadores'
   ];
 
-  private stateSubscription?: Subscription;
+  readonly formDataSignal: Signal<Record<string, any>>;
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
+    private formChange: FormChangeService,
     public tableCfg: Seccion4TableConfigService,
     private dataSrv: Seccion4DataService,
-    private stateAdapter: ReactiveStateAdapter
+    private textGen: Seccion4TextGeneratorService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX_UBICACION, label: 'Ubicación' },
       { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
     ];
+    this.formDataSignal = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
+    effect(() => {
+      const sectionData = this.formDataSignal();
+      const legacyData = this.projectFacade.obtenerDatos();
+      this.datos = { ...legacyData, ...sectionData };
+      this.cdRef.markForCheck();
+    });
   }
 
   private isProcessingPipeline = false;
@@ -94,8 +106,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       
       this.onFieldChange(dataKey as any, filas, { refresh: false });
       this.onFieldChange(flagKey as any, true, { refresh: false });
-      
-      // ✅ Llenar también Tabla A1 si está vacía
+
       const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
       const actualA1 = this.datos[dataKeyA1] || [];
       if (actualA1.length === 0 || (actualA1.length === 1 && !actualA1[0].localidad)) {
@@ -118,21 +129,54 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   }
 
   onTablaUpdated(): void {
-    this.actualizarDatos();
-    const raw = this.obtenerValorConPrefijo('tablaAISD2Datos') || [];
-    const totals = this.dataSrv.calcularTotalesAISD2(raw);
-    const prefijo = this.obtenerPrefijoGrupo();
-    
-    this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion);
-    this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas);
-    this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas);
+    setTimeout(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const keyA1 = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
+      const keyA2 = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
+      const payload: Record<string, any> = {};
+      if (this.datos[keyA1] !== undefined) {
+        payload[keyA1] = Array.isArray(this.datos[keyA1])
+          ? this.datos[keyA1].map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r))
+          : this.datos[keyA1];
+      }
+      if (this.datos[keyA2] !== undefined) {
+        payload[keyA2] = Array.isArray(this.datos[keyA2])
+          ? this.datos[keyA2].map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r))
+          : this.datos[keyA2];
+      }
+      if (Object.keys(payload).length > 0) {
+        this.projectFacade.setFields(this.seccionId, null, payload);
+        this.formChange.persistFields(this.seccionId, 'form', payload);
+      }
+      this.actualizarDatos();
+      const raw = this.obtenerValorConPrefijo('tablaAISD2Datos') || [];
+      const totals = this.dataSrv.calcularTotalesAISD2(raw);
+      this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion);
+      this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas);
+      this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas);
+      this.cdRef.markForCheck();
+    }, 0);
   }
 
   obtenerNombreComunidad(): string {
     return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
   }
 
-  // Métodos obligatorios de BaseSectionComponent con lógica de detección real
+  /** Mismo texto que muestra la vista (personalizado o por defecto) para sincronizar formulario ↔ vista */
+  getTextoIntroduccionEfectivo(): string {
+    return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidad());
+  }
+
+  /** Mismo texto que muestra la vista (personalizado o por defecto) */
+  getTextoComunidadEfectivo(): string {
+    return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidad());
+  }
+
+  /** Mismo texto que muestra la vista (personalizado o por defecto) */
+  getTextoCaracterizacionEfectivo(): string {
+    return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidad());
+  }
+
   protected override detectarCambios(): boolean {
     const actual = JSON.stringify(this.projectFacade.obtenerDatos());
     const anterior = JSON.stringify(this.datosAnteriores);

@@ -62,7 +62,8 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
     });
 
     this.entrevistadosSignal = computed(() => {
-      const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+      // ✅ Usar selectTableData() para obtener datos de tabla (no selectField())
+      const value = this.projectFacade.selectTableData(this.seccionId, null, 'entrevistados')();
       return Array.isArray(value) ? value : [];
     });
 

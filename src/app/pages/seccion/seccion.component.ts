@@ -12,6 +12,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
 import { ImageManagementService } from 'src/app/core/services/image-management.service';
 import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
+import { SectionFlowNavigationService } from 'src/app/core/services/section-flow-navigation.service';
 import { MockDataService } from 'src/app/core/services/infrastructure/mock-data.service';
 import { FormularioMockService } from 'src/app/core/services/formulario-mock.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
@@ -139,6 +140,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     private fieldMapping: FieldMappingFacade,
     private imageService: ImageManagementService,
     private navigationService: SectionNavigationService,
+    private sectionFlowNavigation: SectionFlowNavigationService,
     private mockDataService: MockDataService,
     private tableFacade: TableManagementFacade,
     private formChange: FormChangeService,
@@ -150,18 +152,23 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    const initialId = this.route.snapshot.params['id'];
+    if (initialId && !this.seccionId) {
+      this.seccionId = initialId;
+      void this.cargarSeccion();
+    }
+
     this.subscriptions.push(
       this.route.params.subscribe(params => {
         const newSeccionId = params['id'];
         // Solo recargar si la sección realmente cambió
         if (this.seccionId !== newSeccionId) {
           this.seccionId = newSeccionId;
-          // Ejecutar cargarSeccion como async pero sin bloquear
           void this.cargarSeccion();
         }
       })
     );
-    
+
     this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     this.formData = { ...this.datos };
     this.stateAdapter.setDatos(this.datos);
@@ -208,6 +215,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.actualizarTitulo();
     this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
     this.formData = { ...this.datos };
+
+    // Restaurar estado de la sección desde localStorage (form-state) para que tablas y campos
+    // persistidos vuelvan al formulario y al store tras recargar la página
+    this.formChange.restoreSectionState(this.seccionId, this.datos);
+    this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
+    this.formData = { ...this.datos };
+
     this.centrosPobladosJSON = this.datos['centrosPobladosJSON'] || [];
     this.comunidadesCampesinas = this.datos['comunidadesCampesinas'] || [];
     this.geoInfo = this.datos['geoInfo'] || {};
@@ -360,6 +374,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       '3.1.2': '3.1.2 Delimitación de las áreas de influencia social',
       '3.1.2.A': 'A. Área de Influencia Social Directa (AISD)',
       '3.1.2.B': 'B. Área de Influencia Social Indirecta (AISI)',
+      '3.1.3': '3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares',
       '3.1.3.A': 'A. Fuentes primarias',
       '3.1.3.B': 'B. Fuentes secundarias',
       '3.1.4': '3.1.4 Caracterización socioeconómica de las áreas de influencia social',
@@ -826,6 +841,15 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   actualizarEstadoNavegacion() {
+    // Si estamos en una sección AISD/AISI, usar el flujo secuencial
+    if (this.esSeccionAISDOAISI(this.seccionId)) {
+      this.puedeIrSiguiente = this.sectionFlowNavigation.hasNextSection(this.seccionId);
+      this.puedeIrAnterior = this.sectionFlowNavigation.hasPreviousSection(this.seccionId);
+      this.esUltimaSeccion = !this.puedeIrSiguiente; // Es última si no hay siguiente
+      return;
+    }
+
+    // Para otras secciones, usar navegación normal
     const datosActualizados = this.projectFacade.obtenerDatos() as FormularioDatos;
     const estado = this.navigationService.actualizarEstadoNavegacion(this.seccionId, datosActualizados);
     this.puedeIrAnterior = estado.puedeIrAnterior;
@@ -833,18 +857,55 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.esUltimaSeccion = estado.esUltimaSeccion;
   }
 
+  /**
+   * Navega a la sección anterior.
+   * En secciones AISD/AISI (3.1.4.A.* y 3.1.4.B.*), usa el flujo secuencial.
+   * En otras secciones, usa la navegación normal.
+   */
   seccionAnterior() {
+    // Chequear si es una sección AISD/AISI para aplicar flujo secuencial
+    if (this.esSeccionAISDOAISI(this.seccionId)) {
+      const seccionAnterior = this.sectionFlowNavigation.getPreviousSection(this.seccionId);
+      if (seccionAnterior) {
+        this.router.navigate(['/seccion', seccionAnterior]);
+      }
+      return;
+    }
+
+    // Navegación normal para otras secciones
     const seccionAnterior = this.navigationService.obtenerSeccionAnterior(this.seccionId, this.datos);
     if (seccionAnterior) {
       this.router.navigate(['/seccion', seccionAnterior]);
     }
   }
 
+  /**
+   * Navega a la siguiente sección.
+   * En secciones AISD/AISI (3.1.4.A.* y 3.1.4.B.*), usa el flujo secuencial.
+   * En otras secciones, usa la navegación normal.
+   */
   seccionSiguiente() {
+    // Chequear si es una sección AISD/AISI para aplicar flujo secuencial
+    if (this.esSeccionAISDOAISI(this.seccionId)) {
+      const seccionSiguiente = this.sectionFlowNavigation.getNextSection(this.seccionId);
+      if (seccionSiguiente) {
+        this.router.navigate(['/seccion', seccionSiguiente]);
+      }
+      return;
+    }
+
+    // Navegación normal para otras secciones
     const seccionSiguiente = this.navigationService.obtenerSeccionSiguiente(this.seccionId, this.datos);
     if (seccionSiguiente) {
       this.router.navigate(['/seccion', seccionSiguiente]);
     }
+  }
+
+  /**
+   * Chequea si la sección actual es AISD o AISI (3.1.4.A.* o 3.1.4.B.*)
+   */
+  private esSeccionAISDOAISI(sectionId: string): boolean {
+    return /^3\.1\.4\.[AB]\.\d+\.\d+$/.test(sectionId);
   }
 
   startResize(event: MouseEvent) {
@@ -1480,7 +1541,10 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
           const entrevistadosActual = datosActuales['entrevistados'];
           if (this.esCampoVacio(entrevistadosActual)) {
             const entrevistadosData = JSON.parse(JSON.stringify(enrichedMock.entrevistados));
-            updates['entrevistados'] = entrevistadosData;
+            // ✅ Usar setTableData() para tablas, no setFields()
+            this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistadosData);
+            // También persistir en FormularioService para compatibilidad
+            this.formChange.persistFields(this.seccionId, 'form', { entrevistados: entrevistadosData });
             if (!fieldsConDatos.includes('entrevistados')) {
               fieldsConDatos.push('entrevistados');
             }
@@ -1506,18 +1570,29 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
 
       this.stateAdapter.setDatos(this.datos);
-      
-      // Sincronizar de inmediato el formulario de sección 3 para que el cuadro de entrevistados se vea sin recargar
+
       const esSeccion3 = this.seccionId === '3.1.3' || this.seccionId === '3.1.3.A' || this.seccionId === '3.1.3.B';
-      if (esSeccion3 && this.formComponentRef?.instance?.sincronizarDesdeStore) {
-        setTimeout(() => this.formComponentRef?.instance?.sincronizarDesdeStore(), 0);
+
+      // Sincronizar formulario y vista de sección 3: pasar datos explícitamente y forzar re-render
+      if (esSeccion3) {
+        const form = this.formComponentRef?.instance;
+        if (form && typeof form.sincronizarDesdeStore === 'function') {
+          // Sincronizar desde el store (que ya tiene los datos)
+          form.sincronizarDesdeStore();
+          if (form.cdRef) {
+            form.cdRef.markForCheck();
+          }
+        }
+        if (this.previewComponentRef?.instance?.cdRef) {
+          this.previewComponentRef.instance.cdRef.markForCheck();
+        }
       }
-      
+
       setTimeout(() => {
         this.actualizarComponenteSeccion();
         this.testDataActive = this.fieldMapping.hasAnyTestDataForSection(this.seccionId);
         this.cdRef.detectChanges();
-        
+
         setTimeout(() => {
           const componentIdMap: { [key: string]: string } = {
             '3.1.3': 'seccion3',
@@ -1531,21 +1606,28 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
             '3.1.4.A.1.2': 'seccion6',
             '3.1.4.A.2.2': 'seccion6'
           };
-          
+
           const componentId = componentIdMap[this.seccionId];
           if (componentId) {
             const component = ViewChildHelper.getComponent(componentId);
             if (component) {
-              if (component['actualizarDatos']) {
+              if (typeof component['actualizarDatos'] === 'function') {
                 component['actualizarDatos']();
               }
-              if (component['cdRef'] && component['cdRef']['detectChanges']) {
+              if (component['cdRef']?.detectChanges) {
                 component['cdRef'].detectChanges();
               }
             }
           }
-          
-          
+
+          if (esSeccion3 && this.formComponentRef?.instance?.sincronizarDesdeStore) {
+            this.formComponentRef.instance.sincronizarDesdeStore();
+            this.formComponentRef.instance.cdRef?.markForCheck();
+          }
+          if (this.previewComponentRef?.instance?.cdRef) {
+            this.previewComponentRef.instance.cdRef.markForCheck();
+          }
+
           this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;
           this.stateAdapter.setDatos(this.datos);
           this.cdRef.detectChanges();

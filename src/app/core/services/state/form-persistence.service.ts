@@ -18,6 +18,8 @@ type SectionFormState = {
 
 const STORAGE_PREFIX = 'lbs:form-state:';
 const DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 días
+/** Valores mayores a este tamaño no se persisten en localStorage para evitar QuotaExceededError */
+const BLOB_SIZE_THRESHOLD = 50 * 1024; // 50 KB
 
 interface PersistedState {
   savedAt: number;
@@ -25,17 +27,55 @@ interface PersistedState {
   data: SectionFormState;
 }
 
+function isBlobValue(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  if (value.startsWith('data:image')) return true;
+  return value.length > BLOB_SIZE_THRESHOLD;
+}
+
+/**
+ * Clona el estado y reemplaza valores tipo blob (Base64/imágenes) por cadena vacía
+ * para no exceder la cuota de localStorage y permitir muchas imágenes en memoria.
+ */
+function stripBlobsFromState(state: SectionFormState): SectionFormState {
+  const out: SectionFormState = {};
+  for (const groupId of Object.keys(state)) {
+    const group = state[groupId];
+    out[groupId] = {};
+    for (const fieldName of Object.keys(group)) {
+      const field = group[fieldName];
+      const value = field?.value;
+      out[groupId][fieldName] = {
+        ...field,
+        value: isBlobValue(value) ? '' : value,
+      };
+    }
+  }
+  return out;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FormPersistenceService {
   constructor(private storage: StorageFacade) {}
 
   saveSectionState(sectionId: string, state: SectionFormState, ttl = DEFAULT_TTL_MS): void {
+    const dataToPersist = stripBlobsFromState(state);
     const payload: PersistedState = {
       savedAt: Date.now(),
       ttl,
-      data: state,
+      data: dataToPersist,
     };
-    this.storage.setItem(this.getKey(sectionId), JSON.stringify(payload));
+    const key = this.getKey(sectionId);
+    try {
+      this.storage.setItem(key, JSON.stringify(payload));
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+        this.clearSectionState(sectionId);
+        this.storage.setItem(key, JSON.stringify({ savedAt: Date.now(), ttl, data: {} }));
+      } else {
+        throw err;
+      }
+    }
   }
 
   loadSectionState(sectionId: string): SectionFormState | null {

@@ -242,14 +242,13 @@ export class StateRehydrationService {
   // ============================================================================
   
   private applyState(state: ProjectState): void {
-    // Usar el comando/método del store para cargar estado
-    // El store debe exponer un método para esto
-    if (typeof (this.store as any).loadState === 'function') {
-      (this.store as any).loadState(state);
-    } else if (typeof (this.store as any).dispatch === 'function') {
-      // Si hay sistema de comandos, usar LoadProjectCommand
-      // Por ahora, warning
-      console.warn('[Rehydration] Store does not expose loadState method');
+    const s = this.store as any;
+    if (typeof s.hydrate === 'function') {
+      s.hydrate(state);
+    } else if (typeof s.loadState === 'function') {
+      s.loadState(state);
+    } else {
+      console.warn('[Rehydration] Store does not expose hydrate nor loadState method');
     }
   }
   

@@ -61,7 +61,8 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
     });
 
     this.entrevistadosSignal = computed(() => {
-      const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+      // ✅ Usar selectTableData() para obtener datos de tabla (no selectField())
+      const value = this.projectFacade.selectTableData(this.seccionId, null, 'entrevistados')();
       return Array.isArray(value) ? value : [];
     });
 
@@ -181,7 +182,9 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const entrevistados = this.formData.entrevistados || [];
       if (Array.isArray(entrevistados)) {
-        this.projectFacade.setField(this.seccionId, null, 'entrevistados', entrevistados);
+        // ✅ Usar setTableData() para tablas, que es el comando apropiado
+        this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistados);
+        // Persistir también en FormularioService (legacy storage)
         this.formChange.persistFields(this.seccionId, 'form', { entrevistados });
       }
       this.cdRef.markForCheck();

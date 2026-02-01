@@ -121,9 +121,14 @@ function handleSetFields(
   for (const field of fields) {
     const key = generateFieldKey(sectionId, groupId, field.fieldName);
     const existingEntry = state.byKey[key];
-    
-    // Solo actualizar si hay cambio de valor
-    if (!existingEntry || existingEntry.state.value !== field.value) {
+    const prevVal = existingEntry?.state?.value;
+    const nextVal = field.value;
+    const valueChanged = prevVal !== nextVal && (
+      typeof nextVal !== 'object' || nextVal === null
+        ? true
+        : JSON.stringify(prevVal) !== JSON.stringify(nextVal)
+    );
+    if (!existingEntry || valueChanged) {
       newByKey[key] = createFieldEntry(
         sectionId, 
         groupId, 

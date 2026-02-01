@@ -4,6 +4,7 @@ import { FormPersistenceService } from './form-persistence.service';
 import { SectionSyncService } from './section-sync.service';
 
 import { FormularioService } from '../formulario.service';
+import { ProjectStateFacade } from '../../state/project-state.facade';
 
 /**
  * ✅ FASE 4: Migrado - eliminada dependencia de LegacyDocumentSnapshotService
@@ -13,6 +14,7 @@ import { FormularioService } from '../formulario.service';
 export class FormChangeService {
   // Lazy-loaded para evitar dependencia circular
   private _formularioService: FormularioService | null = null;
+  private _projectFacade: ProjectStateFacade | null = null;
 
   constructor(
     private injector: Injector,
@@ -30,6 +32,17 @@ export class FormChangeService {
       }
     }
     return this._formularioService;
+  }
+
+  private get projectFacade(): ProjectStateFacade | null {
+    if (!this._projectFacade) {
+      try {
+        this._projectFacade = this.injector.get(ProjectStateFacade, null);
+      } catch {
+        return null;
+      }
+    }
+    return this._projectFacade;
   }
 
   private resolvePersistOptions(options?: {
@@ -84,6 +97,28 @@ export class FormChangeService {
       Object.keys(updates).forEach(fieldId => {
         this.formState.updateField(resolvedSectionId, groupId, fieldId, updates[fieldId]);
       });
+    }
+
+    // 2b. Actualizar store (ProjectStateFacade) para que la vista y cuadros reflejen los datos
+    const facade = this.projectFacade;
+    if (facade && Object.keys(updates).length > 0) {
+      // ✅ Detectar si los updates contienen datos de tabla (cuando groupId es 'table')
+      if (groupId === 'table') {
+        // Para cada clave en updates, si contiene un array, es probablemente una tabla
+        Object.keys(updates).forEach(tableKey => {
+          const value = updates[tableKey];
+          if (Array.isArray(value)) {
+            // ✅ Usar setTableData() para tablas
+            facade.setTableData(resolvedSectionId, null, tableKey, value);
+          } else {
+            // Fallback: si no es array, usar setField()
+            facade.setField(resolvedSectionId, null, tableKey, value);
+          }
+        });
+      } else {
+        // Para campos normales, usar setFields()
+        facade.setFields(resolvedSectionId, null, updates);
+      }
     }
 
     // 3. Notificar a SectionSyncService para actualización inmediata

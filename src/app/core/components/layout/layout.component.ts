@@ -23,6 +23,7 @@ interface SidebarSection {
 export class LayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   private subscription?: Subscription;
+  private groupsSubscription?: Subscription;
   private resizeTimeout: any;
 
   constructor(
@@ -51,10 +52,38 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.actualizarSeccionesAISI();
     this.actualizarSeccionesAISD();
     
-    this.subscription = this.stateAdapter.datos$.subscribe(() => {
-      this.actualizarSeccionesAISI();
-      this.actualizarSeccionesAISD();
+    // Suscribirse a cambios en datos legacy (FormularioService)
+    this.subscription = this.stateAdapter.datos$.subscribe((datos: any) => {
+      // Forzar actualización con pequeño delay para permitir que los datos se estabilicen
+      setTimeout(() => {
+        this.actualizarSeccionesAISI();
+        this.actualizarSeccionesAISD();
+        this.cdRef.markForCheck();
+      }, 100);
     });
+
+    // Suscribirse a cambios en grupos (ProjectState)
+    // Esto detecta cambios cuando se cargan nuevos JSONs que crean grupos
+    let previousAISDCount = 0;
+    let previousAISICount = 0;
+    
+    this.groupsSubscription = setInterval(() => {
+      try {
+        const gruposAISD = this.projectFacade.aisdGroups();
+        const gruposAISI = this.projectFacade.aisiGroups();
+        
+        if (gruposAISD.length !== previousAISDCount || gruposAISI.length !== previousAISICount) {
+          previousAISDCount = gruposAISD.length;
+          previousAISICount = gruposAISI.length;
+          
+          this.actualizarSeccionesAISI();
+          this.actualizarSeccionesAISD();
+          this.cdRef.markForCheck();
+        }
+      } catch (error) {
+        // Silently handle error
+      }
+    }, 300) as any;
   }
 
   ngOnDestroy() {
@@ -65,6 +94,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.subscription.unsubscribe();
     }
     
+    if (this.groupsSubscription) {
+      clearInterval(this.groupsSubscription as any);
+    }
+    
     // Limpiar timeout
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
@@ -72,6 +105,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   generarSeccionesAISI(): SidebarSection[] {
+    // Prioridad 1: Leer de ProjectFacade.aisiGroups() (fuente principal)
+    try {
+      const gruposAISI = this.projectFacade.aisiGroups();
+      if (gruposAISI && gruposAISI.length > 0) {
+        return gruposAISI.map((grupo: any, index: number) => {
+          const numero = index + 1;
+          const nombreDistrito = grupo.nombre && grupo.nombre.trim() !== '' ? ` ${grupo.nombre}` : '';
+          return {
+            id: `3.1.4.B.${numero}`,
+            title: `B.${numero} Centro Poblado${nombreDistrito}`,
+            route: `/seccion/3.1.4.B.${numero}`,
+            level: 4,
+            expanded: false,
+            children: this.generarSubseccionesB(numero)
+          };
+        });
+      }
+    } catch (error) {
+      // Silently fall through to legacy
+    }
+
+    // Prioridad 2: Fallback a datos legacy (FormularioService)
     const datos = this.projectFacade.obtenerDatos();
     const distritosAISI = datos['distritosAISI'] || [];
 
@@ -116,6 +171,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   generarSeccionesAISD(): SidebarSection[] {
+    // Prioridad 1: Leer de ProjectFacade.aisdGroups() (fuente principal)
+    try {
+      const gruposAISD = this.projectFacade.aisdGroups();
+      if (gruposAISD && gruposAISD.length > 0) {
+        return gruposAISD.map((grupo: any, index: number) => {
+          const numero = index + 1;
+          const nombreGrupo = grupo.nombre && grupo.nombre.trim() !== '' ? ` ${grupo.nombre}` : '';
+          return {
+            id: `3.1.4.A.${numero}`,
+            title: `A.${numero} Comunidad Campesina${nombreGrupo}`,
+            route: `/seccion/3.1.4.A.${numero}`,
+            level: 4,
+            expanded: false,
+            children: this.generarSubseccionesA(numero)
+          };
+        });
+      }
+    } catch (error) {
+      // Silently fall through to legacy
+    }
+
+    // Prioridad 2: Fallback a datos legacy (FormularioService)
     const datos = this.projectFacade.obtenerDatos();
     const comunidadesCampesinas = datos['comunidadesCampesinas'] || [];
     
@@ -166,19 +243,35 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   actualizarSeccionesAISI() {
-    const seccionB = this.sections[0]?.children?.[0]?.children?.[1];
-    if (seccionB && seccionB.id === '3.1.4.B') {
+    const seccionB = this.buscarSeccionPorId('3.1.4.B');
+    if (seccionB) {
       seccionB.children = this.generarSeccionesAISI();
       this.loadExpandedState();
+      this.cdRef.markForCheck();
     }
   }
 
   actualizarSeccionesAISD() {
-    const seccionA = this.sections[0]?.children?.[0]?.children?.[1]?.children?.[0];
-    if (seccionA && seccionA.id === '3.1.4.A') {
+    const seccionA = this.buscarSeccionPorId('3.1.4.A');
+    if (seccionA) {
       seccionA.children = this.generarSeccionesAISD();
       this.loadExpandedState();
+      this.cdRef.markForCheck();
     }
+  }
+
+  private buscarSeccionPorId(id: string): SidebarSection | undefined {
+    const buscar = (sections: SidebarSection[]): SidebarSection | undefined => {
+      for (const section of sections) {
+        if (section.id === id) return section;
+        if (section.children) {
+          const encontrada = buscar(section.children);
+          if (encontrada) return encontrada;
+        }
+      }
+      return undefined;
+    };
+    return buscar(this.sections);
   }
 
   sections: SidebarSection[] = [
