@@ -54,8 +54,13 @@ export class SectionPersistenceCoordinator {
         if (projectFacade) {
           Object.keys(datosLegacy).forEach(fieldId => {
             const value = (datosLegacy as any)[fieldId];
-            if (value !== undefined && value !== null && value !== '') {
-              projectFacade.setField(sectionId, null, fieldId, value);
+            // ✅ CRÍTICO: Sincronizar arrays (entrevistados, fuentesSecundariasLista) aunque estén vacíos
+            // También sincronizar valores no-vacíos
+            if (value !== undefined && value !== null) {
+              // ✅ PERMITIR arrays vacíos, strings vacíos NO
+              if (Array.isArray(value) || (typeof value === 'string' && value !== '') || typeof value !== 'string') {
+                projectFacade.setField(sectionId, null, fieldId, value);
+              }
             }
           });
         }
