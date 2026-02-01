@@ -125,14 +125,14 @@ export class SectionFlowNavigationService {
     if (groupType === 'AISD') {
       const aisdGroupCount = this.getAISDGroupCount();
       if (groupNumber < aisdGroupCount) {
-        // Hay más grupos AISD
-        return `3.1.4.A.${groupNumber + 1}.1`;
+        // Hay más grupos AISD - retornar la vista del siguiente grupo (sin subsección)
+        return `3.1.4.A.${groupNumber + 1}`;
       }
 
       // No hay más grupos AISD, pasar a AISI
       const aisiGroupCount = this.getAISIGroupCount();
       if (aisiGroupCount > 0) {
-        return `3.1.4.B.1.1`;
+        return `3.1.4.B.1`;
       }
 
       // No hay grupos AISI, terminar
@@ -142,8 +142,8 @@ export class SectionFlowNavigationService {
     // groupType === 'AISI'
     const aisiGroupCount = this.getAISIGroupCount();
     if (groupNumber < aisiGroupCount) {
-      // Hay más grupos AISI
-      return `3.1.4.B.${groupNumber + 1}.1`;
+      // Hay más grupos AISI - retornar la vista del siguiente grupo (sin subsección)
+      return `3.1.4.B.${groupNumber + 1}`;
     }
 
     // Se alcanzó el final del flujo
@@ -169,32 +169,60 @@ export class SectionFlowNavigationService {
       return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}.${prevSubSection}`;
     }
 
-    // Se está en la primera subsección del grupo actual
-    // Intentar pasar al grupo anterior del mismo tipo
-    if (groupType === 'AISD') {
-      if (groupNumber > 1) {
-        // Hay grupos AISD anteriores
-        return `3.1.4.A.${groupNumber - 1}.${this.AISD_SUBSECTIONS}`;
-      }
+    // Se está en la primera subsección del grupo actual (subSectionNumber === 1)
+    // Retornar la vista del grupo sin subsección específica
+    // Ej: 3.1.4.A.1.1 → 3.1.4.A.1
+    return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}`;
+  }
 
-      // Es el primer grupo AISD, no hay anterior
+  /**
+   * Calcula la sección anterior cuando se está en una vista de grupo sin subsección
+   * Ej: De 3.1.4.A.2 → 3.1.4.A.1.16 (última subsección del grupo anterior)
+   */
+  getPreviousSectionFromGroupView(currentSectionId: string): string | null {
+    // Extraer grupo y tipo
+    const match = currentSectionId.match(/^3\.1\.4\.([AB])\.(\d+)$/);
+    if (!match) {
       return null;
     }
 
-    // groupType === 'AISI'
+    const groupType = match[1] === 'A' ? 'AISD' : 'AISI';
+    const groupNumber = parseInt(match[2], 10);
+    const maxSubSections = groupType === 'AISD' ? this.AISD_SUBSECTIONS : this.AISI_SUBSECTIONS;
+
     if (groupNumber > 1) {
-      // Hay grupos AISI anteriores
-      return `3.1.4.B.${groupNumber - 1}.${this.AISI_SUBSECTIONS}`;
+      // Hay grupos anteriores del mismo tipo
+      return `3.1.4.${match[1]}.${groupNumber - 1}.${maxSubSections}`;
     }
 
-    // Es el primer grupo AISI, pasar al último grupo AISD
+    // Es el primer grupo
+    if (groupType === 'AISD') {
+      // No hay grupo anterior
+      return null;
+    }
+
+    // Es el primer grupo AISI, retroceder al último grupo AISD
     const aisdGroupCount = this.getAISDGroupCount();
     if (aisdGroupCount > 0) {
       return `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
     }
 
-    // No hay secciones anteriores
     return null;
+  }
+
+  /**
+   * Calcula la sección siguiente cuando se está en una vista de grupo sin subsección
+   * Ej: De 3.1.4.A.1 → 3.1.4.A.1.1 (primera subsección del grupo actual)
+   */
+  getNextSectionFromGroupView(currentSectionId: string): string | null {
+    // Extraer grupo y tipo
+    const match = currentSectionId.match(/^3\.1\.4\.([AB])\.(\d+)$/);
+    if (!match) {
+      return null;
+    }
+
+    // Simplemente retornar la primera subsección
+    return currentSectionId + '.1';
   }
 
   /**

@@ -154,6 +154,12 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     const initialId = this.route.snapshot.params['id'];
     if (initialId && !this.seccionId) {
+      // Redirigir si intenta acceder a 3.1.4.A o 3.1.4.B sin subsección
+      if (initialId === '3.1.4.A' || initialId === '3.1.4.B') {
+        this.router.navigate(['/seccion', initialId + '.1']);
+        return;
+      }
+      
       this.seccionId = initialId;
       void this.cargarSeccion();
     }
@@ -161,6 +167,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.route.params.subscribe(params => {
         const newSeccionId = params['id'];
+        
+        // Redirigir si intenta acceder a 3.1.4.A o 3.1.4.B sin subsección
+        if (newSeccionId === '3.1.4.A' || newSeccionId === '3.1.4.B') {
+          this.router.navigate(['/seccion', newSeccionId + '.1']);
+          return;
+        }
+        
         // Solo recargar si la sección realmente cambió
         if (this.seccionId !== newSeccionId) {
           this.seccionId = newSeccionId;
@@ -849,6 +862,24 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Casos especiales para 3.1.4.A.X y 3.1.4.B.X (vista de grupo sin subsección)
+    if (this.seccionId.match(/^3\.1\.4\.[AB]\.\d+$/)) {
+      // Siempre puede ir al siguiente (primera subsección del grupo)
+      this.puedeIrSiguiente = true;
+      
+      // Verificar si puede ir al anterior
+      const seccionAnterior = this.sectionFlowNavigation.getPreviousSectionFromGroupView(this.seccionId);
+      this.puedeIrAnterior = seccionAnterior !== null || this.seccionId.match(/^3\.1\.4\.A\.\d+$/) === null;
+      
+      // Si es 3.1.4.A.1, puede retroceder a 3.1.3
+      if (this.seccionId === '3.1.4.A.1') {
+        this.puedeIrAnterior = true;
+      }
+      
+      this.esUltimaSeccion = false;
+      return;
+    }
+
     // Para otras secciones, usar navegación normal
     const datosActualizados = this.projectFacade.obtenerDatos() as FormularioDatos;
     const estado = this.navigationService.actualizarEstadoNavegacion(this.seccionId, datosActualizados);
@@ -872,8 +903,35 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Casos especiales para 3.1.4.A.X y 3.1.4.B.X (sin subsección - vista de grupo)
+    if (this.seccionId.match(/^3\.1\.4\.A\.\d+$/)) {
+      // De 3.1.4.A.X ir a la última subsección del grupo anterior o a 3.1.3
+      const seccionAnterior = this.sectionFlowNavigation.getPreviousSectionFromGroupView(this.seccionId);
+      if (seccionAnterior) {
+        this.router.navigate(['/seccion', seccionAnterior]);
+      } else {
+        // Es el primer grupo AISD, ir a 3.1.3
+        this.router.navigate(['/seccion', '3.1.3']);
+      }
+      return;
+    }
+    if (this.seccionId.match(/^3\.1\.4\.B\.\d+$/)) {
+      // De 3.1.4.B.X ir a la última subsección del grupo anterior o al último grupo AISD
+      const seccionAnterior = this.sectionFlowNavigation.getPreviousSectionFromGroupView(this.seccionId);
+      if (seccionAnterior) {
+        this.router.navigate(['/seccion', seccionAnterior]);
+      }
+      return;
+    }
+
     // Navegación normal para otras secciones
-    const seccionAnterior = this.navigationService.obtenerSeccionAnterior(this.seccionId, this.datos);
+    let seccionAnterior = this.navigationService.obtenerSeccionAnterior(this.seccionId, this.datos);
+    
+    // Si es 3.1.4.A o 3.1.4.B (sin subsección), convertir a 3.1.4.A.1 o 3.1.4.B.1
+    if (seccionAnterior === '3.1.4.A' || seccionAnterior === '3.1.4.B') {
+      seccionAnterior = seccionAnterior + '.1';
+    }
+    
     if (seccionAnterior) {
       this.router.navigate(['/seccion', seccionAnterior]);
     }
@@ -894,8 +952,33 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Casos especiales para 3.1.4.A.X y 3.1.4.B.X (sin subsección)
+    // Navegar a la primera subsección del mismo grupo
+    if (this.seccionId.match(/^3\.1\.4\.A\.\d+$/)) {
+      // De 3.1.4.A.X ir a 3.1.4.A.X.1
+      const seccionSiguiente = this.sectionFlowNavigation.getNextSectionFromGroupView(this.seccionId);
+      if (seccionSiguiente) {
+        this.router.navigate(['/seccion', seccionSiguiente]);
+      }
+      return;
+    }
+    if (this.seccionId.match(/^3\.1\.4\.B\.\d+$/)) {
+      // De 3.1.4.B.X ir a 3.1.4.B.X.1
+      const seccionSiguiente = this.sectionFlowNavigation.getNextSectionFromGroupView(this.seccionId);
+      if (seccionSiguiente) {
+        this.router.navigate(['/seccion', seccionSiguiente]);
+      }
+      return;
+    }
+
     // Navegación normal para otras secciones
-    const seccionSiguiente = this.navigationService.obtenerSeccionSiguiente(this.seccionId, this.datos);
+    let seccionSiguiente = this.navigationService.obtenerSeccionSiguiente(this.seccionId, this.datos);
+    
+    // Si es 3.1.4.A o 3.1.4.B (sin subsección), convertir a 3.1.4.A.1 o 3.1.4.B.1
+    if (seccionSiguiente === '3.1.4.A' || seccionSiguiente === '3.1.4.B') {
+      seccionSiguiente = seccionSiguiente + '.1';
+    }
+    
     if (seccionSiguiente) {
       this.router.navigate(['/seccion', seccionSiguiente]);
     }

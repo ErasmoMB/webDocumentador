@@ -342,6 +342,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                 {
                   id: '3.1.4.A',
                   title: 'A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)',
+                  route: '/seccion/3.1.4.A.1',
                   level: 3,
                   expanded: false,
                   children: this.generarSeccionesAISD()
@@ -349,6 +350,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                 {
                   id: '3.1.4.B',
                   title: 'B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)',
+                  route: '/seccion/3.1.4.B.1',
                   level: 3,
                   expanded: false,
                   children: this.generarSeccionesAISI()
