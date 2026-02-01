@@ -1,6 +1,4 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
+import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, ChangeDetectionStrategy, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
@@ -10,6 +8,7 @@ import { Seccion6DataService } from 'src/app/core/services/domain/seccion6-data.
 import { Seccion6TextGeneratorService } from 'src/app/core/services/domain/seccion6-text-generator.service';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { FotoItem } from '../image-upload/image-upload.component';
 import { debugLog } from 'src/app/shared/utils/debug';
 
 @Component({
@@ -20,12 +19,14 @@ import { debugLog } from 'src/app/shared/utils/debug';
     CoreSharedModule
   ],
   selector: 'app-seccion6-form',
-  templateUrl: './seccion6-form.component.html'
+  templateUrl: './seccion6-form.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion6FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1.2';
   
   override readonly PHOTO_PREFIX = 'fotografiaDemografia';
+  override useReactiveSync: boolean = true;
 
   override watchedFields: string[] = [
     'grupoAISD',
@@ -41,9 +42,80 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
 
   poblacionSexoConfig!: TableConfig;
   poblacionEtarioConfig!: TableConfig;
+  override fotografiasFormMulti: FotoItem[] = [];
 
-  private stateSubscription?: Subscription;
-  private isProcessingPipeline = false;
+  // ✅ SIGNALS PUROS
+  readonly sectionDataSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
+    const data = this.sectionDataSignal();
+    return data['poblacionSexoAISD'] || [];
+  });
+
+  readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
+    const data = this.sectionDataSignal();
+    return data['poblacionEtarioAISD'] || [];
+  });
+
+  readonly textoPoblacionSexoSignal: Signal<string> = computed(() => {
+    const data = this.sectionDataSignal();
+    
+    // ✅ Prioridad: leer valor manual si existe
+    const manual = data['textoPoblacionSexoAISD'];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    
+    // Fallback: generar texto automático
+    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
+    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad);
+  });
+
+  readonly textoPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const data = this.sectionDataSignal();
+    
+    // ✅ Prioridad: leer valor manual si existe
+    const manual = data['textoPoblacionEtarioAISD'];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    
+    // Fallback: generar texto automático
+    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
+    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad);
+  });
+
+  readonly totalPoblacionSexoSignal: Signal<number> = computed(() => {
+    return this.dataSrv.getTotalPoblacionSexo(this.sectionDataSignal());
+  });
+
+  readonly totalPoblacionEtarioSignal: Signal<number> = computed(() => {
+    return this.dataSrv.getTotalPoblacionEtario(this.sectionDataSignal());
+  });
+
+  // ✅ SIGNAL PARA INFORMACIÓN DE GRUPOS AISD (Sección 6 pertenece a un grupo)
+  readonly aisdGroupsSignal: Signal<readonly any[]> = computed(() => {
+    return this.projectFacade.groupsByType('AISD')();
+  });
+
+  // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+      
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -51,7 +123,6 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     public tableCfg: Seccion6TableConfigService,
     private dataSrv: Seccion6DataService,
     private textGenSrv: Seccion6TextGeneratorService,
-    private stateAdapter: ReactiveStateAdapter,
     private tableFacade: TableManagementFacade
   ) {
     super(cdRef, injector);
@@ -61,243 +132,250 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     this.poblacionSexoConfig = this.tableCfg.getTablaPoblacionSexoConfig();
     this.poblacionEtarioConfig = this.tableCfg.getTablaPoblacionEtarioConfig();
     
-    // ✅ DEBUG: Verificar que la configuración se creó correctamente
     debugLog('[PORCENTAJES] 🔧 Seccion6FormComponent - Config creada:', {
       poblacionSexoConfig: this.poblacionSexoConfig,
       tieneCampoTotal: !!this.poblacionSexoConfig.campoTotal,
       tieneCampoPorcentaje: !!this.poblacionSexoConfig.campoPorcentaje,
       calcularPorcentajes: this.poblacionSexoConfig.calcularPorcentajes
     });
-  }
 
-  protected override onInitCustom(): void {
-    this.initDataPipeline();
-    this.subscribeToStateChanges();
-  }
+    // ✅ EFFECT 1: Auto-sync datos reactivamente
+    effect(() => {
+      const sectionData = this.sectionDataSignal();
+      this.datos = { ...sectionData };
+      this.cdRef.markForCheck();
+    });
 
-  private initDataPipeline(): void {
-    if (this.isProcessingPipeline) return;
-    this.isProcessingPipeline = true;
-    try {
-      this.cargarTodosLosGrupos();
-      // ✅ Calcular porcentajes DESPUÉS de cargar los datos
-      this.calcularPorcentajesIniciales();
-    } finally {
-      this.isProcessingPipeline = false;
-    }
+    // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
+    // Este efecto replica el patrón de Sección 5 (MODO IDEAL)
+    // allowSignalWrites: true permite escribir a fotografiasFormMulti después de cargarFotografias()
+    effect(() => {
+      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
+      this.cargarFotografias();  // Recarga fotografías reactivamente
+      
+      // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasFormMulti
+      // Esto asegura que el template se renderice con las nuevas imágenes
+      this.fotografiasFormMulti = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+
+    // ✅ EFFECT 3: Calcular porcentajes cuando los datos de población cambien
+    effect(() => {
+      const sexoData = this.poblacionSexoSignal();
+      const etarioData = this.poblacionEtarioSignal();
+      
+      // Verificar si necesita cálculo de porcentajes
+      if (sexoData.length > 0 && !this.tienePorcentajesCalculados(sexoData)) {
+        debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla sexo...');
+        this.tableFacade.calcularTotalesYPorcentajes(
+          this.sectionDataSignal(),
+          { ...this.poblacionSexoConfig, tablaKey: 'poblacionSexoAISD' }
+        );
+      }
+
+      if (etarioData.length > 0 && !this.tienePorcentajesCalculados(etarioData)) {
+        debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla etario...');
+        this.tableFacade.calcularTotalesYPorcentajes(
+          this.sectionDataSignal(),
+          { ...this.poblacionEtarioConfig, tablaKey: 'poblacionEtarioAISD' }
+        );
+      }
+
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ EFFECT 4: Log automático del grupo AISD de esta sección
+    effect(() => {
+      const gruposAISD = this.aisdGroupsSignal();
+      
+      // Log solo si hay grupos cargados
+      if (gruposAISD.length > 0) {
+        console.log('%c=== INFORMACIÓN DE GRUPO AISD - SECCIÓN 6 ===', 'color: #1f2937; background: #f3f4f6; font-weight: bold; padding: 4px 8px; border-radius: 3px');
+        
+        gruposAISD.forEach((grupo, index) => {
+          this.logGrupoAISDParaConsola(index + 1, grupo);
+        });
+      }
+    });
   }
 
   /**
-   * ✅ SOLID - SRP: Calcula porcentajes iniciales usando el facade
-   * El cálculo automático ya está manejado por dynamic-table, pero
-   * necesitamos calcular cuando se cargan datos desde el backend
+   * Log interno para mostrar información del grupo AISD en consola
    */
-  private calcularPorcentajesIniciales(): void {
-    debugLog('[PORCENTAJES] 🚀 calcularPorcentajesIniciales() iniciado');
+  private logGrupoAISDParaConsola(numeroGrupo: number, grupo: any): void {
+    console.log(`%c🏘️ GRUPO AISD: A.${numeroGrupo} - ${grupo.nombre || 'Sin nombre'}`, 'color: #2563eb; font-weight: bold; font-size: 13px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #7c3aed; font-weight: bold');
     
-    // Usar setTimeout para asegurar que los datos estén completamente cargados
-    setTimeout(() => {
-      // ✅ SOLID - DIP: Usar facade en lugar de lógica manual
-      const prefijo = this.obtenerPrefijoGrupo();
-      const tablaSexoKey = prefijo ? `poblacionSexoAISD${prefijo}` : 'poblacionSexoAISD';
-      const tablaEtarioKey = prefijo ? `poblacionEtarioAISD${prefijo}` : 'poblacionEtarioAISD';
-      
-      debugLog('[PORCENTAJES] 🔑 Claves de tabla:', { prefijo, tablaSexoKey, tablaEtarioKey });
-      
-      // Calcular para población por sexo
-      if (this.datos[tablaSexoKey]?.length > 0 || this.datos['poblacionSexoAISD']?.length > 0) {
-        const datosTabla = this.datos[tablaSexoKey] || this.datos['poblacionSexoAISD'];
-        debugLog('[PORCENTAJES] 📊 Datos tabla sexo:', datosTabla);
-        
-        if (datosTabla && Array.isArray(datosTabla) && datosTabla.length > 0) {
-          // Verificar si ya tiene porcentajes calculados
-          const tienePorcentajes = datosTabla.some((item: any) => 
-            item.porcentaje && 
-            item.porcentaje !== '—' && 
-            item.porcentaje !== '' && 
-            item.porcentaje !== null &&
-            !item.sexo?.toString().toLowerCase().includes('total')
-          );
-          
-          debugLog('[PORCENTAJES] 🔍 Tabla sexo tiene porcentajes?', tienePorcentajes);
-          
-          if (!tienePorcentajes) {
-            debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla sexo...');
-            this.tableFacade.calcularTotalesYPorcentajes(
-              this.datos,
-              { ...this.poblacionSexoConfig, tablaKey: tablaSexoKey }
-            );
-            debugLog('[PORCENTAJES] ✅ Porcentajes calculados. Datos actualizado:', this.datos[tablaSexoKey] || this.datos['poblacionSexoAISD']);
-            this.cdRef.detectChanges();
-          }
-        }
-      }
-      
-      // Calcular para población por grupo etario
-      if (this.datos[tablaEtarioKey]?.length > 0 || this.datos['poblacionEtarioAISD']?.length > 0) {
-        const datosTabla = this.datos[tablaEtarioKey] || this.datos['poblacionEtarioAISD'];
-        if (datosTabla && Array.isArray(datosTabla) && datosTabla.length > 0) {
-          // Verificar si ya tiene porcentajes calculados
-          const tienePorcentajes = datosTabla.some((item: any) => 
-            item.porcentaje && 
-            item.porcentaje !== '—' && 
-            item.porcentaje !== '' && 
-            item.porcentaje !== null &&
-            !item.categoria?.toString().toLowerCase().includes('total')
-          );
-          
-          if (!tienePorcentajes) {
-            this.tableFacade.calcularTotalesYPorcentajes(
-              this.datos,
-              { ...this.poblacionEtarioConfig, tablaKey: tablaEtarioKey }
-            );
-            this.cdRef.detectChanges();
-          }
-        }
-      }
-    }, 100);
-  }
-
-  private subscribeToStateChanges(): void {
-    // ✅ Formularios NO deben suscribirse a cambios del store
-    // Son la fuente de los cambios, no consumidores
-  }
-
-  override ngOnDestroy(): void {
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
+    const centrosPobladosSeleccionados = grupo.ccppIds || [];
+    console.log(`[DEBUG] centrosPobladosSeleccionados (${centrosPobladosSeleccionados.length}):`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      return;
     }
-    this.guardarTodosLosGrupos();
-    super.ngOnDestroy();
+    
+    const jsonCompleto = this.projectFacade.obtenerDatos()['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
+            centrosDetalles.push(centro);
+          }
+        }
+      });
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    }
+  }
+
+  protected override onInitCustom(): void {
+    this.cargarTodosLosGrupos();
+    this.cargarFotografias();
+    // ✅ Sincronizar fotografiasFormMulti con fotografiasCache después de cargar
+    this.fotografiasFormMulti = [...this.fotografiasCache];
+  }
+
+  /**
+   * ✅ Verifica si una tabla ya tiene porcentajes calculados
+   */
+  private tienePorcentajesCalculados(datos: any[]): boolean {
+    return datos.some((item: any) => 
+      item.porcentaje && 
+      item.porcentaje !== '—' && 
+      item.porcentaje !== '' && 
+      item.porcentaje !== null &&
+      !item.sexo?.toString().toLowerCase().includes('total') &&
+      !item.categoria?.toString().toLowerCase().includes('total')
+    );
   }
 
   protected override detectarCambios(): boolean {
-    if (!this.projectFacade) return false;
-    const actual = JSON.stringify(this.projectFacade.obtenerDatos());
-    const anterior = JSON.stringify(this.datosAnteriores);
-    if (actual !== anterior) {
-      this.datosAnteriores = JSON.parse(actual);
-      return true;
-    }
     return false;
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    // Lógica específica de actualización si es necesaria
   }
 
   override obtenerNombreComunidadActual(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
+    return this.dataSrv.obtenerNombreComunidadActual(this.sectionDataSignal(), this.seccionId);
   }
 
   override obtenerValorConPrefijo(campo: string): any {
-    return this.dataSrv.obtenerValorConPrefijo(this.datos, campo, this.seccionId);
+    return this.dataSrv.obtenerValorConPrefijo(this.sectionDataSignal(), campo, this.seccionId);
   }
 
   obtenerTextoPoblacionSexo(): string {
-    return this.textGenSrv.obtenerTextoPoblacionSexo(
-      this.datos,
-      this.obtenerNombreComunidadActual()
-    );
+    return this.textoPoblacionSexoSignal();
   }
 
   obtenerTextoPoblacionEtario(): string {
-    return this.textGenSrv.obtenerTextoPoblacionEtario(
-      this.datos,
-      this.obtenerNombreComunidadActual()
-    );
+    return this.textoPoblacionEtarioSignal();
   }
 
   getPoblacionSexoSinTotal(): any[] {
-    return this.dataSrv.getPoblacionSexoSinTotal(this.datos);
+    return this.dataSrv.getPoblacionSexoSinTotal(this.sectionDataSignal());
   }
 
   getPoblacionEtarioSinTotal(): any[] {
-    return this.dataSrv.getPoblacionEtarioSinTotal(this.datos);
+    return this.dataSrv.getPoblacionEtarioSinTotal(this.sectionDataSignal());
   }
 
   getTotalPoblacionSexo(): number {
-    return this.dataSrv.getTotalPoblacionSexo(this.datos);
+    return this.totalPoblacionSexoSignal();
   }
 
   getTotalPoblacionEtario(): number {
-    return this.dataSrv.getTotalPoblacionEtario(this.datos);
+    return this.totalPoblacionEtarioSignal();
   }
 
-  /**
-   * Calcula dinámicamente el porcentaje del total de población por sexo
-   * Siempre será 100,00 % pero se calcula dinámicamente para mantener consistencia
-   */
   getPorcentajeTotalPoblacionSexo(): string {
     const total = this.getTotalPoblacionSexo();
-    if (total === 0) {
-      return '0,00 %';
-    }
-    // El total siempre representa el 100% de los casos
-    return '100,00 %';
+    return total === 0 ? '0,00 %' : '100,00 %';
   }
 
-  /**
-   * Calcula dinámicamente el porcentaje del total de población por grupo etario
-   * Siempre será 100,00 % pero se calcula dinámicamente para mantener consistencia
-   */
   getPorcentajeTotalPoblacionEtario(): string {
     const total = this.getTotalPoblacionEtario();
-    if (total === 0) {
-      return '0,00 %';
-    }
-    // El total siempre representa el 100% de los casos
-    return '100,00 %';
+    return total === 0 ? '0,00 %' : '100,00 %';
   }
 
-  /**
-   * ✅ SOLID - SRP: El cálculo automático ya está manejado por dynamic-table
-   * Este método solo actualiza la vista cuando la tabla cambia
-   */
   onTablaSexoActualizada(): void {
-    // El cálculo automático ya fue ejecutado por dynamic-table usando la estrategia SOLID
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  /**
-   * ✅ SOLID - SRP: El cálculo automático ya está manejado por dynamic-table
-   * Este método solo actualiza la vista cuando la tabla cambia
-   */
   onTablaEtarioActualizada(): void {
-    // El cálculo automático ya fue ejecutado por dynamic-table usando la estrategia SOLID
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
 
-  /**
-   * ✅ SOLID - ELIMINADO: Método manual duplicado
-   * 
-   * Este método fue eliminado porque violaba:
-   * - SRP: El componente estaba haciendo cálculos en lugar de delegar
-   * - DRY: Duplicaba lógica ya existente en TableCalculationService
-   * - DIP: Dependía de implementación concreta en lugar de abstracción
-   * 
-   * El cálculo automático ahora se maneja completamente por:
-   * 1. TableCalculationStrategyService (determina cuándo calcular)
-   * 2. TableCalculationService (ejecuta los cálculos)
-   * 3. DynamicTableComponent (dispara cálculos automáticamente)
-   * 
-   * Los cálculos se ejecutan automáticamente cuando:
-   * - Se cambia un valor en la tabla (onFieldChange)
-   * - Se agrega una fila (onAdd)
-   * - Se elimina una fila (onDelete)
-   * - Se inicializa la tabla (verificarEInicializarTabla)
-   */
+  // ✅ Override: PhotoCoordinator maneja TODO la persistencia de imágenes
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    // 🔧 PATRÓN CORRECTO: Solo llamar a super() que usa PhotoCoordinator
+    // PhotoCoordinator se encarga de:
+    // - Guardar todas las imágenes via ImageManagementFacade
+    // - Actualizar fotografiasFormMulti y fotografiasCache
+    super.onFotografiasChange(fotografias, customPrefix);
+    
+    // ✅ Actualizar referencias locales (para templates que usan fotografiasFormMulti)
+    this.fotografiasFormMulti = fotografias;
+    
+    // ✅ Marcar para detección de cambios
+    this.cdRef.markForCheck();
+  }
 
   protected override onFieldChange(fieldName: string, value: any, options?: { refresh?: boolean }): void {
     super.onFieldChange(fieldName, value, { refresh: options?.refresh ?? false });
     this.cdRef.markForCheck();
   }
 
-  override onFotografiasChange(event: any): void {
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+  // ✅ OVERRIDE CRÍTICO: cargarFotografias() DEBE LEER DEL SIGNAL REACTIVO (sectionDataSignal)
+  // NO de imageFacade.loadImages() que lee localStorage desactualizado
+  // Esto asegura que los cambios de titulo/fuente se reflejen inmediatamente
+  override cargarFotografias(): void {
+    const formData = this.sectionDataSignal();  // ✅ LEER DEL SIGNAL REACTIVO
+    const fotos: FotoItem[] = [];
+    
+    // ✅ Reconstruir array de fotografías leyendo directamente del state reactivo
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagen = formData[imagenKey];
+      
+      // Si hay imagen, agregar a array
+      if (imagen) {
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+        
+        fotos.push({
+          imagen: imagen,
+          titulo: formData[tituloKey] || '',
+          fuente: formData[fuenteKey] || '',
+          numero: formData[numeroKey] || i
+        });
+      }
+    }
+    
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
+    this.fotografiasFormMulti = [...this.fotografiasCache];
+    this.cdRef.markForCheck();
+  }
+
+  override ngOnDestroy(): void {
+    this.guardarTodosLosGrupos();
+    super.ngOnDestroy();
   }
 }
 

@@ -169,8 +169,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     if (i !== undefined && this._fotografias[i]) {
       this._fotografias[i].titulo = val;
       // ✅ Persistir título en localStorage
+      const fieldKey = `${this.photoPrefix}${i + 1}Titulo`;
       this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}${i + 1}Titulo`]: val
+        [fieldKey]: val
       });
       // ✅ Crear nueva referencia para que Angular detecte el cambio con OnPush
       this._fotografias = [...this._fotografias];
@@ -186,8 +187,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     if (i !== undefined && this._fotografias[i]) {
       this._fotografias[i].fuente = val;
       // ✅ Persistir fuente en localStorage
+      const fieldKey = `${this.photoPrefix}${i + 1}Fuente`;
       this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}${i + 1}Fuente`]: val
+        [fieldKey]: val
       });
       // ✅ Crear nueva referencia para que Angular detecte el cambio con OnPush
       this._fotografias = [...this._fotografias];
@@ -298,19 +300,25 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias.splice(i, 1);
       if (this._fotografias.length === 0) this._fotografias = [this.createEmptyFoto()];
       
-      // Limpiar en persistencia
+      // ✅ CRÍTICO: Limpiar TODOS los campos asociados a esta imagen
+      // Incluir título y fuente para evitar que reaparezcan después de recargar
       this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}${i + 1}Imagen`]: '',
-        [`${this.photoPrefix}${i + 1}Numero`]: ''
+        [`${this.photoPrefix}${i + 1}Numero`]: '',
+        [`${this.photoPrefix}${i + 1}Titulo`]: '',
+        [`${this.photoPrefix}${i + 1}Fuente`]: ''
       });
       
       this.emitirCambios();
     } else {
       this.preview = null;
       this.imagenChange.emit('');
+      // ✅ CRÍTICO: Limpiar TODOS los campos asociados
       this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}Imagen`]: '',
-        [`${this.photoPrefix}Numero`]: ''
+        [`${this.photoPrefix}Numero`]: '',
+        [`${this.photoPrefix}Titulo`]: '',
+        [`${this.photoPrefix}Fuente`]: ''
       });
     }
     this.cdRef.markForCheck();
