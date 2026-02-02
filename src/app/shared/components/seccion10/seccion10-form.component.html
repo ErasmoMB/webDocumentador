@@ -1,0 +1,323 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h4>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+
+      <app-paragraph-editor
+        fieldId="parrafoSeccion10_servicios_basicos_intro"
+        label="Introducción - Servicios Básicos"
+        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion10ServiciosBasicosIntro()"
+        (valueChange)="onFieldChange('parrafoSeccion10_servicios_basicos_intro', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Servicios de agua</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoServiciosAgua"
+          label="Servicios de Agua - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosAgua()"
+          (valueChange)="onFieldChange('textoServiciosAgua', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Título</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerTituloAbastecimientoAgua()"
+          (change)="onTituloAbastecimientoAguaChange($event)"
+          placeholder="Tipos de abastecimiento de agua en las viviendas – CC ____ (2017)">
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Tabla Abastecimiento de Agua</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="abastecimientoAguaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con abastecimiento de agua por red pública', readonly: true },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyAbastecimientoAgua()"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
+          (tableUpdated)="onAbastecimientoAguaTableUpdated($event)">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerFuenteAbastecimientoAgua()"
+          (change)="onFuenteAbastecimientoAguaChange($event)"
+          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoServiciosAguaDetalle"
+          label="Servicios de Agua - Detalle"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosAguaDetalle()"
+          (valueChange)="onFieldChange('textoServiciosAguaDetalle', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoServiciosDesague"
+          label="Servicios de Desagüe - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoServiciosDesague()"
+          (valueChange)="onFieldChange('textoServiciosDesague', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Título</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerTituloTiposSaneamiento()"
+          (change)="onTituloTiposSaneamientoChange($event)"
+          placeholder="Tipos de saneamiento en las viviendas – CC ____ (2017)">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de Saneamiento</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="tiposSaneamientoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con saneamiento vía red pública', readonly: true },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyTiposSaneamiento()"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
+          (tableUpdated)="onTiposSaneamientoTableUpdated($event)">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerFuenteTiposSaneamiento()"
+          (change)="onFuenteTiposSaneamientoChange($event)"
+          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoServiciosDesagueDetalle"
+          label="Servicios de Desagüe - Detalle"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoServiciosDesagueDetalle()"
+          (valueChange)="onFieldChange('textoServiciosDesagueDetalle', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidos1"
+          label="Desechos Sólidos - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDesechosSolidos1()"
+          (valueChange)="onFieldChange('textoDesechosSolidos1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoDesechosSolidos2"
+          label="Desechos Sólidos - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDesechosSolidos2()"
+          (valueChange)="onFieldChange('textoDesechosSolidos2', $event)"
+          style="margin-top: 15px;">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Desechos Sólidos</label>
+        <app-image-upload
+          [fotografias]="fotografiasSeccion10"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Electricidad</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoElectricidad1"
+          label="Electricidad - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoElectricidad1()"
+          (valueChange)="onFieldChange('textoElectricidad1', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Título</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerTituloCoberturaElectrica()"
+          (change)="onTituloCoberturaElectricaChange($event)"
+          placeholder="Cobertura de alumbrado eléctrico en las viviendas – CC ____ (2017)">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Cobertura Eléctrica</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="coberturaElectricaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con acceso a electricidad', readonly: true },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyCoberturaElectrica()"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
+          (tableUpdated)="onCoberturaElectricaTableUpdated($event)">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerFuenteCoberturaElectrica()"
+          (change)="onFuenteCoberturaElectricaChange($event)"
+          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+      </div>
+
+      <div class="form-group-section" style="margin-top: 20px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoElectricidad2"
+          label="Electricidad - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoElectricidad2()"
+          (valueChange)="onFieldChange('textoElectricidad2', $event)">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">e. Energía para cocinar</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoEnergiaParaCocinar"
+          label="Energía para Cocinar - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoEnergiaParaCocinar()"
+          (valueChange)="onFieldChange('textoEnergiaParaCocinar', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Título</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerTituloEnergiaCocinar()"
+          (change)="onTituloEnergiaCocinarChange($event)"
+          placeholder="Energía utilizada para cocinar en las viviendas – CC ____ (2017)">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Energía para Cocinar</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="energiaCocinarConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Leña', readonly: true },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyEnergiaCocinar()"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
+          (tableUpdated)="onEnergiaCocinarTableUpdated($event)">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerFuenteEnergiaCocinar()"
+          (change)="onFuenteEnergiaCocinarChange($event)"
+          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+      </div>
+    </div>
+  </div>
+</div>
