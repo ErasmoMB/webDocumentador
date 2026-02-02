@@ -23,7 +23,7 @@ export class Seccion7TableConfigService {
 
   getColumnasPET(): TableColumn[] {
     return [
-      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Grupo de edad' },
+      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Grupo de edad', readonly: true },
       { field: 'casos', label: 'Casos', type: 'number', dataType: 'number' },
       { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
     ];
@@ -45,7 +45,7 @@ export class Seccion7TableConfigService {
 
   getColumnasPEA(): TableColumn[] {
     return [
-      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'PEA, No PEA' },
+      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'PEA, No PEA', readonly: true },
       { field: 'hombres', label: 'Hombres', type: 'number', dataType: 'number' },
       { field: 'porcentajeHombres', label: '% Hombres', type: 'text', readonly: true },
       { field: 'mujeres', label: 'Mujeres', type: 'number', dataType: 'number' },
@@ -71,7 +71,7 @@ export class Seccion7TableConfigService {
 
   getColumnasPEAOcupada(): TableColumn[] {
     return [
-      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ocupada, Desocupada' },
+      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ocupada, Desocupada', readonly: true },
       { field: 'hombres', label: 'Hombres', type: 'number', dataType: 'number' },
       { field: 'porcentajeHombres', label: '% Hombres', type: 'text', readonly: true },
       { field: 'mujeres', label: 'Mujeres', type: 'number', dataType: 'number' },

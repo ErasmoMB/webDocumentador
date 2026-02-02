@@ -33,7 +33,19 @@ export class Seccion7DataService {
    */
   getTablaPET(datos: any, seccionId: string): any[] {
     const pref = PrefijoHelper.obtenerValorConPrefijo(datos, 'petTabla', seccionId);
-    return pref || datos.petTabla || [];
+    const tablaActual = pref || datos.petTabla || [];
+    
+    if (tablaActual.length === 0) {
+      return [
+        { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
+        { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
+      ];
+    }
+    
+    return tablaActual;
   }
 
   /**
@@ -70,7 +82,17 @@ export class Seccion7DataService {
    */
   getTablaPEA(datos: any, seccionId: string): any[] {
     const pref = PrefijoHelper.obtenerValorConPrefijo(datos, 'peaTabla', seccionId);
-    return pref || datos.peaTabla || [];
+    const tablaActual = pref || datos.peaTabla || [];
+    
+    if (tablaActual.length === 0) {
+      return [
+        { categoria: 'PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'No PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
+      ];
+    }
+    
+    return tablaActual;
   }
 
   /**
@@ -137,7 +159,17 @@ export class Seccion7DataService {
    */
   getTablaPEAOcupada(datos: any, seccionId: string): any[] {
     const pref = PrefijoHelper.obtenerValorConPrefijo(datos, 'peaOcupadaTabla', seccionId);
-    return pref || datos.peaOcupadaTabla || [];
+    const tablaActual = pref || datos.peaOcupadaTabla || [];
+    
+    if (tablaActual.length === 0) {
+      return [
+        { categoria: 'PEA Ocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'PEA Desocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+        { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
+      ];
+    }
+    
+    return tablaActual;
   }
 
   /**

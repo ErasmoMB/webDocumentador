@@ -1,12 +1,9 @@
-import { Component, ChangeDetectorRef, Input, ChangeDetectionStrategy, Injector } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeHtml } from '@angular/platform-browser';
-import { Subscription } from 'rxjs';
-import { debugLog } from 'src/app/shared/utils/debug';
 import { BaseSectionComponent } from '../base-section.component';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
-import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
+import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { Seccion7TableConfigService } from 'src/app/core/services/domain/seccion7-table-config.service';
 import { Seccion7DataService } from 'src/app/core/services/domain/seccion7-data.service';
@@ -25,7 +22,6 @@ import { Seccion7TextGeneratorService } from 'src/app/core/services/domain/secci
 export class Seccion7ViewInternalComponent extends BaseSectionComponent {
   @Input() override seccionId: string = '';
   
-  private stateSubscription?: Subscription;
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override fotografiasCache: FotoItem[] = [];
 
@@ -33,69 +29,189 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
   tablaPEAConfig = this.tableConfigService.getTablaPEAConfig();
   tablaPEAOcupadaConfig = this.tableConfigService.getTablaPEAOcupadaConfig();
 
+  readonly formDataSignal: Signal<Record<string, any>>;
+  readonly petTablaSignal: Signal<any[]>;
+  readonly peaTablaSignal: Signal<any[]>;
+  readonly peaOcupadaTablaSignal: Signal<any[]>;
+  readonly photoFieldsHash: Signal<string>;
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private stateAdapter: ReactiveStateAdapter,
     private tableConfigService: Seccion7TableConfigService,
     private dataService: Seccion7DataService,
     private textGenerator: Seccion7TextGeneratorService
   ) {
     super(cdRef, injector);
+
+    this.formDataSignal = computed(() => {
+      return this.projectFacade.selectSectionFields(this.seccionId, null)();
+    });
+
+    this.petTablaSignal = computed(() => {
+      const formData = this.formDataSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+      const tablaActual = Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
+      
+      if (tablaActual.length === 0) {
+        return [
+          { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
+          { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
+          { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
+          { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
+          { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
+        ];
+      }
+      
+      return tablaActual;
+    });
+
+    this.peaTablaSignal = computed(() => {
+      const formData = this.formDataSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+      const tablaActual = Array.isArray(formData[peaTablaKey]) ? formData[peaTablaKey] : [];
+      
+      if (tablaActual.length === 0) {
+        return [
+          { categoria: 'PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+          { categoria: 'No PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+          { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
+        ];
+      }
+      
+      return tablaActual;
+    });
+
+    this.peaOcupadaTablaSignal = computed(() => {
+      const formData = this.formDataSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+      const tablaActual = Array.isArray(formData[peaOcupadaTablaKey]) ? formData[peaOcupadaTablaKey] : [];
+      
+      if (tablaActual.length === 0) {
+        return [
+          { categoria: 'PEA Ocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+          { categoria: 'PEA Desocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
+          { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
+        ];
+      }
+      
+      return tablaActual;
+    });
+
+    this.photoFieldsHash = computed(() => {
+      let hash = '';
+      for (let i = 1; i <= 10; i++) {
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+        const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+        
+        const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+        
+        hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      }
+      return hash;
+    });
+
+    effect(() => {
+      const formData = this.formDataSignal();
+      this.datos = { ...formData };
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ MODO IDEAL: Sincronización automática de tablas PET desde Signal
+    effect(() => {
+      const tabla = this.petTablaSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+      this.datos[petTablaKey] = tabla;
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ MODO IDEAL: Sincronización automática de tablas PEA desde Signal
+    effect(() => {
+      const tabla = this.peaTablaSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+      this.datos[peaTablaKey] = tabla;
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ MODO IDEAL: Sincronización automática de tablas PEA Ocupada desde Signal
+    effect(() => {
+      const tabla = this.peaOcupadaTablaSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+      this.datos[peaOcupadaTablaKey] = tabla;
+      this.cdRef.markForCheck();
+    });
+
+    effect(() => {
+      this.photoFieldsHash();
+      this.cargarFotografias();
+      this.cdRef.markForCheck();
+    });
   }
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
-    
-    this.stateSubscription = this['stateAdapter'].datos$.subscribe(() => {
-      this.cargarFotografias();
-      this.cdRef.detectChanges();
-    });
-    
     this.logGrupoActual();
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    this.stateSubscription?.unsubscribe();
   }
 
   override cargarFotografias(): void {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    const fotos = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      groupPrefix
-    );
-    this.fotografiasCache = [...fotos];
-    this.cdRef.markForCheck();
+    const formData = this.formDataSignal();
+    const fotos: FotoItem[] = [];
+
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagen = formData[imagenKey];
+
+      if (imagen) {
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+
+        fotos.push({
+          imagen: imagen,
+          titulo: formData[tituloKey] || '',
+          fuente: formData[fuenteKey] || '',
+          numero: formData[numeroKey] || i
+        });
+      }
+    }
+
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
   }
 
   getFotografiasPEAVista(): FotoItem[] {
-    if (this.fotografiasCache && this.fotografiasCache.length > 0) {
-      return this.fotografiasCache;
-    }
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    const fotografias = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      groupPrefix
-    );
-    return fotografias || [];
+    return this.fotografiasCache;
   }
 
-  // ============ MÉTODOS DE DATOS (delegados a DataService) ============
-
   getTablaPET(): any[] {
-    return this.dataService.getTablaPET(this.datos, this.seccionId);
+    return this.petTablaSignal();
   }
 
   getPETTablaSinTotal(): any[] {
-    return this.dataService.getPETTablaSinTotal(this.datos, this.seccionId);
+    const tabla = this.petTablaSignal();
+    return tabla.filter((item: any) => 
+      item.categoria && !item.categoria.toString().toLowerCase().includes('total')
+    );
   }
 
   getTotalPET(): string {
-    return this.dataService.getTotalPET(this.datos, this.seccionId);
+    const tabla = this.petTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.casos?.toString() || '0';
   }
 
   /**
@@ -116,7 +232,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
     }, 0);
 
     if (total <= 0) {
-      debugLog('⚠️ Total casos en tabla PET <= 0, retornando porcentajes 0,00%');
       return tablaPET.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
     }
 
@@ -127,8 +242,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       const porcentajeFormateado = porcentaje
         .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         .replace('.', ',') + ' %';
-
-      debugLog(`📊 Cálculo porcentaje PET ${item.categoria}: ${casos} / ${total} = ${porcentaje.toFixed(2)}%`);
 
       return {
         ...item,
@@ -144,51 +257,78 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       porcentaje: '100,00 %'
     };
     tablaConPorcentajes.push(filaTotal);
-
-    // Log específico para la tabla Cuadro 3.7
-    debugLog('📊 Cuadro N° 3.7 - PET según grupos de edad:', tablaConPorcentajes);
     
     return tablaConPorcentajes;
   }
 
   getTablaPEA(): any[] {
-    return this.dataService.getTablaPEA(this.datos, this.seccionId);
+    return this.peaTablaSignal();
   }
 
   getPEATableSinTotal(): any[] {
-    return this.dataService.getPEATableSinTotal(this.datos, this.seccionId);
+    const tabla = this.peaTablaSignal();
+    return tabla.filter((item: any) => 
+      item.categoria && !item.categoria.toString().toLowerCase().includes('total')
+    );
   }
 
   getTotalPEAHombres(): string {
-    return this.dataService.getTotalHombres(this.datos, this.seccionId);
+    const tabla = this.peaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.hombres?.toString() || '0';
   }
 
   getTotalPEAMujeres(): string {
-    return this.dataService.getTotalMujeres(this.datos, this.seccionId);
+    const tabla = this.peaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.mujeres?.toString() || '0';
   }
 
   getTotalPEA(): string {
-    return this.dataService.getTotalPEA(this.datos, this.seccionId);
+    const tabla = this.peaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.casos?.toString() || '0';
   }
 
   getTablaPEAOcupada(): any[] {
-    return this.dataService.getTablaPEAOcupada(this.datos, this.seccionId);
+    return this.peaOcupadaTablaSignal();
   }
 
   getPEAOcupadaTableSinTotal(): any[] {
-    return this.dataService.getPEAOcupadaTableSinTotal(this.datos, this.seccionId);
+    const tabla = this.peaOcupadaTablaSignal();
+    return tabla.filter((item: any) => 
+      item.categoria && !item.categoria.toString().toLowerCase().includes('total')
+    );
   }
 
   getTotalPEAOcupadaHombres(): string {
-    return this.dataService.getTotalHombresOcupada(this.datos, this.seccionId);
+    const tabla = this.peaOcupadaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.hombres?.toString() || '0';
   }
 
   getTotalPEAOcupadaMujeres(): string {
-    return this.dataService.getTotalMujeresOcupada(this.datos, this.seccionId);
+    const tabla = this.peaOcupadaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.mujeres?.toString() || '0';
   }
 
   getTotalPEAOcupada(): string {
-    return this.dataService.getTotalPEAOcupada(this.datos, this.seccionId);
+    const tabla = this.peaOcupadaTablaSignal();
+    const total = tabla.find((item: any) => 
+      item.categoria && item.categoria.toString().toLowerCase().includes('total')
+    );
+    return total?.casos?.toString() || '0';
   }
 
   /**
@@ -219,7 +359,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
     }, 0);
 
     if (totalHombres <= 0 && totalMujeres <= 0 && totalCasos <= 0) {
-      debugLog('⚠️ Totales en tabla PEA <= 0, retornando porcentajes 0,00%');
       return tablaPEA.map((item: any) => ({
         ...item,
         porcentajeHombres: '0,00 %',
@@ -258,8 +397,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
         .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         .replace('.', ',') + ' %';
 
-      debugLog(`📊 Cálculo porcentajes PEA ${item.categoria}: Hombres ${hombres}/${totalHombres}=${porcentajeHombres.toFixed(2)}%, Mujeres ${mujeres}/${totalMujeres}=${porcentajeMujeres.toFixed(2)}%, Total ${casos}/${totalCasos}=${porcentajeTotal.toFixed(2)}%`);
-
       return {
         ...item,
         hombres,
@@ -282,9 +419,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       porcentaje: '100,00 %'
     };
     tablaConPorcentajes.push(filaTotal);
-
-    // Log específico para la tabla Cuadro 3.8
-    debugLog('📊 Cuadro N° 3.8 - Conformación de la PEA y No PEA, según sexo:', tablaConPorcentajes);
     
     return tablaConPorcentajes;
   }
@@ -317,7 +451,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
     }, 0);
 
     if (totalHombres <= 0 && totalMujeres <= 0 && totalCasos <= 0) {
-      debugLog('⚠️ Totales en tabla PEA Ocupada <= 0, retornando porcentajes 0,00%');
       return tablaPEAOcupada.map((item: any) => ({
         ...item,
         porcentajeHombres: '0,00 %',
@@ -356,8 +489,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
         .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         .replace('.', ',') + ' %';
 
-      debugLog(`📊 Cálculo porcentajes PEA Ocupada ${item.categoria}: Hombres ${hombres}/${totalHombres}=${porcentajeHombres.toFixed(2)}%, Mujeres ${mujeres}/${totalMujeres}=${porcentajeMujeres.toFixed(2)}%, Total ${casos}/${totalCasos}=${porcentajeTotal.toFixed(2)}%`);
-
       return {
         ...item,
         hombres,
@@ -380,9 +511,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       porcentaje: '100,00 %'
     };
     tablaConPorcentajes.push(filaTotal);
-
-    // Log específico para la tabla Cuadro 3.9
-    debugLog('📊 Cuadro N° 3.9 - Conformación de la PEA Ocupada y Desocupada, según sexo:', tablaConPorcentajes);
     
     return tablaConPorcentajes;
   }
@@ -661,8 +789,7 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
 
   // Métodos requeridos por BaseSectionComponent
   detectarCambios(): boolean {
-    this.cdRef.detectChanges();
-    return true;
+    return false;
   }
 
   actualizarValoresConPrefijo(): void {
