@@ -1,0 +1,51 @@
+<h5>A.1.7. Infraestructura en transportes y comunicaciones</h5>
+
+<p style="margin-bottom: 10px;"><strong>a. Transporte</strong></p>
+<p class="text-justify" [innerHTML]="textoTransporteSignal()"></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasTransporteVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
+<p class="text-justify" [innerHTML]="textoTelecomunicacionesSignal()"></p>
+
+<app-table-wrapper [title]="obtenerTituloTelecomunicaciones()" sectionId="3.1.4.A.1.7">
+<table class="table-container">
+    <thead>
+        <tr>
+            <th class="table-header">Medio de comunicación</th>
+            <th class="table-header">Descripción</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of getTelecomunicacionesTabla()">
+            <td class="table-cell"><span *ngIf="item.medio && item.medio !== '____'">{{ item.medio }}</span><span *ngIf="!item.medio || item.medio === '____'">____</span></td>
+            <td class="table-cell"><span *ngIf="item.descripcion && item.descripcion !== '____'">{{ item.descripcion }}</span><span *ngIf="!item.descripcion || item.descripcion === '____'">____</span></td>
+        </tr>
+        <tr *ngIf="getTelecomunicacionesTabla().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+        </tr>
+    </tbody>
+</table>
+</app-table-wrapper>
+<p class="source">Fuente: {{ obtenerFuenteTelecomunicaciones() }}</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasTelecomunicacionesVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>

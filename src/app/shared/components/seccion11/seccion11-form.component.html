@@ -1,0 +1,134 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.7. Infraestructura en transportes y comunicaciones</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">a. Transporte</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion11_transporte_completo"
+          label="Transporte - Texto Completo"
+          hint="Edite todo el bloque de texto sobre transporte. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="textoTransporteSignal()"
+          (valueChange)="onFieldChange('parrafoSeccion11_transporte_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-row" style="margin-top: 20px;">
+        <div class="form-field">
+          <label class="label">Costo Transporte Mínimo (S/.)</label>
+          <input type="text" class="input" placeholder="0"
+            [value]="costoMinSignal()"
+            (input)="onFieldChange('costoTransporteMinimo', $any($event.target).value)">
+        </div>
+        <div class="form-field">
+          <label class="label">Costo Transporte Máximo (S/.)</label>
+          <input type="text" class="input" placeholder="0"
+            [value]="costoMaxSignal()"
+            (input)="onFieldChange('costoTransporteMaximo', $any($event.target).value)">
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Transporte</label>
+        <app-image-upload
+          [fotografias]="fotografiasTransporteFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+          [permitirMultiples]="true"
+          [mostrarTitulo]="true"
+          [mostrarFuente]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura de transporte en la CC Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura de transporte en la CC Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasTransporteChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Telecomunicaciones</h4>
+      
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion11_telecomunicaciones_completo"
+          label="Telecomunicaciones - Texto Completo"
+          hint="Edite todo el bloque de texto sobre telecomunicaciones. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="textoTelecomunicacionesSignal()"
+          (valueChange)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Título de la Tabla</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerTituloTelecomunicaciones()"
+          (change)="onTituloTelecomunicacionesChange($event)"
+          placeholder="Servicios de telecomunicaciones – CC ____">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Servicios de Telecomunicaciones</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="telecomunicacionesConfig"
+          [columns]="[
+            { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Emisoras de radio' },
+            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: '--' }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyTelecomunicaciones()"
+          [showAddButton]="true"
+          [showDeleteButton]="true"
+          (tableUpdated)="onTelecomunicacionesTableUpdated($event)">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fuente de la Tabla</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="obtenerFuenteTelecomunicaciones()"
+          (change)="onFuenteTelecomunicacionesChange($event)"
+          placeholder="GEADES (2024)">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Telecomunicaciones</label>
+        <app-image-upload
+          [fotografias]="fotografiasTelecomunicacionesFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
+          [permitirMultiples]="true"
+          [mostrarTitulo]="true"
+          [mostrarFuente]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Vivienda con antena de DIRECTV en el anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Vivienda con antena de DIRECTV en el anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasTelecomunicacionesChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>
+
