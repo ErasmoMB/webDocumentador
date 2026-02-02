@@ -51,8 +51,10 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion5: () => import('src/app/shared/components/seccion5/seccion5.component').then(m => m.Seccion5Component as unknown as Type<any>),
     seccion6: () => import('src/app/shared/components/seccion6/seccion6.component').then(m => m.Seccion6Component as unknown as Type<any>),
     seccion7View: () => import('src/app/shared/components/seccion7/seccion7-view.component').then(m => m.Seccion7ViewComponent as unknown as Type<any>),
-    seccion8: () => import('src/app/shared/components/seccion8/seccion8.component').then(m => m.Seccion8Component as unknown as Type<any>),
-    seccion9: () => import('src/app/shared/components/seccion9/seccion9.component').then(m => m.Seccion9Component as unknown as Type<any>),
+    seccion8: () => import('src/app/shared/components/seccion8/seccion8-view.component').then(m => m.Seccion8ViewComponent as unknown as Type<any>),
+    seccion8Form: () => import('src/app/shared/components/forms/seccion8-form-wrapper.component').then(m => m.Seccion8FormWrapperComponent as unknown as Type<any>),
+    seccion9Form: () => import('src/app/shared/components/forms/seccion9-form-wrapper.component').then(m => m.Seccion9FormWrapperComponent as unknown as Type<any>),
+    seccion9: () => import('src/app/shared/components/seccion9/seccion9-view.component').then(m => m.Seccion9ViewComponent as unknown as Type<any>),
     seccion10: () => import('src/app/shared/components/seccion10/seccion10.component').then(m => m.Seccion10Component as unknown as Type<any>),
     seccion11: () => import('src/app/shared/components/seccion11/seccion11.component').then(m => m.Seccion11Component as unknown as Type<any>),
     seccion12: () => import('src/app/shared/components/seccion12/seccion12.component').then(m => m.Seccion12Component as unknown as Type<any>),
@@ -706,8 +708,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: aisd(1), loader: this.componentLoaders.seccion5, inputs: withModoFormulario },
       { matches: aisd(2), loader: this.componentLoaders.seccion6, inputs: withModoFormulario },
       { matches: aisd(3), loader: this.componentLoaders.seccion7FormWrapper, inputs: withSeccionId },
-      { matches: aisd(4), loader: this.componentLoaders.seccion8, inputs: withModoFormulario },
-      { matches: aisd(5), loader: this.componentLoaders.seccion9, inputs: withModoFormulario },
+      { matches: aisd(4), loader: this.componentLoaders.seccion8Form, inputs: withSeccionId },
+      { matches: aisd(5), loader: this.componentLoaders.seccion9Form, inputs: withSeccionId },
       { matches: aisd(6), loader: this.componentLoaders.seccion10, inputs: withModoFormulario },
       { matches: aisd(7), loader: this.componentLoaders.seccion11, inputs: withModoFormulario },
       { matches: aisd(8), loader: this.componentLoaders.seccion12, inputs: withModoFormulario },
@@ -1648,6 +1650,58 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
               fieldsConDatos.push('entrevistados');
             }
           }
+        }
+      }
+
+      // ✅ SECCIÓN 9 (A.1.5. Viviendas)
+      if (this.seccionId === '3.1.4.A.1.5') {
+        const prefijoS9 = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+        
+        // Llenar textoViviendas si está vacío
+        const textoViviendasActual = datosActuales['textoViviendas'];
+        if (this.esCampoVacio(textoViviendasActual)) {
+          const comunidad = datosActuales['grupoAISD'] || '____';
+          const textoViviendasData = `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron un total de 90 viviendas empadronadas. De estas, solamente 61 se encuentran ocupadas, representando un 67.8%. Cabe mencionar que, para poder describir el aspecto de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.`;
+          updates['textoViviendas'] = textoViviendasData;
+          fieldsConDatos.push('textoViviendas');
+        }
+        
+        // Llenar textoEstructura si está vacío
+        const textoEstructuraActual = datosActuales['textoEstructura'];
+        if (this.esCampoVacio(textoEstructuraActual)) {
+          const comunidad = datosActuales['grupoAISD'] || '____';
+          const textoEstructuraData = `Según la información recabada de los Censos Nacionales 2017, dentro de la CC ${comunidad}, el material más empleado para la construcción de las paredes de las viviendas es el adobe, pues representa el 98.4%. A ello le complementa el material de triplay / calamina / estera (1.6%). Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un 96.7%. El porcentaje restante consiste en triplay / estera / carrizo (1.6%) y en tejas (1.6%). Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (95.1%). Por otra parte, el porcentaje restante (4.9%) consiste en cemento.`;
+          updates['textoEstructura'] = textoEstructuraData;
+          fieldsConDatos.push('textoEstructura');
+        }
+        
+        // Llenar tabla condicionOcupacionTabla si está vacía
+        const tablaCondicionKey = prefijoS9 ? `condicionOcupacionTabla${prefijoS9}` : 'condicionOcupacionTabla';
+        const condicionActual = datosActuales[tablaCondicionKey];
+        if (this.esCampoVacio(condicionActual)) {
+          const datosCondicion = [
+            { categoria: 'Viviendas ocupadas', casos: 61, porcentaje: '67.8%' },
+            { categoria: 'Viviendas desocupadas', casos: 29, porcentaje: '32.2%' }
+          ];
+          updates[tablaCondicionKey] = datosCondicion;
+          fieldsConDatos.push(tablaCondicionKey);
+        }
+        
+        // Llenar tabla tiposMaterialesTabla si está vacía
+        const tablaMaterialesKey = prefijoS9 ? `tiposMaterialesTabla${prefijoS9}` : 'tiposMaterialesTabla';
+        const materialesActual = datosActuales[tablaMaterialesKey];
+        if (this.esCampoVacio(materialesActual)) {
+          const datosMateriales = [
+            { categoria: 'Paredes', tipoMaterial: 'Adobe', casos: 89, porcentaje: '98.4%' },
+            { categoria: 'Paredes', tipoMaterial: 'Triplay/Calamina/Estera', casos: 1, porcentaje: '1.6%' },
+            { categoria: 'Techos', tipoMaterial: 'Calamina/Fibra de cemento', casos: 87, porcentaje: '96.7%' },
+            { categoria: 'Techos', tipoMaterial: 'Triplay/Estera/Carrizo', casos: 1, porcentaje: '1.6%' },
+            { categoria: 'Techos', tipoMaterial: 'Tejas', casos: 1, porcentaje: '1.6%' },
+            { categoria: 'Pisos', tipoMaterial: 'Tierra', casos: 86, porcentaje: '95.1%' },
+            { categoria: 'Pisos', tipoMaterial: 'Cemento', casos: 4, porcentaje: '4.9%' }
+          ];
+          updates[tablaMaterialesKey] = datosMateriales;
+          fieldsConDatos.push(tablaMaterialesKey);
         }
       }
 

@@ -27,6 +27,8 @@ export class TableNumberingService {
     // Nota: '3.1.4.B' se registrará dinámicamente cuando se use para "Ubicación referencial" en AISI
     ['3.1.4.A.1.2', 2],  // Sección 6: Aspectos Demográficos - 2 tablas
     ['3.1.4.A.1.3', 3],  // Sección 7: Empleo e Ingresos - 3 tablas (PET, PEA, PEA Ocupada)
+    ['3.1.4.A.1.4', 3],  // Sección 8: Actividades Económicas - 3 tablas (PEA, Ganadería, Agricultura)
+    ['3.1.4.A.1.5', 2],  // Sección 9: Viviendas - 2 tablas (Condición de Ocupación, Tipos de Materiales)
     // AISD (A.1.1 a A.1.20) - se registrarán dinámicamente
     // AISI (B.1.1 a B.1.15) - se registrarán dinámicamente
   ]);
@@ -71,9 +73,9 @@ export class TableNumberingService {
       // ✅ AISD (A.1.1 a A.1.20) - TODAS PRIMERO
       '3.1.4.A.1.1',  // A.1.1 Institucionalidad
       '3.1.4.A.1.2',  // Sección 6: Aspectos Demográficos (AISD)
-      '3.1.4.A.1.3',  // A.1.3
-      '3.1.4.A.1.4',  // A.1.4
-      '3.1.4.A.1.5',  // A.1.5
+      '3.1.4.A.1.3',  // Sección 7: Empleo e Ingresos (A.1.3)
+      '3.1.4.A.1.4',  // Sección 8: Actividades Económicas (A.1.4)
+      '3.1.4.A.1.5',  // Sección 9: Viviendas (A.1.5)
       '3.1.4.A.1.6',  // A.1.6
       '3.1.4.A.1.7',  // A.1.7
       '3.1.4.A.1.8',  // A.1.8
