@@ -1,0 +1,156 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.9. Indicadores de salud</h4>
+    
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">a. Natalidad y Mortalidad</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion13_natalidad_mortalidad_completo"
+          label="Natalidad y Mortalidad - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título del cuadro</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroTituloNatalidadMortalidad'] || 'Indicadores de natalidad y mortalidad – CC ' + (obtenerNombreComunidadActual())"
+          (change)="onFieldChange('cuadroTituloNatalidadMortalidad', $any($event.target).value, { refresh: true })" />
+
+        <label class="label mt-md">Tabla Natalidad y Mortalidad</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="natalidadMortalidadConfigSignal()"
+          [columns]="columnasNatalidadMortalidad"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyNatalidadMortalidad()"
+          [showAddButton]="true"
+          (tableUpdated)="onNatalidadMortalidadTableUpdated($event)">
+        </app-dynamic-table>
+
+        <label class="label mt-sm">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroFuenteNatalidadMortalidad'] || 'GEADES (2024)'"
+          (change)="onFieldChange('cuadroFuenteNatalidadMortalidad', $any($event.target).value, { refresh: true })" />
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">b. Morbilidad</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="parrafoSeccion13_morbilidad_completo"
+          label="Morbilidad - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="obtenerTextoSeccion13MorbilidadCompleto()"
+          (valueChange)="onFieldChange('parrafoSeccion13_morbilidad_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título del cuadro</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroTituloMorbilidad'] || 'Casos por grupos de morbilidad – Distrito ' + (datos.distritoSeleccionado || '____') + ' (2023)'"
+          (change)="onFieldChange('cuadroTituloMorbilidad', $any($event.target).value, { refresh: true })" />
+
+        <label class="label mt-md">Tabla Morbilidad</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="morbilidadConfigSignal()"
+          [columns]="columnasMorbilidad"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyMorbilidad()"
+          [showAddButton]="true"
+          (tableUpdated)="onMorbilidadTableUpdated($event)">
+        </app-dynamic-table>
+
+        <label class="label mt-sm">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroFuenteMorbilidad'] || 'REUNIS (2024)'"
+          (change)="onFieldChange('cuadroFuenteMorbilidad', $any($event.target).value, { refresh: true })" />
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">c. Población afiliada a Seguros de Salud</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoAfiliacionSalud"
+          label="Afiliación a Seguros de Salud - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoAfiliacionSalud()"
+          (valueChange)="onFieldChange('textoAfiliacionSalud', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título del cuadro</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroTituloAfiliacionSalud'] || 'Población según tipo de seguro de salud afiliado – CC ' + (obtenerNombreComunidadActual()) + ' (2017)'"
+          (change)="onFieldChange('cuadroTituloAfiliacionSalud', $any($event.target).value, { refresh: true })" />
+
+        <label class="label mt-md">Tabla Afiliación a Seguros de Salud</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="afiliacionSaludConfigSignal()"
+          [columns]="columnasAfiliacionSalud"
+          [sectionId]="seccionId"
+          [tablaKey]="getTablaKeyAfiliacionSalud()"
+          [showAddButton]="true"
+          (tableUpdated)="onAfiliacionSaludTableUpdated($event)">
+        </app-dynamic-table>
+
+        <label class="label mt-sm">Fuente</label>
+        <input
+          type="text"
+          class="form-control"
+          [value]="datos['cuadroFuenteAfiliacionSalud'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+          (change)="onFieldChange('cuadroFuenteAfiliacionSalud', $any($event.target).value, { refresh: true })" />
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Indicadores de Salud</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Indicadores de Salud"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Indicadores de Salud"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>

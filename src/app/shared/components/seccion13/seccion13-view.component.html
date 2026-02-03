@@ -1,0 +1,87 @@
+<div>
+  <h5>A.1.9. Indicadores de salud</h5>
+
+  <p class="mb-sm"><strong>a. Natalidad y Mortalidad</strong></p>
+  <p class="text-justify" [innerHTML]="textoNatalidadMortalidadSignal()"></p>
+
+  <app-table-wrapper [title]="obtenerTituloCuadroNatalidad()" sectionId="3.1.4.A.1.9">
+    <app-generic-table
+      [data]="natalidadMortalidadTablaSignal()"
+      [config]="{
+        columns: [
+          { key: 'anio', header: 'Año', align: 'center' },
+          { key: 'natalidad', header: 'Natalidad', align: 'right' },
+          { key: 'mortalidad', header: 'Mortalidad', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroNatalidad() }}</span></p>
+
+  <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
+  <p class="text-justify" [innerHTML]="textoMorbilidadSignal()"></p>
+
+  <app-table-wrapper [title]="obtenerTituloCuadroMorbilidad()" sectionId="3.1.4.A.1.9">
+    <app-generic-table
+      [data]="getMorbilidadSinTotal()"
+      [config]="{
+        columns: [
+          { key: 'grupo', header: 'Grupo de Morbilidad', align: 'left' },
+          { key: 'rango0_11', header: '0 – 11', align: 'right' },
+          { key: 'rango12_17', header: '12 – 17', align: 'right' },
+          { key: 'rango18_29', header: '18 – 29', align: 'right' },
+          { key: 'rango30_59', header: '30 – 59', align: 'right' },
+          { key: 'rango60', header: '60 ->', align: 'right' },
+          { key: 'casos', header: 'Casos Totales', align: 'right' }
+        ],
+        totalRow: {
+          grupo: 'Total',
+          rango0_11: { value: getTotalMorbilidadRango0_11(), isCalculated: true },
+          rango12_17: { value: getTotalMorbilidadRango12_17(), isCalculated: true },
+          rango18_29: { value: getTotalMorbilidadRango18_29(), isCalculated: true },
+          rango30_59: { value: getTotalMorbilidadRango30_59(), isCalculated: true },
+          rango60: { value: getTotalMorbilidadRango60(), isCalculated: true },
+          casos: { value: getTotalMorbilidad(), isCalculated: true }
+        },
+        showFooter: true,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroMorbilidad() }}</span></p>
+
+  <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
+  <p class="text-justify" [innerHTML]="textoAfiliacionSaludSignal()"></p>
+
+  <app-table-wrapper [title]="obtenerTituloCuadroAfiliacion()" sectionId="3.1.4.A.1.9">
+    <app-generic-table
+      [data]="getAfiliacionSaludConPorcentajes()"
+      [config]="{
+        columns: [
+          { key: 'categoria', header: 'Categoría', align: 'left' },
+          { key: 'casos', header: 'Casos', align: 'right' },
+          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroAfiliacion() }}</span></p>
+
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasCache"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>
