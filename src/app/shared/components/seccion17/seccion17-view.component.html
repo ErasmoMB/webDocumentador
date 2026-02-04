@@ -1,0 +1,84 @@
+<div class="form-group-section">
+  <h4 class="section-title">A.1.13. Índice de Desarrollo Humano (IDH)</h4>
+
+  <!-- Párrafo con Resaltado -->
+  <div class="form-group-section mt-lg" [innerHTML]="obtenerTextoIDHConResaltado()"></div>
+
+  <!-- Tabla IDH -->
+  <app-table-wrapper [title]="obtenerTituloIDH()" [sectionId]="seccionId">
+    <div class="table-wrapper table--scrollable">
+      <table class="table table--view table--idh" style="width:100%">
+        <thead>
+          <tr>
+            <th colspan="2">Población</th>
+            <th colspan="2">Índice de Desarrollo Humano</th>
+            <th colspan="2">Esperanza de vida al nacer</th>
+            <th colspan="2">Con Educación secundaria completa (Población 18 años)</th>
+            <th colspan="2">Años de educación (Población 25 y más)</th>
+            <th colspan="2">Ingreso familiar per cápita</th>
+          </tr>
+          <tr>
+            <th>Habitantes</th>
+            <th>Rank</th>
+            <th>IDH</th>
+            <th>Rank</th>
+            <th>Años</th>
+            <th>Rank</th>
+            <th>Porcentaje</th>
+            <th>Rank</th>
+            <th>Años</th>
+            <th>Rank</th>
+            <th>N.S. mes</th>
+            <th>Rank</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getIndiceDesarrolloHumanoTabla()">
+            <td style="text-align:right">{{ item.poblacion || '____' }}</td>
+            <td style="text-align:center">{{ item.rankIdh1 || '____' }}</td>
+            <td style="text-align:right">{{ item.idh || '____' }}</td>
+            <td style="text-align:center">{{ item.rankEsperanza || '____' }}</td>
+            <td style="text-align:right">{{ item.esperanzaVida || '____' }}</td>
+            <td style="text-align:center">{{ item.rankEducacion1 || '____' }}</td>
+            <td style="text-align:right">{{ item.educacion || '____' }}</td>
+            <td style="text-align:center">{{ item.rankEducacion2 || '____' }}</td>
+            <td style="text-align:right">{{ item.anosEducacion || '____' }}</td>
+            <td style="text-align:center">{{ item.rankAnios || '____' }}</td>
+            <td style="text-align:right">{{ item.ingreso || '____' }}</td>
+            <td style="text-align:center">{{ item.rankIngreso || '____' }}</td>
+          </tr>
+          <tr *ngIf="getIndiceDesarrolloHumanoTabla().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </app-table-wrapper>
+
+  <p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteIDH() }}</p>
+
+  <!-- Fotografías -->
+  <div class="form-group-section mt-lg" *ngIf="getFotografiasVista().length > 0">
+    <app-image-upload
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getFotografiasVista()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
+    </app-image-upload>
+  </div>
+</div>
