@@ -1,0 +1,111 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h4>
+
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">a. Idioma</h4>
+
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="textoAspectosCulturales"
+          label="Aspectos culturales - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="textoAspectosCulturalesSignal()"
+          (valueChange)="onFieldChange('textoAspectosCulturales', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoIdioma"
+          label="Idioma - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="textoIdiomaSignal()"
+          (valueChange)="onFieldChange('textoIdioma', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título de la Tabla Lenguas Maternas</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasTitulo')()" (input)="onInputChange('lenguasMaternasTitulo', $event)" placeholder="Lenguas maternas en población de 3 años a más">
+
+        <label class="label mt-lg">Tabla Lenguas Maternas</label>
+        <app-dynamic-table
+          [datos]="projectFacade.obtenerDatos()"
+          [sectionId]="seccionId"
+          [config]="lenguasMaternasConfigSignal()"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [totalKey]="'categoria'"
+          (tableUpdated)="onLenguasMaternasTableUpdated($event)">
+        </app-dynamic-table>
+
+        <label class="label mt-sm">Fuente de la Tabla Lenguas Maternas</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasFuente')()" (input)="onInputChange('lenguasMaternasFuente', $event)" placeholder="Plataforma Nacional de Datos Georreferenciados – Geo Perú">
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">b. Religión</h4>
+
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          fieldId="parrafoSeccion15_religion_completo"
+          label="Religión - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="parrafoReligionSignal()"
+          (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título de la Tabla Religiones</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesTitulo')()" (input)="onInputChange('religionesTitulo', $event)" placeholder="Religión">
+
+        <label class="label mt-lg">Tabla Religiones</label>
+        <app-dynamic-table
+          [datos]="projectFacade.obtenerDatos()"
+          [sectionId]="seccionId"
+          [config]="religionesConfigSignal()"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [totalKey]="'categoria'"
+          (tableUpdated)="onReligionesTableUpdated($event)">
+        </app-dynamic-table>
+
+        <label class="label mt-sm">Fuente de la Tabla Religiones</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesFuente')()" (input)="onInputChange('religionesFuente', $event)" placeholder="Plataforma Nacional de Datos Georreferenciados – Geo Perú">
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Iglesia</label>
+        <app-image-upload
+          [fotografias]="fotografiasIglesia"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Iglesia Matriz del anexo Ayroca"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>
