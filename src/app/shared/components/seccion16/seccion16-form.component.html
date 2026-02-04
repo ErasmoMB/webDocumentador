@@ -1,0 +1,63 @@
+<div class="form-group-section">
+  <h4 class="section-title">A.1.12. Uso de los suelos y de los recursos naturales</h4>
+
+  <div class="form-group-section mt-lg">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <app-paragraph-editor
+      [fieldId]="getFieldIdAguaCompleto()"
+      label="Agua - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="6"
+      [value]="obtenerTextoAguaCompleto()"
+      (valueChange)="onFieldChange(getFieldIdAguaCompleto(), $event)">
+    </app-paragraph-editor>
+
+    <app-paragraph-editor
+      [fieldId]="getFieldIdRecursosNaturalesCompleto()"
+      label="Recursos Naturales - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="6"
+      [value]="obtenerTextoRecursosNaturalesCompleto()"
+      (valueChange)="onFieldChange(getFieldIdRecursosNaturalesCompleto(), $event)">
+    </app-paragraph-editor>
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fotografías de Reservorio</label>
+    <app-image-upload
+      [fotografias]="fotografiasReservorio"
+      [sectionId]="seccionId"
+      photoPrefix="fotografiaReservorio"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Reservorio del anexo Ayroca"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Reservorio del anexo Ayroca"
+      fuenteDefault="GEADES, 2024"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasReservorioChange($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fotografías de Uso de Suelos</label>
+    <app-image-upload
+      [fotografias]="fotografiasUsoSuelos"
+      [sectionId]="seccionId"
+      photoPrefix="fotografiaUsoSuelos"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: Uso de los suelos en el anexo Ayroca"
+      placeholderFuente="Ej: GEADES, 2024"
+      tituloDefault="Uso de los suelos en el anexo Ayroca"
+      fuenteDefault="GEADES, 2024"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasUsoSuelosChange($event)">
+    </app-image-upload>
+  </div>
+</div>

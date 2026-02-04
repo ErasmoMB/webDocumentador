@@ -1,0 +1,29 @@
+<h5>A.1.12. Uso de los suelos y de los recursos naturales</h5>
+
+<h5>a. Fuentes y usos del agua</h5>
+<div [innerHTML]="obtenerTextoAguaConResaltado()"></div>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasReservorioVista()"
+    [sectionId]="seccionId"
+    photoPrefix="fotografiaReservorio"
+    labelTitulo="Título"
+    labelFuente="Fuente"
+    labelImagen="Imagen">
+</app-image-upload>
+
+<h5>b. Tenencia de la tierra, usos del suelo y de los recursos naturales</h5>
+<div [innerHTML]="obtenerTextoRecursosNaturalesConResaltado()"></div>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasUsoSuelosVista()"
+    [sectionId]="seccionId"
+    photoPrefix="fotografiaUsoSuelos"
+    labelTitulo="Título"
+    labelFuente="Fuente"
+    labelImagen="Imagen">
+</app-image-upload>

@@ -60,7 +60,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   dragOverIndex: number = -1;
   
   private isInternalUpdate: boolean = false;
-  private lastEmittedValue: string = '';
 
   get stableId(): string {
     return (this.photoPrefix + '_' + this.sectionId).replace(/\W+/g, '_');
@@ -173,6 +172,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         [fieldKey]: val
       });
       this._fotografias = [...this._fotografias];
+      this.cdRef.detectChanges();
       this.emitirCambios();
     } else {
       this.titulo = val;
@@ -188,6 +188,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         [fieldKey]: val
       });
       this._fotografias = [...this._fotografias];
+      this.cdRef.detectChanges();
       this.emitirCambios();
     } else {
       this.fuente = val;
@@ -341,30 +342,20 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       } catch (e) {
       }
     }
-    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
   }
 
   agregarFoto() {
     this._fotografias.push(this.createEmptyFoto());
-    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
   }
 
   private emitirCambios() {
-    const val = JSON.stringify(this._fotografias.map(f => 
-      (f.id || '') + 
-      (this.extractImageId(f.imagen) || f.imagen || '') +
-      (f.titulo || '') +
-      (f.fuente || '')
-    ));
-    
-    if (val !== this.lastEmittedValue) {
-      this.lastEmittedValue = val;
-      this.isInternalUpdate = true;
-      this.fotografiasChange.emit(this._fotografias.map(f => ({
-        ...f,
-        imagen: this.extractImageId(f.imagen) || f.imagen
-      })));
-    }
+    this.isInternalUpdate = true;
+    this.fotografiasChange.emit(this._fotografias.map(f => ({
+      ...f,
+      imagen: this.extractImageId(f.imagen) || f.imagen
+    })));
   }
 
   getFormattedPhotoNumber(i: number): string {
