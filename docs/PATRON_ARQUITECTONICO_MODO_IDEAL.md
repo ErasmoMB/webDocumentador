@@ -1,968 +1,29 @@
-# 🎯 PATRÓN ARQUITECTÓNICO - MODO IDEAL (Secciones 1-5)
+# Guía de Refactorización: Patrones Arquitectónicos y Estructura de Archivos
 
-**Análisis comparativo de 5 secciones en MODO IDEAL**  
-**Fecha:** 1 de febrero de 2026
+Este documento sirve como una guía de refactorización para implementar un patrón arquitectónico "MODO IDEAL" en el desarrollo de componentes, enfocándose en la estructura de archivos y patrones de código reutilizables.
 
----
+## 🎯 PATRÓN ARQUITECTÓNICO - MODO IDEAL
 
-## 📋 TABLA COMPARATIVA - CARACTERÍSTICAS CLAVE
+**Referencia:** Secciones 1-9 (Actualizado 2 de febrero de 2026)
 
-| Característica | Sec. 1 | Sec. 2 | Sec. 3 | Sec. 4 | Sec. 5 | Patrón Común |
-|---|---|---|---|---|---|---|
-| **Extends BaseSectionComponent** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **@Input seccionId** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **@Input modoFormulario** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Implements OnDestroy** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **PHOTO_PREFIX** | ✅ | ✅ | ✅ | ✅✅ (2) | ✅ | ✅ **SIEMPRE** |
-| **useReactiveSync** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Signals computed()** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Effects automáticos** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **photoFieldsHash Signal** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **onFotografiasChange()** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Form-Wrapper mínimo** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Sin RxJS manual** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
-| **Sin setTimeout** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ **SIEMPRE** |
+## 📋 ESTRUCTURA DE ARCHIVOS - PATRÓN UNIVERSAL
 
----
-
-## 🏗️ ESTRUCTURA ARQUITECTÓNICA COMÚN
-
-### 1️⃣ COMPONENTES (Siempre 3)
+Cada sección en el "MODO IDEAL" se compone de 5 archivos clave, organizados de la siguiente manera:
 
 ```
-Sección X
-├── seccionX-form-wrapper.component.ts      ← MÍNIMO (25-30 líneas)
-├── seccionX.component.ts                   ← Principal (con lógica)
-├── seccionX-view.component.ts              ← Vista (delegación)
-└── [opcional] seccionX-view-internal.component.ts ← Si tiene UI compleja
-```
-
-**Patrón:**
-- **Wrapper:** Extiende BaseSectionComponent, template inline, solo delegación
-- **Componente Principal:** Toda la lógica, Signals, effects
-- **View:** Misma estructura que Main pero para modo lectura
-
----
-
-### 2️⃣ SIGNALS COMUNES (En TODAS las secciones)
-
-```typescript
-// PATTERN 1: Datos de formulario
-readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
-  return this.projectFacade.selectSectionFields(this.seccionId, null)();
-});
-
-// PATTERN 2: Párrafos/Textos
-readonly parrafoSignal: Signal<string> = computed(() => {
-  // Lógica de obtención de párrafo
-});
-
-// PATTERN 3: Tablas (si aplica)
-readonly tablaSignal: Signal<any[]> = computed(() => {
-  const formData = this.formularioDataSignal();
-  return Array.isArray(formData['tabla']) ? formData['tabla'] : [];
-});
-
-// PATTERN 4: Fotografías (CRÍTICO)
-readonly photoFieldsHash: Signal<string> = computed(() => {
-  let hash = '';
-  for (let i = 1; i <= 10; i++) {
-    const titulo = this.projectFacade.selectField(...)();
-    const fuente = this.projectFacade.selectField(...)();
-    const imagen = this.projectFacade.selectField(...)();
-    hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-  }
-  return hash;
-});
-
-// PATTERN 5: ViewModel (Opcional pero recomendado)
-readonly viewModel: Signal<any> = computed(() => {
-  return {
-    datos: this.formDataSignal(),
-    texto: this.parrafoSignal(),
-    tabla: this.tablaSignal()
-  };
-});
-```
-
----
-
-### 3️⃣ EFFECTS COMUNES (En TODAS las secciones)
-
-```typescript
-// EFFECT 1: Auto-sync datos
-effect(() => {
-  const formData = this.formularioDataSignal();
-  this.datos = { ...formData };
-  this.cdRef.markForCheck();
-});
-
-// EFFECT 2: Monitorear cambios de fotografías
-effect(() => {
-  this.photoFieldsHash();  // ← Dispara cuando CUALQUIER foto cambia
-  this.cargarFotografias();  // ← Se ejecuta automáticamente
-  this.fotografiasFormMulti = [...this.fotografiasCache];
-  this.cdRef.markForCheck();
-}, { allowSignalWrites: true });
-
-// EFFECT 3+: Específicos por sección (Sec2 tiene más)
-effect(() => {
-  // Lógica específica de sincronización
-});
-```
-
----
-
-### 4️⃣ MÉTODOS OBLIGATORIOS (En TODAS las secciones)
-
-```typescript
-// MÉTODO 1: Inicialización
-protected override onInitCustom(): void {
-  this.cargarFotografias();
-  // Sincronización inicial
-  this.fotografiasFormMulti = [...this.fotografiasCache];
-}
-
-// MÉTODO 2: Cambios detectados
-protected override detectarCambios(): boolean {
-  return false;  // ← Signals se encargan
-}
-
-// MÉTODO 3: Actualizar prefijos
-protected override actualizarValoresConPrefijo(): void {
-  // No necesario, Signals ya sincronizados
-}
-
-// MÉTODO 4: Datos personalizados
-protected override actualizarDatosCustom(): void {
-  this.cargarFotografias();  // Recargar fotos si hay cambios
-}
-
-// MÉTODO 5: Cambios de fotografías
-override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
-  super.onFotografiasChange(fotografias, customPrefix);
-  this.fotografiasFormMulti = fotografias;  // Sincronizar localmente
-  this.cdRef.markForCheck();
-}
-```
-
----
-
-## 🔄 FLUJO DE DATOS - PATRÓN UNIVERSAL
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     FLUJO DE DATOS COMÚN                     │
-└─────────────────────────────────────────────────────────────┘
-
-USUARIO EN FORMULARIO
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 1. onFieldChange(fieldId, value)                            │
-│    → super.onFieldChange() → FormChangeService              │
-│    → projectFacade.setField(seccionId, groupId, fieldId)    │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 2. ProjectState actualiza (estado centralizado inmutable)    │
-│    → Reducers puros sin side effects                        │
-│    → Estado nuevo en memoria                                 │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 3. Signals REACCIONAN automáticamente                        │
-│    → formDataSignal() detecta cambio                         │
-│    → photoFieldsHash() recalcula si hay fotos               │
-│    → Todos los computed() que dependen se actualizan        │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 4. Effects se DISPARAN automáticamente                       │
-│    → EFFECT 1: Auto-sync form data                          │
-│    → EFFECT 2: cargarFotografias() si photoFieldsHash cambió│
-│    → EFFECT 3+: Lógica específica de sincronización         │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 5. Componentes locales se actualizan                         │
-│    → this.datos = {...formData}                             │
-│    → this.fotografiasFormMulti = [...fotosRecargadas]       │
-│    → this.cdRef.markForCheck()                              │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 6. Template re-renderiza (OnPush + markForCheck)            │
-│    → Binding {{ }} se actualizan                            │
-│    → *ngIf y *ngFor recalculan                              │
-│    → UI muestra cambios al usuario                          │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 7. FormComponent → ViewComponent (cuando modo cambia)        │
-│    → *ngIf="modoFormulario" → muestra u oculta              │
-│    → ViewComponent recibe MISMO projectState                │
-│    → Signals en View también reaccionan                     │
-│    → Vista también se actualiza automáticamente              │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 8. Persistencia automática (via FormChangeService)          │
-│    → LocalStorage actualizado                               │
-│    → IndexedDB sincronizado                                 │
-│    → Backend (si aplica) actualizado                        │
-└─────────────────────────────────────────────────────────────┘
-        ↓
-USUARIO VE CAMBIOS EN AMBOS MODOS (Form + View) ✅
-```
-
----
-
-## 🔧 FUNCIONALIDADES COMPARTIDAS
-
-### 1️⃣ IMÁGENES (Todas las secciones)
-
-**Patrón común:**
-```typescript
-override readonly PHOTO_PREFIX = 'fotografiaSeccion[N]';
-override useReactiveSync: boolean = true;
-
-readonly photoFieldsHash: Signal<string> = computed(() => {
-  // Monitorea 10 imágenes máximo (título, fuente, imagen)
-  // Crea hash que cambia si CUALQUIER campo cambia
-});
-
-effect(() => {
-  this.photoFieldsHash();
-  this.cargarFotografias();
-  this.fotografiasFormMulti = [...this.fotografiasCache];
-  this.cdRef.markForCheck();
-});
-
-override onFotografiasChange(fotografias: FotoItem[]): void {
-  super.onFotografiasChange(fotografias);
-  this.fotografiasFormMulti = fotografias;
-  this.cdRef.markForCheck();
-}
-```
-
-**Sincronización:**
-- ✅ User agrega foto → photoFieldsHash cambia → effect() se dispara
-- ✅ cargarFotografias() recarga → fotografiasFormMulti se actualiza
-- ✅ Template re-renderiza → User ve foto
-- ✅ View recibe mismo estado → ViewComponent también ve foto
-
----
-
-### 2️⃣ PÁRRAFOS (Todas las secciones)
-
-**Patrón común:**
-```typescript
-readonly parrafoSignal: Signal<string> = computed(() => {
-  const formData = this.formularioDataSignal();
-  const prefijo = this.obtenerPrefijoGrupo();
-  
-  // Intentar leer con prefijo primero
-  const fieldKey = `parrafo[Seccion][X]${prefijo}`;
-  const fieldKeyNoPrefix = `parrafo[Seccion][X]`;
-  
-  const manual = formData[fieldKey] || formData[fieldKeyNoPrefix];
-  if (manual && manual.trim().length > 0) return manual;
-  
-  // Fallback a generated text
-  return this.textGenerator.obtenerTextoSeccion[X](formData);
-});
-```
-
-**Sincronización:**
-- ✅ User edita párrafo → formDataSignal se actualiza
-- ✅ parrafoSignal recomputa automáticamente
-- ✅ ViewComponent recibe Signal reactivo
-- ✅ Vista muestra párrafo actualizado
-
----
-
-### 3️⃣ TABLAS (Secciones 2, 3, 4, 5)
-
-**Patrón común:**
-```typescript
-readonly tablaSignal: Signal<any[]> = computed(() => {
-  const formData = this.formularioDataSignal();
-  const datos = formData['tablaKey'];
-  return Array.isArray(datos) ? datos : [];
-});
-
-onTablaActualizada(): void {
-  const datosActuales = this.tablaSignal();
-  this.onFieldChange('tablaKey', datosActuales, { refresh: false });
-  this.cdRef.markForCheck();
-}
-```
-
-**Sincronización:**
-- ✅ User agrega/edita fila → onTablaActualizada() se ejecuta
-- ✅ onFieldChange() persiste automáticamente
-- ✅ tablaSignal recomputa
-- ✅ ViewComponent ve misma tabla
-
----
-
-### 4️⃣ CONEXIÓN FORM ↔ VIEW (CRÍTICA - PATRÓN UNIVERSAL)
-
-**Clave: MISMO PROJECTSTATE**
-
-```
-┌─────────────────────────────┐
-│   FormComponent             │
-│  (seccionX-form.component)  │
-├─────────────────────────────┤
-│ readonly dataSignal =       │
-│   computed(() => {          │
-│     projectFacade.select... │
-│   });                       │
-│                             │
-│ effect(() => {              │
-│   dataSignal();             │
-│   cargarFotografias();      │
-│ });                         │
-└────────────┬────────────────┘
-             │
-        LEER/ESCRIBIR
-             ↓
-┌────────────────────────────────┐
-│    ProjectState (CENTRALIZADO)  │
-│   ✅ UNA SOLA FUENTE DE VERDAD │
-│   ✅ Estado inmutable           │
-│   ✅ Reducers puros            │
-└────────────┬───────────────────┘
-             │
-        LEER (Solo)
-             ↓
-┌─────────────────────────────┐
-│   ViewComponent             │
-│  (seccionX-view.component)  │
-├─────────────────────────────┤
-│ readonly dataSignal =       │
-│   computed(() => {          │
-│     projectFacade.select... │
-│   });                       │
-│                             │
-│ effect(() => {              │
-│   dataSignal();             │
-│   cargarFotografias();      │
-│ });                         │
-└─────────────────────────────┘
-```
-
-**¿Cómo funciona la sincronización?**
-
-1. **FormComponent escribe:** `onFieldChange('field', value)`
-2. **ProjectState se actualiza:** Estado único cambia
-3. **Ambos Signals reaccionan:** `dataSignal()` se recalcula en Form y View
-4. **Ambos Effects se disparan:** Form y View cargan fotos
-5. **Ambos templates se actualizan:** Form ve cambio, View ve cambio
-
----
-
-## 📊 COMPARATIVA DE SEÑALES POR SECCIÓN
-
-| Signal | Sec. 1 | Sec. 2 | Sec. 3 | Sec. 4 | Sec. 5 |
-|--------|--------|--------|--------|--------|--------|
-| **formDataSignal** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **parrafoSignal** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **photoFieldsHash** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **tablaSignal** | - | ✅ | ✅ | ✅ | ✅ |
-| **gruposSignal** | - | ✅ | - | - | - |
-| **viewModel** | - | - | ✅ | ✅ | ✅ |
-
----
-
-## ✅ CHECKLIST UNIVERSAL - APLICABLE A TODA SECCIÓN
-
-```
-┌─ ESTRUCTURA ─────────────────────────────┐
-│ ✅ Extiende BaseSectionComponent         │
-│ ✅ @Input seccionId                      │
-│ ✅ @Input modoFormulario                 │
-│ ✅ Implements OnDestroy                  │
-│ ✅ ChangeDetectionStrategy.OnPush        │
-└──────────────────────────────────────────┘
-
-┌─ SIGNALS ────────────────────────────────┐
-│ ✅ formDataSignal = computed()           │
-│ ✅ parrafoSignal = computed()            │
-│ ✅ [tabla]Signal = computed() (si aplica)│
-│ ✅ photoFieldsHash = computed()          │
-│ ✅ viewModel = computed() (opcional)     │
-└──────────────────────────────────────────┘
-
-┌─ EFFECTS ────────────────────────────────┐
-│ ✅ EFFECT 1: Auto-sync form data        │
-│ ✅ EFFECT 2: Monitoreo de fotografías   │
-│ ✅ EFFECT 3+: Lógica específica         │
-└──────────────────────────────────────────┘
-
-┌─ MÉTODOS ────────────────────────────────┐
-│ ✅ onInitCustom()                        │
-│ ✅ detectarCambios() = false             │
-│ ✅ actualizarValoresConPrefijo()         │
-│ ✅ actualizarDatosCustom()               │
-│ ✅ onFotografiasChange()                 │
-└──────────────────────────────────────────┘
-
-┌─ FORM-WRAPPER ───────────────────────────┐
-│ ✅ Existe form-wrapper.component.ts      │
-│ ✅ Extiende BaseSectionComponent         │
-│ ✅ Template inline                       │
-│ ✅ 25-30 líneas máximo                   │
-│ ✅ Sin lógica, solo delegación           │
-└──────────────────────────────────────────┘
-
-┌─ CALIDAD ────────────────────────────────┐
-│ ✅ Sin RxJS subscriptions manuales       │
-│ ✅ Sin setTimeout                        │
-│ ✅ Sin flags duplicados                  │
-│ ✅ Persistencia automática                │
-│ ✅ Form↔View sincronizados               │
-└──────────────────────────────────────────┘
-```
-
----
-
-## 🎯 PATRÓN APLICABLE A NUEVAS SECCIONES
-
-**Plantilla universal para cualquier sección nueva:**
-
-```typescript
-import { Component, Input, OnDestroy, ChangeDetectorRef, Injector, Signal, computed, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BaseSectionComponent } from '../base-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
-
-@Component({
-  selector: 'app-seccionX',
-  templateUrl: './seccionX.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
-  imports: [CommonModule, ...]
-})
-export class SeccionXComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.X';
-  @Input() override modoFormulario: boolean = false;
-
-  override readonly PHOTO_PREFIX = 'fotografiaSeccionX';
-  override useReactiveSync: boolean = true;
-
-  fotografiasSeccionX: FotoItem[] = [];
-
-  // ✅ SIGNALS
-  readonly formDataSignal: Signal<any> = computed(() =>
-    this.projectFacade.selectSectionFields(this.seccionId, null)()
-  );
-
-  readonly parrafoSignal: Signal<string> = computed(() => {
-    const data = this.formDataSignal();
-    const manual = data['parrafoSeccionX'];
-    return manual || 'Texto por defecto';
-  });
-
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(..., `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(..., `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(..., `${this.PHOTO_PREFIX}${i}Imagen`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
-  });
-
-  readonly viewModel: Signal<any> = computed(() => ({
-    datos: this.formDataSignal(),
-    parrafo: this.parrafoSignal()
-  }));
-
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
-    super(cdRef, injector);
-
-    // ✅ EFFECT 1
-    effect(() => {
-      const data = this.formDataSignal();
-      this.datos = { ...data };
-      this.cdRef.markForCheck();
-    });
-
-    // ✅ EFFECT 2
-    effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasSeccionX = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
-  }
-
-  protected override onInitCustom(): void {
-    this.cargarFotografias();
-    this.fotografiasSeccionX = [...this.fotografiasCache];
-  }
-
-  protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void { }
-
-  override onFotografiasChange(fotografias: FotoItem[]): void {
-    super.onFotografiasChange(fotografias);
-    this.fotografiasSeccionX = fotografias;
-    this.cdRef.markForCheck();
-  }
-}
-```
-
----
-
-## 📈 VENTAJAS DEL PATRÓN UNIVERSAL
-
-| Ventaja | Beneficio |
-|---------|-----------|
-| **Consistencia** | Todas las secciones funcionan igual |
-| **Predecibilidad** | Bugs son fáciles de identificar |
-| **Mantenibilidad** | Nuevo dev entiende patrón rápidamente |
-| **Escalabilidad** | Nuevas secciones siguen template |
-| **Performance** | Signals + OnPush = rendering óptimo |
-| **Reactividad** | Cambios se propagan automáticamente |
-| **Sincronización** | Form↔View siempre en sync |
-
----
-
-## 🗂️ TABLAS CON ESTRUCTURA FIJA (Sección 7 - Patrón Avanzado)
-
-**Para secciones con tablas de estructura predefinida (categorías fijas, porcentajes calculados)**
-
-### 📊 Características de Tablas con Estructura Fija
-
-**Cuándo usar este patrón:**
-- ✅ Las filas de categorías NO cambian (son fijas)
-- ✅ Los porcentajes se calculan dinámicamente (no editables)
-- ✅ Solo algunos campos son editables (ej: casos, hombres, mujeres)
-- ✅ Siempre hay una fila de Total (no editable)
-- ✅ El usuario NO puede agregar/eliminar filas
-
-**Ejemplo real: Sección 7 (PET, PEA, PEA Ocupada)**
-
----
-
-### 1️⃣ DEFINIR DATOS INICIALES EN SIGNALS
-
-```typescript
-// ✅ Tabla PET con estructura fija
-readonly petTablaSignal: Signal<any[]> = computed(() => {
-  const formData = this.formularioDataSignal();
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-  const tablaActual = Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
-  
-  // Si no hay datos, retornar estructura inicial SIEMPRE
-  if (tablaActual.length === 0) {
-    return [
-      { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
-      { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
-      { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
-      { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
-      { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
-    ];
-  }
-  
-  return tablaActual;
-});
-
-// ✅ Tabla PEA con estructura fija y género
-readonly peaTablaSignal: Signal<any[]> = computed(() => {
-  const formData = this.formularioDataSignal();
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-  const tablaActual = Array.isArray(formData[peaTablaKey]) ? formData[peaTablaKey] : [];
-  
-  if (tablaActual.length === 0) {
-    return [
-      { 
-        categoria: 'PEA', 
-        hombres: 0, porcentajeHombres: '0,00 %', 
-        mujeres: 0, porcentajeMujeres: '0,00 %', 
-        casos: 0, porcentaje: '0,00 %' 
-      },
-      { 
-        categoria: 'No PEA', 
-        hombres: 0, porcentajeHombres: '0,00 %', 
-        mujeres: 0, porcentajeMujeres: '0,00 %', 
-        casos: 0, porcentaje: '0,00 %' 
-      },
-      { 
-        categoria: 'Total', 
-        hombres: 0, porcentajeHombres: '100,00 %', 
-        mujeres: 0, porcentajeMujeres: '100,00 %', 
-        casos: 0, porcentaje: '100,00 %' 
-      }
-    ];
-  }
-  
-  return tablaActual;
-});
-```
-
----
-
-### 2️⃣ CONFIGURAR COLUMNAS EN SERVICE
-
-**Patrón: Usar `readonly: true` para columnas no editables**
-
-```typescript
-// seccionX-table-config.service.ts
-@Injectable({ providedIn: 'root' })
-export class SeccionXTableConfigService {
-
-  getColumnasTabla(): TableColumn[] {
-    return [
-      // ❌ NO EDITABLE: Categorías son fijas
-      { field: 'categoria', label: 'Categoría', type: 'text', readonly: true },
-      
-      // ✅ EDITABLE: Solo datos numéricos
-      { field: 'casos', label: 'Casos', type: 'number', dataType: 'number' },
-      
-      // ❌ NO EDITABLE: Porcentajes calculados dinámicamente
-      { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
-    ];
-  }
-
-  getColumnasConGenero(): TableColumn[] {
-    return [
-      // ❌ NO EDITABLE
-      { field: 'categoria', label: 'Categoría', type: 'text', readonly: true },
-      
-      // ✅ EDITABLE
-      { field: 'hombres', label: 'Hombres', type: 'number', dataType: 'number' },
-      
-      // ❌ NO EDITABLE: % automático
-      { field: 'porcentajeHombres', label: '% Hombres', type: 'text', readonly: true },
-      
-      // ✅ EDITABLE
-      { field: 'mujeres', label: 'Mujeres', type: 'number', dataType: 'number' },
-      
-      // ❌ NO EDITABLE: % automático
-      { field: 'porcentajeMujeres', label: '% Mujeres', type: 'text', readonly: true },
-      
-      // ❌ NO EDITABLE: Se calcula como hombres + mujeres
-      { field: 'casos', label: 'Total', type: 'number', readonly: true },
-      
-      // ❌ NO EDITABLE: % automático
-      { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
-    ];
-  }
-}
-```
-
----
-
-### 3️⃣ CONFIGURAR TABLA EN TEMPLATE
-
-**Patrón: Ocultar botones agregar/eliminar**
-
-```html
-<!-- Template del formulario -->
-<label class="label">Tabla PET - Editable</label>
-<app-dynamic-table
-  [datos]="datos"
-  [config]="petConfig"
-  [columns]="tableCfg.getColumnasTabla()"
-  [sectionId]="seccionId"
-  [tablaKey]="'petTabla'"
-  [showAddButton]="false"              <!-- 🔴 OCULTAR botón agregar -->
-  [showDeleteButton]="false"           <!-- 🔴 OCULTAR botón eliminar -->
-  (tableUpdated)="onTablaPETActualizada()">
-</app-dynamic-table>
-```
-
----
-
-### 4️⃣ MANEJAR CAMBIOS DE TABLA
-
-**Patrón: Persistir + Recalcular porcentajes**
-
-```typescript
-export class SeccionXFormComponent extends BaseSectionComponent {
-
-  onTablaPETActualizada(): void {
-    // ✅ 1. Leer tabla actual desde datos legacy
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const tablaActual = this.datos[petTablaKey] || [];
-    
-    // ✅ 2. Persistir cambios al projectFacade
-    this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaActual);
-    
-    // ✅ 3. Recalcular porcentajes automáticamente
-    this.calcularPorcentajesPET();
-    this.cdRef.markForCheck();
-  }
-
-  calcularPorcentajesPET(): void {
-    const tabla = this.petTablaSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-
-    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return;
-
-    // Calcular total de todos los casos (excepto Total)
-    const totalPET = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.casos) || 0);
-      }
-      return sum;
-    }, 0);
-
-    if (totalPET === 0) return;
-
-    // Mapear tabla con porcentajes recalculados
-    const tablaActualizada = tabla.map((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-
-      // Fila Total siempre es 100%
-      if (categoria.includes('total')) {
-        return {
-          ...item,
-          porcentaje: '100,00 %'
-        };
-      }
-
-      // Calcular porcentaje para otras filas
-      const casos = parseInt(item.casos) || 0;
-      const porcentaje = ((casos / totalPET) * 100);
-      const porcentajeFormateado = porcentaje.toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).replace('.', ',') + ' %';
-
-      return {
-        ...item,
-        porcentaje: porcentajeFormateado
-      };
-    });
-
-    // ✅ Persistir tabla con porcentajes calculados
-    this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaActualizada);
-  }
-}
-```
-
----
-
-### 5️⃣ SINCRONIZAR FORM ↔ VIEW (TABLAS)
-
-**Patrón: Effects para auto-sync**
-
-```typescript
-export class SeccionXFormComponent extends BaseSectionComponent {
-
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, ...) {
-    super(cdRef, injector);
-
-    // ✅ EFFECT: Sincronizar tabla PET automáticamente
-    effect(() => {
-      const tabla = this.petTablaSignal();
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-      const datosActuales = this.datos[petTablaKey];
-      
-      // Solo actualizar si cambió
-      if (JSON.stringify(tabla) !== JSON.stringify(datosActuales)) {
-        this.datos[petTablaKey] = tabla;
-      }
-      this.cdRef.markForCheck();
-    });
-
-    // ✅ EFFECT: Sincronizar tabla PEA automáticamente
-    effect(() => {
-      const tabla = this.peaTablaSignal();
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-      const datosActuales = this.datos[peaTablaKey];
-      
-      if (JSON.stringify(tabla) !== JSON.stringify(datosActuales)) {
-        this.datos[peaTablaKey] = tabla;
-      }
-      this.cdRef.markForCheck();
-    });
-  }
-}
-```
-
-**En el componente VIEW:**
-
-```typescript
-export class SeccionXViewInternalComponent extends BaseSectionComponent {
-
-  readonly petTablaSignal: Signal<any[]> = computed(() => {
-    const formData = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const tablaActual = Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
-    
-    // Misma estructura inicial que en Form
-    if (tablaActual.length === 0) {
-      return [
-        { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
-        // ...
-      ];
-    }
-    
-    return tablaActual;
-  });
-
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, ...) {
-    super(cdRef, injector);
-
-    // ✅ EFFECT: AUTO-SYNC desde Signal
-    effect(() => {
-      const tabla = this.petTablaSignal();
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-      this.datos[petTablaKey] = tabla;  // ← Auto-actualiza
-      this.cdRef.markForCheck();
-    });
-  }
-
-  getTablaPET(): any[] {
-    return this.petTablaSignal();  // ← Siempre sincronizada
-  }
-}
-```
-
----
-
-### 📋 CHECKLIST - TABLAS CON ESTRUCTURA FIJA
-
-```
-✅ ESTRUCTURA INICIAL
-  [ ] ¿Tabla tiene datos iniciales en Signal computed()?
-  [ ] ¿Estructura no cambia (siempre mismas categorías)?
-  [ ] ¿Hay fila de Total que no se edita?
-
-✅ CONFIGURACIÓN DE COLUMNAS
-  [ ] ¿Columna 'categoria' tiene readonly: true?
-  [ ] ¿Columnas de % tienen readonly: true?
-  [ ] ¿Columnas editables están claramente marcadas?
-  [ ] ¿Campos calculados (como 'casos' en PEA) están readonly?
-
-✅ TEMPLATE
-  [ ] ¿showAddButton="false" oculta botón agregar?
-  [ ] ¿showDeleteButton="false" oculta botón eliminar?
-  [ ] ¿La tabla llama onTabla*Actualizada() en (tableUpdated)?
-
-✅ PERSISTENCIA
-  [ ] ¿onTabla*Actualizada() persiste con projectFacade.setField()?
-  [ ] ¿calcularPorcentajes*() recalcula y persiste?
-  [ ] ¿No hay setTimeout para sincronización?
-
-✅ SINCRONIZACIÓN
-  [ ] ¿Hay effect() que sincroniza tabla en Form?
-  [ ] ¿Hay effect() que sincroniza tabla en View?
-  [ ] ¿Form y View comparten formDataSignal?
-  [ ] ¿Cambios en Form se reflejan en View sin retraso?
-
-✅ REACTIVIDAD
-  [ ] ¿tablaSignal es computed()?
-  [ ] ¿Tabla se actualiza al editar celdas?
-  [ ] ¿Porcentajes se recalculan automáticamente?
-  [ ] ¿Cambios persisten al recargar la página?
-```
-
----
-
-### 🎯 EJEMPLO COMPLETO: Sección 7
-
-**Ubicación de archivos:**
-```
-src/app/shared/components/
+shared/components/
 ├── forms/
-│   └── seccion7-form-wrapper.component.ts          (28 líneas)
-├── seccion7/
-│   ├── seccion7-form.component.ts                  (875 líneas - con tablas)
-│   ├── seccion7-form.component.html
-│   ├── seccion7-view-internal.component.ts         (772 líneas)
-│   └── seccion7-view.component.html
-
-src/app/core/services/domain/
-└── seccion7-table-config.service.ts                (3 tablas configuradas)
+│   └── seccionX-form-wrapper.component.ts      (29 líneas)
+└── seccionX/
+    ├── seccionX-form.component.ts              (300-600 líneas)
+    ├── seccionX-form.component.html
+    ├── seccionX-view.component.ts              (300-600 líneas)
+    └── seccionX-view.component.html
 ```
 
-**Tablas implementadas:**
-1. **PET** (Población en Edad de Trabajar)
-   - 5 filas fijas: 15-29, 30-44, 45-64, 65+, Total
-   - Editable: casos
-   - Readonly: categoría, porcentaje
+### 🏗️ FORM-WRAPPER (Siempre Igual - 29 líneas)
 
-2. **PEA** (Población Económicamente Activa)
-   - 3 filas fijas: PEA, No PEA, Total
-   - Editable: hombres, mujeres
-   - Readonly: categoría, casos, porcentaje*, %Hombres, %Mujeres
-
-3. **PEA Ocupada**
-   - 3 filas fijas: Ocupada, Desocupada, Total
-   - Editable: hombres, mujeres
-   - Readonly: categoría, casos, porcentaje*, %Hombres, %Mujeres
-
----
-
-## 🎓 CONCLUSIÓN
-
-**Se ha identificado un PATRÓN UNIVERSAL y CLARO en todas las 5 secciones MODO IDEAL:**
-
-1. ✅ **Estructura:** Siempre BaseSectionComponent + wrapper + view
-2. ✅ **Signals:** formDataSignal, parrafoSignal, photoFieldsHash, viewModel
-3. ✅ **Effects:** Mínimo 2 (auto-sync + fotos), máximo 4+
-4. ✅ **Métodos:** onInitCustom, detectarCambios, actualizarValoresConPrefijo, onFotografiasChange
-5. ✅ **Sincronización:** ProjectState centralizado → Signals reactivos → Effects automáticos
-6. ✅ **Form↔View:** MISMO estado, ambos leen vía Signals, Vista sincronizada automáticamente
-7. ✅ **Tablas:** Estructura fija con datos iniciales, readonly para categorías/porcentajes, botones ocultos
-
-**Este patrón es aplicable a CUALQUIER sección futura, incluyendo variantes con tablas avanzadas.**
-
----
-
-# 🚀 GUÍA PRÁCTICA - MIGRACIÓN A MODO IDEAL
-
-## ⏱️ TIEMPO ESTIMADO POR COMPONENTE
-
-| Tarea | Tiempo | Dificultad |
-|-------|--------|-----------|
-| Setup básico (wrapper + estructura) | 15 min | 🟢 Baja |
-| Párrafo único | 10 min | 🟢 Baja |
-| Párrafo con prefijo (grupo) | 20 min | 🟡 Media |
-| Tabla simple (sin prefijo) | 30 min | 🟡 Media |
-| Tabla con prefijo | 45 min | 🟠 Alta |
-| Tabla dinámica (add/delete) | 60 min | 🔴 Muy Alta |
-| Fotos (siempre igual) | 15 min | 🟢 Baja |
-| Total sección: | **120-180 min** | |
-
----
-
-## 📖 GUÍA PASO A PASO - MIGRAR UNA SECCIÓN A MODO IDEAL
-
-### Fase 1: Análisis Previo (15 min)
-
-**Checklist de análisis:**
-- ✅ ¿Cuántos párrafos tiene la sección?
-- ✅ ¿Tiene tablas? ¿Cuántas?
-- ✅ ¿Las tablas son dinámicas (add/delete) o estáticas?
-- ✅ ¿Usa prefijos de grupo? (ej: AISD A.1, A.2)
-- ✅ ¿Cuántas imágenes?
-- ✅ ¿Hay lógica especial de validación?
-
-**Resultado esperado:** Documento con lista de cambios necesarios
-
----
-
-### Fase 2: Crear Estructura Base (20 min)
-
-**Paso 1: Form-wrapper (COPY-PASTE)**
+Este componente actúa como un envoltorio para el formulario de la sección, asegurando una estructura consistente y la inyección de dependencias necesarias.
 
 ```typescript
 import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector } from '@angular/core';
@@ -991,353 +52,103 @@ export class SeccionXFormWrapperComponent extends BaseSectionComponent implement
 }
 ```
 
-✅ **Resultado:** Archivo wrapper creado (25 líneas exactas)
+### 📊 FORM COMPONENT - Estructura Base
 
----
+Este es el componente principal del formulario, donde se gestiona la lógica y los datos de la sección. Incluye la gestión de señales (Signals) y efectos (Effects) para una reactividad eficiente.
 
-### Fase 3: Implementar Signals (45 min)
-
-**Paso 1: Importes necesarios**
 ```typescript
-import { Signal, computed, effect, OnDestroy } from '@angular/core';
-```
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ChangeDetectorRef } from '@angular/core';
+import { BaseSectionComponent } from '../base-section.component';
+import { FotoItem } from '../image-upload/image-upload.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
 
-**Paso 2: Crear Signal de datos**
-```typescript
-readonly formDataSignal: Signal<Record<string, any>> = computed(() => 
-  this.projectFacade.selectSectionFields(this.seccionId, null)()
-);
-```
-
-**Paso 3: Para CADA párrafo, crear Signal**
-```typescript
-// SIN prefijo (sección simple):
-readonly parrafoSignal: Signal<string> = computed(() => {
-  const data = this.formDataSignal();
-  const manual = data['parrafoSeccionX'];
-  if (manual && manual.trim().length > 0) return manual;
-  return `Texto por defecto de Sección X`;
-});
-
-// CON prefijo (grupo):
-readonly parrafoSignal: Signal<string> = computed(() => {
-  const data = this.formDataSignal();
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const keyManual = prefijo ? `parrafo${prefijo}` : 'parrafo';
-  const keyDefault = 'parrafo';
+@Component({
+    imports: [CommonModule, FormsModule, CoreSharedModule],
+    selector: 'app-seccionX-view',
+    templateUrl: './seccionX-view.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true
+})
+export class SeccionXViewComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '3.1.X';
+  @Input() override modoFormulario: boolean = false;
   
-  const manual = data[keyManual] || data[keyDefault];
-  if (manual && manual.trim().length > 0) return manual;
+  override readonly PHOTO_PREFIX = 'fotografiaSeccionX';
+  override useReactiveSync: boolean = true;
   
-  // Fallback a generador
-  return this.textGenerator.obtenerTextoSeccionX(data);
-});
-```
+  fotografiasSeccionX: FotoItem[] = [];
 
-**Paso 4: Para CADA tabla, crear Signal**
-```typescript
-// Tabla simple:
-readonly tablaSignal: Signal<any[]> = computed(() => {
-  const data = this.formDataSignal();
-  return Array.isArray(data['miTabla']) ? data['miTabla'] : [];
-});
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
 
-// Tabla con prefijo:
-readonly tablaSignal: Signal<any[]> = computed(() => {
-  const data = this.formDataSignal();
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const tablaKey = prefijo ? `miTabla${prefijo}` : 'miTabla';
-  return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-});
-```
-
-**Paso 5: Signal para fotos (SIEMPRE IGUAL)**
-```typescript
-readonly photoFieldsHash: Signal<string> = computed(() => {
-  let hash = '';
-  for (let i = 1; i <= 10; i++) {
-    const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-    const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-    const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-    hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-  }
-  return hash;
-});
-```
-
-✅ **Resultado:** 4-5 Signals creados (dependiendo de párrafos/tablas)
-
----
-
-### Fase 4: Implementar Effects (30 min)
-
-**Paso 1: Effect para auto-sync de datos**
-```typescript
-effect(() => {
-  const data = this.formDataSignal();
-  this.datos = { ...data };
-  this.cdRef.markForCheck();
-});
-```
-
-**Paso 2: Effect para fotos (SIEMPRE IGUAL)**
-```typescript
-effect(() => {
-  this.photoFieldsHash();
-  this.cargarFotografias();
-  this.fotografiasFormMulti = [...this.fotografiasCache];
-  this.cdRef.markForCheck();
-}, { allowSignalWrites: true });
-```
-
-**Paso 3: (Opcional) Effects adicionales por sección**
-```typescript
-// Ej: Si hay cálculos de porcentajes
-effect(() => {
-  const tabla = this.tablaSignal();
-  if (tabla && tabla.length > 0) {
-    this.recalcularPorcentajes();
-  }
-});
-```
-
-✅ **Resultado:** 2-3 Effects funcionando
-
----
-
-### Fase 5: Métodos Override (20 min)
-
-**Paso 1: onInitCustom()**
-```typescript
-protected override onInitCustom(): void {
-  this.cargarFotografias();
-  this.fotografiasFormMulti = [...this.fotografiasCache];
-}
-```
-
-**Paso 2: detectarCambios() - SIEMPRE IGUAL**
-```typescript
-protected override detectarCambios(): boolean {
-  return false;  // Signals se encargan
-}
-```
-
-**Paso 3: actualizarValoresConPrefijo() - SIEMPRE VACÍO**
-```typescript
-protected override actualizarValoresConPrefijo(): void {
-  // No necesario con Signals
-}
-```
-
-**Paso 4: onFotografiasChange()**
-```typescript
-override onFotografiasChange(fotografias: FotoItem[]): void {
-  super.onFotografiasChange(fotografias);
-  this.fotografiasFormMulti = fotografias;
-  this.cdRef.markForCheck();
-}
-```
-
-✅ **Resultado:** 4 métodos implementados
-
----
-
-### Fase 6: TABLAS - Patrones Específicos (60 min CRÍTICO)
-
-#### 🔴 Problema Common: "Tabla no se actualiza en formulario después de agregar fila"
-
-**Causa raíz:** Event binding no pasa `$event`
-
-**Fix:**
-```html
-<!-- ANTES (❌ BUG): -->
-(tableUpdated)="onTablaActualizada()"
-
-<!-- DESPUÉS (✅ FIX): -->
-(tableUpdated)="onTablaActualizada($event)"
-```
-
-**Handler debe recibir datos:**
-```typescript
-onTablaActualizada(updatedData?: any[]): void {
-  const tablaKey = this.getTablaKey();
-  const datosActuales = updatedData || this.datos[tablaKey] || [];
-  this.onFieldChange(tablaKey, datosActuales, { refresh: true });
-  this.cdRef.detectChanges();
-}
-```
-
----
-
-#### ✅ Patrón 1: Tabla Simple (SIN dinámico, SIN prefijo)
-
-**HTML:**
-```html
-<app-dynamic-table
-  [datos]="datos"
-  [config]="miTablaConfig"
-  [columns]="tableCfg.getColumnasMiTabla()"
-  [sectionId]="seccionId"
-  [tablaKey]="'miTabla'"
-  [showAddButton]="false"
-  [showDeleteButton]="false"
-  (tableUpdated)="onMiTablaActualizada($event)">
-</app-dynamic-table>
-```
-
-**TS:**
-```typescript
-readonly miTablaSignal: Signal<any[]> = computed(() => {
-  const data = this.formDataSignal();
-  return Array.isArray(data['miTabla']) ? data['miTabla'] : [];
-});
-
-onMiTablaActualizada(updatedData?: any[]): void {
-  const datos = updatedData || this.datos['miTabla'] || [];
-  this.onFieldChange('miTabla', datos, { refresh: true });
-  this.cdRef.detectChanges();
-}
-```
-
----
-
-#### ✅ Patrón 2: Tabla CON Prefijo (AISD/AISI)
-
-**HTML:**
-```html
-<app-dynamic-table
-  [datos]="datos"
-  [config]="miTablaConfig"
-  [columns]="tableCfg.getColumnasMiTabla()"
-  [sectionId]="seccionId"
-  [tablaKey]="obtenerTablaKey()"
-  [showAddButton]="true"
-  [showDeleteButton]="true"
-  (tableUpdated)="onMiTablaActualizada($event)">
-</app-dynamic-table>
-```
-
-**TS:**
-```typescript
-readonly miTablaSignal: Signal<any[]> = computed(() => {
-  const data = this.formDataSignal();
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const tablaKey = prefijo ? `miTabla${prefijo}` : 'miTabla';
-  return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-});
-
-obtenerTablaKey(): string {
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  return prefijo ? `miTabla${prefijo}` : 'miTabla';
-}
-
-onMiTablaActualizada(updatedData?: any[]): void {
-  const tablaKey = this.obtenerTablaKey();
-  const datos = updatedData || this.datos[tablaKey] || [];
-  this.onFieldChange(tablaKey, datos, { refresh: true });
-  this.cdRef.detectChanges();
-}
-```
-
----
-
-#### ✅ Patrón 3: Tabla Dinámico CON Cálculos (Sección 8)
-
-**HTML:**
-```html
-<app-dynamic-table
-  [datos]="datos"
-  [config]="peaOcupacionesConfig"
-  [columns]="tableCfg.getColumnasPEAOcupaciones()"
-  [sectionId]="seccionId"
-  [tablaKey]="'peaOcupacionesTabla'"
-  [showAddButton]="true"
-  [showDeleteButton]="true"
-  (tableUpdated)="onPEATableUpdated($event)">
-</app-dynamic-table>
-```
-
-**TS - Signal con Total row:**
-```typescript
-readonly peaOcupacionesConPorcentajesSignal: Signal<any[]> = computed(() => {
-  const tabla = this.peaOcupacionesSignal();
-  if (!tabla || tabla.length === 0) return [];
-
-  const total = tabla.reduce((sum, item) => {
-    const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-    return sum + casos;
-  }, 0);
-
-  if (total <= 0) {
-    return tabla.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
-  }
-
-  const tablaConPorcentajes = tabla.map((item: any) => {
-    const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-    const porcentaje = (casos / total) * 100;
-    const formateado = porcentaje.toLocaleString('es-PE', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).replace('.', ',') + ' %';
-    return { ...item, casos, porcentaje: formateado };
+  readonly parrafoSignal: Signal<string> = computed(() => {
+    const data = this.formDataSignal();
+    const manual = data['parrafoSeccionX'];
+    if (manual && manual.trim().length > 0) return manual;
+    return this.generarTextoDefault();
   });
 
-  tablaConPorcentajes.push({
-    categoria: 'Total',
-    casos: total,
-    porcentaje: '100,00 %'
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
   });
 
-  return tablaConPorcentajes;
-});
-```
+  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+    super(cdRef, injector);
 
-**TS - Handler:**
-```typescript
-onPEATableUpdated(updatedData?: any[]): void {
-  const datos = updatedData || this.datos['peaOcupacionesTabla'] || [];
-  this.onFieldChange('peaOcupacionesTabla', datos, { refresh: true });
-  this.cdRef.detectChanges();
-}
-```
+    effect(() => {
+      const data = this.formDataSignal();
+      this.datos = { ...data };
+      this.cdRef.markForCheck();
+    });
 
-**Template - Vista:**
-```html
-<tr *ngFor="let item of getPEAOcupacionesConPorcentajes()">
-  <td>{{ item.categoria }}</td>
-  <td>{{ item.casos }}</td>
-  <td [class.total-row]="item.categoria === 'Total'">{{ item.porcentaje }}</td>
-</tr>
-```
-
-✅ **Resultado:** Tabla dinámica con Total row automático
-
----
-
-### Fase 7: PÁRRAFOS - Patrones Específicos (45 min)
-
-#### 🔴 Problema Common: "Párrafo no se edita" o "Se borra el cambio"
-
-**Causa raíz:** NO verificar si es edición manual antes de regenerar
-
-**Fix en método obtenerTexto():**
-```typescript
-obtenerTextoParrafo(): string {
-  const data = this.formDataSignal();
-  
-  // ✅ SI está editado manualmente, retornar ESO (no regenerar)
-  if (data['parrafoSeccionX'] && data['parrafoSeccionX'].trim().length > 0) {
-    return data['parrafoSeccionX'];
+    effect(() => {
+      this.photoFieldsHash();
+      this.cargarFotografias();
+      this.fotografiasSeccionX = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
   }
-  
-  // Solo si está vacío, generar por defecto
-  return this.generarTextoDefault();
+
+  protected override onInitCustom(): void {
+    this.cargarFotografias();
+    this.fotografiasSeccionX = [...this.fotografiasCache];
+  }
+
+  protected override detectarCambios(): boolean { return false; }
+  protected override actualizarValoresConPrefijo(): void { }
+
+  override onFotografiasChange(fotografias: FotoItem[]): void {
+    super.onFotografiasChange(fotografias);
+    this.fotografiasSeccionX = fotografias;
+    this.cdRef.markForCheck();
+  }
+
+  private generarTextoDefault(): string {
+    return 'Texto por defecto';
+  }
+
+  obtenerTextoParrafo(): string {
+    return this.parrafoSignal();
+  }
 }
 ```
 
----
+## 🎯 PATRONES POR TIPO DE CONTENIDO
 
-#### ✅ Patrón 1: Párrafo Simple (Sin prefijo)
+### Patrón 1: Párrafo Simple (SIN prefijo)
+
+Para la gestión de párrafos de texto simples sin la necesidad de prefijos dinámicos.
 
 **Signal:**
 ```typescript
@@ -1353,123 +164,421 @@ readonly parrafoSignal: Signal<string> = computed(() => {
 ```typescript
 private generarTextoDefault(): string {
   const data = this.formDataSignal();
-  const nombreProyecto = data['projectName'] || '____';
-  const provincia = data['provinciaSeleccionada'] || '____';
-  
-  return `Este es el párrafo de la Sección X para ${nombreProyecto} en ${provincia}...`;
+  return `Texto por defecto`;
 }
 ```
 
-**Formulario (edición):**
+**HTML Formulario:**
 ```html
-<label>Editar Párrafo Sección X</label>
-<textarea
+<textarea 
   [(ngModel)]="datos['parrafoSeccionX']"
-  (ngModelChange)="onFieldChange('parrafoSeccionX', $event)"
-  placeholder="Editar texto...">
+  (ngModelChange)="onFieldChange('parrafoSeccionX', $event)">
 </textarea>
 ```
 
-**Vista (lectura):**
+**HTML Vista:**
 ```html
 <div [innerHTML]="parrafoSignal()"></div>
 ```
 
----
+### Patrón 2: Párrafo CON Prefijo (Grupo AISD/AISI)
 
-#### ✅ Patrón 2: Párrafo CON Prefijo (Grupo AISD)
+Para párrafos que requieren un prefijo dinámico, útil en contextos donde el contenido varía según un grupo o categoría.
 
 **Signal:**
 ```typescript
 readonly parrafoGrupoSignal: Signal<string> = computed(() => {
   const data = this.formDataSignal();
   const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  const keyManual = prefijo ? `parrafo${prefijo}` : 'parrafo';
   
-  // Intentar con prefijo primero
-  const keyConPrefijo = prefijo ? `parrafo${prefijo}` : null;
-  const keySinPrefijo = 'parrafo';
-  
-  const manual = (keyConPrefijo && data[keyConPrefijo]) || data[keySinPrefijo];
+  const manual = data[keyManual];
   if (manual && manual.trim().length > 0) return manual;
-  
   return this.generarTextoGrupo();
 });
+```
 
+**Método generador:**
+```typescript
 private generarTextoGrupo(): string {
   const data = this.formDataSignal();
   const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  const nombreGrupo = prefijo ? data[`nombreGrupo${prefijo}`] : data['nombreGrupo'];
-  
-  return `Párrafo automático para grupo ${nombreGrupo}...`;
+  const nombreGrupo = data[prefijo ? `nombreGrupo${prefijo}` : 'nombreGrupo'];
+  return `Texto para ${nombreGrupo}`;
 }
 ```
 
-**Formulario (edición con prefijo):**
+**Método helper:**
 ```typescript
-get fieldKeyParrafo(): string {
+private get fieldKeyParrafo(): string {
   const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   return prefijo ? `parrafo${prefijo}` : 'parrafo';
 }
 ```
 
+**HTML Formulario:**
 ```html
-<textarea
+<textarea 
   [(ngModel)]="datos[fieldKeyParrafo]"
-  (ngModelChange)="onFieldChange(fieldKeyParrafo, $event)"
-  placeholder="Editar texto...">
+  (ngModelChange)="onFieldChange(fieldKeyParrafo, $event)">
 </textarea>
 ```
 
----
+### Patrón 3: Tabla Simple (Estructura Fija)
 
-#### ✅ Patrón 3: Múltiples Párrafos CON Lógica (Sección 2)
+Implementación de tablas con una estructura predefinida y datos iniciales.
 
-**Signals múltiples:**
+**Signal:**
 ```typescript
-readonly parrafoIntroduccionSignal: Signal<string> = computed(() => {
+readonly tablaSignal: Signal<any[]> = computed(() => {
   const data = this.formDataSignal();
-  const manual = data['parrafo_introduccion'];
-  return manual && manual.trim().length > 0 ? manual : 'Introducción por defecto...';
-});
-
-readonly parrafoAISDSignal: Signal<string> = computed(() => {
-  const data = this.formDataSignal();
-  const manual = data['parrafo_aisd_completo'];
-  return manual && manual.trim().length > 0 ? manual : this.generarTextoAISD();
-});
-
-readonly parrafoAISISignal: Signal<string> = computed(() => {
-  const data = this.formDataSignal();
-  const manual = data['parrafo_aisi_completo'];
-  return manual && manual.trim().length > 0 ? manual : this.generarTextoAISI();
+  let tabla = Array.isArray(data['miTabla']) ? data['miTabla'] : [];
+  
+  if (tabla.length === 0) {
+    tabla = [
+      { categoria: 'Fila 1', casos: 0, porcentaje: '0,00 %' },
+      { categoria: 'Fila 2', casos: 0, porcentaje: '0,00 %' }
+    ];
+  }
+  return tabla;
 });
 ```
 
-**Métodos generadores con contexto:**
-```typescript
-private generarTextoAISD(): string {
-  const data = this.formDataSignal();
-  const comunidades = data['comunidadesNombre'] || '____';
-  const distrito = data['distritoSeleccionado'] || '____';
-  
-  return `El AISD comprende la comunidad ${comunidades} en ${distrito}...`;
-}
+**HTML Formulario:**
+```html
+<app-dynamic-table
+  [datos]="datos"
+  [columns]="[
+    { field: 'categoria', label: 'Categoría', readonly: true },
+    { field: 'casos', label: 'Casos', readonly: false },
+    { field: 'porcentaje', label: 'Porcentaje', readonly: true }
+  ]"
+  [sectionId]="seccionId"
+  [tablaKey]="'miTabla'"
+  [showAddButton]="false"
+  [showDeleteButton]="false"
+  (tableUpdated)="onTablaActualizada($event)">
+</app-dynamic-table>
+```
 
-private generarTextoAISI(): string {
-  const data = this.formDataSignal();
-  const provincia = data['provinciaSeleccionada'] || '____';
-  
-  return `El AISI comprende la provincia de ${provincia}...`;
+**Handler:**
+```typescript
+onTablaActualizada(updatedData?: any[]): void {
+  const datos = updatedData || this.datos['miTabla'] || [];
+  this.onFieldChange('miTabla', datos, { refresh: true });
+  this.cdRef.detectChanges();
 }
 ```
 
-✅ **Resultado:** Múltiples párrafos con lógica independiente
+### Patrón 4: Tabla Dinámica CON Porcentajes
 
----
+Tablas que calculan y muestran porcentajes dinámicamente basados en los datos de la tabla.
 
-### Fase 8: IMÁGENES (15 min - SIEMPRE IGUAL)
+**Signal con cálculos:**
+```typescript
+readonly tablaConPorcentajesSignal: Signal<any[]> = computed(() => {
+  const tabla = this.tablaSignal();
+  if (!tabla || tabla.length === 0) return [];
 
-**Signal de fotos (COPY-PASTE):**
+  const total = tabla.reduce((sum, item) => {
+    return sum + (parseInt(item?.casos) || 0);
+  }, 0);
+
+  if (total <= 0) {
+    return tabla.map(item => ({ ...item, porcentaje: '0,00 %' }));
+  }
+
+  return tabla.map((item: any) => {
+    const casos = parseInt(item?.casos) || 0;
+    const porcentaje = ((casos / total) * 100)
+      .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      .replace('.', ',') + ' %';
+    
+    return { ...item, porcentaje };
+  });
+});
+```
+
+**HTML Vista:**
+```html
+<tr *ngFor="let item of tablaConPorcentajesSignal()">
+  <td>{{ item.categoria }}</td>
+  <td>{{ item.casos }}</td>
+  <td>{{ item.porcentaje }}</td>
+</tr>
+```
+
+### Patrón 5: Tabla CON Prefijo - ✅ SINCRONIZACIÓN FORM-VIEW PERFECTA
+
+Tablas que utilizan prefijos dinámicos para identificar diferentes conjuntos de datos. **CRÍTICO:** Cuando `dynamic-table.component.ts` persiste datos con clave prefijada (ej: `tablaKey_A1`), la form y view deben leerla con la función `selectTableData()` que maneja el lookup automático.
+
+#### PASO 1: Signal con Dual Fallback (OBLIGATORIO)
+
+**⚠️ ERROR COMÚN:** Usar solo `selectField()` sin fallback a `selectTableData()`
+```typescript
+// ❌ MALO - No funciona después de reload con prefijo dinámico
+readonly tablaSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'miTabla')());
+
+// ✅ CORRECTO - Busca en selectField(), fallback a selectTableData() para claves prefijadas
+readonly tablaSignal: Signal<any[]> = computed(() => {
+  const data = this.formDataSignal();
+  
+  // ✅ PASO 1: Intenta leer directamente
+  let tabla = this.projectFacade.selectField(this.seccionId, null, 'miTabla')();
+  
+  // ✅ PASO 2: Si vacío, fallback a selectTableData() (busca con prefijo automático)
+  if (!Array.isArray(tabla) || tabla.length === 0) {
+    tabla = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  }
+  
+  // ✅ PASO 3: Si aún vacío, estructura inicial (NUNCA [unFilaInicial])
+  if (!Array.isArray(tabla) || tabla.length === 0) {
+    tabla = []; // ← CRÍTICO: [] no [{ categoria: 'Fila 1', casos: 0 }]
+  }
+  
+  return tabla;
+});
+```
+
+**¿Por qué el dual fallback?**
+- `dynamic-table` persiste con clave prefijada: `miTabla_A1`, `miTabla_B2`, etc
+- `selectField('miTabla')` → devuelve undefined (no coincide)
+- `selectTableData('miTabla')` → busca automáticamente `miTabla_*` y devuelve datos
+- **Sin esto:** después de reload, form y view no ven los datos porque PrefixManager generó prefijo
+
+#### PASO 2: Método Helper para Obtener Clave Tabla
+
+```typescript
+private obtenerTablaKey(): string {
+  // Esta clave es usada SOLO en el HTML del dynamic-table [tablaKey]
+  // El dynamic-table la prefijará automáticamente al persistir
+  return 'miTabla'; // ← Siempre SIN prefijo (el dynamic-table añade el prefijo)
+}
+```
+
+#### PASO 3: HTML - Binding a `app-dynamic-table`
+
+```html
+<app-dynamic-table
+  [datos]="datos"
+  [columns]="[
+    { field: 'categoria', label: 'Categoría', readonly: true },
+    { field: 'casos', label: 'Casos', readonly: false },
+    { field: 'porcentaje', label: 'Porcentaje', readonly: true }
+  ]"
+  [sectionId]="seccionId"
+  [tablaKey]="'miTabla'"
+  [showAddButton]="true"
+  [showDeleteButton]="true"
+  (tableUpdated)="onTablaActualizada($event)">
+</app-dynamic-table>
+```
+
+#### PASO 4: Handler - Sincronización Inmediata + Persist
+
+```typescript
+onTablaActualizada(updatedData?: any[]): void {
+  // ✅ PASO 1: Si el dynamic-table pasa updatedData, usarlo
+  if (Array.isArray(updatedData) && updatedData.length > 0) {
+    this.datos['miTabla'] = updatedData;
+  }
+  
+  // ✅ PASO 2: Leer desde ProjectState (selectTableData busca claves prefijadas)
+  const tablaDelState = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  if (Array.isArray(tablaDelState)) {
+    this.datos['miTabla'] = tablaDelState;
+  }
+  
+  // ✅ PASO 3: Persistir cambios inmediatamente
+  this.onFieldChange('miTabla', this.datos['miTabla'] || [], { refresh: true });
+  
+  // ✅ PASO 4: Fuerza detección visual inmediata
+  this.cdRef.markForCheck();
+  this.cdRef.detectChanges();
+}
+```
+
+#### PASO 5: EFFECT Crítico para Sincronización Form-View
+
+**En el constructor, agregar EFFECT 1:**
+```typescript
+effect(() => {
+  const sectionData = this.formDataSignal();
+  this.datos = { ...this.datos, ...sectionData }; // ✅ Merge inteligente
+  this.cdRef.markForCheck();
+});
+```
+
+**¿Por qué es crítico?**
+- `dynamic-table` persiste datos en `ProjectState`
+- `formDataSignal()` devuelve datos del estado
+- Sin este effect, `this.datos` no se sincroniza con cambios de tabla
+- Form no ve actualizaciones después de reload
+
+#### PASO 6: La Clave - Nunca inicializar con Estructura por Defecto
+
+```typescript
+// ❌ MALO - Sobrescribe datos cuando se agregan 3+ filas
+readonly tablaSignal = computed(() => {
+  const tabla = this.projectFacade.selectField(...) || 
+    [{ categoria: 'Fila 1', casos: 0 }];
+  return tabla;
+});
+
+// ✅ CORRECTO - Estructura vacía, dynamic-table agregará filas
+readonly tablaSignal = computed(() => {
+  const tabla = this.projectFacade.selectField(...) ?? 
+                this.projectFacade.selectTableData(...) ??
+                [];
+  return tabla;
+});
+```
+
+#### PASO 7: Testing la Sincronización
+
+Para verificar que la sincronización funciona:
+
+```typescript
+// 1. Agregar 3 filas en form → Guardar
+// 2. Recargar página
+// 3. En consola: 
+console.log('Form data:', this.projectFacade.selectField(this.seccionId, null, 'miTabla')());
+console.log('Table data (prefixed):', this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')());
+// Deben ambos mostrar 3 filas
+
+// 4. Ver que form.tablaSignal() devuelve 3 filas
+console.log('Form Signal:', this.tablaSignal());
+
+// 5. Ver que view.tablaSignal() también devuelve 3 filas
+```
+
+#### RESUMEN - Patrón Correcto para Tablas con Prefijo
+
+| Elemento | Patrón | Crítico? |
+|----------|--------|----------|
+| Signal lectura | `selectField() ?? selectTableData() ?? []` | 🔴 SÍ |
+| Estructura inicial | `[]` (NO `[{...}]`) | 🔴 SÍ |
+| HTML tablaKey | `'miTabla'` (sin prefijo) | 🟢 NO |
+| Handler sync | Lee `selectTableData()` + `onFieldChange()` | 🟡 SÍ |
+| EFFECT 1 | Sincroniza `formDataSignal()` a `this.datos` | 🔴 SÍ |
+| Detección cambios | `cdRef.detectChanges()` después de update | 🟡 SÍ |
+
+### Patrón 6: Numeración Dinámica de Cuadros
+
+Para la numeración automática y dinámica de cuadros o tablas dentro de una sección.
+
+**Métodos getters:**
+```typescript
+obtenerNumeroCuadro(indice: number): string {
+  return this.tableNumberingService.getGlobalTableNumber(this.seccionId, indice);
+}
+
+obtenerTituloCuadro(indice: number): string {
+  const numero = this.obtenerNumeroCuadro(indice);
+  return `Cuadro N° ${numero}`;
+}
+```
+
+**HTML:**
+```html
+<h4>{{ obtenerTituloCuadro(0) }}</h4>
+<p>Condición de ocupación de las viviendas – CC ____ (2017)</p>
+```
+
+### Patrón 7: Títulos y Fuentes Editables
+
+Permite la edición de títulos y fuentes de tablas o cuadros, con valores por defecto si no se proporcionan.
+
+**Métodos getters:**
+```typescript
+obtenerTituloTabla(): string {
+  const tituloKey = 'tituloTabla';
+  const titulo = this.datos[tituloKey];
+  
+  if (titulo && titulo.trim().length > 0) return titulo;
+  const numeroCuadro = this.obtenerNumeroCuadro(0);
+  return `Cuadro N° ${numeroCuadro} - Título por defecto`;
+}
+
+obtenerFuenteTabla(): string {
+  const fuenteKey = 'fuenteTabla';
+  const fuente = this.datos[fuenteKey];
+  
+  if (fuente && fuente.trim().length > 0) return fuente;
+  return 'Fuente por defecto';
+}
+```
+
+**HTML Formulario:**
+```html
+<input 
+  type="text"
+  [value]="obtenerTituloTabla()"
+  (change)="onTituloChange($event)">
+
+<input 
+  type="text"
+  [value]="obtenerFuenteTabla()"
+  (change)="onFuenteChange($event)">
+```
+
+**Handlers:**
+```typescript
+onTituloChange(event: Event): void {
+  const valor = (event.target as HTMLInputElement).value;
+  this.onFieldChange('tituloTabla', valor, { refresh: false });
+  this.cdRef.markForCheck();
+}
+
+onFuenteChange(event: Event): void {
+  const valor = (event.target as HTMLInputElement).value;
+  this.onFieldChange('fuenteTabla', valor, { refresh: false });
+  this.cdRef.markForCheck();
+}
+```
+
+**HTML Vista:**
+```html
+<h5>{{ obtenerTituloTabla() }}</h5>
+<!-- Tabla -->
+<p>Fuente: {{ obtenerFuenteTabla() }}</p>
+```
+
+### Patrón 8: Fotografías (SIEMPRE IGUAL) ✅ CON FORM-VIEW SYNC
+
+Gestión estandarizada de la carga y visualización de fotografías asociadas a una sección.
+
+**IMPORTANTE:** Este patrón debe combinarse con EFFECT 1 en el constructor para sincronización correcta cuando hay form-view separado.
+
+#### PASO 1: Effect de Sincronización de Datos (CRÍTICO con Form-View)
+
+**En FORM component:**
+```typescript
+effect(() => {
+  const sectionData = this.formDataSignal();
+  const legacyData = this.projectFacade.obtenerDatos();
+  this.datos = { ...legacyData, ...sectionData }; // ✅ Merge inteligente
+  this.cdRef.markForCheck();
+});
+```
+
+**En VIEW component:**
+```typescript
+effect(() => {
+  const data = this.formDataSignal();
+  this.datos = { ...data }; // ✅ Sincroniza datos persistidos
+  this.cdRef.markForCheck();
+});
+```
+
+**¿Por qué es crítico?**
+- Form persiste título con `formChange.persistFields()`
+- View recibe `formDataSignal()` actualizado
+- Sin este effect, View no sincroniza `this.datos`
+- Métodos como `obtenerTituloFoto()` leen `this.datos[tituloKey]` → VACÍO sin sync
+
+#### PASO 2: Signal de Hash de Fotografías
+
 ```typescript
 readonly photoFieldsHash: Signal<string> = computed(() => {
   let hash = '';
@@ -1483,541 +592,714 @@ readonly photoFieldsHash: Signal<string> = computed(() => {
 });
 ```
 
-**Effect para fotos (COPY-PASTE):**
+#### PASO 3: Effect que Monitorea Cambios de Fotos
+
 ```typescript
 effect(() => {
-  this.photoFieldsHash();
-  this.cargarFotografias();
-  this.fotografiasFormMulti = [...this.fotografiasCache];
+  this.photoFieldsHash(); // ✅ Trackea hash de fotos
+  this.cargarFotografias(); // ✅ Recarga cuando hash cambia
+  this.fotografiasSeccionX = [...this.fotografiasCache];
   this.cdRef.markForCheck();
 }, { allowSignalWrites: true });
 ```
 
-**Método para fotos (COPY-PASTE):**
+#### PASO 4: Handler para Edición Inmediata
+
 ```typescript
 override onFotografiasChange(fotografias: FotoItem[]): void {
   super.onFotografiasChange(fotografias);
-  this.fotografiasFormMulti = fotografias;
+  // ✅ Actualizar referencias locales
+  this.fotografiasSeccionX = fotografias;
+  // ✅ CRÍTICO: Llama detectChanges() para sincronización INMEDIATA
+  // Sin esto, los cambios solo aparecen en la siguiente detección de cambios
   this.cdRef.markForCheck();
+  this.cdRef.detectChanges();
 }
 ```
 
-✅ **Resultado:** Fotos funcionales (siempre igual a otras secciones)
+**Nota importante:** El componente `app-image-upload` **persiste automáticamente** cada título/fuente mediante `formChange.persistFields()` cuando el usuario edita, así que el handler SOLO necesita:
+1. Actualizar referencias locales
+2. Llamar `cdRef.detectChanges()` para fuerza la detección inmediata
+3. NO llamar `onFieldChange()` nuevamente (evita duplicación)
 
----
+#### PASO 5: HTML Formulario (Con Banderas Explícitas)
 
-## 🐛 TROUBLESHOOTING - BUGS COMUNES Y SOLUCIONES
-
-### ❌ BUG 1: Tabla no actualiza en formulario (primera fila)
-
-**Síntoma:** 
-- Click en "Agregar Fila" → No aparece nada
-- Recargo página → Aparece
-
-**Causa:** Event binding sin `$event`
-
-**Solución:**
 ```html
-<!-- CAMBIAR: -->
-(tableUpdated)="onTablaActualizada()"
-
-<!-- POR: -->
-(tableUpdated)="onTablaActualizada($event)"
+<app-image-upload
+  [fotografias]="fotografiasFormMulti"
+  [sectionId]="seccionId"
+  [photoPrefix]="PHOTO_PREFIX"
+  [permitirMultiples]="true"
+  [mostrarTitulo]="true"
+  [mostrarFuente]="true"
+  labelTitulo="Título de la fotografía"
+  labelFuente="Fuente de la fotografía"
+  labelImagen="Fotografía - Imagen"
+  placeholderTitulo="Ej: Vista del área"
+  placeholderFuente="Ej: GEADES, 2024"
+  tituloDefault="Fotografía"
+  fuenteDefault="GEADES, 2024"
+  [requerido]="false"
+  (fotografiasChange)="onFotografiasChange($event)">
+</app-image-upload>
 ```
 
----
+#### PASO 6: Métodos de Vista que Leen Datos Reactivos
 
-### ❌ BUG 2: Párrafo se borra al cambiar prefijo/grupo
-
-**Síntoma:**
-- Edito párrafo
-- Cambio de grupo
-- El párrafo desaparece
-
-**Causa:** NO verificar prefijo correcto al guardar
-
-**Solución:**
 ```typescript
-// VERIFICAR que estás usando la key correcta:
-get fieldKeyParrafo(): string {
-  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-  return prefijo ? `parrafo${prefijo}` : 'parrafo';
+obtenerTituloFoto(index: number): string {
+  const tituloKey = `${this.PHOTO_PREFIX}${index}Titulo`;
+  // ✅ Lee from this.datos que está sincronizado por effect()
+  return this.datos[tituloKey] || `Fotografía ${index}`;
 }
 
-// Y usar SIEMPRE en cambios:
-onFieldChange(this.fieldKeyParrafo, valor);
-```
-
----
-
-### ❌ BUG 3: Porcentajes no se recalculan
-
-**Síntoma:**
-- Edito "casos"
-- Porcentaje no cambia
-
-**Causa:** Effect no está observando la tabla
-
-**Solución:**
-```typescript
-effect(() => {
-  const tabla = this.tablaSignal();  // ← DEBE estar aquí
-  if (tabla && tabla.length > 0) {
-    this.recalcularPorcentajes();
-  }
-});
-```
-
----
-
-### ❌ BUG 4: Form y Vista desincronizados
-
-**Síntoma:**
-- Edito en formulario
-- La vista NO muestra cambio
-- O viceversa
-
-**Causa:** Dos fuentes de datos diferentes (legacy + Signal)
-
-**Solución:**
-```typescript
-// VERIFICAR que ambos usan projectFacade:
-readonly dataSignal = computed(() =>
-  this.projectFacade.selectSectionFields(this.seccionId, null)()  // ✅ MISMO en Form y View
-);
-```
-
----
-
-### ❌ BUG 5: Fotos no se guardan
-
-**Síntoma:**
-- Cargo foto
-- Recargo página
-- Desaparece
-
-**Causa:** NO estás usando `onFotografiasChange()` correctamente
-
-**Solución:**
-```typescript
-override onFotografiasChange(fotografias: FotoItem[]): void {
-  super.onFotografiasChange(fotografias);  // ← CRÍTICO
-  this.fotografiasFormMulti = fotografias;  // Sincronizar local
-  this.cdRef.markForCheck();
+obtenerFuenteFoto(index: number): string {
+  const fuenteKey = `${this.PHOTO_PREFIX}${index}Fuente`;
+  // ✅ Lee from this.datos que está sincronizado por effect()
+  return this.datos[fuenteKey] || 'GEADES, 2024';
 }
 ```
 
----
+#### PASO 7: HTML Vista (Que Consume Métodos Reactivos)
 
-### ❌ BUG 6: Effects ejecutándose demasiado o poco
-
-**Síntoma:**
-- Effect en loop infinito (console overflow)
-- O effect NO se dispara
-
-**Causa:** 
-- Loop infinito: Modifica Signal dentro del effect
-- No se dispara: Signal no está siendo monitoreo
-
-**Solución Loop Infinito:**
-```typescript
-// ❌ MAL: Effect modifica lo que monitorea
-effect(() => {
-  const data = this.formDataSignal();
-  this.formDataSignal = computed(() => ...); // ❌ Loop!
-});
-
-// ✅ BIEN: Effect solo observa
-effect(() => {
-  const data = this.formDataSignal();
-  this.datos = { ...data };  // ✅ Copia, no modifica Signal
-  this.cdRef.markForCheck();
-});
-```
-
-**Solución No se Dispara:**
-```typescript
-// ❌ MAL: Signal no está referenciado
-effect(() => {
-  this.cargarFotografias();  // ← No dispara cambios
-});
-
-// ✅ BIEN: Signal referenciado
-effect(() => {
-  this.photoFieldsHash();  // ← Dispara cuando hash cambia
-  this.cargarFotografias();
-});
-```
-
----
-
-## ✅ CHECKLIST FINAL - VERIFICACIÓN PRE-COMMIT
-
-```
-ANTES DE HACER PUSH, VERIFICAR TODO:
-
-┌─ ESTRUCTURA ─────────────────────────────────┐
-  [ ] ¿Wrapper existe? (25-30 líneas)
-  [ ] ¿@Input seccionId correcto?
-  [ ] ¿Extiende BaseSectionComponent?
-  [ ] ¿Imports correctos? (Signal, computed, effect)
-└──────────────────────────────────────────────┘
-
-┌─ SIGNALS ────────────────────────────────────┐
-  [ ] ¿formDataSignal creado?
-  [ ] ¿Para cada párrafo, hay Signal?
-  [ ] ¿Para cada tabla, hay Signal?
-  [ ] ¿photoFieldsHash creado?
-  [ ] ¿viewModel creado? (si aplica)
-└──────────────────────────────────────────────┘
-
-┌─ EFFECTS ────────────────────────────────────┐
-  [ ] ¿EFFECT 1: Auto-sync datos?
-  [ ] ¿EFFECT 2: Fotos?
-  [ ] ¿EFFECT 3+: Lógica específica?
-  [ ] ¿Todos llaman cdRef.markForCheck()?
-└──────────────────────────────────────────────┘
-
-┌─ MÉTODOS ────────────────────────────────────┐
-  [ ] ¿onInitCustom() implementado?
-  [ ] ¿detectarCambios() retorna false?
-  [ ] ¿actualizarValoresConPrefijo() vacío?
-  [ ] ¿onFotografiasChange() implementado?
-└──────────────────────────────────────────────┘
-
-┌─ PÁRRAFOS ───────────────────────────────────┐
-  [ ] ¿Cada método verifica trim().length > 0?
-  [ ] ¿Clave de párrafo es consistente?
-  [ ] ¿Si hay prefijo, está en método generador?
-  [ ] ¿Fallback a generador si está vacío?
-└──────────────────────────────────────────────┘
-
-┌─ TABLAS ─────────────────────────────────────┐
-  [ ] ¿Event binding tiene (tableUpdated)="...$event"?
-  [ ] ¿Handler recibe updatedData?: any[]?
-  [ ] ¿onFieldChange con { refresh: true }?
-  [ ] ¿Si hay prefijo, obtenerTablaKey() existe?
-  [ ] ¿Total row se calcula? (si aplica)
-  [ ] ¿Botones add/delete correctos?
-└──────────────────────────────────────────────┘
-
-┌─ FOTOS ──────────────────────────────────────┐
-  [ ] ¿photoFieldsHash monitorea 10 items?
-  [ ] ¿cargarFotografias() en effect?
-  [ ] ¿fotografiasFormMulti sincronizada?
-  [ ] ¿onFotografiasChange() llama super?
-└──────────────────────────────────────────────┘
-
-┌─ CALIDAD ────────────────────────────────────┐
-  [ ] ¿SIN subscribe()?
-  [ ] ¿SIN setTimeout?
-  [ ] ¿SIN comentarios innecesarios?
-  [ ] ¿Compila sin errores? (npm start)
-  [ ] ¿FormulariO y Vista sincronizados?
-└──────────────────────────────────────────────┘
-```
-
----
-
-## 📚 EJEMPLO REAL: LECCIONES DE SECCIÓN 9 (A.1.5. Viviendas)
-
-**Timeline: 2 de febrero de 2026**
-
-### 🎓 Aprendizajes Clave Implementados:
-
-#### 1. **Numeración Dinámica Global de Cuadros**
-**Problema:** Cuadros hardcodeados como "3.15" y "3.16" sin considerar secciones anteriores  
-**Solución MODO IDEAL:**
-```typescript
-// Crear métodos que usen TableNumberingService
-obtenerNumeroCuadroCondicionOcupacion(): string {
-  return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0); // Index local
-}
-
-obtenerNumeroCuadroTiposMateriales(): string {
-  return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
-}
-
-// En el HTML: {{ obtenerNumeroCuadroCondicionOcupacion() }} → Dinámico ✅
-```
-
-**Configuración requerida en table-numbering.service.ts:**
-```typescript
-sectionTableCounts: new Map([
-  ['3.1.4.A.1.5', 2],  // 2 cuadros en esta sección
-]);
-
-sectionOrder: [
-  '3.1.4.A.1.4',  // Sección 8
-  '3.1.4.A.1.5',  // Sección 9 ← Debe estar en orden correcto
-  '3.1.4.A.1.6',
-]
-```
-
-**Beneficio:** Los números se recalculan automáticamente si cambias orden o agregas tablas anteriores.
-
----
-
-#### 2. **Estructura Inicial de Tablas (Rows Predefinidos)**
-**Problema:** Tabla vacía no mostraba rows predefinidos hasta que user ingresaba datos  
-**Solución MODO IDEAL:**
-```typescript
-// En form component - Configuración de tabla
-get condicionOcupacionConfig(): any {
-  return {
-    estructuraInicial: [
-      { categoria: 'Viviendas ocupadas', casos: null, porcentaje: null },
-      { categoria: 'Viviendas con otra condición', casos: null, porcentaje: null }
-    ],
-    calcularPorcentajes: true
-  };
-}
-
-// En view component - Signal que carga estructura si está vacío
-readonly condicionOcupacionConPorcentajesSignal: Signal<any[]> = computed(() => {
-  let datos = this.getCondicionOcupacion() || [];
-  
-  // ✅ Si tabla vacía, usar estructura inicial
-  if (!datos || datos.length === 0) {
-    datos = [
-      { categoria: 'Viviendas ocupadas', casos: null, porcentaje: null },
-      { categoria: 'Viviendas con otra condición', casos: null, porcentaje: null }
-    ];
-  }
-  
-  // Cálculo de porcentajes...
-  return tablaConPorcentajes;
-});
-```
-
-**Beneficio:** Estructura visible SIEMPRE, incluso cuando está vacía. Users saben qué esperar.
-
----
-
-#### 3. **Campos Readonly Correctos en Tablas**
-**Problema:** Primera columna era editable pero no debería serlo  
-**Solución MODO IDEAL:**
 ```html
-<!-- seccionX-form.component.html -->
+<div class="photo-container">
+  <img [src]="..." alt="...">
+  <p class="photo-title">{{ obtenerTituloFoto(1) }}</p>
+  <p class="photo-source">{{ obtenerFuenteFoto(1) }}</p>
+</div>
+```
+
+**Flujo Completo de Reactividad:**
+1. Usuario edita título en form
+2. `app-image-upload.onTituloChange()` → `formChange.persistFields()`
+3. Estado se actualiza
+4. `formDataSignal()` devuelve nuevo valor
+5. EFFECT 1 sincroniza a `this.datos`
+6. `obtenerTituloFoto()` lee `this.datos` actualizado
+7. Template re-renderiza automáticamente
+
+**Notas críticas para sincronización perfecta:**
+- ✅ EFFECT 1 (sincronización de datos) es OBLIGATORIO con form-view separado
+- ✅ `[mostrarTitulo]="true"` y `[mostrarFuente]="true"` son explícitos
+- ✅ Handler llama `cdRef.detectChanges()` para detección inmediata
+- ✅ El `image-upload` component persiste automáticamente vía `formChange.persistFields()`
+- ✅ Sin EFFECT 1, los cambios se pierden entre instancias
+- ✅ Comparar con Sección 1 (simple) vs Sección 4 (REFERENCIA form-view)
+
+## ✅ CHECKLIST UNIVERSAL
+
+Este checklist asegura la adherencia a los estándares de desarrollo para cada componente de sección.
+
+**ESTRUCTURA**
+*   [ ] Extiende `BaseSectionComponent`
+*   [ ] `@Input` `seccionId`
+*   [ ] `@Input` `modoFormulario`
+*   [ ] Implements `OnDestroy`
+*   [ ] `ChangeDetectionStrategy.OnPush`
+
+**SIGNALS**
+*   [ ] `formDataSignal = computed()`
+*   [ ] `parrafoSignal = computed()` (para cada párrafo)
+*   [ ] `tablaSignal = computed()` (para cada tabla)
+*   [ ] `photoFieldsHash = computed()`
+
+**EFFECTS**
+*   [ ] EFFECT 1: Auto-sync `formDataSignal`
+*   [ ] EFFECT 2: Monitor `photoFieldsHash`
+
+**MÉTODOS**
+*   [ ] `onInitCustom()` - cargar fotografías
+*   [ ] `detectarCambios()` - retorna `false`
+*   [ ] `actualizarValoresConPrefijo()` - vacío
+*   [ ] `onFotografiasChange()` - actualiza local
+
+**PÁRRAFOS**
+*   [ ] Verifica `trim().length > 0`
+*   [ ] Fallback a generador
+*   [ ] Soporta prefijo si aplica
+
+**TABLAS**
+*   [ ] Event binding con `$event`
+*   [ ] Handler recibe `updatedData`
+*   [ ] `onFieldChange` con `refresh: true`
+*   [ ] Estructura inicial si está vacío
+*   [ ] `readonly` correcto (categoría, %)
+
+**SINCRONIZACIÓN**
+*   [ ] Form y View usan mismo `formDataSignal`
+*   [ ] Sin duplicación de datos
+*   [ ] Sin `setTimeout`
+
+**LIMPIEZA FINAL**
+*   [ ] Eliminar `seccionX.component.ts` (archivo original deprecado)
+*   [ ] Eliminar `seccionX.component.html` (template original deprecado)
+*   [ ] Verificar que solo queden 4 archivos en `/seccionX/`
+*   [ ] Compilación exitosa sin errores
+*   [ ] Funcionalidad completa preservada
+
+## 🚀 MIGRACIÓN RÁPIDA
+
+Guía paso a paso para la migración y creación de nuevas secciones siguiendo el "MODO IDEAL".
+
+1.  **Paso 1: Copiar template wrapper (1 min)**
+    ```bash
+    cp seccion9-form-wrapper.component.ts seccionX-form-wrapper.component.ts
+    # Editar: selector, import, seccionId
+    ```
+
+2.  **Paso 2: Crear form.component.ts (30 min)**
+    ```bash
+    # Usar template arriba
+    # Cambiar: nombre, PHOTO_PREFIX, señales específicas 
+    ```
+
+3.  **Paso 3: Crear view.component.ts (15 min)**
+    ```bash
+    # Copiar form.component.ts
+    # Solo renombrar clase
+    # Cambiar template a view 
+    ```
+
+4.  **Paso 4: Crear HTML formulario (45 min)**
+    ```bash
+    # Estructura: párrafos + tablas + fotos
+    # Usar patrones arriba 
+    ```
+
+5.  **Paso 5: Crear HTML vista (30 min)**
+    ```bash
+    # Copiar HTML formulario
+    # Remover inputs, agregar readonly
+    # Mostrar datos del Signal 
+    ```
+
+6.  **Paso 6: Eliminar archivos deprecados (2 min)**
+    ```bash
+    # Una vez que la compilación funciona correctamente:
+    rm seccionX.component.ts      # Archivo original deprecado
+    rm seccionX.component.html    # Template original deprecado
+    # Verificar que solo queden los 4 archivos del patrón MODO IDEAL
+    ls seccionX/                  # Debe mostrar solo: form.component.ts, form.component.html, view.component.ts, view.component.html
+    ```
+
+**Tiempo total:** 2 horas por sección
+
+## 📚 REFERENCIA RÁPIDA
+
+| Elemento             | Patrón                      | Complejidad |
+| :------------------- | :-------------------------- | :---------- |
+| Párrafo simple       | `computed()` + manual check | 🟢          |
+| Párrafo con prefijo  | `computed()` + `PrefijoHelper` | 🟡          |
+| Tabla estática       | Signal + estructura inicial | 🟡          |
+| Tabla dinámica       | Signal + `reduce()` porcentajes | 🟠          |
+| Tabla con prefijo    | `obtenerTablaKey()`         | 🟠          |
+| Numeración dinámica  | `TableNumberingService`     | 🟢          |
+| Fotos                | `photoFieldsHash` + cargar  | 🟢          |
+
+**Estado:** 🟢 Listo para producción
+**Secciones:** 1-9 en MODO IDEAL
+**Tiempo proyectado:** 2 horas por nueva sección
+**Mantenibilidad:** 9/10
+**Limpieza:** Eliminar archivos deprecados después de refactorización
+
+## 🔧 TROUBLESHOOTING - TABLAS EN FORM-VIEW
+
+### OBLIGATORIO — Patrón de tablas con prefijo (LEER PRIMERO)
+
+**Resumen corto:** Todas las secciones que usan tablas dinámicas con prefijo deben aplicar este patrón OBLIGATORIO para evitar pérdida de datos, fallos al recargar y problemas de sincronización entre form y view.
+
+Checklist obligatorio (si falta cualquiera de estos, considera el cambio **NO APTO**):
+- Signal de lectura: `selectField() ?? selectTableData() ?? []`
+- EFFECT 1 (constructor): sincronizar `formDataSignal()` → `this.datos` (merge inteligente)
+- Handler `onTablaActualizada`: leer `selectTableData()`, actualizar `this.datos`, llamar `onFieldChange('miTabla', datos, { refresh: true })` y `cdRef.detectChanges()`
+- HTML: usar `[tablaKey]="'miTabla'"` (SIN prefijo; el dynamic-table añade el prefijo al persistir)
+
+Snippets obligatorios (copiar y pegar):
+
+```typescript
+// SIGNAL: dual fallback (OBLIGATORIO)
+readonly tablaSignal: Signal<any[]> = computed(() => {
+  const fromSelectField = this.projectFacade.selectField(this.seccionId, null, 'miTabla')();
+  const fromSelectTableData = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  return fromSelectField ?? fromSelectTableData ?? [];
+});
+```
+
+```typescript
+// EFFECT 1: Sincronización (OBLIGATORIO)
+constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  super(cdRef, injector);
+  effect(() => {
+    const sectionData = this.formDataSignal();
+    this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+    this.cdRef.markForCheck();
+  });
+}
+```
+
+```typescript
+// HANDLER: al actualizar tabla (OBLIGATORIO)
+onTablaActualizada(updatedData?: any[]): void {
+  const tablaDelState = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  const datos = tablaDelState || updatedData || [];
+  this.datos['miTabla'] = datos;
+  this.onFieldChange('miTabla', datos, { refresh: true });
+  this.cdRef.markForCheck();
+  this.cdRef.detectChanges();
+}
+
+#### Ejemplo práctico — Sección 14: Tablas (Nivel Educativo y Tasa de Analfabetismo) ✅
+A continuación se muestra el patrón aplicado en la Sección 14 (implementación real que solucionó los problemas vistos):
+
+- En `seccion14-form.component.ts` (dentro de la clase):
+
+```typescript
+// Configs de tabla (Signal dentro de la clase, NO al top-level)
+readonly nivelEducativoConfigSignal: Signal<TableConfig> = computed(() => ({
+  tablaKey: 'nivelEducativoTabla',
+  totalKey: 'categoria',
+  campoTotal: 'casos',
+  campoPorcentaje: 'porcentaje',
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true,
+  noInicializarDesdeEstructura: false,
+  estructuraInicial: [{ categoria: '', casos: 0, porcentaje: '0%' }],
+  calcularPorcentajes: true
+}));
+
+readonly tasaAnalfabetismoConfigSignal: Signal<TableConfig> = computed(() => ({
+  tablaKey: 'tasaAnalfabetismoTabla',
+  totalKey: 'indicador',
+  campoTotal: 'casos',
+  campoPorcentaje: 'porcentaje',
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true,
+  noInicializarDesdeEstructura: false,
+  estructuraInicial: [{ indicador: '', casos: 0, porcentaje: '0%' }],
+  calcularPorcentajes: true
+}));
+```
+
+- En el template `seccion14-form.component.html` pasar la config al componente:
+
+```html
 <app-dynamic-table
-  [columns]="[
-    { field: 'categoria', label: 'Condición de ocupación', readonly: true },  // ✅ No editable
-    { field: 'casos', label: 'Casos', readonly: false },                    // ✅ Editable
-    { field: 'porcentaje', label: 'Porcentaje', readonly: true }            // ✅ Calculado
-  ]"
-></app-dynamic-table>
+  [datos]="datos"
+  [config]="nivelEducativoConfigSignal()"
+  [columns]="[...]"
+  [sectionId]="seccionId"
+  [tablaKey]="'nivelEducativoTabla'"
+  (tableUpdated)="onNivelEducativoTableUpdated($event)">
+</app-dynamic-table>
 ```
 
-**Pattern Universal para Tablas:**
-```
-Primera columna (Categoría/Tipo): readonly: true  (estructura fija)
-Columnas de datos:                readonly: false (editable por user)
-Porcentaje:                       readonly: true  (calculated)
-```
+- Handler robusto (prioriza `updatedData`, persiste con notifySync, lee estado y actualiza `this.datos`):
 
----
-
-#### 4. **Títulos y Fuentes Editables**
-**Problema:** Títulos de cuadros eran fijos o mal persistidos  
-**Solución MODO IDEAL:**
 ```typescript
-// Métodos getters con fallback a defaults
-obtenerTituloCondicionOcupacion(): string {
-  const tituloKey = 'tituloCondicionOcupacion';
-  const titulo = this.datos[tituloKey];
-  const comunidad = this.obtenerNombreComunidadActual();
-  
-  // Si user editó, usar su versión. Si no, usar default con placeholders dinámicos
-  return titulo?.trim() 
-    ? titulo 
-    : `Condición de ocupación de las viviendas – CC ${comunidad} (2017)`;
-}
+onNivelEducativoTableUpdated(updatedData?: any[]): void {
+  console.log('[Seccion14][form] onNivelEducativoTableUpdated - incoming', { updatedDataLength: updatedData?.length ?? 0 });
 
-// Event handlers para persistencia inmediata
-onTituloCondicionOcupacionChange(event: Event): void {
-  const valor = (event.target as HTMLInputElement).value;
-  this.onFieldChange('tituloCondicionOcupacion', valor, { refresh: false });
+  const datos = (updatedData && updatedData.length > 0)
+    ? updatedData
+    : (this.projectFacade.selectTableData(this.seccionId, null, 'nivelEducativoTabla')() || []);
+
+  const formChange = this.injector.get(FormChangeService);
+  formChange.persistFields(this.seccionId, 'table', { nivelEducativoTabla: datos }, { updateState: true, notifySync: true, persist: false } as any);
+
+  // Read-back para asegurar estado consistente y evitar race conditions
+  const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, 'nivelEducativoTabla')() || [];
+  this.datos['nivelEducativoTabla'] = tablaPersistida;
+
+  // Opcional: persistir el field para que otros mecanismos lo detecten
+  this.onFieldChange('nivelEducativoTabla', tablaPersistida, { refresh: false });
+
   this.cdRef.markForCheck();
+  this.cdRef.detectChanges();
 }
-
-// En HTML: Input con binding
-<input 
-  type="text"
-  [value]="obtenerTituloCondicionOcupacion()"
-  (change)="onTituloCondicionOcupacionChange($event)">
 ```
 
-**Pattern:** `[value]="getter()" + (change)="onChangeHandler()"` ✅
+- En la vista (`seccion14-view.component.ts`) usar la función correcta de cálculo para que aparezca la fila **Total** (Cuadro 3.26):
 
----
-
-#### 5. **Sincronización Form ↔ View Perfecta**
-**Problema:** Formulario y Vista mostraban datos diferentes temporalmente  
-**Solución MODO IDEAL:**
 ```typescript
-// AMBOS componentes usan EXACTAMENTE las mismas estruturas de signals
-
-// seccion9-form.component.ts
-readonly formDataSignal: Signal<any> = computed(() =>
-  this.projectFacade.selectSectionFields(this.seccionId, null)()
-);
-
-// seccion9-view.component.ts
-readonly formDataSignal: Signal<any> = computed(() =>
-  this.projectFacade.selectSectionFields(this.seccionId, null)()
-);
-
-// ✅ Mismo origin → Siempre sincronizados
-// ✅ Sin duplicación de datos
-// ✅ Sin race conditions
-```
-
----
-
-#### 6. **Placeholder Templates con Dinámicas**
-**Problema:** Placeholders no incluían valores dinámicos como nombre de comunidad  
-**Solución MODO IDEAL:**
-```typescript
-private generarPlantillaTextoViviendas(): string {
-  const comunidad = this.obtenerNombreComunidadActual();
-  return `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman 
-          la CC ${comunidad} se hallaron un total de ____ viviendas empadronadas...`;
-}
-
-obtenerTextoViviendas(): string {
-  const manual = this.datos['textoViviendas'];
-  if (manual?.trim()) return manual;
-  return this.generarPlantillaTextoViviendas(); // Template dinámico ✅
+getTasaAnalfabetismoConPorcentajes(): any[] {
+  const tabla = this.tasaAnalfabetismoTablaSignal();
+  if (!tabla || tabla.length === 0) return [];
+  return TablePercentageHelper.calcularPorcentajesAnalfabetismo(tabla, '3.26');
 }
 ```
 
-**Pattern:**
-```
-Manual data → Mostrar manual
-Sin manual → Mostrar plantilla con placeholders dinámicos (____)
-User puede editar en cualquier momento → Reemplaza plantilla
+**Checklist específico (Sección 14)**
+- [ ] Config signals dentro de la clase (no fuera)
+- [ ] Pasar `[config]` al `app-dynamic-table`
+- [ ] Handler usa `updatedData` cuando viene, si no lee `selectTableData()`
+- [ ] `persistFields(..., { updateState: true, notifySync: true })` para asegurar efectos
+- [ ] Read-back `selectTableData()` y asignar a `this.datos[...]`
+- [ ] Forzar `cdRef.detectChanges()` para vista inmediata
+- [ ] En la vista usar `calcularPorcentajesAnalfabetismo` para agregar fila `Total`
+
+Esta sección práctica queda integrada al bloque OBLIGATORIO para que al seguir la guía no haya dudas al aplicar el patrón en futuras refactorizaciones.
+
 ```
 
----
-
-#### 7. **Prefijo "Fuente:" en Vista**
-**Problema:** Fuentes no tenían etiqueta diferenciadora  
-**Solución MODO IDEAL:**
 ```html
-<!-- seccion9-view.component.html -->
-<p class="source">Fuente: {{ obtenerFuenteCondicionOcupacion() }}</p>
-
-<!-- Estilo -->
-<style>
-  p.source {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 10px;
-  }
-</style>
+<!-- HTML: [tablaKey] WITHOUT prefix (OBLIGATORIO) -->
+<app-dynamic-table
+  [datos]="datos"
+  [columns]="[ ... ]"
+  [sectionId]="seccionId"
+  [tablaKey]="'miTabla'"
+  (tableUpdated)="onTablaActualizada($event)">
+</app-dynamic-table>
 ```
 
-**Pattern:** Siempre mostrar "Fuente: " como prefijo en vista, NO en formulario.
+---
+
+### Problema 1: "Form no muestra datos de tabla después de reload"
+
+**Causa:** Signal usa solo `selectField()` sin fallback a `selectTableData()`
+
+**Síntomas:**
+- Form está vacío después de reload
+- View muestra datos correctamente
+- Datos están en localStorage (verificado en DevTools)
+
+**Solución:**
+```typescript
+// ❌ ANTES (Causa el bug)
+readonly tablaSignal = computed(() => 
+  this.projectFacade.selectField(this.seccionId, null, 'miTabla')()
+);
+
+// ✅ DESPUÉS (Funciona)
+readonly tablaSignal = computed(() => {
+  const fromSelectField = this.projectFacade.selectField(this.seccionId, null, 'miTabla')();
+  const fromSelectTableData = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  return fromSelectField ?? fromSelectTableData ?? [];
+});
+```
+
+### Problema 2: "Agregar 3ª fila limpia todos los datos"
+
+**Causa:** `estructuraInicial: [{ ...unFilaCompleta }]` sobrescribe datos al inicializar Signal
+
+**Síntomas:**
+- 1 y 2 filas se guardan correctamente
+- Al agregar 3ª fila: todos los datos desaparecen
+- localStorage tiene solo 1 fila después
+
+**Solución:**
+```typescript
+// ❌ ANTES (Causa sobrescritura en 3+ filas)
+const estructuraInicial = [
+  { categoria: 'Salud', casos: 0, porcentaje: '0,00 %' }
+];
+readonly tablaSignal = computed(() => 
+  this.projectFacade.selectField(this.seccionId, null, 'miTabla')() || estructuraInicial
+);
+
+// ✅ DESPUÉS (Estructura vacía, dynamic-table agrega filas)
+readonly tablaSignal = computed(() => 
+  this.projectFacade.selectField(this.seccionId, null, 'miTabla')() ?? 
+  this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')() ?? 
+  []
+);
+```
+
+### Problema 3: "Agregar fila en form no aparece hasta reload"
+
+**Causa:** Handler no sincroniza datos desde ProjectState después de agregar fila
+
+**Síntomas:**
+- View muestra nueva fila inmediatamente
+- Form requiere reload para mostrar fila nueva
+- dynamic-table emite evento `tableUpdated`
+
+**Solución:**
+```typescript
+// ❌ ANTES (No sincroniza desde State)
+onTablaActualizada(updatedData?: any[]): void {
+  this.onFieldChange('miTabla', updatedData || [], { refresh: false });
+}
+
+// ✅ DESPUÉS (Lee desde State + Detección inmediata)
+onTablaActualizada(updatedData?: any[]): void {
+  // 1. Leer desde ProjectState (maneja prefijos)
+  const tablaDelState = this.projectFacade.selectTableData(
+    this.seccionId, null, 'miTabla'
+  )();
+  
+  // 2. Usar datos más frescos (del State)
+  const datos = tablaDelState || updatedData || [];
+  
+  // 3. Actualizar this.datos para sincronización inmediata
+  this.datos['miTabla'] = datos;
+  
+  // 4. Persistir al estado
+  this.onFieldChange('miTabla', datos, { refresh: true });
+  
+  // 5. Fuerza detección visual INMEDIATA
+  this.cdRef.markForCheck();
+  this.cdRef.detectChanges();
+}
+```
+
+### Problema 4: "EFFECT 1 no existe y form no se sincroniza con view"
+
+**Causa:** Falta EFFECT crítico que sincroniza `formDataSignal()` con `this.datos`
+
+**Síntomas:**
+- Form muestra datos de antigua sesión
+- Cambios en view no se ven en form
+- Métodos como `obtenerTituloFoto()` leen vacíos
+
+**Solución (en constructor):**
+```typescript
+constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  super(cdRef, injector);
+
+  // ✅ EFFECT 1 (OBLIGATORIO): Sincroniza estado con formulario
+  effect(() => {
+    const sectionData = this.formDataSignal();
+    const legacyData = this.projectFacade.obtenerDatos();
+    
+    // Merge inteligente: prefer sectionData (más actual)
+    this.datos = { ...legacyData, ...sectionData };
+    this.cdRef.markForCheck();
+  });
+
+  // ✅ EFFECT 2 (Para fotos): Monitorea cambios
+  effect(() => {
+    this.photoFieldsHash();
+    this.cargarFotografias();
+    this.cdRef.markForCheck();
+  });
+}
+```
+
+### Problema 5: "dynamic-table persiste con clave prefijada pero Signal no la encuentra"
+
+**Causa:** PrefixManager genera `tablaKey_A1`, `tablaKey_B2`, pero Signal busca solo `tablaKey`
+
+**Síntomas:**
+- DevTools localStorage muestra `miTabla_A1` (con prefijo)
+- Signal busca solo `miTabla` (sin prefijo) → vacío
+- `selectField('miTabla')` devuelve undefined
+
+**Solución - Usar `selectTableData()` que maneja lookup automático:**
+```typescript
+// ❌ MALO - No busca claves prefijadas
+readonly tablaSignal = computed(() => 
+  this.projectFacade.selectField(this.seccionId, null, 'miTabla')()
+);
+
+// ✅ CORRECTO - selectTableData() busca tablaKey_* automáticamente
+readonly tablaSignal = computed(() => {
+  // Primero intenta clave directa
+  let data = this.projectFacade.selectField(this.seccionId, null, 'miTabla')();
+  
+  // Si no existe, busca con prefijo automático
+  if (!data) {
+    data = this.projectFacade.selectTableData(this.seccionId, null, 'miTabla')();
+  }
+  
+  return data ?? [];
+});
+
+// ¿Qué hace selectTableData()?
+// 1. Lee el prefijo actual del estado
+// 2. Busca `miTabla_prefijo` en projectState
+// 3. Si existe, devuelve esos datos
+// 4. Si no existe, devuelve undefined
+```
 
 ---
 
-### 🎯 Sección 9 Resultado Final:
-**🟢 100% MODO IDEAL** con 7 nuevos patrones documentados
+## 📋 GUÍA RÁPIDA - Flujo Correcto de Tabla Form-View
 
-### 📊 Comparación de Números:
-| Métrica | Antes | Después |
-|---------|-------|---------|
-| Hardcodeados en HTML | 2 (3.15, 3.16) | 0 ✅ |
-| Métodos para obtener números | 0 | 2 ✅ |
-| Campos editables faltantes | 4 | 0 ✅ |
-| Filas predefinidas en tabla | 0 | 2 ✅ |
-| Sincronización Form-View | 70% | 100% ✅ |
+### ✅ Flujo CORRECTO (Toda tabla con prefijo debe seguir esto)
 
----
+```
+1. SIGNAL (en formulario)
+   ├─ Intenta: selectField('miTabla')
+   ├─ Fallback: selectTableData('miTabla') 👈 CRÍTICO para prefijos
+   └─ Fallback: [] (nunca estructura con datos)
 
-## 📚 EJEMPLO REAL: CÓMO SE MIGRÓ SECCIÓN 8 A MODO IDEAL
+2. EFFECT 1 (en constructor)
+   └─ Sincroniza: formDataSignal() → this.datos
 
-**Timeline: 2 de febrero de 2026**
+3. HTML DYNAMIC-TABLE
+   ├─ [tablaKey]="'miTabla'" (sin prefijo, dynamic-table lo añade)
+   └─ (tableUpdated)="onTablaActualizada($event)"
 
-### Cambios realizados:
+4. HANDLER (onTablaActualizada)
+   ├─ Lee desde: selectTableData() 👈 Por si hay prefijo
+   ├─ Actualiza: this.datos['miTabla'] = datos
+   ├─ Persiste: onFieldChange('miTabla', datos)
+   └─ Detecta: cdRef.detectChanges() (INMEDIATO)
 
-1. **Agregado `implements OnDestroy`** en view component (1 línea)
-2. **Eliminado effect auto-sync muerto** (34 líneas de código muerto removidas)
-3. **Limpiados comentarios** (10+ comentarios eliminados)
-4. **Simplificado formDataSignal** (de 3 a 1 línea)
-5. **Fixed event binding en HTML** (agregar `$event` a 3 handlers)
-6. **Actualizado dynamic-table.component.ts** (tableUpdated emite datos ahora)
-7. **Actualizado seccion8-form.component.ts** (handlers reciben updatedData)
+5. PERSISTENCIA (automática en dynamic-table)
+   ├─ dynamic-table.onAdd() → persistirTablaConLog()
+   ├─ Usa: setField() + persistFields()
+   └─ Guarda con prefijo: 'miTabla_A1', 'miTabla_B2'
 
-### Bugs encontrados y solucionados:
+6. RELOAD
+   ├─ localStorage tiene 'miTabla_A1' (con prefijo)
+   ├─ Signal lee selectTableData() (maneja prefijo) 👈
+   └─ Form y View muestran datos correctamente
+```
 
-- ✅ Primera fila no aparecía hasta reload
-- ✅ Form y Vista desincronizados
-- ✅ Total row no se mostraba
+### ❌ Flujo INCORRECTO (Causas de bugs)
 
-### Resultado final:
+```
+1. SIGNAL (ERROR)
+   └─ Solo selectField('miTabla') ← No maneja prefijos
 
-**🟢 100% MODO IDEAL** - Sección 8 es ahora modelo de referencia
+2. EFFECT 1 (ERROR)
+   └─ No existe ← Form no sincroniza con State
 
----
+3. HANDLER (ERROR)
+   └─ No usa selectTableData() ← Pierde datos con prefijo
 
-## 🎯 RESUMEN: PATRONES CLAVE PARA FUTURAS SECCIONES
+4. ESTRUCTURA INICIAL (ERROR)
+   └─ [{ ... }] ← Sobrescribe en 3+ filas
 
-### Patrones de Secciones 1-9:
+5. Sin cdRef.detectChanges() (ERROR)
+   └─ Cambios no se ven hasta próxima detección
+```
 
-| Patrón | Secciones | Aplicable a | Complejidad | Tiempo |
-|--------|-----------|-----------|------------|--------|
-| **Párrafo simple** | 1,2,3 | Todas | 🟢 Baja | 10 min |
-| **Párrafo con prefijo dinámico** | 1,4,5,9 | Con grupos | 🟡 Media | 20 min |
-| **Tabla estática** | 1,2 | Algunas | 🟡 Media | 30 min |
-| **Tabla dinámica con porcentajes** | 3,4,6,7,8,9 | Mayoría | 🟠 Alta | 60 min |
-| **Numeración dinámica global** | **9** (NUEVO) | **Todas con tablas** | 🟡 Media | **15 min** |
-| **Estructura inicial de filas** | **9** (NUEVO) | **Tablas con rows fijos** | 🟢 Baja | **10 min** |
-| **Campos readonly correctos** | **9** (NUEVO) | **Tablas** | 🟢 Baja | **5 min** |
-| **Títulos/Fuentes editables** | **9** (NUEVO) | **Cuadros/Tablas** | 🟡 Media | **20 min** |
-| **Fotos** | 1-9 | Todas | 🟢 Baja | 15 min |
-| **Total por sección estándar** | | | | **120-180 min** |
-| **Total con patrones S9** | | | | **90-120 min** ⚡ |
+### Checklist para Arreglar Tabla Rota
 
----
-
-### 🆕 Nuevos Patrones de Sección 9 (Recomendados para todas):
-
-1. ✅ **TableNumberingService** - Para numeración global automática
-2. ✅ **Estructura inicial en tablas** - Rows predefinidos siempre visibles
-3. ✅ **Readonly fields correctos** - Categoría no editable, datos sí
-4. ✅ **Getter methods con fallback** - Para títulos/fuentes editables
-5. ✅ **Plantillas dinámicas** - Con placeholders que incluyen variables
-6. ✅ **Sincronización perfecta** - Form y View leen del mismo signal
-7. ✅ **Etiquetas "Fuente:"** - Diferenciador visual en vista
+```
+[ ] ¿Signal usa dual fallback? selectField() ?? selectTableData() ?? []
+[ ] ¿estructuraInicial es []? (NO [{ ... }])
+[ ] ¿Existe EFFECT 1 en constructor?
+[ ] ¿Handler llama selectTableData()?
+[ ] ¿Handler actualiza this.datos?
+[ ] ¿Handler llama onFieldChange()?
+[ ] ¿Handler llama cdRef.detectChanges()?
+[ ] ¿HTML dynamic-table usa [tablaKey]="'miTabla'"?
+[ ] ¿Test: Agregar 3 filas → Reload → ¿Se ven en form y view?
+```
 
 ---
 
-**🎓 CONCLUSIÓN FINAL:**
+## 🎯 EJEMPLO REAL - Sección 12 Tabla COMPLETA
 
-Este documento es tu **GUÍA COMPLETA para migrar CUALQUIER sección a MODO IDEAL**. 
+Esta es la implementación CORRECTA 100% para una tabla con prefijo dinámico:
 
-Cada patrón está probado en Secciones 1-9. 
+### Form Component (seccion12-form.component.ts)
 
-### ⏱️ Reducción de Tiempo Estimada:
+```typescript
+export class Seccion12FormComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '3.1.12';
+  @Input() override modoFormulario: boolean = false;
 
-- **Secciones 1-5:** 180-200 min cada una (sin patrón conocido)
-- **Secciones 6-8:** 150-180 min cada una (usando patrones básicos)
-- **Secciones 9+:** **90-120 min cada una** (usando TODOS los patrones S9)
+  // ✅ SIGNAL: Dual fallback obligatorio
+  readonly tablaSaludSignal: Signal<any[]> = computed(() => {
+    const directField = this.projectFacade.selectField(this.seccionId, null, 'caracteristicasSalud')();
+    const tableData = this.projectFacade.selectTableData(this.seccionId, null, 'caracteristicasSalud')();
+    return directField ?? tableData ?? [];
+  });
 
-### 📈 Impacto:
-- **Antes:** 30 secciones × 180 min = **5,400 minutos** (90 horas)
-- **Después:** 30 secciones × 105 min = **3,150 minutos** (52.5 horas)
-- **Ahorro:** **38.5 horas** (~42% más rápido) ⚡
+  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+    super(cdRef, injector);
 
-Úsalo como referencia paso a paso y el tiempo de migración se reducirá significativamente.
+    // ✅ EFFECT 1: Sincronización obligatoria
+    effect(() => {
+      const sectionData = this.formDataSignal();
+      this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+      this.cdRef.markForCheck();
+    });
+  }
 
-**¡Las próximas 22 secciones serán MUCHO más rápidas!** ⚡
+  // ✅ HANDLER: Sincronización inmediata
+  onCaracteristicasSaludTableUpdated(updatedData?: any[]): void {
+    const tablaDelState = this.projectFacade.selectTableData(
+      this.seccionId, null, 'caracteristicasSalud'
+    )();
+    const datos = tablaDelState || updatedData || [];
+    
+    this.datos['caracteristicasSalud'] = datos;
+    this.onFieldChange('caracteristicasSalud', datos, { refresh: true });
+    this.cdRef.detectChanges(); // ← INMEDIATO
+  }
+}
+```
+
+### View Component (seccion12-view.component.ts)
+
+```typescript
+export class Seccion12ViewComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '3.1.12';
+  @Input() override modoFormulario: boolean = false;
+
+  // ✅ SIGNAL: IDÉNTICA a form.component
+  readonly tablaSaludSignal: Signal<any[]> = computed(() => {
+    const directField = this.projectFacade.selectField(this.seccionId, null, 'caracteristicasSalud')();
+    const tableData = this.projectFacade.selectTableData(this.seccionId, null, 'caracteristicasSalud')();
+    return directField ?? tableData ?? [];
+  });
+
+  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+    super(cdRef, injector);
+
+    // ✅ EFFECT 1: Idéntica a form.component
+    effect(() => {
+      const sectionData = this.formDataSignal();
+      this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+      this.cdRef.markForCheck();
+    });
+  }
+}
+```
+
+### HTML Form Template
+
+```html
+<!-- ✅ CRÍTICO: [tablaKey]="'caracteristicasSalud'" SIN prefijo -->
+<app-dynamic-table
+  [datos]="datos"
+  [columns]="[
+    { field: 'caracteristica', label: 'Característica', readonly: true },
+    { field: 'casos', label: 'Casos', readonly: false },
+    { field: 'porcentaje', label: '%', readonly: true }
+  ]"
+  [sectionId]="seccionId"
+  [tablaKey]="'caracteristicasSalud'"
+  [showAddButton]="true"
+  (tableUpdated)="onCaracteristicasSaludTableUpdated($event)">
+</app-dynamic-table>
+```
+
+### HTML View Template
+
+```html
+<!-- ✅ MISMO HTML pero sin dynamic-table (solo lectura) -->
+<table>
+  <tr *ngFor="let item of tablaSaludSignal()">
+    <td>{{ item.caracteristica }}</td>
+    <td>{{ item.casos }}</td>
+    <td>{{ item.porcentaje }}</td>
+  </tr>
+</table>
+```
 
 ---
 
-**Última actualización:** 2 de febrero de 2026  
-**Secciones analizadas:** 1-9  
-**Patrones documentados:** 15+  
-**Estado:** 🟢 Completo y listo para usar
+## 📚 CONCLUSIÓN - Patrón Universal Para Tablas
+
+**Esta es la ÚNICA forma correcta de implementar tablas con prefijo dinámico:**
+
+1. **Signal:** `selectField() ?? selectTableData() ?? []`
+2. **HTML:** `[tablaKey]="'sinkPrefijo'"`
+3. **Handler:** Lee con `selectTableData()` + Detecta cambios
+4. **EFFECT 1:** Sincroniza `formDataSignal()` a `this.datos`
+5. **Estructura:** Inicializa como `[]` (nunca con datos)
+
+**Sin esto:** Bugs garantizados (form no muestra datos, 3ª fila limpia todo, changes no aparecen inmediatamente)
+
+**Con esto:** 100% funcional en form y view, con sincronización perfecta y reload-safe
+
+**IMPORTANTE:** Después de completar la refactorización, eliminar los archivos originales deprecados (`seccionX.component.ts` y `seccionX.component.html`) para mantener la estructura limpia del patrón MODO IDEAL.
 
