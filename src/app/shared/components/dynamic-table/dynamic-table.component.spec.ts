@@ -458,7 +458,7 @@ describe('DynamicTableComponent', () => {
 
   describe('trackByIndex', () => {
     it('should return index for tracking', () => {
-      const result = component.trackByIndex(5, {});
+      const result = component.trackByIndex(5);
       expect(result).toBe(5);
     });
   });

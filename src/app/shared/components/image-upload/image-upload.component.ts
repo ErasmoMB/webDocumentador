@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { PhotoNumberingService } from '../../../core/services/photo-numbering.service';
 import { ImageBackendService } from '../../../core/services/image-backend.service';
+import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 
@@ -69,6 +70,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     private cdRef: ChangeDetectorRef,
     private photoNumberingService: PhotoNumberingService,
     private imageBackendService: ImageBackendService,
+    private imageFacade: ImageManagementFacade,
     private projectFacade: ProjectStateFacade,
     private formChange: FormChangeService
   ) {}
@@ -108,11 +110,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       const incoming = changes['fotografias'].currentValue || [];
       const hasPlaceholders = this._fotografias.some(f => !f.imagen);
       
-      // PROTECCIÓN: Si tenemos slots nuevos (placeholders) que el padre aún no conoce,
-      // NO reseteamos el componente, porque perderíamos los slots recién agregados.
       if (!this.arraysEqual(this._fotografias, incoming)) {
         if (incoming.length < this._fotografias.length && hasPlaceholders) {
-             return; // Mantener slots locales
+             return;
         }
         this.inicializarFotografias(false);
       }
@@ -144,7 +144,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     this.cdRef.markForCheck();
   }
 
-  private createEmptyFoto(): FotoItem {
+  createEmptyFoto(): FotoItem {
     return {
       titulo: this.titulo || this.tituloDefault,
       fuente: this.fuente || this.fuenteDefault,
@@ -168,15 +168,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   onTituloChange(val: string, i?: number) {
     if (i !== undefined && this._fotografias[i]) {
       this._fotografias[i].titulo = val;
-      // ✅ Persistir título en localStorage
       const fieldKey = `${this.photoPrefix}${i + 1}Titulo`;
       this.formChange.persistFields(this.sectionId, 'images', {
         [fieldKey]: val
       });
-      // ✅ Crear nueva referencia para que Angular detecte el cambio con OnPush
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
-      this.cdRef.detectChanges();
     } else {
       this.titulo = val;
       this.tituloChange.emit(val);
@@ -186,15 +183,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   onFuenteChange(val: string, i?: number) {
     if (i !== undefined && this._fotografias[i]) {
       this._fotografias[i].fuente = val;
-      // ✅ Persistir fuente en localStorage
       const fieldKey = `${this.photoPrefix}${i + 1}Fuente`;
       this.formChange.persistFields(this.sectionId, 'images', {
         [fieldKey]: val
       });
-      // ✅ Crear nueva referencia para que Angular detecte el cambio con OnPush
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
-      this.cdRef.detectChanges();
     } else {
       this.fuente = val;
       this.fuenteChange.emit(val);
@@ -202,7 +196,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   onFileSelected(event: any, index?: number) {
-    // Guardar posición del scroll antes de procesar
     const scrollContainer = this.getScrollContainer();
     const scrollPosition = scrollContainer?.scrollTop || 0;
     
@@ -211,10 +204,8 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this.procesarImagen(file, index);
     }
     
-    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
     if (event.target) event.target.value = '';
     
-    // Restaurar scroll inmediatamente
     setTimeout(() => {
       if (scrollContainer && scrollPosition > 0) {
         scrollContainer.scrollTop = scrollPosition;
@@ -226,15 +217,13 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     const projectName = this.projectFacade.obtenerDatos()['projectName'] || 'default';
     const numGlobal = this.calculateGlobalPhotoNumber(index || 0);
 
-    // INTENTO 1: Subir al backend
     this.imageBackendService.uploadImage(file, projectName, this.sectionId, this.photoPrefix).subscribe({
       next: (res) => {
         const url = this.imageBackendService.getImageUrl(res.image_id);
         this.aplicarImagenLocalmente(url, numGlobal, res.image_id, index);
       },
       error: (err) => {
-        console.warn('⚠️ Backend inalcanzable. Usando fallback Base64.', err);
-        // SALVAVIDAS: Si falla el backend, comprimir y usar localmente
+        console.warn('Backend inalcanzable. Usando fallback Base64.', err);
         this.comprimirImagen(file).then(base64 => {
           this.aplicarImagenLocalmente(base64, numGlobal, base64, index);
         });
@@ -242,8 +231,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     });
   }
 
-  private aplicarImagenLocalmente(imgData: string, numGlobal: string, persistValue: string, index?: number) {
-    // Guardar posición del scroll antes de aplicar cambios
+  aplicarImagenLocalmente(imgData: string, numGlobal: string, persistValue: string, index?: number) {
     const scrollContainer = this.getScrollContainer();
     const scrollPosition = scrollContainer?.scrollTop || 0;
     
@@ -251,7 +239,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias[index].imagen = imgData;
       this._fotografias[index].numero = numGlobal;
       
-      // ✅ Persistir imagen, número, título y fuente
       const foto = this._fotografias[index];
       this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}${index + 1}Imagen`]: persistValue,
@@ -262,6 +249,16 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
+
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        const fotosParaGuardar = this._fotografias.map(f => ({
+          ...f,
+          imagen: this.extractImageId(f.imagen) || f.imagen
+        }));
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+      } catch (e) {
+      }
     } else {
       this.preview = imgData;
       this.imagenChange.emit(imgData);
@@ -271,11 +268,22 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
         [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
       });
+
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        const fotosParaGuardar = [{
+          numero: numGlobal,
+          titulo: this.titulo || this.tituloDefault,
+          fuente: this.fuente || this.fuenteDefault,
+          imagen: persistValue
+        }];
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+      } catch (e) {
+      }
     }
     
     this.cdRef.markForCheck();
     
-    // Restaurar posición del scroll después de que Angular procese los cambios
     setTimeout(() => {
       if (scrollContainer && scrollPosition > 0) {
         scrollContainer.scrollTop = scrollPosition;
@@ -284,7 +292,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   private getScrollContainer(): HTMLElement | null {
-    // Buscar el contenedor con scroll (típicamente el sidebar del formulario)
     let element = document.querySelector('.seccion-formulario-content');
     if (!element) {
       element = document.querySelector('.formulario-sidebar');
@@ -300,8 +307,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias.splice(i, 1);
       if (this._fotografias.length === 0) this._fotografias = [this.createEmptyFoto()];
       
-      // ✅ CRÍTICO: Limpiar TODOS los campos asociados a esta imagen
-      // Incluir título y fuente para evitar que reaparezcan después de recargar
       this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}${i + 1}Imagen`]: '',
         [`${this.photoPrefix}${i + 1}Numero`]: '',
@@ -310,32 +315,51 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       });
       
       this.emitirCambios();
+
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        const fotosParaGuardar = this._fotografias.map(f => ({
+          ...f,
+          imagen: this.extractImageId(f.imagen) || f.imagen
+        }));
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+      } catch (e) {
+      }
     } else {
       this.preview = null;
       this.imagenChange.emit('');
-      // ✅ CRÍTICO: Limpiar TODOS los campos asociados
       this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}Imagen`]: '',
         [`${this.photoPrefix}Numero`]: '',
         [`${this.photoPrefix}Titulo`]: '',
         [`${this.photoPrefix}Fuente`]: ''
       });
+
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, [], groupPrefix);
+      } catch (e) {
+      }
     }
     this.cdRef.markForCheck();
   }
 
   agregarFoto() {
     this._fotografias.push(this.createEmptyFoto());
-    // NO emitimos cambios inmediatamente para que la persistencia global no borre el slot vacío
     this.cdRef.markForCheck();
   }
 
   private emitirCambios() {
-    const val = JSON.stringify(this._fotografias.map(f => (f.id || '') + (this.extractImageId(f.imagen) || f.imagen || '')));
+    const val = JSON.stringify(this._fotografias.map(f => 
+      (f.id || '') + 
+      (this.extractImageId(f.imagen) || f.imagen || '') +
+      (f.titulo || '') +
+      (f.fuente || '')
+    ));
+    
     if (val !== this.lastEmittedValue) {
       this.lastEmittedValue = val;
       this.isInternalUpdate = true;
-      // Solo emitimos las que tienen imagen o datos reales para evitar que el padre limpie slots activos
       this.fotografiasChange.emit(this._fotografias.map(f => ({
         ...f,
         imagen: this.extractImageId(f.imagen) || f.imagen
@@ -352,17 +376,14 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   onLabelClick(event: Event) {
-    // Guardar la posición del scroll cuando se hace clic en el label
     const scrollContainer = this.getScrollContainer();
     if (scrollContainer) {
       const scrollPosition = scrollContainer.scrollTop;
       
-      // Restaurar después de un breve delay (cuando el diálogo se cierra)
       setTimeout(() => {
         scrollContainer.scrollTop = scrollPosition;
       }, 50);
       
-      // También restaurar después de que el usuario cierre el diálogo
       setTimeout(() => {
         scrollContainer.scrollTop = scrollPosition;
       }, 200);
@@ -448,10 +469,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     if (file) this.procesarImagen(file, i);
   }
 
-  /**
-   * Dispara el evento de clic en el input file para permitir seleccionar archivos
-   * Patrones SOLID: Responsabilidad única de manejar la interacción UI
-   */
   triggerFileInput(fileInput: HTMLInputElement | ElementRef<HTMLInputElement> | any): void {
     if (!fileInput) return;
     

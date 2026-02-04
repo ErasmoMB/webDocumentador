@@ -57,12 +57,21 @@ export class TableWrapperComponent implements AfterViewInit {
     if (firstTableOfSection === this.el.nativeElement) {
       // IMPORTANTE: Solo registrar si la sección NO tiene un valor predefinido en el servicio
       // Para AISD/AISI dinámicas, permitir el registro
-      const isAISDorAISI = this.sectionId.startsWith('3.1.4.A.1.') || 
-                          this.sectionId.startsWith('3.1.4.B.1.') ||
-                          this.sectionId === '3.1.4.B'; // También registrar 3.1.4.B (Ubicación AISI)
       
-      if (isAISDorAISI) {
-        // Para AISD/AISI: registrar dinámicamente
+      // ❌ Secciones fijas que NO deben registrarse dinámicamente (tienen configuración predefinida)
+      const fixedSections = [
+        '3.1.4.A.1.1',  // A.1.1 Institucionalidad - configuración fija
+        '3.1.4.A.1.6',  // Sección 10: A.1.6 - configuración fija
+        '3.1.4.A.1.7'   // Sección 11: A.1.7 - configuración fija
+      ];
+      
+      const isFixedSection = fixedSections.includes(this.sectionId);
+      const isDynamicAISDorAISI = (this.sectionId.startsWith('3.1.4.A.1.') || 
+                                  this.sectionId.startsWith('3.1.4.B.1.') ||
+                                  this.sectionId === '3.1.4.B') && !isFixedSection;
+      
+      if (isDynamicAISDorAISI) {
+        // Para AISD/AISI DINÁMICAS: registrar dinámicamente
         this.tableNumberingService.registerSectionTableCount(this.sectionId, tablesInSection);
       } else {
         // Para secciones fijas: no registrar, usar configuración inicial

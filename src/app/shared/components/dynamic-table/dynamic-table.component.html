@@ -7,7 +7,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of tableData; let i = index; trackBy: trackByIndex">
+      <tr *ngFor="let item of getEditableRows(); let i = index; trackBy: trackByIndexAndValue">
         <td *ngFor="let col of columns" [attr.data-label]="col.label">
           <!-- Modo vista: mostrar solo texto -->
           <span *ngIf="modoVista">{{ getFormattedValue(item, col) }}</span>
@@ -18,7 +18,8 @@
               *ngIf="col.type === 'select'"
               class="table-input"
               [value]="getFormattedValue(item, col)"
-              (change)="onFieldChange(i, col.field, $any($event.target).value)">
+              (change)="onFieldChange(i, col.field, $any($event.target).value)"
+              [disabled]="isFieldReadonly(col)">
               <option value="">-- Seleccionar --</option>
               <option *ngFor="let value of col.allowedValues" [value]="value">{{ value }}</option>
             </select>
@@ -29,7 +30,7 @@
               [value]="getFormattedValue(item, col)"
               (blur)="onFieldChange(i, col.field, $any($event.target).value)"
               [placeholder]="col.placeholder || ''"
-              [readonly]="col.readonly || false"
+              [readonly]="isFieldReadonly(col)"
               rows="2">
             </textarea>
             <!-- Input para otros tipos -->
@@ -41,7 +42,7 @@
               (blur)="onFieldChange(i, col.field, $any($event.target).value)"
               (keyup.enter)="onFieldChange(i, col.field, $any($event.target).value); $any($event.target).blur()"
               [placeholder]="col.placeholder || ''"
-              [readonly]="col.readonly || false">
+              [readonly]="isFieldReadonly(col)">
           </ng-container>
         </td>
         <td *ngIf="showDeleteButton && !modoVista" class="table-actions" data-label="">
@@ -49,23 +50,40 @@
             type="button" 
             class="btn-icon" 
             (click)="onDelete(i)" 
-            *ngIf="canDelete(i) && !modoVista"
+            *ngIf="canDelete(i) && !modoVista && (config?.permiteEliminarFilas !== false)"
             title="Eliminar fila">
             ×
           </button>
         </td>
       </tr>
-      <tr *ngIf="(!tableData || tableData.length === 0) && !modoVista">
+      <tr *ngIf="(!tableData || tableData.length === 0) && !modoVista && showAddButton">
         <td [attr.colspan]="columns.length + (showDeleteButton ? 1 : 0)" class="text-center p-md">
-          <button type="button" class="btn btn-secondary" (click)="initializeTable()">
-            Agregar Filas
+          <button type="button" class="btn btn-secondary" (click)="onAdd()">
+            Agregar Fila
           </button>
+        </td>
+      </tr>
+      <!-- Fila de Total (readonly) -->
+      <tr *ngIf="getTotalRow() && !modoVista" class="total-row">
+        <td *ngFor="let col of columns" [attr.data-label]="col.label">
+          <span *ngIf="modoVista">{{ getFormattedValue(getTotalRow(), col) }}</span>
+          <ng-container *ngIf="!modoVista">
+            <input 
+              [type]="col.type || 'text'"
+              class="table-input"
+              [value]="getFormattedValue(getTotalRow(), col)"
+              readonly
+              style="background-color: #f5f5f5; cursor: not-allowed;">
+          </ng-container>
+        </td>
+        <td *ngIf="showDeleteButton && !modoVista" class="table-actions" data-label="">
+          <!-- No hay botón de eliminar para la fila Total -->
         </td>
       </tr>
     </tbody>
   </table>
   <button 
-    *ngIf="showAddButton && (tableData && tableData.length > 0) && !modoVista"
+    *ngIf="showAddButton && (tableData && tableData.length > 0) && !modoVista && (config?.permiteAgregarFilas !== false)"
     type="button" 
     class="btn btn-secondary mt-sm" 
     (click)="onAdd()">
