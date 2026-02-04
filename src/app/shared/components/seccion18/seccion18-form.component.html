@@ -1,0 +1,62 @@
+<div class="form-group-section">
+  <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
+
+  <div class="form-group-section mt-lg">
+    <h4 class="section-title">Editar Párrafos</h4>
+    <app-paragraph-editor
+      [fieldId]="getFieldIdTextoNBI()"
+      label="Necesidades Básicas Insatisfechas - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos."
+      [rows]="6"
+      [value]="obtenerTextoCompleto()"
+      (valueChange)="onFieldChange(getFieldIdTextoNBI(), $event)">
+    </app-paragraph-editor>
+  </div>
+
+  <div class="form-field mt-xl">
+    <label class="label">Tabla NBI CC Ayroca</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [sectionId]="seccionId"
+      [config]="nbiCCAyrocaConfigSignal()"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con hacinamiento' },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+      ]"
+      [totalKey]="'categoria'"
+      (tableUpdated)="onNbiCCTableUpdated($event)">
+    </app-dynamic-table>
+  </div>
+
+  <div class="form-field mt-xl">
+    <label class="label">Tabla NBI Distrito Cahuacho</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [sectionId]="seccionId"
+      [config]="nbiDistritoCahuachoConfigSignal()"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas sin servicios higiénicos' },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+      ]"
+      [totalKey]="'categoria'"
+      (tableUpdated)="onNbiDistritoTableUpdated($event)">
+    </app-dynamic-table>
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fotografías de NBI</label>
+    <app-image-upload
+      [fotografias]="fotografiasSignal()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasChange($event)">
+    </app-image-upload>
+  </div>
+</div>

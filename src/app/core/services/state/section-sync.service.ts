@@ -100,6 +100,7 @@ export class SectionSyncService {
 
     // También suscribirse a cambios notificados directamente (más inmediato)
     const changeSubscription = this.changes$.pipe(
+      debounceTime(50),
       map(notification => {
         if (notification.sectionId !== sectionId) return null;
         

@@ -103,9 +103,9 @@ export class Seccion23Component extends AutoLoadSectionComponent implements OnDe
       return this.datos.textoPET_AISI;
     }
     const centroPoblado = this.datos.centroPobladoAISI || '';
-    const porcentajePET = this['getPorcentajePETTotal']();
-    const porcentaje4564 = this['getPorcentajeGrupoPET']('45');
-    const porcentaje65 = this['getPorcentajeGrupoPET']('65');
+    const porcentajePET = this.getPorcentajePET();
+    const porcentaje4564 = this.getPorcentajeGrupoPET('45 a 64');
+    const porcentaje65 = this.getPorcentajeGrupoPET('65');
     return `La población en edad de trabajar (PET) en el CP ${centroPoblado} representa un ${porcentajePET} de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el ${porcentaje4564} de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el ${porcentaje65} de la PET.`;
   }
 

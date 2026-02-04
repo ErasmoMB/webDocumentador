@@ -2,17 +2,17 @@ import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion7FormComponent } from '../seccion7/seccion7-form.component';
+import { Seccion5FormComponent } from '../seccion5/seccion5-form.component';
 import { BaseSectionComponent } from '../base-section.component';
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion7FormComponent],
-    selector: 'app-seccion7-form-wrapper',
-    template: `<app-seccion7-form [seccionId]="seccionId" [modoFormulario]="true"></app-seccion7-form>`,
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion5FormComponent],
+    selector: 'app-seccion5-form-wrapper',
+    template: `<app-seccion5-form [seccionId]="seccionId" [modoFormulario]="true"></app-seccion5-form>`,
     styles: [`:host { display: block; width: 100%; }`]
 })
-export class Seccion7FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.7';
+export class Seccion5FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
+  @Input() override seccionId: string = '3.1.5';
 
   constructor(
     cdRef: ChangeDetectorRef,

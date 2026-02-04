@@ -31,8 +31,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   fotografiasCache: FotoItem[] = [];
   fotografiasFormMulti: FotoItem[] = [];
   readonly PHOTO_PREFIX: string = '';
-
-  [key: string]: any;
   
   protected photoGroups: Map<string, FotoItem[]> = new Map();
   protected photoGroupsConfig: PhotoGroupConfig[] = [];
@@ -110,8 +108,11 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.legacyStateSubscription = undefined;
     }
 
-    // Solo suscribirse en modo vista (no formulario)
-    if (this.modoFormulario) return;
+    // Normalmente solo suscribirse en modo vista, pero para asegurar sincronización en formularios
+    // también permitir suscripción reactiva en modoFormulario para tablas dinámicas.
+    // Esto evita que los cambios realizados desde DynamicTable no se vean hasta recarga.
+    // Nota: suscripción puede ser ruidosa; se filtra con debounceTime(50) y debounce adicional en SectionSyncService.
+    // if (this.modoFormulario) return;
 
     try {
       const stateAdapter = this.injector.get(ReactiveStateAdapter, null);

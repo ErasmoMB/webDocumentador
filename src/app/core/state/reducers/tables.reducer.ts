@@ -1,16 +1,3 @@
-/**
- * TABLES REDUCER
- * 
- * Reducer puro para comandos de tablas.
- * Maneja: SetTableData, AddTableRow, UpdateTableRow, RemoveTableRow, ReorderTableRows, ClearTable.
- * 
- * REGLAS:
- * - Función pura: (state, command) => newState
- * - Sin efectos secundarios
- * - Siempre retorna nuevo objeto (inmutabilidad)
- * - IDs de filas generados automáticamente
- */
-
 import { 
   TablesState, 
   TableEntry,
@@ -29,23 +16,14 @@ import {
   ClearTableCommand
 } from '../commands.model';
 
-/**
- * Genera un nuevo timestamp
- */
 function now(): number {
   return Date.now();
 }
 
-/**
- * Genera un ID único para una fila
- */
 function generateRowId(): string {
   return `row_${now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-/**
- * Crea un nuevo estado de tabla
- */
 function createTableState(
   rows: readonly TableRow[],
   config: { totalKey: string; campoTotal: string; campoPorcentaje?: string }
@@ -59,9 +37,6 @@ function createTableState(
   };
 }
 
-/**
- * Crea filas con IDs y orden asignados
- */
 function createTableRows(
   rowsData: ReadonlyArray<Omit<TableRow, 'id' | 'orden'>>
 ): TableRow[] {
@@ -72,9 +47,6 @@ function createTableRows(
   }));
 }
 
-/**
- * Re-numera las filas manteniendo el orden
- */
 function renumberRows(rows: readonly TableRow[]): TableRow[] {
   return rows.map((row, index) => ({
     ...row,
@@ -82,16 +54,12 @@ function renumberRows(rows: readonly TableRow[]): TableRow[] {
   }));
 }
 
-/**
- * Reducer para SetTableData
- */
 function handleSetTableData(
   state: TablesState, 
   command: SetTableDataCommand
 ): TablesState {
   const { sectionId, groupId, tableKey, rows, config } = command.payload;
   const key = generateTableKey(sectionId, groupId, tableKey);
-  
   const tableRows = createTableRows(rows);
   const tableState = createTableState(tableRows, config);
 
@@ -105,7 +73,7 @@ function handleSetTableData(
   const newAllKeys = state.allKeys.includes(key) 
     ? state.allKeys 
     : [...state.allKeys, key];
-
+  
   return {
     ...state,
     byKey: {
@@ -116,9 +84,6 @@ function handleSetTableData(
   };
 }
 
-/**
- * Reducer para AddTableRow
- */
 function handleAddTableRow(
   state: TablesState, 
   command: AddTableRowCommand
@@ -128,29 +93,26 @@ function handleAddTableRow(
   
   const existingEntry = state.byKey[key];
   if (!existingEntry) {
-    return state; // Tabla no existe
+    return state;
   }
 
   const newRow: TableRow = {
     id: generateRowId(),
-    orden: 0, // Se re-calculará
+    orden: 0,
     data: { ...data }
   };
 
   let newRows: TableRow[];
   if (insertAt !== undefined && insertAt >= 0 && insertAt < existingEntry.state.rows.length) {
-    // Insertar en posición específica
     newRows = [
       ...existingEntry.state.rows.slice(0, insertAt),
       newRow,
       ...existingEntry.state.rows.slice(insertAt)
     ];
   } else {
-    // Agregar al final
     newRows = [...existingEntry.state.rows, newRow];
   }
 
-  // Re-numerar
   newRows = renumberRows(newRows);
 
   return {
@@ -169,9 +131,6 @@ function handleAddTableRow(
   };
 }
 
-/**
- * Reducer para UpdateTableRow
- */
 function handleUpdateTableRow(
   state: TablesState, 
   command: UpdateTableRowCommand
@@ -181,12 +140,12 @@ function handleUpdateTableRow(
   
   const existingEntry = state.byKey[key];
   if (!existingEntry) {
-    return state; // Tabla no existe
+    return state;
   }
 
   const rowIndex = existingEntry.state.rows.findIndex(r => r.id === rowId);
   if (rowIndex === -1) {
-    return state; // Fila no existe
+    return state;
   }
 
   const existingRow = existingEntry.state.rows[rowIndex];
@@ -217,9 +176,6 @@ function handleUpdateTableRow(
   };
 }
 
-/**
- * Reducer para RemoveTableRow
- */
 function handleRemoveTableRow(
   state: TablesState, 
   command: RemoveTableRowCommand
@@ -229,15 +185,14 @@ function handleRemoveTableRow(
   
   const existingEntry = state.byKey[key];
   if (!existingEntry) {
-    return state; // Tabla no existe
+    return state;
   }
 
   const rowIndex = existingEntry.state.rows.findIndex(r => r.id === rowId);
   if (rowIndex === -1) {
-    return state; // Fila no existe
+    return state;
   }
 
-  // Remover y re-numerar
   const newRows = renumberRows(
     existingEntry.state.rows.filter(r => r.id !== rowId)
   );
@@ -258,9 +213,6 @@ function handleRemoveTableRow(
   };
 }
 
-/**
- * Reducer para ReorderTableRows
- */
 function handleReorderTableRows(
   state: TablesState, 
   command: ReorderTableRowsCommand
@@ -270,13 +222,10 @@ function handleReorderTableRows(
   
   const existingEntry = state.byKey[key];
   if (!existingEntry) {
-    return state; // Tabla no existe
+    return state;
   }
 
-  // Crear mapa de filas existentes
   const rowsById = new Map(existingEntry.state.rows.map(r => [r.id, r]));
-  
-  // Reordenar según los IDs proporcionados
   const reorderedRows: TableRow[] = [];
   for (const id of orderedRowIds) {
     const row = rowsById.get(id);
@@ -285,13 +234,10 @@ function handleReorderTableRows(
       rowsById.delete(id);
     }
   }
-  
-  // Agregar filas que no estaban en orderedRowIds al final
   for (const row of rowsById.values()) {
     reorderedRows.push(row);
   }
 
-  // Re-numerar
   const numberedRows = renumberRows(reorderedRows);
 
   return {
@@ -310,9 +256,6 @@ function handleReorderTableRows(
   };
 }
 
-/**
- * Reducer para ClearTable
- */
 function handleClearTable(
   state: TablesState, 
   command: ClearTableCommand
@@ -322,10 +265,9 @@ function handleClearTable(
   
   const existingEntry = state.byKey[key];
   if (!existingEntry) {
-    return state; // Tabla no existe
+    return state;
   }
 
-  // Limpiar filas pero mantener configuración
   return {
     ...state,
     byKey: {
@@ -342,13 +284,6 @@ function handleClearTable(
   };
 }
 
-/**
- * TABLES REDUCER PRINCIPAL
- * 
- * @param state - Estado actual de tablas
- * @param command - Comando a ejecutar
- * @returns Nuevo estado de tablas
- */
 export function tablesReducer(
   state: TablesState = INITIAL_TABLES_STATE,
   command: TableCommand
@@ -356,30 +291,21 @@ export function tablesReducer(
   switch (command.type) {
     case 'table/setData':
       return handleSetTableData(state, command);
-    
     case 'table/addRow':
       return handleAddTableRow(state, command);
-    
     case 'table/updateRow':
       return handleUpdateTableRow(state, command);
-    
     case 'table/removeRow':
       return handleRemoveTableRow(state, command);
-    
     case 'table/reorderRows':
       return handleReorderTableRows(state, command);
-    
     case 'table/clear':
       return handleClearTable(state, command);
-    
     default:
       return state;
   }
 }
 
-/**
- * Obtiene todas las tablas de una sección
- */
 export function getTablesBySection(
   state: TablesState, 
   sectionId: string,
@@ -394,9 +320,6 @@ export function getTablesBySection(
     .map(key => state.byKey[key]);
 }
 
-/**
- * Obtiene una tabla específica
- */
 export function getTable(
   state: TablesState,
   sectionId: string,
@@ -407,9 +330,6 @@ export function getTable(
   return state.byKey[key];
 }
 
-/**
- * Calcula el total de una columna
- */
 export function calculateColumnTotal(
   state: TablesState,
   sectionId: string,
@@ -427,9 +347,6 @@ export function calculateColumnTotal(
   }, 0);
 }
 
-/**
- * Cuenta filas en una tabla
- */
 export function countTableRows(
   state: TablesState,
   sectionId: string,

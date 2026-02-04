@@ -41,6 +41,8 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   @Input() showDeleteButton: boolean = true;
   @Input() modoVista: boolean = false;
   @Input() customFieldChangeHandler?: (index: number, field: string, value: any) => void;
+  // Opcional: encabezados agrupados para tablas con multi-fila de cabecera
+  @Input() groupHeaders?: { label: string; colspan: number }[];
   
   @Output() dataChange = new EventEmitter<any[]>();
   @Output() tableUpdated = new EventEmitter<any[]>();

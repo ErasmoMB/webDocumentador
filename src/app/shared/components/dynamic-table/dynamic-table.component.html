@@ -1,9 +1,14 @@
 <div class="table-editor">
   <table class="table table--editable editor-table">
     <thead>
+      <!-- Encabezado agrupado (opcional) -->
+      <tr *ngIf="groupHeaders && groupHeaders.length">
+        <th *ngFor="let g of groupHeaders" [attr.colspan]="g.colspan" style="text-align:center">{{ g.label }}</th>
+        <th *ngIf="showDeleteButton && !modoVista" rowspan="2"></th>
+      </tr>
       <tr>
         <th *ngFor="let col of columns">{{ col.label }}</th>
-        <th *ngIf="showDeleteButton && !modoVista"></th>
+        <th *ngIf="!groupHeaders && showDeleteButton && !modoVista"></th>
       </tr>
     </thead>
     <tbody>

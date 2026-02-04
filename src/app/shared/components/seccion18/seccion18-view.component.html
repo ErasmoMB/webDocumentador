@@ -1,0 +1,49 @@
+<div class="form-group-section">
+  <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
+  <div [innerHTML]="getTextoNBIConResaltado()"></div>
+
+  <app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ getNombreComunidad() }} (2017)" sectionId="3.1.4.A.1.14">
+    <app-generic-table
+      [data]="getNbiCCAyrocaConPorcentajes()"
+      [config]="{
+        columns: [
+          { key: 'categoria', header: 'Categoría', align: 'left' },
+          { key: 'casos', header: 'Casos', align: 'right' },
+          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+
+  <app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.14">
+    <app-generic-table
+      [data]="getNbiDistritoCahuachoConPorcentajes()"
+      [config]="{
+        columns: [
+          { key: 'categoria', header: 'Categoría', align: 'left' },
+          { key: 'casos', header: 'Casos', align: 'right' },
+          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017</span></p>
+
+  <app-image-upload
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getFotografiasVista()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

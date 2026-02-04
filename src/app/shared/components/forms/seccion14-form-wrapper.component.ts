@@ -1,131 +1,27 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion14Component } from '../seccion14/seccion14.component';
-import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
-import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
-import { FotoItem } from '../image-upload/image-upload.component';
-import { Subscription } from 'rxjs';
+import { Seccion14FormComponent } from '../seccion14/seccion14-form.component';
+import { BaseSectionComponent } from '../base-section.component';
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion14Component],
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion14FormComponent],
     selector: 'app-seccion14-form-wrapper',
-    templateUrl: './seccion14-form-wrapper.component.html',
-    styleUrls: ['./seccion14-form-wrapper.component.css']
+    template: `<app-seccion14-form [seccionId]="seccionId" [modoFormulario]="true"></app-seccion14-form>`,
+    styles: [`:host { display: block; width: 100%; }`]
 })
-export class Seccion14FormWrapperComponent implements OnInit, OnDestroy {
-  @Input() seccionId: string = '';
-  
-  formData: any = {};
-  datos: any = {};
-  private subscription?: Subscription;
+export class Seccion14FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
+  @Input() override seccionId: string = '3.1.14';
 
   constructor(
-    private projectFacade: ProjectStateFacade,
-    private stateAdapter: ReactiveStateAdapter,
-    private formChange: FormChangeService
-  ) {}
-
-  ngOnInit() {
-    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
-    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
-    this.actualizarDatos();
+    cdRef: ChangeDetectorRef,
+    injector: Injector
+  ) {
+    super(cdRef, injector);
   }
 
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-  }
-
-  actualizarDatos() {
-    this.datos = this.projectFacade.obtenerDatos();
-    this.formData = { ...this.datos };
-  }
-
-  onFieldChange(fieldId: string, value: any) {
-    let valorLimpio = '';
-    if (value !== undefined && value !== null && value !== 'undefined') {
-      valorLimpio = value;
-    }
-    this.formData[fieldId] = valorLimpio;
-    this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
-    // ✅ No llamar actualizarDatos() aquí - el formData ya está actualizado
-    // y llamar actualizarDatos() sobrescribiría el valor que el usuario está escribiendo
-  }
-
-  actualizarNivelEducativo(index: number, field: string, value: any) {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['actualizarNivelEducativo']) {
-      component['actualizarNivelEducativo'](index, field, value);
-      // ✅ No llamar actualizarDatos() aquí - causa pérdida de caracteres
-    }
-  }
-
-  eliminarNivelEducativo(index: number) {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['eliminarNivelEducativo']) {
-      component['eliminarNivelEducativo'](index);
-      this.actualizarDatos();
-    }
-  }
-
-  inicializarNivelEducativo() {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['inicializarNivelEducativo']) {
-      component['inicializarNivelEducativo']();
-      this.actualizarDatos();
-    }
-  }
-
-  agregarNivelEducativo() {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['agregarNivelEducativo']) {
-      component['agregarNivelEducativo']();
-      this.actualizarDatos();
-    }
-  }
-
-  actualizarTasaAnalfabetismo(index: number, field: string, value: any) {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['actualizarTasaAnalfabetismo']) {
-      component['actualizarTasaAnalfabetismo'](index, field, value);
-      this.actualizarDatos();
-    }
-  }
-
-  eliminarTasaAnalfabetismo(index: number) {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['eliminarTasaAnalfabetismo']) {
-      component['eliminarTasaAnalfabetismo'](index);
-      this.actualizarDatos();
-    }
-  }
-
-  inicializarTasaAnalfabetismo() {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['inicializarTasaAnalfabetismo']) {
-      component['inicializarTasaAnalfabetismo']();
-      this.actualizarDatos();
-    }
-  }
-
-  agregarTasaAnalfabetismo() {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['agregarTasaAnalfabetismo']) {
-      component['agregarTasaAnalfabetismo']();
-      this.actualizarDatos();
-    }
-  }
-
-  obtenerTextoSeccion14IndicadoresEducacionIntro(): string {
-    const component = ViewChildHelper.getComponent('seccion14');
-    if (component && component['obtenerTextoSeccion14IndicadoresEducacionIntro']) {
-      return component['obtenerTextoSeccion14IndicadoresEducacionIntro']();
-    }
-    return '';
-  }
+  protected override onInitCustom(): void { }
+  protected override detectarCambios(): boolean { return false; }
+  protected override actualizarValoresConPrefijo(): void { }
 }

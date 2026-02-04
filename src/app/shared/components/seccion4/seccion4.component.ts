@@ -6,15 +6,13 @@ import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/secci
 import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
 import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, DynamicTableComponent, ImageUploadComponent],
+  imports: [CommonModule, FormsModule, CoreSharedModule, ImageUploadComponent],
   selector: 'app-seccion4',
   templateUrl: './seccion4.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

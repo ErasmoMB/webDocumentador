@@ -27,7 +27,7 @@ export class Seccion6TextGeneratorService {
     }
 
     const textoPoblacionSexo = datos.textoPoblacionSexoAISD || this.getTextoPoblacionSexoDefault();
-    return textoPoblacionSexo.replace(/___/g, nombreComunidad);
+    return textoPoblacionSexo.replace(/___/, nombreComunidad);
   }
 
   /**
@@ -47,20 +47,20 @@ export class Seccion6TextGeneratorService {
     }
 
     const textoPoblacionEtario = datos.textoPoblacionEtarioAISD || this.getTextoPoblacionEtarioDefault();
-    return textoPoblacionEtario.replace(/___/g, nombreComunidad);
+    return textoPoblacionEtario.replace(/___/, nombreComunidad);
   }
 
   /**
    * Texto por defecto para población por sexo
    */
   private getTextoPoblacionSexoDefault(): string {
-    return 'La CC ___ tiene una distribución equilibrada de población por sexo que refleja la composición demográfica de la comunidad.';
+    return 'Respecto a la población de la CC ___, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___).';
   }
 
   /**
    * Texto por defecto para población por grupo etario
    */
   private getTextoPoblacionEtarioDefault(): string {
-    return 'La CC ___ presenta una distribución de población según grandes grupos de edad que muestra los patrones demográficos de la comunidad.';
+    return 'En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ___ es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa un ___.';
   }
 }

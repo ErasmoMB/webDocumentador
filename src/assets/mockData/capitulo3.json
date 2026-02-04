@@ -562,6 +562,7 @@
       { "categoria": "No escucha, ni habla", "casos": "1" }
     ],
     "textoReligion": "La religión desempeña un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracteriza y describe la diversidad religiosa en el CP Cahuacho, explorando las principales creencias.\n\nEn ese sentido, según los datos recopilados por los Censos Nacionales 2017, se obtiene que la religión mayoritaria es la católica representada por el de la población de 12 años a más. A ello se complementan aquellos que son evangélicos o cristianos, ambas categorías con un cada una.",
+    "parrafoSeccion15_religion_completo": "En la actualidad, la confesión predominante dentro de la CC ____ es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz ____, y a la inexistencia de templos evangélicos o de otras confesiones.\n\nEsta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar se halla al sur del anexo ____.",
     "religionesTabla": [
       { "categoria": "Católica", "casos": "126" },
       { "categoria": "Evangélica", "casos": "1" },

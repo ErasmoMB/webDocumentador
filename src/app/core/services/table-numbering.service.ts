@@ -24,11 +24,14 @@ export class TableNumberingService {
     ['3.1.4.A1', 1],     // Sección 4A1: Características Económicas - 1 tabla
     ['3.1.4.A2', 1],     // Sección 4A2: Características Económicas - 1 tabla
     ['3.1.4.B.1', 0],    // Sección 5.1: Institucionalidad
-    // Nota: '3.1.4.B' se registrará dinámicamente cuando se use para "Ubicación referencial" en AISI
+    ['3.1.4.A.1.1', 3],  // A.1.1 Institucionalidad - 3 tablas
     ['3.1.4.A.1.2', 2],  // Sección 6: Aspectos Demográficos - 2 tablas
     ['3.1.4.A.1.3', 3],  // Sección 7: Empleo e Ingresos - 3 tablas (PET, PEA, PEA Ocupada)
     ['3.1.4.A.1.4', 3],  // Sección 8: Actividades Económicas - 3 tablas (PEA, Ganadería, Agricultura)
     ['3.1.4.A.1.5', 2],  // Sección 9: Viviendas - 2 tablas (Condición de Ocupación, Tipos de Materiales)
+    ['3.1.4.A.1.6', 1],  // Sección 10: A.1.6 - 1 tabla
+    ['3.1.4.A.1.7', 1],  // Sección 11: A.1.7 - 1 tabla
+    ['3.1.4.A.1.8', 6],  // Sección 12: A.1.8 - 6 tablas (salud, estudiantes, IE Ayroca, IE 40270, alumnos Ayroca, alumnos 40270)
     // AISD (A.1.1 a A.1.20) - se registrarán dinámicamente
     // AISI (B.1.1 a B.1.15) - se registrarán dinámicamente
   ]);
@@ -118,7 +121,6 @@ export class TableNumberingService {
     // Encontrar el índice de la sección actual
     const currentSectionIndex = sectionOrder.indexOf(sectionId);
     if (currentSectionIndex === -1) {
-      console.warn(`⚠️ Sección desconocida: ${sectionId}`);
       return '';
     }
 
