@@ -81,7 +81,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion20: () => import('src/app/shared/components/seccion20/seccion20-form.component').then(m => m.Seccion20FormComponent as unknown as Type<any>),
     seccion20FormWrapper: () => import('src/app/shared/components/forms/seccion20-form-wrapper.component').then(m => m.Seccion20FormWrapperComponent as unknown as Type<any>),
     seccion20View: () => import('src/app/shared/components/seccion20/seccion20-view.component').then(m => m.Seccion20ViewComponent as unknown as Type<any>),
-    seccion21: () => import('src/app/shared/components/seccion21/seccion21.component').then(m => m.Seccion21Component as unknown as Type<any>),
+    seccion21View: () => import('src/app/shared/components/seccion21/seccion21-view.component').then(m => m.Seccion21ViewComponent as unknown as Type<any>),
+    seccion21: () => import('src/app/shared/components/forms/seccion21-form-wrapper.component').then(m => m.Seccion21FormWrapperComponent as unknown as Type<any>),
+    seccion21FormWrapper: () => import('src/app/shared/components/forms/seccion21-form-wrapper.component').then(m => m.Seccion21FormWrapperComponent as unknown as Type<any>),
     seccion22: () => import('src/app/shared/components/seccion22/seccion22.component').then(m => m.Seccion22Component as unknown as Type<any>),
     seccion23: () => import('src/app/shared/components/seccion23/seccion23.component').then(m => m.Seccion23Component as unknown as Type<any>),
     seccion24: () => import('src/app/shared/components/seccion24/seccion24.component').then(m => m.Seccion24Component as unknown as Type<any>),
@@ -565,7 +567,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // ✅ Secciones raíz AISI (B.X) - cualquier grupo
     if (seccionId.match(/^3\.1\.4\.B(\.\d+)?$/)) {
-      return { loader: this.componentLoaders.seccion21, inputs };
+      // Preview (panel izquierdo) debe mostrar la View (solo lectura)
+      return { loader: this.componentLoaders.seccion21View, inputs };
     }
 
     const componentMap: Partial<Record<string, ComponentLoader>> = {
@@ -583,10 +586,12 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getPreviewInputs(seccionId: string): { [key: string]: any } {
-    // Secciones raíz BISI no necesitan modoFormulario
+    // Secciones raíz BISI: pasar siempre el seccionId (y modoFormulario=false) para que
+    // el componente de vista lea las mismas claves que el formulario (evita diferencias)
     if (seccionId === '3.1.4.B' || seccionId === '3.1.4.B.1' || seccionId === '3.1.4.B.2') {
-      return {};
+      return { seccionId, modoFormulario: false };
     }
+
     // Todas las secciones AISD (incluyendo subsecciones) deben usar modo de vista
     if (seccionId.startsWith('3.1.4.A')) {
       return { seccionId, modoFormulario: false };
@@ -704,7 +709,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: eq('3.1.1'), loader: this.componentLoaders.seccion1FormWrapper, inputs: withSeccionId },
       { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders.seccion2FormWrapper, inputs: withSeccionId },
       { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders.seccion3Form, inputs: withSeccionId },
-      { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders.seccion21, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders.seccion21FormWrapper, inputs: withModoFormulario },
       { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders.seccion4FormWrapper, inputs: withSeccionId },
 
       { matches: aisd(1), loader: this.componentLoaders.seccion5, inputs: withModoFormulario },

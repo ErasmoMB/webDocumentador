@@ -1,0 +1,134 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
+
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">Editar Párrafos</h4>
+      <app-paragraph-editor
+        fieldId="parrafoSeccion21_aisi_intro_completo"
+        label="AISI - Introducción - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="parrafoAisiSignal()"
+        (valueChange)="actualizarParrafoAisi($event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h4>
+
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        <app-paragraph-editor
+          fieldId="parrafoSeccion21_centro_poblado_completo"
+          label="Centro Poblado - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="6"
+          [value]="parrafoCentroSignal()"
+          (valueChange)="actualizarParrafoCentro($event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-group-section mt-xl">
+        <h4 class="section-title">Datos para Generar Párrafos del Centro Poblado</h4>
+        <div class="form-field mt-md">
+          <label class="label">Ley N° de Creación del Distrito</label>
+          <input type="text" class="form-control"
+            [value]="datos.leyCreacionDistrito || ''"
+            (input)="onFieldChange('leyCreacionDistrito', $any($event.target).value)"
+            placeholder="Ej: 8004">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Fecha de Creación del Distrito</label>
+          <input type="text" class="form-control"
+            [value]="datos.fechaCreacionDistrito || ''"
+            (input)="onFieldChange('fechaCreacionDistrito', $any($event.target).value)"
+            placeholder="Ej: 22 de febrero de 1935">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Distrito Anterior</label>
+          <input type="text" class="form-control"
+            [value]="datos.distritoAnterior || ''"
+            (input)="onFieldChange('distritoAnterior', $any($event.target).value)"
+            placeholder="Ej: Caravelí">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Origen de Pobladores (Lugar/Provincia)</label>
+          <input type="text" class="form-control"
+            [value]="datos.origenPobladores1 || ''"
+            (input)="onFieldChange('origenPobladores1', $any($event.target).value)"
+            placeholder="Ej: Caravelí">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Origen de Pobladores (Provincia)</label>
+          <input type="text" class="form-control"
+            [value]="datos.origenPobladores2 || ''"
+            (input)="onFieldChange('origenPobladores2', $any($event.target).value)"
+            placeholder="Ej: Parinacochas">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Departamento de Origen</label>
+          <input type="text" class="form-control"
+            [value]="datos.departamentoOrigen || ''"
+            (input)="onFieldChange('departamentoOrigen', $any($event.target).value)"
+            placeholder="Ej: Arequipa">
+        </div>
+
+        <div class="form-field mt-sm">
+          <label class="label">Anexos Ejemplo</label>
+          <input type="text" class="form-control"
+            [value]="datos.anexosEjemplo || ''"
+            (input)="onFieldChange('anexosEjemplo', $any($event.target).value)"
+            placeholder="Ej: Llacsahuanca, Salome">
+        </div>
+      </div>
+
+      <div class="form-field mt-lg">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="label">Título del Cuadro</label>
+          <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloUbicacionCp']" (ngModelChange)="onTituloUbicacionChange($event)" placeholder="Ubicación referencial – Centro Poblado {{ datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____' }}">
+        </div>
+
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="ubicacionCpConfig"
+          [columns]="columnasUbicacionCp"
+          [tablaKey]="'ubicacionCpTabla'"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
+          (tableUpdated)="onTablaUpdated()">
+        </app-dynamic-table>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="label">Fuente del Cuadro</label>
+          <input type="text" class="form-control" [(ngModel)]="datos['cuadroFuenteUbicacionCp']" (ngModelChange)="onFuenteUbicacionChange($event)" placeholder="Ej: GEADES (2024)">
+        </div>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Cahuacho</label>
+        <app-image-upload
+          [fotografias]="fotosCacheSignal()"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Centro Poblado Cahuacho"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Centro Poblado Cahuacho"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>

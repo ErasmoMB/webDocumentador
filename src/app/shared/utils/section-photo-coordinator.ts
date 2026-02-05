@@ -69,7 +69,7 @@ export class SectionPhotoCoordinator {
       host.onPhotoLoadComplete?.(fotos);
       this.cdRef.markForCheck();
     } catch (error) {
-      console.error(`Error cargando fotografías en ${host.seccionId}:`, error);
+      try { const { debugError } = require('src/app/shared/utils/debug'); debugError(`Error cargando fotografías en ${host.seccionId}:`, error); } catch {}
     }
   }
 
@@ -96,7 +96,7 @@ export class SectionPhotoCoordinator {
         ViewChildHelper.updateAllComponents('actualizarDatos');
       } catch (e) {}
     } catch (error) {
-      console.error(`Error guardando fotografías en ${host.seccionId}:`, error);
+      try { const { debugError } = require('src/app/shared/utils/debug'); debugError(`Error guardando fotografías en ${host.seccionId}:`, error); } catch {}
     }
   }
 
@@ -113,20 +113,8 @@ export class SectionPhotoCoordinator {
       '📊 Fotos en Propiedad': propName && host[propName] ? host[propName].length : 0
     };
 
-    // logged: diagnostic separator start
-    // logged: diagnostic title
-    // logged: diagnostic separator
-    console.table(diagnostico);
-
-    if (host.fotografiasCache?.length > 0) {
-      // logged: cache photos
-    }
-
-    const tieneOverride = (host as any).constructor?.prototype?.hasOwnProperty?.('cargarFotografias');
-    if (tieneOverride) {
-      console.warn('⚠️  ADVERTENCIA: Esta sección tiene override de cargarFotografias()');
-      // logged: override warning message
-    }
+    // optionally log diagnostic when debug enabled
+    try { const { debugLog, debugWarn } = require('src/app/shared/utils/debug'); debugLog('Diagnóstico fotografías', diagnostico); if ((host as any).constructor?.prototype?.hasOwnProperty?.('cargarFotografias')) { debugWarn('⚠️  ADVERTENCIA: Esta sección tiene override de cargarFotografias()'); } } catch (e) {}
 
     // logged: diagnostic separator end
   }

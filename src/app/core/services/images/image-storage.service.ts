@@ -143,6 +143,10 @@ export class ImageStorageService {
       if (ViewChildHelper && typeof ViewChildHelper.updateAllComponents === 'function') {
         // calling ViewChildHelper.updateAllComponents
         ViewChildHelper.updateAllComponents('actualizarDatos');
+        // fallback extra tick to avoid timing/race issues when many updates occur quickly
+        setTimeout(() => {
+          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+        }, 120);
       }
     } catch (e) {
       // ignore if helper not available

@@ -7,7 +7,24 @@
 
 ---
 
-## 📋 ESTRUCTURA BASE
+## � Tabla de contenidos
+
+1. Introducción y principios
+2. Quick-start (Form-wrapper 29 líneas)
+3. Patrones (Form, View, ViewModel, Effects)
+4. Migración paso-a-paso (Workflow de refactor)
+5. Acceptance Criteria (checklist)
+6. Tests y E2E (snippets y escenarios)
+7. PR checklist y plantilla de revisión
+8. Casos comunes y correcciones (bugs frecuentes)
+9. Automatizaciones sugeridas (linters/CI)
+10. Ejemplos concretos (Sección 12, Sección 21)
+
+> Nota: Ver `docs/REFAC_CHECKLIST.md` para la checklist corta de PRs y `docs/E2E_TEMPLATES.md` para escenarios E2E.
+
+---
+
+## �📋 ESTRUCTURA BASE
 
 ```
 shared/components/
@@ -396,6 +413,23 @@ MANTENIBILIDAD
   [✓] Bajo riesgo de bugs
   [✓] 100% Arquitectura ProjectState
 ```
+
+## 🧾 Acceptance Criteria (PR-level)
+
+- Todos los puntos del checklist de conformidad deben estar marcados ✅.
+- Se han añadido tests unitarios relevantes.
+- Se han añadido al menos 1 E2E para flujos críticos: párrafo, fotos y tabla.
+- `formChange.persistFields()` persiste claves base y prefijo cuando aplica.
+- `ImageStorageService.saveImages()` ejecuta `stateAdapter.refreshFromStorage()` y `ViewChildHelper.updateAllComponents('actualizarDatos')`.
+- La PR incluye una nota `Antes / Después` y referencia a `docs/REFAC_CHECKLIST.md`.
+
+## ✅ PR Quick-Checklist (revisor)
+
+- [ ] Compila y tests pasan.
+- [ ] Revisar uso de Signals (no getters imperativos en templates).
+- [ ] Revisar que no hay efectos secundarios en reducers (solo Commands).
+- [ ] E2E agregados o `docs/E2E_TEMPLATES.md` actualizado con el escenario.
+- [ ] Documentación actualizada (`MODO_IDEAL_PERFECTO_ARQUITECTURA_100.md` y `docs/EXAMPLES/` si aplica).
 
 ---
 

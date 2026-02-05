@@ -102,6 +102,18 @@ export class FormChangeService {
       });
     }
 
+    // 2b. También sincronizar inmediatamente con ProjectStateFacade (store) para
+    // asegurar que las vistas que dependen de selectField()/selectSectionFields()
+    // reevalúen de forma inmediata sin requerir recarga manual.
+    const facadeImmediateSync = this.projectFacade;
+    if (facadeImmediateSync && opts.updateState) {
+      try {
+        facadeImmediateSync.setFields(resolvedSectionId, null, updates);
+      } catch (e) {
+        console.warn('[FormChangeService] Error setting fields in ProjectStateFacade', e);
+      }
+    }
+
     // 2b. Actualizar store (ProjectStateFacade) para que la vista y cuadros reflejen los datos
     const facade = this.projectFacade;
     if (facade && Object.keys(updates).length > 0) {

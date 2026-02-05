@@ -49,7 +49,8 @@ export class SectionReactiveSyncCoordinator {
 				this.handleReactiveChanges(host, changes);
 			});
 		} catch (error) {
-			console.warn('No se pudo inicializar sincronización reactiva:', error);
+			// optional debug
+			try { const { debugWarn } = require('src/app/shared/utils/debug'); debugWarn('No se pudo inicializar sincronización reactiva:', error); } catch {}
 		}
 	}
 
