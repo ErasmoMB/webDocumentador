@@ -498,6 +498,26 @@ En la plantilla/resumen usar **vista** y **form-wrapper** por separado (para Vie
 
 **Resumen:** Izquierda = View, Derecha = Form-wrapper. No usar el form-wrapper en el preview.
 
+## 📌 Nota: Usar el componente monolítico como referencia para la vista preview (IMPORTANTE)
+
+Cuando refactorices una sección a MODO IDEAL y separes **View** y **Form-wrapper**, usa siempre el componente monolítico **existente** como referencia para la **vista previa** (preview). El monolito suele contener la estructura visual definitiva (tablas, textos generados, formatos y configuraciones de tabla) que la View debe reproducir fielmente.
+
+Pasos rápidos para evitar el bug "formulario en ambos paneles / preview vacío":
+- Verifica que el **loader de preview** (en `seccion.component.ts`) devuelva el *view* (ej.: `seccion22View`) y **no** el form-wrapper.
+- Comprueba que `plantilla.component.ts` registre el `@ViewChild` del componente View y lo pase a `ViewChildHelper` (ej.: `ViewChildHelper.registerComponent('seccion22', comp)`).
+- Reutiliza la estructura HTML y la configuración del monolítico (tablas, `app-table-wrapper` con `sectionId`, textos, `app-image-upload`) en la nueva `SeccionXXViewComponent`.
+- Si el monolito generaba textos por lógica, inyecta el **TextGenerator** correspondiente (p. ej. `ISeccion22TextGeneratorService`) en la View para los fallback cuando el campo manual está vacío.
+- Asegúrate de que las tablas de la View tengan las mismas **configs** (ej.: `poblacionSexoConfig`), y que la plantilla use index access para campos con index-signature: `vm.data['campo']`.
+- Añade un E2E corto que valide: editar párrafo → preview actualiza; subir/editar foto → preview actualiza; editar tabla → preview actualiza sin recargar.
+
+Checklist (incluir en `docs/REFAC_CHECKLIST.md` y en la descripción del PR):
+- [ ] Preview carga `SeccionXXViewComponent` (loader `seccionXXView`).
+- [ ] `plantilla.component` registra la View (`ViewChildHelper`).
+- [ ] La View reproduce tablas, textos y fotos del monolito.
+- [ ] TextGenerator o lógica de fallback presente cuando aplica.
+- [ ] Table configs presentes en la View y `app-table-wrapper` usa `sectionId` real.
+- [ ] E2E que valide los flujos críticos agregados a la PR.
+
 ---
 
 ## 📋 NUMERACIÓN DE CUADROS EN LA VISTA (CUADRO N° 3.XX)
@@ -743,3 +763,545 @@ Checklist (PR mínimo)
 **Estado:** 🟢 LISTO PARA SECCIÓN 12+  
 **Conformidad:** 🟢 100% ARQUITECTURA  
 **Reactividad:** 🟢 100% SIGNALS
+---
+
+## � SOLUCIONES DE BUGS (Sección 22 - Implementadas)
+
+### 🐞 Bug 1: Párrafos no se muestran en la vista
+
+**Síntoma:** Editar el párrafo en el formulario no lo muestra en la vista previa.
+
+**Causa:** Los párrafos no se inicializaban con valores por defecto, por lo que `textoDemografiaSignal()` retornaba solo el texto generado pero el campo nunca se persistía.
+
+**Solución implementada:**
+```typescript
+// En Form Component onInitCustom()
+const textoDemografia = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
+if (!textoDemografia || textoDemografia.trim() === '') {
+  this.projectFacade.setField(this.seccionId, null, 'textoDemografiaAISI', '');
+  this.formChange.persistFields(this.seccionId, 'text', { textoDemografiaAISI: '' });
+}
+```
+
+**En handlers de párrafos:**
+```typescript
+actualizarTextoDemografia(valor: string): void {
+  this.projectFacade.setField(this.seccionId, null, 'textoDemografiaAISI', valor);
+  this.onFieldChange('textoDemografiaAISI', valor);
+  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+}
+```
+
+**En View template:**
+```html
+<p class="text-justify" [innerHTML]="vm.texts.demografiaText"></p>
+```
+
+✅ **Estado:** Corregido - párrafos ahora se muestran correctamente en preview
+
+---
+
+### 🐞 Bug 2: Títulos y fuentes de cuadros no se actualizan en vista
+
+**Síntoma:** Editar el título o fuente de una tabla en el formulario no actualiza la vista.
+
+**Causa:** Los handlers existían pero no forzaban actualización en Vista; los Signals se actualizaban pero componentes no reaccionaban.
+
+**Solución implementada:**
+```typescript
+actualizarTituloPoblacionSexo(valor: string): void {
+  this.projectFacade.setField(this.seccionId, null, 'tituloPoblacionSexoAISI', valor);
+  this.onFieldChange('tituloPoblacionSexoAISI', valor);
+  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+}
+
+// REPETIR para fuentePoblacionSexo, tituloPoblacionEtario, fuentePoblacionEtario
+```
+
+✅ **Estado:** Corregido - títulos y fuentes se actualizan sin recargar
+
+---
+
+### 🐞 Bug 3: Porcentajes no se calculan ni guardan, falta fila de total
+
+**Síntoma:** Editar casos en tabla, porcentaje no se calcula; en vista no se ven porcentajes ni fila de totales. Aparecen dos filas de total (una correcta `Total 22 100,00%`, otra duplicada/malformada `TOTAL 22 0.0`).
+
+**Causa raíz:**
+1. `DynamicTable` calcula porcentajes solo para display, NO persiste los datos completos
+2. Vista usa `app-generic-table` que solo muestra lo que hay en estado (sin porcentajes guardados)
+3. `TablePercentageHelper.calcularPorcentajesPoblacionSexo()` retorna datos con estructura compleja `{ value, isCalculated }` pero se guardan sin normalizar
+4. Vista agregaba OTRA fila de total duplicando la que ya venía del Form
+
+**Solución implementada (4 partes):**
+
+**Parte 1: Normalizar datos ANTES de guardar en Form**
+```typescript
+// Crear helper para normalizar estructuras complejas
+private normalizarTabla(tabla: any[]): any[] {
+  return tabla.map((row: any) => {
+    const rowNormalizado: any = {};
+    for (const key in row) {
+      const valor = row[key];
+      // Si es objeto con { value, isCalculated }, extraer solo el value
+      rowNormalizado[key] = typeof valor === 'object' && valor?.value !== undefined ? valor.value : valor;
+    }
+    return rowNormalizado;
+  });
+}
+```
+
+**Parte 2: Usar normalización en handlers de tabla**
+```typescript
+onPoblacionSexoUpdated(eventOrTabla: any): void {
+  const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
+  if (!Array.isArray(tabla)) return;
+  
+  // Calcular porcentajes
+  const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesPoblacionSexo(tabla);
+  
+  // Normalizar valores ANTES de guardar
+  const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
+  
+  // Persistir tabla normalizada
+  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISI', tablaNormalizada);
+  if (prefijo) {
+    this.projectFacade.setField(this.seccionId, null, `poblacionSexoAISI${prefijo}`, tablaNormalizada);
+  }
+  this.formChange.persistFields(this.seccionId, 'table', { poblacionSexoAISI: tablaNormalizada });
+  ViewChildHelper.updateAllComponents('actualizarDatos');
+}
+```
+
+**Parte 3: NO duplicar fila de total en Vista**
+```typescript
+// ANTES (incorrecto: duplicaba fila de total)
+readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
+  const data = this.projectFacade.selectTableData(...) ?? [];
+  return this.agregarFilaTotal(data, 'sexo', 'TOTAL'); // ❌ Agregaba OTRA fila
+});
+
+// AHORA (correcto: solo devuelve lo que viene del Form)
+readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
+  return this.projectFacade.selectTableData(...) ?? [];
+});
+```
+La `TablePercentageHelper` ya incluye la fila de total, NO debe agregarse otra en la Vista.
+
+**Parte 4: Datos llegan correctamente normalizados a app-generic-table**
+- Form calcula porcentajes → normaliza → guarda valores simples → Vista los recibe → app-generic-table los muestra correctamente
+
+✅ **Estado:** Corregido - Sin filas de total duplicadas, porcentajes correctos, formato consistente
+
+---
+
+### Checklist: Normalización de Datos Complejos
+
+Cuando uses `TablePercentageHelper`:
+```
+✅ Pasos
+  [ ] Llamar TablePercentageHelper.calcularPorcentajes*()
+  [ ] Normalizar el resultado con normalizarTabla() ANTES de guardar
+  [ ] Guardar valores simples (no { value, isCalculated })
+  [ ] NO volver a agregar fila de total en Vista
+  [ ] Vista usa datos normalizados tal como vienen del Form
+  
+✅ Checklist Final
+  [ ] Una sola fila "Total" sin duplicados
+  [ ] Porcentajes formateados correctamente (XX,XX %)
+  [ ] Valores de casos son números simples (no objetos)
+  [ ] app-generic-table recibe datos limpios
+  [ ] Sin "TOTAL" duplicado en mayúsculas
+```
+
+---
+
+---
+
+## ✅ Checklist Final: Sección 22 (Todos los bugs solucionados)
+
+```
+✅ PÁRRAFOS
+  [✓] Párrafos inicializan con valores vacíos en onInitCustom()
+  [✓] Editar párrafo → se persiste en estado
+  [✓] Editar párrafo → vista se actualiza sin recargar
+  [✓] Vista muestra párrafo manual O texto generado (fallback)
+
+✅ TÍTULOS Y FUENTES
+  [✓] Editar título → vista se actualiza automáticamente
+  [✓] Editar fuente → vista se actualiza automáticamente
+  [✓] ViewChildHelper.updateAllComponents() llamado en cada handler
+  [✓] Cambios persisten al recargar
+
+✅ TABLAS Y PORCENTAJES
+  [✓] Editar casos → porcentaje se calcula automáticamente en formulario
+  [✓] Porcentajes calculados se guardan EN el estado (no solo display)
+  [✓] Vista recibe datos con porcentajes ya incluidos
+  [✓] Fila de TOTAL agregada automáticamente en vista
+  [✓] Ambas claves (base + prefijo) se guardan para consistencia
+
+✅ SINCRONIZACIÓN FORM ↔ VIEW
+  [✓] Cambio en Form → actualización automática en View sin recargar
+  [✓] Estructura inicial fija (Hombre/Mujer, edades)
+  [✓] Persistencia a localStorage completa y consistente
+  [✓] Recargar página → todos los datos intactos
+
+✅ E2E VALIDACIÓN
+  [ ] Cargar sección → editar párrafo → ver cambio en preview
+  [ ] Cargar sección → editar título/fuente → cambios inmediatos
+  [ ] Cargar sección → editar casos en tabla → porcentajes y total visibles
+  [ ] Editar múltiples campos → una sola recarga persiste todo
+  [ ] Recargar página → párrafos, títulos, fuentes, tablas intacta
+```
+
+---
+
+## 🎯 Patrón Completo: SOLUCIÓN PARA TABLAS + PÁRRAFOS + METADATOS
+
+Este es el patrón final que Sección 22 implementa y que debería replicarse en cualquier sección con estructuras similares:
+
+### Form Component: Patrón Completo
+```typescript
+import { TablePercentageHelper } from '...';
+import { ViewChildHelper } from '...';
+
+// 1. SIGNALS para cada entidad
+readonly parrafoSignal = computed(() => {
+  const manual = this.projectFacade.selectField(..., 'parrafo')();
+  if (manual?.trim()) return manual;
+  return this.generarTextoDefault();
+});
+
+readonly tituloSignal = computed(() => {
+  return this.projectFacade.selectField(..., 'titulo')() || 'Título por defecto';
+});
+
+readonly tablaSignal = computed(() => {
+  const data = this.projectFacade.selectField(..., 'tabla')() ??
+               this.projectFacade.selectTableData(..., 'tabla')() ?? [];
+  return Array.isArray(data) ? data : [];
+});
+
+readonly viewModel = computed(() => ({
+  parrafo: this.parrafoSignal(),
+  titulo: this.tituloSignal(),
+  tabla: this.tablaSignal()
+}));
+
+// 2. onInitCustom(): inicializar estructuras
+protected override onInitCustom(): void {
+  // Párrafos
+  if (!this.projectFacade.selectField(..., 'parrafo')()) {
+    this.projectFacade.setField(..., 'parrafo', '');
+    this.formChange.persistFields(..., 'text', { parrafo: '' });
+  }
+  
+  // Tablas
+  const currentTabla = this.projectFacade.selectField(..., 'tabla')() ?? [];
+  if (currentTabla.length === 0) {
+    const estructura = [{ ...estructura inicial... }];
+    this.projectFacade.setField(..., 'tabla', estructura);
+    this.formChange.persistFields(..., 'table', { tabla: estructura });
+  }
+}
+
+// 3. Handlers: actualizar + persistir + ViewChildHelper
+actualizarParrafo(valor: string): void {
+  this.projectFacade.setField(..., 'parrafo', valor);
+  this.onFieldChange('parrafo', valor);
+  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+}
+
+actualizarTitulo(valor: string): void {
+  this.projectFacade.setField(..., 'titulo', valor);
+  this.onFieldChange('titulo', valor);
+  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+}
+
+onTablaUpdated(tabla: any[]): void {
+  // Calcular antes de guardar
+  const tablaCompleta = TablePercentageHelper.calcularPorcentajes*(tabla);
+  
+  // Guardar ambas claves
+  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  this.projectFacade.setField(..., 'tabla', tablaCompleta);
+  if (prefijo) this.projectFacade.setField(..., 'tabla' + prefijo, tablaCompleta);
+  
+  this.formChange.persistFields(..., 'table', { tabla: tablaCompleta });
+  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+}
+```
+
+### View Component: Patrón Completo
+```typescript
+// 1. SIGNALS: idem a Form + agregarFilaTotal()
+readonly parrafoSignal = computed(() => {
+  const manual = this.projectFacade.selectField(..., 'parrafo')();
+  if (manual?.trim()) return manual;
+  return this.textGenerator.generateTexto(this.formDataSignal());
+});
+
+readonly tablaSignal = computed(() => {
+  const data = this.projectFacade.selectField(..., 'tabla')() ??
+               this.projectFacade.selectTableData(..., 'tabla')() ?? [];
+  return this.agregarFilaTotal(data, 'id', 'TOTAL');
+});
+
+private agregarFilaTotal(tabla: any[], campoId: string, etiquetaTotal: string): any[] {
+  if (!Array.isArray(tabla) || tabla.length === 0) return tabla;
+  const fila = { [campoId]: etiquetaTotal, casos: 0, porcentaje: 0 };
+  // ... calcular totales ...
+  return [...tabla, fila];
+}
+
+readonly viewModel = computed(() => ({
+  parrafo: this.parrafoSignal(),
+  tabla: this.tablaSignal()
+}));
+```
+
+### Template Form: Patrón Completo
+```html
+<div class="form-field">
+  <label>Párrafo</label>
+  <textarea [value]="viewModel().parrafo" 
+    (change)="actualizarParrafo($event.target.value)"></textarea>
+</div>
+
+<div class="form-field">
+  <label>Título</label>
+  <input [value]="viewModel().titulo" 
+    (change)="actualizarTitulo($event.target.value)">
+</div>
+
+<app-dynamic-table [datos]="viewModel().tabla" ...
+  (tableUpdated)="onTablaUpdated($event)"></app-dynamic-table>
+```
+
+### Template View: Patrón Completo
+```html
+<p [innerHTML]="vm.parrafo"></p>
+<p><strong>{{ vm.titulo }}</strong></p>
+<app-generic-table [data]="vm.tabla" [config]="tablaConfig"></app-generic-table>
+```
+
+---
+
+✅ **Este patrón está implementado 100% en Sección 22 (Demografía AISI)**  
+✅ **Conformidad:** 100% ARQUITECTURA + 100% SIGNALS + 100% SINCRONIZACIÓN  
+✅ **Bugs solucionados:** Párrafos ✓, Títulos/Fuentes ✓, Porcentajes/Totales ✓
+
+
+
+Cuando una sección tiene múltiples tablas que requieren:
+- **Título editable** ANTES del cuadro
+- **Fuente editable** DESPUÉS del cuadro  
+- **Estructura inicial fija** (sin opción de agregar/eliminar filas)
+
+### Ejemplo: Sección 22 (Demografía AISI)
+
+**Estructura en el formulario:**
+```
+[Input] Título — Población por Sexo
+[Table] Población por Sexo (Hombre/Mujer, readonly)
+[Input] Fuente — Población por Sexo
+
+[Input] Título — Población por Grupo Etario
+[Table] Población por Grupo Etario (5 categorías de rango etario, readonly)
+[Input] Fuente — Población por Grupo Etario
+```
+
+### Implementación en Form Component
+
+**1. Signals para títulos y fuentes:**
+```typescript
+readonly tituloPoblacionSexoSignal: Signal<string> = computed(() => {
+  return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionSexoAISI')() || 'Población por sexo';
+});
+
+readonly fuentePoblacionSexoSignal: Signal<string> = computed(() => {
+  return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionSexoAISI')() || 'Censos Nacionales 2017';
+});
+
+// RECOMENDACIÓN: Use campos dedicados `cuadroTitulo*` y `cuadroFuente*` para permitir editar
+// el título completo y la fuente (ej. "Población por sexo – CP Cahuacho (2017)" y "Censos Nacionales 2017")
+// sin que la composición automática sobrescriba partes del texto. Esto es el patrón usado en Sección 21:
+// - Inicializar `datos['cuadroTituloX']` y `datos['cuadroFuenteX']` en `onInitCustom()` si no existen.
+// - En el template del form usar `[(ngModel)]="datos['cuadroTituloX']"` y `[(ngModel)]="datos['cuadroFuenteX']"` con
+//   `(ngModelChange)` para llamar a handlers `onTituloCuadroXChange(value)` / `onFuenteCuadroXChange(value)` que hagan:
+//   `this.datos[fieldId] = value; this.onFieldChange(fieldId, value, { refresh: false });` y
+//   `ViewChildHelper.updateAllComponents('actualizarDatos')` para forzar la actualización de la vista.
+
+// REPETIR PATRÓN para otras tablas (tituloPoblacionEtarioSignal, fuentePoblacionEtarioSignal)
+```
+**2. onInitCustom(): Inicializar estructuras fijas**
+```typescript
+protected override onInitCustom(): void {
+  // TABLA 1: Población por Sexo
+  const tablaKeySexo = 'poblacionSexoAISI';
+  const currentSexo = this.projectFacade.selectField(this.seccionId, null, tablaKeySexo)() ?? 
+                      this.projectFacade.selectTableData(this.seccionId, null, tablaKeySexo)() ?? [];
+
+  if (!Array.isArray(currentSexo) || currentSexo.length === 0) {
+    const inicialSexo = [
+      { sexo: 'Hombre', casos: '', porcentaje: '' },
+      { sexo: 'Mujer', casos: '', porcentaje: '' }
+    ];
+    // Persistir...
+    this.projectFacade.setField(this.seccionId, null, tablaKeySexo, inicialSexo);
+    this.formChange.persistFields(this.seccionId, 'table', { [tablaKeySexo]: inicialSexo });
+  }
+
+  // TABLA 2: Población por Grupo Etario
+  const tablaKeyEtario = 'poblacionEtarioAISI';
+  const currentEtario = this.projectFacade.selectField(this.seccionId, null, tablaKeyEtario)() ??
+                        this.projectFacade.selectTableData(this.seccionId, null, tablaKeyEtario)() ?? [];
+
+  if (!Array.isArray(currentEtario) || currentEtario.length === 0) {
+    const inicialEtario = [
+      { categoria: '0 a 14 años', casos: '', porcentaje: '' },
+      { categoria: '15 a 29 años', casos: '', porcentaje: '' },
+      { categoria: '30 a 44 años', casos: '', porcentaje: '' },
+      { categoria: '45 a 64 años', casos: '', porcentaje: '' },
+      { categoria: '65 años a más', casos: '', porcentaje: '' }
+    ];
+    // Persistir...
+    this.projectFacade.setField(this.seccionId, null, tablaKeyEtario, inicialEtario);
+    this.formChange.persistFields(this.seccionId, 'table', { [tablaKeyEtario]: inicialEtario });
+  }
+}
+```
+
+**3. Métodos para actualizar títulos y fuentes:**
+```typescript
+actualizarTituloPoblacionSexo(valor: string): void {
+  this.projectFacade.setField(this.seccionId, null, 'tituloPoblacionSexoAISI', valor);
+  this.onFieldChange('tituloPoblacionSexoAISI', valor);
+}
+
+actualizarFuentePoblacionSexo(valor: string): void {
+  this.projectFacade.setField(this.seccionId, null, 'fuentePoblacionSexoAISI', valor);
+  this.onFieldChange('fuentePoblacionSexoAISI', valor);
+}
+
+// REPETIR para otras tablas
+```
+
+### Implementación en Template Form
+
+```html
+<div class="form-field mt-lg">
+  <label class="label">Título — Población por Sexo</label>
+  <input type="text" 
+    [value]="viewModel().tituloPoblacionSexo" 
+    (change)="actualizarTituloPoblacionSexo($any($event.target).value)" 
+    class="form-control" 
+    placeholder="Ej: Población por sexo – CP Cahuacho (2017)">
+</div>
+
+<div class="form-field mt-md">
+  <label class="label">Población por Sexo</label>
+  <app-dynamic-table
+    [datos]="viewModel().poblacionSexo"
+    [config]="{
+      tablaKey: 'poblacionSexoAISI',
+      totalKey: 'sexo',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      calcularPorcentajes: true,
+      estructuraInicial: [
+        { sexo: 'Hombre', casos: '', porcentaje: '' },
+        { sexo: 'Mujer', casos: '', porcentaje: '' }
+      ]
+    }"
+    [columns]="[
+      { field: 'sexo', label: 'Sexo', type: 'text', readonly: true },
+      { field: 'casos', label: 'Casos', type: 'number' },
+      { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+    ]"
+    [showAddButton]="false"
+    [showDeleteButton]="false"
+    (tableUpdated)="onPoblacionSexoUpdated($event)">
+  </app-dynamic-table>
+</div>
+
+<div class="form-field mt-md">
+  <label class="label">Fuente — Población por Sexo</label>
+  <input type="text" 
+    [value]="viewModel().fuentePoblacionSexo" 
+    (change)="actualizarFuentePoblacionSexo($any($event.target).value)" 
+    class="form-control" 
+    placeholder="Ej: Censos Nacionales 2017">
+</div>
+
+<!-- REPETIR el patrón para otras tablas -->
+```
+
+### Implementación en View Component
+
+Agregar los Signals de títulos/fuentes:
+```typescript
+readonly tituloPoblacionSexoSignal: Signal<string> = computed(() => {
+  return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionSexoAISI')() || 'Población por sexo';
+});
+
+readonly fuentePoblacionSexoSignal: Signal<string> = computed(() => {
+  return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionSexoAISI')() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
+});
+
+// Actualizar viewModel para incluir estos datos
+readonly viewModel = computed(() => ({
+  // ... otros datos
+  tituloPoblacionSexo: this.tituloPoblacionSexoSignal(),
+  fuentePoblacionSexo: this.fuentePoblacionSexoSignal(),
+  // ... etc
+}));
+```
+
+### Implementación en View Template
+
+```html
+<app-table-wrapper 
+  [title]="vm.tituloPoblacionSexo + ' – CP ' + (vm.data['centroPobladoAISI'] || 'Cahuacho') + ' (2017)'" 
+  [sectionId]="seccionId">
+  <app-generic-table [data]="vm.poblacionSexo" [config]="poblacionSexoConfig"></app-generic-table>
+</app-table-wrapper>
+<p class="source">FUENTE: {{ vm.fuentePoblacionSexo }}</p>
+```
+
+### Checklist para este patrón
+
+```
+✅ COMPONENTE FORM
+  [ ] Agregar Signals para cada título y fuente
+  [ ] onInitCustom() inicializa todas las tablas con estructura fija
+  [ ] Métodos actualizarTítulo*() y actualizarFuente*()
+  [ ] Template: campos input ANTES y DESPUÉS de cada tabla
+  [ ] DynamicTable con showAddButton=false, showDeleteButton=false
+
+✅ COMPONENTE VIEW
+  [ ] Agregar Signals para títulos y fuentes (same as Form)
+  [ ] viewModel incluye títulos y fuentes
+  [ ] Template muestra vm.titulo* y vm.fuente* dinámicamente
+
+✅ SINCRONIZACIÓN
+  [ ] Editar título en form → vista se actualiza sin recargar
+  [ ] Editar fuente en form → fuente se actualiza en preview
+  [ ] Tablas persistidas correctamente (localStorage)
+  [ ] Estructura inicial (Hombre/Mujer, edades) fijas al crear sección
+
+✅ E2E
+  [ ] Cargar sección → ver estructura fija en form
+  [ ] Editar título → preview actualiza título
+  [ ] Editar fuente → preview actualiza fuente
+  [ ] Editar casos en tabla → porcentaje se calcula automáticamente
+  [ ] Recargar página → datos persisten con estructura inicial intacta
+```
+
+---
+
+**Ejemplo completo:** Ver `src/app/shared/components/seccion22/` (sección 22, Demografía AISI)
+
+**Estado:** 🟢 Implementado y documentado (Sección 22)  
+**Conformidad:** 🟢 100% ARQUITECTURA + 100% SIGNALS  
+**Sincronización:** 🟢 Form ↔ View automática

@@ -84,7 +84,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion21View: () => import('src/app/shared/components/seccion21/seccion21-view.component').then(m => m.Seccion21ViewComponent as unknown as Type<any>),
     seccion21: () => import('src/app/shared/components/forms/seccion21-form-wrapper.component').then(m => m.Seccion21FormWrapperComponent as unknown as Type<any>),
     seccion21FormWrapper: () => import('src/app/shared/components/forms/seccion21-form-wrapper.component').then(m => m.Seccion21FormWrapperComponent as unknown as Type<any>),
-    seccion22: () => import('src/app/shared/components/seccion22/seccion22.component').then(m => m.Seccion22Component as unknown as Type<any>),
+    seccion22View: () => import('src/app/shared/components/seccion22/seccion22-view.component').then(m => m.Seccion22ViewComponent as unknown as Type<any>),
+    seccion22: () => import('src/app/shared/components/forms/seccion22-form-wrapper.component').then(m => m.Seccion22FormWrapperComponent as unknown as Type<any>),
     seccion23: () => import('src/app/shared/components/seccion23/seccion23.component').then(m => m.Seccion23Component as unknown as Type<any>),
     seccion24: () => import('src/app/shared/components/seccion24/seccion24.component').then(m => m.Seccion24Component as unknown as Type<any>),
     seccion25: () => import('src/app/shared/components/seccion25/seccion25.component').then(m => m.Seccion25Component as unknown as Type<any>),
@@ -544,7 +545,12 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20View, inputs };
 
     // ✅ AISI: Subsecciones dinámicas (B.1.X, B.2.X, B.3.X, etc.)
-    if (this.esSubseccionAISI(seccionId, 1)) return { loader: this.componentLoaders.seccion22, inputs };
+    // Nota: Para Sección 22 (B.1.1), devolver View component
+    if (this.esSubseccionAISI(seccionId, 1)) {
+      // Sección 22 ya tiene View component en MODO IDEAL
+      return { loader: this.componentLoaders.seccion22View, inputs };
+    }
+    // Para las demás secciones B.X, usar componentes existentes (pendiente refactorizar a View)
     if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23, inputs };
     if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24, inputs };
     if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
