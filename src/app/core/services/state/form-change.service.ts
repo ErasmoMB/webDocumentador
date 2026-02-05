@@ -86,6 +86,7 @@ export class FormChangeService {
     if (!updates || Object.keys(updates).length === 0) return;
 
     const opts = this.resolvePersistOptions(options);
+    // No logging por defecto para persistFields (demasiado ruidoso en producción)
 
     // 1. Actualizar FormularioService (fuente de verdad)
     if (opts.updateLegacy) {
@@ -140,6 +141,15 @@ export class FormChangeService {
             }
           }
         });
+      }
+
+      // Notificar a SectionSyncService inmediatamente si se solicita (notifySync)
+      try {
+        if (opts.notifySync && this.sectionSync) {
+          this.sectionSync.notifyChanges(resolvedSectionId, updates);
+        }
+      } catch (e) {
+        console.warn('[FormChangeService] Error notifying SectionSyncService', e);
       }
     }
 

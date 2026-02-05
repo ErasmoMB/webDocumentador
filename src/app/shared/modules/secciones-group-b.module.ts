@@ -26,7 +26,8 @@ import { Seccion21FormWrapperComponent } from '../components/forms/seccion21-for
 import { Seccion22ViewComponent } from '../components/seccion22/seccion22-view.component';
 import { Seccion22FormComponent } from '../components/seccion22/seccion22-form.component';
 import { Seccion22FormWrapperComponent } from '../components/forms/seccion22-form-wrapper.component';
-import { Seccion23Component } from '../components/seccion23/seccion23.component';
+import { Seccion23ViewComponent } from '../components/seccion23/seccion23-view.component';
+import { Seccion23FormWrapperComponent } from '../components/forms/seccion23-form-wrapper.component';
 import { Seccion24Component } from '../components/seccion24/seccion24.component';
 
 // ✅ Updated: Seccion17, 18, 19 use ViewComponent + FormWrapperComponent pattern
@@ -51,7 +52,8 @@ const GROUP_B_COMPONENTS = [
   Seccion22ViewComponent,
   Seccion22FormComponent,
   Seccion22FormWrapperComponent,
-  Seccion23Component,
+  Seccion23ViewComponent,
+  Seccion23FormWrapperComponent,
   Seccion24Component,
 ];
 
@@ -85,7 +87,8 @@ const GROUP_B_COMPONENTS = [
     Seccion22ViewComponent,
     Seccion22FormComponent,
     Seccion22FormWrapperComponent,
-    Seccion23Component,
+    Seccion23ViewComponent,
+    Seccion23FormWrapperComponent,
     Seccion24Component,
   ],
   exports: [
@@ -116,7 +119,8 @@ const GROUP_B_COMPONENTS = [
     Seccion22ViewComponent,
     Seccion22FormComponent,
     Seccion22FormWrapperComponent,
-    Seccion23Component,
+    Seccion23ViewComponent,
+    Seccion23FormWrapperComponent,
     Seccion24Component,
   ]
 })

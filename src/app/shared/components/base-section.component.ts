@@ -351,7 +351,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     // ✅ Actualizar this.datos localmente PRIMERO para que esté disponible inmediatamente
     // Esto evita que otros campos se vacíen cuando se re-renderiza el componente
     this.datos[fieldId] = value;
-    
+    // No logging ruidoso por defecto
     const injector = this.injector;
     this.persistence.persistFieldChange(
       injector,
@@ -359,6 +359,19 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       fieldId,
       value
     );
+
+    // Además de persistir en FormularioService y ProjectState, asegurar que el FormState
+    // y SectionSyncService sean notificados inmediatamente para actualizar view/components
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = injector.get(FormChangeServiceToken, null);
+      if (formChange) {
+        // Persistir en FormStateService y notificar sección (notifySync) para que la vista se actualice
+        try { formChange.persistFields(this.seccionId, 'text', { [fieldId]: value }, { notifySync: true }); } catch (e) {}
+      }
+    } catch (e) {
+      // No bloquear si no está disponible
+    }
 
     if (options?.refresh ?? true) {
       this.actualizarDatos();

@@ -477,14 +477,14 @@ li {
   background-color: var(--highlight-color); */
 }
 
-/* ✅ Resaltado amarillo para TODOS los campos con datos (manual y section) */
+/* ✅ Resaltado desactivado por defecto: quitar fondo amarillo, mantener énfasis ligero */
 .data-manual.has-data,
 .data-section.has-data {
-  font-weight: bold;
-  color: var(--highlight-text);
-  background-color: var(--highlight-color);
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-weight: 600;
+  color: inherit;
+  background-color: transparent; /* eliminar color de fondo */
+  padding: 0; /* quitar padding asociado al resaltado */
+  border-radius: 0;
 }
 
 /* Campos sin datos no tienen resaltado */

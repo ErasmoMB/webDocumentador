@@ -86,7 +86,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion21FormWrapper: () => import('src/app/shared/components/forms/seccion21-form-wrapper.component').then(m => m.Seccion21FormWrapperComponent as unknown as Type<any>),
     seccion22View: () => import('src/app/shared/components/seccion22/seccion22-view.component').then(m => m.Seccion22ViewComponent as unknown as Type<any>),
     seccion22: () => import('src/app/shared/components/forms/seccion22-form-wrapper.component').then(m => m.Seccion22FormWrapperComponent as unknown as Type<any>),
-    seccion23: () => import('src/app/shared/components/seccion23/seccion23.component').then(m => m.Seccion23Component as unknown as Type<any>),
+    seccion23: () => import('src/app/shared/components/forms/seccion23-form-wrapper.component').then(m => m.Seccion23FormWrapperComponent as unknown as Type<any>),
+    seccion23View: () => import('src/app/shared/components/seccion23/seccion23-view.component').then(m => m.Seccion23ViewComponent as unknown as Type<any>),
     seccion24: () => import('src/app/shared/components/seccion24/seccion24.component').then(m => m.Seccion24Component as unknown as Type<any>),
     seccion25: () => import('src/app/shared/components/seccion25/seccion25.component').then(m => m.Seccion25Component as unknown as Type<any>),
     seccion26: () => import('src/app/shared/components/seccion26/seccion26.component').then(m => m.Seccion26Component as unknown as Type<any>),
@@ -551,7 +552,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       return { loader: this.componentLoaders.seccion22View, inputs };
     }
     // Para las demás secciones B.X, usar componentes existentes (pendiente refactorizar a View)
-    if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23, inputs };
+    if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23View, inputs };
     if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24, inputs };
     if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
     if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders.seccion26, inputs };

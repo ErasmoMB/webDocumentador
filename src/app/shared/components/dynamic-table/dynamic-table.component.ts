@@ -352,6 +352,14 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     if (!tablaKeyActual) {
       return;
     }
+
+    // Special handling for Hombres/Mujeres tables (based on base config tablaKey)
+    if (this.config && (this.config.tablaKey === 'peaDistritoSexoTabla' || this.config.tablaKey === 'peaOcupadaDesocupadaTabla')) {
+      const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
+      this.tableFacade.calcularPorcentajesPorSexo(this.datos, configConTablaKey);
+      return;
+    }
+
     if (this.calculationStrategy) {
       const tipoCalculo = this.calculationStrategy.obtenerTipoCalculo(this.config);
       const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
@@ -373,6 +381,7 @@ export class DynamicTableComponent implements OnInit, OnChanges {
                                       (this.config.calcularPorcentajes !== false);
       const debeCalcularTotales = !!this.config.campoTotal;
       const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
+
       if (debeCalcularPorcentajes && debeCalcularTotales) {
         this.tableFacade.calcularTotalesYPorcentajes(this.datos, configConTablaKey);
       } else if (debeCalcularPorcentajes) {
@@ -392,6 +401,8 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     }
     const columna = this.columns.find(col => col.field === field);
     const valorValidado = this.validarYNormalizarValor(columna, value);
+    // Validación aplicada, no logging por defecto
+    
     this.cachedTableData = [];
     this.lastTablaKey = '';
     if (this.customFieldChangeHandler) {
@@ -432,28 +443,47 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   }
 
   private persistirTablaConLog(tablaKey: string, tablaCopia: any[]): void {
+    // Normalizar cualquier campo que venga en formato { value: X, isCalculated: boolean }
+    const tablaNormalizada = tablaCopia.map((row: any) => {
+      const r: any = {};
+      for (const k of Object.keys(row)) {
+        const v = row[k];
+        r[k] = (v && typeof v === 'object' && v.value !== undefined) ? v.value : v;
+      }
+      return r;
+    });
+
+    // Persistiendo tabla (normalizada). No logging por defecto
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
-    const payload: Record<string, any> = { [tablaKey]: tablaCopia };
-    if (tablaKeyBase && tablaKeyBase !== tablaKey) payload[tablaKeyBase] = tablaCopia;
+    const payload: Record<string, any> = { [tablaKey]: tablaNormalizada };
+    if (tablaKeyBase && tablaKeyBase !== tablaKey) payload[tablaKeyBase] = tablaNormalizada;
     this.formChange.persistFields(this.sectionId, 'table', payload);
     try {
       const sectionSync = (this as any).injector?.get?.(require('src/app/core/services/state/section-sync.service').SectionSyncService, null);
       if (sectionSync) {
-        const notifyPayload: Record<string, any> = { [tablaKey]: tablaCopia };
-        if (tablaKeyBase && tablaKeyBase !== tablaKey) notifyPayload[tablaKeyBase] = tablaCopia;
+        const notifyPayload: Record<string, any> = { [tablaKey]: tablaNormalizada };
+        if (tablaKeyBase && tablaKeyBase !== tablaKey) notifyPayload[tablaKeyBase] = tablaNormalizada;
         try {
           const prefixed = require('src/app/shared/utils/prefix-manager').PrefixManager.getFieldKey(this.sectionId, tablaKey);
-          notifyPayload[prefixed] = tablaCopia;
-          if (tablaKeyBase && tablaKeyBase !== prefixed) notifyPayload[tablaKeyBase] = tablaCopia;
+          notifyPayload[prefixed] = tablaNormalizada;
+          if (tablaKeyBase && tablaKeyBase !== prefixed) notifyPayload[tablaKeyBase] = tablaNormalizada;
         } catch {}
+        // Notify SectionSyncService without logging here
         sectionSync.notifyChanges(this.sectionId, notifyPayload);
       }
-    } catch (e) {}
+    } catch (e) { console.error('[DynamicTable] persistirTablaConLog error', e); }
+  }
+
+  private shouldLogTabla(tablaKey: string): boolean {
+    if (!tablaKey) return false;
+    // Sólo habilitar logs para el primer cuadro (PET)
+    return tablaKey.toString().includes('petGruposEdadAISI');
   }
 
   private validarYNormalizarValor(columna: TableColumn | undefined, value: any): any {
     if (!columna) return value;
-    const dataType = columna.dataType || 'string';
+    // Prefer explicit dataType, fallback to column.type used in templates
+    const dataType = columna.dataType || (columna as any).type || 'string';
     switch (dataType) {
       case 'number':
         const num = parseFloat(value);
