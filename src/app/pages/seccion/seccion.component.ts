@@ -532,8 +532,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esSubseccionAISD(seccionId, 10)) return { loader: this.componentLoaders.seccion14View, inputs };
     if (this.esSubseccionAISD(seccionId, 11)) return { loader: this.componentLoaders.seccion15, inputs };
     if (this.esSubseccionAISD(seccionId, 12)) return { loader: this.componentLoaders.seccion16View, inputs };
-    if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders.seccion17, inputs };
-    if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders.seccion18, inputs };
+    if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders.seccion17View, inputs };
+    if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders.seccion18View, inputs };
     if (this.esSubseccionAISD(seccionId, 15)) return { loader: this.componentLoaders.seccion19, inputs };
     if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20, inputs };
 
@@ -875,7 +875,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esSeccionAISDOAISI(this.seccionId)) {
       this.puedeIrSiguiente = this.sectionFlowNavigation.hasNextSection(this.seccionId);
       this.puedeIrAnterior = this.sectionFlowNavigation.hasPreviousSection(this.seccionId);
-      this.esUltimaSeccion = !this.puedeIrSiguiente; // Es última si no hay siguiente
+      // "Ver Plantilla" solo se muestra en la última sección AISI (B.X.9 del último grupo AISI)
+      // En AISD siempre muestra "Siguiente" aunque sea la última subsección
+      this.esUltimaSeccion = this.sectionFlowNavigation.isEndOfAISIFlow(this.seccionId);
       return;
     }
 

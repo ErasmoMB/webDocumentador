@@ -176,14 +176,53 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
     }
 
     obtenerTituloIDH(): string {
-        return 'CUADRO N° 3.21';
+        const data = this.allSectionData();
+        const prefijo = this.obtenerPrefijoGrupo();
+        
+        // ✅ PRIMERO: Intentar leer el título personalizado guardado en el formulario
+        const tituloFieldId = prefijo ? `tituloIDH${prefijo}` : 'tituloIDH';
+        const tituloPersonalizado = data[tituloFieldId] || data['tituloIDH'];
+        
+        // Si hay un título personalizado, retornarlo
+        if (tituloPersonalizado && tituloPersonalizado.trim() !== '') {
+            return tituloPersonalizado;
+        }
+        
+        // ✅ FALLBACK: Generar título dinámico si no hay personalizado
+        let nombreComunidad = '____';
+        
+        // Obtener nombre de comunidad según prefijo (A.1, A.2, etc.)
+        if (prefijo && prefijo.includes('.1')) {
+            const match = prefijo.match(/A\.(\d+)/);
+            if (match) {
+                const grupoIdx = parseInt(match[1], 10) - 1;
+                const comunidades = data['comunidadesCampesinas'] || [];
+                if (comunidades[grupoIdx]) {
+                    nombreComunidad = comunidades[grupoIdx].nombre || '____';
+                }
+            }
+        }
+        
+        if (!prefijo) {
+            nombreComunidad = data['distritoSeleccionado'] || '____';
+            return `Componentes del Índice de Desarrollo Humano – ${nombreComunidad} (2019)`;
+        }
+        
+        // Generar número de cuadro dinámico basado en el prefijo
+        const grupoMatch = prefijo.match(/[AB]\.(\d+)/);
+        if (!grupoMatch) {
+            return `Componentes del Índice de Desarrollo Humano – ${nombreComunidad} (2019)`;
+        }
+        
+        return `Componentes del Índice de Desarrollo Humano – CC ${nombreComunidad} (2019)`;
     }
 
     obtenerFuenteIDH(): string {
         const data = this.allSectionData();
         const prefijo = this.obtenerPrefijoGrupo();
         const fuenteField = prefijo ? `fuenteIDH${prefijo}` : 'fuenteIDH';
-        return data[fuenteField] || data['fuenteIDH'] || '____';
+        const fuente = data[fuenteField] || data['fuenteIDH'] || '';
+        return fuente && fuente.trim() !== '' ? fuente : 'PNUD Informe 2019';
     }
 
     // === UTILIDADES ===

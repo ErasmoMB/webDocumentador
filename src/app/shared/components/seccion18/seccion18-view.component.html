@@ -2,7 +2,7 @@
   <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
   <div [innerHTML]="getTextoNBIConResaltado()"></div>
 
-  <app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CC {{ getNombreComunidad() }} (2017)" sectionId="3.1.4.A.1.14">
+  <app-table-wrapper [title]="getTituloNbiCC()" sectionId="3.1.4.A.1.14">
     <app-generic-table
       [data]="getNbiCCAyrocaConPorcentajes()"
       [config]="{
@@ -17,9 +17,9 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'" [fieldName]="'textoNecesidadesBasicasInsatisfechas'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+  <p class="source">FUENTE: {{ getFuenteNbiCC() }}</p>
 
-  <app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos.distritoSeleccionado || 'Cahuacho' }} (2017)" sectionId="3.1.4.A.1.14">
+  <app-table-wrapper [title]="getTituloNbiDistrito()" sectionId="3.1.4.A.1.14">
     <app-generic-table
       [data]="getNbiDistritoCahuachoConPorcentajes()"
       [config]="{
@@ -34,7 +34,7 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017</span></p>
+  <p class="source">FUENTE: {{ getFuenteNbiDistrito() }}</p>
 
   <app-image-upload
       [modoVista]="true"

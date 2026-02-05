@@ -207,4 +207,44 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
     private escapeRegex(text: string): string {
         return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
+
+    // ✅ Métodos para obtener títulos y fuentes editables (como en seccion17)
+
+    getTituloNbiCC(): string {
+        const data = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldId = prefijo ? `tituloNbiCC${prefijo}` : 'tituloNbiCC';
+        const titulo = (data as any)[fieldId];
+        if (titulo && String(titulo).trim() !== '') return titulo;
+        const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(data, 'grupoAISD', this.seccionId) || 'Ayroca';
+        return `Necesidades Básicas Insatisfechas (NBI) según población – CC ${grupoAISD} (2017)`;
+    }
+
+    getFuenteNbiCC(): string {
+        const data = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldId = prefijo ? `fuenteNbiCC${prefijo}` : 'fuenteNbiCC';
+        const fuente = (data as any)[fieldId];
+        if (fuente && String(fuente).trim() !== '') return fuente;
+        return 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
+    }
+
+    getTituloNbiDistrito(): string {
+        const data = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldId = prefijo ? `tituloNbiDistrito${prefijo}` : 'tituloNbiDistrito';
+        const titulo = (data as any)[fieldId];
+        if (titulo && String(titulo).trim() !== '') return titulo;
+        const distrito = (data as any).distritoSeleccionado || 'Cahuacho';
+        return `Tipos de NBI existentes – Distrito ${distrito} (2017)`;
+    }
+
+    getFuenteNbiDistrito(): string {
+        const data = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldId = prefijo ? `fuenteNbiDistrito${prefijo}` : 'fuenteNbiDistrito';
+        const fuente = (data as any)[fieldId];
+        if (fuente && String(fuente).trim() !== '') return fuente;
+        return 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017';
+    }
 }

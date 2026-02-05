@@ -19,7 +19,7 @@
     <input
       type="text"
       class="form-control"
-      [value]="obtenerTituloIDH()"
+      [(ngModel)]="datos[getTituloIDHField()]"
       (change)="onTituloIDHChange($event)"
       placeholder="Componentes del IDH – Distrito ____">
   </div>
@@ -52,7 +52,7 @@
     <input
       type="text"
       class="form-control"
-      [value]="obtenerFuenteIDH()"
+      [(ngModel)]="datos[getFuenteIDHField()]"
       (change)="onFuenteIDHChange($event)"
       placeholder="PNUD, 2019">
   </div>

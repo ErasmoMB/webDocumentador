@@ -12,7 +12,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of getEditableRows(); let i = index; trackBy: trackByIndexAndValue">
+      <tr *ngFor="let item of getEditableRows(); let i = index; trackBy: trackByIndex">
         <td *ngFor="let col of columns" [attr.data-label]="col.label">
           <!-- Modo vista: mostrar solo texto -->
           <span *ngIf="modoVista">{{ getFormattedValue(item, col) }}</span>

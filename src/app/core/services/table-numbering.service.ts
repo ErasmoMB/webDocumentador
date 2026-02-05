@@ -32,8 +32,14 @@ export class TableNumberingService {
     ['3.1.4.A.1.6', 1],  // Sección 10: A.1.6 - 1 tabla
     ['3.1.4.A.1.7', 1],  // Sección 11: A.1.7 - 1 tabla
     ['3.1.4.A.1.8', 6],  // Sección 12: A.1.8 - 6 tablas (salud, estudiantes, IE Ayroca, IE 40270, alumnos Ayroca, alumnos 40270)
-    // AISD (A.1.1 a A.1.20) - se registrarán dinámicamente
-    // AISI (B.1.1 a B.1.15) - se registrarán dinámicamente
+    ['3.1.4.A.1.9', 0],  // A.1.9 - se registrará dinámicamente
+    ['3.1.4.A.1.10', 0], // A.1.10 - se registrará dinámicamente
+    ['3.1.4.A.1.11', 0], // A.1.11 - se registrará dinámicamente
+    ['3.1.4.A.1.12', 0], // A.1.12 - se registrará dinámicamente
+    ['3.1.4.A.1.13', 1], // A.1.13 (seccion17 - IDH) - 1 tabla
+    ['3.1.4.A.1.14', 0], // A.1.14 - se registrará dinámicamente
+    ['3.1.4.A.1.15', 0], // A.1.15 - se registrará dinámicamente
+    ['3.1.4.A.1.16', 0], // A.1.16 - se registrará dinámicamente
   ]);
 
   /**
@@ -86,7 +92,7 @@ export class TableNumberingService {
       '3.1.4.A.1.10', // A.1.10
       '3.1.4.A.1.11', // A.1.11
       '3.1.4.A.1.12', // A.1.12
-      '3.1.4.A.1.13', // A.1.13
+      '3.1.4.A.1.13', // A.1.13 (seccion17 - IDH)
       '3.1.4.A.1.14', // A.1.14
       '3.1.4.A.1.15', // A.1.15
       '3.1.4.A.1.16', // A.1.16
