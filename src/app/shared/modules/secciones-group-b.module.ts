@@ -17,7 +17,9 @@ import { Seccion18FormWrapperComponent } from '../components/forms/seccion18-for
 import { Seccion19ViewComponent } from '../components/seccion19/seccion19-view.component';
 import { Seccion19FormComponent } from '../components/seccion19/seccion19-form.component';
 import { Seccion19FormWrapperComponent } from '../components/forms/seccion19-form-wrapper.component';
-import { Seccion20Component } from '../components/seccion20/seccion20.component';
+import { Seccion20ViewComponent } from '../components/seccion20/seccion20-view.component';
+import { Seccion20FormComponent } from '../components/seccion20/seccion20-form.component';
+import { Seccion20FormWrapperComponent } from '../components/forms/seccion20-form-wrapper.component';
 import { Seccion21Component } from '../components/seccion21/seccion21.component';
 import { Seccion22Component } from '../components/seccion22/seccion22.component';
 import { Seccion23Component } from '../components/seccion23/seccion23.component';
@@ -36,7 +38,9 @@ const GROUP_B_COMPONENTS = [
   Seccion18FormWrapperComponent,
   Seccion19ViewComponent,
   Seccion19FormWrapperComponent,
-  Seccion20Component,
+  Seccion20ViewComponent,
+  Seccion20FormComponent,
+  Seccion20FormWrapperComponent,
   Seccion21Component,
   Seccion22Component,
   Seccion23Component,
@@ -64,7 +68,9 @@ const GROUP_B_COMPONENTS = [
     Seccion19ViewComponent,
     Seccion19FormComponent,
     Seccion19FormWrapperComponent,
-    Seccion20Component,
+    Seccion20ViewComponent,
+    Seccion20FormComponent,
+    Seccion20FormWrapperComponent,
     Seccion21Component,
     Seccion22Component,
     Seccion23Component,
@@ -89,7 +95,9 @@ const GROUP_B_COMPONENTS = [
     Seccion19ViewComponent,
     Seccion19FormComponent,
     Seccion19FormWrapperComponent,
-    Seccion20Component,
+    Seccion20ViewComponent,
+    Seccion20FormComponent,
+    Seccion20FormWrapperComponent,
     Seccion21Component,
     Seccion22Component,
     Seccion23Component,

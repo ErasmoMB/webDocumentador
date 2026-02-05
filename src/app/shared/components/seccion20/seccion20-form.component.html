@@ -1,50 +1,23 @@
-<div *ngIf="!modoFormulario">
-<h5>A.1.16. Festividades, Costumbres y Turismo</h5>
-<div [innerHTML]="obtenerTextoFestividadesConResaltado()"></div>
-
-<app-table-wrapper title="Festividades principales – CC {{ obtenerNombreComunidadActual() }}" sectionId="3.1.4.A.1.16">
-<app-generic-table
-  [data]="getTablaFestividades()"
-  [config]="{
-    columns: [
-      { key: 'festividad', header: 'Festividad', align: 'left' },
-      { key: 'fecha', header: 'Fecha', align: 'left' }
-    ],
-    showFooter: false,
-    striped: true,
-    hover: true
-  }">
-</app-generic-table>
-</app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
-
-<app-image-upload
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="getFotografiasFestividadesVista()"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
-</app-image-upload>
-</div>
-
-<div *ngIf="modoFormulario" class="seccion-formulario-content">
+<div class="seccion-formulario-content">
   <div class="form-group-section">
     <h4 class="section-title">A.1.16. Festividades, Costumbres y Turismo</h4>
-    
+
     <div class="form-group-section mt-lg">
       <h4 class="section-title">Editar Párrafos</h4>
-      
+
       <app-paragraph-editor
         [fieldId]="getFieldIdTextoFestividades()"
         label="Festividades, Costumbres y Turismo - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="8"
-        [value]="obtenerTextoFestividades()"
+        [value]="textoSignal()"
         (valueChange)="onFieldChange(getFieldIdTextoFestividades(), $event)">
       </app-paragraph-editor>
+    </div>
+
+    <div class="form-field mt-xl">
+      <label class="label">Título - Tabla Festividades</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[getTituloFestividadesField()]" (change)="onTituloFestividadesChange($event)" placeholder="Festividades principales – CC {{ obtenerNombreComunidadActual() }}">
     </div>
 
     <div class="form-field mt-xl">
@@ -64,9 +37,14 @@
     </div>
 
     <div class="form-field mt-lg">
+      <label class="label">Fuente - Tabla Festividades</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[getFuenteFestividadesField()]" (change)="onFuenteFestividadesChange($event)" placeholder="GEADES (2024)">
+    </div>
+
+    <div class="form-field mt-lg">
       <label class="label">Fotografías de Festividades</label>
       <app-image-upload
-        [fotografias]="fotografiasFormMulti"
+        [fotografias]="fotosSignal()"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX"
         [permitirMultiples]="true"
@@ -83,4 +61,3 @@
     </div>
   </div>
 </div>
-

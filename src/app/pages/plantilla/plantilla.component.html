@@ -54,7 +54,14 @@
       </div>
     </div>
     
-    <app-seccion20 [seccionId]="'3.1.4.A.1.16'" [modoFormulario]="false"></app-seccion20>
+    <div class="seccion-container" style="display: flex; gap: 20px; margin-bottom: 40px; border-bottom: 1px solid #ddd; padding-bottom: 20px;">
+      <div class="seccion-view" style="flex: 1; min-width: 0; border-right: 1px solid #eee; padding-right: 20px;">
+        <app-seccion20-view [seccionId]="'3.1.4.A.1.16'" [modoFormulario]="false"></app-seccion20-view>
+      </div>
+      <div class="seccion-form" style="flex: 1; min-width: 0;">
+        <app-seccion20-form-wrapper [seccionId]="'3.1.4.A.1.16'"></app-seccion20-form-wrapper>
+      </div>
+    </div>
     
     <app-seccion21 [seccionId]="'3.1.4.B.1'" [modoFormulario]="false"></app-seccion21>
     

@@ -78,7 +78,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion19: () => import('src/app/shared/components/seccion19/seccion19-form.component').then(m => m.Seccion19FormComponent as unknown as Type<any>),
     seccion19FormWrapper: () => import('src/app/shared/components/forms/seccion19-form-wrapper.component').then(m => m.Seccion19FormWrapperComponent as unknown as Type<any>),
     seccion19View: () => import('src/app/shared/components/seccion19/seccion19-view.component').then(m => m.Seccion19ViewComponent as unknown as Type<any>),
-    seccion20: () => import('src/app/shared/components/seccion20/seccion20.component').then(m => m.Seccion20Component as unknown as Type<any>),
+    seccion20: () => import('src/app/shared/components/seccion20/seccion20-form.component').then(m => m.Seccion20FormComponent as unknown as Type<any>),
+    seccion20FormWrapper: () => import('src/app/shared/components/forms/seccion20-form-wrapper.component').then(m => m.Seccion20FormWrapperComponent as unknown as Type<any>),
+    seccion20View: () => import('src/app/shared/components/seccion20/seccion20-view.component').then(m => m.Seccion20ViewComponent as unknown as Type<any>),
     seccion21: () => import('src/app/shared/components/seccion21/seccion21.component').then(m => m.Seccion21Component as unknown as Type<any>),
     seccion22: () => import('src/app/shared/components/seccion22/seccion22.component').then(m => m.Seccion22Component as unknown as Type<any>),
     seccion23: () => import('src/app/shared/components/seccion23/seccion23.component').then(m => m.Seccion23Component as unknown as Type<any>),
@@ -537,7 +539,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders.seccion17View, inputs };
     if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders.seccion18View, inputs };
     if (this.esSubseccionAISD(seccionId, 15)) return { loader: this.componentLoaders.seccion19View, inputs };
-    if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20, inputs };
+    if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20View, inputs };
 
     // ✅ AISI: Subsecciones dinámicas (B.1.X, B.2.X, B.3.X, etc.)
     if (this.esSubseccionAISI(seccionId, 1)) return { loader: this.componentLoaders.seccion22, inputs };
@@ -720,7 +722,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: aisd(13), loader: this.componentLoaders.seccion17FormWrapper, inputs: withSeccionId },
       { matches: aisd(14), loader: this.componentLoaders.seccion18FormWrapper, inputs: withSeccionId },
       { matches: aisd(15), loader: this.componentLoaders.seccion19FormWrapper, inputs: withSeccionId },
-      { matches: aisd(16), loader: this.componentLoaders.seccion20, inputs: withModoFormulario },
+      { matches: aisd(16), loader: this.componentLoaders.seccion20FormWrapper, inputs: withModoFormulario },
 
       { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders.seccion22, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders.seccion23, inputs: withModoFormulario },
