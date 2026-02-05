@@ -14,14 +14,16 @@ import { Seccion17FormWrapperComponent } from '../components/forms/seccion17-for
 import { Seccion18ViewComponent } from '../components/seccion18/seccion18-view.component';
 import { Seccion18FormComponent } from '../components/seccion18/seccion18-form.component';
 import { Seccion18FormWrapperComponent } from '../components/forms/seccion18-form-wrapper.component';
-import { Seccion19Component } from '../components/seccion19/seccion19.component';
+import { Seccion19ViewComponent } from '../components/seccion19/seccion19-view.component';
+import { Seccion19FormComponent } from '../components/seccion19/seccion19-form.component';
+import { Seccion19FormWrapperComponent } from '../components/forms/seccion19-form-wrapper.component';
 import { Seccion20Component } from '../components/seccion20/seccion20.component';
 import { Seccion21Component } from '../components/seccion21/seccion21.component';
 import { Seccion22Component } from '../components/seccion22/seccion22.component';
 import { Seccion23Component } from '../components/seccion23/seccion23.component';
 import { Seccion24Component } from '../components/seccion24/seccion24.component';
 
-// ✅ Updated: Seccion17 & 18 use ViewComponent + FormWrapperComponent pattern
+// ✅ Updated: Seccion17, 18, 19 use ViewComponent + FormWrapperComponent pattern
 const GROUP_B_COMPONENTS = [
   Seccion13FormWrapperComponent,
   Seccion14FormWrapperComponent,
@@ -32,7 +34,8 @@ const GROUP_B_COMPONENTS = [
   Seccion17FormWrapperComponent,
   Seccion18ViewComponent,
   Seccion18FormWrapperComponent,
-  Seccion19Component,
+  Seccion19ViewComponent,
+  Seccion19FormWrapperComponent,
   Seccion20Component,
   Seccion21Component,
   Seccion22Component,
@@ -58,7 +61,9 @@ const GROUP_B_COMPONENTS = [
     Seccion18ViewComponent,
     Seccion18FormComponent,
     Seccion18FormWrapperComponent,
-    Seccion19Component,
+    Seccion19ViewComponent,
+    Seccion19FormComponent,
+    Seccion19FormWrapperComponent,
     Seccion20Component,
     Seccion21Component,
     Seccion22Component,
@@ -81,7 +86,9 @@ const GROUP_B_COMPONENTS = [
     Seccion18ViewComponent,
     Seccion18FormComponent,
     Seccion18FormWrapperComponent,
-    Seccion19Component,
+    Seccion19ViewComponent,
+    Seccion19FormComponent,
+    Seccion19FormWrapperComponent,
     Seccion20Component,
     Seccion21Component,
     Seccion22Component,

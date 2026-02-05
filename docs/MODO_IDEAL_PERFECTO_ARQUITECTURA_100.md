@@ -594,6 +594,118 @@ readonly tablaSaludSignal: Signal<any[]> = computed(() => {
 
 ---
 
+## 🐞 Corrección: Edición de párrafos (ej. Sección 19)
+
+Problema
+- La edición del párrafo no se reflejaba en la vista previa o quedaba bloqueada hasta que se realizaba otra acción (ej. agregar fila en una tabla).
+
+Causa raíz
+- El form-wrapper no estaba registrado correctamente en el helper de ViewChild, por lo que no era posible forzar la recarga del componente de vista.
+- La clave usada en la vista no siempre coincidía con la clave persistida (problemas de prefijo de grupo).
+- En algunos puntos, la sincronización automática sobrescribía campos locales durante la edición.
+
+Implementación (pasos concretos)
+1. Registrar el componente en el wrapper (ej.: `@ViewChild(Seccion19FormComponent)` + `ViewChildHelper.registerComponent('seccion19', this)` en `ngOnInit`).
+2. Usar `PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)` para construir `fieldId` (un solo lugar de verdad para los prefijos).
+3. El `ParagraphEditor` debe emitir `(valueChange)` y el handler del form debe llamar `onFieldChange(fieldId, value)` para persistir vía `SectionPersistenceCoordinator`.
+4. Evitar sobrescribir campos en edición: marcar campos en foco (`editingFlag`) y hacer que `SectionReactiveSyncCoordinator` no actualice campos que estén en edición activa.
+
+Checklist (PR mínimo)
+- [ ] Form-wrapper registra la instancia del componente.
+- [ ] View usa `PrefijoHelper` para los `fieldId` dependientes de grupo.
+- [ ] `ParagraphEditor` emite `valueChange` y el form llama `onFieldChange()`.
+- [ ] `SectionReactiveSyncCoordinator` respeta `isFieldBeingEdited()`.
+
+---
+
+## 🐞 Corrección: Edición de tablas (ej. Sección 19)
+
+Problema
+- Ediciones en la tabla a veces no se veían en la vista o se perdían al recargar cuando existían claves con prefijo de grupo.
+
+Causa raíz
+- Inconsistencia entre clave con prefijo y clave base al persistir. Algunas inicializaciones usaban ceros (`0`) que aparecían como placeholders y bloqueaban flujos lógicos.
+- El código de sincronización no siempre unía correctamente `selectField` y `selectTableData`, lo que provocaba que la vista y el formulario leyeran orígenes distintos.
+
+Implementación (pasos concretos)
+1. Al persistir la tabla siempre incluir en el payload tanto la `tablaKey` con prefijo como la `tablaKeyBase` (si son distintas). Ej.:
+```ts
+this.formChange.persistFields(this.seccionId, 'table', { [tablaKeyPref]: datos, [tablaKeyBase]: datos });
+this.projectFacade.setField(this.seccionId, null, tablaKeyBase, datos);
+```
+2. `estructuraInicial` debe usar `''` en campos que deben mostrarse vacíos por defecto (evitar `0`/`0%`).
+3. En el `Form-component` tener un `effect()` que una `formDataSignal()` con las tablas: `fromField ?? fromTable ?? estructuraInicial`.
+4. `DynamicTable.getFormattedValue()` debe ocultar `0`/`0%` y mostrar `''` para celdas vacías; `validarYNormalizarValor()` debe devolver valores saneados (números dentro de rango, porcentajes 0-100).
+5. Evitar race conditions en `obtenerTablaKeyConPrefijo()` (usar `lastTablaKey` solo si apunta a un array válido y con contenido real).
+
+Checklist (PR mínimo)
+- [ ] Persistir ambas claves (prefijo + base) al guardar tablas.
+- [ ] `estructuraInicial` con `''` en campos sensibles.
+- [ ] `Form-component` effect que merge `formDataSignal()` y tablas (`selectField`/`selectTableData`).
+- [ ] `DynamicTable` normaliza valores y oculta placeholders numéricos.
+
+---
+
+## 🐞 Corrección: Sincronización inmediata de imágenes y metadatos (título/fuente)
+
+Problema
+- Subir/editar/eliminar imágenes o editar título/fuente no siempre actualizaba la vista inmediatamente (se necesitaba recargar la página).
+
+Causa raíz
+- Algunas cargas de imágenes leían directamente de almacenamiento (localStorage) u otras rutas fuera de los Signals; algunos componentes no eran forzados a recargar.
+
+Implementación (pasos concretos)
+1. `ImageStorageService.saveImages()` debe:
+   - Persistir vía `projectFacade.setFields` y `formChange.persistFields`.
+   - Llamar `stateAdapter.refreshFromStorage()` para reinyectar datos en `datos$` (ReactiveStateAdapter).
+   - Llamar `ViewChildHelper.updateAllComponents('actualizarDatos')` para forzar recarga de componentes que no dependan directamente de `datos$`.
+2. Señales que exponen fotos deben depender de `projectFacade.selectSectionFields(this.seccionId, null)()` para forzar re-evaluación cuando cambien campos relevantes.
+3. Handlers de título/fuente: persisten con `onFieldChange()` y llaman a `ViewChildHelper.updateAllComponents('actualizarDatos')` si aplica.
+
+Checklist (PR mínimo)
+- [ ] `saveImages()` persiste + `stateAdapter.refreshFromStorage()` + `ViewChildHelper.updateAllComponents('actualizarDatos')`.
+- [ ] Señales de fotos y metadatos dependen de `selectSectionFields()`.
+- [ ] Handlers de título/fuente persisten y forzan `updateAllComponents`.
+
+---
+
+## ✅ Normativa PR / Tests (resumen rápido)
+- En cada PR que modifique tables/paragraphs/photos incluir:
+  - Snippet de `effect()` que hace merge (`formDataSignal()` + tablas).
+  - Tests unitarios para `DynamicTable` (normalización y renderizado de placeholders).
+  - Test E2E que cubra: crear fila, editar título/fuente, persistir, y verificar vista sin recargar.
+
+---
+
+
+---
+
+
+## 🐞 Corrección: Sincronización inmediata de imágenes y edición de título/fuente (detalle técnico)
+
+**Síntoma:** Tras subir, editar o eliminar una fotografía (o editar título/fuente), los cambios se persistían pero NO se veían en la vista hasta recargar la página.
+
+**Causa raíz:** Las operaciones guardaban correctamente en FormularioService y en ProjectState, pero los componentes de vista no se re-evaluaban automáticamente en todos los puntos (la carga de fotografías dependía de accesos directos a localStorage en lugar de los signals y algunos componentes no eran forzados a recargar).
+
+**Qué se cambió exactamente (resumen y archivos):**
+- `ImageStorageService.saveImages()` → ya persiste con `projectFacade.setFields` y `formChange.persistFields`, y además llama a `this.stateAdapter.refreshFromStorage()` y a `ViewChildHelper.updateAllComponents('actualizarDatos')` para forzar re-evaluaciones en caliente (archivo: `src/app/core/services/images/image-storage.service.ts`).
+- `ViewChildHelper.updateAllComponents()` → ahora, al invocar `actualizarDatos`, además intenta llamar `cargarFotografias()` en componentes que lo soporten y marca sus `cdRef` con `markForCheck()` para asegurar que la vista preview se refresque (archivo: `src/app/shared/utils/view-child-helper.ts`).
+- `ImageUploadComponent` → tras subir o eliminar imágenes guarda vía `imageFacade.saveImages()` y llama a `ViewChildHelper.updateAllComponents('actualizarDatos')` (archivo: `src/app/shared/components/image-upload/image-upload.component.ts`).
+- Señales de fotos en Sección 19 (form y view) → ahora delegan a `imageFacade.loadImages()` y además referencian `projectFacade.selectSectionFields(this.seccionId, null)()` para que el computed se re-evalúe cuando cambien campos de la sección (archivos: `src/app/shared/components/seccion19/seccion19-form.component.ts` y `seccion19-view.component.ts`).
+- Handlers de título/fuente → después de persistir (via `onFieldChange`) invocan `ViewChildHelper.updateAllComponents('actualizarDatos')` para propagar el cambio a la vista.
+- Se eliminaron logs ruidosos y se usa `debugLog()` para trazas opcionales (archivo: `src/app/shared/utils/debug.ts`).
+
+**Por qué esta solución funciona:**
+- `FormChangeService.persistFields()` actualiza `FormStateService` (BehaviorSubject) y `ProjectStateFacade` (store). `ReactiveStateAdapter` está suscrito y publica a `datos$` inmediatamente, por lo que las vistas suscritas se actualizan. Al añadir la llamada explícita a `ViewChildHelper.updateAllComponents('actualizarDatos')` nos aseguramos de cubrir componentes que no dependan directamente de `datos$` (ej. que usan `imageFacade.loadImages()`), forzando su recarga y `cdRef.markForCheck()`.
+
+**Checklist de verificación (manual / E2E):**
+- [ ] Subir imagen → aparece en preview sin recargar.  
+- [ ] Eliminar imagen → desaparece en preview sin recargar.  
+- [ ] Editar Título/Fuente → vista se actualiza inmediatamente.  
+- [ ] Prueba E2E que valide el flujo subir/eliminar y edición de título/fuente.  
+
+**Estado:** 🟢 Corregido y documentado.
+
 **Estado:** 🟢 LISTO PARA SECCIÓN 12+  
 **Conformidad:** 🟢 100% ARQUITECTURA  
 **Reactividad:** 🟢 100% SIGNALS

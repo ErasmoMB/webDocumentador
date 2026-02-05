@@ -310,7 +310,6 @@ export class DynamicTableComponent implements OnInit, OnChanges {
       return '';
     }
     if (this.lastTablaKey && this.datos[this.lastTablaKey] && Array.isArray(this.datos[this.lastTablaKey])) {
-      console.log('[DT] obtenerTablaKeyConPrefijo using lastTablaKey', { sectionId: this.sectionId, lastTablaKey: this.lastTablaKey, lastTableLen: (this.datos[this.lastTablaKey] || []).length });
       return this.lastTablaKey;
     }
     const tablaKeyConPrefijo = PrefixManager.getFieldKey(this.sectionId, tablaKeyBase);
@@ -633,6 +632,13 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     const value = item[col.field];
     if (col.formatter) {
       return col.formatter(value);
+    }
+    // Ocultar ceros y valores placeholder como '0%' para mostrar celdas vacías
+    if (value === 0) return '';
+    if (typeof value === 'string') {
+      const v = value.trim();
+      if (v === '0' || v === '0%' || v === '0,00 %' || v === '0.00 %') return '';
+      return v;
     }
     return value != null ? String(value) : '';
   }

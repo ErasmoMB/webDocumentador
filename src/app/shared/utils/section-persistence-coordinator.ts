@@ -14,6 +14,8 @@ export class SectionPersistenceCoordinator {
     fieldId: string,
     value: any
   ): void {
+
+
     let valorLimpio: any = value;
     if (value === undefined || value === 'undefined') {
       valorLimpio = '';

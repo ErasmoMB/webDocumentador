@@ -36,10 +36,10 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         camposParaCalcular: ['casos'],
         // Estructura inicial fija (no editable en categorías)
         estructuraInicial: [
-            { categoria: 'Población en Viviendas con características físicas inadecuadas', casos: 0, porcentaje: '0%' },
-            { categoria: 'Población en Viviendas con hacinamiento', casos: 0, porcentaje: '0%' },
-            { categoria: 'Población en Viviendas sin servicios higiénicos', casos: 0, porcentaje: '0%' },
-            { categoria: 'Población en Hogares con niños que no asisten a la escuela', casos: 0, porcentaje: '0%' }
+            { categoria: 'Población en Viviendas con características físicas inadecuadas', casos: '', porcentaje: '' },
+            { categoria: 'Población en Viviendas con hacinamiento', casos: '', porcentaje: '' },
+            { categoria: 'Población en Viviendas sin servicios higiénicos', casos: '', porcentaje: '' },
+            { categoria: 'Población en Hogares con niños que no asisten a la escuela', casos: '', porcentaje: '' }
         ],
         permiteAgregarFilas: false,
         permiteEliminarFilas: false
@@ -54,11 +54,11 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         camposParaCalcular: ['casos'],
         // Estructura inicial fija (no editable en categorías)
         estructuraInicial: [
-            { categoria: 'Viviendas con características físicas inadecuadas', casos: 0, porcentaje: '0%' },
-            { categoria: 'Viviendas con hacinamiento', casos: 0, porcentaje: '0%' },
-            { categoria: 'Viviendas sin servicios higiénicos', casos: 0, porcentaje: '0%' },
-            { categoria: 'Hogares con niños que no asisten a la escuela', casos: 0, porcentaje: '0%' },
-            { categoria: 'Hogares con alta dependencia económica', casos: 0, porcentaje: '0%' }
+            { categoria: 'Viviendas con características físicas inadecuadas', casos: '', porcentaje: '' },
+            { categoria: 'Viviendas con hacinamiento', casos: '', porcentaje: '' },
+            { categoria: 'Viviendas sin servicios higiénicos', casos: '', porcentaje: '' },
+            { categoria: 'Hogares con niños que no asisten a la escuela', casos: '', porcentaje: '' },
+            { categoria: 'Hogares con alta dependencia económica', casos: '', porcentaje: '' }
         ],
         permiteAgregarFilas: false,
         permiteEliminarFilas: false

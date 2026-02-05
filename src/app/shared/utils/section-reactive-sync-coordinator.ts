@@ -88,6 +88,10 @@ export class SectionReactiveSyncCoordinator {
 		const prefijo = host.obtenerPrefijoGrupo();
 
 		Object.keys(changes).forEach(fieldName => {
+			// Si el host indica que el campo está siendo editado activamente, no sobrescribirlo
+			if ((host as any).isFieldBeingEdited && typeof (host as any).isFieldBeingEdited === 'function' && (host as any).isFieldBeingEdited(fieldName)) {
+				return;
+			}
 			const nuevoValor = changes[fieldName];
 			const valorAnterior = host.datos[fieldName];
 

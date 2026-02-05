@@ -1,0 +1,38 @@
+<div class="seccion-vista-content">
+  <h5>A.1.15. Organización social y liderazgo</h5>
+  
+  <!-- ✅ LECTURA REACTIVA DESDE SIGNAL (sin resaltado) -->
+  <p class="text-justify" [innerHTML]="textoOrganizacionPlano"></p>
+
+  <!-- ✅ TABLA DE AUTORIDADES CON NUMERACIÓN DINÁMICA Y TÍTULO EDITABLE -->
+  <app-table-wrapper 
+    [title]="viewModel().tituloAutoridades" 
+    [sectionId]="seccionId">
+    <app-generic-table
+      [data]="getAutoridades()"
+      [config]="{
+        columns: [
+          { key: 'organizacion', header: 'Organización', align: 'left' },
+          { key: 'cargo', header: 'Cargo', align: 'left' },
+          { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  
+  <p class="source">FUENTE: {{ viewModel().fuenteAutoridades }}</p>
+
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

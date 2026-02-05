@@ -230,6 +230,13 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     // temporales que causan la pérdida de valores editados localmente.
     if (datosNuevos && Object.keys(datosNuevos).length > 0) {
       Object.keys(datosNuevos).forEach(key => {
+        // No sobrescribir si el campo está en edición activa (por ejemplo: títulos o fuentes que el usuario está editando)
+        try {
+          if ((this as any).isFieldBeingEdited && typeof (this as any).isFieldBeingEdited === 'function' && (this as any).isFieldBeingEdited(key)) {
+            return;
+          }
+        } catch {}
+
         const valor = datosNuevos[key];
 
         if (Array.isArray(valor)) {

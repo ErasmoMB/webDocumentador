@@ -129,11 +129,23 @@ export class ImageStorageService {
     });
 
     if (Object.keys(updates).length > 0) {
+      // debug: saveImages applying updates
       this.projectFacade.setFields(sectionId, null, updates);
       this.formChange.persistFields(sectionId, 'form', updates);
     }
 
     // ✅ Notificar al ReactiveStateAdapter para actualizar la vista inmediatamente
     this.stateAdapter.refreshFromStorage();
+
+    // ✅ Forzar actualización en todos los componentes registrados (preview y formularios)
+    try {
+      const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
+      if (ViewChildHelper && typeof ViewChildHelper.updateAllComponents === 'function') {
+        // calling ViewChildHelper.updateAllComponents
+        ViewChildHelper.updateAllComponents('actualizarDatos');
+      }
+    } catch (e) {
+      // ignore if helper not available
+    }
   }
 }

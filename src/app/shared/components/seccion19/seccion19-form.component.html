@@ -1,0 +1,84 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.15. Organización social y liderazgo</h4>
+    
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">Editar Párrafo</h4>
+      
+      <app-paragraph-editor
+        [fieldId]="getFieldIdTextoOrganizacion()"
+        label="Organización Social y Liderazgo - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="8"
+        [value]="obtenerTextoOrganizacion()"
+        (valueChange)="onFieldChange(getFieldIdTextoOrganizacion(), $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field mt-xl">
+      <label class="label">Título - Tabla Autoridades</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [(ngModel)]="datos[getTituloAutoridadesField()]"
+        (input)="onTituloAutoridadesInput($event)"
+        (focus)="onTituloAutoridadesFocus()"
+        (blur)="onTituloAutoridadesBlur()"
+        (change)="onTituloAutoridadesChange($event)"
+        placeholder="Autoridades y líderes sociales – CC Ayroca">
+      <app-dynamic-table
+        [datos]="projectFacade.obtenerDatos()"
+        [sectionId]="seccionId"
+        [config]="{
+          tablaKey: getTablaKeyAutoridades(),
+          totalKey: 'organizacion',
+          campoTotal: 'organizacion',
+          estructuraInicial: [{ organizacion: '', cargo: '', nombre: '' }],
+          permiteAgregarFilas: true,
+          permiteEliminarFilas: true
+        }"
+        [columns]="[
+          { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'CC Ayroca' },
+          { field: 'cargo', label: 'Cargo', type: 'text', placeholder: 'Presidente' },
+          { field: 'nombre', label: 'Nombres y Apellidos', type: 'text', placeholder: 'Nombres y Apellidos' }
+        ]"
+        [totalKey]="'organizacion'"
+        (tableUpdated)="onAutoridadesTableUpdated($event)">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-field mt-lg">
+      <label class="label">Fuente - Tabla Autoridades</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [(ngModel)]="datos[getFuenteAutoridadesField()]"
+        (input)="onFuenteAutoridadesInput($event)"
+        (focus)="onFuenteAutoridadesFocus()"
+        (blur)="onFuenteAutoridadesBlur()"
+        (change)="onFuenteAutoridadesChange($event)"
+        placeholder="GEADES (2024)">
+    </div>
+
+    <div class="form-field mt-lg">
+      <label class="label">Fotografías de Organización Social</label>
+       <app-image-upload
+         [fotografias]="fotosCacheSignal()"
+         [sectionId]="seccionId"
+         [photoPrefix]="PHOTO_PREFIX"
+         [permitirMultiples]="true"
+         [mostrarTitulo]="true"
+         [mostrarFuente]="true"
+         labelTitulo="Título de la fotografía"
+         labelFuente="Fuente de la fotografía"
+         labelImagen="Fotografía - Imagen"
+         placeholderTitulo="Ej: Organización social"
+         placeholderFuente="Ej: GEADES, 2024"
+         tituloDefault="Organización social"
+         fuenteDefault="GEADES, 2024"
+         [requerido]="false"
+         (fotografiasChange)="onFotografiasChange($event)">
+       </app-image-upload>
+    </div>
+  </div>
+</div>

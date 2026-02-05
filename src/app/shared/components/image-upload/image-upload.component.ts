@@ -8,6 +8,8 @@ import { ImageBackendService } from '../../../core/services/image-backend.servic
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
+import { debugLog } from '../../utils/debug';
+import { ViewChildHelper } from '../../utils/view-child-helper';
 
 export interface FotoItem {
   numero?: string;
@@ -279,6 +281,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           imagen: persistValue
         }];
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
       } catch (e) {
       }
     }
@@ -323,7 +326,10 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           ...f,
           imagen: this.extractImageId(f.imagen) || f.imagen
         }));
+        debugLog('[ImageUpload] saving photos', { section: this.sectionId, prefix: this.photoPrefix, fotos: fotosParaGuardar });
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+        // Forzar actualización global por si algo no se refresca inmediatamente
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
       } catch (e) {
       }
     } else {

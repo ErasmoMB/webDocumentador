@@ -29,7 +29,10 @@ import { Seccion15ViewComponent } from 'src/app/shared/components/seccion15/secc
 import { Seccion16Component } from 'src/app/shared/components/seccion16/seccion16.component';
 import { Seccion17FormComponent } from 'src/app/shared/components/seccion17/seccion17-form.component';
 import { Seccion18FormComponent } from 'src/app/shared/components/seccion18/seccion18-form.component';
-import { Seccion19Component } from 'src/app/shared/components/seccion19/seccion19.component';
+import { Seccion18FormWrapperComponent } from 'src/app/shared/components/forms/seccion18-form-wrapper.component';
+import { Seccion18ViewComponent } from 'src/app/shared/components/seccion18/seccion18-view.component';
+import { Seccion19FormWrapperComponent } from 'src/app/shared/components/forms/seccion19-form-wrapper.component';
+import { Seccion19ViewComponent } from 'src/app/shared/components/seccion19/seccion19-view.component';
 import { Seccion20Component } from 'src/app/shared/components/seccion20/seccion20.component';
 import { Seccion21Component } from 'src/app/shared/components/seccion21/seccion21.component';
 import { Seccion22Component } from 'src/app/shared/components/seccion22/seccion22.component';
@@ -122,8 +125,14 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   @ViewChild(Seccion18FormComponent) set seccion18(comp: Seccion18FormComponent) {
     ViewChildHelper.registerComponent('seccion18', comp);
   }
-  @ViewChild(Seccion19Component) set seccion19(comp: Seccion19Component) {
-    ViewChildHelper.registerComponent('seccion19', comp);
+  @ViewChild(Seccion18ViewComponent) set seccion18View(comp: Seccion18ViewComponent) {
+    ViewChildHelper.registerComponent('seccion18View', comp);
+  }
+  @ViewChild(Seccion19ViewComponent) set seccion19View(comp: Seccion19ViewComponent) {
+    ViewChildHelper.registerComponent('seccion19View', comp);
+  }
+  @ViewChild(Seccion19FormWrapperComponent) set seccion19FormWrapper(comp: Seccion19FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion19FormWrapper', comp);
   }
   @ViewChild(Seccion20Component) set seccion20(comp: Seccion20Component) {
     ViewChildHelper.registerComponent('seccion20', comp);
