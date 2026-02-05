@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectStateFacade } from '../state/project-state.facade';
+import { FormChangeService } from './state/form-change.service';
 
 /**
  * PhotoNumberingService - Servicio para numeración de fotografías
@@ -83,7 +84,8 @@ export class PhotoNumberingService {
   ];
 
   constructor(
-    private projectFacade: ProjectStateFacade
+    private projectFacade: ProjectStateFacade,
+    private formChange: FormChangeService
   ) {
     this.printConfigurationSummary();
   }
@@ -148,15 +150,28 @@ export class PhotoNumberingService {
     const datos = this.projectFacade.obtenerDatos();
     let count = 0;
 
+    // Include base (no numbered suffix) when searching group suffixes.
     const groupSuffixes = specificGroupSuffix ? [specificGroupSuffix] : 
-                          hasGroup ? ['_A1', '_A2', '_A3', '_A4', '_A5', '_A6', '_A7', '_A8', '_A9', '_A10', '_B1', '_B2', '_B3', '_B4', '_B5', '_B6', '_B7', '_B8', '_B9', '_B10'] : [''];
+                          hasGroup ? ['', '_A1', '_A2', '_A3', '_A4', '_A5', '_A6', '_A7', '_A8', '_A9', '_A10', '_B1', '_B2', '_B3', '_B4', '_B5', '_B6', '_B7', '_B8', '_B9', '_B10'] : [''];
 
     for (const prefix of prefixes) {
       for (const groupSuffix of groupSuffixes) {
+        // First, check numbered slots (preferred). If any numbered slot exists, count them.
+        let numberedFound = false;
         for (let i = 1; i <= 10; i++) {
           const imagenKey = `${prefix}${i}Imagen${groupSuffix}`;
           const imagen = datos[imagenKey];
           if (this.isValidImage(imagen)) {
+            count++;
+            numberedFound = true;
+          }
+        }
+
+        // If no numbered images, check base key (e.g., fotografiaXImagen or fotografiaXImagen_B1)
+        if (!numberedFound) {
+          const baseKey = `${prefix}Imagen${groupSuffix}`;
+          const baseImg = datos[baseKey];
+          if (this.isValidImage(baseImg)) {
             count++;
           }
         }
@@ -205,19 +220,59 @@ export class PhotoNumberingService {
         }
       }
       else if (section.id === currentSection.id) {
-        if (prefix && currentSection.prefixes.length > 1) {
-          const currentPrefixIndex = currentSection.prefixes.indexOf(prefix);
-          
-          if (currentPrefixIndex > 0) {
-            const previousPrefixes = currentSection.prefixes.slice(0, currentPrefixIndex);
-            
-            for (const prevPrefix of previousPrefixes) {
-              const count = this.countPhotosInSectionByPrefixes([prevPrefix], currentSection.hasGroup, specificGroupSuffix);
-              globalIndex += count;
+        if (prefix) {
+          // If the prefix is explicitly listed in section config, respect its position.
+          if (currentSection.prefixes.length > 1 && currentSection.prefixes.includes(prefix)) {
+            const currentPrefixIndex = currentSection.prefixes.indexOf(prefix);
+            if (currentPrefixIndex > 0) {
+              const previousPrefixes = currentSection.prefixes.slice(0, currentPrefixIndex);
+              for (const prevPrefix of previousPrefixes) {
+                const count = this.countPhotosInSectionByPrefixes([prevPrefix], currentSection.hasGroup, specificGroupSuffix);
+                globalIndex += count;
+              }
+            }
+          } else {
+            // Prefix is not in the config list (likely a subgroup like 'fotografiaMercado').
+            // Discover all fotografia* prefixes that belong to this section (using specificGroupSuffix).
+            const datos = this.projectFacade.obtenerDatos();
+            const discovered = new Set<string>();
+            const suffix = `Imagen${specificGroupSuffix}`;
+
+            Object.keys(datos).forEach(k => {
+              if (!k.endsWith(suffix)) return;
+
+              // Prefer configured prefixes (deterministic)
+              for (const p of currentSection.prefixes) {
+                if (k.startsWith(p)) { discovered.add(p); return; }
+              }
+
+              // Fallback: strip trailing digits immediately before 'Imagen' (slot numbers)
+              const fallbackMatch = k.match(/^(fotografia[A-Za-z0-9_]*?)(\d+)Imagen/);
+              if (fallbackMatch && fallbackMatch[1]) {
+                discovered.add(fallbackMatch[1]);
+                return;
+              }
+
+              // Last resort: capture base 'fotografiaXXX' before 'Imagen'
+              const baseMatch = k.match(/^(fotografia[A-Za-z0-9_]*?)Imagen/);
+              if (baseMatch && baseMatch[1]) discovered.add(baseMatch[1]);
+            });
+
+            // Include known prefixes from config as well for deterministic ordering
+            currentSection.prefixes.forEach(p => discovered.add(p));
+
+            // Sort deterministically (alphabetical) and accumulate counts until target prefix
+            const ordered = Array.from(discovered).sort();
+            // discovered prefixes for section (debug removed)
+
+            for (const p of ordered) {
+              if (p === prefix) break;
+              const c = this.countPhotosInSectionByPrefixes([p], currentSection.hasGroup, specificGroupSuffix);
+              globalIndex += c;
             }
           }
         }
-        
+
         globalIndex += photoIndexInSection;
         break;
       }
@@ -272,5 +327,114 @@ export class PhotoNumberingService {
     }
     
     return '';
+  }
+
+  /**
+   * Recomputes global sequential numbering for all photographs and persists
+   * updated `Numero` fields under each section when they differ from current values.
+   * This makes numbering dynamic and globally consecutive across sections.
+   */
+  public renumberAllAndPersist(): void {
+    const datos = this.projectFacade.obtenerDatos();
+    const orderedSections = [...this.allSections].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+
+    type ImgEntry = { sectionId: string; prefix: string; groupSuffix: string; slot: number; numeroKey: string };
+    const entries: ImgEntry[] = [];
+
+    const maxPhotos = 20;
+
+    for (const section of orderedSections) {
+      const sectionId = section.id;
+      const specificGroupSuffix = section.hasGroup ? this.getGroupPrefix(sectionId) : '';
+
+      // Discover prefixes present in datos for this section + include configured prefixes
+      const discovered = new Set<string>(section.prefixes || []);
+      const keyRegex = new RegExp(`^(fotografia[A-Za-z0-9_]*)(?:\\d+)?Imagen${specificGroupSuffix.replace('$','')}$`);
+      Object.keys(datos).forEach(k => {
+        const m = k.match(keyRegex);
+        if (m && m[1]) discovered.add(m[1]);
+      });
+
+      // Ordered prefixes: configured first, then others alphabetically
+      const orderedPrefixes = [...section.prefixes.filter(p => discovered.has(p)), ...Array.from(discovered).filter(p => !section.prefixes.includes(p)).sort()];
+
+      for (const prefix of orderedPrefixes) {
+        // Check numbered slots
+        let foundNumbered = false;
+        for (let i = 1; i <= maxPhotos; i++) {
+          const imagenKey = specificGroupSuffix ? `${prefix}${i}Imagen${specificGroupSuffix}` : `${prefix}${i}Imagen`;
+          const val = datos[imagenKey];
+          if (this.isValidImage(val)) {
+            const numeroKey = specificGroupSuffix ? `${prefix}${i}Numero${specificGroupSuffix}` : `${prefix}${i}Numero`;
+            entries.push({ sectionId, prefix, groupSuffix: specificGroupSuffix, slot: i, numeroKey });
+            foundNumbered = true;
+          }
+        }
+
+        // If no numbered found, check base key
+        if (!foundNumbered) {
+          const baseKey = specificGroupSuffix ? `${prefix}Imagen${specificGroupSuffix}` : `${prefix}Imagen`;
+          if (this.isValidImage(datos[baseKey])) {
+            const numeroKey = specificGroupSuffix ? `${prefix}Numero${specificGroupSuffix}` : `${prefix}Numero`;
+            // treat as slot 1
+            entries.push({ sectionId, prefix, groupSuffix: specificGroupSuffix, slot: 1, numeroKey });
+          }
+        }
+      }
+    }
+
+    // Now assign sequential numbers and prepare updates grouped by section
+    const updatesBySection: Record<string, Record<string, any>> = {};
+    let counter = 0;
+    for (const e of entries) {
+      counter++;
+      const newNumero = `3.${counter}`;
+      const currentVal = String(this.projectFacade.obtenerDatos()[e.numeroKey] ?? '').trim();
+      if (currentVal !== newNumero) {
+        updatesBySection[e.sectionId] = updatesBySection[e.sectionId] || {};
+        updatesBySection[e.sectionId][e.numeroKey] = newNumero;
+      }
+    }
+
+    // Persist updates per section
+    for (const sectionId of Object.keys(updatesBySection)) {
+      const updates = updatesBySection[sectionId];
+      try {
+        this.projectFacade.setFields(sectionId, null, updates);
+        try { this.formChange.persistFields(sectionId, 'images', updates); } catch (e) { /* persist error */ }
+      } catch (e) {
+        /* setFields error */
+      }
+    }
+
+    if (Object.keys(updatesBySection).length > 0) {
+      try {
+        // Refresh state so views reflect updated numbers
+        const { ReactiveStateAdapter } = require('src/app/core/services/state-adapters/reactive-state-adapter.service');
+      } catch (e) { /* noop - adapter not required here */ }
+    }
+  }
+
+  private renumberTimer: any = null;
+  private renumberInProgress: boolean = false;
+
+  public scheduleRenumber(delay: number = 60): void {
+    if (this.renumberTimer) clearTimeout(this.renumberTimer);
+    this.renumberTimer = setTimeout(async () => {
+      if (this.renumberInProgress) {
+        // if still in progress, reschedule
+        this.scheduleRenumber(delay);
+        return;
+      }
+      this.renumberInProgress = true;
+      try {
+        this.renumberAllAndPersist();
+      } catch (e) {
+        /* scheduled renumber error */
+      } finally {
+        this.renumberInProgress = false;
+        this.renumberTimer = null;
+      }
+    }, delay);
   }
 }

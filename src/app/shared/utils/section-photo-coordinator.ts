@@ -84,7 +84,9 @@ export class SectionPhotoCoordinator {
       host.fotografiasFormMulti = [...fotografias];
 
       const propertyName = this.getPhotosPropertyName(host, prefix);
-      if (propertyName) host[propertyName] = [...fotografias];
+      if (propertyName) {
+        host[propertyName] = [...fotografias];
+      }
 
       host.actualizarDatos?.();
       host.onPhotoSaveComplete?.(fotografias, prefix);

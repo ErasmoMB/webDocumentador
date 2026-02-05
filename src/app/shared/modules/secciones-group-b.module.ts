@@ -28,7 +28,9 @@ import { Seccion22FormComponent } from '../components/seccion22/seccion22-form.c
 import { Seccion22FormWrapperComponent } from '../components/forms/seccion22-form-wrapper.component';
 import { Seccion23ViewComponent } from '../components/seccion23/seccion23-view.component';
 import { Seccion23FormWrapperComponent } from '../components/forms/seccion23-form-wrapper.component';
-import { Seccion24Component } from '../components/seccion24/seccion24.component';
+import { Seccion24ViewComponent } from '../components/seccion24/seccion24-view.component';
+import { Seccion24FormComponent } from '../components/seccion24/seccion24-form.component';
+import { Seccion24FormWrapperComponent } from '../components/forms/seccion24-form-wrapper.component';
 
 // ✅ Updated: Seccion17, 18, 19 use ViewComponent + FormWrapperComponent pattern
 const GROUP_B_COMPONENTS = [
@@ -54,7 +56,9 @@ const GROUP_B_COMPONENTS = [
   Seccion22FormWrapperComponent,
   Seccion23ViewComponent,
   Seccion23FormWrapperComponent,
-  Seccion24Component,
+  Seccion24ViewComponent,
+  Seccion24FormComponent,
+  Seccion24FormWrapperComponent,
 ];
 
 @NgModule({
@@ -89,7 +93,9 @@ const GROUP_B_COMPONENTS = [
     Seccion22FormWrapperComponent,
     Seccion23ViewComponent,
     Seccion23FormWrapperComponent,
-    Seccion24Component,
+    Seccion24ViewComponent,
+    Seccion24FormComponent,
+    Seccion24FormWrapperComponent,
   ],
   exports: [
     CoreSharedModule,
@@ -121,7 +127,9 @@ const GROUP_B_COMPONENTS = [
     Seccion22FormWrapperComponent,
     Seccion23ViewComponent,
     Seccion23FormWrapperComponent,
-    Seccion24Component,
+    Seccion24ViewComponent,
+    Seccion24FormComponent,
+    Seccion24FormWrapperComponent,
   ]
 })
 export class SeccionesGroupBModule { }

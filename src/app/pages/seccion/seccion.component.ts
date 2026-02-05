@@ -88,7 +88,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion22: () => import('src/app/shared/components/forms/seccion22-form-wrapper.component').then(m => m.Seccion22FormWrapperComponent as unknown as Type<any>),
     seccion23: () => import('src/app/shared/components/forms/seccion23-form-wrapper.component').then(m => m.Seccion23FormWrapperComponent as unknown as Type<any>),
     seccion23View: () => import('src/app/shared/components/seccion23/seccion23-view.component').then(m => m.Seccion23ViewComponent as unknown as Type<any>),
-    seccion24: () => import('src/app/shared/components/seccion24/seccion24.component').then(m => m.Seccion24Component as unknown as Type<any>),
+    seccion24View: () => import('src/app/shared/components/seccion24/seccion24-view.component').then(m => m.Seccion24ViewComponent as unknown as Type<any>),
+    seccion24: () => import('src/app/shared/components/forms/seccion24-form-wrapper.component').then(m => m.Seccion24FormWrapperComponent as unknown as Type<any>),
     seccion25: () => import('src/app/shared/components/seccion25/seccion25.component').then(m => m.Seccion25Component as unknown as Type<any>),
     seccion26: () => import('src/app/shared/components/seccion26/seccion26.component').then(m => m.Seccion26Component as unknown as Type<any>),
     seccion27: () => import('src/app/shared/components/seccion27/seccion27.component').then(m => m.Seccion27Component as unknown as Type<any>),
@@ -553,8 +554,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // Para las demás secciones B.X, usar componentes existentes (pendiente refactorizar a View)
     if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23View, inputs };
-    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24, inputs };
-    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
+    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24View, inputs }; // Use VIEW component for preview (MODO IDEAL)    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
     if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders.seccion26, inputs };
     if (this.esSubseccionAISI(seccionId, 6)) return { loader: this.componentLoaders.seccion27, inputs };
     if (this.esSubseccionAISI(seccionId, 7)) return { loader: this.componentLoaders.seccion28, inputs };
@@ -1449,6 +1449,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const enrichedMock = this.formularioMock.aplicarTransformacionesMock(datosMock);
 
+      // DEBUG: show enrichedMock keys and sample activities if present
+      try {
+        console.info('[llenarDatosPrueba] seccionId:', this.seccionId);
+        console.info('[llenarDatosPrueba] enrichedMock keys:', Object.keys(enrichedMock || {}));
+        console.info('[llenarDatosPrueba] enrichedMock.actividadesEconomicasAISI:', JSON.stringify((enrichedMock && (enrichedMock['actividadesEconomicasAISI'] ?? enrichedMock['actividadesEconomicas'])) ?? null, null, 2));
+      } catch (e) { console.error('[llenarDatosPrueba] debug error', e); }
+
       const aliasMap: Record<string, string[]> = {
         textoPoblacionSexoAISD: ['textoPoblacionSexo'],
         poblacionSexoAISD: ['poblacionSexoTabla'],
@@ -1461,7 +1468,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         natalidadMortalidadTabla: ['natalidadMortalidadTabla'],
         morbilidadTabla: ['morbilidadCpTabla', 'morbiliadTabla'],
         textoAfiliacionSalud: ['textoAfiliacionSalud'],
-        afiliacionSaludTabla: ['afiliacionSaludTabla']
+        afiliacionSaludTabla: ['afiliacionSaludTabla'],
+        // Sección 24: Actividades económicas (tabla)
+        actividadesEconomicasAISI: ['actividadesEconomicas', 'actividadesEconomicasTabla', 'actividadesEconomicasAISI']
       };
 
       const fieldsConDatos: string[] = [];
@@ -1741,12 +1750,18 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
+      // DEBUG: show updates keys and activities table before persisting
+      console.info('[llenarDatosPrueba] updates keys:', Object.keys(updates));
+      console.info('[llenarDatosPrueba] actividadesEconomicasAISI (in updates):', updates['actividadesEconomicasAISI']);
+
       if (Object.keys(updates).length > 0) {
         this.formChange.persistFields(this.seccionId, 'form', updates);
         this.projectFacade.setFields(this.seccionId, null, updates);
+        // Force update of components to reflect changes immediately
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
 
         // ✅ FIX: Asegurar que tablas importantes se guarden como "table" si vienen en el mock
-        const tablaKeys = ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'lenguasMaternasTabla', 'religionesTabla'];
+        const tablaKeys = ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'lenguasMaternasTabla', 'religionesTabla', 'actividadesEconomicasAISI'];
         tablaKeys.forEach(key => {
           const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
           // Buscar posibles alias en el mock
@@ -1764,12 +1779,53 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Detectar si el field/table actual contiene una única fila 'vacía' legacy (ej: estructura inicial con valores 0/''/"0%")
             const isSingleEmptyRow = (arr: any) => Array.isArray(arr) && arr.length === 1 && Object.values(arr[0] || {}).every(v => v === '' || v === 0 || v === '0%' || v === '0,00 %' || v === '0.00 %' || v === null || v === undefined);
+            const areAllRowsEmpty = (arr: any) => Array.isArray(arr) && arr.length > 0 && arr.every(row => Object.values(row || {}).every(v => v === '' || v === 0 || v === '0%' || v === '0,00 %' || v === '0.00 %' || v === null || v === undefined));
+            const areAllRowsCasosEmpty = (arr: any) => Array.isArray(arr) && arr.length > 0 && arr.every(row => {
+              const c = row?.casos;
+              return c === '' || c === 0 || c === '0' || c === '0%' || c === null || c === undefined || (typeof c === 'string' && c.trim() === '');
+            });
 
-            if ((actualField === undefined || this.esCampoVacio(actualField) || isSingleEmptyRow(actualField)) && (!Array.isArray(actualTable) || actualTable.length === 0 || isSingleEmptyRow(actualTable))) {
+            // EXTRA DEBUG: Show mock/table/state details even if we will NOT persist, to diagnose blocked persistence for actividadesEconomicasAISI
+            if (key === 'actividadesEconomicasAISI') {
+              console.info('[llenarDatosPrueba] Key DEBUG ->', { key, prefijo, valorMockLen: Array.isArray(valorMock) ? valorMock.length : undefined });
+              try {
+                console.info('[llenarDatosPrueba] pre-persist actualField:', JSON.stringify(actualField, null, 2));
+                console.info('[llenarDatosPrueba] pre-persist actualTable:', JSON.stringify(actualTable, null, 2));
+                console.info('[llenarDatosPrueba] pre-persist checks:', {
+                  actualFieldIsUndefined: actualField === undefined,
+                  esCampoVacio: this.esCampoVacio(actualField),
+                  isSingleEmptyRow_field: isSingleEmptyRow(actualField),
+                  areAllRowsEmpty_field: areAllRowsEmpty(actualField),
+                  areAllRowsCasosEmpty_field: areAllRowsCasosEmpty(actualField),
+                  isTableArray: Array.isArray(actualTable),
+                  tableLen: Array.isArray(actualTable) ? actualTable.length : undefined,
+                  isSingleEmptyRow_table: isSingleEmptyRow(actualTable),
+                  areAllRowsEmpty_table: areAllRowsEmpty(actualTable),
+                  areAllRowsCasosEmpty_table: areAllRowsCasosEmpty(actualTable)
+                });
+              } catch (err) { console.error('[llenarDatosPrueba] Key DEBUG error', err); }
+            }
+
+            // Allow override if field/table is undefined, empty, a single empty row, all rows empty, or all 'casos' are empty (common for initial structures)
+            const canOverrideField = (actualField === undefined || this.esCampoVacio(actualField) || isSingleEmptyRow(actualField) || areAllRowsEmpty(actualField) || areAllRowsCasosEmpty(actualField));
+            const canOverrideTable = (!Array.isArray(actualTable) || actualTable.length === 0 || isSingleEmptyRow(actualTable) || areAllRowsEmpty(actualTable) || areAllRowsCasosEmpty(actualTable));
+
+            if (canOverrideField || canOverrideTable) {
+              // DEBUG: log target key and payload
+              if (key === 'actividadesEconomicasAISI') {
+                console.info('[llenarDatosPrueba] Will persist actividadesEconomicasAISI payload:', JSON.stringify(valorMock, null, 2));
+                console.info('[llenarDatosPrueba] actualField before persist:', JSON.stringify(actualField, null, 2));
+                console.info('[llenarDatosPrueba] actualTable before persist:', JSON.stringify(actualTable, null, 2));
+              }
               // Persistir correctamente como tabla (sobrescribe filas legacy vacías)
               const payload = JSON.parse(JSON.stringify(valorMock));
               this.projectFacade.setTableData(this.seccionId, null, key, payload);
               this.formChange.persistFields(this.seccionId, 'table', { [key]: payload });
+              // DEBUG: log after persist
+              if (key === 'actividadesEconomicasAISI') {
+                console.info('[llenarDatosPrueba] After persist - selectField:', JSON.stringify(this.projectFacade.selectField(this.seccionId, null, key)(), null, 2));
+                console.info('[llenarDatosPrueba] After persist - selectTableData:', JSON.stringify(this.projectFacade.selectTableData(this.seccionId, null, key)(), null, 2));
+              }
 
               // Además, sincronizar legacy (fields) para que `this.datos` contenga la tabla
               const prefixedFieldKey = PrefixManager.getFieldKey(this.seccionId, key);

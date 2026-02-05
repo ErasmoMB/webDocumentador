@@ -261,6 +261,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
         }));
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
       } catch (e) {
+        /* saveImages multi error */
       }
     } else {
       this.preview = imgData;
@@ -281,7 +282,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           imagen: persistValue
         }];
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+        try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* ViewChildHelper error */ }
       } catch (e) {
       }
     }
@@ -326,7 +327,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           ...f,
           imagen: this.extractImageId(f.imagen) || f.imagen
         }));
-        debugLog('[ImageUpload] saving photos', { section: this.sectionId, prefix: this.photoPrefix, fotos: fotosParaGuardar });
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
         // Forzar actualización global por si algo no se refresca inmediatamente
         try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
@@ -358,10 +358,11 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   private emitirCambios() {
     this.isInternalUpdate = true;
-    this.fotografiasChange.emit(this._fotografias.map(f => ({
+    const payload = this._fotografias.map(f => ({
       ...f,
       imagen: this.extractImageId(f.imagen) || f.imagen
-    })));
+    }));
+    this.fotografiasChange.emit(payload);
   }
 
   getFormattedPhotoNumber(i: number): string {
@@ -389,42 +390,36 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
 
   private calculateGlobalPhotoNumber(index: number): string {
-    const datos = this.projectFacade.obtenerDatos();
-    const globalOrder = [
-      'fotografiaSeccion1', 'fotografiaSeccion2', 'fotografiaSeccion3',
-      'fotografiaAISD', 'fotografiaAISD2', 'fotografiaUbicacionReferencial',
-      'fotografiaPoblacionViviendas', 'fotografiaInstitucionalidad',
-      'fotografiaDemografia', 'fotografiaPEA', 'fotografiaGanaderia',
-      'fotografiaAgricultura', 'fotografiaComercio', 'fotografiaEstructura',
-      'fotografiaDesechosSolidos', 'fotografiaElectricidad', 'fotografiaTransporte',
-      'fotografiaTelecomunicaciones', 'fotografiaSalud', 'fotografiaIEAyroca',
-      'fotografiaIE40270', 'fotografiaRecreacion', 'fotografiaDeporte',
-      'fotografiaSaludIndicadores', 'fotografiaEducacionIndicadores',
-      'fotografiaIglesia', 'fotografiaReservorio', 'fotografiaUsoSuelos',
-      'fotografiaIDH', 'fotografiaNBI', 'fotografiaOrganizacionSocial',
-      'fotografiaFestividades', 'fotografiaCahuacho', 'fotografiaCahuachoB11',
-      'fotografiaCahuachoB13', 'fotografiaCahuachoB14', 'fotografiaCahuachoB15',
-      'fotografiaCahuachoB16', 'fotografiaCahuachoB17', 'fotografiaCahuachoB18',
-      'fotografiaCahuachoB19', 'fotografiaDesechosSolidosAISI', 'fotografiaElectricidadAISI',
-      'fotografiaEnergiaCocinarAISI', 'fotografiaTransporteAISI', 'fotografiaTelecomunicacionesAISI',
-      'fotografiaSaludAISI', 'fotografiaEducacionAISI', 'fotografiaRecreacionAISI',
-      'fotografiaDeporteAISI'
-    ];
+    try {
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      const photoIndexOneBased = (index || 0) + 1; // index is 0-based in templates
+      const numero = this.photoNumberingService.getGlobalPhotoNumber(
+        this.sectionId,
+        photoIndexOneBased,
+        this.photoPrefix,
+        groupPrefix
+      );
+      if (numero) return numero;
+    } catch (e) {
+      /* calculateGlobalPhotoNumber error */
+    }
 
+    // Fallback: conservative local computation (handles older formats without group suffixes)
+    const datos = this.projectFacade.obtenerDatos();
+    const prefix = this.photoPrefix;
     let count = 0;
-    for (const prefix of globalOrder) {
-      if (prefix === this.photoPrefix) {
-        for (let i = 1; i <= index; i++) {
-          if (datos[`${prefix}${i}Imagen`]?.length > 5) count++;
-        }
-        return `3.${count + 1}`;
-      } else {
-        for (let i = 1; i <= 20; i++) {
-          if (datos[`${prefix}${i}Imagen`]?.length > 5) count++;
+    for (let i = 1; i <= index; i++) {
+      if (datos[`${prefix}${i}Imagen`] && String(datos[`${prefix}${i}Imagen`]).length > 5) count++;
+      // also try with common group suffixes as fallback
+      const suffixes = ['_A1','_A2','_A3','_A4','_A5','_A6','_A7','_A8','_A9','_A10','_B1','_B2','_B3','_B4','_B5','_B6','_B7','_B8','_B9','_B10'];
+      for (const suf of suffixes) {
+        if (datos[`${prefix}${i}Imagen${suf}`] && String(datos[`${prefix}${i}Imagen${suf}`]).length > 5) {
+          count++;
+          break;
         }
       }
     }
-    return '';
+    return `3.${count + 1}`;
   }
 
   private getImageUrl(img: string | null): string | null {

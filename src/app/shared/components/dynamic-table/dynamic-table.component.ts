@@ -518,10 +518,12 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   onAdd(): void {
     if (!this.config) return;
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+    console.info('[DynamicTable] onAdd -> tablaKeyActual:', tablaKeyActual);
     if (!tablaKeyActual) return;
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
+    console.info('[DynamicTable] before agregarFila, length:', Array.isArray(this.datos[tablaKeyActual]) ? this.datos[tablaKeyActual].length : 'n/a');
     this.tableFacade.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual });
     this.ejecutarCalculosAutomaticosSiEsNecesario(false, true);
     this.cachedTableData = [];
@@ -529,6 +531,7 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
+    console.info('[DynamicTable] after agregarFila, length:', tablaCopia.length);
     this.persistirTablaConLog(tablaKeyActual, tablaCopia);
     this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit(tablaCopia);

@@ -2,7 +2,7 @@ import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
+import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
@@ -16,7 +16,7 @@ import { TableManagementFacade } from 'src/app/core/services/tables/table-manage
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent],
+    imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent],
     selector: 'app-seccion23-form',
     templateUrl: './seccion23-form.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,7 +28,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
 
   // Campos observados para sincronización reactiva (se expande con prefijos automáticamente)
   override watchedFields: string[] = [
-    'grupoAISD', 'distritoSeleccionado', 'poblacionDistritalAISI', 'petDistritalAISI',
+    'grupoAISD', 'distritoSeleccionado',
     'petGruposEdadAISI', 'petGruposEdadTitulo', 'petGruposEdadFuente',
     'peaDistritoSexoTabla', 'peaDistritoSexoTitulo', 'peaDistritoSexoFuente',
     'peaOcupadaDesocupadaTabla', 'peaOcupadaDesocupadaTitulo', 'peaOcupadaDesocupadaFuente',
@@ -783,6 +783,13 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     const porcentajeHombres = this.getPorcentajeHombresOcupados();
     const porcentajeMujeres = this.getPorcentajeMujeresOcupadas();
     return `Del cuadro precedente, se halla que en el distrito de ${distrito} la PEA Desocupada representa un ${porcentajeDesempleo} del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de ${porcentajeHombres} y ${porcentajeMujeres}, respectivamente.`;
+  }
+
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    super.onFotografiasChange(fotografias, customPrefix);
+    // Sync the editable array used by the form UI
+    this.fotografiasFormMulti = fotografias;
+    this.cdRef.markForCheck();
   }
 
   trackByIndex(index: number): number { return index; }

@@ -1,0 +1,123 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.3. Actividades económicas de la población</h4>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      <app-paragraph-editor
+        fieldId="textoIntroActividadesEconomicasAISI"
+        label="Actividades Económicas - Introducción - Párrafo 1"
+        [rows]="4"
+        [value]="viewModel().textos.intro"
+        (valueChange)="actualizarTexto('textoIntroActividadesEconomicasAISI', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        fieldId="textoIntroActividadesEconomicasAISI_parte2"
+        label="Actividades Económicas - Introducción - Párrafo 2"
+        [rows]="4"
+        [value]="viewModel().textos.introLong"
+        (valueChange)="actualizarIntroLong($event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <p class="table-caption"><strong>Cuadro N° 3.26</strong></p>
+      <div class="form-field">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="input" [(ngModel)]="datos['cuadroTituloActividadesEconomicasAISI']" (ngModelChange)="onFieldChange('cuadroTituloActividadesEconomicasAISI', $event)" placeholder="PEA Ocupada según actividad económica – CP Cahuacho (2017)" />
+      </div>
+      <label class="label">PEA Ocupada según actividad económica – CP {{ viewModel().centroPoblado || 'Cahuacho' }} (2017)</label>
+      <app-dynamic-table
+        [datos]="datos"
+        [sectionId]="seccionId"
+        [config]="{ tablaKey: 'actividadesEconomicasAISI', totalKey: 'actividad', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true }"
+        [columns]="[
+          { field: 'actividad', label: 'Actividad Económica', type: 'text', placeholder: 'Ej: Agricultura, ganadería, silvicultura y pesca' },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+        ]"
+        (tableUpdated)="onActividadesEconomicasChange($event)">
+      </app-dynamic-table>
+
+      <div class="form-field" style="margin-top: 12px;">
+        <label class="label">Fuente (Cifras)</label>
+        <input type="text" class="input" [value]="viewModel().textos.fuente" (input)="actualizarFuente($any($event.target).value)" placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda..." />
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      <app-paragraph-editor
+        fieldId="textoActividadesEconomicasAISI"
+        label="Actividades Económicas - Análisis - Texto Completo"
+        [rows]="4"
+        [value]="viewModel().textos.analisis"
+        (valueChange)="actualizarTexto('textoActividadesEconomicasAISI', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías de Actividades Económicas</label>
+      <app-image-upload
+        [fotografias]="fotosActividadesSignal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="'fotografiaActividadesEconomicas'"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaActividadesEconomicas')">
+      </app-image-upload>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Mercado y comercialización de productos</h4>
+      <app-paragraph-editor
+        fieldId="textoMercadoProductos"
+        label="Mercado y comercialización - Texto Completo"
+        [rows]="6"
+        [value]="viewModel().textos.mercado"
+        (valueChange)="actualizarTexto('textoMercadoProductos', $event)">
+      </app-paragraph-editor>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Ciudad de origen del comercio</label>
+        <input type="text" class="input" [value]="viewModel().ciudadOrigenComercio" (input)="actualizarCiudadOrigenComercio($any($event.target).value)" placeholder="Ej: Caravelí">
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Mercado</label>
+        <app-image-upload
+        [fotografias]="fotosMercadoSignal()"
+          [sectionId]="seccionId"
+          [photoPrefix]="'fotografiaMercado'"
+          [permitirMultiples]="true"
+          (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaMercado')">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Hábitos de consumo</h4>
+      <app-paragraph-editor
+        fieldId="textoHabitosConsumo"
+        label="Hábitos de consumo - Texto Completo"
+        [rows]="8"
+        [value]="viewModel().textos.habitos"
+        (valueChange)="actualizarTexto('textoHabitosConsumo', $event)">
+      </app-paragraph-editor>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Hábitos de Consumo</label>
+        <app-image-upload
+          [fotografias]="fotosCacheSignal()"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          (fotografiasChange)="onFotografiasChangeHandler($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>

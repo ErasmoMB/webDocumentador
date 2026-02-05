@@ -246,31 +246,13 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">Datos Adicionales</h4>
+      <h4 class="section-title">Fotografías adicionales</h4>
 
-      <div class="form-row" style="margin-top: 15px;">
-        <div class="form-field">
-          <label class="label">Población distrital</label>
-          <input type="number" class="input" 
-            [value]="datos['poblacionDistritalAISI'] || ''"
-            (input)="onFieldChange('poblacionDistritalAISI', $any($event.target).value)"
-            placeholder="Ej: 610">
-        </div>
-
-        <div class="form-field">
-          <label class="label">PET distrital (14 años a más)</label>
-          <input type="number" class="input" 
-            [value]="datos['petDistritalAISI'] || ''"
-            (input)="onFieldChange('petDistritalAISI', $any($event.target).value)"
-            placeholder="Ej: 461">
-        </div>
+      <div style="margin-top: 15px;">
+        <app-image-upload
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [fotografias]="fotografiasFormMulti"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
       </div>
-
-      <div class="form-row" style="margin-top: 15px;">
-        <div class="form-field">
-          <label class="label">Ingreso familiar per cápita (S/.)</label>
-          <input type="text" class="input" 
-            [value]="datos['ingresoPerCapitaAISI'] || ''"
-            (input)="onFieldChange('ingresoPerCapitaAISI', $any($event.target).value)"
-            placeholder="Ej: 391,06">
-        </div>
