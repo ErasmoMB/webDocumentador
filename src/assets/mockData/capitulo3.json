@@ -316,16 +316,16 @@
     "textoAlumnosPorSexoGrado": "De manera adicional, se presenta la cantidad de alumnos de las dos instituciones educativas dentro de la CC Ayroca según sexo y grado de enseñanza para el año 2024 según las entrevistas aplicadas. Dicha información se encuentra en los cuadros que se muestran a continuación.",
     "textoEducacion": "La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.",
     "nivelEducativoTabla": [
-      { "categoria": "Sin nivel o inicial", "casos": "10" },
-      { "categoria": "Primaria", "casos": "75" },
-      { "categoria": "Secundaria", "casos": "64" },
-      { "categoria": "Superior no Universitaria", "casos": "7" },
-      { "categoria": "Superior Universitaria", "casos": "10" }
+      { "nivel": "Sin nivel o Inicial", "casos": 10, "porcentaje": "" },
+      { "nivel": "Primaria", "casos": 75, "porcentaje": "" },
+      { "nivel": "Secundaria", "casos": 64, "porcentaje": "" },
+      { "nivel": "Superior no Universitaria", "casos": 7, "porcentaje": "" },
+      { "nivel": "Superior Universitaria", "casos": 10, "porcentaje": "" }
     ],
     "textoNivelEducativo": "En la CC Ayroca, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la primaria, pues representan el . En segundo lugar, se hallan aquellos que cuentan con secundaria (). Por otro lado, la categoría minoritaria corresponde a aquellos con educación superior no universitaria, pues representan solamente un .",
     "tasaAnalfabetismoTabla": [
-      { "indicador": "Sabe leer y escribir", "casos": "151" },
-      { "indicador": "No sabe leer ni escribir", "casos": "15" }
+      { "indicador": "Sabe leer y escribir", "casos": 151, "porcentaje": "" },
+      { "indicador": "No sabe leer ni escribir", "casos": 15, "porcentaje": "" }
     ],
     "textoAnalfabetismo": "En la CC Ayroca, se observa que la cantidad de personas de 15 años a más que no saben leer ni escribir llegan a la cantidad de 15. Esto representa una tasa de analfabetismo del en la comunidad.",
     "cantidadEstudiantesEducacionTabla": [
@@ -543,16 +543,16 @@
     "textoEducacion": "La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.",
     "textoNivelEducativo": "En el CP Cahuacho, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es Sin nivel o inicial, pues representan el ____.",
     "nivelEducativoTabla": [
-      { "categoria": "Sin nivel o inicial", "casos": "6" },
-      { "categoria": "Primaria", "casos": "35" },
-      { "categoria": "Secundaria", "casos": "51" },
-      { "categoria": "Superior no Universitaria", "casos": "14" },
-      { "categoria": "Superior Universitaria", "casos": "13" }
+      { "nivel": "Sin nivel o Inicial", "casos": 6, "porcentaje": "" },
+      { "nivel": "Primaria", "casos": 35, "porcentaje": "" },
+      { "nivel": "Secundaria", "casos": 51, "porcentaje": "" },
+      { "nivel": "Superior no Universitaria", "casos": 14, "porcentaje": "" },
+      { "nivel": "Superior Universitaria", "casos": 13, "porcentaje": "" }
     ],
     "textoAnalfabetismo": "En el CP Cahuacho, tomando en cuenta a la población de 15 años a más, las personas que no saben leer ni escribir llegan a la cantidad de 5. Esto representa una tasa de analfabetismo del en esta localidad.",
     "tasaAnalfabetismoTabla": [
-      { "indicador": "Sabe leer y escribir", "casos": "114" },
-      { "indicador": "No sabe leer ni escribir", "casos": "5" }
+      { "indicador": "Sabe leer y escribir", "casos": 114, "porcentaje": "" },
+      { "indicador": "No sabe leer ni escribir", "casos": 5, "porcentaje": "" }
     ],
     "textoAspectosCulturales": "Los aspectos culturales juegan un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracterizan y describen la diversidad religiosa en el CP Cahuacho, explorando las principales creencias.",
     "textoIdioma": "La lengua materna es la primera lengua u idioma que aprende una persona. De la data obtenida de los Censos Nacionales 2017, se aprecia que el castellano es la categoría mayoritaria, pues representa al de la población de 3 años a más. En segundo lugar, se halla aquellos que tienen el quechua como primer idioma, con un .",

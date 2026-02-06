@@ -8,6 +8,7 @@ import { BackendDataMapperService } from 'src/app/core/services/backend-data-map
 import { TableMetadata } from 'src/app/core/models/table-metadata.model';
 import { PrefixManager } from 'src/app/shared/utils/prefix-manager';
 import { TableCalculationStrategyService } from 'src/app/core/services/tables/table-calculation-strategy.service';
+import { TableMockMergeService } from 'src/app/core/services/tables/table-mock-merge.service';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 
 export interface TableColumn {
@@ -54,6 +55,7 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   private isCleaningLegacy: boolean = false;
   private calcDebounceMs = 200;
   private calcTimeouts = new Map<string, any>();
+  private mockMergeApplied = new Set<string>(); // Evitar bucle de merge
   public tableData: any[] = [];
 
   // For deep change detection when `datos` object mutates in place
@@ -66,7 +68,8 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     private cdRef: ChangeDetectorRef,
     private projectFacade: ProjectStateFacade,
     private backendDataMapper?: BackendDataMapperService,
-    private calculationStrategy?: TableCalculationStrategyService
+    private calculationStrategy?: TableCalculationStrategyService,
+    private mockMergeService?: TableMockMergeService
   ) {}
 
   ngOnInit(): void {
@@ -211,6 +214,37 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
         } catch (e) { /* noop */ }
       }
     } catch (e) { /* noop */ }
+
+    // ✅ MERGE INTELIGENTE: Si hay datos del mock con casos pero sin porcentajes,
+    // combinar con la estructura inicial manteniendo las categorías y calculando porcentajes
+    // IMPORTANTE: Solo ejecutar una vez por tablaKey para evitar bucles infinitos
+    const mergeKey = `${this.sectionId}_${tablaKeyActual}`;
+    if (datosTabla && Array.isArray(datosTabla) && datosTabla.length > 0 && 
+        this.config.estructuraInicial && this.mockMergeService && 
+        !this.mockMergeApplied.has(mergeKey)) {
+      const sonMock = this.mockMergeService.sonDatosDeMock(datosTabla, this.config);
+      if (sonMock) {
+        this.mockMergeApplied.add(mergeKey); // Marcar como procesado ANTES de ejecutar
+        const datosCombinados = this.mockMergeService.combinarMockConEstructura(
+          datosTabla,
+          this.config.estructuraInicial,
+          this.config
+        );
+        if (datosCombinados.length > 0) {
+          this.datos[tablaKeyActual] = datosCombinados;
+          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
+            this.datos[tablaKeyBase] = structuredClone(datosCombinados);
+          }
+          datosTabla = datosCombinados;
+          // Calcular porcentajes después de merge
+          this.ejecutarCalculosAutomaticosSiEsNecesario(true, false);
+          // Persistir los datos combinados
+          this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosCombinados });
+          this.actualizarTableData();
+          return; // Salir después de merge para evitar más procesamiento
+        }
+      }
+    }
 
     if (datosTabla && Array.isArray(datosTabla) && this.esDatoLegacy(datosTabla)) {
       this.isCleaningLegacy = true;
