@@ -1,0 +1,135 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h4>
+    
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+      
+      <app-paragraph-editor
+        fieldId="textoIntroServiciosBasicosAISI"
+        label="Servicios Básicos - Introducción - Texto Completo"
+        [rows]="4"
+        [value]="viewModel().textoIntro"
+        (valueChange)="onFieldChange('textoIntroServiciosBasicosAISI', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <!-- a. Servicios de agua -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">a. Servicios de agua</h4>
+      <app-paragraph-editor fieldId="textoServiciosAguaAISI" [rows]="4" [value]="viewModel().textoServiciosAgua" (valueChange)="onFieldChange('textoServiciosAguaAISI', $event)"></app-paragraph-editor>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloAbastecimiento" (change)="onFieldChange('cuadroTituloAbastecimiento', $any($event.target).value)" placeholder="Título del cuadro" />
+      </div>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
+        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="abastecimientoConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'abastecimientoAguaCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)" (tableUpdated)="onAbastecimientoAguaTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
+      </div>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Fuente del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteAbastecimiento" (change)="onFieldChange('cuadroFuenteAbastecimiento', $any($event.target).value)" placeholder="Fuente del cuadro" />
+      </div>
+    </div>
+
+    <!-- b. Servicios básicos de desagüe -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        <app-paragraph-editor fieldId="textoDesagueCP" label="Servicios básicos de desagüe - Texto Completo" [rows]="6" [value]="viewModel().textoDesague" (valueChange)="onFieldChange('textoDesagueCP', $event)"></app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloSaneamiento" (change)="onFieldChange('cuadroTituloSaneamiento', $any($event.target).value)" placeholder="Título del cuadro" />
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
+        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="saneamientoConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'saneamientoCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onSaneamientoFieldChange.bind(this)" (tableUpdated)="onSaneamientoTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
+      </div>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Fuente del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteSaneamiento" (change)="onFieldChange('cuadroFuenteSaneamiento', $any($event.target).value)" placeholder="Fuente del cuadro" />
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Desechos Sólidos</label>
+        <app-image-upload [fotografias]="fotografiasDesechosFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_DESECHOS" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Contenedores de residuos sólidos" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Contenedores de residuos sólidos" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasDesechosChange($event)"></app-image-upload>
+      </div>
+    </div>
+
+    <!-- c. Gestión y destino de los desechos sólidos -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        <app-paragraph-editor fieldId="textoDesechosSolidosCP" label="Gestión y Destino de Desechos Sólidos - Texto Completo" [rows]="6" [value]="viewModel().textoDesechos" (valueChange)="onFieldChange('textoDesechosSolidosCP', $event)"></app-paragraph-editor>
+      </div>
+    </div>
+
+    <!-- d. Electricidad -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">d. Electricidad</h4>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        <app-paragraph-editor fieldId="textoElectricidadCP" label="Electricidad - Texto Completo" [rows]="4" [value]="viewModel().textoElectricidad" (valueChange)="onFieldChange('textoElectricidadCP', $event)"></app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloCobertura" (change)="onFieldChange('cuadroTituloCobertura', $any($event.target).value)" placeholder="Título del cuadro" />
+
+        <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
+        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="coberturaConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'coberturaElectricaCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)" (tableUpdated)="onCoberturaElectricaTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
+
+
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Fuente del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteCobertura" (change)="onFieldChange('cuadroFuenteCobertura', $any($event.target).value)" placeholder="Fuente del cuadro" />
+      </div>
+
+        <div class="form-field" style="margin-top: 20px;">
+          <label class="label">Fotografías de Electricidad</label>
+          <app-image-upload [fotografias]="fotografiasElectricidadFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Infraestructura eléctrica" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Infraestructura eléctrica" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasElectricidadChange($event)"></app-image-upload>
+        </div>
+      </div>
+    </div>
+
+    <!-- e. Energía para cocinar -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">e. Energía para cocinar</h4>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">Editar Párrafos</h4>
+        <app-paragraph-editor fieldId="textoEnergiaCocinarCP" label="Energía para Cocinar - Texto Completo" [rows]="4" [value]="viewModel().textoCocinar" (valueChange)="onFieldChange('textoEnergiaCocinarCP', $event)"></app-paragraph-editor>
+      </div>
+
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloCombustibles" (change)="onFieldChange('cuadroTituloCombustibles', $any($event.target).value)" placeholder="Título del cuadro" />
+
+        <label class="label">Tabla Combustibles para cocción en los hogares</label>
+        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="combustiblesConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'combustiblesCocinarCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onCombustiblesCocinarFieldChange.bind(this)" (tableUpdated)="onCombustiblesCocinarTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>
+
+
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Fuente del cuadro</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteCombustibles" (change)="onFieldChange('cuadroFuenteCombustibles', $any($event.target).value)" placeholder="Fuente del cuadro" />
+      </div>
+
+        <div class="form-field" style="margin-top: 20px;">
+          <label class="label">Fotografías de Energía para Cocinar</label>
+          <app-image-upload [fotografias]="fotografiasCocinarFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_COCINAR" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Energía para cocinar" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Energía para cocinar" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasCocinarChange($event)"></app-image-upload>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

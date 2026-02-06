@@ -70,10 +70,23 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     if (!tieneConfigValido && this.fieldName) {
       this.autoConfigurarDesdeMetadata();
     }
+    // Aplicar regla: si existe estructuraInicial, ocultar botones de agregar/eliminar
+    this.applyNoAddDeleteForEstructuraInicial();
     setTimeout(() => {
       this.verificarEInicializarTabla();
       this.actualizarTableData();
+      // Asegurar la regla después de inicialización
+      this.applyNoAddDeleteForEstructuraInicial();
     }, 0);
+  }
+
+  private applyNoAddDeleteForEstructuraInicial(): void {
+    try {
+      if (this.config && Array.isArray((this.config as any).estructuraInicial) && (this.config as any).estructuraInicial.length > 0) {
+        this.showAddButton = false;
+        this.showDeleteButton = false;
+      }
+    } catch (e) { /* noop */ }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -91,6 +104,8 @@ export class DynamicTableComponent implements OnInit, OnChanges {
       if ((changes['fieldName'] || changes['sectionId']) && !tieneConfigValido) {
         this.autoConfigurarDesdeMetadata();
       }
+      // Aplicar regla de botones en cada cambio relevante
+      this.applyNoAddDeleteForEstructuraInicial();
       this.verificarEInicializarTabla();
       this.actualizarTableData();
     }
@@ -227,6 +242,7 @@ export class DynamicTableComponent implements OnInit, OnChanges {
         }, 100);
       }
     } else {
+
       this.actualizarTableData();
       this.cdRef.detectChanges();
     }
@@ -396,30 +412,46 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     if (!this.config) return;
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) return;
+
     if (this.config.noInicializarDesdeEstructura && (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) && this.config.estructuraInicial?.length) {
       this.datos[tablaKeyActual] = structuredClone(this.config.estructuraInicial);
     }
+
     const columna = this.columns.find(col => col.field === field);
     const valorValidado = this.validarYNormalizarValor(columna, value);
-    // Validación aplicada, no logging por defecto
-    
+
+
+
     this.cachedTableData = [];
     this.lastTablaKey = '';
+
+    // Immediate local assignment so UI shows edits even if external sync overwrites later
+    try {
+      if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) this.datos[tablaKeyActual] = [];
+      if (!this.datos[tablaKeyActual][index]) this.datos[tablaKeyActual][index] = {};
+      this.datos[tablaKeyActual][index][field] = valorValidado;
+      try { this.cdRef.detectChanges(); } catch (e) {}
+    } catch (e) { console.warn('[DynamicTable] error during local assignment', e); }
+
     if (this.customFieldChangeHandler) {
-      this.customFieldChangeHandler(index, field, valorValidado);
+      try { this.customFieldChangeHandler(index, field, valorValidado); } catch (e) { console.warn('[DynamicTable] customFieldChangeHandler error', e); }
     } else {
-      this.tableFacade.actualizarFila(
-        this.datos,
-        { ...this.config, tablaKey: tablaKeyActual },
-        index,
-        field,
-        valorValidado,
-        false
-      );
+      try {
+        this.tableFacade.actualizarFila(
+          this.datos,
+          { ...this.config, tablaKey: tablaKeyActual },
+          index,
+          field,
+          valorValidado,
+          false
+        );
+      } catch (e) { console.warn('[DynamicTable] actualizarFila error', e); }
     }
+
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
+
     const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
@@ -429,7 +461,7 @@ export class DynamicTableComponent implements OnInit, OnChanges {
       clearTimeout(this.calcTimeouts.get(debounceKey));
     }
     this.calcTimeouts.set(debounceKey, setTimeout(() => {
-      this.ejecutarCalculosAutomaticosSiEsNecesario(false, true);
+      try { this.ejecutarCalculosAutomaticosSiEsNecesario(false, true); } catch (e) { console.warn('[DynamicTable] calcular error', e); }
       const tablaCopia2 = (this.datos[tablaKeyActual] || []).map((item: any) => 
         typeof item === 'object' && item !== null ? { ...item } : item
       );
@@ -438,8 +470,8 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     }, this.calcDebounceMs));
     this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit(tablaCopia);
-    this.cdRef.detectChanges();
-    this.cdRef.markForCheck();
+    try { this.cdRef.detectChanges(); } catch (e) {}
+    try { this.cdRef.markForCheck(); } catch (e) {}
   }
 
   private persistirTablaConLog(tablaKey: string, tablaCopia: any[]): void {
@@ -453,11 +485,44 @@ export class DynamicTableComponent implements OnInit, OnChanges {
       return r;
     });
 
-    // Persistiendo tabla (normalizada). No logging por defecto
+    // Persistiendo tabla (normalizada) y actualizando ProjectState para notificación inmediata.
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
     const payload: Record<string, any> = { [tablaKey]: tablaNormalizada };
     if (tablaKeyBase && tablaKeyBase !== tablaKey) payload[tablaKeyBase] = tablaNormalizada;
-    this.formChange.persistFields(this.sectionId, 'table', payload);
+
+
+
+    // Actualizar ProjectState localmente para disponibilidad inmediata
+    try {
+      if ((this as any).projectFacade && typeof (this as any).projectFacade.setTableData === 'function') {
+        try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKey, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData error', e); }
+        if (tablaKeyBase && tablaKeyBase !== tablaKey) {
+          try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData base error', e); }
+        }
+        // También establecer la clave BASE como field para que selectField(...) la lea inmediatamente
+        try {
+          if (tablaKeyBase) {
+            try { (this as any).projectFacade.setField(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setField base error', e); }
+            // Actualizar this.datos para evitar inconsistencias en este componente
+            try { this.datos[tablaKeyBase] = tablaNormalizada; } catch (e) { console.warn('[DynamicTable] update datos error', e); }
+          }
+        } catch (e) { console.warn('[DynamicTable] setField wrapper error', e); }
+      }
+    } catch (e) { console.warn('[DynamicTable] projectFacade update error', e); }
+
+    // Persistir y notificar (notifySync) para que SectionSync/Reactive adapters actualicen la vista
+    try {
+      this.formChange.persistFields(this.sectionId, 'table', payload, { notifySync: true });
+    } catch (e) {
+      try { this.formChange.persistFields(this.sectionId, 'table', payload); } catch (err) { console.warn('[DynamicTable] persistFields error', err); }
+    }
+
+    // Force an extra sync: set fields explicitly and notify ViewChildHelper to update components
+    try {
+      const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
+      try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
+    } catch (e) { /* noop */ }
+
     try {
       const sectionSync = (this as any).injector?.get?.(require('src/app/core/services/state/section-sync.service').SectionSyncService, null);
       if (sectionSync) {
@@ -518,26 +583,31 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   onAdd(): void {
     if (!this.config) return;
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
-    console.info('[DynamicTable] onAdd -> tablaKeyActual:', tablaKeyActual);
     if (!tablaKeyActual) return;
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
-    console.info('[DynamicTable] before agregarFila, length:', Array.isArray(this.datos[tablaKeyActual]) ? this.datos[tablaKeyActual].length : 'n/a');
+    // Add a row via facade
     this.tableFacade.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual });
+
+    // Ensure immediate UI reflects the new row even if values are empty (default row)
+    try {
+      this.tableData = this.datos[tablaKeyActual] || [];
+      this.lastTablaKey = tablaKeyActual;
+      this.cdRef.detectChanges();
+    } catch (e) {}
+
     this.ejecutarCalculosAutomaticosSiEsNecesario(false, true);
     this.cachedTableData = [];
-    this.lastTablaKey = '';
-    const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
+    const tablaCopia = (this.datos[tablaKeyActual] || []).map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
-    console.info('[DynamicTable] after agregarFila, length:', tablaCopia.length);
     this.persistirTablaConLog(tablaKeyActual, tablaCopia);
     this.dataChange.emit(this.datos[tablaKeyActual]);
     this.tableUpdated.emit(tablaCopia);
-    this.lastTablaKey = tablaKeyActual;
     this.actualizarTableData();
-    this.cdRef.detectChanges();
+    // Extra detectChanges in next tick to handle OnPush parents
+    setTimeout(() => this.cdRef.detectChanges(), 0);
   }
 
   onDelete(index: number): void {
@@ -613,6 +683,7 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     const estructura = this.config?.estructuraInicial;
     const noInit = this.config?.noInicializarDesdeEstructura;
     let datosFinales: any[] = [];
+
     if (noInit && estructura && estructura.length > 0) {
       const datosExistentes = datosConPrefijo ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
       if (datosExistentes && Array.isArray(datosExistentes) && datosExistentes.length === estructura.length) {
@@ -662,10 +733,22 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   }
 
   getFormattedValue(item: any, col: TableColumn): string {
-    const value = item[col.field];
+    let value = item[col.field];
+
+    // Support objects returned by helpers: { value: '12,34 %', isCalculated: true }
+    if (value && typeof value === 'object') {
+      if (value.value !== undefined) {
+        value = value.value;
+      } else {
+        // Fallback to string representation
+        try { value = String(value); } catch { value = ''; }
+      }
+    }
+
     if (col.formatter) {
       return col.formatter(value);
     }
+
     // Ocultar ceros y valores placeholder como '0%' para mostrar celdas vacías
     if (value === 0) return '';
     if (typeof value === 'string') {

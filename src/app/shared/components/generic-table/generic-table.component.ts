@@ -96,7 +96,12 @@ export class GenericTableComponent implements OnInit {
 
   getCellValue(row: any, col: TableColumn): { value: any; isCalculated: boolean } {
     const rawValue = row[col.key];
-    if (rawValue && typeof rawValue === 'object' && 'value' in rawValue && 'isCalculated' in rawValue) {
+    // Tratar explicitamente null/undefined como celda vacía (evita que typeof null === 'object' cause error)
+    if (rawValue === null || rawValue === undefined) {
+      return { value: '', isCalculated: false };
+    }
+
+    if (typeof rawValue === 'object' && 'value' in rawValue && 'isCalculated' in rawValue) {
       return { value: rawValue.value, isCalculated: rawValue.isCalculated };
     }
     // Si es un objeto pero no tiene la estructura esperada, asumimos que no es calculado
@@ -109,7 +114,12 @@ export class GenericTableComponent implements OnInit {
   getTotalCellValue(col: TableColumn): { value: any; isCalculated: boolean } {
     if (!this.config.totalRow) return { value: '', isCalculated: false };
     const rawValue = this.config.totalRow[col.key];
-    if (rawValue && typeof rawValue === 'object' && 'value' in rawValue && 'isCalculated' in rawValue) {
+    // Tratar explicitamente null/undefined como celda vacía (evita que typeof null === 'object' cause error)
+    if (rawValue === null || rawValue === undefined) {
+      return { value: '', isCalculated: false };
+    }
+
+    if (typeof rawValue === 'object' && 'value' in rawValue && 'isCalculated' in rawValue) {
       return { value: rawValue.value, isCalculated: rawValue.isCalculated };
     }
     // Si es un objeto pero no tiene la estructura esperada, asumimos que no es calculado

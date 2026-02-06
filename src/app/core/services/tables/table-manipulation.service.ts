@@ -66,14 +66,15 @@ export class TableManipulationService {
     value: any
   ): void {
     const { tablaKey } = config;
-    
     if (!datos[tablaKey]) {
       this.initialization.inicializarTabla(datos, config);
     }
     
     const tabla = datos[tablaKey] || [];
     if (tabla[index]) {
-      tabla[index][field] = value;
+      try { tabla[index][field] = value; } catch (e) { console.warn('[TableManipulation] error setting value', e); }
+    } else {
+      try { console.warn('[TableManipulation] actualizarFila - index out of range', index, 'length:', tabla.length); } catch (e) {}
     }
   }
 }

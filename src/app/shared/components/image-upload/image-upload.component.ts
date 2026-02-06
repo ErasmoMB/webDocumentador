@@ -397,7 +397,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       clearTimeout(this.metaDebounceTimers.get(key));
     }
 
-    console.info('[ImageUpload] scheduleMetaPersist start', key);
     const timeout = setTimeout(() => {
       if (index !== undefined) {
         const foto = this._fotografias[index];
@@ -412,12 +411,15 @@ export class ImageUploadComponent implements OnInit, OnChanges {
             [tituloKey]: foto.titulo || this.tituloDefault,
             [fuenteKey]: foto.fuente || this.fuenteDefault
           }, { notifySync: true });
-          console.info('[ImageUpload] scheduleMetaPersist persisted (multi)', tituloKey, fuenteKey);
+
+          // Emitir cambios para que el host guarde en imageFacade y la vista se actualice
+          this.emitirCambios();
+          try {
+            const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
+            ViewChildHelper.updateAllComponents('actualizarDatos');
+          } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
         } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist persist error', e); }
 
-        // Emitir el cambio para que el host guarde en imageFacade y la vista se actualice
-        this.emitirCambios();
-        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
       } else {
         // single image
         try {
@@ -425,7 +427,6 @@ export class ImageUploadComponent implements OnInit, OnChanges {
             [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
             [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
           }, { notifySync: true });
-          console.info('[ImageUpload] scheduleMetaPersist persisted (single)', this.photoPrefix);
         } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist persist(single) error', e); }
 
         // Also persist image-group for single mode so preview uses saved metadata
@@ -434,13 +435,15 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           const imagenPersist = this.extractImageId(this.preview) || this.preview || '';
           const payload = [{ numero: this.calculateGlobalPhotoNumber(0), titulo: this.titulo || this.tituloDefault, fuente: this.fuente || this.fuenteDefault, imagen: imagenPersist }];
           this.imageFacade.saveImages(this.sectionId, this.photoPrefix, payload, groupPrefix);
-          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
+          try {
+            const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
+            ViewChildHelper.updateAllComponents('actualizarDatos');
+          } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
         } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist saveImages error', e); }
       }
 
       this.metaDebounceTimers.delete(key);
       this.cdRef.detectChanges();
-      console.info('[ImageUpload] scheduleMetaPersist finished', key);
     }, this.META_DEBOUNCE_MS);
 
     this.metaDebounceTimers.set(key, timeout);
