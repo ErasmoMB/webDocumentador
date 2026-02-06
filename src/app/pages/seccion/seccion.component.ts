@@ -97,7 +97,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion26Form: () => import('src/app/shared/components/forms/seccion26-form-wrapper.component').then(m => m.Seccion26FormWrapperComponent as unknown as Type<any>),
     seccion27View: () => import('src/app/shared/components/seccion27/seccion27-view.component').then(m => m.Seccion27ViewComponent as unknown as Type<any>),
     seccion27Form: () => import('src/app/shared/components/forms/seccion27-form-wrapper.component').then(m => m.Seccion27FormWrapperComponent as unknown as Type<any>),
-    seccion28: () => import('src/app/shared/components/seccion28/seccion28.component').then(m => m.Seccion28Component as unknown as Type<any>),
+    seccion28: () => import('src/app/shared/components/seccion28/seccion28-view.component').then(m => m.Seccion28ViewComponent as unknown as Type<any>),
+    seccion28View: () => import('src/app/shared/components/seccion28/seccion28-view.component').then(m => m.Seccion28ViewComponent as unknown as Type<any>),
+    seccion28Form: () => import('src/app/shared/components/forms/seccion28-form-wrapper.component').then(m => m.Seccion28FormWrapperComponent as unknown as Type<any>),
     seccion29: () => import('src/app/shared/components/seccion29/seccion29.component').then(m => m.Seccion29Component as unknown as Type<any>),
     seccion30: () => import('src/app/shared/components/seccion30/seccion30.component').then(m => m.Seccion30Component as unknown as Type<any>),
     seccion31: () => import('src/app/shared/components/seccion31/seccion31.component').then(m => m.Seccion31Component as unknown as Type<any>),
@@ -118,7 +120,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion15FormWrapper: () => import('src/app/shared/components/forms/seccion15-form-wrapper.component').then(m => m.Seccion15FormWrapperComponent as unknown as Type<any>),
     seccion16FormWrapper: () => import('src/app/shared/components/forms/seccion16-form-wrapper.component').then(m => m.Seccion16FormWrapperComponent as unknown as Type<any>),
     seccion30FormWrapper: () => import('src/app/shared/components/forms/seccion30-form-wrapper.component').then(m => m.Seccion30FormWrapperComponent as unknown as Type<any>),
-  } satisfies Record<string, ComponentLoader>;
+  } as Record<string, ComponentLoader>;
 
   private readonly formRules = this.createFormRules();
   
@@ -533,64 +535,64 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     const inputs = this.getPreviewInputs(seccionId);
 
     // ✅ AISD: Subsecciones dinámicas (A.1.X, A.2.X, A.3.X, etc.)
-    if (this.esSubseccionAISD(seccionId, 1)) return { loader: this.componentLoaders.seccion5, inputs };
-    if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders.seccion6, inputs };
-    if (this.esSubseccionAISD(seccionId, 3)) return { loader: this.componentLoaders.seccion7View, inputs };
-    if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders.seccion8, inputs };
-    if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders.seccion9, inputs };
-    if (this.esSubseccionAISD(seccionId, 6)) return { loader: this.componentLoaders.seccion10View, inputs };
-    if (this.esSubseccionAISD(seccionId, 7)) return { loader: this.componentLoaders.seccion11View, inputs };
-    if (this.esSubseccionAISD(seccionId, 8)) return { loader: this.componentLoaders.seccion12View, inputs };
-    if (this.esSubseccionAISD(seccionId, 9)) return { loader: this.componentLoaders.seccion13View, inputs };
-    if (this.esSubseccionAISD(seccionId, 10)) return { loader: this.componentLoaders.seccion14View, inputs };
-    if (this.esSubseccionAISD(seccionId, 11)) return { loader: this.componentLoaders.seccion15, inputs };
-    if (this.esSubseccionAISD(seccionId, 12)) return { loader: this.componentLoaders.seccion16View, inputs };
-    if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders.seccion17View, inputs };
-    if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders.seccion18View, inputs };
-    if (this.esSubseccionAISD(seccionId, 15)) return { loader: this.componentLoaders.seccion19View, inputs };
-    if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders.seccion20View, inputs };
+    if (this.esSubseccionAISD(seccionId, 1)) return { loader: this.componentLoaders['seccion5'], inputs };
+    if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders['seccion6'], inputs };
+    if (this.esSubseccionAISD(seccionId, 3)) return { loader: this.componentLoaders['seccion7View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders['seccion8'], inputs };
+    if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders['seccion9'], inputs };
+    if (this.esSubseccionAISD(seccionId, 6)) return { loader: this.componentLoaders['seccion10View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 7)) return { loader: this.componentLoaders['seccion11View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 8)) return { loader: this.componentLoaders['seccion12View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 9)) return { loader: this.componentLoaders['seccion13View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 10)) return { loader: this.componentLoaders['seccion14View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 11)) return { loader: this.componentLoaders['seccion15'], inputs };
+    if (this.esSubseccionAISD(seccionId, 12)) return { loader: this.componentLoaders['seccion16View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 13)) return { loader: this.componentLoaders['seccion17View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 14)) return { loader: this.componentLoaders['seccion18View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 15)) return { loader: this.componentLoaders['seccion19View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 16)) return { loader: this.componentLoaders['seccion20View'], inputs };
 
     // ✅ AISI: Subsecciones dinámicas (B.1.X, B.2.X, B.3.X, etc.)
     // Nota: Para Sección 22 (B.1.1), devolver View component
     if (this.esSubseccionAISI(seccionId, 1)) {
       // Sección 22 ya tiene View component en MODO IDEAL
-      return { loader: this.componentLoaders.seccion22View, inputs };
+      return { loader: this.componentLoaders['seccion22View'], inputs };
     }
     // Para las demás secciones B.X, usar componentes existentes (pendiente refactorizar a View)
-    if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23View, inputs };
-    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24View, inputs }; // Use VIEW component for preview (MODO IDEAL)
-    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25View, inputs };
-    if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders.seccion26, inputs };
-    if (this.esSubseccionAISI(seccionId, 6)) return { loader: this.componentLoaders.seccion27View, inputs };
-    if (this.esSubseccionAISI(seccionId, 7)) return { loader: this.componentLoaders.seccion28, inputs };
-    if (this.esSubseccionAISI(seccionId, 8)) return { loader: this.componentLoaders.seccion29, inputs };
-    if (this.esSubseccionAISI(seccionId, 9)) return { loader: this.componentLoaders.seccion30, inputs };
-    if (this.esSubseccionAISI(seccionId, 10)) return { loader: this.componentLoaders.seccion31, inputs };
-    if (this.esSubseccionAISI(seccionId, 11)) return { loader: this.componentLoaders.seccion32, inputs };
-    if (this.esSubseccionAISI(seccionId, 12)) return { loader: this.componentLoaders.seccion33, inputs };
-    if (this.esSubseccionAISI(seccionId, 13)) return { loader: this.componentLoaders.seccion34, inputs };
-    if (this.esSubseccionAISI(seccionId, 14)) return { loader: this.componentLoaders.seccion35, inputs };
-    if (this.esSubseccionAISI(seccionId, 15)) return { loader: this.componentLoaders.seccion36, inputs };
+    if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders['seccion23View'], inputs };
+    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders['seccion24View'], inputs }; // Use VIEW component for preview (MODO IDEAL)
+    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders['seccion25View'], inputs };
+    if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders['seccion26'], inputs };
+    if (this.esSubseccionAISI(seccionId, 6)) return { loader: this.componentLoaders['seccion27View'], inputs };
+    if (this.esSubseccionAISI(seccionId, 7)) return { loader: this.componentLoaders['seccion28'], inputs };
+    if (this.esSubseccionAISI(seccionId, 8)) return { loader: this.componentLoaders['seccion29'], inputs };
+    if (this.esSubseccionAISI(seccionId, 9)) return { loader: this.componentLoaders['seccion30'], inputs };
+    if (this.esSubseccionAISI(seccionId, 10)) return { loader: this.componentLoaders['seccion31'], inputs };
+    if (this.esSubseccionAISI(seccionId, 11)) return { loader: this.componentLoaders['seccion32'], inputs };
+    if (this.esSubseccionAISI(seccionId, 12)) return { loader: this.componentLoaders['seccion33'], inputs };
+    if (this.esSubseccionAISI(seccionId, 13)) return { loader: this.componentLoaders['seccion34'], inputs };
+    if (this.esSubseccionAISI(seccionId, 14)) return { loader: this.componentLoaders['seccion35'], inputs };
+    if (this.esSubseccionAISI(seccionId, 15)) return { loader: this.componentLoaders['seccion36'], inputs };
 
     // ✅ Secciones raíz AISD (A.X) - cualquier grupo
     if (seccionId.match(/^3\.1\.4\.A(\.\d+)?$/)) {
-      return { loader: this.componentLoaders.seccion4, inputs: { seccionId, modoFormulario: false } };
+      return { loader: this.componentLoaders['seccion4'], inputs: { seccionId, modoFormulario: false } };
     }
 
     // ✅ Secciones raíz AISI (B.X) - cualquier grupo
     if (seccionId.match(/^3\.1\.4\.B(\.\d+)?$/)) {
       // Preview (panel izquierdo) debe mostrar la View (solo lectura)
-      return { loader: this.componentLoaders.seccion21View, inputs };
+      return { loader: this.componentLoaders['seccion21View'], inputs };
     }
 
     const componentMap: Partial<Record<string, ComponentLoader>> = {
-      '3.1.1': this.componentLoaders.seccion1,
-      '3.1.2': this.componentLoaders.seccion2,
-      '3.1.2.A': this.componentLoaders.seccion2,
-      '3.1.2.B': this.componentLoaders.seccion2,
-      '3.1.3': this.componentLoaders.seccion3,
-      '3.1.3.A': this.componentLoaders.seccion3,
-      '3.1.3.B': this.componentLoaders.seccion3,
+      '3.1.1': this.componentLoaders['seccion1'],
+      '3.1.2': this.componentLoaders['seccion2'],
+      '3.1.2.A': this.componentLoaders['seccion2'],
+      '3.1.2.B': this.componentLoaders['seccion2'],
+      '3.1.3': this.componentLoaders['seccion3'],
+      '3.1.3.A': this.componentLoaders['seccion3'],
+      '3.1.3.B': this.componentLoaders['seccion3'],
     };
 
     const loader = componentMap[seccionId];
@@ -718,38 +720,38 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     const withModoFormulario = (seccionId: string) => ({ seccionId, modoFormulario: true });
 
     return [
-      { matches: eq('3.1.1'), loader: this.componentLoaders.seccion1FormWrapper, inputs: withSeccionId },
-      { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders.seccion2FormWrapper, inputs: withSeccionId },
-      { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders.seccion3Form, inputs: withSeccionId },
-      { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders.seccion21FormWrapper, inputs: withModoFormulario },
-      { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders.seccion4FormWrapper, inputs: withSeccionId },
+      { matches: eq('3.1.1'), loader: this.componentLoaders['seccion1FormWrapper'], inputs: withSeccionId },
+      { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders['seccion2FormWrapper'], inputs: withSeccionId },
+      { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders['seccion3Form'], inputs: withSeccionId },
+      { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders['seccion21FormWrapper'], inputs: withModoFormulario },
+      { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders['seccion4FormWrapper'], inputs: withSeccionId },
 
-      { matches: aisd(1), loader: this.componentLoaders.seccion5, inputs: withModoFormulario },
-      { matches: aisd(2), loader: this.componentLoaders.seccion6, inputs: withModoFormulario },
-      { matches: aisd(3), loader: this.componentLoaders.seccion7FormWrapper, inputs: withSeccionId },
-      { matches: aisd(4), loader: this.componentLoaders.seccion8Form, inputs: withSeccionId },
-      { matches: aisd(5), loader: this.componentLoaders.seccion9Form, inputs: withSeccionId },
-      { matches: aisd(6), loader: this.componentLoaders.seccion10, inputs: withModoFormulario },
-      { matches: aisd(7), loader: this.componentLoaders.seccion11, inputs: withModoFormulario },
-      { matches: aisd(8), loader: this.componentLoaders.seccion12, inputs: withModoFormulario },
-      { matches: aisd(9), loader: this.componentLoaders.seccion13, inputs: withSeccionId },
-      { matches: aisd(10), loader: this.componentLoaders.seccion14FormWrapper, inputs: withSeccionId },
-      { matches: aisd(11), loader: this.componentLoaders.seccion15FormWrapper, inputs: withSeccionId },
-      { matches: aisd(12), loader: this.componentLoaders.seccion16FormWrapper, inputs: withSeccionId },
-      { matches: aisd(13), loader: this.componentLoaders.seccion17FormWrapper, inputs: withSeccionId },
-      { matches: aisd(14), loader: this.componentLoaders.seccion18FormWrapper, inputs: withSeccionId },
-      { matches: aisd(15), loader: this.componentLoaders.seccion19FormWrapper, inputs: withSeccionId },
-      { matches: aisd(16), loader: this.componentLoaders.seccion20FormWrapper, inputs: withModoFormulario },
+      { matches: aisd(1), loader: this.componentLoaders['seccion5'], inputs: withModoFormulario },
+      { matches: aisd(2), loader: this.componentLoaders['seccion6'], inputs: withModoFormulario },
+      { matches: aisd(3), loader: this.componentLoaders['seccion7FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(4), loader: this.componentLoaders['seccion8Form'], inputs: withSeccionId },
+      { matches: aisd(5), loader: this.componentLoaders['seccion9Form'], inputs: withSeccionId },
+      { matches: aisd(6), loader: this.componentLoaders['seccion10'], inputs: withModoFormulario },
+      { matches: aisd(7), loader: this.componentLoaders['seccion11'], inputs: withModoFormulario },
+      { matches: aisd(8), loader: this.componentLoaders['seccion12'], inputs: withModoFormulario },
+      { matches: aisd(9), loader: this.componentLoaders['seccion13'], inputs: withSeccionId },
+      { matches: aisd(10), loader: this.componentLoaders['seccion14FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(11), loader: this.componentLoaders['seccion15FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(12), loader: this.componentLoaders['seccion16FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(13), loader: this.componentLoaders['seccion17FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(14), loader: this.componentLoaders['seccion18FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(15), loader: this.componentLoaders['seccion19FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(16), loader: this.componentLoaders['seccion20FormWrapper'], inputs: withModoFormulario },
 
-      { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders.seccion22, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders.seccion23, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.3', '3.1.4.B.2.3'), loader: this.componentLoaders.seccion24, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders.seccion25Form, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.5', '3.1.4.B.2.5'), loader: this.componentLoaders.seccion26Form, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.6', '3.1.4.B.2.6'), loader: this.componentLoaders.seccion27Form, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.7', '3.1.4.B.2.7'), loader: this.componentLoaders.seccion28, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.8', '3.1.4.B.2.8'), loader: this.componentLoaders.seccion29, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.9', '3.1.4.B.2.9'), loader: this.componentLoaders.seccion30FormWrapper, inputs: withSeccionId }
+      { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders['seccion22'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders['seccion23'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.3', '3.1.4.B.2.3'), loader: this.componentLoaders['seccion24'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders['seccion25Form'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.5', '3.1.4.B.2.5'), loader: this.componentLoaders['seccion26Form'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.6', '3.1.4.B.2.6'), loader: this.componentLoaders['seccion27Form'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.7', '3.1.4.B.2.7'), loader: this.componentLoaders['seccion28Form'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.8', '3.1.4.B.2.8'), loader: this.componentLoaders['seccion29'], inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.9', '3.1.4.B.2.9'), loader: this.componentLoaders['seccion30FormWrapper'], inputs: withSeccionId }
     ];
   }
 
@@ -1454,13 +1456,6 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const enrichedMock = this.formularioMock.aplicarTransformacionesMock(datosMock);
 
-      // DEBUG: show enrichedMock keys and sample activities if present
-      try {
-        console.info('[llenarDatosPrueba] seccionId:', this.seccionId);
-        console.info('[llenarDatosPrueba] enrichedMock keys:', Object.keys(enrichedMock || {}));
-        console.info('[llenarDatosPrueba] enrichedMock.actividadesEconomicasAISI:', JSON.stringify((enrichedMock && (enrichedMock['actividadesEconomicasAISI'] ?? enrichedMock['actividadesEconomicas'])) ?? null, null, 2));
-      } catch (e) { console.error('[llenarDatosPrueba] debug error', e); }
-
       const aliasMap: Record<string, string[]> = {
         textoPoblacionSexoAISD: ['textoPoblacionSexo'],
         poblacionSexoAISD: ['poblacionSexoTabla'],
@@ -1755,9 +1750,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
-      // DEBUG: show updates keys and activities table before persisting
-      console.info('[llenarDatosPrueba] updates keys:', Object.keys(updates));
-      console.info('[llenarDatosPrueba] actividadesEconomicasAISI (in updates):', updates['actividadesEconomicasAISI']);
+
 
       if (Object.keys(updates).length > 0) {
         this.formChange.persistFields(this.seccionId, 'form', updates);
@@ -1766,8 +1759,19 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
 
         // ✅ FIX: Asegurar que tablas importantes se guarden como "table" si vienen en el mock
-        const tablaKeys = ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'lenguasMaternasTabla', 'religionesTabla', 'actividadesEconomicasAISI'];
+        // Define which tables belong to which sections to avoid cross-section pollution
+        const tablasXSeccion: { [seccionPattern: string]: string[] } = {
+          '3.1.4.B.1.3': ['actividadesEconomicasAISI'], // Seccion 24
+          '3.1.4.B.1.7': ['puestoSaludCpTabla', 'educacionCpTabla'], // Seccion 28
+          'default': ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'lenguasMaternasTabla', 'religionesTabla']
+        };
+        
+        const tablasParaEstaSec = tablasXSeccion[this.seccionId] || tablasXSeccion['default'];
+        const tablaKeys = ['natalidadMortalidadTabla', 'morbilidadTabla', 'afiliacionSaludTabla', 'nivelEducativoTabla', 'tasaAnalfabetismoTabla', 'lenguasMaternasTabla', 'religionesTabla', 'actividadesEconomicasAISI', 'educacionCpTabla', 'puestoSaludCpTabla'];
         tablaKeys.forEach(key => {
+          // Skip tables that don't belong to this section
+          if (!tablasParaEstaSec.includes(key)) return;
+
           const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
           // Buscar posibles alias en el mock
           let valorMock: any = enrichedMock[key] ?? enrichedMock[`${key}${prefijo}`] ?? null;
@@ -1790,64 +1794,94 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
               return c === '' || c === 0 || c === '0' || c === '0%' || c === null || c === undefined || (typeof c === 'string' && c.trim() === '');
             });
 
-            // EXTRA DEBUG: Show mock/table/state details even if we will NOT persist, to diagnose blocked persistence for actividadesEconomicasAISI
-            if (key === 'actividadesEconomicasAISI') {
-              console.info('[llenarDatosPrueba] Key DEBUG ->', { key, prefijo, valorMockLen: Array.isArray(valorMock) ? valorMock.length : undefined });
-              try {
-                console.info('[llenarDatosPrueba] pre-persist actualField:', JSON.stringify(actualField, null, 2));
-                console.info('[llenarDatosPrueba] pre-persist actualTable:', JSON.stringify(actualTable, null, 2));
-                console.info('[llenarDatosPrueba] pre-persist checks:', {
-                  actualFieldIsUndefined: actualField === undefined,
-                  esCampoVacio: this.esCampoVacio(actualField),
-                  isSingleEmptyRow_field: isSingleEmptyRow(actualField),
-                  areAllRowsEmpty_field: areAllRowsEmpty(actualField),
-                  areAllRowsCasosEmpty_field: areAllRowsCasosEmpty(actualField),
-                  isTableArray: Array.isArray(actualTable),
-                  tableLen: Array.isArray(actualTable) ? actualTable.length : undefined,
-                  isSingleEmptyRow_table: isSingleEmptyRow(actualTable),
-                  areAllRowsEmpty_table: areAllRowsEmpty(actualTable),
-                  areAllRowsCasosEmpty_table: areAllRowsCasosEmpty(actualTable)
-                });
-              } catch (err) { console.error('[llenarDatosPrueba] Key DEBUG error', err); }
-            }
+
 
             // Allow override if field/table is undefined, empty, a single empty row, all rows empty, or all 'casos' are empty (common for initial structures)
-            const canOverrideField = (actualField === undefined || this.esCampoVacio(actualField) || isSingleEmptyRow(actualField) || areAllRowsEmpty(actualField) || areAllRowsCasosEmpty(actualField));
+            let canOverrideField = (actualField === undefined || this.esCampoVacio(actualField) || isSingleEmptyRow(actualField) || areAllRowsEmpty(actualField) || areAllRowsCasosEmpty(actualField));
+
+            // Allow override when the existing field is only the initial 'categoria' rows with empty editable cells
+            try {
+              if (!canOverrideField && Array.isArray(actualField) && Array.isArray(valorMock) && actualField.length === valorMock.length) {
+                const onlyCategoriesNoDescription = actualField.every((row: any) => {
+                  const desc = row.descripcion ?? row.cantidadEstudiantes ?? row.casos ?? '';
+                  const cat = row.categoria ?? row.nombreIE ?? '';
+                  return (desc === '' || desc === null || desc === undefined || (typeof desc === 'string' && desc.trim() === '')) && (cat && String(cat).trim() !== '');
+                });
+                if (onlyCategoriesNoDescription) {
+                  canOverrideField = true;
+                }
+              }
+            } catch (e) { }
+
             const canOverrideTable = (!Array.isArray(actualTable) || actualTable.length === 0 || isSingleEmptyRow(actualTable) || areAllRowsEmpty(actualTable) || areAllRowsCasosEmpty(actualTable));
 
             if (canOverrideField || canOverrideTable) {
-              // DEBUG: log target key and payload
-              if (key === 'actividadesEconomicasAISI') {
-                console.info('[llenarDatosPrueba] Will persist actividadesEconomicasAISI payload:', JSON.stringify(valorMock, null, 2));
-                console.info('[llenarDatosPrueba] actualField before persist:', JSON.stringify(actualField, null, 2));
-                console.info('[llenarDatosPrueba] actualTable before persist:', JSON.stringify(actualTable, null, 2));
-              }
+
               // Persistir correctamente como tabla (sobrescribe filas legacy vacías)
               const payload = JSON.parse(JSON.stringify(valorMock));
               this.projectFacade.setTableData(this.seccionId, null, key, payload);
-              this.formChange.persistFields(this.seccionId, 'table', { [key]: payload });
-              // DEBUG: log after persist
-              if (key === 'actividadesEconomicasAISI') {
-                console.info('[llenarDatosPrueba] After persist - selectField:', JSON.stringify(this.projectFacade.selectField(this.seccionId, null, key)(), null, 2));
-                console.info('[llenarDatosPrueba] After persist - selectTableData:', JSON.stringify(this.projectFacade.selectTableData(this.seccionId, null, key)(), null, 2));
-              }
-
-              // Además, sincronizar legacy (fields) para que `this.datos` contenga la tabla
-              const prefixedFieldKey = PrefixManager.getFieldKey(this.seccionId, key);
+              // ALSO persist to prefixed table key to ensure components that detect prefixed keys read it
               try {
-                // Actualizar campo base y prefijado en legacy para compatibilidad con componentes que leen desde `datos` (this.datos)
-                this.projectFacade.setField(this.seccionId, null, key, payload);
-                if (prefixedFieldKey && prefixedFieldKey !== key) {
-                  this.projectFacade.setField(this.seccionId, null, prefixedFieldKey, payload);
+                const prefixedTableKey = PrefixManager.getFieldKey(this.seccionId, key);
+                if (prefixedTableKey && prefixedTableKey !== key) {
+                  try { this.projectFacade.setTableData(this.seccionId, null, prefixedTableKey, payload); } catch (e) { /* noop */ }
+                  try { this.formChange.persistFields(this.seccionId, 'table', { [prefixedTableKey]: payload }, { notifySync: true }); } catch (e) { /* noop */ }
                 }
-                // Asegurar que FormChange también tenga los campos en 'form' para persistencia inmediata
-                this.formChange.persistFields(this.seccionId, 'form', { [key]: payload, ...(prefixedFieldKey && prefixedFieldKey !== key ? { [prefixedFieldKey]: payload } : {}) });
-              } catch (e) {
-                console.warn('[llenarDatosPrueba] Error sincronizando campos legacy:', e);
+              } catch (e) { /* noop */ }
+
+              this.formChange.persistFields(this.seccionId, 'table', { [key]: payload }, { notifySync: true });
+              // Force components to refresh after table persist
+              try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
+
+              // Sincronizar tablas críticas de Seccion28
+              if (key === 'actividadesEconomicasAISI' || key === 'puestoSaludCpTabla' || key === 'educacionCpTabla') {
+                try {
+                  // Trigger silent sync
+                  try {
+                    const comp = ViewChildHelper.getComponent('seccion28');
+                    if (comp && typeof comp['sincronizarTablaDesdeStore'] === 'function') {
+                      comp['sincronizarTablaDesdeStore'](key);
+                    }
+                  } catch (e) { /* noop */ }
+                } catch (e) { /* noop */ }
               }
 
               if (!fieldsConDatos.includes(key)) fieldsConDatos.push(key);
             }
+
+            // Extra aggressive fix: If this is puestoSaludCpTabla and table store is empty but mock exists and field is only categories, force persist
+            try {
+              if (key === 'puestoSaludCpTabla' && Array.isArray(valorMock) && valorMock.length > 0) {
+                const tableNow = this.projectFacade.selectTableData(this.seccionId, null, key)();
+                const fieldNow = this.projectFacade.selectField(this.seccionId, null, key)();
+                const tableEmpty = !Array.isArray(tableNow) || tableNow.length === 0;
+                const fieldOnlyCats = Array.isArray(fieldNow) && fieldNow.length === valorMock.length && fieldNow.every((row: any) => {
+                  const desc = row.descripcion ?? row.cantidadEstudiantes ?? row.casos ?? '';
+                  const cat = row.categoria ?? row.nombreIE ?? '';
+                  return (desc === '' || desc === null || desc === undefined || (typeof desc === 'string' && desc.trim() === '')) && (cat && String(cat).trim() !== '');
+                });
+                if (tableEmpty && fieldOnlyCats) {
+                  const payload = JSON.parse(JSON.stringify(valorMock));
+                  this.projectFacade.setTableData(this.seccionId, null, key, payload);
+                  // Ensure prefixed table key is persisted too
+                  try {
+                    const prefixedTableKey = PrefixManager.getFieldKey(this.seccionId, key);
+                    if (prefixedTableKey && prefixedTableKey !== key) {
+                      try { this.projectFacade.setTableData(this.seccionId, null, prefixedTableKey, payload); } catch (e) { /* noop */ }
+                      try { this.formChange.persistFields(this.seccionId, 'table', { [prefixedTableKey]: payload }, { notifySync: true }); } catch (e) { /* noop */ }
+                    }
+                  } catch (e) { /* noop */ }
+
+                  this.formChange.persistFields(this.seccionId, 'table', { [key]: payload }, { notifySync: true });
+                  const prefixedFieldKey = PrefixManager.getFieldKey(this.seccionId, key);
+                  this.projectFacade.setField(this.seccionId, null, key, payload);
+                  if (prefixedFieldKey && prefixedFieldKey !== key) this.projectFacade.setField(this.seccionId, null, prefixedFieldKey, payload);
+                  this.formChange.persistFields(this.seccionId, 'form', { [key]: payload, ...(prefixedFieldKey && prefixedFieldKey !== key ? { [prefixedFieldKey]: payload } : {}) }, { notifySync: true });
+                  try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+                  if (!fieldsConDatos.includes(key)) fieldsConDatos.push(key);
+                }
+              }
+            } catch (e) { }
           }
         });
 
@@ -1914,7 +1948,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // Persistir en el storage de imágenes y en campos legacy para compatibilidad
               const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-              try { this.imageService.saveImages(this.seccionId, prefix, fotos, groupPrefix); } catch (e) { console.warn('[llenarDatosPrueba] imageService.saveImages error', e); }
+              try { this.imageService.saveImages(this.seccionId, prefix, fotos, groupPrefix); } catch (e) { /* noop */ }
 
               const persistPayload: any = {};
               fotos.forEach((f: any, i: number) => {
@@ -1923,35 +1957,43 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
                 persistPayload[`${prefix}${i + 1}Fuente`] = f.fuente || '';
               });
 
-              try { this.formChange.persistFields(this.seccionId, 'images', persistPayload, { notifySync: true }); } catch (e) { console.warn('[llenarDatosPrueba] formChange.persistFields images error', e); }
-              try { this.projectFacade.setFields(this.seccionId, null, persistPayload); } catch (e) { console.warn('[llenarDatosPrueba] projectFacade.setFields images error', e); }
+              try { this.formChange.persistFields(this.seccionId, 'images', persistPayload, { notifySync: true }); } catch (e) { /* noop */ }
+              try { this.projectFacade.setFields(this.seccionId, null, persistPayload); } catch (e) { /* noop */ }
 
               try { ViewChildHelper.updateAllComponents('actualizarDatos'); ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) { /* ignore */ }
 
               Object.keys(persistPayload).forEach(k => { if (!fieldsConDatos.includes(k)) fieldsConDatos.push(k); });
             } catch (e) {
-              console.warn('[llenarDatosPrueba] Error procesando fotos mock para', prefix, e);
             }
           }
         }
-      } catch (e) { console.warn('[llenarDatosPrueba] fotos mock outer error', e); }
+      } catch (e) { /* noop */ }
 
       // ✅ Asegurar que tablas clave de la sección 3.1.4.B.1.4 se persistan también en TABLE store
       try {
-        const tableKeysToEnsure = ['tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI'];
+        const tableKeysToEnsure = ['tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'educacionCpTabla', 'puestoSaludCpTabla'];
         tableKeysToEnsure.forEach(key => {
           const payload = updates[key] ?? updates[PrefixManager.getFieldKey(this.seccionId, key)];
           if (Array.isArray(payload) && payload.length > 0) {
-            try { this.projectFacade.setTableData(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { console.warn('[llenarDatosPrueba] setTableData error', e); }
-            try { this.formChange.persistFields(this.seccionId, 'table', { [key]: JSON.parse(JSON.stringify(payload)) }); } catch (e) { console.warn('[llenarDatosPrueba] persistFields(table) error', e); }
+            try { this.projectFacade.setTableData(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { /* noop */ }
+            // Also ensure the prefixed TABLE key is set so components that resolve prefixed table keys read it immediately
+            try {
+              const prefixedTableKey = PrefixManager.getFieldKey(this.seccionId, key);
+              if (prefixedTableKey && prefixedTableKey !== key) {
+                try { this.projectFacade.setTableData(this.seccionId, null, prefixedTableKey, JSON.parse(JSON.stringify(payload))); } catch (e) { /* noop */ }
+                try { this.formChange.persistFields(this.seccionId, 'table', { [prefixedTableKey]: JSON.parse(JSON.stringify(payload)) }, { notifySync: true }); } catch (e) { /* noop */ }
+              }
+            } catch (e) { /* noop */ }
+
+            try { this.formChange.persistFields(this.seccionId, 'table', { [key]: JSON.parse(JSON.stringify(payload)) }); } catch (e) { /* noop */ }
             // Mirror to legacy field for compatibility with components that read `this.datos`
-            try { this.projectFacade.setField(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { console.warn('[llenarDatosPrueba] setField mirror error', e); }
+            try { this.projectFacade.setField(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { /* noop */ }
             // force components update
             try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
             if (!fieldsConDatos.includes(key)) fieldsConDatos.push(key);
           }
         });
-      } catch (e) { console.warn('[llenarDatosPrueba] table persist outer error', e); }
+      } catch (e) { /* noop */ }
 
       this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
 

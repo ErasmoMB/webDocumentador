@@ -24,7 +24,7 @@
               class="table-input"
               [value]="getFormattedValue(item, col)"
               (change)="onFieldChange(i, col.field, $any($event.target).value)"
-              [disabled]="isFieldReadonly(col)">
+              [disabled]="isFieldReadonly(col, i)">
               <option value="">-- Seleccionar --</option>
               <option *ngFor="let value of col.allowedValues" [value]="value">{{ value }}</option>
             </select>
@@ -35,7 +35,7 @@
               [value]="getFormattedValue(item, col)"
               (blur)="onFieldChange(i, col.field, $any($event.target).value)"
               [placeholder]="col.placeholder || ''"
-              [readonly]="isFieldReadonly(col)"
+              [readonly]="isFieldReadonly(col, i)"
               rows="2">
             </textarea>
             <!-- Input para otros tipos -->
@@ -47,7 +47,7 @@
               (blur)="onFieldChange(i, col.field, $any($event.target).value)"
               (keyup.enter)="onFieldChange(i, col.field, $any($event.target).value); $any($event.target).blur()"
               [placeholder]="col.placeholder || ''"
-              [readonly]="isFieldReadonly(col)">
+              [readonly]="isFieldReadonly(col, i)">
           </ng-container>
         </td>
         <td *ngIf="showDeleteButton && !modoVista" class="table-actions" data-label="">

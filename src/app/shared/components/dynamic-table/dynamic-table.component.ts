@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnChanges, DoCheck, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
@@ -28,7 +28,7 @@ export interface TableColumn {
     templateUrl: './dynamic-table.component.html',
     styleUrls: ['./dynamic-table.component.css']
 })
-export class DynamicTableComponent implements OnInit, OnChanges {
+export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() config!: TableConfig;
@@ -55,6 +55,10 @@ export class DynamicTableComponent implements OnInit, OnChanges {
   private calcDebounceMs = 200;
   private calcTimeouts = new Map<string, any>();
   public tableData: any[] = [];
+
+  // For deep change detection when `datos` object mutates in place
+  private lastDatosArrayRef: any = null;
+  private lastDatosArraySnapshot: string = '';
 
   constructor(
     private tableFacade: TableManagementFacade,
@@ -176,6 +180,26 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     }
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
     let datosTabla = this.datos[tablaKeyActual] ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
+
+
+
+    // Si no hubo datos locales, intentar cargar directamente desde ProjectState (table store)
+    try {
+      if ((!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) && tablaKeyActual) {
+        try {
+          const fromStore = (this.projectFacade && typeof this.projectFacade.selectTableData === 'function') ? (this.projectFacade.selectTableData(this.sectionId, null, tablaKeyActual)() || (tablaKeyBase ? this.projectFacade.selectTableData(this.sectionId, null, tablaKeyBase)() : undefined)) : undefined;
+          if (Array.isArray(fromStore) && fromStore.length > 0) {
+            this.datos[tablaKeyActual] = structuredClone(fromStore);
+            datosTabla = this.datos[tablaKeyActual];
+            try { this.cdRef.detectChanges(); } catch (e) {}
+            if (String(tablaKeyActual).toLowerCase().includes('puestosalud')) {
+              console.info('[DynamicTable] cargar desde store ->', tablaKeyActual, 'len', fromStore.length);
+            }
+          }
+        } catch (e) { /* noop */ }
+      }
+    } catch (e) { /* noop */ }
+
     if (datosTabla && Array.isArray(datosTabla) && this.esDatoLegacy(datosTabla)) {
       this.isCleaningLegacy = true;
       this.isInitializing = true;
@@ -732,6 +756,29 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     return this.tableData || [];
   }
 
+  // Force load payload directly into the table and avoid initialization heuristics
+  public forceLoadTableData(tablaKey: string, payload: any[]): void {
+    try {
+      if (!Array.isArray(payload)) return;
+      
+      // ✅ CRÍTICO: Crear NUEVA referencia a this.datos para forzar OnPush detection
+      const datosActualizados = { ...this.datos };
+      datosActualizados[tablaKey] = structuredClone(payload);
+      const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+      if (tablaKeyBase && tablaKeyBase !== tablaKey) {
+        datosActualizados[tablaKeyBase] = structuredClone(payload);
+      }
+      this.datos = datosActualizados;
+      
+      this.tableData = payload.map((r: any) => (typeof r === 'object' && r !== null) ? { ...r } : r);
+      this.cachedTableData = [];
+      this.lastTablaKey = '';
+      try { this.formChange.persistFields(this.sectionId, 'table', { [tablaKey]: payload }, { notifySync: true }); } catch (e) {}
+      try { this.cdRef.detectChanges(); } catch (e) {}
+    } catch (e) {
+    }
+  }
+
   getFormattedValue(item: any, col: TableColumn): string {
     let value = item[col.field];
 
@@ -759,11 +806,19 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     return value != null ? String(value) : '';
   }
 
-  isFieldReadonly(col: TableColumn): boolean {
+  isFieldReadonly(col: TableColumn, rowIndex?: number): boolean {
     if (col.readonly) return true;
     if (this.config?.camposNoEditables && this.config.camposNoEditables.includes(col.field)) {
       return true;
     }
+    // Si la tabla tiene estructura inicial fija, solo la columna identificadora (totalKey) es no editable en esas filas
+    try {
+      if (typeof rowIndex === 'number' && Array.isArray(this.config?.estructuraInicial) && this.config.estructuraInicial.length > 0) {
+        const estructuraLen = this.config.estructuraInicial.length;
+        const totalKey = this.config?.totalKey || this.totalKey;
+        if (rowIndex < estructuraLen && col.field === totalKey) return true;
+      }
+    } catch (e) { /* noop */ }
     return false;
   }
 
@@ -800,5 +855,45 @@ export class DynamicTableComponent implements OnInit, OnChanges {
       return lastRow;
     }
     return null;
+  }
+  ngDoCheck(): void {
+    try {
+      const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+      const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+      const currentArray = (tablaKeyActual && Array.isArray(this.datos[tablaKeyActual])) ? this.datos[tablaKeyActual]
+        : (tablaKeyBase && Array.isArray(this.datos[tablaKeyBase])) ? this.datos[tablaKeyBase]
+        : null;
+
+      if (currentArray !== this.lastDatosArrayRef) {
+        // Reference changed -> update
+        this.lastDatosArrayRef = currentArray;
+        this.lastDatosArraySnapshot = JSON.stringify(currentArray ? currentArray.slice(-1)[0] || {} : {});
+        this.verificarEInicializarTabla();
+        this.cdRef.detectChanges();
+        return;
+      }
+
+      // If reference is same, compare length and last item snapshot
+      if (Array.isArray(currentArray)) {
+        const lastItem = currentArray.length > 0 ? currentArray[currentArray.length - 1] : {};
+        const snapshot = JSON.stringify(lastItem || {});
+        if (snapshot !== this.lastDatosArraySnapshot) {
+          this.lastDatosArraySnapshot = snapshot;
+          this.verificarEInicializarTabla();
+          this.cdRef.detectChanges();
+        }
+      }
+    } catch (e) {
+      // noop
+    }
+  }  // Método público que permite forzar la actualización de la tabla cuando el store cambió
+  actualizarDatos(): void {
+    try {
+      this.verificarEInicializarTabla();
+      this.actualizarTableData();
+      this.cdRef.detectChanges();
+    } catch (e) {
+      // noop
+    }
   }
 }

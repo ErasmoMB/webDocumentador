@@ -46,7 +46,8 @@ import { Seccion25ViewComponent } from 'src/app/shared/components/seccion25/secc
 import { Seccion26ViewComponent } from 'src/app/shared/components/seccion26/seccion26-view.component';
 import { Seccion26FormWrapperComponent } from 'src/app/shared/components/forms/seccion26-form-wrapper.component';
 import { Seccion27ViewComponent } from 'src/app/shared/components/seccion27/seccion27-view.component';
-import { Seccion28Component } from 'src/app/shared/components/seccion28/seccion28.component';
+import { Seccion28ViewComponent } from 'src/app/shared/components/seccion28/seccion28-view.component';
+import { Seccion28FormWrapperComponent } from 'src/app/shared/components/forms/seccion28-form-wrapper.component';
 import { Seccion29Component } from 'src/app/shared/components/seccion29/seccion29.component';
 import { Seccion30Component } from 'src/app/shared/components/seccion30/seccion30.component';
 import { Seccion31Component } from 'src/app/shared/components/seccion31/seccion31.component';
@@ -180,8 +181,11 @@ export class ResumenComponent implements OnInit, AfterViewInit {
     // El componente de vista contiene la lógica/form internamente y es el que debemos registrar
     ViewChildHelper.registerComponent('seccion27', comp);
   }
-  @ViewChild(Seccion28Component) set seccion28(comp: Seccion28Component) {
+  @ViewChild(Seccion28ViewComponent) set seccion28(comp: Seccion28ViewComponent) {
     ViewChildHelper.registerComponent('seccion28', comp);
+  }
+  @ViewChild(Seccion28FormWrapperComponent) set seccion28FormWrapper(comp: Seccion28FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion28FormWrapper', comp);
   }
   @ViewChild(Seccion29Component) set seccion29(comp: Seccion29Component) {
     ViewChildHelper.registerComponent('seccion29', comp);

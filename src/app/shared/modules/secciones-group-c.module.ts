@@ -9,7 +9,9 @@ import { Seccion26ViewComponent } from '../components/seccion26/seccion26-view.c
 import { Seccion27FormWrapperComponent } from '../components/forms/seccion27-form-wrapper.component';
 import { Seccion27FormComponent } from '../components/seccion27/seccion27-form.component';
 import { Seccion27ViewComponent } from '../components/seccion27/seccion27-view.component';
-import { Seccion28Component } from '../components/seccion28/seccion28.component';
+import { Seccion28FormWrapperComponent } from '../components/forms/seccion28-form-wrapper.component';
+import { Seccion28FormComponent } from '../components/seccion28/seccion28-form.component';
+import { Seccion28ViewComponent } from '../components/seccion28/seccion28-view.component';
 import { Seccion29Component } from '../components/seccion29/seccion29.component';
 import { Seccion30Component } from '../components/seccion30/seccion30.component';
 import { Seccion31Component } from '../components/seccion31/seccion31.component';
@@ -27,7 +29,9 @@ const GROUP_C_COMPONENTS = [
   Seccion27FormWrapperComponent,
   Seccion27FormComponent,
   Seccion27ViewComponent,
-  Seccion28Component,
+  Seccion28FormWrapperComponent,
+  Seccion28FormComponent,
+  Seccion28ViewComponent,
   Seccion29Component,
   Seccion30Component,
   Seccion31Component,
@@ -52,7 +56,9 @@ const GROUP_C_COMPONENTS = [
     Seccion27FormWrapperComponent,
     Seccion27FormComponent,
     Seccion27ViewComponent,
-    Seccion28Component,
+    Seccion28FormWrapperComponent,
+    Seccion28FormComponent,
+    Seccion28ViewComponent,
     Seccion29Component,
     Seccion30Component,
     Seccion31Component,
@@ -74,7 +80,9 @@ const GROUP_C_COMPONENTS = [
     Seccion27FormWrapperComponent,
     Seccion27FormComponent,
     Seccion27ViewComponent,
-    Seccion28Component,
+    Seccion28FormWrapperComponent,
+    Seccion28FormComponent,
+    Seccion28ViewComponent,
     Seccion29Component,
     Seccion30Component,
     Seccion31Component,
