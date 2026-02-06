@@ -87,8 +87,20 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   private applyNoAddDeleteForEstructuraInicial(): void {
     try {
       if (this.config && Array.isArray((this.config as any).estructuraInicial) && (this.config as any).estructuraInicial.length > 0) {
-        this.showAddButton = false;
-        this.showDeleteButton = false;
+        // If there is an initial structure, hide add/delete only when the table is empty
+        // or not yet initialized. If the table already has rows (initialized or filled), allow add/delete
+        // only if the inputs haven't explicitly disabled them (respect explicit `[showAddButton]="false"`).
+        const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+        const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+        const datos = (tablaKeyActual && this.datos) ? (this.datos[tablaKeyActual] ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined)) : undefined;
+        if (!datos || !Array.isArray(datos) || datos.length === 0) {
+          this.showAddButton = false;
+          this.showDeleteButton = false;
+        } else {
+          // Allow add/delete once there is data but do not override an explicit false input
+          if (this.showAddButton !== false) this.showAddButton = true;
+          if (this.showDeleteButton !== false) this.showDeleteButton = true;
+        }
       }
     } catch (e) { /* noop */ }
   }
