@@ -90,7 +90,9 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion23View: () => import('src/app/shared/components/seccion23/seccion23-view.component').then(m => m.Seccion23ViewComponent as unknown as Type<any>),
     seccion24View: () => import('src/app/shared/components/seccion24/seccion24-view.component').then(m => m.Seccion24ViewComponent as unknown as Type<any>),
     seccion24: () => import('src/app/shared/components/forms/seccion24-form-wrapper.component').then(m => m.Seccion24FormWrapperComponent as unknown as Type<any>),
-    seccion25: () => import('src/app/shared/components/seccion25/seccion25.component').then(m => m.Seccion25Component as unknown as Type<any>),
+    seccion25: () => import('src/app/shared/components/seccion25/seccion25-view.component').then(m => m.Seccion25ViewComponent as unknown as Type<any>),
+    seccion25View: () => import('src/app/shared/components/seccion25/seccion25-view.component').then(m => m.Seccion25ViewComponent as unknown as Type<any>),
+    seccion25Form: () => import('src/app/shared/components/forms/seccion25-form-wrapper.component').then(m => m.Seccion25FormWrapperComponent as unknown as Type<any>),
     seccion26: () => import('src/app/shared/components/seccion26/seccion26.component').then(m => m.Seccion26Component as unknown as Type<any>),
     seccion27: () => import('src/app/shared/components/seccion27/seccion27.component').then(m => m.Seccion27Component as unknown as Type<any>),
     seccion28: () => import('src/app/shared/components/seccion28/seccion28.component').then(m => m.Seccion28Component as unknown as Type<any>),
@@ -554,7 +556,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // Para las demás secciones B.X, usar componentes existentes (pendiente refactorizar a View)
     if (this.esSubseccionAISI(seccionId, 2)) return { loader: this.componentLoaders.seccion23View, inputs };
-    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24View, inputs }; // Use VIEW component for preview (MODO IDEAL)    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25, inputs };
+    if (this.esSubseccionAISI(seccionId, 3)) return { loader: this.componentLoaders.seccion24View, inputs }; // Use VIEW component for preview (MODO IDEAL)
+    if (this.esSubseccionAISI(seccionId, 4)) return { loader: this.componentLoaders.seccion25View, inputs };
     if (this.esSubseccionAISI(seccionId, 5)) return { loader: this.componentLoaders.seccion26, inputs };
     if (this.esSubseccionAISI(seccionId, 6)) return { loader: this.componentLoaders.seccion27, inputs };
     if (this.esSubseccionAISI(seccionId, 7)) return { loader: this.componentLoaders.seccion28, inputs };
@@ -739,7 +742,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders.seccion22, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders.seccion23, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.3', '3.1.4.B.2.3'), loader: this.componentLoaders.seccion24, inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders.seccion25, inputs: withModoFormulario },
+      { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders.seccion25Form, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.5', '3.1.4.B.2.5'), loader: this.componentLoaders.seccion26, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.6', '3.1.4.B.2.6'), loader: this.componentLoaders.seccion27, inputs: withModoFormulario },
       { matches: eq('3.1.4.B.1.7', '3.1.4.B.2.7'), loader: this.componentLoaders.seccion28, inputs: withModoFormulario },
@@ -1875,6 +1878,79 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
       
+      // ✅ Intento adicional: poblar fotografías desde el mock si existen arrays de fotos
+      try {
+        // Buscar prefijos de foto declarados para esta sección (p. ej. 'fotografiaCahuachoB14')
+        const photoPrefixes = seccionFields
+          .filter(f => f && f.startsWith('fotografia'))
+          .map(f => f.replace(/(Imagen|Titulo|Fuente)$/, ''));
+        const uniquePrefixes = Array.from(new Set(photoPrefixes));
+
+        for (const prefix of uniquePrefixes) {
+          // Preferir clave específica en el mock: 'fotografias' + sufijo del prefijo de foto
+          const suffix = prefix.startsWith('fotografia') ? prefix.substring('fotografia'.length) : '';
+          const mockKeyCandidate = `fotografias${suffix}`;
+          let fotosMock = enrichedMock?.[mockKeyCandidate] ?? enrichedMock?.['fotografias'] ?? null;
+
+          // Si no encontramos, intentar cualquier clave del mock que parezca contener fotos
+          if ((!Array.isArray(fotosMock) || fotosMock.length === 0) && enrichedMock) {
+            for (const k of Object.keys(enrichedMock)) {
+              if (k.toLowerCase().includes('fotograf') && Array.isArray(enrichedMock[k]) && enrichedMock[k].length > 0) {
+                fotosMock = enrichedMock[k];
+                break;
+              }
+            }
+          }
+
+          if (Array.isArray(fotosMock) && fotosMock.length > 0) {
+            try {
+              const fotos: FotoItem[] = fotosMock.map((fm: any, idx: number) => {
+                const ruta = fm.ruta || fm.imagen || fm.url || '';
+                const imagen = ruta ? ((ruta.startsWith('http') || ruta.startsWith('data:')) ? ruta : `${location.origin.replace(/\/$/, '')}/${String(ruta).replace(/^\/+/, '')}`) : '';
+                return { numero: fm.numero || `${idx + 1}`, titulo: fm.titulo || fm.descripcion || '', fuente: fm.fuente || '', imagen } as FotoItem;
+              });
+
+              // Persistir en el storage de imágenes y en campos legacy para compatibilidad
+              const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+              try { this.imageService.saveImages(this.seccionId, prefix, fotos, groupPrefix); } catch (e) { console.warn('[llenarDatosPrueba] imageService.saveImages error', e); }
+
+              const persistPayload: any = {};
+              fotos.forEach((f: any, i: number) => {
+                persistPayload[`${prefix}${i + 1}Imagen`] = f.imagen || '';
+                persistPayload[`${prefix}${i + 1}Titulo`] = f.titulo || '';
+                persistPayload[`${prefix}${i + 1}Fuente`] = f.fuente || '';
+              });
+
+              try { this.formChange.persistFields(this.seccionId, 'images', persistPayload, { notifySync: true }); } catch (e) { console.warn('[llenarDatosPrueba] formChange.persistFields images error', e); }
+              try { this.projectFacade.setFields(this.seccionId, null, persistPayload); } catch (e) { console.warn('[llenarDatosPrueba] projectFacade.setFields images error', e); }
+
+              try { ViewChildHelper.updateAllComponents('actualizarDatos'); ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) { /* ignore */ }
+
+              Object.keys(persistPayload).forEach(k => { if (!fieldsConDatos.includes(k)) fieldsConDatos.push(k); });
+            } catch (e) {
+              console.warn('[llenarDatosPrueba] Error procesando fotos mock para', prefix, e);
+            }
+          }
+        }
+      } catch (e) { console.warn('[llenarDatosPrueba] fotos mock outer error', e); }
+
+      // ✅ Asegurar que tablas clave de la sección 3.1.4.B.1.4 se persistan también en TABLE store
+      try {
+        const tableKeysToEnsure = ['tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI'];
+        tableKeysToEnsure.forEach(key => {
+          const payload = updates[key] ?? updates[PrefixManager.getFieldKey(this.seccionId, key)];
+          if (Array.isArray(payload) && payload.length > 0) {
+            try { this.projectFacade.setTableData(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { console.warn('[llenarDatosPrueba] setTableData error', e); }
+            try { this.formChange.persistFields(this.seccionId, 'table', { [key]: JSON.parse(JSON.stringify(payload)) }); } catch (e) { console.warn('[llenarDatosPrueba] persistFields(table) error', e); }
+            // Mirror to legacy field for compatibility with components that read `this.datos`
+            try { this.projectFacade.setField(this.seccionId, null, key, JSON.parse(JSON.stringify(payload))); } catch (e) { console.warn('[llenarDatosPrueba] setField mirror error', e); }
+            // force components update
+            try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
+            if (!fieldsConDatos.includes(key)) fieldsConDatos.push(key);
+          }
+        });
+      } catch (e) { console.warn('[llenarDatosPrueba] table persist outer error', e); }
+
       this.fieldMapping.markFieldsAsTestData(fieldsConDatos);
 
       this.datos = this.projectFacade.obtenerDatos() as FormularioDatos;

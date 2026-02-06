@@ -14,7 +14,12 @@ export class ImageLogicService {
     if (!imagen) return false;
     if (typeof imagen === 'string') {
       return imagen !== 'null' && imagen.trim() !== '' && 
-        (imagen.startsWith('data:image') || imagen.length > 100 || this.isImageId(imagen));
+        (
+          imagen.startsWith('data:image') ||
+          imagen.startsWith('http') ||
+          imagen.length > 100 ||
+          this.isImageId(imagen)
+        );
     }
     if (imagen instanceof File) {
       return imagen.type.startsWith('image/');

@@ -1,0 +1,170 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.4. Vivienda</h4>
+
+    <label class="label">Texto — Vivienda</label>
+    <app-paragraph-editor
+      fieldId="textoViviendaAISI"
+      [value]="viewModel().textoVivienda"
+      (valueChange)="onFieldChange('textoViviendaAISI', $event)">
+    </app-paragraph-editor>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+      <label class="label">Título de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroTituloTiposVivienda"
+        (change)="onFieldChange('cuadroTituloTiposVivienda', $any($event.target).value)"
+        placeholder="Ej: Tipos de Vivienda">
+    </div>
+
+    <label class="label">Tipos de Vivienda</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [sectionId]="seccionId"
+      [config]="tiposViviendaConfig"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Casa independiente' },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+      ]"
+      [tablaKey]="'tiposViviendaAISI'"
+      [totalKey]="'categoria'"
+      [customFieldChangeHandler]="onTiposViviendaFieldChange.bind(this)"
+      (tableUpdated)="onTiposViviendaTableUpdated()">
+    </app-dynamic-table>
+
+
+
+    <div class="form-group" style="margin-top: 15px;">
+      <label class="label">Fuente de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroFuenteTiposVivienda"
+        (change)="onFieldChange('cuadroFuenteTiposVivienda', $any($event.target).value)"
+        placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.">
+    </div>
+
+    <!-- Texto — Ocupación (ahora después del cuadro) -->
+    <label class="label">Texto — Ocupación de vivienda</label>
+    <app-paragraph-editor
+      fieldId="textoOcupacionViviendaAISI"
+      [value]="viewModel().textoOcupacion"
+      (valueChange)="onFieldChange('textoOcupacionViviendaAISI', $event)">
+    </app-paragraph-editor>
+
+
+
+    <!-- Tablas -->
+    <h5 class="mt-md">Cuadros</h5>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+      <label class="label">Título de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroTituloCondicionOcupacion"
+        (change)="onFieldChange('cuadroTituloCondicionOcupacion', $any($event.target).value)"
+        placeholder="Ej: Condición de Ocupación">
+    </div>
+
+    <label class="label">Condición de Ocupación</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [sectionId]="seccionId"
+      [config]="condicionOcupacionConfig"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Ocupada, con personas presentes' },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+      ]"
+      [tablaKey]="'condicionOcupacionAISI'"
+      [totalKey]="'categoria'"
+      [customFieldChangeHandler]="onCondicionOcupacionFieldChange.bind(this)"
+      (tableUpdated)="onCondicionOcupacionTableUpdated()"
+      [showAddButton]="false"
+      [showDeleteButton]="false">
+    </app-dynamic-table>
+
+    <div class="form-group" style="margin-top: 15px;">
+      <label class="label">Fuente de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroFuenteCondicionOcupacion"
+        (change)="onFieldChange('cuadroFuenteCondicionOcupacion', $any($event.target).value)"
+        placeholder="Ej: Censos Nacionales 2017">
+    </div>
+
+    <h4 class="section-title">a. Estructura</h4>
+
+    <app-paragraph-editor
+      fieldId="textoEstructuraAISI"
+      [value]="viewModel().textoEstructura"
+      (valueChange)="onFieldChange('textoEstructuraAISI', $event)">
+    </app-paragraph-editor>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+      <label class="label">Título de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroTituloMaterialesVivienda"
+        (change)="onFieldChange('cuadroTituloMaterialesVivienda', $any($event.target).value)"
+        placeholder="Ej: Tipos de materiales de la vivienda">
+    </div>
+
+    <label class="label">Tipos de materiales de la vivienda</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [sectionId]="seccionId"
+      [config]="materialesViviendaConfig"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
+        { field: 'tipoMaterial', label: 'Tipo de material', type: 'text', placeholder: 'Ej: Adobe' },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+      ]"
+      [tablaKey]="'materialesViviendaAISI'"
+      [totalKey]="'categoria'"
+      [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
+      (tableUpdated)="onMaterialesViviendaTableUpdated()">
+    </app-dynamic-table>
+
+
+
+    <div class="form-group" style="margin-top: 15px;">
+      <label class="label">Fuente de la Tabla</label>
+      <input 
+        type="text" 
+        class="form-control"
+        [value]="viewModel().cuadroFuenteMaterialesVivienda"
+        (change)="onFieldChange('cuadroFuenteMaterialesVivienda', $any($event.target).value)"
+        placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.">
+    </div>
+
+
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="viewModel().fotos"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Estructura de viviendas en el CP"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Estructura de viviendas en el CP"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChangeHandler($event)">
+      </app-image-upload>
+    </div>
+
+  </div>
+</div>

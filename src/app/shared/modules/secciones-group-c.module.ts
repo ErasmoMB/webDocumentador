@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CoreSharedModule } from './core-shared.module';
-import { Seccion25Component } from '../components/seccion25/seccion25.component';
+import { Seccion25FormWrapperComponent } from '../components/forms/seccion25-form-wrapper.component';
+import { Seccion25FormComponent } from '../components/seccion25/seccion25-form.component';
+import { Seccion25ViewComponent } from '../components/seccion25/seccion25-view.component';
 import { Seccion26Component } from '../components/seccion26/seccion26.component';
 import { Seccion27Component } from '../components/seccion27/seccion27.component';
 import { Seccion28Component } from '../components/seccion28/seccion28.component';
@@ -15,7 +17,6 @@ import { Seccion36Component } from '../components/seccion36/seccion36.component'
 import { Seccion30FormWrapperComponent } from '../components/forms/seccion30-form-wrapper.component';
 
 const GROUP_C_COMPONENTS = [
-  Seccion25Component,
   Seccion26Component,
   Seccion27Component,
   Seccion28Component,
@@ -34,7 +35,9 @@ const GROUP_C_COMPONENTS = [
   declarations: [],
   imports: [
     CoreSharedModule,
-    Seccion25Component,
+    Seccion25FormWrapperComponent,
+    Seccion25FormComponent,
+    Seccion25ViewComponent,
     Seccion26Component,
     Seccion27Component,
     Seccion28Component,
@@ -50,7 +53,9 @@ const GROUP_C_COMPONENTS = [
   ],
   exports: [
     CoreSharedModule,
-    Seccion25Component,
+    Seccion25FormWrapperComponent,
+    Seccion25FormComponent,
+    Seccion25ViewComponent,
     Seccion26Component,
     Seccion27Component,
     Seccion28Component,

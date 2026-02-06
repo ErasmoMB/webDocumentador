@@ -403,7 +403,30 @@ export const DEFAULT_SECTION_FIELDS: Record<string, string[]> = {
     'textoActividadesEconomicasAISI',
     'actividadesEconomicasAISI',
     'textoMercadoProductos',
-    'textoHabitosConsumo'
+    'textoHabitosConsumo',
+
+    // Vivienda (Sección 25)
+    'textoViviendaAISI',
+    'textoOcupacionViviendaAISI',
+    'textoEstructuraAISI',
+
+    // Tablas
+    'tiposViviendaAISI',
+    'condicionOcupacionAISI',
+    'materialesViviendaAISI',
+
+    // Cuadro títulos y fuentes (editable)
+    'cuadroTituloTiposVivienda',
+    'cuadroFuenteTiposVivienda',
+    'cuadroTituloCondicionOcupacion',
+    'cuadroFuenteCondicionOcupacion',
+    'cuadroTituloMaterialesVivienda',
+    'cuadroFuenteMaterialesVivienda',
+
+    // Fotografías (campos base y por índice)
+    'fotografiaCahuachoB14Imagen',
+    'fotografiaCahuachoB14Titulo',
+    'fotografiaCahuachoB14Fuente'
   ],
   '3.1.4.B.1.5': [
     'centroPobladoAISI',

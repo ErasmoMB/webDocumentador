@@ -62,6 +62,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   dragOverIndex: number = -1;
   
   private isInternalUpdate: boolean = false;
+  // Debounce timers for title/source edits per photo (keyed by 'meta_<index>' or 'meta_single')
+  private metaDebounceTimers: Map<string, any> = new Map();
+  private readonly META_DEBOUNCE_MS = 600; // debounce delay when editing title/fuente
 
   get stableId(): string {
     return (this.photoPrefix + '_' + this.sectionId).replace(/\W+/g, '_');
@@ -158,6 +161,14 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     return Math.random().toString(36).substr(2, 9);
   }
 
+  ngOnDestroy() {
+    // Clear any pending meta timers
+    try {
+      this.metaDebounceTimers.forEach(t => clearTimeout(t));
+      this.metaDebounceTimers.clear();
+    } catch (e) {}
+  }
+
   private arraysEqual(a: FotoItem[], b: FotoItem[]): boolean {
     const validA = a.filter(f => !!f.imagen);
     const validB = b.filter(f => !!f.imagen);
@@ -168,33 +179,33 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   onTituloChange(val: string, i?: number) {
     if (i !== undefined && this._fotografias[i]) {
+      // Update local model immediately
       this._fotografias[i].titulo = val;
-      const fieldKey = `${this.photoPrefix}${i + 1}Titulo`;
-      this.formChange.persistFields(this.sectionId, 'images', {
-        [fieldKey]: val
-      });
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
-      this.emitirCambios();
+      // Debounce persistence and emit
+      this.scheduleMetaPersist(i);
     } else {
       this.titulo = val;
       this.tituloChange.emit(val);
+      // Debounce persist for single image
+      this.scheduleMetaPersist();
     }
   }
 
   onFuenteChange(val: string, i?: number) {
     if (i !== undefined && this._fotografias[i]) {
+      // Update local model immediately
       this._fotografias[i].fuente = val;
-      const fieldKey = `${this.photoPrefix}${i + 1}Fuente`;
-      this.formChange.persistFields(this.sectionId, 'images', {
-        [fieldKey]: val
-      });
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
-      this.emitirCambios();
+      // Debounce persistence and emit
+      this.scheduleMetaPersist(i);
     } else {
       this.fuente = val;
       this.fuenteChange.emit(val);
+      // Debounce persist for single image
+      this.scheduleMetaPersist();
     }
   }
 
@@ -243,13 +254,14 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias[index].numero = numGlobal;
       
       const foto = this._fotografias[index];
-      this.formChange.persistFields(this.sectionId, 'images', {
+      // Persistir imagen y metadatos e indicar notifySync para actualizar vista inmediatamente
+      try { this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}${index + 1}Imagen`]: persistValue,
         [`${this.photoPrefix}${index + 1}Numero`]: numGlobal,
         [`${this.photoPrefix}${index + 1}Titulo`]: foto.titulo || this.tituloDefault,
         [`${this.photoPrefix}${index + 1}Fuente`]: foto.fuente || this.fuenteDefault
-      });
-      
+      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields error', e); }
+
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
 
@@ -260,18 +272,21 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           imagen: this.extractImageId(f.imagen) || f.imagen
         }));
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
       } catch (e) {
         /* saveImages multi error */
+        console.warn('[ImageUpload] saveImages error', e);
       }
     } else {
       this.preview = imgData;
       this.imagenChange.emit(imgData);
-      this.formChange.persistFields(this.sectionId, 'images', {
+      // Persistir imagen y metadatos (single) e indicar notifySync para actualizar vista inmediatamente
+      try { this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}Imagen`]: persistValue,
         [`${this.photoPrefix}Numero`]: numGlobal,
         [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
         [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
-      });
+      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(single) error', e); }
 
       try {
         const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
@@ -308,16 +323,25 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   eliminarImagen(i?: number) {
+    if (i !== undefined) {
+      // clear any pending meta timer for this photo
+      const key = `meta_${i}`;
+      if (this.metaDebounceTimers.has(key)) {
+        clearTimeout(this.metaDebounceTimers.get(key));
+        this.metaDebounceTimers.delete(key);
+      }
+    }
+
     if (this.permitirMultiples && i !== undefined) {
       this._fotografias.splice(i, 1);
       if (this._fotografias.length === 0) this._fotografias = [this.createEmptyFoto()];
       
-      this.formChange.persistFields(this.sectionId, 'images', {
+      try { this.formChange.persistFields(this.sectionId, 'images', {
         [`${this.photoPrefix}${i + 1}Imagen`]: '',
         [`${this.photoPrefix}${i + 1}Numero`]: '',
         [`${this.photoPrefix}${i + 1}Titulo`]: '',
         [`${this.photoPrefix}${i + 1}Fuente`]: ''
-      });
+      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(remove) error', e); }
       
       this.emitirCambios();
 
@@ -333,6 +357,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       } catch (e) {
       }
     } else {
+      // single mode
       this.preview = null;
       this.imagenChange.emit('');
       this.formChange.persistFields(this.sectionId, 'images', {
@@ -363,6 +388,62 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       imagen: this.extractImageId(f.imagen) || f.imagen
     }));
     this.fotografiasChange.emit(payload);
+  }
+
+  private scheduleMetaPersist(index?: number) {
+    const key = (index !== undefined) ? `meta_${index}` : 'meta_single';
+
+    if (this.metaDebounceTimers.has(key)) {
+      clearTimeout(this.metaDebounceTimers.get(key));
+    }
+
+    console.info('[ImageUpload] scheduleMetaPersist start', key);
+    const timeout = setTimeout(() => {
+      if (index !== undefined) {
+        const foto = this._fotografias[index];
+        if (!foto) {
+          this.metaDebounceTimers.delete(key);
+          return;
+        }
+        const tituloKey = `${this.photoPrefix}${index + 1}Titulo`;
+        const fuenteKey = `${this.photoPrefix}${index + 1}Fuente`;
+        try {
+          this.formChange.persistFields(this.sectionId, 'images', {
+            [tituloKey]: foto.titulo || this.tituloDefault,
+            [fuenteKey]: foto.fuente || this.fuenteDefault
+          }, { notifySync: true });
+          console.info('[ImageUpload] scheduleMetaPersist persisted (multi)', tituloKey, fuenteKey);
+        } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist persist error', e); }
+
+        // Emitir el cambio para que el host guarde en imageFacade y la vista se actualice
+        this.emitirCambios();
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
+      } else {
+        // single image
+        try {
+          this.formChange.persistFields(this.sectionId, 'images', {
+            [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
+            [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
+          }, { notifySync: true });
+          console.info('[ImageUpload] scheduleMetaPersist persisted (single)', this.photoPrefix);
+        } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist persist(single) error', e); }
+
+        // Also persist image-group for single mode so preview uses saved metadata
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+          const imagenPersist = this.extractImageId(this.preview) || this.preview || '';
+          const payload = [{ numero: this.calculateGlobalPhotoNumber(0), titulo: this.titulo || this.tituloDefault, fuente: this.fuente || this.fuenteDefault, imagen: imagenPersist }];
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, payload, groupPrefix);
+          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
+        } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist saveImages error', e); }
+      }
+
+      this.metaDebounceTimers.delete(key);
+      this.cdRef.detectChanges();
+      console.info('[ImageUpload] scheduleMetaPersist finished', key);
+    }, this.META_DEBOUNCE_MS);
+
+    this.metaDebounceTimers.set(key, timeout);
   }
 
   getFormattedPhotoNumber(i: number): string {
