@@ -180,6 +180,26 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
 
+    // ✅ Effect para autoLlenarTablas cuando datos estén disponibles
+    effect(() => {
+      // Este effect se ejecuta cuando cualquier dato cambia
+      // Verificar si hay datos suficientes para llenar tablas
+      const tablaA1 = this.tablaAISD1Signal();
+      const tablaA2 = this.tablaAISD2Signal();
+      const datos = this.datos;
+      const tieneDatosCompletos = datos && Object.keys(datos).length > 0;
+      
+      // Solo ejecutar autoLlenarTablas si:
+      // 1. Hay datos en el store
+      // 2. Las tablas están vacías o tienen placeholders
+      if (tieneDatosCompletos && this.modoFormulario === false) {
+        // Usar setTimeout para evitar efectos secundarios en el constructor
+        setTimeout(() => {
+          this.autoLlenarTablas();
+        }, 0);
+      }
+    }, { allowSignalWrites: true });
+
     // ✅ DEBUG: Monitor de cambios en los signals de tabla
     effect(() => {
       const tablaA1 = this.tablaAISD1Signal();
@@ -264,29 +284,45 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     console.log(`[Seccion4] A1 - estaVacia=${estaVaciaA1}, estaInvalida=${estaInvalidaA1}`);
     
     if (estaVaciaA1 || estaInvalidaA1) {
-      // ✅ OBTENER CAPITAL DEL GRUPO
-      const nombreComunidad = this.obtenerNombreComunidadPublico();
-      const capital = this.dataSrv.obtenerCapitalComunidad(this.datos, this.seccionId) || nombreComunidad;
-      console.log(`[Seccion4] Capital detectada: "${capital}"`);
-      
-      if (capital && capital !== '____') {
-        // ✅ BUSCAR DATOS DE LA CAPITAL
-        const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
-        console.log(`[Seccion4] Datos de capital encontrados:`, datosCap);
+      // ✅ OPCIÓN 1: Usar datos del mock si están disponibles (tablaAISD1Datos sin prefijo)
+      const tablaA1Mock = this.datos['tablaAISD1Datos'];
+      if (tablaA1Mock && tablaA1Mock.length > 0 && tablaA1Mock[0].localidad && tablaA1Mock[0].localidad !== '____') {
+        console.log(`[Seccion4] ✅ USANDO DATOS DEL MOCK para tabla A1:`, tablaA1Mock);
+        this.onFieldChange(dataKeyA1 as any, tablaA1Mock, { refresh: false });
+        this.datos[dataKeyA1] = tablaA1Mock;
+      } else {
+        // ✅ OPCIÓN 2: Generar desde tablaAISD2 (usar la capital que es la primera fila con población > 0)
+        const tablaA2Actual = this.datos[dataKeyA2] || this.datos['tablaAISD2Datos'] || [];
+        console.log(`[Seccion4] Buscando capital en tabla A2:`, tablaA2Actual);
         
-        // ✅ CREAR FILA DE TABLA A1 CON LA CAPITAL
-        const filaA1 = [{
-          localidad: capital,
-          coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || '____',
-          altitud: datosCap?.altitud || this.datos.altitudAISD || '____',
-          distrito: datosCap?.distrito || this.datos.distritoSeleccionado || '____',
-          provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || '____',
-          departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || '____'
-        }];
+        // Buscar la fila con mayor población (generalmente es la capital)
+        let filaCapital = tablaA2Actual.find((f: any) => f.poblacion && parseInt(f.poblacion) > 0);
         
-        console.log(`%c[Seccion4] ✅ LLENANDO tabla A1 con capital`, 'color: #00aa00; font-weight: bold');
-        this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
-        this.datos[dataKeyA1] = filaA1;
+        // Si no hay población, usar la primera fila
+        if (!filaCapital && tablaA2Actual.length > 0) {
+          filaCapital = tablaA2Actual[0];
+        }
+        
+        if (filaCapital) {
+          const capital = filaCapital.punto || filaCapital.nombre || '____';
+          const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
+          
+          // ✅ CREAR FILA DE TABLA A1 CON LA CAPITAL
+          const filaA1 = [{
+            localidad: capital,
+            coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || this.datos['tablaAISD1Coordenadas'] || '____',
+            altitud: datosCap?.altitud || this.datos.altitudAISD || this.datos['tablaAISD1Altitud'] || '____',
+            distrito: datosCap?.distrito || this.datos.distritoSeleccionado || this.datos['tablaAISD1Fila1Distrito'] || '____',
+            provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
+            departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
+          }];
+          
+          console.log(`%c[Seccion4] ✅ GENERANDO tabla A1 desde tabla A2:`, 'color: #00aa00; font-weight: bold', filaA1);
+          this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
+          this.datos[dataKeyA1] = filaA1;
+        } else {
+          console.warn(`[Seccion4] ⚠️ No se encontró capital en tabla A2`);
+        }
       }
     } else {
       console.log(`[Seccion4] ✅ Tabla A1 ya tiene datos válidos, preservando:`, tablaA1Actual);
@@ -297,56 +333,41 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     const codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
     console.log(`[Seccion4] Códigos de comunidad detectados:`, codigosComunidad);
     
-    if (!codigosComunidad || codigosComunidad.length === 0) {
-      console.log(`[Seccion4] ⚠️ No hay códigos de centros poblados seleccionados, tabla A2 no se llenará`);
-      return;
-    }
-
     // ✅ OBTENER TABLA A2 ACTUAL
     const tablaA2Actual = this.datos[dataKeyA2] || [];
     console.log(`[Seccion4] Tabla A2 actual:`, tablaA2Actual);
     
-    // ✅ LÓGICA: Llenar SOLO si está vacía O si el número de filas NO coincide con códigos
+    // ✅ LÓGICA: Llenar SOLO si está vacía
     const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
-    const filasActuales = Array.isArray(tablaA2Actual) ? tablaA2Actual.length : 0;
-    const sincronizado = filasActuales === codigosComunidad.length && filasActuales > 0;
     
-    console.log(`[Seccion4] A2 - estaVacia=${estaVaciaA2}, filasActuales=${filasActuales}, codigosExpectados=${codigosComunidad.length}, sincronizado=${sincronizado}`);
-    
-    if (!sincronizado) {
-      // ✅ OBTENER JSON COMPLETO CON DATOS DE CENTROS POBLADOS
-      const jsonCompleto = this.datos['jsonCompleto'];
-      console.log(`[Seccion4] jsonCompleto disponible:`, !!jsonCompleto);
-      
-      if (jsonCompleto) {
-        // ✅ OBTENER DATOS DE TODOS LOS CENTROS POBLADOS SELECCIONADOS
-        const centrosPoblados = this.dataSrv.obtenerDatosCentrosPorCodigos(jsonCompleto, codigosComunidad);
-        console.log(`[Seccion4] Centros poblados encontrados:`, centrosPoblados.length);
-        
-        if (centrosPoblados.length > 0) {
-          // ✅ CREAR FILAS DE TABLA A2
-          const filas = centrosPoblados.map(cp => ({
-            punto: cp.CCPP || cp.ccpp || '____',
-            nombre: cp.CCPP || cp.ccpp || '____',
-            codigo: (cp.CODIGO || cp.codigo || '').toString(),
-            poblacion: (cp.POBLACION || cp.poblacion || '0').toString(),
-            viviendasEmpadronadas: '0',
-            viviendasOcupadas: '0'
+    if (estaVaciaA2) {
+      // ✅ OPCIÓN 1: Usar datos del mock si están disponibles
+      const tablaA2Mock = this.datos['tablaAISD2Datos'];
+      if (tablaA2Mock && tablaA2Mock.length > 0) {
+        console.log(`[Seccion4] ✅ USANDO DATOS DEL MOCK para tabla A2:`, tablaA2Mock);
+        this.onFieldChange(dataKeyA2 as any, tablaA2Mock, { refresh: false });
+        this.datos[dataKeyA2] = tablaA2Mock;
+      } else {
+        // ✅ OPCIÓN 2: Usar puntosPoblacion del mock
+        const puntosPoblacionMock = this.datos['puntosPoblacion'];
+        if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
+          const filas = puntosPoblacionMock.map((cp: any) => ({
+            punto: cp.nombre || cp.punto || '____',
+            codigo: (cp.codigo || '').toString(),
+            poblacion: (cp.poblacion || '0').toString(),
+            viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
+            viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
           }));
           
-          console.log(`%c[Seccion4] ✅ LLENANDO tabla A2 con ${filas.length} centros poblados`, 'color: #00aa00; font-weight: bold');
-          console.log(`[Seccion4] Filas A2 a guardar:`, filas);
-          
+          console.log(`[Seccion4] ✅ GENERANDO tabla A2 desde puntosPoblacion:`, filas);
           this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
           this.datos[dataKeyA2] = filas;
         } else {
-          console.warn(`[Seccion4] ⚠️ No se encontraron datos de centros poblados en jsonCompleto`);
+          console.warn(`[Seccion4] ⚠️ No hay datos para llenar tabla A2`);
         }
-      } else {
-        console.warn(`[Seccion4] ⚠️ jsonCompleto no disponible, no puedo llenar tabla A2`);
       }
     } else {
-      console.log(`[Seccion4] ✅ Tabla A2 ya sincronizada con códigos, preservando:`, tablaA2Actual);
+      console.log(`[Seccion4] ✅ Tabla A2 ya tiene datos, preservando:`, tablaA2Actual);
     }
 
     this.actualizarDatos(); // Forzar actualización

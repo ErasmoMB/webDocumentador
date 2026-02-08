@@ -171,6 +171,9 @@
       { "nombre": "Tastanic", "codigo": "0403060008", "poblacion": 0, "viviendasEmpadronadas": 1, "viviendasOcupadas": 0 },
       { "nombre": "Faldahuasi", "codigo": "0403060014", "poblacion": 1, "viviendasEmpadronadas": 4, "viviendasOcupadas": 1 }
     ],
+    "tablaAISD1Datos": [
+      { "localidad": "CC Ayroca", "coordenadas": "15° 45' S, 73° 22' W", "altitud": "3,600 m.s.n.m.", "distrito": "Cahuacho", "provincia": "Caravelí", "departamento": "Arequipa" }
+    ],
     "textoInstitucionalidad": "Dentro de los límites de la CC Ayroca se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).",
     "textoPoblacionSexo": "Respecto a la población de la CC Ayroca, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de 225 habitantes que residen permanentemente en la comunidad. De este conjunto, el son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos ().",
     "poblacionSexoTabla": [
@@ -185,16 +188,24 @@
       { "categoria": "45 a 64 años", "casos": 43 },
       { "categoria": "65 años a más", "casos": 25 }
     ],
-    "textoPET": "",
-    "petTabla": [],
-    "textoDetalePEA": "",
-    "textoDefinicionPEA": "",
-    "peaTabla": [],
-    "textoAnalisisPEA": "",
-    "textoSituacionEmpleo": "En la CC Ayroca, la mayor parte de la población se dedica a actividades económicas de carácter independiente, siendo la ganadería la principal fuente de sustento. De manera complementaria, también se desarrolla la agricultura. Esta realidad implica que la mayoría de los comuneros se dediquen al trabajo por cuenta propia, centrado en la crianza de vacunos y ovinos como las principales especies ganaderas. Estas actividades son claves para la economía local, siendo la venta de ganado y derivados una fuente de ingresos importante para las familias. En el ámbito agrícola, las tierras comunales se destinan a la producción de cultivos como la papa, habas y cebada, productos que se destinan principalmente al autoconsumo y de manera esporádica a la comercialización en mercados cercanos.\n\nEl empleo dependiente en la CC Ayroca es mínimo y se encuentra limitado a aquellos que trabajan en instituciones públicas. Entre ellos se encuentran los docentes que laboran en las instituciones educativas locales, así como el personal que presta servicios en el puesto de salud. Estas ocupaciones representan un pequeño porcentaje de la fuerza laboral, ya que la mayoría de los comuneros siguen trabajando en actividades tradicionales como la ganadería y la agricultura, que forman parte de su modo de vida ancestral.",
-    "textoIngresosPoblacion": "En la CC Ayroca, los ingresos de la población provienen principalmente de las actividades ganaderas y agrícolas, que son las fuentes económicas predominantes en la localidad. La venta de vacunos y ovinos, así como de productos agrícolas como papa, habas y cebada, proporciona ingresos variables, dependiendo de las condiciones climáticas y las fluctuaciones en los precios locales. Sin embargo, debido a la dependencia de estos sectores primarios, los ingresos no son estables ni regulares, pudiéndose verse afectados por factores como heladas, la falta de pasto en épocas de sequía o la baja demanda en los mercados.\n\nOtra parte de los ingresos proviene de los comuneros que participan en actividades de comercio de pequeña escala, vendiendo sus productos en mercados locales o en ferias regionales. No obstante, esta forma de generación de ingresos sigue siendo limitada y no representa una fuente principal para la mayoría de las familias. En cuanto a los pocos habitantes que se encuentran empleados de manera dependiente, tales como los maestros en las instituciones educativas y el personal del puesto de salud, sus ingresos son más regulares, aunque representan una porción pequeña de la población.\n\nAdicionalmente, cabe mencionar que, según informe del PNUD 2019, el distrito de Cahuacho alcanza a los poblados con con un ingreso familiar per cápita de S/. 391,06 mensuales, ocupando el puesto N°1191 en el ranking de dicha variable, lo que convierte a dicha jurisdicción en una de las que cuentan con menor ingreso familiar per cápita en todo el país.",
-    "textoIndiceDesempleo": "El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en búsqueda de empleo, pero no logra obtenerlo. En este caso, se caracteriza el índice de desempleo del distrito de Cahuacho, el cual abarca los poblados de la CC Ayroca. Para ello, se emplea la fuente 'Resultados Definitivos de la Población Económicamente Activa 2017' del INEI, con el cual se puede visualizar las características demográficas de la población que forma parte de la PEA y distinguir entre sus subgrupos (Ocupada y Desocupada).",
-    "peaOcupadaTabla": [],
+    "textoPET": "La población en edad de trabajar (PET) de la CC Ayroca, considerada desde los 15 años a más, se compone del 74.22% de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el 35.89% de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un 11.11%.",
+    "petTabla": [
+      { "categoria": "15 a 29 años", "casos": 60, "porcentaje": "35.89%" },
+      { "categoria": "30 a 44 años", "casos": 38, "porcentaje": "22.75%" },
+      { "categoria": "45 a 64 años", "casos": 43, "porcentaje": "25.75%" },
+      { "categoria": "65 años a más", "casos": 25, "porcentaje": "14.96%" }
+    ],
+    "textoDetalePEA": "La PEA del distrito de Cahuacho representa el 76.67% del total de la PET de la jurisdicción, mientras que la No PEA abarca el 23.33% restante. Asimismo, se visualiza que los hombres se encuentran predominantemente dentro del indicador de PEA con un 66.67%; mientras que, en el caso de las mujeres, se hallan mayormente en el indicador de No PEA (33.33%).",
+    "textoDefinicionPEA": "La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción. En este apartado se presenta una descripción de la PEA del distrito de Cahuacho, jurisdicción que abarca a las poblaciones de la CC Ayroca.",
+    "peaTabla": [
+      { "categoria": "PEA", "hombres": 114, "mujeres": 97, "casos": 211, "porcentaje": "76.67%" },
+      { "categoria": "No PEA", "hombres": 57, "mujeres": 73, "casos": 130, "porcentaje": "23.33%" }
+    ],
+    "textoAnalisisPEA": "Del análisis de la tabla anterior, se aprecia que la PEA representa el 76.67% de la PET del distrito de Cahuacho, con una predominancia masculina en la fuerza laboral. La No PEA abarca el 23.33% restante, con mayor presencia femenina.",
+    "peaOcupadaTabla": [
+      { "categoria": "PEA Ocupada", "hombres": 152, "mujeres": 73, "casos": 225, "porcentaje": "96.70%" },
+      { "categoria": "PEA Desocupada", "hombres": 7, "mujeres": 0, "casos": 7, "porcentaje": "3.30%" }
+    ],
     "textoAnalisisOcupacion": "Del cuadro precedente, se halla que en el distrito de Cahuacho la PEA Desocupada representa el 3.3% de la total de la PEA de la jurisdicción, mientras que la PEA Ocupada abarca el 96.7% restante. Asimismo, como se puede visualizar que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de 66.7% y 31.9%, respectivamente.",
     "textoActividadesEconomicas": "Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este item, se describe las ocupaciones principales existentes en los poblados de la CC Ayroca, que forma parte del AISD.",
     "textoFuentesActividadesEconomicas": "A partir de fuentes oficiales, se exploran las principales labores y ocupaciones más relevantes dentro de la CC Ayroca. En esta ocasión, se recurre a los datos provistos por la Plataforma Nacional de Datos Georreferenciados – Geo Perú.",
@@ -651,10 +662,13 @@
     ],
     
     "peaDistritoSexoTabla": [
-      { "categoria": "PEA", "hombres": 184, "mujeres": 92, "casos": 276 },
-      { "categoria": "No PEA", "hombres": 54, "mujeres": 131, "casos": 185 }
+      { "categoria": "PEA", "hombres": 184, "mujeres": 92, "casos": 276, "porcentajePEA": "76.67%" },
+      { "categoria": "No PEA", "hombres": 54, "mujeres": 131, "casos": 185, "porcentajePEA": "23.33%" }
     ],
-    "peaOcupadaDesocupadaTabla": [],
+    "peaOcupadaDesocupadaTabla": [
+      { "categoria": "PEA Ocupada", "hombres": 152, "mujeres": 73, "casos": 225, "porcentaje": "96.70%" },
+      { "categoria": "PEA Desocupada", "hombres": 7, "mujeres": 0, "casos": 7, "porcentaje": "3.30%" }
+    ],
     "actividadesEconomicasAISI": [
       { "actividad": "A. Agricultura, ganader\u00eda, silvicultura y pesca", "casos": 50 },
       { "actividad": "B. Explotaci\u00f3n de minas y canteras", "casos": 1 },
