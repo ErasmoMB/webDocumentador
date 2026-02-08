@@ -108,27 +108,27 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.legacyStateSubscription = undefined;
     }
 
-    // Normalmente solo suscribirse en modo vista, pero para asegurar sincronización en formularios
-    // también permitir suscripción reactiva en modoFormulario para tablas dinámicas.
-    // Esto evita que los cambios realizados desde DynamicTable no se vean hasta recarga.
-    // Nota: suscripción puede ser ruidosa; se filtra con debounceTime(50) y debounce adicional en SectionSyncService.
-    // if (this.modoFormulario) return;
+    // En modo formulario, no suscribirse para evitar actualizaciones constantes
+    // Las actualizaciones vendrán del formulario directamente
+    if (this.modoFormulario) {
+      return;
+    }
 
     try {
       const stateAdapter = this.injector.get(ReactiveStateAdapter, null);
       if (!stateAdapter) return;
 
       this.legacyStateSubscription = stateAdapter.datos$.pipe(
-        debounceTime(50), // Pequeño debounce para agrupar cambios rápidos
+        debounceTime(100), // Increased debounce to reduce frequency
         takeUntil(this.destroy$)
       ).subscribe(() => {
-        // Actualizar datos desde ProjectStateFacade (fuente de verdad)
+        // En modo vista, actualizar datos desde ProjectStateFacade
         this.actualizarDatos();
         // Recargar fotografías si aplica
         if (this.tieneFotografias()) {
           this.cargarFotografias();
         }
-        this.cdRef.detectChanges();
+        this.cdRef.markForCheck();
       });
     } catch {
       // ReactiveStateAdapter no disponible - los componentes usan sus propias suscripciones
@@ -160,13 +160,13 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         this.actualizarFotografiasFormMulti();
         this.cargarFotografias();
       }
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
     }
 
     if (changes['modoFormulario'] && this.modoFormulario) {
       if (this.tieneFotografias()) {
         this.cargarTodosLosGrupos();
-        this.cdRef.detectChanges();
+        this.cdRef.markForCheck();
       }
     }
 
@@ -175,7 +175,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       if (this.tieneFotografias()) {
         setTimeout(() => {
           this.cargarFotografias();
-          this.cdRef.detectChanges();
+          this.cdRef.markForCheck();
         }, 0);
       }
     }
@@ -255,7 +255,9 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
 
     this.actualizarValoresConPrefijo();
     this.actualizarDatosCustom();
-    this.cdRef.detectChanges();
+    // Usar markForCheck en lugar de detectChanges para mejor rendimiento
+    // detectChanges fuerza renderizado completo, markForCheck solo marca para checking
+    this.cdRef.markForCheck();
   }
 
   protected loadSectionData(): void {

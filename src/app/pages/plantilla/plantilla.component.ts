@@ -63,6 +63,7 @@ import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion3
 @Component({
     selector: 'app-resumen',
     templateUrl: './plantilla.component.html',
+    styleUrl: './plantilla.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
@@ -246,9 +247,7 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    setTimeout(() => {
-      this.actualizarDatos();
-    }, 100);
+    // Eliminado: setTimeout causaba doble renderizado innecesario
   }
 
   actualizarDatos() {

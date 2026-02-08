@@ -14,6 +14,7 @@ import { PeaService } from 'src/app/core/services/domain/pea.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
     imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent],
@@ -140,7 +141,8 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     protected override tableFacade: TableManagementFacade,
     protected override autoLoader: AutoBackendDataLoaderService,
     private groupConfig: GroupConfigService,
-    private peaService: PeaService
+    private peaService: PeaService,
+    private tableNumbering: TableNumberingService
   ) {
     super(cdRef, autoLoader, injector, undefined, tableFacade);
 
@@ -289,7 +291,8 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     console.debug('[S23][FORM] onPetGruposEdadUpdated', { tablaLength: Array.isArray(tabla) ? tabla.length : 0, sample: Array.isArray(tabla) ? tabla.slice(0,2) : tabla });
     if (!Array.isArray(tabla)) return;
 
-    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.40');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
     const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
 
     // Quitar fila 'Total' generada por el helper para evitar duplicados en el formulario

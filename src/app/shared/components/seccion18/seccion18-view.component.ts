@@ -8,6 +8,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
     standalone: true,
@@ -35,7 +36,8 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
     constructor(
         cdRef: ChangeDetectorRef,
         injector: Injector,
-        private sanitizer: DomSanitizer
+        private sanitizer: DomSanitizer,
+    private tableNumbering: TableNumberingService
     ) {
         super(cdRef, injector);
         console.log('[Seccion18View] constructor seccionId=', this.seccionId);
@@ -86,12 +88,14 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
 
     getNbiCCAyrocaConPorcentajes(): any[] {
         const tabla = this.getTableNbiCC();
-        return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.33');
+        const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+        return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
     }
 
     getNbiDistritoCahuachoConPorcentajes(): any[] {
         const tabla = this.getTableNbiDistrito();
-        return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.34');
+        const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
+        return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
     }
 
     getNombreComunidad(): string {

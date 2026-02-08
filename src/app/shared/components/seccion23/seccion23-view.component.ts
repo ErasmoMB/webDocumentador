@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-seccion23-view',
@@ -66,7 +67,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     fotos: this.fotosCacheSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
 
     effect(() => {
@@ -119,15 +120,18 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   override ngOnDestroy(): void { super.ngOnDestroy(); }
 
   getPetGruposEdadAISIConPorcentajes(): any[] {
-    return TablePercentageHelper.calcularPorcentajesSimple(this.petGruposEdadSignal(), '3.40');
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.petGruposEdadSignal(), cuadroNumero);
   }
 
   getPeaDistritoSexoConPorcentajes(): any[] {
-    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaDistritoSexoSignal(), '3.41');
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
+    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaDistritoSexoSignal(), cuadroNumero);
   }
 
   getPeaOcupadaDesocupadaConPorcentajes(): any[] {
-    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaOcupadaDesocupadaSignal(), '3.42');
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaOcupadaDesocupadaSignal(), cuadroNumero);
   }
 
   // Keep the same helper names used by template for compatibility

@@ -4,7 +4,7 @@
   <p class="mb-sm"><strong>a. Natalidad y Mortalidad</strong></p>
   <p class="text-justify" [innerHTML]="textoNatalidadMortalidadSignal()"></p>
 
-  <app-table-wrapper [title]="obtenerTituloCuadroNatalidad()" sectionId="3.1.4.A.1.9">
+  <app-table-wrapper [title]="obtenerTituloCuadroNatalidad()" [sectionId]="seccionId">
     <app-generic-table
       [data]="natalidadMortalidadTablaSignal()"
       [config]="{
@@ -18,13 +18,13 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>
+  </app-table-wrapper>"
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroNatalidad() }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
   <p class="text-justify" [innerHTML]="textoMorbilidadSignal()"></p>
 
-  <app-table-wrapper [title]="obtenerTituloCuadroMorbilidad()" sectionId="3.1.4.A.1.9">
+  <app-table-wrapper [title]="obtenerTituloCuadroMorbilidad()" [sectionId]="seccionId">
     <app-generic-table
       [data]="getMorbilidadSinTotal()"
       [config]="{
@@ -51,13 +51,13 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>
+  </app-table-wrapper>"
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroMorbilidad() }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
   <p class="text-justify" [innerHTML]="textoAfiliacionSaludSignal()"></p>
 
-  <app-table-wrapper [title]="obtenerTituloCuadroAfiliacion()" sectionId="3.1.4.A.1.9">
+  <app-table-wrapper [title]="obtenerTituloCuadroAfiliacion()" [sectionId]="seccionId">
     <app-generic-table
       [data]="getAfiliacionSaludConPorcentajes()"
       [config]="{
@@ -71,7 +71,7 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>
+  </app-table-wrapper>"
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroAfiliacion() }}</span></p>
 
   <app-image-upload

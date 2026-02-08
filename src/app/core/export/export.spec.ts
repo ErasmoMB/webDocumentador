@@ -32,10 +32,15 @@ import {
 import { JSONExporterService } from './json-exporter.service';
 
 import { ProjectState, INITIAL_PROJECT_STATE } from '../state/project-state.model';
+import { TableNumberingService } from '../services/table-numbering.service';
 
 // ============================================================================
 // TEST DATA FACTORIES
 // ============================================================================
+
+function createTableNumberingService(): TableNumberingService {
+  return new TableNumberingService();
+}
 
 function createTestProjectState(): ProjectState {
   const now = Date.now();
@@ -250,7 +255,7 @@ describe('Export Contract (PASO 8.1)', () => {
   describe('validateExportedDocument', () => {
     it('should validate correct document', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       expect(validateExportedDocument(doc)).toBe(true);
     });
     
@@ -280,7 +285,7 @@ describe('Document Builder (PASO 8.2)', () => {
   describe('buildDocument', () => {
     it('should build complete document from state', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc._export).toBeDefined();
       expect(doc.project).toBeDefined();
@@ -292,7 +297,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include project info from state', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc.project.projectName).toBe('Proyecto de Prueba');
       expect(doc.project.consultora).toBe('Consultora Test');
@@ -300,7 +305,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include ubicacion from state', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc.ubicacion.departamento).toBe('Lima');
       expect(doc.ubicacion.provincia).toBe('Lima');
@@ -309,7 +314,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include groups from state', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc.aisd.length).toBe(2);
       expect(doc.aisi.length).toBe(1);
@@ -318,7 +323,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include entrevistados from state', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc.entrevistados.length).toBe(2);
       expect(doc.entrevistados[0].nombre).toBe('Juan Pérez');
@@ -326,14 +331,14 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include initialized sections only', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       expect(doc.sections.length).toBe(2);
     });
     
     it('should include fields in sections', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       const section1 = doc.sections.find(s => s.sectionId === 'seccion1');
       expect(section1).toBeDefined();
@@ -342,7 +347,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include tables in sections', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       const section1 = doc.sections.find(s => s.sectionId === 'seccion1');
       expect(section1).toBeDefined();
@@ -352,7 +357,7 @@ describe('Document Builder (PASO 8.2)', () => {
     
     it('should include images in sections', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       const section1 = doc.sections.find(s => s.sectionId === 'seccion1');
       expect(section1).toBeDefined();
@@ -365,7 +370,7 @@ describe('Document Builder (PASO 8.2)', () => {
     it('should filter sections when sectionsFilter is set', () => {
       const state = createTestProjectState();
       const options = { ...DEFAULT_EXPORT_OPTIONS, sectionsFilter: ['seccion1'] };
-      const doc = buildDocument(state, options);
+      const doc = buildDocument(state, options, createTableNumberingService());
       
       expect(doc.sections.length).toBe(1);
       expect(doc.sections[0].sectionId).toBe('seccion1');
@@ -374,7 +379,7 @@ describe('Document Builder (PASO 8.2)', () => {
     it('should filter groups when groupsFilter is set', () => {
       const state = createTestProjectState();
       const options = { ...DEFAULT_EXPORT_OPTIONS, groupsFilter: ['1'] };
-      const doc = buildDocument(state, options);
+      const doc = buildDocument(state, options, createTableNumberingService());
       
       expect(doc.aisd.length).toBe(1);
       expect(doc.aisd[0].id).toBe('1');
@@ -408,7 +413,7 @@ describe('Document Builder (PASO 8.2)', () => {
       };
       
       const options = { ...DEFAULT_EXPORT_OPTIONS, includeEmptyFields: false };
-      const doc = buildDocument(state, options);
+      const doc = buildDocument(state, options, createTableNumberingService());
       
       const section1 = doc.sections.find(s => s.sectionId === 'seccion1');
       const emptyField = section1!.fields.find(f => f.fieldName === 'campoVacio');
@@ -419,7 +424,7 @@ describe('Document Builder (PASO 8.2)', () => {
   describe('getDocumentStats', () => {
     it('should return correct statistics', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       const stats = getDocumentStats(doc);
       
       expect(stats.sectionsCount).toBe(2);
@@ -448,7 +453,7 @@ describe('JSON Exporter (PASO 8.3)', () => {
   describe('export', () => {
     it('should export valid JSON', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       const result = jsonExporter.export(doc);
       
       expect(result.success).toBe(true);
@@ -460,7 +465,7 @@ describe('JSON Exporter (PASO 8.3)', () => {
     
     it('should include metadata by default', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       const result = jsonExporter.export(doc);
       
       expect(result.success).toBe(true);
@@ -473,7 +478,7 @@ describe('JSON Exporter (PASO 8.3)', () => {
     
     it('should generate correct filename', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       const result = jsonExporter.export(doc);
       
       expect(result.success).toBe(true);
@@ -485,7 +490,7 @@ describe('JSON Exporter (PASO 8.3)', () => {
     
     it('should respect indent option', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       
       const minified = jsonExporter.export(doc, { indent: null });
       const formatted = jsonExporter.export(doc, { indent: 2 });
@@ -500,7 +505,7 @@ describe('JSON Exporter (PASO 8.3)', () => {
   describe('import', () => {
     it('should import valid JSON', () => {
       const state = createTestProjectState();
-      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+      const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
       const exported = jsonExporter.export(doc);
       
       if (exported.success) {
@@ -532,8 +537,8 @@ describe('Export Snapshots', () => {
   
   it('should produce consistent document structure', () => {
     const state = createTestProjectState();
-    const doc1 = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
-    const doc2 = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc1 = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
+    const doc2 = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     
     // Estructura debe ser idéntica (excluyendo timestamps)
     expect(doc1.project).toEqual(doc2.project);
@@ -545,7 +550,7 @@ describe('Export Snapshots', () => {
   
   it('should maintain consistent image numbering', () => {
     const state = createTestProjectState();
-    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     
     // Verificar que las imágenes mantienen su numeración
     const allImages = doc.sections.flatMap(s => s.images);
@@ -558,7 +563,7 @@ describe('Export Snapshots', () => {
   
   it('should maintain table row order', () => {
     const state = createTestProjectState();
-    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     
     const section1 = doc.sections.find(s => s.sectionId === 'seccion1');
     const table = section1?.tables[0];
@@ -578,7 +583,7 @@ describe('Export Snapshots', () => {
 describe('Export Edge Cases', () => {
   
   it('should handle empty state', () => {
-    const doc = buildDocument(INITIAL_PROJECT_STATE, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(INITIAL_PROJECT_STATE, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     
     expect(doc.sections.length).toBe(0);
     expect(doc.aisd.length).toBe(0);
@@ -596,7 +601,7 @@ describe('Export Edge Cases', () => {
       }
     };
     
-    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     const stats = getDocumentStats(doc);
     
     expect(stats.imagesCount).toBe(0);
@@ -612,7 +617,7 @@ describe('Export Edge Cases', () => {
       }
     };
     
-    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     const stats = getDocumentStats(doc);
     
     expect(stats.tablesCount).toBe(0);
@@ -629,7 +634,7 @@ describe('Export Edge Cases', () => {
       }
     };
     
-    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS);
+    const doc = buildDocument(state, DEFAULT_EXPORT_OPTIONS, createTableNumberingService());
     const jsonExporter = new JSONExporterService();
     const result = jsonExporter.export(doc);
     

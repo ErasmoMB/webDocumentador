@@ -7,6 +7,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-seccion13-view',
@@ -16,8 +17,9 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
   standalone: true
 })
 export class Seccion13ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.13';
-  @Input() override modoFormulario: boolean = false;
+  @Input() override seccionId: string = '3.1.4.A.1.9';
+  @Input() override modoFormulario: boolean = false;  
+  // NOTE: seccionId uses AISD-style identifiers (3.1.4.A.1.X) to match table numbering fixed sections
 
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
   override useReactiveSync: boolean = true;
@@ -114,7 +116,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private tableNumbering: TableNumberingService
   ) {
     super(cdRef, injector);
 
@@ -329,7 +332,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
 
   getAfiliacionSaludConPorcentajes(): any[] {
     const tabla = this.afiliacionSaludTablaSignal();
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.27');
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadroNumero);
   }
 
   private obtenerRegExp(pattern: string): RegExp {

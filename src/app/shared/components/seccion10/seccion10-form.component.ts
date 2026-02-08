@@ -129,6 +129,14 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
   }
 
+  obtenerNumeroCuadroEnergiaCocinar(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 3);
+  }
+
+  obtenerNumeroCuadroTecnologiaComunicaciones(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 4);
+  }
+
   obtenerTituloAbastecimientoAgua(): string {
     const tituloKey = 'tituloAbastecimientoAgua';
     const titulo = this.datos[tituloKey];

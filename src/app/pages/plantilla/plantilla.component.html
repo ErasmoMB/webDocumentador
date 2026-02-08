@@ -4,90 +4,178 @@
     <div style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px; border: 1px solid #ddd;" id="main-heading">
       <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">CAPÍTULO III - LÍNEA BASE</h1>
     </div>
+
     <!-- SECTION:3.1.1:START -->
-    <app-seccion1 [seccionId]="'3.1.1'" [modoFormulario]="false"></app-seccion1>
+    @defer (on viewport) {
+      <app-seccion1 [seccionId]="'3.1.1'" [modoFormulario]="false"></app-seccion1>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 1...</div>
+    }
     <!-- SECTION:3.1.1:END -->
+
+    <!-- Secciones 2-6: Carga inmediata ya que son prioridades altas -->
     <app-seccion2-view [seccionId]="'3.1.2'"></app-seccion2-view>
     <app-seccion3-view [seccionId]="'3.1.3'"></app-seccion3-view>
-    <app-seccion4 [seccionId]="'3.1.4'" [modoFormulario]="false"></app-seccion4>
-    <app-seccion5 [seccionId]="'3.1.4.A.1.1'" [modoFormulario]="false"></app-seccion5>
-    <app-seccion6 [seccionId]="'3.1.4.A.1.2'" [modoFormulario]="false"></app-seccion6>
-    <app-seccion7-view [seccionId]="'3.1.4.A.1.3'"></app-seccion7-view>
+
+    @defer (on viewport) {
+      <app-seccion4 [seccionId]="'3.1.4'" [modoFormulario]="false"></app-seccion4>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 4...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion5 [seccionId]="'3.1.4.A.1.1'" [modoFormulario]="false"></app-seccion5>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 5...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion6 [seccionId]="'3.1.4.A.1.2'" [modoFormulario]="false"></app-seccion6>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 6...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion7-view [seccionId]="'3.1.4.A.1.3'"></app-seccion7-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 7...</div>
+    }
+
     <app-seccion8-view [seccionId]="'3.1.4.A.1'"></app-seccion8-view>
-    <app-seccion9-view [seccionId]="'3.1.4.A.1.5'" [modoFormulario]="false"></app-seccion9-view>
-    <app-seccion10-view [seccionId]="'3.1.4.A.1.6'"></app-seccion10-view>
-    <app-seccion10-form-wrapper [seccionId]="'3.1.4.A.1.6'"></app-seccion10-form-wrapper>
-    <app-seccion11-view [seccionId]="'3.1.4.A.1.7'" [modoFormulario]="false"></app-seccion11-view>
-    <app-seccion11-form-wrapper [seccionId]="'3.1.4.A.1.7'"></app-seccion11-form-wrapper>
-    <app-seccion12-view [seccionId]="'3.1.4.A.1.8'" [modoFormulario]="false"></app-seccion12-view>
-    <app-seccion12-form-wrapper [seccionId]="'3.1.4.A.1.8'"></app-seccion12-form-wrapper>
-    <app-seccion13-view [seccionId]="'3.1.4.A.1.9'" [modoFormulario]="false"></app-seccion13-view>
-    <app-seccion13-form-wrapper [seccionId]="'3.1.4.A.1.9'"></app-seccion13-form-wrapper>
-    <app-seccion14-view [seccionId]="'3.1.4.A.1.10'" [modoFormulario]="false"></app-seccion14-view>
-    <app-seccion14-form-wrapper [seccionId]="'3.1.4.A.1.10'"></app-seccion14-form-wrapper>
-    <app-seccion15-view [seccionId]="'3.1.4.A.1.11'" [modoFormulario]="false"></app-seccion15-view>
-    <app-seccion16 [seccionId]="'3.1.4.A.1.12'" [modoFormulario]="false"></app-seccion16>
-    <div class="seccion-layout" style="display: flex; gap: 20px; width: 100%; margin-bottom: 30px;">
-      <div class="seccion-view" style="flex: 1; min-width: 0; border-right: 1px solid #eee; padding-right: 20px;">
-        <app-seccion17-view [seccionId]="'3.1.4.A.1.13'" [modoFormulario]="false"></app-seccion17-view>
-      </div>
-      <div class="seccion-form" style="flex: 1; min-width: 0;">
-        <app-seccion17-form-wrapper [seccionId]="'3.1.4.A.1.13'"></app-seccion17-form-wrapper>
-      </div>
-    </div>
-    
-    <div class="seccion-layout" style="display: flex; gap: 20px; width: 100%; margin-bottom: 30px;">
-      <div class="seccion-view" style="flex: 1; min-width: 0; border-right: 1px solid #eee; padding-right: 20px;">
-        <app-seccion18-view [seccionId]="'3.1.4.A.1.14'" [modoFormulario]="false"></app-seccion18-view>
-      </div>
-      <div class="seccion-form" style="flex: 1; min-width: 0;">
-        <app-seccion18-form-wrapper [seccionId]="'3.1.4.A.1.14'"></app-seccion18-form-wrapper>
-      </div>
-    </div>
-    
-    <div class="seccion-container" style="display: flex; gap: 20px; margin-bottom: 40px; border-bottom: 1px solid #ddd; padding-bottom: 20px;">
-      <div class="seccion-view" style="flex: 1; min-width: 0; border-right: 1px solid #eee; padding-right: 20px;">
-        <app-seccion19-view [seccionId]="'3.1.4.A.1.15'" [modoFormulario]="false"></app-seccion19-view>
-      </div>
-      <div class="seccion-form" style="flex: 1; min-width: 0;">
-        <app-seccion19-form-wrapper [seccionId]="'3.1.4.A.1.15'"></app-seccion19-form-wrapper>
-      </div>
-    </div>
-    
-    <div class="seccion-container" style="display: flex; gap: 20px; margin-bottom: 40px; border-bottom: 1px solid #ddd; padding-bottom: 20px;">
-      <div class="seccion-view" style="flex: 1; min-width: 0; border-right: 1px solid #eee; padding-right: 20px;">
-        <app-seccion20-view [seccionId]="'3.1.4.A.1.16'" [modoFormulario]="false"></app-seccion20-view>
-      </div>
-      <div class="seccion-form" style="flex: 1; min-width: 0;">
-        <app-seccion20-form-wrapper [seccionId]="'3.1.4.A.1.16'"></app-seccion20-form-wrapper>
-      </div>
-    </div>
-    
-    <app-seccion21-view [seccionId]="'3.1.4.B.1'" [modoFormulario]="false"></app-seccion21-view>
-    
-    <app-seccion22-view [seccionId]="'3.1.4.B.1.1'" [modoFormulario]="false"></app-seccion22-view>
-    <app-seccion22-form-wrapper [seccionId]="'3.1.4.B.1.1'"></app-seccion22-form-wrapper>
-    
-    <app-seccion23-view [seccionId]="'3.1.4.B.1.2'" [modoFormulario]="false"></app-seccion23-view>
-    <app-seccion23-form-wrapper [seccionId]="'3.1.4.B.1.2'"></app-seccion23-form-wrapper>
-    
-    <app-seccion24-view [seccionId]="'3.1.4.B.1.3'" [modoFormulario]="false"></app-seccion24-view>
-    <app-seccion24-form-wrapper [seccionId]="'3.1.4.B.1.3'"></app-seccion24-form-wrapper>
-    
-    <app-seccion25-view [seccionId]="'3.1.4.B.1.4'" [modoFormulario]="false"></app-seccion25-view>
-    <app-seccion25-form-wrapper [seccionId]="'3.1.4.B.1.4'"></app-seccion25-form-wrapper>
-    
-    <app-seccion26-view [seccionId]="'3.1.4.B.1.5'" [modoFormulario]="false"></app-seccion26-view>
-    <app-seccion26-form-wrapper [seccionId]="'3.1.4.B.1.5'"></app-seccion26-form-wrapper>
-    
-    <app-seccion27-view [seccionId]="'3.1.4.B.1.6'" [modoFormulario]="false"></app-seccion27-view>
-    <app-seccion27-form-wrapper [seccionId]="'3.1.4.B.1.6'"></app-seccion27-form-wrapper>
-    
-    <app-seccion28-view [seccionId]="'3.1.4.B.1.7'" [modoFormulario]="false"></app-seccion28-view>
-    
-    <app-seccion29-view [seccionId]="'3.1.4.B.1.8'" [modoFormulario]="false"></app-seccion29-view>
-    
-    <app-seccion30-view [seccionId]="'3.1.4.B.1.9'" [modoFormulario]="false"></app-seccion30-view>
-    <app-seccion30-form-wrapper [seccionId]="'3.1.4.B.1.9'"></app-seccion30-form-wrapper>
+
+    @defer (on viewport) {
+      <app-seccion9-view [seccionId]="'3.1.4.A.1.5'" [modoFormulario]="false"></app-seccion9-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 9...</div>
+    }
+
+    <!-- Grupo Secciones 10-16: Solo VISTAS, no formularios -->
+    @defer (on viewport) {
+      <app-seccion10-view [seccionId]="'3.1.4.A.1.6'"></app-seccion10-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 10...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion11-view [seccionId]="'3.1.4.A.1.7'"></app-seccion11-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 11...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion12-view [seccionId]="'3.1.4.A.1.8'"></app-seccion12-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 12...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion13-view [seccionId]="'3.1.4.A.1.9'"></app-seccion13-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 13...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion14-view [seccionId]="'3.1.4.A.1.10'"></app-seccion14-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 14...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion15-view [seccionId]="'3.1.4.A.1.11'"></app-seccion15-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 15...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion16 [seccionId]="'3.1.4.A.1.12'" [modoFormulario]="false"></app-seccion16>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 16...</div>
+    }
+
+    <!-- Grupo Secciones 17-20: Solo VISTAS, no formularios -->
+    @defer (on viewport) {
+      <app-seccion17-view [seccionId]="'3.1.4.A.1.13'" [modoFormulario]="false"></app-seccion17-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 17...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion18-view [seccionId]="'3.1.4.A.1.14'" [modoFormulario]="false"></app-seccion18-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 18...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion19-view [seccionId]="'3.1.4.A.1.15'" [modoFormulario]="false"></app-seccion19-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 19...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion20-view [seccionId]="'3.1.4.A.1.16'" [modoFormulario]="false"></app-seccion20-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 20...</div>
+    }
+
+    <!-- Grupo Secciones 21-36: Solo VISTAS, no formularios -->
+    @defer (on viewport) {
+      <app-seccion21-view [seccionId]="'3.1.4.B.1'" [modoFormulario]="false"></app-seccion21-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 21...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion22-view [seccionId]="'3.1.4.B.1.1'" [modoFormulario]="false"></app-seccion22-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 22...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion23-view [seccionId]="'3.1.4.B.1.2'" [modoFormulario]="false"></app-seccion23-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 23...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion24-view [seccionId]="'3.1.4.B.1.3'" [modoFormulario]="false"></app-seccion24-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 24...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion25-view [seccionId]="'3.1.4.B.1.4'" [modoFormulario]="false"></app-seccion25-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 25...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion26-view [seccionId]="'3.1.4.B.1.5'" [modoFormulario]="false"></app-seccion26-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 26...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion27-view [seccionId]="'3.1.4.B.1.6'" [modoFormulario]="false"></app-seccion27-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 27...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion28-view [seccionId]="'3.1.4.B.1.7'" [modoFormulario]="false"></app-seccion28-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 28...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion29-view [seccionId]="'3.1.4.B.1.8'" [modoFormulario]="false"></app-seccion29-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 29...</div>
+    }
+
+    @defer (on viewport) {
+      <app-seccion30-view [seccionId]="'3.1.4.B.1.9'" [modoFormulario]="false"></app-seccion30-view>
+    } @placeholder {
+      <div class="section-skeleton">Cargando sección 30...</div>
+    }
     </div>
 </div>

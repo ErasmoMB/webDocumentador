@@ -6,6 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TablePercentageHelper } from '../../../shared/utils/table-percentage-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
     standalone: true,
@@ -39,12 +40,14 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly lenguasMaternasConPorcentajes: Signal<any[]> = computed(() => {
     const tabla = this.lenguasMaternasSignal();
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.30');
+    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly religionesConPorcentajes: Signal<any[]> = computed(() => {
     const tabla = this.religionesSignal();
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.31');
+    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly lenguasMaternasTitulo: Signal<string> = computed(() => {
@@ -76,7 +79,8 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    public sanitizer: DomSanitizer
+    public sanitizer: DomSanitizer,
+    private tableNumberingService: TableNumberingService
   ) {
     super(cdRef, injector);
 

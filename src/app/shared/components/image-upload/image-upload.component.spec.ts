@@ -27,7 +27,8 @@ describe('ImageUploadComponent (integration important flow)', () => {
         { provide: FormChangeService, useValue: formChangeSpy },
         { provide: ProjectStateFacade, useValue: projectFacadeSpy },
         { provide: ImageBackendService, useValue: {} },
-        { provide: ChangeDetectorRef, useValue: TestBed.inject(ChangeDetectorRef) }
+        // Mock ChangeDetectorRef para evitar NullInjectorError
+        { provide: ChangeDetectorRef, useValue: { markForCheck: () => {}, detectChanges: () => {} } }
       ]
     }).compileComponents();
 

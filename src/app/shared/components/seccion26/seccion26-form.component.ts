@@ -8,6 +8,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   standalone: true,
@@ -137,7 +138,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     fotosCocinar: this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX_COCINAR, this.imageFacade.getGroupPrefix(this.seccionId))
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
 
     effect(() => {
@@ -179,7 +180,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoServiciosAguaAISI(): string {
     const centro = this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const tabla = this.datos['abastecimientoAguaCpTabla'] || [];
-    const tablaCon = TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.47');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+    const tablaCon = TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
     const dentro = tablaCon.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('dentro'))?.porcentaje?.value || '____';
     const fuera = tablaCon.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('fuera'))?.porcentaje?.value || '____';
     return `Respecto al servicio de agua para consumo humano en el CP ${centro}, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un ${dentro} de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (${fuera}) consta de red pública fuera de la vivienda, pero dentro de la edificación.`;
@@ -187,7 +189,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoDesagueCP(): string {
     const centro = this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
-    const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['saneamientoCpTabla'] || [], '3.48');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
+    const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['saneamientoCpTabla'] || [], cuadro);
     const dentro = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('dentro'))?.porcentaje?.value || '____';
     const pozo = tabla.find((i:any)=> i.categoria && (i.categoria.toString().toLowerCase().includes('pozo') || i.categoria.toString().toLowerCase().includes('tanque') || i.categoria.toString().toLowerCase().includes('biodigestor')))?.porcentaje?.value || '____';
     const p1 = `Respecto al servicio de saneamiento en las viviendas de la capital distrital de ${centro}, se cuenta con una amplia cobertura de dicho servicio. Es así que, según los Censos Nacionales 2017, un ${dentro} de las viviendas cuenta con red pública de desagüe dentro de las mismas. Adicionalmente, un ${pozo} cuenta con pozo séptico, tanque séptico o biodigestor.`;
@@ -205,11 +208,13 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoElectricidadCP(): string {
     const si = (()=>{
-      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['coberturaElectricaCpTabla']||[], '3.49');
+      const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['coberturaElectricaCpTabla']||[], cuadro);
       return tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('si'))?.porcentaje?.value || '____';
     })();
     const no = (()=>{
-      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['coberturaElectricaCpTabla']||[], '3.49');
+      const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['coberturaElectricaCpTabla']||[], cuadro);
       return tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('no'))?.porcentaje?.value || '____';
     })();
     return `Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, se cuenta con los siguientes datos: el ${si} de las viviendas cuenta con alumbrado eléctrico, mientras que el ${no} restante no tiene el referido servicio.`;
@@ -217,7 +222,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoEnergiaCocinarCP(): string {
     const centro = this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
-    const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['combustiblesCocinarCpTabla']||[], '3.50');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 3);
+    const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.datos['combustiblesCocinarCpTabla']||[], cuadro);
     const lena = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('leña'))?.porcentaje?.value || '____';
     const gas = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('gas'))?.porcentaje?.value || '____';
     const bosta = tabla.find((i:any)=> i.categoria && (i.categoria.toString().toLowerCase().includes('bosta') || i.categoria.toString().toLowerCase().includes('estiércol')))?.porcentaje?.value || '____';

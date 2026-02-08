@@ -207,7 +207,8 @@ describe('DynamicTableComponent', () => {
         jasmine.any(Object),
         0,
         'casos',
-        99 // El componente normaliza el string '99' a número 99
+        99, // El componente normaliza el string '99' a número 99
+        false
       );
     });
 
@@ -267,7 +268,8 @@ describe('DynamicTableComponent', () => {
         jasmine.any(Object),
         0,
         'casos',
-        99 // Should be converted to number
+        99, // Should be converted to number
+        false
       );
     });
 
@@ -285,7 +287,8 @@ describe('DynamicTableComponent', () => {
         jasmine.any(Object),
         0,
         'porcentaje',
-        100
+        100,
+        false
       );
     });
   });

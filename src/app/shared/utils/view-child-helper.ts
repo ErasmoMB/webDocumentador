@@ -33,22 +33,8 @@ export class ViewChildHelper {
             debugError('[ViewChildHelper] Error calling', method, 'on', id, ':', error);
           }
         }
-
-        // If we asked to actualizarDatos, also refresh photographs if component supports it
-        if (method === 'actualizarDatos') {
-          try {
-            if (typeof component['cargarFotografias'] === 'function') {
-              try { component['cargarFotografias'](); } catch {}
-            }
-          } catch {}
-        }
-
-        // Try to mark component for check if possible
-        try {
-          if (component && component['cdRef'] && typeof component['cdRef'].markForCheck === 'function') {
-            component['cdRef'].markForCheck();
-          }
-        } catch {}
+        // Eliminado: cargarFotografias() y markForCheck() 
+        // Los componentes ahora manejan su propia detección de cambios
       });
     } finally {
       this.isUpdating = false;

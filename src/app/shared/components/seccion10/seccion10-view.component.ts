@@ -569,13 +569,13 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return this.sanitizer.bypassSecurityTrustHtml(texto);
   }
 
-  // ✅ MÉTODOS AUXILIARES PARA LOS NUEVOS MÉTODOS
-  private obtenerNumeroCuadroEnergiaCocinar(): number {
-    return 4; // Placeholder - implementar lógica específica
+  // ✅ NÚMEROS DE CUADROS USANDO SERVICIO DE NUMERACIÓN
+  private obtenerNumeroCuadroEnergiaCocinar(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 3);
   }
 
-  private obtenerNumeroCuadroTecnologiaComunicaciones(): number {
-    return 5; // Placeholder - implementar lógica específica
+  private obtenerNumeroCuadroTecnologiaComunicaciones(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 4);
   }
 
   private obtenerTextoEnergiaCocinarDetalle(): string {

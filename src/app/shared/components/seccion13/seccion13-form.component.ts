@@ -9,6 +9,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-seccion13-form',
@@ -18,7 +19,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
   standalone: true
 })
 export class Seccion13FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.13';
+  @Input() override seccionId: string = '3.1.4.A.1.9';
   @Input() override modoFormulario: boolean = false;
 
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
@@ -123,7 +124,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private tableNumbering: TableNumberingService
   ) {
     super(cdRef, injector);
 
@@ -346,7 +348,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   getAfiliacionSaludConPorcentajes(): any[] {
     const tabla = this.afiliacionSaludTablaSignal();
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.27');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   }
 
   formatearPorcentaje(value: any): string {
@@ -414,7 +417,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     const datosRaw = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')() || []);
 
     // ✅ Calcular porcentajes manualmente para evitar ocultamiento de filas
-    const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosRaw, '3.27');
+    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosRaw, cuadro);
 
     this.datos['afiliacionSaludTabla'] = datosConPorcentajes;
 

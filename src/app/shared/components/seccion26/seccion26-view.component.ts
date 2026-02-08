@@ -6,6 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   standalone: true,
@@ -25,6 +26,8 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
+
+
 
   // Text signals
   readonly textoIntroSignal = computed(() => {
@@ -91,10 +94,22 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   readonly combustiblesSignal = computed(() => this.projectFacade.selectTableData(this.seccionId, null, 'combustiblesCocinarCpTabla')() ?? this.projectFacade.selectField(this.seccionId, null, 'combustiblesCocinarCpTabla')() ?? []);
 
   // computed with percentages
-  readonly abastecimientoConPorcentajes = computed(() => TablePercentageHelper.calcularPorcentajesSimple(this.abastecimientoSignal(), '3.47'));
-  readonly saneamientoConPorcentajes = computed(() => TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoSignal(), '3.48'));
-  readonly coberturaConPorcentajes = computed(() => TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal(), '3.49'));
-  readonly combustiblesConPorcentajes = computed(() => TablePercentageHelper.calcularPorcentajesSimple(this.combustiblesSignal(), '3.50'));
+  readonly abastecimientoConPorcentajes = computed(() => {
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.abastecimientoSignal(), cuadroNumero);
+  });
+  readonly saneamientoConPorcentajes = computed(() => {
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoSignal(), cuadroNumero);
+  });
+  readonly coberturaConPorcentajes = computed(() => {
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal(), cuadroNumero);
+  });
+  readonly combustiblesConPorcentajes = computed(() => {
+    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 3);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.combustiblesSignal(), cuadroNumero);
+  });
 
   // Totals & percentage helpers
   readonly totalAbastecimientoSignal: Signal<number> = computed(() => {
@@ -191,7 +206,7 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     centroPoblado: this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho'
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
 
     effect(() => {

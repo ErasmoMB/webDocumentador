@@ -224,17 +224,20 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
   // --- Computed signals for preview (MODO IDEAL) ---
   readonly tiposViviendaConPorcentajes = computed(() => {
     const tabla = this.tiposViviendaSignal() || [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.44');
+    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly condicionOcupacionConPorcentajes = computed(() => {
     const tabla = this.condicionOcupacionSignal() || [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.45');
+    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly materialesConPorcentajes = computed(() => {
     const tabla = this.materialesViviendaSignal() || [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.46');
+    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly totalViviendasSignal = computed(() => {

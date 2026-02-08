@@ -22,7 +22,7 @@ import { Seccion7TextGeneratorService } from 'src/app/core/services/domain/secci
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion7FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.7';
+  @Input() override seccionId: string = '3.1.4.A.1.3';
   @Input() override modoFormulario: boolean = false;
 
   override readonly PHOTO_PREFIX = 'fotografiaPEA';

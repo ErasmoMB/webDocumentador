@@ -17,7 +17,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
   standalone: true
 })
 export class Seccion14FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.14';
+  @Input() override seccionId: string = '3.1.4.A.1.10';
   @Input() override modoFormulario: boolean = false;
 
   override readonly PHOTO_PREFIX = 'fotografiaEducacionIndicadores';

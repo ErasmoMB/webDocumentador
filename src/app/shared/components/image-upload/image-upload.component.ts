@@ -183,7 +183,18 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias[i].titulo = val;
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
-      // Debounce persistence and emit
+
+      // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        const fotosParaGuardar = this._fotografias.map(f => ({
+          ...f,
+          imagen: this.extractImageId(f.imagen) || f.imagen
+        }));
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+      } catch (e) { /* noop */ }
+
+      // Debounce persistence y emit
       this.scheduleMetaPersist(i);
     } else {
       this.titulo = val;
@@ -199,6 +210,17 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias[i].fuente = val;
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
+
+      // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
+      try {
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+        const fotosParaGuardar = this._fotografias.map(f => ({
+          ...f,
+          imagen: this.extractImageId(f.imagen) || f.imagen
+        }));
+        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+      } catch (e) { /* noop */ }
+
       // Debounce persistence and emit
       this.scheduleMetaPersist(i);
     } else {
@@ -414,6 +436,17 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
           // Emitir cambios para que el host guarde en imageFacade y la vista se actualice
           this.emitirCambios();
+
+          // Guardar fotos vía facade también para asegurar persistencia de metadatos de múltiples
+          try {
+            const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+            const fotosParaGuardar = this._fotografias.map(f => ({
+              ...f,
+              imagen: this.extractImageId(f.imagen) || f.imagen
+            }));
+            this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+          } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist saveImages error', e); }
+
           try {
             const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
             ViewChildHelper.updateAllComponents('actualizarDatos');
