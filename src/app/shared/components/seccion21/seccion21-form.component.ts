@@ -152,19 +152,39 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // 🔍 AGREGAR LOG PARA VERIFICAR GRUPOS AISI
+    this.logGrupoActual();
+    
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual (siempre)
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    console.log(`[Seccion21] Auto-llenando centroPobladoAISI: "${centroPobladoAISI}"`);
+    
+    // Actualizar tanto el objeto local como el store para que el título se actualice
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, 'centroPobladoAISI', centroPobladoAISI);
+    this.onFieldChange('centroPobladoAISI', centroPobladoAISI, { refresh: false });
+    try { this.formChange.persistFields(this.seccionId, 'form', { centroPobladoAISI }); } catch (e) {}
+    
+    // 🔍 FORZAR DETECCIÓN DE CAMBIOS PARA ACTUALIZAR EL TÍTULO
+    this.cdRef.detectChanges();
+    
+    console.log(`[Seccion21] Título actualizado a: "B.1. Centro Poblado ${centroPobladoAISI}"`);
+    
     // Asegurar inicialización de tabla y campos (como en Seccion20)
     const tablaKey = this.getTablaKeyUbicacionCp();
     if (!this.datos[tablaKey] || !Array.isArray(this.datos[tablaKey]) || this.datos[tablaKey].length === 0) {
       this.datos[tablaKey] = structuredClone(this.ubicacionCpConfig.estructuraInicial);
+      this.projectFacade.setField(this.seccionId, null, tablaKey, this.datos[tablaKey]);
       this.onFieldChange(tablaKey, this.datos[tablaKey], { refresh: false });
       try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }); } catch (e) {}
     }
 
-    // Inicializar Título y Fuente de tabla si no existen
+    // Inicializar Título y Fuente de tabla
     const tituloField = 'cuadroTituloUbicacionCp';
-    if (!this.datos[tituloField]) {
-      const valorTitulo = `Ubicación referencial – Centro Poblado ${this.datos.centroPobladoAISI || this.datos.informacionReferencialAISI?.centro_poblado || '____'}`;
+    const valorTitulo = `Ubicación referencial – Centro Poblado ${this.datos.centroPobladoAISI || this.datos.informacionReferencialAISI?.centro_poblado || '____'}`;
+    if (!this.datos[tituloField] || this.datos[tituloField] !== valorTitulo) {
       this.datos[tituloField] = valorTitulo;
+      this.projectFacade.setField(this.seccionId, null, tituloField, valorTitulo);
       this.onFieldChange(tituloField, valorTitulo, { refresh: false });
     }
 
@@ -172,6 +192,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     if (!this.datos[fuenteField]) {
       const valorFuente = 'GEADES (2024)';
       this.datos[fuenteField] = valorFuente;
+      this.projectFacade.setField(this.seccionId, null, fuenteField, valorFuente);
       this.onFieldChange(fuenteField, valorFuente, { refresh: false });
     }
   }

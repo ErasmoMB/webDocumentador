@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { CCPPEntry, GroupDefinition } from 'src/app/core/state/project-state.model';
 import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/seccion4-text-generator.service';
 import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
 import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
@@ -9,6 +10,7 @@ import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -46,6 +48,7 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
   readonly tablaAISD1Signal: Signal<any[]>;
   readonly tablaAISD2Signal: Signal<any[]>;
   readonly viewModel: Signal<{
+    nombreComunidad: string;
     data: Record<string, any>;
     texts: { introduccionText: string; comunidadText: string; caracterizacionText: string };
     tables: { tablaAISD1: any[]; tablaAISD2: any[] };
@@ -53,7 +56,10 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     sources: { tablaAISD1Source: string; tablaAISD2Source: string };
   }>;
   readonly photoFieldsHash: Signal<string>;
-
+   
+  // ✅ Bandera para evitar bucle infinito en autoLlenarTablas
+  private autoLlenarTablasExecuted = false;
+  
   private isProcessingPipeline = false;
 
   constructor(
@@ -64,14 +70,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     public tableCfg: Seccion4TableConfigService
   ) {
     super(cdRef, injector);
+    
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX_UBICACION, label: 'Ubicación' },
       { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
     ];
 
     // ✅ Inicializar métodos públicos para evitar problemas con index signature
+    // ✅ Usar obtenerNombreComunidadActual() del BaseSectionComponent (que usa aisdGroups signal)
     this.obtenerNombreComunidadPublico = () => {
-      return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
+      return this.obtenerNombreComunidadActual();
     };
     
     this.getTextoIntroduccionEfectivo = () => {
@@ -93,23 +101,17 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     });
 
     this.tablaAISD1Signal = computed(() => {
-      // ✅ SIEMPRE leer con prefijo. Sin fallbacks a versiones sin prefijo.
       const prefijo = this.obtenerPrefijoGrupo();
       const keyA1 = `tablaAISD1Datos${prefijo}`;
       const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA1)();
-      const result = Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
-      console.log(`[Seccion4] tablaAISD1Signal computed - prefijo="${prefijo}", key="${keyA1}", rows=${result.length}`);
-      return result;
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
     });
 
     this.tablaAISD2Signal = computed(() => {
-      // ✅ SIEMPRE leer con prefijo. Sin fallbacks a versiones sin prefijo.
       const prefijo = this.obtenerPrefijoGrupo();
       const keyA2 = `tablaAISD2Datos${prefijo}`;
       const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA2)();
-      const result = Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
-      console.log(`[Seccion4] tablaAISD2Signal computed - prefijo="${prefijo}", key="${keyA2}", rows=${result.length}`, result);
-      return result;
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
     });
 
     this.photoFieldsHash = computed(() => {
@@ -129,13 +131,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
       const sectionData = this.formDataSignal();
       // ✅ MODELO IDEAL: Solo usar sectionData de signals, NO mezclar obtenerDatos()
       const data = sectionData;
-      const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
+      // ✅ Usar obtenerNombreComunidadActual() del BaseSectionComponent (que usa aisdGroups signal)
+      const nombreComunidad = this.obtenerNombreComunidadActual();
       
       const tablaAISD1 = this.tablaAISD1Signal();
       const tablaAISD2 = this.tablaAISD2Signal();
       
       const totales = this.dataSrv.calcularTotalesAISD2(Array.isArray(tablaAISD2) ? tablaAISD2 : []);
       return {
+        // ✅ Agregar nombreComunidad para usar en el template
+        nombreComunidad,
         data: {
           ...data,
           comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? [],
@@ -182,69 +187,50 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
 
     // ✅ Effect para autoLlenarTablas cuando datos estén disponibles
     effect(() => {
-      // Este effect se ejecuta cuando cualquier dato cambia
-      // Verificar si hay datos suficientes para llenar tablas
+      // Solo ejecutar autoLlenarTablas una vez
+      if (this.autoLlenarTablasExecuted) {
+        return;
+      }
+      
       const tablaA1 = this.tablaAISD1Signal();
       const tablaA2 = this.tablaAISD2Signal();
       const datos = this.datos;
       const tieneDatosCompletos = datos && Object.keys(datos).length > 0;
       
-      // Solo ejecutar autoLlenarTablas si:
-      // 1. Hay datos en el store
-      // 2. Las tablas están vacías o tienen placeholders
       if (tieneDatosCompletos && this.modoFormulario === false) {
-        // Usar setTimeout para evitar efectos secundarios en el constructor
+        this.autoLlenarTablasExecuted = true;
         setTimeout(() => {
           this.autoLlenarTablas();
         }, 0);
       }
     }, { allowSignalWrites: true });
 
-    // ✅ DEBUG: Monitor de cambios en los signals de tabla
-    effect(() => {
-      const tablaA1 = this.tablaAISD1Signal();
-      const tablaA2 = this.tablaAISD2Signal();
-      const prefijo = this.obtenerPrefijoGrupo();
-      
-      console.log(`%c[Seccion4] === SIGNAL CHANGE ===`, 'color: #ff00ff; font-weight: bold; font-size: 12px');
-      console.log(`[Seccion4] prefijo: "${prefijo}"`);
-      console.log(`[Seccion4] tablaAISD1Signal.length: ${tablaA1?.length || 0}`);
-      console.log(`[Seccion4] tablaAISD2Signal.length: ${tablaA2?.length || 0}`);
-      if (tablaA2 && tablaA2.length > 3) {
-        console.log(`[Seccion4] A2 filas 4+:`, tablaA2.slice(3));
-      }
-      console.log(`%c[Seccion4] === END SIGNAL CHANGE ===\n`, 'color: #ff00ff; font-weight: bold; font-size: 12px');
-    });
+    // ❌ DEBUG: MONITOR DESHABILITADO - Causaba bucle de logs
+    // effect(() => {
+    //   const tablaA1 = this.tablaAISD1Signal();
+    //   const tablaA2 = this.tablaAISD2Signal();
+    //   const prefijo = this.obtenerPrefijoGrupo();
+    //   
+    //   console.log(`%c[Seccion4] === SIGNAL CHANGE ===`, 'color: #ff00ff; font-weight: bold; font-size: 12px');
+    //   console.log(`[Seccion4] prefijo: "${prefijo}"`);
+    //   console.log(`[Seccion4] tablaAISD1Signal.length: ${tablaA1?.length || 0}`);
+    //   console.log(`[Seccion4] tablaAISD2Signal.length: ${tablaA2?.length || 0}`);
+    //   if (tablaA2 && tablaA2.length > 3) {
+    //     console.log(`[Seccion4] A2 filas 4+:`, tablaA2.slice(3));
+    //   }
+    //   console.log(`%c[Seccion4] === END SIGNAL CHANGE ===\n`, 'color: #ff00ff; font-weight: bold; font-size: 12px');
+    // });
   }
 
   override ngOnInit(): void {
     super.ngOnInit();
     this.cargarFotografias();
-    
-    console.log(`\n%c[Seccion4] === ngOnInit START ===`, 'color: #00aa00; font-weight: bold; font-size: 14px');
-    
-    // Console.log para mostrar el grupo AISD y sus centros poblados
     this.logGrupoActual();
-    
-    // ✅ CRÍTICO: SIEMPRE llenar tabla 3.2 si está vacía
-    // Esto es lo primero que hacemos en ngOnInit ANTES de initDataPipeline
     this.autoLlenarTablas();
     
-    // 🔍 DEBUG: Verificar estado después de autoLlenarTablas
-    const prefijo = this.obtenerPrefijoGrupo();
-    const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
-    console.log(`[Seccion4] Después de autoLlenarTablas - this.datos[${dataKeyA1}]:`, this.datos[dataKeyA1]);
-    console.log(`[Seccion4] tablaAISD1Signal() value:`, this.tablaAISD1Signal());
-    
-    // Forzar actualización de signals
-    this.cdRef.markForCheck();
-    
-    // Inicializar pipeline de datos en formulario si es modo formulario
     if (this.modoFormulario) {
       this.initDataPipeline();
     }
-    
-    console.log(`%c[Seccion4] === ngOnInit END ===\n`, 'color: #00aa00; font-weight: bold; font-size: 14px');
   }
 
   private initDataPipeline(): void {
@@ -264,36 +250,36 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
     const dataKeyA2 = `tablaAISD2Datos${prefijo}`;
     
-    console.log(`%c[Seccion4] autoLlenarTablas START - prefijo="${prefijo}", dataKeyA1="${dataKeyA1}", dataKeyA2="${dataKeyA2}"`, 'color: #0066cc; font-weight: bold');
-    
     // ✅ VALIDACIÓN: Debe tener prefijo válido
     if (!prefijo || !prefijo.startsWith('_A')) {
-      console.warn(`[Seccion4] ⚠️ Prefijo inválido: "${prefijo}", no puedo llenar tablas`);
       return;
     }
-
+    
+    // ============ OBTENER GRUPOS DESDE PROJECTSTATE ============
+    const gruposAISD = this.aisdGroups();
+    const centrosPoblados = this.allPopulatedCenters();
+    
+    // Obtener el grupo actual según el prefijo
+    const match = prefijo.match(/_A(\d+)/);
+    const index = match ? parseInt(match[1]) - 1 : -1;
+    const grupoActual = index >= 0 && index < gruposAISD.length ? gruposAISD[index] : null;
+    
     // ============ TABLA A1: CAPITAL ============
-    // ✅ OBTENER TABLA A1 ACTUAL
     const tablaA1Actual = this.datos[dataKeyA1] || [];
-    console.log(`[Seccion4] Tabla A1 actual:`, tablaA1Actual);
     
     // ✅ LÓGICA: Llenar SOLO si está completamente vacía o sin localidad válida
     const estaVaciaA1 = !tablaA1Actual || tablaA1Actual.length === 0;
     const estaInvalidaA1 = tablaA1Actual.length === 1 && (!tablaA1Actual[0].localidad || tablaA1Actual[0].localidad === '____');
     
-    console.log(`[Seccion4] A1 - estaVacia=${estaVaciaA1}, estaInvalida=${estaInvalidaA1}`);
-    
     if (estaVaciaA1 || estaInvalidaA1) {
       // ✅ OPCIÓN 1: Usar datos del mock si están disponibles (tablaAISD1Datos sin prefijo)
       const tablaA1Mock = this.datos['tablaAISD1Datos'];
       if (tablaA1Mock && tablaA1Mock.length > 0 && tablaA1Mock[0].localidad && tablaA1Mock[0].localidad !== '____') {
-        console.log(`[Seccion4] ✅ USANDO DATOS DEL MOCK para tabla A1:`, tablaA1Mock);
         this.onFieldChange(dataKeyA1 as any, tablaA1Mock, { refresh: false });
         this.datos[dataKeyA1] = tablaA1Mock;
       } else {
         // ✅ OPCIÓN 2: Generar desde tablaAISD2 (usar la capital que es la primera fila con población > 0)
         const tablaA2Actual = this.datos[dataKeyA2] || this.datos['tablaAISD2Datos'] || [];
-        console.log(`[Seccion4] Buscando capital en tabla A2:`, tablaA2Actual);
         
         // Buscar la fila con mayor población (generalmente es la capital)
         let filaCapital = tablaA2Actual.find((f: any) => f.poblacion && parseInt(f.poblacion) > 0);
@@ -317,63 +303,73 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
             departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
           }];
           
-          console.log(`%c[Seccion4] ✅ GENERANDO tabla A1 desde tabla A2:`, 'color: #00aa00; font-weight: bold', filaA1);
           this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
           this.datos[dataKeyA1] = filaA1;
-        } else {
-          console.warn(`[Seccion4] ⚠️ No se encontró capital en tabla A2`);
         }
       }
-    } else {
-      console.log(`[Seccion4] ✅ Tabla A1 ya tiene datos válidos, preservando:`, tablaA1Actual);
     }
 
     // ============ TABLA A2: CENTROS POBLADOS ============
-    // ✅ OBTENER CÓDIGOS DE CENTROS POBLADOS SELECCIONADOS
-    const codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
-    console.log(`[Seccion4] Códigos de comunidad detectados:`, codigosComunidad);
+    // ✅ OBTENER CÓDIGOS DE CENTROS POBLADOS SELECCIONADOS DESDE PROJECTSTATE
+    let codigosComunidad: string[] = [];
+    if (grupoActual && grupoActual.ccppIds && grupoActual.ccppIds.length > 0) {
+      codigosComunidad = grupoActual.ccppIds as string[];
+    } else {
+      // Fallback al método legacy
+      codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
+    }
     
     // ✅ OBTENER TABLA A2 ACTUAL
     const tablaA2Actual = this.datos[dataKeyA2] || [];
-    console.log(`[Seccion4] Tabla A2 actual:`, tablaA2Actual);
     
     // ✅ LÓGICA: Llenar SOLO si está vacía
     const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
     
     if (estaVaciaA2) {
-      // ✅ OPCIÓN 1: Usar datos del mock si están disponibles
-      const tablaA2Mock = this.datos['tablaAISD2Datos'];
-      if (tablaA2Mock && tablaA2Mock.length > 0) {
-        console.log(`[Seccion4] ✅ USANDO DATOS DEL MOCK para tabla A2:`, tablaA2Mock);
-        this.onFieldChange(dataKeyA2 as any, tablaA2Mock, { refresh: false });
-        this.datos[dataKeyA2] = tablaA2Mock;
-      } else {
-        // ✅ OPCIÓN 2: Usar puntosPoblacion del mock
-        const puntosPoblacionMock = this.datos['puntosPoblacion'];
-        if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
-          const filas = puntosPoblacionMock.map((cp: any) => ({
-            punto: cp.nombre || cp.punto || '____',
-            codigo: (cp.codigo || '').toString(),
-            poblacion: (cp.poblacion || '0').toString(),
-            viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
-            viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
-          }));
-          
-          console.log(`[Seccion4] ✅ GENERANDO tabla A2 desde puntosPoblacion:`, filas);
+      // ✅ OPCIÓN 1: Generar desde ProjectState si hay códigos
+      if (codigosComunidad.length > 0 && centrosPoblados.length > 0) {
+        const filas = codigosComunidad.map(codigo => {
+          const ccpp = centrosPoblados.find(c => c.id === codigo || c.codigo === codigo);
+          return {
+            punto: ccpp?.nombre || codigo,
+            codigo: codigo,
+            poblacion: ccpp?.poblacion?.toString() || '0',
+            viviendasEmpadronadas: '0',
+            viviendasOcupadas: '0'
+          };
+        });
+        
+        if (filas.length > 0) {
           this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
           this.datos[dataKeyA2] = filas;
+        }
+      } else {
+        // ✅ OPCIÓN 2: Fallback a datos del mock
+        const tablaA2Mock = this.datos['tablaAISD2Datos'];
+        if (tablaA2Mock && tablaA2Mock.length > 0) {
+          this.onFieldChange(dataKeyA2 as any, tablaA2Mock, { refresh: false });
+          this.datos[dataKeyA2] = tablaA2Mock;
         } else {
-          console.warn(`[Seccion4] ⚠️ No hay datos para llenar tabla A2`);
+          // ✅ OPCIÓN 3: Usar puntosPoblacion del mock
+          const puntosPoblacionMock = this.datos['puntosPoblacion'];
+          if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
+            const filas = puntosPoblacionMock.map((cp: any) => ({
+              punto: cp.nombre || cp.punto || '____',
+              codigo: (cp.codigo || '').toString(),
+              poblacion: (cp.poblacion || '0').toString(),
+              viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
+              viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
+            }));
+            
+            this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
+            this.datos[dataKeyA2] = filas;
+          }
         }
       }
-    } else {
-      console.log(`[Seccion4] ✅ Tabla A2 ya tiene datos, preservando:`, tablaA2Actual);
     }
 
-    this.actualizarDatos(); // Forzar actualización
-    this.cdRef.markForCheck(); // Forzar detección de cambios
-    
-    console.log(`%c[Seccion4] autoLlenarTablas COMPLETE`, 'color: #0066cc; font-weight: bold');
+    this.actualizarDatos();
+    this.cdRef.markForCheck();
   }
 
   onTablaUpdated(): void {
@@ -381,27 +377,16 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     const keyA1 = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
     const keyA2 = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
     
-    console.log(`\n%c[Seccion4] === TABLA ACTUALIZADA ===`, 'color: #ff6600; font-weight: bold; font-size: 14px');
-    console.log(`[Seccion4] prefijo detectado: "${prefijo}"`);
-    console.log(`[Seccion4] keyA1: "${keyA1}", keyA2: "${keyA2}"`);
-    
     // ✅ USAR SIGNALS PARA OBTENER DATOS COMPLETOS Y ACTUALIZADOS
     let tablaA1Actual = this.tablaAISD1Signal();
     const tablaA2Actual = this.tablaAISD2Signal();
     
-    console.log(`[Seccion4] tablaA1Actual.length: ${tablaA1Actual?.length || 0}`);
-    if (tablaA1Actual && tablaA1Actual.length > 0) {
-      console.log(`[Seccion4] Primeras filas A1:`, tablaA1Actual.slice(0, 3));
-      if (tablaA1Actual.length > 3) {
-        console.log(`[Seccion4] Últimas filas A1:`, tablaA1Actual.slice(-2));
-      }
-    } else {
-      console.warn(`%c[Seccion4] ⚠️ TABLA A1 VACÍA - intentando re-llenarla`, 'color: #ff6600; font-weight: bold');
-      // ✅ Protección: si tabla A1 está vacía, re-llenarla automáticamente
+    // ✅ Protección: si tabla A1 está vacía, re-llenarla automáticamente
+    if (!tablaA1Actual || tablaA1Actual.length === 0) {
       const nombreComunidad = this.obtenerNombreComunidadPublico();
       const capital = this.dataSrv.obtenerCapitalComunidad(this.datos, this.seccionId) || nombreComunidad;
       const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
-      const filaA1 = [{
+      tablaA1Actual = [{
         localidad: capital,
         coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || '____',
         altitud: datosCap?.altitud || this.datos.altitudAISD || '____',
@@ -409,50 +394,31 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
         provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || '____',
         departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || '____'
       }];
-      console.log(`%c[Seccion4] ✅ Re-llenando tabla A1 con capital: ${capital}`, 'color: #00aa00; font-weight: bold');
-      tablaA1Actual = filaA1;
-    }
-    
-    console.log(`[Seccion4] tablaA2Actual.length: ${tablaA2Actual?.length || 0}`);
-    if (tablaA2Actual && tablaA2Actual.length > 0) {
-      console.log(`[Seccion4] Primeras filas A2:`, tablaA2Actual.slice(0, 3));
-      if (tablaA2Actual.length > 3) {
-        console.log(`[Seccion4] Últimas filas A2 (después de fila 3):`, tablaA2Actual.slice(3));
-      }
     }
     
     // 1. Persistir ambas tablas al projectFacade
     const payload: Record<string, any> = {};
     if (tablaA1Actual && tablaA1Actual.length > 0) {
       payload[keyA1] = tablaA1Actual.map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r));
-      console.log(`[Seccion4] Persistiendo ${tablaA1Actual.length} filas de A1 con key "${keyA1}"`);
     }
     if (tablaA2Actual && tablaA2Actual.length > 0) {
       payload[keyA2] = tablaA2Actual.map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r));
-      console.log(`[Seccion4] Persistiendo ${tablaA2Actual.length} filas de A2 con key "${keyA2}"`);
     }
     
     if (Object.keys(payload).length > 0) {
-      console.log(`[Seccion4] Llamando projectFacade.setFields()...`);
       this.projectFacade.setFields(this.seccionId, null, payload);
-      console.log(`[Seccion4] ✅ setFields completado`);
     }
     
     // ✅ CALCULAR TOTALES USANDO EL ARRAY COMPLETO DE LA TABLA
-    // No usar this.datos (que puede estar incompleto), usar tablaA2Actual directamente
     const totals = this.dataSrv.calcularTotalesAISD2(tablaA2Actual || []);
-    console.log(`[Seccion4] Totales calculados:`, totals);
     
     // 2. Persistir totales
-    console.log(`[Seccion4] Persistiendo totales...`);
     this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion, { refresh: false });
     this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas, { refresh: false });
     this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas, { refresh: false });
-    console.log(`[Seccion4] ✅ Totales persistidos`);
     
     this.actualizarDatos();
     this.cdRef.markForCheck();
-    console.log(`%c[Seccion4] === FIN TABLA ACTUALIZADA ===\n`, 'color: #ff6600; font-weight: bold; font-size: 14px');
   }
 
   /** Sección 4 tiene varios grupos de fotos (Ubicación, Población); cargar todos para la vista */

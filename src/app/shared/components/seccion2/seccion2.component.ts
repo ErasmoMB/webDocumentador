@@ -32,9 +32,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   fotografiasSeccion2: FotoItem[] = [];
   imageUploadKey: number = 0;
 
-  readonly aisdGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISD');
-  readonly aisiGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISI');
-  readonly allPopulatedCenters: Signal<readonly CCPPEntry[]> = this.projectFacade.allPopulatedCenters();
+  // ✅ aisiGroups ahora viene de BaseSectionComponent (con override)
+  override readonly aisiGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISI');
 
   readonly comunidadesNombres: Signal<string[]> = computed(() => 
     this.aisdGroups().map(g => g.nombre)

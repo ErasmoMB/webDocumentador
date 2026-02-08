@@ -393,8 +393,21 @@ export function createRegisterCCPPCommand(result: NormalizedJSONResult): Registe
  * Crea AddGroupCommands desde el resultado normalizado
  */
 export function createGroupCommands(result: NormalizedJSONResult): AddGroupCommand[] {
-  // Por compatibilidad, crear comandos SOLO para AISD (result.groups contiene AISD)
-  const commands = result.groups.filter(g => g.tipo === 'AISD').map(group => ({
+  // Crear comandos para AISD
+  const aisdCommands = result.groups
+    .filter(g => g.tipo === 'AISD')
+    .map(group => ({
+      type: 'groupConfig/addGroup' as const,
+      payload: {
+        tipo: group.tipo,
+        nombre: group.nombre,
+        parentId: null,
+        ccppIds: [...group.ccppIds]
+      }
+    }));
+  
+  // Crear comandos para AISI (distritos)
+  const aisiCommands = result.aisiGroups.map(group => ({
     type: 'groupConfig/addGroup' as const,
     payload: {
       tipo: group.tipo,
@@ -403,6 +416,8 @@ export function createGroupCommands(result: NormalizedJSONResult): AddGroupComma
       ccppIds: [...group.ccppIds]
     }
   }));
+  
+  const commands = [...aisdCommands, ...aisiCommands];
   
   console.log('🔧 [createGroupCommands] Creando', commands.length, 'comandos de grupos:', 
     commands.map(c => `${c.payload.tipo}: ${c.payload.nombre} (${c.payload.ccppIds.length} centros)`));

@@ -1,5 +1,6 @@
-import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy, Injector, ProviderToken } from '@angular/core';
+import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy, Injector, ProviderToken, Signal } from '@angular/core';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { GroupDefinition, CCPPEntry } from 'src/app/core/state/project-state.model';
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
 import { FieldTestDataService } from 'src/app/core/services/field-mapping/field-test-data.service';
 import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
@@ -42,12 +43,23 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   private readonly photos: SectionPhotoCoordinator;
   private readonly tables: SectionTableCoordinator;
   private legacyStateSubscription?: Subscription;
+  
+  // ✅ SIGNALS PARA GRUPOS AISD/AISI
+  readonly aisdGroups: Signal<readonly GroupDefinition[]>;
+  readonly aisiGroups: Signal<readonly GroupDefinition[]>;  // ✅ AGREGADO
+  readonly allPopulatedCenters: Signal<readonly CCPPEntry[]>;
 
   protected constructor(
     protected cdRef: ChangeDetectorRef,
     protected injector: Injector
   ) {
     this.projectFacade = injector.get(ProjectStateFacade);
+    
+    // ✅ Inicializar signals para grupos AISD, AISI y CCPP
+    this.aisdGroups = this.projectFacade.groupsByType('AISD');
+    this.aisiGroups = this.projectFacade.groupsByType('AISI');  // ✅ AGREGADO
+    this.allPopulatedCenters = this.projectFacade.allPopulatedCenters();
+    
     this.reactiveSync = new SectionReactiveSyncCoordinator(this.fieldMapping, this.cdRef);
     this.persistence = new SectionPersistenceCoordinator();
     this.photos = new SectionPhotoCoordinator(this.imageFacade, this.photoNumberingService, this.cdRef);
@@ -307,8 +319,21 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
 
   obtenerNombreComunidadActual(): string {
     const prefijo = this.obtenerPrefijoGrupo();
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     
+    // ✅ NUEVO: Usar aisdGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_A')) {
+      const match = prefijo.match(/_A(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _A1 → índice 0, _A2 → índice 1
+        const grupos = this.aisdGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre;
+        }
+      }
+    }
+    
+    // Fallback: buscar en datos guardados
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     if (grupoAISD && grupoAISD.trim() !== '') {
       return grupoAISD;
     }
@@ -332,6 +357,51 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     const grupoAISDBase = this.datos.grupoAISD;
     if (grupoAISDBase && grupoAISDBase.trim() !== '') {
       return grupoAISDBase;
+    }
+    
+    return '____';
+  }
+
+  /**
+   * ✅ NUEVO: Obtiene el nombre del distrito AISI actual usando aisiGroups signal.
+   * Ej: si seccionId = '3.1.4.B.1', devuelve el nombre del grupo AISI[0]
+   */
+  obtenerNombreDistritoActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Usar aisiGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_B')) {
+      const match = prefijo.match(/_B(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _B1 → índice 0, _B2 → índice 1
+        const grupos = this.aisiGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre;
+        }
+      }
+    }
+    
+    // Fallback: buscar en datos guardados
+    const grupoAISIValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISI', this.seccionId);
+    if (grupoAISIValor && grupoAISIValor.trim() !== '') {
+      return grupoAISIValor;
+    }
+    
+    const grupoConSufijo = prefijo ? this.datos[`grupoAISI${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    if (this.datos.distritosAISI && Array.isArray(this.datos.distritosAISI) && this.datos.distritosAISI.length > 0) {
+      const primerDistrito = this.datos.distritosAISI[0];
+      if (primerDistrito && primerDistrito.nombre && primerDistrito.nombre.trim() !== '') {
+        return primerDistrito.nombre;
+      }
+    }
+    
+    const grupoAISIBase = this.datos.grupoAISI;
+    if (grupoAISIBase && grupoAISIBase.trim() !== '') {
+      return grupoAISIBase;
     }
     
     return '____';
@@ -502,6 +572,111 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       config,
       afterChange
     );
+  }
+
+  // ============================================================================
+  // ✅ MÉTODOS PARA OBTENER GRUPO ACTUAL Y SUS CCPP (disponibles en todas las secciones)
+  // ============================================================================
+
+  /**
+   * Obtiene el grupo AISD actual según el prefijo del seccionId.
+   * Ej: si seccionId = '3.1.4.A.1', devuelve el grupo AISD[0]
+   */
+  protected obtenerGrupoActualAISD(): GroupDefinition | null {
+    const prefijo = this.obtenerPrefijoGrupo();
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      return null;
+    }
+    
+    const match = prefijo.match(/_A(\d+)/);
+    if (!match) return null;
+    
+    const index = parseInt(match[1], 10) - 1;
+    const grupos = this.aisdGroups();
+    
+    return (index >= 0 && index < grupos.length) ? grupos[index] : null;
+  }
+
+  /**
+   * Obtiene el grupo AISI actual según el prefijo del seccionId.
+   * Ej: si seccionId = '3.1.4.B.1', devuelve el grupo AISI[0]
+   */
+  protected obtenerGrupoActualAISI(): GroupDefinition | null {
+    const prefijo = this.obtenerPrefijoGrupo();
+    if (!prefijo || !prefijo.startsWith('_B')) {
+      return null;
+    }
+    
+    const match = prefijo.match(/_B(\d+)/);
+    if (!match) return null;
+    
+    const index = parseInt(match[1], 10) - 1;
+    // Usar projectFacade para obtener grupos AISI
+    const grupos = this.projectFacade.groupsByType('AISI')();
+    
+    return (index >= 0 && index < grupos.length) ? grupos[index] : null;
+  }
+
+  /**
+   * Obtiene los CCPP IDs del grupo AISD actual.
+   * @returns Array de códigos de centros poblados seleccionados
+   */
+  protected obtenerCCPPIdsDelGrupoAISD(): readonly string[] {
+    const grupo = this.obtenerGrupoActualAISD();
+    return grupo?.ccppIds || [];
+  }
+
+  /**
+   * Obtiene los CCPP IDs del grupo AISI actual.
+   * @returns Array de códigos de centros poblados seleccionados
+   */
+  protected obtenerCCPPIdsDelGrupoAISI(): readonly string[] {
+    const grupo = this.obtenerGrupoActualAISI();
+    return grupo?.ccppIds || [];
+  }
+
+  /**
+   * Obtiene las entradas CCPP completas del grupo AISD actual.
+   * @returns Array de CCPPEntry con todos los datos
+   */
+  protected obtenerCCPPsDelGrupoAISD(): CCPPEntry[] {
+    const ccppIds = this.obtenerCCPPIdsDelGrupoAISD();
+    const todosLosCCPP = this.allPopulatedCenters();
+    
+    return todosLosCCPP.filter(ccpp => ccppIds.includes(ccpp.id));
+  }
+
+  /**
+   * Obtiene las entradas CCPP completas del grupo AISI actual.
+   * @returns Array de CCPPEntry con todos los datos
+   */
+  protected obtenerCCPPsDelGrupoAISI(): CCPPEntry[] {
+    const ccppIds = this.obtenerCCPPIdsDelGrupoAISI();
+    const todosLosCCPP = this.allPopulatedCenters();
+    
+    return todosLosCCPP.filter(ccpp => ccppIds.includes(ccpp.id));
+  }
+
+  /**
+   * ✅ NUEVO: Obtiene el nombre del centro poblado principal del grupo AISI actual.
+   * @returns Nombre del grupo AISI (ej: DISTRITO1) o '____' si no hay datos
+   */
+  protected obtenerCentroPobladoAISI(): string {
+    // Primero intentar obtener el nombre del grupo AISI actual
+    const nombreGrupo = this.obtenerNombreDistritoActual();
+    if (nombreGrupo && nombreGrupo !== '____') {
+      return nombreGrupo;
+    }
+    
+    // Fallback: buscar el primer CCPP del grupo
+    const ccpps = this.obtenerCCPPsDelGrupoAISI();
+    if (ccpps && ccpps.length > 0) {
+      const primerCP = ccpps.find(cp => cp.nombre && cp.nombre.trim() !== '');
+      if (primerCP && primerCP.nombre) {
+        return primerCP.nombre;
+      }
+    }
+    return '____';
   }
 
   /**
