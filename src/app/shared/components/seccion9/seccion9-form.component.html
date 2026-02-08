@@ -1,0 +1,126 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.5. Viviendas</h4>
+    
+    <!-- Sección Viviendas -->
+    <div class="form-group-section" style="margin-top: 20px;">
+      <h5>Condición de ocupación de las viviendas - CC (2017)</h5>
+      
+      <app-paragraph-editor
+        fieldId="textoViviendas"
+        label="Viviendas - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Los campos con ____ son dinámicos."
+        [rows]="4"
+        [value]="obtenerTextoViviendas()"
+        (valueChange)="onFieldChange('textoViviendas', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <label class="label">Cuadro Nº {{ obtenerNumeroCuadroCondicionOcupacion() }} - Título</label>
+      <input 
+        type="text"
+        class="form-control"
+        [value]="obtenerTituloCondicionOcupacion()"
+        (change)="onTituloCondicionOcupacionChange($event)"
+        placeholder="Condición de ocupación de las viviendas – CC ____">
+    </div>
+
+    <div class="form-group-section" style="margin-top: 15px;">
+      <label class="label">Tabla Condición de Ocupación</label>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="condicionOcupacionConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Condición de ocupación', type: 'text', placeholder: 'Viviendas ocupadas', readonly: true },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: false },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+        ]"
+        [sectionId]="seccionId"
+        [tablaKey]="getTablaKeyCondicionOcupacion()"
+        [showAddButton]="false"
+        [showDeleteButton]="false"
+        (tableUpdated)="onCondicionOcupacionTableUpdated($event)">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 15px;">
+      <label class="label">Fuente</label>
+      <input 
+        type="text"
+        class="form-control"
+        [value]="obtenerFuenteCondicionOcupacion()"
+        (change)="onFuenteCondicionOcupacionChange($event)"
+        placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+    </div>
+
+    <!-- Sección Estructura -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h5>Estructura de las viviendas - CC (2017)</h5>
+      
+      <app-paragraph-editor
+        fieldId="textoEstructura"
+        label="Estructura - Texto Completo"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Los campos con ____ son dinámicos."
+        [rows]="4"
+        [value]="obtenerTextoEstructura()"
+        (valueChange)="onFieldChange('textoEstructura', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <label class="label">Cuadro Nº {{ obtenerNumeroCuadroTiposMateriales() }} - Título</label>
+      <input 
+        type="text"
+        class="form-control"
+        [value]="obtenerTituloTiposMateriales()"
+        (change)="onTituloTiposMaterialesChange($event)"
+        placeholder="Tipos de materiales de las viviendas – CC ____">
+    </div>
+
+    <div class="form-group-section" style="margin-top: 15px;">
+      <label class="label">Tabla Tipos de Materiales</label>
+      <app-dynamic-table
+        [datos]="datos"
+        [config]="tiposMaterialesConfig"
+        [columns]="[
+          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Paredes', readonly: false },
+          { field: 'tipoMaterial', label: 'Tipos de materiales', type: 'text', placeholder: 'Adobe', readonly: false },
+          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: false },
+          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+        ]"
+        [sectionId]="seccionId"
+        [tablaKey]="getTablaKeyTiposMateriales()"
+        [showAddButton]="true"
+        [showDeleteButton]="true"
+        (tableUpdated)="onTiposMaterialesTableUpdated($event)">
+      </app-dynamic-table>
+    </div>
+
+    <div class="form-group-section" style="margin-top: 15px;">
+      <label class="label">Fuente</label>
+      <input 
+        type="text"
+        class="form-control"
+        [value]="obtenerFuenteTiposMateriales()"
+        (change)="onFuenteTiposMaterialesChange($event)"
+        placeholder="Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas">
+    </div>
+
+    <!-- Sección Fotografías -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h5>Fotografías</h5>
+      <app-image-upload
+        [modoVista]="false"
+        [permitirMultiples]="true"
+        [fotografias]="fotografiasSeccion9"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+  </div>
+</div>

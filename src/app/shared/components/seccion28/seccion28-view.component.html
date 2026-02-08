@@ -1,0 +1,115 @@
+<div *ngIf="!modoFormulario">
+<h5>B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h5>
+
+<p class="mt-lg mb-sm"><strong>a. Infraestructura en salud</strong></p>
+<p class="text-justify" *ngIf="datos.textoSaludCP && datos.textoSaludCP !== '____'">{{ datos.textoSaludCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoSaludCP || datos.textoSaludCP === '____'">Dentro de la capital distrital de <span [appDataSource]="'section'" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local. Este puesto de salud es el principal punto de referencia para los habitantes de <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, ofreciendo servicios esenciales como consultas médicas, controles de salud y atención básica de emergencias. Aunque cuenta con limitaciones en cuanto a especialidades médicas y equipamiento, su presencia es fundamental para atender las necesidades de salud de la población, especialmente considerando la ausencia de otros centros de mayor capacidad en la zona.</p>
+
+<app-table-wrapper [title]="(datos['puestoSaludTitulo'] || ('Principales características del Puesto de Salud ' + (datos.centroPobladoAISI || 'Cahuacho')))" sectionId="3.1.4.B.1.7">
+  <app-generic-table
+    [data]="puestoSaludCpTablaVista"
+    [config]="{
+      columns: [
+        { key: 'categoria', header: 'Categoría', align: 'left' },
+        { key: 'descripcion', header: 'Descripción', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ datos['puestoSaludFuente'] || 'GEADES (2024)' }}</span></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasSaludVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_SALUD"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p class="mt-lg mb-sm"><strong>b. Infraestructura en educación</strong></p>
+<p class="text-justify" *ngIf="datos.textoEducacionCP && datos.textoEducacionCP !== '____'">{{ datos.textoEducacionCP }}</p>
+<p class="text-justify" *ngIf="!datos.textoEducacionCP || datos.textoEducacionCP === '____'">Dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se hallan instituciones educativas que cubren todos los niveles de educación básica regular: inicial, primaria y secundaria. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la localidad es la <span [appDataSource]="'manual'" [fieldName]="'nombreIEMayorEstudiantes'">{{ datos.nombreIEMayorEstudiantes || 'IE Virgen de Copacabana' }}</span>, la cual es de nivel secundaria, con un total de <span [appDataSource]="'section'" [fieldName]="'cantidadEstudiantesIEMayor'">{{ datos.cantidadEstudiantesIEMayor || '28' }}</span> estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.</p>
+
+<app-table-wrapper [title]="(datos['educacionTitulo'] || ('Infraestructura educativa – CP ' + (datos.centroPobladoAISI || 'Cahuacho') + ' (2023)'))" sectionId="3.1.4.B.1.7">
+  <app-generic-table
+    [data]="getEducacionCpConPorcentajes()"
+    [config]="{
+      columns: [
+        { key: 'nombreIE', header: 'Nombre de IE', align: 'left' },
+        { key: 'nivel', header: 'Nivel', align: 'left' },
+        { key: 'tipoGestion', header: 'Tipo de Gestión', align: 'left' },
+        { key: 'cantidadEstudiantes', header: 'Cantidad de estudiantes', align: 'right' },
+        { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
+</app-table-wrapper>
+<p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ datos['educacionFuente'] || 'Censo Educativo 2023 – ESCALE (MINEDU)' }}</span></p> 
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasEducacionVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p class="mt-lg mb-sm"><strong>c. Infraestructura en recreación</strong></p>
+<p class="text-justify" *ngIf="datos.textoRecreacionCP1 && datos.textoRecreacionCP1 !== '____'">{{ datos.textoRecreacionCP1 }}</p>
+<p class="text-justify" *ngIf="!datos.textoRecreacionCP1 || datos.textoRecreacionCP1 === '____'">Dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con espacios destinados a la recreación de la población. Entre ellos destacan las plazas, las cuales funcionan como principales áreas de encuentro para la interacción y socialización, especialmente durante festividades y eventos culturales.</p>
+<p class="text-justify" *ngIf="datos.textoRecreacionCP2 && datos.textoRecreacionCP2 !== '____'">{{ datos.textoRecreacionCP2 }}</p>
+<p class="text-justify" *ngIf="!datos.textoRecreacionCP2 || datos.textoRecreacionCP2 === '____'">Otra infraestructura recreativa relevante es la plaza de toros, que se halla en la zona este del centro poblado, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales y celebraciones taurinas. Este espacio funciona como un centro de actividad importante para las festividades taurinas y celebraciones especiales, atrayendo tanto a residentes como a visitantes y promoviendo las tradiciones locales.</p>
+<p class="text-justify" *ngIf="datos.textoRecreacionCP3 && datos.textoRecreacionCP3 !== '____'">{{ datos.textoRecreacionCP3 }}</p>
+<p class="text-justify" *ngIf="!datos.textoRecreacionCP3 || datos.textoRecreacionCP3 === '____'">Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasRecreacionVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_RECREACION"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p class="mt-lg mb-sm"><strong>d. Infraestructura en deporte</strong></p>
+<p class="text-justify" *ngIf="datos.textoDeporteCP1 && datos.textoDeporteCP1 !== '____'">{{ datos.textoDeporteCP1 }}</p>
+<p class="text-justify" *ngIf="!datos.textoDeporteCP1 || datos.textoDeporteCP1 === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura deportiva consiste en instalaciones básicas para la práctica de actividades físicas y recreativas. Se destaca la losa deportiva ubicada detrás de la municipalidad, la cual es utilizada para diversos deportes colectivos como fútbol y vóley, y sirve como un espacio frecuente para eventos locales y recreación de niños y jóvenes.</p>
+<p class="text-justify" *ngIf="datos.textoDeporteCP2 && datos.textoDeporteCP2 !== '____'">{{ datos.textoDeporteCP2 }}</p>
+<p class="text-justify" *ngIf="!datos.textoDeporteCP2 || datos.textoDeporteCP2 === '____'">Asimismo, cabe mencionar que en <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasDeporteVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+</div>

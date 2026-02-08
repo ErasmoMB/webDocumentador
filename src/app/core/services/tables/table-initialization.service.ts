@@ -11,7 +11,6 @@ export class TableInitializationService {
     config: TableConfig
   ): void {
     const { tablaKey, estructuraInicial } = config;
-    
     const necesitaReinicializar = this.verificarSiNecesitaReinicializarConEstructura(
       datos[tablaKey], 
       estructuraInicial

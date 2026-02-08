@@ -41,13 +41,14 @@
           </svg>
           Limpiar
         </button>
-        <button class="btn btn-test" (click)="llenarDatosPrueba()" title="Llenar todos los campos con datos de ejemplo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 11l3 3L22 4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-          Llenar Datos
-        </button>
+        <!-- Botón ocultado: Llenar Datos -->
+        <!-- <button class="btn btn-test" (click)="llenarDatosPrueba()" title="Llenar todos los campos con datos de ejemplo">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             <path d="M9 11l3 3L22 4"/>
+             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+           </svg>
+           Llenar Datos
+         </button> -->
       </div>
     </div>
     <div class="preview-content scrollbar-thin">
@@ -71,10 +72,10 @@
       <span class="badge badge-primary">{{ seccionTitulo }}</span>
     </div>
     <div class="formulario-content scrollbar-thin">
-      <div *ngIf="validationErrors.length > 0" class="validation-banner" style="background:#ffe5e5;border:1px solid #ffb3b3;border-radius:6px;margin-bottom:16px;padding:12px;">
+      <div *ngIf="(validationErrorsSignal() | slice:0).length > 0" class="validation-banner" style="background:#ffe5e5;border:1px solid #ffb3b3;border-radius:6px;margin-bottom:16px;padding:12px;">
         <strong>Referencias inválidas detectadas:</strong>
         <ul style="margin:8px 0 0;padding-left:18px;">
-          <li *ngFor="let error of validationErrors">
+          <li *ngFor="let error of (validationErrorsSignal() | slice:0)">
             Sección {{ error.sectionId }} · Tabla {{ error.tableId }} · fila {{ error.rowId }} — {{ error.message }}
           </li>
         </ul>

@@ -1,39 +1,15 @@
 import { Component, ChangeDetectorRef, OnDestroy, Injector, ChangeDetectionStrategy, Signal, computed, effect, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
-import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion2TextGeneratorService } from '../../../core/services/seccion2-text-generator.service';
 import { DataHighlightService } from '../../../core/services/data-highlight.service';
+import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { BaseSectionComponent } from '../base-section.component';
-import { ReactiveStateAdapter } from '../../../core/services/state-adapters/reactive-state-adapter.service';
-import { Commands } from '../../../core/state/ui-store.contract';
 import { GroupDefinition, CCPPEntry } from '../../../core/state/project-state.model';
 
-/**
- * SECCION 2 - ÁREA DE INFLUENCIA SOCIAL
- * 
- * Componente refactorizado para consumir exclusivamente señales (Signals) del ProjectStateFacade.
- * 
- * PRINCIPIOS:
- * - ✅ No usa projectFacade.obtenerDatos()
- * - ✅ Lee datos solo de signals: groupsByType, allPopulatedCenters
- * - ✅ Cada modificación dispara comandos específicos (addGroup, removeGroup, renameGroup, setGroupCCPP, etc.)
- * - ✅ Los centros poblados activos se derivan de grupo.ccppIds (reactivo)
- * - ✅ UI reactiva: effect() para loguear cambios automáticamente
- * 
- * COMANDOS UTILIZADOS:
- * - addGroup: Agregar comunidad/distrito
- * - removeGroup: Eliminar comunidad/distrito
- * - renameGroup: Cambiar nombre
- * - setGroupCCPP: Reemplazar todos los CCPP de un grupo
- * - addCCPPToGroup: Agregar un CCPP individual
- * - removeCCPPFromGroup: Remover un CCPP individual
- */
 @Component({
   selector: 'app-seccion2',
   templateUrl: './seccion2.component.html',
@@ -52,58 +28,36 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   
   override readonly PHOTO_PREFIX = 'fotografiaSeccion2';
   override useReactiveSync: boolean = true;
-  
-  override watchedFields: string[] = [
-    'parrafoSeccion2_introduccion',
-    'parrafoSeccion2_aisd_completo',
-    'parrafoSeccion2_aisi_completo'
-  ];
 
   fotografiasSeccion2: FotoItem[] = [];
   imageUploadKey: number = 0;
 
-  // ============================================================================
-  // SIGNALS - Única fuente de verdad para grupos y centros poblados
-  // ============================================================================
-  
-  /** Signal: Grupos AISD (Comunidades Campesinas) */
   readonly aisdGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISD');
-  
-  /** Signal: Grupos AISI (Distritos) */
   readonly aisiGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISI');
-  
-  /** Signal: Todos los centros poblados registrados */
   readonly allPopulatedCenters: Signal<readonly CCPPEntry[]> = this.projectFacade.allPopulatedCenters();
 
-  /** Signal derivado: Nombres de comunidades para texto */
   readonly comunidadesNombres: Signal<string[]> = computed(() => 
     this.aisdGroups().map(g => g.nombre)
   );
 
-  /** Signal derivado: Nombres de distritos para texto */
   readonly distritosNombres: Signal<string[]> = computed(() => 
     this.aisiGroups().map(g => g.nombre)
   );
 
-  /** Signal derivado: Texto AISD formateado para vista */
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
-    // Leer grupos directamente para que el signal sea reactivo
     const grupos = this.aisdGroups();
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
-  /** Signal derivado: Texto AISI formateado para vista */
   readonly textoAISIFormateado: Signal<SafeHtml> = computed(() => {
-    // Leer grupos directamente para que el signal sea reactivo
     const grupos = this.aisiGroups();
     const texto = this.obtenerTextoSeccion2AISICompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
-  /** Signal derivado: Hash de campos de fotografías para detectar cambios */
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
     for (let i = 1; i <= 10; i++) {
@@ -120,12 +74,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return hash;
   });
 
-  // ============================================================================
-  // SERVICIOS
-  // ============================================================================
-  
-  private readonly textGenerator = this.injector.get(Seccion2TextGeneratorService);
   private readonly dataHighlightService = this.injector.get(DataHighlightService);
+  private readonly formChangeService = this.injector.get(FormChangeService);
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -134,177 +84,213 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   ) {
     super(cdRef, injector);
     
-    // ✅ REACTIVIDAD: Registrar effect para loguear cambios en grupos y forzar actualización de vista
     effect(() => {
-      const aisd = this.aisdGroups();
-      const aisi = this.aisiGroups();
-      const centros = this.allPopulatedCenters();
-      
-      console.log('🔄 [Seccion2] Grupos AISD actualizados:', aisd.length, 'grupos');
-      console.log('🔄 [Seccion2] Grupos AISI actualizados:', aisi.length, 'grupos');
-      console.log('🔄 [Seccion2] Centros poblados disponibles:', centros.length);
-      
-      aisd.forEach(grupo => {
-        const centrosActivos = grupo.ccppIds.map(id => 
-          centros.find(c => c.codigo === id)?.nombre || id
-        );
-        console.log(`   Grupo ${grupo.nombre} → centros:`, centrosActivos);
-      });
-      
-      // Forzar actualización de la vista cuando cambian los grupos
+      this.aisdGroups();
+      this.aisiGroups();
+      this.allPopulatedCenters();
       this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
+    });
 
-    // ✅ REACTIVIDAD: Effect para recargar fotografías cuando cambian título o fuente
+    effect(() => {
+      const gruposAISD = this.aisdGroups();
+      const comunidadesParaPersistir = gruposAISD.map(g => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: g.ccppIds || []
+      }));
+      this.formChangeService.persistFields('3.1.2', 'form', {
+        comunidadesCampesinas: comunidadesParaPersistir
+      });
+    });
+
+    effect(() => {
+      const gruposAISI = this.aisiGroups();
+      const distritosParaPersistir = gruposAISI.map(g => ({
+        id: g.id,
+        nombre: g.nombre,
+        centrosPobladosSeleccionados: g.ccppIds || []
+      }));
+      this.formChangeService.persistFields('3.1.2', 'form', {
+        distritosAISI: distritosParaPersistir
+      });
+    });
+
     effect(() => {
       this.photoFieldsHash();
       this.cargarFotografias();
       this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
+    });
+
+    // ✅ Log automático de grupos cargados
+    effect(() => {
+      const gruposAISD = this.aisdGroups();
+      const gruposAISI = this.aisiGroups();
+      
+      // Log solo si hay grupos cargados
+      if (gruposAISD.length > 0 || gruposAISI.length > 0) {
+        console.log('%c=== GRUPOS CARGADOS EN SECCIÓN 2 ===', 'color: #1f2937; background: #f3f4f6; font-weight: bold; padding: 4px 8px; border-radius: 3px');
+        
+        if (gruposAISD.length > 0) {
+          gruposAISD.forEach((grupo, index) => {
+            this.logGrupoParaConsola('AISD', index + 1, grupo);
+          });
+        }
+        
+        if (gruposAISI.length > 0) {
+          gruposAISI.forEach((grupo, index) => {
+            this.logGrupoParaConsola('AISI', index + 1, grupo);
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Log interno para mostrar grupo en consola
+   */
+  private logGrupoParaConsola(tipo: 'AISD' | 'AISI', numeroGrupo: number, grupo: GroupDefinition): void {
+    const icono = tipo === 'AISD' ? '🏘️' : '🗺️';
+    const color = tipo === 'AISD' ? '#2563eb' : '#dc2626';
+    const prefijo = tipo === 'AISD' ? 'A' : 'B';
+    
+    console.log(`%c${icono} GRUPO ${tipo}: ${prefijo}.${numeroGrupo} - ${grupo.nombre || 'Sin nombre'}`, `color: ${color}; font-weight: bold; font-size: 13px`);
+    console.log(`%cCentros Poblados (CCPP):`, `color: ${color === '#2563eb' ? '#7c3aed' : '#b91c1c'}; font-weight: bold`);
+    
+    const centrosPobladosSeleccionados = grupo.ccppIds || [];
+    console.log(`[DEBUG] centrosPobladosSeleccionados (${centrosPobladosSeleccionados.length}):`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      return;
+    }
+    
+    const jsonCompleto = this.projectFacade.obtenerDatos()['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
+            centrosDetalles.push(centro);
+          }
+        }
+      });
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    }
   }
 
   protected override onInitCustom(): void {
-    // ✅ Cargar fotografías
     this.cargarFotografias();
   }
 
   override ngOnDestroy(): void {
-    // Limpieza si fuera necesario
+    super.ngOnDestroy();
   }
 
   protected override actualizarDatosCustom(): void {
-    // Cargar fotografías cuando se actualizan datos
-    this.cargarFotografias();
+    this.cdRef.markForCheck();
   }
 
-  protected override onChangesCustom(changes: SimpleChanges): void {
-    if (changes['modoFormulario'] && !this.modoFormulario) {
-      setTimeout(() => {
-        this.cargarFotografias();
-        this.cdRef.markForCheck();
-      }, 0);
-    }
-  }
-
-  // ============================================================================
-  // COMANDOS - AISD (Comunidades Campesinas)
-  // ============================================================================
-
-  /**
-   * Agrega una nueva comunidad campesina (grupo AISD)
-   */
   agregarComunidadCampesina(): void {
     const nombre = `Comunidad Campesina ${this.aisdGroups().length + 1}`;
     this.projectFacade.addGroup('AISD', nombre, null);
-    console.log(`✅ [Comando] Agregada comunidad: ${nombre}`);
+    console.log(`✅ Comunidad AISD: ${nombre}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Elimina una comunidad campesina
-   */
   eliminarComunidadCampesina(id: string): void {
     this.projectFacade.removeGroup('AISD', id, true);
-    console.log(`❌ [Comando] Eliminada comunidad: ${id}`);
+    console.log(`❌ Comunidad AISD eliminada: ${id}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Actualiza el nombre de una comunidad
-   */
   actualizarNombreComunidad(id: string, nombre: string): void {
     this.projectFacade.renameGroup('AISD', id, nombre);
-    console.log(`📝 [Comando] Renombrada comunidad ${id} → ${nombre}`);
     this.cdRef.markForCheck();
   }
 
-  // ============================================================================
-  // COMANDOS - AISI (Distritos)
-  // ============================================================================
-
-  /**
-   * Agrega un nuevo distrito (grupo AISI)
-   */
   agregarDistritoAISI(): void {
     const nombre = `Distrito ${this.aisiGroups().length + 1}`;
     this.projectFacade.addGroup('AISI', nombre, null);
-    console.log(`✅ [Comando] Agregado distrito: ${nombre}`);
+    console.log(`✅ Distrito AISI: ${nombre}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Elimina un distrito
-   */
   eliminarDistritoAISI(id: string): void {
     this.projectFacade.removeGroup('AISI', id, true);
-    console.log(`❌ [Comando] Eliminado distrito: ${id}`);
+    console.log(`❌ Distrito AISI eliminado: ${id}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Actualiza el nombre de un distrito
-   */
   actualizarNombreDistrito(id: string, nombre: string): void {
     this.projectFacade.renameGroup('AISI', id, nombre);
-    console.log(`📝 [Comando] Renombrado distrito ${id} → ${nombre}`);
     this.cdRef.markForCheck();
   }
 
-  // ============================================================================
-  // COMANDOS - CENTROS POBLADOS
-  // ============================================================================
-
-  /**
-   * Agrega un centro poblado a una comunidad
-   */
   addCCPPToComunidad(communityId: string, ccppId: string): void {
+    const grupo = this.aisdGroups().find(g => g.id === communityId);
+    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
-    console.log(`➕ [Comando] Centro ${ccppId} agregado a comunidad ${communityId}`);
+    console.log(`✅ Centro poblado ${ccppId} agregado a AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Remueve un centro poblado de una comunidad
-   */
   removeCCPPFromComunidad(communityId: string, ccppId: string): void {
+    const grupo = this.aisdGroups().find(g => g.id === communityId);
+    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
-    console.log(`➖ [Comando] Centro ${ccppId} removido de comunidad ${communityId}`);
+    console.log(`❌ Centro poblado ${ccppId} removido de AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Agrega un centro poblado a un distrito
-   */
   addCCPPToDistrito(districtId: string, ccppId: string): void {
+    const grupo = this.aisiGroups().find(g => g.id === districtId);
+    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
     });
-    console.log(`➕ [Comando] Centro ${ccppId} agregado a distrito ${districtId}`);
+    console.log(`✅ Centro poblado ${ccppId} agregado a AISI B.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Remueve un centro poblado de un distrito
-   */
   removeCCPPFromDistrito(districtId: string, ccppId: string): void {
+    const grupo = this.aisiGroups().find(g => g.id === districtId);
+    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
     });
-    console.log(`➖ [Comando] Centro ${ccppId} removido de distrito ${districtId}`);
+    console.log(`❌ Centro poblado ${ccppId} removido de AISI B.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Toggle (agrega o remueve) un centro poblado de una comunidad
-   */
   toggleCentroPobladoComunidad(id: string, codigo: string): void {
     const grupo = this.aisdGroups().find(g => g.id === id);
     if (!grupo) return;
@@ -313,7 +299,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     if (!codigoNormalizado) return;
 
     const existe = grupo.ccppIds.includes(codigoNormalizado);
-    
     if (existe) {
       this.removeCCPPFromComunidad(id, codigoNormalizado);
     } else {
@@ -321,9 +306,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  /**
-   * Toggle (agrega o remueve) un centro poblado de un distrito
-   */
   toggleCentroPobladoDistrito(id: string, codigo: string): void {
     const grupo = this.aisiGroups().find(g => g.id === id);
     if (!grupo) return;
@@ -332,7 +314,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     if (!codigoNormalizado) return;
 
     const existe = grupo.ccppIds.includes(codigoNormalizado);
-    
     if (existe) {
       this.removeCCPPFromDistrito(id, codigoNormalizado);
     } else {
@@ -340,92 +321,91 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
-  /**
-   * Selecciona todos los centros poblados disponibles para una comunidad
-   */
+  estaCentroPobladoSeleccionadoComunidad(id: string, codigo: string): boolean {
+    const grupo = this.aisdGroups().find(g => g.id === id);
+    if (!grupo) return false;
+    const codigoNormalizado = codigo?.toString().trim() || '';
+    return grupo.ccppIds.includes(codigoNormalizado);
+  }
+
+  estaCentroPobladoSeleccionadoDistrito(id: string, codigo: string): boolean {
+    const grupo = this.aisiGroups().find(g => g.id === id);
+    if (!grupo) return false;
+    const codigoNormalizado = codigo?.toString().trim() || '';
+    return grupo.ccppIds.includes(codigoNormalizado);
+  }
+
   seleccionarTodosCentrosPobladosComunidad(id: string): void {
+    const grupo = this.aisdGroups().find(g => g.id === id);
+    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: codigos }
     });
-    console.log(`✅ [Comando] Todos los centros seleccionados para comunidad ${id}`);
+    console.log(`✅ Seleccionados ${codigos.length} centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Deselecciona todos los centros poblados de una comunidad
-   */
   deseleccionarTodosCentrosPobladosComunidad(id: string): void {
+    const grupo = this.aisdGroups().find(g => g.id === id);
+    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: [] }
     });
-    console.log(`❌ [Comando] Todos los centros deseleccionados para comunidad ${id}`);
+    console.log(`❌ Deseleccionados todos los centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Selecciona todos los centros poblados disponibles para un distrito
-   */
   seleccionarTodosCentrosPobladosDistrito(id: string): void {
+    const grupo = this.aisiGroups().find(g => g.id === id);
+    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISI', groupId: id, ccppIds: codigos }
     });
-    console.log(`✅ [Comando] Todos los centros seleccionados para distrito ${id}`);
+    console.log(`✅ Seleccionados ${codigos.length} centros poblados en AISI B.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  /**
-   * Deselecciona todos los centros poblados de un distrito
-   */
   deseleccionarTodosCentrosPobladosDistrito(id: string): void {
+    const grupo = this.aisiGroups().find(g => g.id === id);
+    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
+    const nombreGrupo = grupo?.nombre || '?';
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISI', groupId: id, ccppIds: [] }
     });
-    console.log(`❌ [Comando] Todos los centros deseleccionados para distrito ${id}`);
+    console.log(`❌ Deseleccionados todos los centros poblados en AISI B.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
-  // ============================================================================
-  // MÉTODOS DERIVADOS - Compatibilidad con templates y formularios
-  // ============================================================================
-
-  /**
-   * Obtiene los centros poblados seleccionados de una comunidad (derivado del signal)
-   */
   obtenerCentrosPobladosSeleccionadosComunidad(id: string): string[] {
     const grupo = this.aisdGroups().find(g => g.id === id);
     return grupo?.ccppIds as string[] || [];
   }
 
-  /**
-   * Obtiene todos los centros poblados disponibles
-   */
   obtenerTodosCentrosPoblados(): CCPPEntry[] {
     return this.allPopulatedCenters() as CCPPEntry[];
   }
 
-  /**
-   * Verifica si un grupo tiene una sola comunidad
-   */
   tieneUnaComunidad(): boolean {
     return this.aisdGroups().length === 1;
   }
 
-  /**
-   * Verifica si un grupo tiene múltiples comunidades
-   */
   tieneMultiplesComunidades(): boolean {
     return this.aisdGroups().length > 1;
   }
 
-  /**
-   * Obtiene nombres de comunidades como texto
-   */
   obtenerTextoComunidades(): string {
     const nombres = this.comunidadesNombres();
     if (nombres.length === 0) return '____';
@@ -434,57 +414,30 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1];
   }
 
-  /**
-   * Obtiene texto de comunidades en singular
-   */
   obtenerTextoComunidadesSingular(): string {
     return this.tieneUnaComunidad() ? 'comunidad campesina' : 'comunidades campesinas';
   }
 
-  /**
-   * Obtiene texto de comunidades en posesión
-   */
   obtenerTextoComunidadesPosesion(): string {
     return this.tieneUnaComunidad() ? 'su' : 'sus';
   }
 
-  /**
-   * Obtiene prefijo para texto de impactos
-   */
   obtenerPrefijoCCImpactos(): string {
     return this.tieneUnaComunidad() ? 'la CC' : 'las CC';
   }
 
-  /**
-   * Obtiene texto de comunidades para impactos
-   */
   obtenerTextoComunidadesImpactos(): string {
     return this.obtenerTextoComunidades();
   }
 
-  /**
-   * Obtiene prefijo para texto final
-   */
   obtenerPrefijoCCFinal(): string {
     return this.tieneUnaComunidad() ? 'la CC' : 'las CC';
   }
 
-  /**
-   * Obtiene texto de comunidades final
-   */
   obtenerTextoComunidadesFinal(): string {
     return this.obtenerTextoComunidades();
   }
 
-  // ============================================================================
-  // TEXTOS DERIVADOS PARA VISTA
-  // ============================================================================
-  // MÉTODOS PARA GENERAR TEXTO SIN HTML (versión plana para edición)
-  // ============================================================================
-
-  /**
-   * Genera texto AISD **SIN HTML** para usar en el editor (texto plano)
-   */
   generarTextoAISDSinHTML(params: { 
     comunidades: string; 
     distrito: string; 
@@ -501,20 +454,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) ${comunidades}, cuya área comunal se encuentra predominantemente en el distrito de ${distrito} y en menor proporción en los distritos de ${componente1} y de ${componente2}, pertenecientes al departamento de ${departamento}. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC ${comunidades}, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC ${comunidades}.`;
   }
 
-  /**
-   * Obtiene texto AISD para edición (sin HTML)
-   */
   obtenerTextoSeccion2AISDParaEdicion(): string {
-    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisd_completo'];
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const datos = this.projectFacade.obtenerDatos();
-    const geoInfo = datos?.['geoInfo'] || {};
+    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
     const distrito = geoInfo.DIST || '____';
     const departamento = geoInfo.DPTO || '____';
-    const componente1 = datos?.['aisdComponente1'] || '____';
-    const componente2 = datos?.['aisdComponente2'] || '____';
+    const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
+    const componente2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')() || '____';
 
     return this.generarTextoAISDSinHTML({ 
       comunidades, 
@@ -525,28 +474,17 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     });
   }
 
-  /**
-   * Obtiene texto AISI para edición (sin HTML)
-   */
   obtenerTextoSeccion2AISIParaEdicion(): string {
-    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisi_completo'];
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
-    const datos = this.projectFacade.obtenerDatos();
-    const geoInfo = datos?.['geoInfo'] || {};
-    const centroPoblado = geoInfo.DIST || '____';
-    const distrito = geoInfo.DIST || '____';
+    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
 
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el ${centroPoblado}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el ${geoInfo.DIST || '____'}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
   }
 
-  // ============================================================================
-
-  /**
-   * Genera texto AISD completo para vista
-   */
   generarTextoAISDCompleto(params: { 
     comunidades: string; 
     distrito: string; 
@@ -563,8 +501,6 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const highlightClass = this.dataHighlightService.getInheritedClass();
     const manualClass = this.dataHighlightService.getManualClass();
     
-    // Usar data-manual has-data para nombres de comunidades (resaltado amarillo claro)
-    // cuando tienen datos (no son '____')
     const comunidadesClass = comunidades !== '____' 
       ? `${manualClass} has-data` 
       : highlightClass;
@@ -572,30 +508,23 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) <span class="${comunidadesClass}">${comunidades}</span>, cuya área comunal se encuentra predominantemente en el distrito de <span class="${highlightClass}">${distrito}</span> y en menor proporción en los distritos de <span class="${manualClass}">${componente1}</span> y de <span class="${manualClass}">${componente2}</span>, pertenecientes al departamento de <span class="${highlightClass}">${departamento}</span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC <span class="${comunidadesClass}">${comunidades}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC <span class="${comunidadesClass}">${comunidades}</span>.`;
   }
 
-  /**
-   * Obtiene texto de introducción de Sección 2
-   */
   obtenerTextoSeccion2Introduccion(): string {
-    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_introduccion'];
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_introduccion')();
     if (manual && manual.trim().length > 0) return manual;
 
     return `En términos generales, la delimitación del ámbito de estudio de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales, individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los recursos respecto de los cuales el proyecto de exploración minera tiene incidencia.\n\nAsimismo, el área de influencia social de un proyecto tiene en consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina "grupos de interés" a aquellos grupos humanos que son impactados por dicho proyecto).\n\nEl criterio social para la delimitación de un área de influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos, expectativas, intereses y/o demandas del entorno social.\n\nEn base a estos criterios se han identificado las áreas de influencia social directa e indirecta:`;
   }
 
-  /**
-   * Obtiene texto completo AISD
-   */
   obtenerTextoSeccion2AISDCompleto(): string {
-    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisd_completo'];
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const datos = this.projectFacade.obtenerDatos();
-    const geoInfo = datos?.['geoInfo'] || {};
+    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
     const distrito = geoInfo.DIST || '____';
     const departamento = geoInfo.DPTO || '____';
-    const componente1 = datos?.['aisdComponente1'] || '____';
-    const componente2 = datos?.['aisdComponente2'] || '____';
+    const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
+    const componente2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')() || '____';
 
     return this.generarTextoAISDCompleto({ 
       comunidades, 
@@ -606,30 +535,22 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     });
   }
 
-  /**
-   * Obtiene texto completo AISI
-   */
   obtenerTextoSeccion2AISICompleto(): string {
-    const manual = this.projectFacade.obtenerDatos()?.['parrafoSeccion2_aisi_completo'];
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
-    // ✅ Obtener grupos AISI directamente desde signals
     const gruposAISI = this.aisiGroups();
-    // ✅ Incluir TODOS los distritos que tengan nombre, incluso los que empiezan con "Distrito"
-    // Solo filtrar los que están vacíos o son placeholders sin nombre asignado
     const distritosNombres = gruposAISI
       .map(g => g.nombre?.trim())
       .filter(nombre => nombre && nombre !== '' && nombre !== 'Distrito');
 
-    const datos = this.projectFacade.obtenerDatos();
-    const geoInfo = datos?.['geoInfo'] || {};
+    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
     const manualClass = this.dataHighlightService.getManualClass();
 
-    // Formatear lista de distritos
     let textoDistritos = '____';
     if (distritosNombres.length === 1) {
       textoDistritos = distritosNombres[0];
@@ -641,25 +562,19 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
       textoDistritos = `${anteriores} y ${ultimo}`;
     }
 
-    // Aplicar clase de resaltado si hay distritos cargados
     const distritosClass = distritosNombres.length > 0 
       ? `${manualClass} has-data`
       : highlightClass;
 
-    // Generar texto según cantidad de distritos
     if (distritosNombres.length === 1) {
       return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${distritosClass}">${textoDistritos}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
     } else if (distritosNombres.length > 1) {
       return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por los distritos de <span class="${distritosClass}">${textoDistritos}</span>, capitales distritales de sus respectivas jurisdicciones, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que estas localidades son los centros políticos de las jurisdicciones donde se ubica el Proyecto, así como al hecho de que mantienen una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, son las localidades de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
     }
 
-    // Fallback si no hay distritos
     return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${highlightClass}">____</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
   }
 
-  /**
-   * Formatea un párrafo con etiquetas HTML
-   */
   formatearParrafo(texto: string): string {
     if (!texto) return '';
     const parrafos = texto.split(/\n\n+/);
@@ -670,37 +585,12 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    // ✅ Implementación específica para sección 2
-    // Actualizar valores que dependen de prefijos si es necesario
   }
 
   protected override detectarCambios(): boolean {
-    const datosActuales = this.projectFacade.obtenerDatos();
-    let hayCambios = false;
-    
-    for (const campo of this.watchedFields) {
-      const valorActual = (datosActuales as any)[campo] || null;
-      const valorAnterior = this.datosAnteriores[campo] || null;
-      if (valorActual !== valorAnterior) {
-        hayCambios = true;
-        this.datosAnteriores[campo] = valorActual;
-      }
-    }
-
-    return hayCambios;
+    return false;
   }
 
-  override onFieldChange(field: string, value: any, options?: { refresh?: boolean }): void {
-    // ✅ Usar el sistema unificado de persistencia de BaseSectionComponent
-    super.onFieldChange(field, value, options);
-  }
-
-  override onFotografiasChange(fotos: any[]): void {
-    // ✅ Usar el sistema unificado de fotos
-    super.onFotografiasChange(fotos);
-  }
-
-  // ✅ MÉTODO LLENAR DATOS DE PRUEBA
   llenarDatosPrueba(): void {
     const parrafoPrueba = `Los centros poblados ubicados en el área de influencia del proyecto presentan características sociodemográficas variadas. 
 Se ha identificado la presencia de comunidades campesinas organizadas que mantienen prácticas tradicionales de gestión territorial.
@@ -722,5 +612,13 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
     
     this.modoFormulario = false;
     this.cdRef.detectChanges();
+  }
+
+  trackByComunidadId(index: number, comunidad: GroupDefinition): string {
+    return comunidad.id;
+  }
+
+  trackByDistritoId(index: number, distrito: GroupDefinition): string {
+    return distrito.id;
   }
 }

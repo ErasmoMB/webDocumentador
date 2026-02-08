@@ -23,6 +23,8 @@ export class TableWrapperComponent implements AfterViewInit {
   
   tableNumber: string = '';
 
+  private changesSub: any;
+
   constructor(
     private tableNumberingService: TableNumberingService,
     private el: ElementRef,
@@ -30,15 +32,25 @@ export class TableWrapperComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit() {
-    // Cuando esta tabla se renderiza, registrar cuántas tablas tiene su sección
+    // Registrar conteo la primera vez
     setTimeout(() => {
-      // Solo registrar la PRIMERA tabla de cada sectionId
-      // Esto evita que form y view registren por separado
       this.registerSectionTableCountOnce();
+      // Calcular número inicial
       this.calculateTableNumber();
-      // Marcar para que Angular detecte el cambio en tableNumber
       this.cdr.markForCheck();
+
+      // Suscribirse a cambios del servicio para recalcular automáticamente
+      this.changesSub = this.tableNumberingService.changes$.subscribe(() => {
+        this.calculateTableNumber();
+        this.cdr.markForCheck();
+      });
     }, 0);
+  }
+
+  ngOnDestroy() {
+    if (this.changesSub) {
+      this.changesSub.unsubscribe();
+    }
   }
 
   private registerSectionTableCountOnce() {
@@ -57,12 +69,47 @@ export class TableWrapperComponent implements AfterViewInit {
     if (firstTableOfSection === this.el.nativeElement) {
       // IMPORTANTE: Solo registrar si la sección NO tiene un valor predefinido en el servicio
       // Para AISD/AISI dinámicas, permitir el registro
-      const isAISDorAISI = this.sectionId.startsWith('3.1.4.A.1.') || 
-                          this.sectionId.startsWith('3.1.4.B.1.') ||
-                          this.sectionId === '3.1.4.B'; // También registrar 3.1.4.B (Ubicación AISI)
       
-      if (isAISDorAISI) {
-        // Para AISD/AISI: registrar dinámicamente
+      // ❌ Secciones fijas que NO deben registrarse dinámicamente (tienen configuración predefinida)
+      const fixedSections = [
+        // AISD
+        '3.1.4.A.1.1',  // A.1.1 Institucionalidad
+        '3.1.4.A.1.6',  // A.1.6 Servicios básicos
+        '3.1.4.A.1.7',  // A.1.7 Telecomunicaciones
+        '3.1.4.A.1.8',  // A.1.8 Salud y educación
+        '3.1.4.A.1.9',  // A.1.9 Salud
+        '3.1.4.A.1.10', // A.1.10 Educación
+        '3.1.4.A.1.11', // A.1.11 Lenguas y religión
+        '3.1.4.A.1.13', // A.1.13 IDH
+        '3.1.4.A.1.14', // A.1.14 NBI
+        '3.1.4.A.1.15', // A.1.15 Autoridades
+        '3.1.4.A.1.16', // A.1.16 Festividades
+        // AISI
+        '3.1.4.B.1',    // B.1: Centro Poblado
+        '3.1.4.B.1.1',  // B.1.1: Aspectos demográficos
+        '3.1.4.B.1.2',  // B.1.2: PET, PEA
+        '3.1.4.B.1.4',  // B.1.4: Vivienda
+        '3.1.4.B.1.5',  // B.1.5: Servicios básicos
+        '3.1.4.B.1.6',  // B.1.6: Telecomunicaciones
+        '3.1.4.B.1.7',  // B.1.7: Salud y educación
+        '3.1.4.B.1.8',  // B.1.8: Salud
+        '3.1.4.B.1.9',  // B.1.9: Educación
+        '3.1.4.B.1.10', // B.1.10: Lenguas y religión
+        '3.1.4.B.1.12', // B.1.12: IDH
+        '3.1.4.B.1.13', // B.1.13: NBI
+        '3.1.4.B.1.14', // B.1.14: Autoridades
+        '3.1.4.B.1.15', // B.1.15: Festividades
+        '3.1.4.B.1.16'  // B.1.16: Mapa de actores
+      ];
+      
+      const isFixedSection = fixedSections.includes(this.sectionId);
+      const isDynamicAISDorAISI = (this.sectionId.startsWith('3.1.4.A.1.') || 
+                                  this.sectionId.startsWith('3.1.4.B.1.') ||
+                                  this.sectionId === '3.1.4.B' ||
+                                  this.sectionId === '3.1.4.B.1') && !isFixedSection;
+      
+      if (isDynamicAISDorAISI) {
+        // Para AISD/AISI DINÁMICAS: registrar dinámicamente
         this.tableNumberingService.registerSectionTableCount(this.sectionId, tablesInSection);
       } else {
         // Para secciones fijas: no registrar, usar configuración inicial

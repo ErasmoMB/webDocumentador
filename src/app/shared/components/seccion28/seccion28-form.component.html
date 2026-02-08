@@ -1,0 +1,253 @@
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h4>
+    
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">a. Infraestructura en salud</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoSaludCP"
+          label="Infraestructura en Salud - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoSaludCP()"
+          (valueChange)="onFieldChange('textoSaludCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título — Principales características del Puesto de Salud</label>
+        <input type="text" class="input" 
+          [value]="datos['puestoSaludTitulo'] || ''"
+          (input)="onFieldChange('puestoSaludTitulo', $any($event.target).value)"
+          placeholder="Ej: Principales características del Puesto de Salud">
+      </div>
+
+      <div class="form-field mt-sm">
+        <label class="label">Tabla Principales características del Puesto de Salud</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="puestoSaludConfig"
+          [columns]="columnasPuestoSalud"
+          [tablaKey]="getTablaKeyPuestoSalud()"
+          [totalKey]="'categoria'"
+          (tableUpdated)="onPuestoSaludTableUpdated()"
+          [showAddButton]="false"
+          [showDeleteButton]="false">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field mt-sm">
+        <label class="label">Fuente — Principales características del Puesto de Salud</label>
+        <input type="text" class="input" 
+          [value]="datos['puestoSaludFuente'] || ''"
+          (input)="onFieldChange('puestoSaludFuente', $any($event.target).value)"
+          placeholder="Ej: Ministerio de Salud (MINSA)">
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Infraestructura en salud</label>
+        <app-image-upload
+          [fotografias]="fotografiasSaludFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_SALUD"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Puesto de Salud"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Puesto de Salud"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasSaludChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">b. Infraestructura en educación</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoEducacionCP"
+          label="Infraestructura en Educación - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoEducacionCP()"
+          (valueChange)="onFieldChange('textoEducacionCP', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-row mt-lg">
+        <div class="form-field">
+          <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
+          <input type="text" class="input" 
+            [value]="datos['nombreIEMayorEstudiantes'] || ''"
+            (input)="onFieldChange('nombreIEMayorEstudiantes', $any($event.target).value)"
+            placeholder="Ej: IE Virgen de Copacabana">
+        </div>
+
+        <div class="form-field">
+          <label class="label">Cantidad de estudiantes de la IE con mayor cantidad</label>
+          <input type="number" class="input" 
+            [value]="datos['cantidadEstudiantesIEMayor'] || ''"
+            (input)="onFieldChange('cantidadEstudiantesIEMayor', $any($event.target).value)"
+            placeholder="Ej: 28">
+        </div>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título — Infraestructura educativa</label>
+        <input type="text" class="input" 
+          [value]="datos['educacionTitulo'] || ''"
+          (input)="onFieldChange('educacionTitulo', $any($event.target).value)"
+          placeholder="Ej: Infraestructura educativa – CP Cahuacho (2023)">
+      </div>
+
+      <div class="form-field mt-sm">
+        <label class="label">Tabla Infraestructura educativa</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [sectionId]="seccionId"
+          [config]="educacionConfig"
+          [columns]="columnasEducacion"
+          [tablaKey]="getTablaKeyEducacion()"
+          [totalKey]="'nombreIE'"
+          (tableUpdated)="onTablaUpdated()">
+        </app-dynamic-table>
+      </div>
+
+      <div class="form-field mt-sm">
+        <label class="label">Fuente — Infraestructura educativa</label>
+        <input type="text" class="input" 
+          [value]="datos['educacionFuente'] || ''"
+          (input)="onFieldChange('educacionFuente', $any($event.target).value)"
+          placeholder="Ej: Censo Educativo 2023 – ESCALE (MINEDU)">
+      </div> 
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Infraestructura en educación</label>
+        <app-image-upload
+          [fotografias]="fotografiasEducacionFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Infraestructura educativa"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Infraestructura educativa"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasEducacionChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">c. Infraestructura en recreación</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP1"
+          label="Infraestructura en Recreación - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP1()"
+          (valueChange)="onFieldChange('textoRecreacionCP1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP2"
+          label="Infraestructura en Recreación - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP2()"
+          (valueChange)="onFieldChange('textoRecreacionCP2', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoRecreacionCP3"
+          label="Infraestructura en Recreación - Párrafo 3"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoRecreacionCP3()"
+          (valueChange)="onFieldChange('textoRecreacionCP3', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Infraestructura en recreación</label>
+        <app-image-upload
+          [fotografias]="fotografiasRecreacionFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_RECREACION"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Plaza de toros"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Plaza de toros"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasRecreacionChange($event)">
+        </app-image-upload>
+      </div>
+
+      <div class="form-group-section mt-xl">
+      <h4 class="section-title">d. Infraestructura en deporte</h4>
+      
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+        
+        <app-paragraph-editor
+          fieldId="textoDeporteCP1"
+          label="Infraestructura en Deporte - Párrafo 1"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoDeporteCP1()"
+          (valueChange)="onFieldChange('textoDeporteCP1', $event)">
+        </app-paragraph-editor>
+
+        <app-paragraph-editor
+          fieldId="textoDeporteCP2"
+          label="Infraestructura en Deporte - Párrafo 2"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="4"
+          [value]="obtenerTextoDeporteCP2()"
+          (valueChange)="onFieldChange('textoDeporteCP2', $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Infraestructura en deporte</label>
+        <app-image-upload
+          [fotografias]="fotografiasDeporteFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Losa deportiva"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Losa deportiva"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasDeporteChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+  </div>
+</div>

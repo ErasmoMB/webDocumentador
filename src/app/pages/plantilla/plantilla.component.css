@@ -1,0 +1,35 @@
+/* Skeleton loading para @defer blocks */
+.section-skeleton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  margin: 20px 0;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 8px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Optimización para el contenido principal */
+.preview-static {
+  contain: content;
+}
+
+/* Mejorar el rendering del viewport */
+.viewport-content {
+  contain: layout style;
+  will-change: transform;
+}

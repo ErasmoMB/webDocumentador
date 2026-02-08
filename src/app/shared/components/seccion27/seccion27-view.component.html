@@ -1,0 +1,55 @@
+<h5>B.1.6. Infraestructura para transportes y comunicaciones</h5>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Transporte</strong></p>
+
+<p class="text-justify" *ngIf="datos.textoTransporteCP1 && datos.textoTransporteCP1 !== '____'">{{ datos.textoTransporteCP1 }}</p>
+<p class="text-justify" *ngIf="!datos.textoTransporteCP1 || datos.textoTransporteCP1 === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.</p>
+<p class="text-justify" *ngIf="datos.textoTransporteCP2 && datos.textoTransporteCP2 !== '____'">{{ datos.textoTransporteCP2 }}</p>
+<p class="text-justify" *ngIf="!datos.textoTransporteCP2 || datos.textoTransporteCP2 === '____'">Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de <span [appDataSource]="'manual'" [fieldName]="'ciudadOrigenComercio'">{{ datos.ciudadOrigenComercio || 'Caravelí' }}</span>, a la cual parte cerca de las 10:30 am desde la capital distrital de <span [appDataSource]="'distritoSeleccionado' | dataSource" [fieldName]="'distritoSeleccionado'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span>. El costo por este servicio varía entre S/. <span [appDataSource]="'manual'" [fieldName]="'costoTransporteMinimo'">{{ datos.costoTransporteMinimo || '25' }}</span> y S/. <span [appDataSource]="'manual'" [fieldName]="'costoTransporteMaximo'">{{ datos.costoTransporteMaximo || '30' }}</span> por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los pobladores para desplazarse a ciudades más grandes.</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasTransporteVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
+
+<p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP1 && datos.textoTelecomunicacionesCP1 !== '____'">{{ datos.textoTelecomunicacionesCP1 }}</p>
+<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP1 || datos.textoTelecomunicacionesCP1 === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span>, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.</p>
+<p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP2 && datos.textoTelecomunicacionesCP2 !== '____'">{{ datos.textoTelecomunicacionesCP2 }}</p>
+<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP2 || datos.textoTelecomunicacionesCP2 === '____'">En cuanto a radiodifusión, se puede captar señal de emisoras nacionales como RPP, Nacional y Unión, las cuales sirven como importantes fuentes de información y entretenimiento para la población local. Estas emisoras proporcionan noticias, música y programas de interés general que son valorados por los habitantes del centro poblado.</p>
+<p class="text-justify" *ngIf="datos.textoTelecomunicacionesCP3 && datos.textoTelecomunicacionesCP3 !== '____'">{{ datos.textoTelecomunicacionesCP3 }}</p>
+<p class="text-justify" *ngIf="!datos.textoTelecomunicacionesCP3 || datos.textoTelecomunicacionesCP3 === '____'">Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.</p>
+
+<app-table-wrapper [title]="datos['cuadroTituloTelecomunicaciones'] || ('Servicios de telecomunicaciones – CP ' + (datos.centroPobladoAISI || 'Cahuacho'))" sectionId="3.1.4.B.1.6">
+  <app-generic-table
+    [data]="telecomunicacionesCpTablaVista"
+    [config]="{
+      columns: [
+        { key: 'medio', header: 'Medio de comunicación', align: 'left' },
+        { key: 'descripcion', header: 'Descripción', align: 'left' }
+      ],
+      showFooter: false,
+      striped: true,
+      hover: true
+    }">
+  </app-generic-table>
+</app-table-wrapper>
+<p class="source">FUENTE: <span [appDataSource]="'manual'" [fieldName]="'cuadroFuenteTelecomunicaciones'">{{ datos['cuadroFuenteTelecomunicaciones'] || 'GEADES (2024)' }}</span></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasTelecomunicacionesVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>

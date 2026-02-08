@@ -31,8 +31,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   fotografiasCache: FotoItem[] = [];
   fotografiasFormMulti: FotoItem[] = [];
   readonly PHOTO_PREFIX: string = '';
-
-  [key: string]: any;
   
   protected photoGroups: Map<string, FotoItem[]> = new Map();
   protected photoGroupsConfig: PhotoGroupConfig[] = [];
@@ -110,24 +108,27 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       this.legacyStateSubscription = undefined;
     }
 
-    // Solo suscribirse en modo vista (no formulario)
-    if (this.modoFormulario) return;
+    // En modo formulario, no suscribirse para evitar actualizaciones constantes
+    // Las actualizaciones vendrán del formulario directamente
+    if (this.modoFormulario) {
+      return;
+    }
 
     try {
       const stateAdapter = this.injector.get(ReactiveStateAdapter, null);
       if (!stateAdapter) return;
 
       this.legacyStateSubscription = stateAdapter.datos$.pipe(
-        debounceTime(50), // Pequeño debounce para agrupar cambios rápidos
+        debounceTime(100), // Increased debounce to reduce frequency
         takeUntil(this.destroy$)
       ).subscribe(() => {
-        // Actualizar datos desde ProjectStateFacade (fuente de verdad)
+        // En modo vista, actualizar datos desde ProjectStateFacade
         this.actualizarDatos();
         // Recargar fotografías si aplica
         if (this.tieneFotografias()) {
           this.cargarFotografias();
         }
-        this.cdRef.detectChanges();
+        this.cdRef.markForCheck();
       });
     } catch {
       // ReactiveStateAdapter no disponible - los componentes usan sus propias suscripciones
@@ -159,13 +160,13 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         this.actualizarFotografiasFormMulti();
         this.cargarFotografias();
       }
-      this.cdRef.detectChanges();
+      this.cdRef.markForCheck();
     }
 
     if (changes['modoFormulario'] && this.modoFormulario) {
       if (this.tieneFotografias()) {
         this.cargarTodosLosGrupos();
-        this.cdRef.detectChanges();
+        this.cdRef.markForCheck();
       }
     }
 
@@ -174,7 +175,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       if (this.tieneFotografias()) {
         setTimeout(() => {
           this.cargarFotografias();
-          this.cdRef.detectChanges();
+          this.cdRef.markForCheck();
         }, 0);
       }
     }
@@ -229,6 +230,13 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     // temporales que causan la pérdida de valores editados localmente.
     if (datosNuevos && Object.keys(datosNuevos).length > 0) {
       Object.keys(datosNuevos).forEach(key => {
+        // No sobrescribir si el campo está en edición activa (por ejemplo: títulos o fuentes que el usuario está editando)
+        try {
+          if ((this as any).isFieldBeingEdited && typeof (this as any).isFieldBeingEdited === 'function' && (this as any).isFieldBeingEdited(key)) {
+            return;
+          }
+        } catch {}
+
         const valor = datosNuevos[key];
 
         if (Array.isArray(valor)) {
@@ -247,7 +255,9 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
 
     this.actualizarValoresConPrefijo();
     this.actualizarDatosCustom();
-    this.cdRef.detectChanges();
+    // Usar markForCheck en lugar de detectChanges para mejor rendimiento
+    // detectChanges fuerza renderizado completo, markForCheck solo marca para checking
+    this.cdRef.markForCheck();
   }
 
   protected loadSectionData(): void {
@@ -343,7 +353,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     // ✅ Actualizar this.datos localmente PRIMERO para que esté disponible inmediatamente
     // Esto evita que otros campos se vacíen cuando se re-renderiza el componente
     this.datos[fieldId] = value;
-    
+    // No logging ruidoso por defecto
     const injector = this.injector;
     this.persistence.persistFieldChange(
       injector,
@@ -351,6 +361,19 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       fieldId,
       value
     );
+
+    // Además de persistir en FormularioService y ProjectState, asegurar que el FormState
+    // y SectionSyncService sean notificados inmediatamente para actualizar view/components
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = injector.get(FormChangeServiceToken, null);
+      if (formChange) {
+        // Persistir en FormStateService y notificar sección (notifySync) para que la vista se actualice
+        try { formChange.persistFields(this.seccionId, 'text', { [fieldId]: value }, { notifySync: true }); } catch (e) {}
+      }
+    } catch (e) {
+      // No bloquear si no está disponible
+    }
 
     if (options?.refresh ?? true) {
       this.actualizarDatos();
@@ -503,26 +526,16 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   private logGrupoAISD(numeroGrupo: number): void {
     const datos = this.projectFacade.obtenerDatos();
-    
-    console.log(`%c[DEBUG] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
-    console.log(`%c[DEBUG] Estructura de datos:`, 'color: #666; font-size: 12px');
-    console.log('- comunidadesCampesinas:', datos['comunidadesCampesinas']);
-    console.log('- centrosPobladosJSON:', datos['centrosPobladosJSON']);
-    console.log('- jsonCompleto:', datos['jsonCompleto']);
-    
     const comunidades = datos['comunidadesCampesinas'] || [];
-    console.log(`%c[DEBUG] Total comunidades cargadas: ${comunidades.length}`, 'color: #999; font-size: 11px');
     
     if (comunidades.length === 0) {
-      console.log('%c⚠️ No hay comunidades cargadas. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      console.log('%c⚠️ No hay comunidades cargadas.', 'color: #f59e0b; font-weight: bold');
       return;
     }
     
     const comunidadActual = comunidades[numeroGrupo - 1];
-    console.log(`%c[DEBUG] Buscando comunidad en índice ${numeroGrupo - 1}:`, 'color: #999; font-size: 11px', comunidadActual);
-    
     if (!comunidadActual) {
-      console.log(`%c⚠️ No existe comunidad A.${numeroGrupo}. Comunidades disponibles: ${comunidades.length}`, 'color: #f59e0b; font-weight: bold');
+      console.log(`%c⚠️ No existe comunidad A.${numeroGrupo}.`, 'color: #f59e0b; font-weight: bold');
       return;
     }
     
@@ -534,7 +547,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     
     if (centrosPobladosSeleccionados.length === 0) {
       console.log('  (Sin centros poblados asignados)');
-      console.log('%c[INFO] Debes asignar centros poblados a esta comunidad en la sección 2', 'color: #f59e0b; font-size: 11px');
       return;
     }
     
@@ -542,7 +554,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     const centrosDetalles: any[] = [];
     
     centrosPobladosSeleccionados.forEach((codigo: any) => {
-      let encontrado = false;
       Object.keys(jsonCompleto).forEach((grupoKey: string) => {
         const grupoData = jsonCompleto[grupoKey];
         if (Array.isArray(grupoData)) {
@@ -551,16 +562,11 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
             const codigoBuscado = String(codigo).trim();
             return codigoCentro === codigoBuscado;
           });
-          if (centro && !encontrado) {
+          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
             centrosDetalles.push(centro);
-            encontrado = true;
           }
         }
       });
-      
-      if (!encontrado) {
-        console.log(`  [DEBUG] Centro con código ${codigo} no encontrado en jsonCompleto`);
-      }
     });
     
     if (centrosDetalles.length > 0) {
@@ -568,8 +574,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
         console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
       });
-    } else {
-      console.log('  (Sin centros poblados encontrados en el JSON)');
     }
   }
 
@@ -578,28 +582,16 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   private logGrupoAISI(numeroGrupo: number): void {
     const datos = this.projectFacade.obtenerDatos();
-    
-    console.clear();
-    
-    console.log(`%c[DEBUG AISI] Analizando sección ${this.seccionId}`, 'color: #666; font-size: 12px');
-    console.log(`%c[DEBUG AISI] Estructura de datos:`, 'color: #666; font-size: 12px');
-    console.log('- distritosAISI:', datos['distritosAISI']);
-    console.log('- centrosPobladosJSON:', datos['centrosPobladosJSON']);
-    console.log('- jsonCompleto:', datos['jsonCompleto']);
-    
     const distritos = datos['distritosAISI'] || [];
-    console.log(`%c[DEBUG AISI] Total distritos cargados: ${distritos.length}`, 'color: #999; font-size: 11px');
     
     if (distritos.length === 0) {
-      console.log('%c⚠️ No hay distritos cargados. Verifica que hayas cargado un JSON en sección 1.', 'color: #f59e0b; font-weight: bold');
+      console.log('%c⚠️ No hay distritos cargados.', 'color: #f59e0b; font-weight: bold');
       return;
     }
     
     const distritoActual = distritos[numeroGrupo - 1];
-    console.log(`%c[DEBUG AISI] Buscando distrito en índice ${numeroGrupo - 1}:`, 'color: #999; font-size: 11px', distritoActual);
-    
     if (!distritoActual) {
-      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}. Distritos disponibles: ${distritos.length}`, 'color: #f59e0b; font-weight: bold');
+      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}.`, 'color: #f59e0b; font-weight: bold');
       return;
     }
     
@@ -607,11 +599,10 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     console.log(`%cCentros Poblados (CCPP):`, 'color: #b91c1c; font-weight: bold');
     
     const centrosPobladosSeleccionados = distritoActual.centrosPobladosSeleccionados || [];
-    console.log(`[DEBUG AISI] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
+    console.log(`[DEBUG] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
     
     if (centrosPobladosSeleccionados.length === 0) {
       console.log('  (Sin centros poblados asignados)');
-      console.log('%c[INFO AISI] Debes asignar centros poblados a este distrito en la sección 2', 'color: #f59e0b; font-size: 11px');
       return;
     }
     
@@ -619,7 +610,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     const centrosDetalles: any[] = [];
     
     centrosPobladosSeleccionados.forEach((codigo: any) => {
-      let encontrado = false;
       Object.keys(jsonCompleto).forEach((grupoKey: string) => {
         const grupoData = jsonCompleto[grupoKey];
         if (Array.isArray(grupoData)) {
@@ -628,16 +618,11 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
             const codigoBuscado = String(codigo).trim();
             return codigoCentro === codigoBuscado;
           });
-          if (centro && !encontrado) {
+          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
             centrosDetalles.push(centro);
-            encontrado = true;
           }
         }
       });
-      
-      if (!encontrado) {
-        console.log(`  [DEBUG AISI] Centro con código ${codigo} no encontrado en jsonCompleto`);
-      }
     });
     
     if (centrosDetalles.length > 0) {
@@ -645,8 +630,6 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
         const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
         console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
       });
-    } else {
-      console.log('  (Sin centros poblados encontrados en el JSON)');
     }
   }
 }

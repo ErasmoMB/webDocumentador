@@ -75,7 +75,7 @@ export class TablePercentageHelper {
   }
 
   /**
-   * Calcula porcentajes dinámicamente para la tabla de educación (Cuadro 3.53)
+   * Calcula porcentajes dinámicamente para la tabla de educación
    * Campos específicos: nombreIE, cantidadEstudiantes
    * @param tabla Array de objetos con propiedades nombreIE, nivel, tipoGestion, cantidadEstudiantes
    * @param cuadroNumero Número del cuadro para logging (opcional)
@@ -229,7 +229,7 @@ export class TablePercentageHelper {
   }
 
   /**
-   * Calcula porcentajes dinámicamente para la tabla de actividades económicas (Cuadro 3.43)
+   * Calcula porcentajes dinámicamente para la tabla de actividades económicas
    * Campos específicos: actividad, casos
    * @param tabla Array de objetos con propiedades actividad, casos
    * @param cuadroNumero Número del cuadro para logging (opcional)
@@ -305,7 +305,7 @@ export class TablePercentageHelper {
   }
 
   /**
-   * Calcula porcentajes dinámicamente para la tabla de población por sexo (Cuadro 3.38)
+   * Calcula porcentajes dinámicamente para la tabla de población por sexo
    * Campos específicos: sexo, casos
    * @param tabla Array de objetos con propiedades sexo, casos
    * @param cuadroNumero Número del cuadro para logging (opcional)

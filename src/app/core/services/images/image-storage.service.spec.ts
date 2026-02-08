@@ -17,7 +17,7 @@ describe('ImageStorageService', () => {
   let mockImageLogic: jasmine.SpyObj<ImageLogicService>;
 
   beforeEach(() => {
-    mockProjectFacade = jasmine.createSpyObj('ProjectStateFacade', ['obtenerDatos']);
+    mockProjectFacade = jasmine.createSpyObj('ProjectStateFacade', ['obtenerDatos', 'setFields']);
     mockPhotoNumbering = jasmine.createSpyObj('PhotoNumberingService', ['getGlobalPhotoNumber']);
     mockStateAdapter = jasmine.createSpyObj('ReactiveStateAdapter', ['setDatos', 'refreshFromStorage']);
     mockFormChange = jasmine.createSpyObj('FormChangeService', ['persistFields']);

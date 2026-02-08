@@ -22,9 +22,12 @@ export class Seccion6TableConfigService {
       calcularPorcentajes: true,          // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],      // ✅ Campos que disparan recálculo
       estructuraInicial: [
-        { sexo: 'Femenino', casos: 0 },
-        { sexo: 'Masculino', casos: 0 }
-      ]
+        { sexo: 'Hombre', casos: 0 },
+        { sexo: 'Mujer', casos: 0 }
+      ],
+      permiteAgregarFilas: false,         // ✅ No agregar filas con estructura inicial
+      permiteEliminarFilas: false,        // ✅ No eliminar filas de estructura inicial
+      camposNoEditables: ['sexo']         // ✅ Campo de categoría no editable
     };
   }
 
@@ -37,7 +40,8 @@ export class Seccion6TableConfigService {
         field: 'sexo',
         label: 'Sexo',
         type: 'text',
-        placeholder: 'Femenino, Masculino, etc.'
+        placeholder: 'Femenino, Masculino, etc.',
+        readonly: true  // ✅ Campo de estructura inicial no editable
       },
       {
         field: 'casos',
@@ -66,10 +70,15 @@ export class Seccion6TableConfigService {
       calcularPorcentajes: true,          // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],      // ✅ Campos que disparan recálculo
       estructuraInicial: [
-        { categoria: '0-14 años', casos: 0 },
-        { categoria: '15-64 años', casos: 0 },
-        { categoria: '65+ años', casos: 0 }
-      ]
+        { categoria: '0 a 14 años', casos: 0 },
+        { categoria: '15 a 29 años', casos: 0 },
+        { categoria: '30 a 44 años', casos: 0 },
+        { categoria: '45 a 64 años', casos: 0 },
+        { categoria: '65 años a más', casos: 0 }
+      ],
+      permiteAgregarFilas: false,         // ✅ No agregar filas con estructura inicial
+      permiteEliminarFilas: false,        // ✅ No eliminar filas de estructura inicial
+      camposNoEditables: ['categoria']    // ✅ Campo de categoría no editable
     };
   }
 
@@ -82,7 +91,8 @@ export class Seccion6TableConfigService {
         field: 'categoria',
         label: 'Categoría',
         type: 'text',
-        placeholder: 'Grupo de edad'
+        placeholder: 'Grupo de edad',
+        readonly: true  // ✅ Campo de estructura inicial no editable
       },
       {
         field: 'casos',

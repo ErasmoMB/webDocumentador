@@ -1,18 +1,3 @@
-/**
- * UI ↔ STORE CONTRACT
- * 
- * Este archivo define el ÚNICO punto de acceso entre la UI y el Store.
- * 
- * REGLAS:
- * 1. UI solo puede LEER a través de Selectors
- * 2. UI solo puede ESCRIBIR a través de Commands
- * 3. UI NO conoce la estructura interna de ProjectState
- * 4. UI NO calcula totales, porcentajes ni reglas de negocio
- * 5. UI NO guarda copias del state (sin datosAnteriores, sin caches)
- * 
- * @module UIStoreContract
- */
-
 import { Injectable, Signal, computed, signal } from '@angular/core';
 import { 
   ProjectState, 
@@ -45,11 +30,12 @@ import { rootReducer, createInitialState } from './reducers';
 import { GroupType } from '../models/section-config.model';
 import { Entrevistado } from '../models/formulario.model';
 
-// ============================================================================
-// TIPOS PÚBLICOS PARA UI (Solo lo que la UI necesita ver)
-// ============================================================================
+let getTableDataLastLog = {
+  length: -1,
+  sectionId: '',
+  tableKey: ''
+};
 
-/** Información básica del proyecto para display */
 export interface ProjectInfo {
   readonly projectName: string;
   readonly consultora: string;
@@ -58,7 +44,6 @@ export interface ProjectInfo {
   readonly lastSaved: number;
 }
 
-/** Grupo para selección en UI */
 export interface GroupOption {
   readonly id: string;
   readonly nombre: string;
@@ -67,7 +52,6 @@ export interface GroupOption {
   readonly parentId: string | null;
 }
 
-/** Estado de sección para navegación */
 export interface SectionNavItem {
   readonly sectionId: string;
   readonly isInitialized: boolean;
@@ -77,7 +61,6 @@ export interface SectionNavItem {
   readonly groupId: string | null;
 }
 
-/** Campo para formulario */
 export interface FormField {
   readonly key: string;
   readonly value: any;
@@ -86,14 +69,12 @@ export interface FormField {
   readonly lastModified: number;
 }
 
-/** Fila de tabla para display */
 export interface UITableRow {
   readonly rowId: string;
   readonly data: Record<string, any>;
   readonly order: number;
 }
 
-/** Imagen para galería */
 export interface GalleryImage {
   readonly id: string;
   readonly numero: number;
@@ -103,28 +84,13 @@ export interface GalleryImage {
   readonly uploadStatus: 'pending' | 'uploaded' | 'error';
 }
 
-/** Ubicación geográfica */
 export interface UbicacionInfo {
   readonly departamento: string;
   readonly provincia: string;
   readonly distrito: string;
 }
 
-// ============================================================================
-// SELECTORES (Funciones Puras - Solo Lectura)
-// ============================================================================
-
-/**
- * SELECTORES PÚBLICOS
- * 
- * La UI solo puede acceder al estado a través de estos selectores.
- * Todos los selectores son funciones puras que reciben el estado
- * y devuelven datos derivados.
- */
 export const Selectors = {
-  // === METADATA ===
-  
-  /** Obtiene información básica del proyecto */
   getProjectInfo: (state: ProjectState): ProjectInfo => ({
     projectName: state.metadata.projectName,
     consultora: state.metadata.consultora,
@@ -133,18 +99,10 @@ export const Selectors = {
     lastSaved: state._internal.lastSaved
   }),
 
-  /** Obtiene el nombre del proyecto */
   getProjectName: (state: ProjectState): string => state.metadata.projectName,
-  
-  /** Obtiene la consultora */
   getConsultora: (state: ProjectState): string => state.metadata.consultora,
-  
-  /** Verifica si el proyecto tiene cambios sin guardar */
   isDirty: (state: ProjectState): boolean => state._internal.isDirty,
 
-  // === GRUPOS ===
-  
-  /** Obtiene grupos AISD como opciones para select */
   getAISDGroups: (state: ProjectState): GroupOption[] => 
     state.groupConfig.aisd.map(g => ({
       id: g.id,
@@ -154,7 +112,6 @@ export const Selectors = {
       parentId: g.parentId
     })),
 
-  /** Obtiene grupos AISI como opciones para select */
   getAISIGroups: (state: ProjectState): GroupOption[] => 
     state.groupConfig.aisi.map(g => ({
       id: g.id,
@@ -164,7 +121,6 @@ export const Selectors = {
       parentId: g.parentId
     })),
 
-  /** Obtiene un grupo específico por tipo e ID */
   getGroup: (state: ProjectState, tipo: 'AISD' | 'AISI', groupId: string): GroupOption | null => {
     const groups = tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
     const g = groups.find(group => group.id === groupId);
@@ -178,28 +134,23 @@ export const Selectors = {
     };
   },
 
-  /** Obtiene todos los grupos de un tipo */
   getGroupsByType: (state: ProjectState, tipo: 'AISD' | 'AISI'): readonly GroupDefinition[] => {
     return tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
   },
 
-  /** Obtiene un grupo definido (sin map a UI) */
   getGroupById: (state: ProjectState, tipo: 'AISD' | 'AISI', groupId: string): GroupDefinition | null => {
     const groups = tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
     return groups.find(group => group.id === groupId) || null;
   },
 
-  /** Obtiene un centro poblado registrado por su ID */
   getPopulatedCenterById: (state: ProjectState, centerId: string): CCPPEntry | null => {
     return state.ccppRegistry.byId[centerId] || null;
   },
 
-  /** Obtiene todos los centros poblados registrados */
   getAllPopulatedCenters: (state: ProjectState): readonly CCPPEntry[] => {
     return state.ccppRegistry.allIds.map(id => state.ccppRegistry.byId[id]);
   },
 
-  /** Obtiene grupos raíz (sin padre) */
   getRootGroups: (state: ProjectState, tipo: 'AISD' | 'AISI'): GroupOption[] => {
     const groups = tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
     return groups
@@ -213,7 +164,6 @@ export const Selectors = {
       }));
   },
 
-  /** Obtiene hijos de un grupo */
   getGroupChildren: (state: ProjectState, tipo: 'AISD' | 'AISI', parentId: string): GroupOption[] => {
     const groups = tipo === 'AISD' ? state.groupConfig.aisd : state.groupConfig.aisi;
     return groups
@@ -227,9 +177,6 @@ export const Selectors = {
       }));
   },
 
-  // === SECCIONES ===
-  
-  /** Obtiene la sección activa */
   getActiveSection: (state: ProjectState): SectionNavItem | null => {
     const sectionId = state.sections.activeSectionId;
     if (!sectionId) return null;
@@ -245,11 +192,9 @@ export const Selectors = {
     };
   },
 
-  /** Obtiene el ID de la sección activa */
   getActiveSectionId: (state: ProjectState): string | null => 
     state.sections.activeSectionId,
 
-  /** Obtiene el estado de navegación de una sección */
   getSectionNav: (state: ProjectState, sectionId: string): SectionNavItem | null => {
     const section = state.sections.byId[sectionId];
     if (!section) return null;
@@ -263,7 +208,6 @@ export const Selectors = {
     };
   },
 
-  /** Obtiene todas las secciones inicializadas */
   getInitializedSections: (state: ProjectState): SectionNavItem[] => 
     state.sections.allIds
       .map(id => state.sections.byId[id])
@@ -277,13 +221,9 @@ export const Selectors = {
         groupId: s.groupId
       })),
 
-  /** Verifica si una sección está completa */
   isSectionComplete: (state: ProjectState, sectionId: string): boolean => 
     state.sections.byId[sectionId]?.isComplete ?? false,
 
-  // === CAMPOS ===
-  
-  /** Obtiene un campo específico */
   getField: (state: ProjectState, sectionId: string, groupId: string | null, fieldName: string): FormField | null => {
     const key = generateFieldKey(sectionId, groupId, fieldName);
     const entry = state.fields.byKey[key];
@@ -297,13 +237,11 @@ export const Selectors = {
     };
   },
 
-  /** Obtiene el valor de un campo */
   getFieldValue: (state: ProjectState, sectionId: string, groupId: string | null, fieldName: string): any => {
     const key = generateFieldKey(sectionId, groupId, fieldName);
     return state.fields.byKey[key]?.state.value ?? null;
   },
 
-  /** Obtiene todos los campos de una sección */
   getSectionFields: (state: ProjectState, sectionId: string, groupId: string | null): FormField[] => {
     const prefix = groupId ? `${sectionId}::${groupId}::` : `${sectionId}::`;
     return state.fields.allKeys
@@ -320,22 +258,18 @@ export const Selectors = {
       });
   },
 
-  /** Obtiene campos como objeto para formulario */
   getSectionFieldsAsObject: (state: ProjectState, sectionId: string, groupId: string | null): Record<string, any> => {
     const prefix = groupId ? `${sectionId}::${groupId}::` : `${sectionId}::`;
     const result: Record<string, any> = {};
-    
     for (const key of state.fields.allKeys) {
       if (key.startsWith(prefix)) {
         const fieldName = key.replace(prefix, '');
         result[fieldName] = state.fields.byKey[key]?.state.value ?? null;
       }
     }
-    
     return result;
   },
 
-  /** Verifica si algún campo de la sección fue tocado */
   hasTouchedFields: (state: ProjectState, sectionId: string): boolean => {
     const prefix = `${sectionId}::`;
     return state.fields.allKeys
@@ -343,9 +277,6 @@ export const Selectors = {
       .some(key => state.fields.byKey[key]?.state.touched);
   },
 
-  // === TABLAS ===
-  
-  /** Obtiene una tabla específica */
   getTable: (state: ProjectState, sectionId: string, groupId: string | null, tableKey: string): UITableRow[] => {
     const key = generateTableKey(sectionId, groupId, tableKey);
     const table = state.tables.byKey[key];
@@ -357,30 +288,31 @@ export const Selectors = {
     }));
   },
 
-  /** Obtiene filas de tabla como array de datos */
   getTableData: (state: ProjectState, sectionId: string, groupId: string | null, tableKey: string): any[] => {
     const key = generateTableKey(sectionId, groupId, tableKey);
     const table = state.tables.byKey[key];
     if (!table) return [];
-    return table.state.rows.map(row => ({ ...row.data }));
+    const resultado = table.state.rows.map(row => ({ ...row.data }));
+    const currentLength = resultado.length;
+    if (currentLength !== getTableDataLastLog.length || sectionId !== getTableDataLastLog.sectionId || tableKey !== getTableDataLastLog.tableKey) {
+      getTableDataLastLog.length = currentLength;
+      getTableDataLastLog.sectionId = sectionId;
+      getTableDataLastLog.tableKey = tableKey;
+    }
+    return resultado;
   },
 
-  /** Cuenta filas de una tabla */
   getTableRowCount: (state: ProjectState, sectionId: string, groupId: string | null, tableKey: string): number => {
     const key = generateTableKey(sectionId, groupId, tableKey);
     return state.tables.byKey[key]?.state.rows.length ?? 0;
   },
 
-  /** Verifica si una tabla existe y tiene datos */
   hasTableData: (state: ProjectState, sectionId: string, groupId: string | null, tableKey: string): boolean => {
     const key = generateTableKey(sectionId, groupId, tableKey);
     const table = state.tables.byKey[key];
     return table !== undefined && table.state.rows.length > 0;
   },
 
-  // === IMÁGENES ===
-  
-  /** Obtiene todas las imágenes de una sección */
   getSectionImages: (state: ProjectState, sectionId: string, groupId: string | null): GalleryImage[] => {
     const key = generateImageGroupKey(sectionId, groupId);
     const imageIds = state.images.bySectionGroup[key] || [];
@@ -398,17 +330,14 @@ export const Selectors = {
     }).filter((img): img is GalleryImage => img !== null);
   },
 
-  /** Obtiene el siguiente número de imagen global */
   getNextImageNumber: (state: ProjectState): number => 
     state.images.allIds.length + 1,
 
-  /** Cuenta imágenes de una sección */
   getSectionImageCount: (state: ProjectState, sectionId: string, groupId: string | null): number => {
     const key = generateImageGroupKey(sectionId, groupId);
     return state.images.bySectionGroup[key]?.length ?? 0;
   },
 
-  /** Obtiene una imagen específica */
   getImage: (state: ProjectState, imageId: string): GalleryImage | null => {
     const img = state.images.byId[imageId];
     if (!img) return null;
@@ -422,47 +351,26 @@ export const Selectors = {
     };
   },
 
-  // === GLOBAL REGISTRY ===
-  
-  /** Obtiene la ubicación del proyecto */
   getUbicacion: (state: ProjectState): UbicacionInfo => ({
     departamento: state.globalRegistry.ubicacion.departamento,
     provincia: state.globalRegistry.ubicacion.provincia,
     distrito: state.globalRegistry.ubicacion.distrito
   }),
 
-  /** Obtiene los entrevistados */
   getEntrevistados: (state: ProjectState): readonly Entrevistado[] => 
     state.globalRegistry.entrevistados,
 
-  // === UTILIDADES ===
-  
-  /** Verifica si el proyecto está cargado */
   isProjectLoaded: (state: ProjectState): boolean => 
     state._internal.loadedFrom !== null,
 
-  /** Obtiene la fuente de carga del proyecto */
   getLoadSource: (state: ProjectState): 'storage' | 'api' | 'fresh' | null => 
     state._internal.loadedFrom,
 
-  /** Obtiene snapshot del estado completo (solo para debug) */
   _getDebugSnapshot: (state: ProjectState): ProjectState => 
     JSON.parse(JSON.stringify(state))
 };
 
-// ============================================================================
-// COMMAND BUILDERS (Fábricas para comandos - Aseguran tipado correcto)
-// ============================================================================
-
-/**
- * COMMAND BUILDERS
- * 
- * La UI usa estos builders para crear comandos tipados.
- * Esto previene errores de tipado y centraliza la creación de comandos.
- */
 export const Commands = {
-  // === METADATA ===
-  
   setProjectName: (projectName: string): MetadataCommand => ({
     type: 'metadata/setProjectName',
     payload: { projectName }
@@ -483,8 +391,6 @@ export const Commands = {
     payload: updates as any
   }),
 
-  // === GRUPOS ===
-  
   addGroup: (
     tipo: 'AISD' | 'AISI',
     nombre: string,
@@ -521,8 +427,6 @@ export const Commands = {
     payload: { tipo, orderedIds }
   }),
 
-  // === SECCIONES ===
-  
   initializeSection: (
     sectionId: string,
     groupType: GroupType = 'NONE',
@@ -552,8 +456,6 @@ export const Commands = {
     payload: { sectionId, groupId }
   }),
 
-  // === CAMPOS ===
-  
   setField: (
     sectionId: string,
     groupId: string | null,
@@ -601,8 +503,6 @@ export const Commands = {
     payload: { sectionId, groupId, fieldName }
   }),
 
-  // === TABLAS ===
-  
   setTableData: (
     sectionId: string,
     groupId: string | null,
@@ -665,8 +565,6 @@ export const Commands = {
     payload: { sectionId, groupId, tableKey }
   }),
 
-  // === IMÁGENES ===
-  
   addImage: (
     sectionId: string,
     groupId: string | null,
@@ -722,19 +620,11 @@ export const Commands = {
     payload: { sectionId, groupId }
   }),
 
-  // === PROYECTO ===
-  
   loadProject: (data: any, source: 'storage' | 'api'): ProjectCommand => ({
     type: 'project/load',
     payload: { data, source }
   }),
 
-  /**
-   * Carga datos JSON desde archivo importado.
-   * @param fileContent - Contenido JSON parseado del archivo
-   * @param projectName - Nombre del proyecto (requerido)
-   * @param fileName - Nombre del archivo original (opcional, para metadata)
-   */
   loadJsonData: (fileContent: unknown, projectName: string, fileName?: string): ProjectCommand => ({
     type: 'project/loadJsonData',
     payload: { fileContent, projectName, fileName }
@@ -769,8 +659,6 @@ export const Commands = {
     payload: { index }
   }),
 
-  // === BATCH ===
-  
   batch: (commands: ProjectStateCommand[], transactionId?: string): BatchCommand => ({
     type: 'batch/execute',
     payload: { 
@@ -780,35 +668,15 @@ export const Commands = {
   })
 };
 
-// ============================================================================
-// STORE SERVICE (Servicio Angular para conectar UI con State)
-// ============================================================================
-
-/**
- * UIStoreService
- * 
- * Servicio singleton que conecta la UI con el sistema de estado.
- * Usa Angular Signals para reactividad.
- */
 @Injectable({ providedIn: 'root' })
 export class UIStoreService {
-  /** Estado interno (privado - UI no accede directamente) */
   private readonly _state = signal<ProjectState>(createInitialState());
-
-  /** Estado como signal readonly (para selectores) */
   readonly state = this._state.asReadonly();
 
-  /**
-   * Selecciona datos del estado usando un selector.
-   * Retorna un Signal que se actualiza automáticamente.
-   */
   select<T>(selector: (state: ProjectState) => T): Signal<T> {
     return computed(() => selector(this._state()));
   }
 
-  /**
-   * Selecciona datos usando un selector con argumentos.
-   */
   selectWith<T, A extends any[]>(
     selector: (state: ProjectState, ...args: A) => T,
     ...args: A
@@ -816,62 +684,39 @@ export class UIStoreService {
     return computed(() => selector(this._state(), ...args));
   }
 
-  /**
-   * Despacha un comando al store.
-   */
   dispatch(command: ProjectStateCommand): void {
     const currentState = this._state();
     const newState = rootReducer(currentState, command);
     this._state.set(newState);
   }
 
-  /**
-   * Despacha múltiples comandos como batch.
-   */
   dispatchBatch(commands: ProjectStateCommand[], transactionId?: string): void {
     this.dispatch(Commands.batch(commands, transactionId));
   }
 
-  /**
-   * Obtiene un snapshot del estado actual.
-   */
   getSnapshot(): ProjectState {
     return this._state();
   }
 
-  /**
-   * Resetea el store al estado inicial.
-   */
   reset(): void {
     this._state.set(createInitialState());
   }
 
-  /**
-   * Carga un estado completo (para hidratación desde storage).
-   */
   hydrate(state: ProjectState): void {
     this._state.set(state);
   }
 }
 
-// ============================================================================
-// TYPE GUARDS Y UTILIDADES PARA UI
-// ============================================================================
-
-/** Verifica si un valor es un campo válido */
 export function isValidField(field: FormField | null): field is FormField {
   return field !== null && field.value !== undefined;
 }
 
-/** Verifica si una sección está lista para edición */
 export function isSectionEditable(section: SectionNavItem | null): boolean {
   return section !== null && section.isInitialized && !section.isComplete;
 }
 
-/** Crea un ID único para elementos UI */
 export function createUIElementId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Re-export Entrevistado for facade
 export type { Entrevistado };

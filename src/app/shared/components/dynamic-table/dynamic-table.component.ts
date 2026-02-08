@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnChanges, DoCheck, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
@@ -8,6 +8,8 @@ import { BackendDataMapperService } from 'src/app/core/services/backend-data-map
 import { TableMetadata } from 'src/app/core/models/table-metadata.model';
 import { PrefixManager } from 'src/app/shared/utils/prefix-manager';
 import { TableCalculationStrategyService } from 'src/app/core/services/tables/table-calculation-strategy.service';
+import { TableMockMergeService } from 'src/app/core/services/tables/table-mock-merge.service';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 
 export interface TableColumn {
   field: string;
@@ -16,21 +18,8 @@ export interface TableColumn {
   placeholder?: string;
   readonly?: boolean;
   formatter?: (value: any) => string;
-  /**
-   * Tipo de dato esperado para validación
-   * - 'string': Texto (default)
-   * - 'number': Número entero o decimal
-   * - 'boolean': Booleano (true/false)
-   * - 'percentage': Porcentaje (0-100)
-   */
   dataType?: 'string' | 'number' | 'boolean' | 'percentage';
-  /**
-   * Valores permitidos (para campos restringidos como SI/NO)
-   */
   allowedValues?: string[];
-  /**
-   * Mensaje de error personalizado
-   */
   errorMessage?: string;
 }
 
@@ -40,135 +29,121 @@ export interface TableColumn {
     templateUrl: './dynamic-table.component.html',
     styleUrls: ['./dynamic-table.component.css']
 })
-export class DynamicTableComponent implements OnInit, OnChanges {
+export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() config!: TableConfig;
   @Input() datos: any = {};
   @Input() tablaKey: string = '';
   @Input() sectionId: string = 'global';
-  @Input() fieldName?: string;  // Nuevo: nombre del campo para auto-configuración
+  @Input() fieldName?: string;
   @Input() totalKey: string = 'Total';
   @Input() showAddButton: boolean = true;
   @Input() showDeleteButton: boolean = true;
-  @Input() modoVista: boolean = false; // Nuevo: modo vista (solo lectura)
+  @Input() modoVista: boolean = false;
   @Input() customFieldChangeHandler?: (index: number, field: string, value: any) => void;
+  // Opcional: encabezados agrupados para tablas con multi-fila de cabecera
+  @Input() groupHeaders?: { label: string; colspan: number }[];
   
   @Output() dataChange = new EventEmitter<any[]>();
-  @Output() tableUpdated = new EventEmitter<void>();
+  @Output() tableUpdated = new EventEmitter<any[]>();
 
   private tableMetadata?: TableMetadata;
-  
-  // Caché para evitar llamadas infinitas
   private cachedTableData: any[] = [];
   private lastTablaKey: string = '';
-  private isInitializing: boolean = false; // Guard para prevenir bucles infinitos
-  private isCleaningLegacy: boolean = false; // Guard para prevenir bucle al limpiar legacy
-  
-  // ✅ Propiedad pública para el template (evita llamar getTableData() repetidamente)
+  private isInitializing: boolean = false;
+  private isCleaningLegacy: boolean = false;
+  private calcDebounceMs = 200;
+  private calcTimeouts = new Map<string, any>();
+  private mockMergeApplied = new Set<string>(); // Evitar bucle de merge
   public tableData: any[] = [];
+
+  // For deep change detection when `datos` object mutates in place
+  private lastDatosArrayRef: any = null;
+  private lastDatosArraySnapshot: string = '';
 
   constructor(
     private tableFacade: TableManagementFacade,
     private formChange: FormChangeService,
     private cdRef: ChangeDetectorRef,
+    private projectFacade: ProjectStateFacade,
     private backendDataMapper?: BackendDataMapperService,
-    private calculationStrategy?: TableCalculationStrategyService
+    private calculationStrategy?: TableCalculationStrategyService,
+    private mockMergeService?: TableMockMergeService
   ) {}
 
   ngOnInit(): void {
-    // ✅ CRÍTICO: NO auto-configurar en ngOnInit si hay config explícito
-    // El binding de [config] aún no se ha completado, así que esperamos a ngOnChanges
-    // Solo auto-configurar si NO hay config explícito Y hay fieldName
     const tieneConfigValido = this.config?.campoTotal && this.config?.campoPorcentaje;
-    
     if (!tieneConfigValido && this.fieldName) {
       this.autoConfigurarDesdeMetadata();
-    } else if (tieneConfigValido) {
-    } else {
     }
-    
-    // ✅ CRÍTICO: Forzar verificación después de que Angular complete el binding
-    // Esto asegura que config y datos estén disponibles antes de verificar
+    // Aplicar regla: si existe estructuraInicial, ocultar botones de agregar/eliminar
+    this.applyNoAddDeleteForEstructuraInicial();
     setTimeout(() => {
-      
       this.verificarEInicializarTabla();
-      // Inicializar tableData después de verificar
       this.actualizarTableData();
-      
-      // ✅ FASE 1: NO calcular porcentajes automáticamente cuando se cargan datos mock
-      // Los porcentajes se calcularán dinámicamente cuando el usuario edite los datos
-      // this.calcularPorcentajesSiEsNecesario();
+      // Asegurar la regla después de inicialización
+      this.applyNoAddDeleteForEstructuraInicial();
     }, 0);
   }
 
-  /**
-   * ✅ SOLID - ELIMINADO: Este método duplicaba la lógica de TableCalculationStrategyService
-   * La verificación de si se necesitan cálculos ya la hace la estrategia.
-   * Si necesitas verificar antes de calcular, usa directamente la estrategia:
-   * this.calculationStrategy?.obtenerTipoCalculo(this.config) !== 'ninguno'
-   */
+  private applyNoAddDeleteForEstructuraInicial(): void {
+    try {
+      if (this.config && Array.isArray((this.config as any).estructuraInicial) && (this.config as any).estructuraInicial.length > 0) {
+        // If there is an initial structure, hide add/delete only when the table is empty
+        // or not yet initialized. If the table already has rows (initialized or filled), allow add/delete
+        // only if the inputs haven't explicitly disabled them (respect explicit `[showAddButton]="false"`).
+        const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+        const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+        const datos = (tablaKeyActual && this.datos) ? (this.datos[tablaKeyActual] ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined)) : undefined;
+        if (!datos || !Array.isArray(datos) || datos.length === 0) {
+          this.showAddButton = false;
+          this.showDeleteButton = false;
+        } else {
+          // Allow add/delete once there is data but do not override an explicit false input
+          if (this.showAddButton !== false) this.showAddButton = true;
+          if (this.showDeleteButton !== false) this.showDeleteButton = true;
+        }
+      }
+    } catch (e) { /* noop */ }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // ✅ CRÍTICO: No ejecutar si estamos limpiando o inicializando para evitar bucles
     if (this.isCleaningLegacy || this.isInitializing) {
       return;
     }
-    
-    // ✅ CRÍTICO: Si cambió config explícito, NO sobrescribir con metadata
     if (changes['config'] && changes['config'].currentValue) {
       const nuevoConfig = changes['config'].currentValue;
-      
-      // Si hay config explícito con campoTotal y campoPorcentaje, NO buscar metadata
       if (nuevoConfig.campoTotal && nuevoConfig.campoPorcentaje) {
-        // Actualizar this.config con el nuevo valor
         this.config = nuevoConfig;
       }
     }
-    
     if (changes['datos'] || changes['config'] || changes['tablaKey'] || changes['fieldName'] || changes['sectionId']) {
-      // Re-auto-configurar SOLO si cambió fieldName o sectionId Y NO hay config explícito válido
       const tieneConfigValido = this.config && this.config.campoTotal && this.config.campoPorcentaje;
-      
       if ((changes['fieldName'] || changes['sectionId']) && !tieneConfigValido) {
         this.autoConfigurarDesdeMetadata();
-      } else if (tieneConfigValido) {
       }
-      
+      // Aplicar regla de botones en cada cambio relevante
+      this.applyNoAddDeleteForEstructuraInicial();
       this.verificarEInicializarTabla();
-      // ✅ Actualizar tableData cuando cambian los datos de entrada
       this.actualizarTableData();
     }
   }
 
-  /**
-   * Auto-configura el componente desde metadata del registry
-   * ✅ SOLID - OCP: Solo auto-configura si no hay config explícito válido
-   */
   private autoConfigurarDesdeMetadata(): void {
-    // ✅ CRÍTICO: Si ya hay config explícito con campoTotal y campoPorcentaje, NO sobrescribir
     const tieneConfigValido = this.config && this.config.campoTotal && this.config.campoPorcentaje;
-    
     if (tieneConfigValido) {
       return;
     }
-    
     if (!this.backendDataMapper || !this.sectionId || !this.fieldName) {
       return;
     }
-
-    // Extraer sectionKey del sectionId (ej: '3.1.4.A.1.2' -> 'seccion6_aisd')
     const sectionKey = this.obtenerSectionKeyDesdeSectionId(this.sectionId);
-    
     if (!sectionKey) {
       return;
     }
-
     this.tableMetadata = this.backendDataMapper.getTableMetadata(sectionKey, this.fieldName);
-    
     if (this.tableMetadata) {
-      
-      // Auto-configurar columns si no están definidas
       if ((!this.columns || this.columns.length === 0) && this.tableMetadata.columns) {
         this.columns = this.tableMetadata.columns.map(col => ({
           field: col.field,
@@ -178,8 +153,6 @@ export class DynamicTableComponent implements OnInit, OnChanges {
           readonly: col.readonly || false
         }));
       }
-
-      // Auto-configurar config SOLO si no está definido explícitamente
       if (!this.config && this.tableMetadata.tableConfig) {
         this.config = {
           tablaKey: this.tableMetadata.tablaKey || this.tableMetadata.fieldName,
@@ -190,139 +163,108 @@ export class DynamicTableComponent implements OnInit, OnChanges {
           estructuraInicial: this.tableMetadata.tableConfig.estructuraInicial,
           camposParaCalcular: this.tableMetadata.tableConfig.camposParaCalcular
         };
-      } else if (this.config) {
       }
-
-      // Auto-configurar tablaKey si no está definido
       if (!this.tablaKey && this.tableMetadata.tablaKey) {
         this.tablaKey = this.tableMetadata.tablaKey;
       }
-    } else {
     }
   }
 
-  /**
-   * Extrae sectionKey desde sectionId
-   * Ej: '3.1.4.A.1.2' -> 'seccion6_aisd'
-   */
   private obtenerSectionKeyDesdeSectionId(sectionId: string): string | null {
     if (!sectionId) return null;
-
-    // Extraer número de sección y tipo (AISD/AISI)
     const match = sectionId.match(/3\.1\.4\.([AB])\.(\d+)\.(\d+)/);
     if (!match) return null;
-
     const tipo = match[1] === 'A' ? 'aisd' : 'aisi';
     const seccionNum = parseInt(match[2]);
-    
-    // Mapear número de sección a sección real
-    // A.1 -> seccion4, A.2 -> seccion5, A.3 -> seccion6, etc.
-    // B.1 -> seccion21, B.2 -> seccion22, etc.
     let seccionReal: number;
     if (tipo === 'aisd') {
-      seccionReal = seccionNum + 3; // A.1 -> 4, A.2 -> 5, A.3 -> 6
+      seccionReal = seccionNum + 3;
     } else {
-      seccionReal = seccionNum + 20; // B.1 -> 21, B.2 -> 22
+      seccionReal = seccionNum + 20;
     }
-
     return `seccion${seccionReal}_${tipo}`;
   }
 
   private verificarEInicializarTabla(): void {
-    if (!this.config || !this.datos || this.isInitializing || this.isCleaningLegacy) return;
-    
+    if (!this.config || !this.datos || this.isInitializing || this.isCleaningLegacy) {
+      return;
+    }
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
-    if (!tablaKeyActual) return;
-    
-    // ✅ Mantenible: compatibilidad con tablas legacy sin prefijo
-    // Si por cualquier razón la data está guardada en la key base (sin prefijo),
-    // la consideramos para decidir reinicialización y evitar que el formulario
-    // muestre solo placeholders/filas incompletas.
+    if (!tablaKeyActual) {
+      return;
+    }
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
     let datosTabla = this.datos[tablaKeyActual] ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
-    
-    // ✅ CRÍTICO: Si detectamos datos legacy, limpiarlos de memoria ANTES de verificar
-    // Esto asegura que después de limpiar localStorage, el componente también limpie memoria
+
+
+
+    // Si no hubo datos locales, intentar cargar directamente desde ProjectState (table store)
+    try {
+      if ((!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) && tablaKeyActual) {
+        try {
+          const fromStore = (this.projectFacade && typeof this.projectFacade.selectTableData === 'function') ? (this.projectFacade.selectTableData(this.sectionId, null, tablaKeyActual)() || (tablaKeyBase ? this.projectFacade.selectTableData(this.sectionId, null, tablaKeyBase)() : undefined)) : undefined;
+          if (Array.isArray(fromStore) && fromStore.length > 0) {
+            this.datos[tablaKeyActual] = structuredClone(fromStore);
+            datosTabla = this.datos[tablaKeyActual];
+            try { this.cdRef.detectChanges(); } catch (e) {}
+            if (String(tablaKeyActual).toLowerCase().includes('puestosalud')) {
+              console.info('[DynamicTable] cargar desde store ->', tablaKeyActual, 'len', fromStore.length);
+            }
+          }
+        } catch (e) { /* noop */ }
+      }
+    } catch (e) { /* noop */ }
+
+    // ✅ MERGE INTELIGENTE: Si hay datos del mock con casos pero sin porcentajes,
+    // combinar con la estructura inicial manteniendo las categorías y calculando porcentajes
+    // IMPORTANTE: Solo ejecutar una vez por tablaKey para evitar bucles infinitos
+    const mergeKey = `${this.sectionId}_${tablaKeyActual}`;
+    if (datosTabla && Array.isArray(datosTabla) && datosTabla.length > 0 && 
+        this.config.estructuraInicial && this.mockMergeService && 
+        !this.mockMergeApplied.has(mergeKey)) {
+      const sonMock = this.mockMergeService.sonDatosDeMock(datosTabla, this.config);
+      if (sonMock) {
+        this.mockMergeApplied.add(mergeKey); // Marcar como procesado ANTES de ejecutar
+        const datosCombinados = this.mockMergeService.combinarMockConEstructura(
+          datosTabla,
+          this.config.estructuraInicial,
+          this.config
+        );
+        if (datosCombinados.length > 0) {
+          this.datos[tablaKeyActual] = datosCombinados;
+          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
+            this.datos[tablaKeyBase] = structuredClone(datosCombinados);
+          }
+          datosTabla = datosCombinados;
+          // Calcular porcentajes después de merge
+          this.ejecutarCalculosAutomaticosSiEsNecesario(true, false);
+          // Persistir los datos combinados
+          this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosCombinados });
+          this.actualizarTableData();
+          return; // Salir después de merge para evitar más procesamiento
+        }
+      }
+    }
+
     if (datosTabla && Array.isArray(datosTabla) && this.esDatoLegacy(datosTabla)) {
-      // Activar guard para evitar bucle
       this.isCleaningLegacy = true;
       this.isInitializing = true;
-      
-      // 🧹 [Dynamic Table] Limpiando datos legacy en memoria: tablaKeyActual
       delete this.datos[tablaKeyActual];
       if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
         delete this.datos[tablaKeyBase];
       }
-      
-      // Invalidar caché inmediatamente
       this.cachedTableData = [];
       this.lastTablaKey = '';
-      
-        // Si hay estructura inicial, inicializar inmediatamente
-        if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
-          this.tableFacade.inicializarTabla(this.datos, { ...this.config, tablaKey: tablaKeyActual });
-          
-          // ✅ SOLID - DRY: Usar método centralizado
-          // ⚠️ Inicialización: NO calcular automáticamente (podrían ser datos mock)
-          // Los cálculos se ejecutarán cuando el usuario edite los datos
-          // this.ejecutarCalculosAutomaticosSiEsNecesario(true, false); // esDatosMock=true
-          
-          // ✅ SINCRONIZACIÓN: Guardar también en key base (sin prefijo) para compatibilidad
-          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
-            const datosInicializados = this.datos[tablaKeyActual];
-            if (datosInicializados && Array.isArray(datosInicializados)) {
-              this.datos[tablaKeyBase] = structuredClone(datosInicializados);
-            }
-          }
-          
-          // ✅ PERSISTIR: Guardar en StateService para sincronización vista/formulario
-          const datosParaPersistir = this.datos[tablaKeyActual];
-          if (datosParaPersistir && Array.isArray(datosParaPersistir)) {
-            this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosParaPersistir });
-            if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
-              this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyBase]: this.datos[tablaKeyBase] });
-            }
-          }
-          
-          // Actualizar propiedad tableData para el template
-          this.actualizarTableData();
-        }
-      
-      // Desactivar guards después de completar (usar setTimeout para evitar bucle)
-      setTimeout(() => {
-        this.isCleaningLegacy = false;
-        this.isInitializing = false;
-        this.cdRef.detectChanges();
-      }, 100);
-      
-      // ✅ CRÍTICO: Retornar inmediatamente para evitar que continúe el flujo
-      return;
-    }
-    
-    const necesitaInicializacion = this.verificarSiNecesitaReinicializacion(datosTabla);
-    
-    if (!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0 || necesitaInicializacion) {
-      if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
-        // ✅ CRÍTICO SENIOR: Inicializar inmediatamente y persistir
-        // Esto asegura que la estructura inicial se guarde en this.datos
-        // y esté disponible tanto para vista como formulario
-        this.isInitializing = true;
+      if (this.config.noInicializarDesdeEstructura) {
+        this.actualizarTableData();
+      } else if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
         this.tableFacade.inicializarTabla(this.datos, { ...this.config, tablaKey: tablaKeyActual });
-        
-        // ✅ SOLID - DRY: Usar método centralizado
-        // ⚠️ Inicialización: NO calcular automáticamente (podrían ser datos mock)
-        // Los cálculos se ejecutarán cuando el usuario edite los datos
-        // this.ejecutarCalculosAutomaticosSiEsNecesario(true, false); // esDatosMock=true
-        
-        // ✅ SINCRONIZACIÓN: Guardar también en key base (sin prefijo) para compatibilidad
         if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
           const datosInicializados = this.datos[tablaKeyActual];
           if (datosInicializados && Array.isArray(datosInicializados)) {
             this.datos[tablaKeyBase] = structuredClone(datosInicializados);
           }
         }
-        
-        // ✅ PERSISTIR: Guardar en StateService para sincronización vista/formulario
         const datosParaPersistir = this.datos[tablaKeyActual];
         if (datosParaPersistir && Array.isArray(datosParaPersistir)) {
           this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosParaPersistir });
@@ -330,56 +272,63 @@ export class DynamicTableComponent implements OnInit, OnChanges {
             this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyBase]: this.datos[tablaKeyBase] });
           }
         }
-        
-        // Actualizar propiedad tableData para el template
         this.actualizarTableData();
-        
-        // Invalidar caché para forzar re-lectura
+      }
+      setTimeout(() => {
+        this.isCleaningLegacy = false;
+        this.isInitializing = false;
+        this.cdRef.detectChanges();
+      }, 100);
+      return;
+    }
+    const necesitaInicializacion = this.verificarSiNecesitaReinicializacion(datosTabla);
+    if (!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0 || necesitaInicializacion) {
+      if (this.config.noInicializarDesdeEstructura) {
+        this.actualizarTableData();
+        return;
+      }
+      if (this.config.estructuraInicial && this.config.estructuraInicial.length > 0) {
+        this.isInitializing = true;
+        this.tableFacade.inicializarTabla(this.datos, { ...this.config, tablaKey: tablaKeyActual });
+        if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
+          const datosInicializados = this.datos[tablaKeyActual];
+          if (datosInicializados && Array.isArray(datosInicializados)) {
+            this.datos[tablaKeyBase] = structuredClone(datosInicializados);
+          }
+        }
+        const datosParaPersistir = this.datos[tablaKeyActual];
+        if (datosParaPersistir && Array.isArray(datosParaPersistir)) {
+          this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosParaPersistir });
+          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
+            this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyBase]: this.datos[tablaKeyBase] });
+          }
+        }
+        this.actualizarTableData();
         this.cachedTableData = [];
         this.lastTablaKey = '';
-        
-        // Desactivar guard después de un ciclo
         setTimeout(() => {
           this.isInitializing = false;
           this.cdRef.detectChanges();
         }, 100);
       }
     } else {
-      // Actualizar tableData incluso si no necesita inicialización
+
       this.actualizarTableData();
-      
-      // ✅ FASE 1: NO calcular porcentajes automáticamente cuando se cargan datos mock
-      // Los porcentajes se calcularán dinámicamente cuando el usuario edite los datos
-      // Si hay datos existentes y hay configuración para calcular porcentajes/totales, NO calcularlos automáticamente
-      // const tabla = this.datos[tablaKeyActual];
-      // if (tabla && Array.isArray(tabla) && tabla.length > 0) {
-      //   // ✅ SOLID - DRY: Usar método centralizado
-      //   this.ejecutarCalculosAutomaticosSiEsNecesario();
-      // }
-      
       this.cdRef.detectChanges();
     }
   }
 
-  /**
-   * Detecta si un array de datos es legacy (1 fila placeholder vacía)
-   * ✅ Lógica consistente con DataCleanupService
-   */
   private esDatoLegacy(datosTabla: any[]): boolean {
     if (!Array.isArray(datosTabla) || datosTabla.length === 0) {
       return false;
     }
-
-    // Caso más común: 1 fila placeholder vacía
     if (datosTabla.length === 1) {
       const row = datosTabla[0];
       if (!row || typeof row !== 'object') return true;
-      
       const totalKey = this.config?.totalKey || 'categoria';
       const categoria = row[totalKey] || row.categoria || row.sexo || '';
       const casos = row.casos || row.hombres || row.mujeres || 0;
       const porcentaje = row.porcentaje || row.porcentajeHombres || row.porcentajeMujeres || '';
-      
       const categoriaVacia = !categoria || categoria.toString().trim() === '';
       const casosCero = casos === 0 || casos === '0' || casos === '' || casos === null || casos === undefined;
       const porcentajeCero = !porcentaje || 
@@ -387,46 +336,26 @@ export class DynamicTableComponent implements OnInit, OnChanges {
                             porcentaje.toString().includes('0%') ||
                             porcentaje.toString().includes('0,00 %') ||
                             porcentaje.toString().includes('0.00 %');
-      
       return categoriaVacia && casosCero && porcentajeCero;
     }
-
     return false;
   }
 
-  /**
-   * Verifica si la tabla necesita reinicialización con estructura predefinida
-   * Retorna true si:
-   * - La tabla tiene solo filas vacías (sin datos reales)
-   * - La estructura actual NO coincide con la estructura inicial esperada
-   * ✅ LÓGICA SENIOR: Detecta placeholders y estructuras incompletas correctamente
-   */
   private verificarSiNecesitaReinicializacion(datosTabla: any[]): boolean {
     if (!this.config.estructuraInicial || this.config.estructuraInicial.length === 0) {
       return false;
     }
-    
     if (!datosTabla || !Array.isArray(datosTabla)) {
       return true;
     }
-
-    // ✅ CRÍTICO: Si hay menos filas que la estructura esperada, SIEMPRE reinicializar
-    // Esto cubre el caso de 1 fila placeholder cuando debería haber 4
     if (datosTabla.length < this.config.estructuraInicial.length) {
       return true;
     }
-    
-    // ✅ Detectar si todas las filas son placeholders vacíos
-    // Verificar específicamente el campo de categoría (que es el que define la estructura)
     const totalKey = this.config.totalKey || 'categoria';
     const estructuraLength = this.config.estructuraInicial?.length ?? 0;
     const todasVacias = datosTabla.every((fila: any) => {
       if (!fila || typeof fila !== 'object') return true;
-      
-      // Si el campo clave (categoria) está vacío, es placeholder
       const claveVacia = !fila[totalKey] || fila[totalKey].toString().trim() === '';
-      
-      // Verificar si todos los valores son vacíos/cero
       const valoresVacios = Object.values(fila).every(val =>
         val === '' ||
         val === 0 ||
@@ -437,80 +366,54 @@ export class DynamicTableComponent implements OnInit, OnChanges {
         val === null ||
         val === undefined
       );
-      
       return claveVacia || valoresVacios;
     });
-    
     if (todasVacias && datosTabla.length <= estructuraLength) {
       return true;
     }
-    
-    // ✅ Verificar si las categorías NO coinciden con la estructura inicial esperada
-    // Esto detecta casos donde hay datos pero con categorías incorrectas
     const categoriasEsperadas = this.config.estructuraInicial.map(item => {
       const key = item[totalKey] || item.categoria || item.sexo || '';
       return key.toString().toLowerCase().trim();
     });
-    
     const categoriasActuales = datosTabla
       .map(item => {
         const key = item[totalKey] || item.categoria || item.sexo || '';
         return key.toString().toLowerCase().trim();
       })
       .filter(cat => cat !== '' && !cat.includes('total'));
-    
-    // Si no hay ninguna categoría que coincida con las esperadas, reinicializar
     const tieneCategoriasValidas = categoriasActuales.some(catActual => 
       categoriasEsperadas.some(catEsperada => catActual.includes(catEsperada) || catEsperada.includes(catActual))
     );
-    
     if (categoriasActuales.length > 0 && !tieneCategoriasValidas) {
       return true;
     }
-    
     return false;
   }
 
-  /**
-   * Obtiene la tablaKey con prefijo usando PrefixManager centralizado
-   * ✅ Previene duplicación de prefijos mediante caché
-   * ✅ Verifica si los datos tienen contenido real antes de usar clave con prefijo
-   */
   private obtenerTablaKeyConPrefijo(): string {
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
-    
     if (!tablaKeyBase) {
       return '';
     }
-    
+    if (this.lastTablaKey && this.datos[this.lastTablaKey] && Array.isArray(this.datos[this.lastTablaKey])) {
+      return this.lastTablaKey;
+    }
     const tablaKeyConPrefijo = PrefixManager.getFieldKey(this.sectionId, tablaKeyBase);
-    
-    // ✅ PRIMERO: Preferir la clave con prefijo si existe Y tiene contenido real
     const datosConPrefijo = this.datos[tablaKeyConPrefijo];
     if (datosConPrefijo && this.tieneContenidoRealTabla(datosConPrefijo)) {
       return tablaKeyConPrefijo;
     }
-    
-    // FALLBACK: usar clave base si existe Y tiene contenido real
     const datosBase = this.datos[tablaKeyBase];
     if (datosBase && this.tieneContenidoRealTabla(datosBase)) {
       return tablaKeyBase;
     }
-    
-    // Si ninguna tiene contenido real, devolver clave con prefijo (default)
     return tablaKeyConPrefijo;
   }
 
-  /**
-   * Verifica si una tabla tiene contenido real (no solo estructura vacía)
-   */
   private tieneContenidoRealTabla(tabla: any): boolean {
     if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return false;
-    
     return tabla.some((item: any) => {
       if (!item || typeof item !== 'object') return false;
-      
-      // Verificar si algún campo tiene un valor no vacío
       return Object.keys(item).some(key => {
         const valor = item[key];
         if (valor === null || valor === undefined) return false;
@@ -521,41 +424,31 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     });
   }
 
-  /**
-   * ✅ SOLID - SRP: Método con responsabilidad única de ejecutar cálculos automáticos
-   * ✅ SOLID - DRY: Centraliza la lógica duplicada en múltiples lugares
-   * ✅ SOLID - DIP: Usa la estrategia inyectada en lugar de lógica hardcodeada
-   * ✅ SOLID - OCP: Controla cuándo ejecutar cálculos basado en contexto
-   * 
-   * @param esDatosMock - Si es true, NO ejecuta cálculos automáticos (para datos mock)
-   * @param esEdicionUsuario - Si es true, ejecuta cálculos automáticos (usuario editó datos)
-   */
   private ejecutarCalculosAutomaticosSiEsNecesario(
     esDatosMock: boolean = false,
     esEdicionUsuario: boolean = false
   ): void {
-    
-    // ✅ FASE 1: NO calcular automáticamente cuando se cargan datos mock
     if (esDatosMock && !esEdicionUsuario) {
       return;
     }
-    
     if (!this.config) {
       return;
     }
-    
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
-    
     if (!tablaKeyActual) {
       return;
     }
 
-    // ✅ SOLID - DIP: Usar estrategia para decidir qué calcular
+    // Special handling for Hombres/Mujeres tables (based on base config tablaKey)
+    if (this.config && (this.config.tablaKey === 'peaDistritoSexoTabla' || this.config.tablaKey === 'peaOcupadaDesocupadaTabla')) {
+      const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
+      this.tableFacade.calcularPorcentajesPorSexo(this.datos, configConTablaKey);
+      return;
+    }
+
     if (this.calculationStrategy) {
       const tipoCalculo = this.calculationStrategy.obtenerTipoCalculo(this.config);
       const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
-      
-      
       switch (tipoCalculo) {
         case 'ambos':
           this.tableFacade.calcularTotalesYPorcentajes(this.datos, configConTablaKey);
@@ -570,12 +463,11 @@ export class DynamicTableComponent implements OnInit, OnChanges {
           break;
       }
     } else {
-      // Fallback para compatibilidad si la estrategia no está disponible
       const debeCalcularPorcentajes = this.config.campoPorcentaje && 
                                       (this.config.calcularPorcentajes !== false);
       const debeCalcularTotales = !!this.config.campoTotal;
       const configConTablaKey = { ...this.config, tablaKey: tablaKeyActual };
-      
+
       if (debeCalcularPorcentajes && debeCalcularTotales) {
         this.tableFacade.calcularTotalesYPorcentajes(this.datos, configConTablaKey);
       } else if (debeCalcularPorcentajes) {
@@ -588,98 +480,170 @@ export class DynamicTableComponent implements OnInit, OnChanges {
 
   onFieldChange(index: number, field: string, value: any): void {
     if (!this.config) return;
-    
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) return;
-    
-    // Validar y normalizar valor según tipo de columna
+
+    if (this.config.noInicializarDesdeEstructura && (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) && this.config.estructuraInicial?.length) {
+      this.datos[tablaKeyActual] = structuredClone(this.config.estructuraInicial);
+    }
+
     const columna = this.columns.find(col => col.field === field);
     const valorValidado = this.validarYNormalizarValor(columna, value);
-    
-    // Invalidar caché cuando hay cambios
+
+
+
     this.cachedTableData = [];
     this.lastTablaKey = '';
-    
+
+    // Immediate local assignment so UI shows edits even if external sync overwrites later
+    try {
+      if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) this.datos[tablaKeyActual] = [];
+      if (!this.datos[tablaKeyActual][index]) this.datos[tablaKeyActual][index] = {};
+      this.datos[tablaKeyActual][index][field] = valorValidado;
+      try { this.cdRef.detectChanges(); } catch (e) {}
+    } catch (e) { console.warn('[DynamicTable] error during local assignment', e); }
+
     if (this.customFieldChangeHandler) {
-      this.customFieldChangeHandler(index, field, valorValidado);
+      try { this.customFieldChangeHandler(index, field, valorValidado); } catch (e) { console.warn('[DynamicTable] customFieldChangeHandler error', e); }
     } else {
-      this.tableFacade.actualizarFila(
-        this.datos,
-        { ...this.config, tablaKey: tablaKeyActual },
-        index,
-        field,
-        valorValidado
-      );
+      try {
+        this.tableFacade.actualizarFila(
+          this.datos,
+          { ...this.config, tablaKey: tablaKeyActual },
+          index,
+          field,
+          valorValidado,
+          false
+        );
+      } catch (e) { console.warn('[DynamicTable] actualizarFila error', e); }
     }
-    
-    // Asegurar que la tabla existe y es un array
+
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
-    
-    // Hacer copia profunda del array para forzar detección de cambios
+
     const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
-    
-    // ✅ REFACTOR FASE 1: Solo persistir versión con prefijo (eliminar doble persistencia)
-    this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: tablaCopia });
-    
-    // ✅ SOLID: Asegurar que los cálculos se ejecuten cuando el usuario edita un campo
-    // ✅ FASE 1: Solo calcular cuando es edición de usuario (no datos mock)
-    setTimeout(() => {
-      this.ejecutarCalculosAutomaticosSiEsNecesario(false, true); // esDatosMock=false, esEdicionUsuario=true
-    }, 0);
-    
+    this.persistirTablaConLog(tablaKeyActual, tablaCopia);
+    const debounceKey = tablaKeyActual;
+    if (this.calcTimeouts.has(debounceKey)) {
+      clearTimeout(this.calcTimeouts.get(debounceKey));
+    }
+    this.calcTimeouts.set(debounceKey, setTimeout(() => {
+      try { this.ejecutarCalculosAutomaticosSiEsNecesario(false, true); } catch (e) { console.warn('[DynamicTable] calcular error', e); }
+      const tablaCopia2 = (this.datos[tablaKeyActual] || []).map((item: any) => 
+        typeof item === 'object' && item !== null ? { ...item } : item
+      );
+      this.persistirTablaConLog(tablaKeyActual, tablaCopia2);
+      this.calcTimeouts.delete(debounceKey);
+    }, this.calcDebounceMs));
     this.dataChange.emit(this.datos[tablaKeyActual]);
-    this.tableUpdated.emit();
-    this.cdRef.detectChanges();
+    this.tableUpdated.emit(tablaCopia);
+    try { this.cdRef.detectChanges(); } catch (e) {}
+    try { this.cdRef.markForCheck(); } catch (e) {}
   }
 
-  /**
-   * Valida y normaliza valores según el tipo de dato de la columna
-   * @param columna - Configuración de la columna
-   * @param value - Valor a validar
-   * @returns Valor validado y normalizado
-   */
+  private persistirTablaConLog(tablaKey: string, tablaCopia: any[]): void {
+    // Normalizar cualquier campo que venga en formato { value: X, isCalculated: boolean }
+    const tablaNormalizada = tablaCopia.map((row: any) => {
+      const r: any = {};
+      for (const k of Object.keys(row)) {
+        const v = row[k];
+        r[k] = (v && typeof v === 'object' && v.value !== undefined) ? v.value : v;
+      }
+      return r;
+    });
+
+    // Persistiendo tabla (normalizada) y actualizando ProjectState para notificación inmediata.
+    const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+    const payload: Record<string, any> = { [tablaKey]: tablaNormalizada };
+    if (tablaKeyBase && tablaKeyBase !== tablaKey) payload[tablaKeyBase] = tablaNormalizada;
+
+
+
+    // Actualizar ProjectState localmente para disponibilidad inmediata
+    try {
+      if ((this as any).projectFacade && typeof (this as any).projectFacade.setTableData === 'function') {
+        try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKey, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData error', e); }
+        if (tablaKeyBase && tablaKeyBase !== tablaKey) {
+          try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData base error', e); }
+        }
+        // También establecer la clave BASE como field para que selectField(...) la lea inmediatamente
+        try {
+          if (tablaKeyBase) {
+            try { (this as any).projectFacade.setField(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setField base error', e); }
+            // Actualizar this.datos para evitar inconsistencias en este componente
+            try { this.datos[tablaKeyBase] = tablaNormalizada; } catch (e) { console.warn('[DynamicTable] update datos error', e); }
+          }
+        } catch (e) { console.warn('[DynamicTable] setField wrapper error', e); }
+      }
+    } catch (e) { console.warn('[DynamicTable] projectFacade update error', e); }
+
+    // Persistir y notificar (notifySync) para que SectionSync/Reactive adapters actualicen la vista
+    try {
+      this.formChange.persistFields(this.sectionId, 'table', payload, { notifySync: true });
+    } catch (e) {
+      try { this.formChange.persistFields(this.sectionId, 'table', payload); } catch (err) { console.warn('[DynamicTable] persistFields error', err); }
+    }
+
+    // Force an extra sync: set fields explicitly and notify ViewChildHelper to update components
+    try {
+      const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
+      try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
+    } catch (e) { /* noop */ }
+
+    try {
+      const sectionSync = (this as any).injector?.get?.(require('src/app/core/services/state/section-sync.service').SectionSyncService, null);
+      if (sectionSync) {
+        const notifyPayload: Record<string, any> = { [tablaKey]: tablaNormalizada };
+        if (tablaKeyBase && tablaKeyBase !== tablaKey) notifyPayload[tablaKeyBase] = tablaNormalizada;
+        try {
+          const prefixed = require('src/app/shared/utils/prefix-manager').PrefixManager.getFieldKey(this.sectionId, tablaKey);
+          notifyPayload[prefixed] = tablaNormalizada;
+          if (tablaKeyBase && tablaKeyBase !== prefixed) notifyPayload[tablaKeyBase] = tablaNormalizada;
+        } catch {}
+        // Notify SectionSyncService without logging here
+        sectionSync.notifyChanges(this.sectionId, notifyPayload);
+      }
+    } catch (e) { console.error('[DynamicTable] persistirTablaConLog error', e); }
+  }
+
+  private shouldLogTabla(tablaKey: string): boolean {
+    if (!tablaKey) return false;
+    // Sólo habilitar logs para el primer cuadro (PET)
+    return tablaKey.toString().includes('petGruposEdadAISI');
+  }
+
   private validarYNormalizarValor(columna: TableColumn | undefined, value: any): any {
     if (!columna) return value;
-
-    const dataType = columna.dataType || 'string';
-
+    // Prefer explicit dataType, fallback to column.type used in templates
+    const dataType = columna.dataType || (columna as any).type || 'string';
     switch (dataType) {
       case 'number':
         const num = parseFloat(value);
         if (isNaN(num)) {
-          console.warn(`⚠️ Valor no numérico en ${columna.field}:`, value);
           return 0;
         }
         return num;
-
       case 'percentage':
         const perc = parseFloat(value);
         if (isNaN(perc)) {
           return 0;
         }
-        // Asegurar que esté entre 0 y 100
         return Math.max(0, Math.min(100, perc));
-
       case 'boolean':
         if (typeof value === 'boolean') return value;
         const str = String(value).toLowerCase().trim();
         return str === 'true' || str === 'si' || str === 'sí' || str === '1' || str === 'yes';
-
       case 'string':
       default:
-        // Validar valores permitidos si existen
         if (columna.allowedValues && columna.allowedValues.length > 0) {
           const valorNormalizado = String(value).trim().toUpperCase();
           const permitido = columna.allowedValues.some(v => 
             String(v).trim().toUpperCase() === valorNormalizado
           );
           if (!permitido && valorNormalizado !== '') {
-            console.warn(`⚠️ Valor no permitido en ${columna.field}:`, value, 
-              `(Permitidos: ${columna.allowedValues.join(', ')})`);
           }
         }
         return typeof value === 'string' ? value.trim() : String(value || '').trim();
@@ -688,73 +652,52 @@ export class DynamicTableComponent implements OnInit, OnChanges {
 
   onAdd(): void {
     if (!this.config) return;
-    
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) return;
-    
-    // Asegurar que la tabla existe
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
-    
+    // Add a row via facade
     this.tableFacade.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual });
-    
-    // ✅ SOLID - DRY: Usar método centralizado
-    // ✅ Usuario agregó fila - calcular automáticamente
-    this.ejecutarCalculosAutomaticosSiEsNecesario(false, true); // esDatosMock=false, esEdicionUsuario=true
-    
-    // Invalidar caché para forzar re-lectura
+
+    // Ensure immediate UI reflects the new row even if values are empty (default row)
+    try {
+      this.tableData = this.datos[tablaKeyActual] || [];
+      this.lastTablaKey = tablaKeyActual;
+      this.cdRef.detectChanges();
+    } catch (e) {}
+
+    this.ejecutarCalculosAutomaticosSiEsNecesario(false, true);
     this.cachedTableData = [];
-    this.lastTablaKey = '';
-    
-    // Hacer copia profunda del array para forzar detección de cambios
-    const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
+    const tablaCopia = (this.datos[tablaKeyActual] || []).map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
-    
-    // ✅ REFACTOR FASE 1: Solo persistir versión con prefijo (eliminar doble persistencia)
-    this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: tablaCopia });
+    this.persistirTablaConLog(tablaKeyActual, tablaCopia);
     this.dataChange.emit(this.datos[tablaKeyActual]);
-    this.tableUpdated.emit();
-    
-    // ✅ CRÍTICO: Actualizar tableData inmediatamente después de agregar
+    this.tableUpdated.emit(tablaCopia);
     this.actualizarTableData();
-    this.cdRef.detectChanges();
+    // Extra detectChanges in next tick to handle OnPush parents
+    setTimeout(() => this.cdRef.detectChanges(), 0);
   }
 
   onDelete(index: number): void {
     if (!this.config) return;
-    
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) return;
-    
-    // Asegurar que la tabla existe
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
-    
     const deleted = this.tableFacade.eliminarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual }, index);
-    
     if (deleted) {
-      // ✅ SOLID - DRY: Usar método centralizado
-      // ✅ Usuario eliminó fila - calcular automáticamente
-      this.ejecutarCalculosAutomaticosSiEsNecesario(false, true); // esDatosMock=false, esEdicionUsuario=true
-      
-      // Invalidar caché para forzar re-lectura
+      this.ejecutarCalculosAutomaticosSiEsNecesario(false, true);
       this.cachedTableData = [];
       this.lastTablaKey = '';
-      
-      // Hacer copia profunda del array para forzar detección de cambios
       const tablaCopia = this.datos[tablaKeyActual].map((item: any) => 
         typeof item === 'object' && item !== null ? { ...item } : item
       );
-      
-      // ✅ REFACTOR FASE 1: Solo persistir versión con prefijo (eliminar doble persistencia)
       this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: tablaCopia });
       this.dataChange.emit(this.datos[tablaKeyActual]);
-      this.tableUpdated.emit();
-      
-      // ✅ CRÍTICO: Actualizar tableData inmediatamente después de eliminar
+      this.tableUpdated.emit(tablaCopia);
       this.actualizarTableData();
       this.cdRef.detectChanges();
     }
@@ -764,135 +707,239 @@ export class DynamicTableComponent implements OnInit, OnChanges {
     if (!this.showDeleteButton) return false;
     const tableData = (this.data && this.data.length > 0) ? this.data : this.getTableData();
     if (!tableData || tableData.length === 0) return false;
-    
     const item = tableData[index];
     if (!item) return false;
-    
-    // Usar config.totalKey si existe, sino usar this.totalKey
     const totalKeyToUse = this.config?.totalKey || this.totalKey;
     const totalValue = item[totalKeyToUse];
     const canDeleteResult = !totalValue || !totalValue.toString().toLowerCase().includes('total');
-    
     return canDeleteResult;
   }
 
   initializeTable(): void {
     if (!this.config || this.isInitializing) return;
-    
-    this.isInitializing = true; // Activar guard
-    
+    this.isInitializing = true;
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) {
       this.isInitializing = false;
       return;
     }
-    
     if (this.tableFacade) {
       this.tableFacade.inicializarTabla(this.datos, { ...this.config, tablaKey: tablaKeyActual });
-      
-      // ✅ SOLID - DRY: Usar método centralizado
-      // ⚠️ Inicialización: NO calcular automáticamente (podrían ser datos mock)
-      // Los cálculos se ejecutarán cuando el usuario edite los datos
-      // this.ejecutarCalculosAutomaticosSiEsNecesario(true, false); // esDatosMock=true
     }
-    
-    // Invalidar caché para forzar re-lectura
     this.cachedTableData = [];
     this.lastTablaKey = '';
-
-    // ✅ Actualizar tableData inmediatamente para reflejar la nueva fila
     this.actualizarTableData();
-    
-    // Hacer copia profunda del array para forzar detección de cambios
     const tablaCopia = (this.datos[tablaKeyActual] || []).map((item: any) => 
       typeof item === 'object' && item !== null ? { ...item } : item
     );
-    
-    // ✅ REFACTOR FASE 1: Solo persistir versión con prefijo (eliminar doble persistencia)
     this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: tablaCopia });
     this.dataChange.emit(this.datos[tablaKeyActual]);
-    this.tableUpdated.emit();
-    
-    // Desactivar guard después de un ciclo
+    this.tableUpdated.emit(this.datos[tablaKeyActual]);
     setTimeout(() => {
       this.isInitializing = false;
       this.cdRef.detectChanges();
     }, 100);
   }
 
-  /**
-   * Actualiza la propiedad tableData desde los datos actuales
-   * Se llama después de limpiar legacy o inicializar
-   */
   private actualizarTableData(): void {
     const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
     if (!tablaKeyActual) {
       this.tableData = [];
       return;
     }
-    
     const datosConPrefijo = this.datos[tablaKeyActual];
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
     const fallback = tablaKeyBase ? this.datos[tablaKeyBase] : undefined;
-    
-    // Determinar qué datos usar
+    const estructura = this.config?.estructuraInicial;
+    const noInit = this.config?.noInicializarDesdeEstructura;
     let datosFinales: any[] = [];
-    
-    if (datosConPrefijo && Array.isArray(datosConPrefijo) && datosConPrefijo.length > 0) {
+
+    if (noInit && estructura && estructura.length > 0) {
+      const datosExistentes = datosConPrefijo ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
+      if (datosExistentes && Array.isArray(datosExistentes) && datosExistentes.length === estructura.length) {
+        const totalKey = this.config.totalKey || 'categoria';
+        const mismaEstructura = estructura.every((row: any, i: number) => {
+          const existente = datosExistentes[i];
+          return existente && String(existente[totalKey] || '').trim() === String(row[totalKey] || '').trim();
+        });
+        const campoValor = this.config.campoPorcentaje || 'descripcion';
+        const todasLasFilasConContenido = mismaEstructura && datosExistentes.every((fila: any) => {
+          const v = fila[campoValor];
+          return v != null && String(v).trim() !== '';
+        });
+        if (todasLasFilasConContenido) {
+          datosFinales = datosExistentes;
+          this.datos[tablaKeyActual] = datosFinales;
+          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) this.datos[tablaKeyBase] = datosFinales;
+          this.formChange.persistFields(this.sectionId, 'table', { [tablaKeyActual]: datosFinales });
+          this.projectFacade.setField(this.sectionId, null, tablaKeyActual, datosFinales);
+          if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) this.projectFacade.setField(this.sectionId, null, tablaKeyBase, datosFinales);
+        } else {
+          datosFinales = datosExistentes;
+        }
+      } else {
+        const existente = datosConPrefijo ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
+        datosFinales = (existente && Array.isArray(existente) && existente.length > 0)
+          ? existente
+          : structuredClone(estructura);
+      }
+    } else if (datosConPrefijo && Array.isArray(datosConPrefijo) && datosConPrefijo.length > 0) {
       datosFinales = datosConPrefijo;
     } else if (fallback && Array.isArray(fallback) && fallback.length > 0) {
-      // ✅ SINCRONIZACIÓN: Si usamos fallback, copiar a la clave con prefijo
       datosFinales = structuredClone(fallback);
       this.datos[tablaKeyActual] = datosFinales;
-      // 🔄 Sincronizando datos desde fallback a tablaKeyActual
-    } else if (this.config?.estructuraInicial && this.config.estructuraInicial.length > 0) {
-      // ✅ SINCRONIZACIÓN: Si usamos estructura inicial, copiar a la clave con prefijo
-      datosFinales = structuredClone(this.config.estructuraInicial);
-      this.datos[tablaKeyActual] = datosFinales;
-      // 🔄 Sincronizando datos desde estructura inicial a tablaKeyActual
+    } else if (estructura && estructura.length > 0) {
+      datosFinales = structuredClone(estructura);
+      if (!noInit) this.datos[tablaKeyActual] = datosFinales;
     } else {
       datosFinales = [];
     }
-    
     this.tableData = datosFinales;
-    
-    // ✅ SOLID - DRY: Usar método centralizado si hay datos reales
-    if (datosFinales.length > 0 && this.config) {
-      const tieneDatosReales = datosFinales.some((item: any) => {
-        if (this.config.campoTotal) {
-          const valor = item[this.config.campoTotal];
-          return valor !== undefined && valor !== null && valor !== '' && valor !== 0;
-        }
-        return false;
-      });
-      
-      // ⚠️ Verificación de datos: NO calcular automáticamente (podrían ser datos mock)
-      // Los cálculos se ejecutarán cuando el usuario edite los datos
-      // if (tieneDatosReales) {
-      //   this.ejecutarCalculosAutomaticosSiEsNecesario(true, false); // esDatosMock=true
-      // }
-    }
+    this.lastTablaKey = '';
   }
 
-  /**
-   * ✅ REFACTOR: getTableData() ahora solo retorna tableData (propiedad cached)
-   * NO limpia legacy - esa lógica está en verificarEInicializarTabla()
-   * Esto evita bucles infinitos porque getTableData() se llama desde el template
-   */
   getTableData(): any[] {
-    // Retornar propiedad cached directamente (evita llamadas repetidas)
     return this.tableData || [];
   }
 
+  // Force load payload directly into the table and avoid initialization heuristics
+  public forceLoadTableData(tablaKey: string, payload: any[]): void {
+    try {
+      if (!Array.isArray(payload)) return;
+      
+      // ✅ CRÍTICO: Crear NUEVA referencia a this.datos para forzar OnPush detection
+      const datosActualizados = { ...this.datos };
+      datosActualizados[tablaKey] = structuredClone(payload);
+      const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+      if (tablaKeyBase && tablaKeyBase !== tablaKey) {
+        datosActualizados[tablaKeyBase] = structuredClone(payload);
+      }
+      this.datos = datosActualizados;
+      
+      this.tableData = payload.map((r: any) => (typeof r === 'object' && r !== null) ? { ...r } : r);
+      this.cachedTableData = [];
+      this.lastTablaKey = '';
+      try { this.formChange.persistFields(this.sectionId, 'table', { [tablaKey]: payload }, { notifySync: true }); } catch (e) {}
+      try { this.cdRef.detectChanges(); } catch (e) {}
+    } catch (e) {
+    }
+  }
+
   getFormattedValue(item: any, col: TableColumn): string {
-    const value = item[col.field];
+    let value = item[col.field];
+
+    // Support objects returned by helpers: { value: '12,34 %', isCalculated: true }
+    if (value && typeof value === 'object') {
+      if (value.value !== undefined) {
+        value = value.value;
+      } else {
+        // Fallback to string representation
+        try { value = String(value); } catch { value = ''; }
+      }
+    }
+
     if (col.formatter) {
       return col.formatter(value);
+    }
+
+    // Ocultar ceros y valores placeholder como '0%' para mostrar celdas vacías
+    if (value === 0) return '';
+    if (typeof value === 'string') {
+      const v = value.trim();
+      if (v === '0' || v === '0%' || v === '0,00 %' || v === '0.00 %') return '';
+      return v;
     }
     return value != null ? String(value) : '';
   }
 
-  trackByIndex(index: number, item: any): number {
+  isFieldReadonly(col: TableColumn, rowIndex?: number): boolean {
+    if (col.readonly) return true;
+    if (this.config?.camposNoEditables && this.config.camposNoEditables.includes(col.field)) {
+      return true;
+    }
+    // Si la tabla tiene estructura inicial fija, solo la columna identificadora (totalKey) es no editable en esas filas
+    try {
+      if (typeof rowIndex === 'number' && Array.isArray(this.config?.estructuraInicial) && this.config.estructuraInicial.length > 0) {
+        const estructuraLen = this.config.estructuraInicial.length;
+        const totalKey = this.config?.totalKey || this.totalKey;
+        if (rowIndex < estructuraLen && col.field === totalKey) return true;
+      }
+    } catch (e) { /* noop */ }
+    return false;
+  }
+
+  getEditableRows(): any[] {
+    if (!this.tableData || this.tableData.length === 0) return [];
+    const totalKeyToUse = this.config?.totalKey || this.totalKey;
+    const lastRow = this.tableData[this.tableData.length - 1];
+    if (lastRow && lastRow[totalKeyToUse] && lastRow[totalKeyToUse].toString().toLowerCase().includes('total')) {
+      return this.tableData.slice(0, -1);
+    }
+    return this.tableData;
+  }
+
+  trackByIndexAndValue(index: number, item: any): any {
+    if (item && typeof item === 'object') {
+      if (item.id) return `${index}-${item.id}`;
+      if (item._id) return `${index}-${item._id}`;
+      const keys = Object.keys(item).sort();
+      const valores = keys.map(k => `${k}:${item[k]}`).join('|');
+      return `${index}-${valores}`;
+    }
     return index;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  getTotalRow(): any {
+    if (!this.tableData || this.tableData.length === 0) return null;
+    const totalKeyToUse = this.config?.totalKey || this.totalKey;
+    const lastRow = this.tableData[this.tableData.length - 1];
+    if (lastRow && lastRow[totalKeyToUse] && lastRow[totalKeyToUse].toString().toLowerCase().includes('total')) {
+      return lastRow;
+    }
+    return null;
+  }
+  ngDoCheck(): void {
+    try {
+      const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+      const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
+      const currentArray = (tablaKeyActual && Array.isArray(this.datos[tablaKeyActual])) ? this.datos[tablaKeyActual]
+        : (tablaKeyBase && Array.isArray(this.datos[tablaKeyBase])) ? this.datos[tablaKeyBase]
+        : null;
+
+      if (currentArray !== this.lastDatosArrayRef) {
+        // Reference changed -> update
+        this.lastDatosArrayRef = currentArray;
+        this.lastDatosArraySnapshot = JSON.stringify(currentArray ? currentArray.slice(-1)[0] || {} : {});
+        this.verificarEInicializarTabla();
+        this.cdRef.detectChanges();
+        return;
+      }
+
+      // If reference is same, compare length and last item snapshot
+      if (Array.isArray(currentArray)) {
+        const lastItem = currentArray.length > 0 ? currentArray[currentArray.length - 1] : {};
+        const snapshot = JSON.stringify(lastItem || {});
+        if (snapshot !== this.lastDatosArraySnapshot) {
+          this.lastDatosArraySnapshot = snapshot;
+          this.verificarEInicializarTabla();
+          this.cdRef.detectChanges();
+        }
+      }
+    } catch (e) {
+      // noop
+    }
+  }  // Método público que permite forzar la actualización de la tabla cuando el store cambió
+  actualizarDatos(): void {
+    try {
+      this.verificarEInicializarTabla();
+      this.actualizarTableData();
+      this.cdRef.detectChanges();
+    } catch (e) {
+      // noop
+    }
   }
 }

@@ -1,0 +1,79 @@
+<div class="form-group-section">
+  <h4 class="section-title">A.1.13. Índice de Desarrollo Humano (IDH)</h4>
+
+  <!-- Párrafo IDH -->
+  <div class="form-group-section mt-lg">
+    <app-paragraph-editor
+      [fieldId]="getFieldIdTextoIDH()"
+      label="Índice de Desarrollo Humano - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="6"
+      [value]="obtenerTextoIDHCompleto()"
+      (valueChange)="onFieldChange(getFieldIdTextoIDH(), $event)">
+    </app-paragraph-editor>
+  </div>
+
+  <!-- Título editable -->
+  <div class="form-group-section mt-lg">
+    <label class="label">Título</label>
+    <input
+      type="text"
+      class="form-control"
+      [(ngModel)]="datos[getTituloIDHField()]"
+      (change)="onTituloIDHChange($event)"
+      placeholder="Componentes del IDH – Distrito ____">
+  </div>
+
+  <!-- Tabla IDH con estructura agrupada -->
+  <app-table-wrapper [title]="''" [sectionId]="seccionId" [hideNumber]="true">
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="indiceDesarrolloHumanoConfigSignal()"
+      [columns]="columnasIDH"
+      [sectionId]="seccionId"
+      [tablaKey]="getTablaKeyIDH()"
+      [groupHeaders]="[
+        { label: 'Población', colspan: 2 },
+        { label: 'Índice de Desarrollo Humano', colspan: 2 },
+        { label: 'Esperanza de vida al nacer', colspan: 2 },
+        { label: 'Con Educación secundaria completa (Población 18 años)', colspan: 2 },
+        { label: 'Años de educación (Población 25 y más)', colspan: 2 },
+        { label: 'Ingreso familiar per cápita', colspan: 2 }
+      ]"
+      [showAddButton]="false"
+      [showDeleteButton]="false"
+      (tableUpdated)="onTablaActualizada($event)">
+    </app-dynamic-table>
+  </app-table-wrapper>
+
+  <!-- Fuente editable -->
+  <div class="form-group-section mt-lg">
+    <label class="label">Fuente</label>
+    <input
+      type="text"
+      class="form-control"
+      [(ngModel)]="datos[getFuenteIDHField()]"
+      (change)="onFuenteIDHChange($event)"
+      placeholder="PNUD, 2019">
+  </div>
+
+  <!-- Fotos -->
+  <div class="form-field mt-lg">
+    <label class="label">Fotografías del IDH</label>
+    <app-image-upload
+      [fotografias]="fotografiasSignal()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía - Imagen"
+      placeholderTitulo="Ej: IDH del distrito"
+      placeholderFuente="Ej: PNUD, 2019"
+      tituloDefault="Índice de Desarrollo Humano"
+      fuenteDefault="PNUD, 2019"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasChange($event)">
+    </app-image-upload>
+  </div>
+</div>

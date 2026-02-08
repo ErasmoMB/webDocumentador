@@ -99,6 +99,7 @@ export interface ExportTableRow {
 /** Tabla exportada */
 export interface ExportTable {
   readonly tableKey: string;
+  readonly tableNumber: string; // ej: "3.1", "3.26" - calculado dinámicamente
   readonly rows: readonly ExportTableRow[];
 }
 

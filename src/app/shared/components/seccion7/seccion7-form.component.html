@@ -37,6 +37,8 @@
           [columns]="tableCfg.getColumnasPET()"
           [sectionId]="seccionId"
           [tablaKey]="'petTabla'"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
           (tableUpdated)="onTablaPETActualizada()">
         </app-dynamic-table>
 
@@ -113,6 +115,8 @@
           [columns]="tableCfg.getColumnasPEA()"
           [sectionId]="seccionId"
           [tablaKey]="'peaTabla'"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAActualizada()">
         </app-dynamic-table>
 
@@ -199,6 +203,8 @@
           [columns]="tableCfg.getColumnasPEAOcupada()"
           [sectionId]="seccionId"
           [tablaKey]="'peaOcupadaTabla'"
+          [showAddButton]="false"
+          [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAOcupadaActualizada()">
         </app-dynamic-table>
 

@@ -22,6 +22,10 @@ export interface TableConfig {
   estructuraInicial?: any[];
   calcularPorcentajes?: boolean;
   camposParaCalcular?: string[];
+  permiteAgregarFilas?: boolean;
+  permiteEliminarFilas?: boolean;
+  camposNoEditables?: string[];
+  noInicializarDesdeEstructura?: boolean;
 }
 
 /**

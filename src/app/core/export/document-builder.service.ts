@@ -13,6 +13,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ProjectState } from '../state/project-state.model';
 import { Selectors, UIStoreService, GroupOption, FormField, GalleryImage } from '../state/ui-store.contract';
+import { TableNumberingService } from '../services/table-numbering.service';
 import {
   ExportedDocument,
   ExportProjectInfo,
@@ -40,6 +41,7 @@ import {
 })
 export class DocumentBuilderService {
   private readonly store = inject(UIStoreService);
+  private readonly tableNumbering = inject(TableNumberingService);
   
   /**
    * Construye el documento exportable completo.
@@ -48,7 +50,7 @@ export class DocumentBuilderService {
   build(options: Partial<ExportOptions> = {}): ExportedDocument {
     const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
     const state = this.store.getSnapshot();
-    return buildDocument(state, opts);
+    return buildDocument(state, opts, this.tableNumbering);
   }
   
   /**
@@ -57,7 +59,7 @@ export class DocumentBuilderService {
    */
   buildFromState(state: ProjectState, options: Partial<ExportOptions> = {}): ExportedDocument {
     const opts = { ...DEFAULT_EXPORT_OPTIONS, ...options };
-    return buildDocument(state, opts);
+    return buildDocument(state, opts, this.tableNumbering);
   }
 }
 
@@ -68,14 +70,14 @@ export class DocumentBuilderService {
 /**
  * Función principal de construcción - usa solo selectores.
  */
-export function buildDocument(state: ProjectState, options: ExportOptions): ExportedDocument {
+export function buildDocument(state: ProjectState, options: ExportOptions, tableNumbering: TableNumberingService): ExportedDocument {
   // 1. Construir cada sección del documento
   const project = buildProjectInfo(state);
   const ubicacion = buildUbicacion(state);
   const aisd = buildGroups(state, 'AISD', options);
   const aisi = buildGroups(state, 'AISI', options);
   const entrevistados = buildEntrevistados(state);
-  const sections = buildSections(state, options);
+  const sections = buildSections(state, options, tableNumbering);
   
   // 2. Crear documento sin metadatos de export todavía
   const docWithoutMeta = {
@@ -172,7 +174,8 @@ function buildEntrevistados(state: ProjectState): readonly ExportEntrevistado[] 
  */
 function buildSections(
   state: ProjectState,
-  options: ExportOptions
+  options: ExportOptions,
+  tableNumbering: TableNumberingService
 ): readonly ExportSection[] {
   const initializedSections = Selectors.getInitializedSections(state);
   
@@ -185,7 +188,7 @@ function buildSections(
   }
   
   return filtered.map(nav => 
-    buildSection(state, nav.sectionId, nav.groupId, nav.groupType, options)
+    buildSection(state, nav.sectionId, nav.groupId, nav.groupType, options, tableNumbering)
   );
 }
 
@@ -197,7 +200,8 @@ function buildSection(
   sectionId: string,
   groupId: string | null,
   groupType: string,
-  options: ExportOptions
+  options: ExportOptions,
+  tableNumbering: TableNumberingService
 ): ExportSection {
   // Obtener nombre del grupo si aplica
   let groupName: string | null = null;
@@ -210,7 +214,7 @@ function buildSection(
   const fields = buildFields(state, sectionId, groupId, options);
   
   // Construir tablas
-  const tables = buildTables(state, sectionId, groupId, options);
+  const tables = buildTables(state, sectionId, groupId, options, tableNumbering);
   
   // Construir imágenes
   const images = buildImages(state, sectionId, groupId, options);
@@ -267,7 +271,8 @@ function buildTables(
   state: ProjectState,
   sectionId: string,
   groupId: string | null,
-  options: ExportOptions
+  options: ExportOptions,
+  tableNumbering: TableNumberingService
 ): readonly ExportTable[] {
   // Necesitamos identificar qué tablas pertenecen a esta sección
   // Usando el patrón de keys del state
@@ -278,6 +283,7 @@ function buildTables(
   const tableKeys = state.tables.allKeys.filter(k => k.startsWith(prefix));
   
   const tables: ExportTable[] = [];
+  let localTableIndex = 0;
   
   for (const fullKey of tableKeys) {
     // Extraer el tableKey del fullKey
@@ -291,13 +297,19 @@ function buildTables(
       continue;
     }
     
+    // Calcular número global usando el servicio de numeración
+    const tableNumber = tableNumbering.getGlobalTableNumber(sectionId, localTableIndex);
+    
     tables.push({
       tableKey,
+      tableNumber,
       rows: rows.map((data, index) => ({
         order: index,
         data
       }))
     });
+    
+    localTableIndex++;
   }
   
   return tables;

@@ -129,11 +129,45 @@ export class ImageStorageService {
     });
 
     if (Object.keys(updates).length > 0) {
+      // apply updates
       this.projectFacade.setFields(sectionId, null, updates);
-      this.formChange.persistFields(sectionId, 'form', updates);
+      try { this.formChange.persistFields(sectionId, 'form', updates); } catch (e) { /* persist form error */ }
+      try { this.formChange.persistFields(sectionId, 'images', updates); } catch (e) { /* persist images error */ }
+
+      // DEBUG: check stored sample keys (first image slot)
+      try {
+        const sampleImgKey = Object.keys(updates).find(k => k.toLowerCase().includes('imagen'));
+        if (sampleImgKey) {
+          // sample key saved (debug removed)
+        }
+      } catch (e) { /* debug sample read error */ }
     }
 
     // ✅ Notificar al ReactiveStateAdapter para actualizar la vista inmediatamente
+    // refreshing state adapter and notifying views
     this.stateAdapter.refreshFromStorage();
+
+    // ✅ Forzar actualización en todos los componentes registrados (preview y formularios)
+    try {
+      const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
+      if (ViewChildHelper && typeof ViewChildHelper.updateAllComponents === 'function') {
+        // calling ViewChildHelper.updateAllComponents
+        ViewChildHelper.updateAllComponents('actualizarDatos');
+        // fallback extra tick to avoid timing/race issues when many updates occur quickly
+        setTimeout(() => {
+          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+        }, 120);
+      }
+    } catch (e) {
+      // ignore if helper not available
+    }
+
+    // Recompute global photo numbering and persist changes (if any) so numbers stay globally consecutive.
+    // Use a scheduled renumber to coalesce rapid successive saves and avoid race conditions.
+    try {
+      this.photoNumberingService.scheduleRenumber(80);
+    } catch (e) {
+      /* renumber schedule error */
+    }
   }
 }

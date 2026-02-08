@@ -1,0 +1,277 @@
+<div class="section-form">
+  <h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
+
+  <div class="form-section">
+    <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
+    
+    <textarea class="form-control" 
+              [ngModel]="parrafoSaludSignal()"
+              (ngModelChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)"
+              placeholder="Texto de infraestructura en salud"
+              rows="4">
+    </textarea>
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloCaracteristicasSaludSignal()"
+           (ngModelChange)="onFieldChange('caracteristicasSaludTitulo', $event)"
+           placeholder="Ej: Principales características del Puesto de Salud">
+
+    <app-dynamic-table [datos]="datos"
+                       [config]="caracteristicasSaludConfigSignal()"
+                       [columns]="columnasSalud"
+                       [sectionId]="seccionId"
+                       [tablaKey]="'caracteristicasSaludTabla'"
+                       [showAddButton]="false"
+                       [showDeleteButton]="false"
+                       (tableUpdated)="onCaracteristicasSaludTableUpdated($event)">
+    </app-dynamic-table>
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteCaracteristicasSaludSignal()"
+           (ngModelChange)="onFieldChange('caracteristicasSaludFuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <app-image-upload [permitirMultiples]="true"
+                      [fotografias]="fotosSaludSignal()"
+                      [sectionId]="seccionId"
+                      [photoPrefix]="PHOTO_PREFIX_SALUD"
+                      (fotografiasChange)="onFotografiasSaludChange($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
+    
+    <textarea class="form-control"
+              [ngModel]="parrafoEducacionSignal()"
+              (ngModelChange)="onFieldChange('parrafoSeccion12_educacion_completo', $event)"
+              placeholder="Texto de infraestructura en educación"
+              rows="4">
+    </textarea>
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloCantidadEstudiantesSignal()"
+           (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionTitulo', $event)"
+           placeholder="Ej: Infraestructura educativa – CC (2023)">
+
+    <app-dynamic-table [datos]="datos"
+                       [config]="cantidadEstudiantesEducacionConfigSignal()"
+                       [columns]="columnasEstudiantes"
+                       [sectionId]="seccionId"
+                       [tablaKey]="'cantidadEstudiantesEducacionTabla'"
+                       (tableUpdated)="onCantidadEstudiantesTableUpdated()">
+    </app-dynamic-table>
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteCantidadEstudiantesSignal()"
+           (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionFuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <textarea class="form-control"
+              [ngModel]="parrafoInfraestructuraPostSignal()"
+              (ngModelChange)="onFieldChange('textoInfraestructuraEducacionPost', $event)"
+              placeholder="Texto de infraestructura post educación"
+              rows="3">
+    </textarea>
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloIEAyrocaSignal()"
+           (ngModelChange)="onFieldChange('ieAyrocaTitulo', $event)"
+           placeholder="Ej: Características IE Ayroca">
+
+    <app-dynamic-table [datos]="datos"
+                       [config]="ieAyrocaConfigSignal()"
+                       [columns]="columnasIECategoria"
+                       [sectionId]="seccionId"
+                       [tablaKey]="'ieAyrocaTabla'"
+                       [showAddButton]="false"
+                       [showDeleteButton]="false"
+                       (tableUpdated)="onIEAyrocaTableUpdated($event)">
+    </app-dynamic-table>
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteIEAyrocaSignal()"
+           (ngModelChange)="onFieldChange('ieAyrocaFuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloIE40270Signal()"
+           (ngModelChange)="onFieldChange('ie40270Titulo', $event)"
+           placeholder="Ej: Características IE N°40270">
+
+    <app-dynamic-table [datos]="datos"
+                       [config]="ie40270ConfigSignal()"
+                       [columns]="columnasIECategoria"
+                       [sectionId]="seccionId"
+                       [tablaKey]="'ie40270Tabla'"
+                       [showAddButton]="false"
+                       [showDeleteButton]="false"
+                       (tableUpdated)="onIE40270TableUpdated($event)">
+    </app-dynamic-table>
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteIE40270Signal()"
+           (ngModelChange)="onFieldChange('ie40270Fuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloAlumnosIEAyrocaSignal()"
+           (ngModelChange)="onFieldChange('alumnosIEAyrocaTitulo', $event)"
+           placeholder="Ej: Alumnos IE Ayroca por sexo y grado">
+
+    <!-- Tabla personalizada con encabezado multinivel para IE Ayroca -->
+    <table class="table table--editable editor-table" style="font-size: 12px; margin-top: 10px;">
+      <thead>
+        <tr>
+          <th rowspan="2">Nombre de IE</th>
+          <th rowspan="2">Nivel</th>
+          <th colspan="2">Total</th>
+          <th colspan="2">3 años</th>
+          <th colspan="2">4 años</th>
+          <th colspan="2">5 años</th>
+        </tr>
+        <tr>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of tablaAlumnosIEAyrocaSignal(); let i = index">
+          <td><input class="table-input" type="text" [ngModel]="item.nombre" (blur)="actualizarAlumnoAyroca(i, 'nombre', $event)"></td>
+          <td><input class="table-input" type="text" [ngModel]="item.nivel" (blur)="actualizarAlumnoAyroca(i, 'nivel', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.totalH" (blur)="actualizarAlumnoAyroca(i, 'totalH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.totalM" (blur)="actualizarAlumnoAyroca(i, 'totalM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.tresH" (blur)="actualizarAlumnoAyroca(i, 'tresH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.tresM" (blur)="actualizarAlumnoAyroca(i, 'tresM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cuatroH" (blur)="actualizarAlumnoAyroca(i, 'cuatroH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cuatroM" (blur)="actualizarAlumnoAyroca(i, 'cuatroM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cincoH" (blur)="actualizarAlumnoAyroca(i, 'cincoH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cincoM" (blur)="actualizarAlumnoAyroca(i, 'cincoM', $event)"></td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- Botón eliminado: tabla de Alumnos IE Ayroca usa UNA fila -->
+
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteAlumnosIEAyrocaSignal()"
+           (ngModelChange)="onFieldChange('alumnosIEAyrocaFuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <label class="label">Título del cuadro</label>
+    <input class="form-control" type="text"
+           [ngModel]="tituloAlumnosIE40270Signal()"
+           (ngModelChange)="onFieldChange('alumnosIE40270Titulo', $event)"
+           placeholder="Ej: Alumnos IE N°40270 por sexo y grado">
+
+    <!-- Tabla personalizada con encabezado multinivel para IE 40270 -->
+    <table class="table table--editable editor-table" style="font-size: 12px; margin-top: 10px;">
+      <thead>
+        <tr>
+          <th rowspan="2">Nombre de IE</th>
+          <th rowspan="2">Nivel</th>
+          <th colspan="2">Total</th>
+          <th colspan="2">1º</th>
+          <th colspan="2">2º</th>
+          <th colspan="2">3º</th>
+          <th colspan="2">4º</th>
+          <th colspan="2">5º</th>
+          <th colspan="2">6º</th>
+        </tr>
+        <tr>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+          <th>H</th><th>M</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of tablaAlumnosIE40270Signal(); let i = index">
+          <td><input class="table-input" type="text" [ngModel]="item.nombre" (blur)="actualizarAlumno40270(i, 'nombre', $event)"></td>
+          <td><input class="table-input" type="text" [ngModel]="item.nivel" (blur)="actualizarAlumno40270(i, 'nivel', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.totalH" (blur)="actualizarAlumno40270(i, 'totalH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.totalM" (blur)="actualizarAlumno40270(i, 'totalM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.primeroH" (blur)="actualizarAlumno40270(i, 'primeroH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.primeroM" (blur)="actualizarAlumno40270(i, 'primeroM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.segundoH" (blur)="actualizarAlumno40270(i, 'segundoH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.segundoM" (blur)="actualizarAlumno40270(i, 'segundoM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.terceroH" (blur)="actualizarAlumno40270(i, 'terceroH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.terceroM" (blur)="actualizarAlumno40270(i, 'terceroM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cuartoH" (blur)="actualizarAlumno40270(i, 'cuartoH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.cuartoM" (blur)="actualizarAlumno40270(i, 'cuartoM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.quintoH" (blur)="actualizarAlumno40270(i, 'quintoH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.quintoM" (blur)="actualizarAlumno40270(i, 'quintoM', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.sextoH" (blur)="actualizarAlumno40270(i, 'sextoH', $event)"></td>
+          <td><input class="table-input" type="number" [ngModel]="item.sextoM" (blur)="actualizarAlumno40270(i, 'sextoM', $event)"></td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- Botón eliminado: tabla de Alumnos IE N°40270 usa UNA fila -->
+
+    <label class="label">Fuente</label>
+    <input class="form-control" type="text"
+           [ngModel]="fuenteAlumnosIE40270Signal()"
+           (ngModelChange)="onFieldChange('alumnosIE40270Fuente', $event)"
+           placeholder="Ej: GEADES (2024)">
+
+    <app-image-upload [permitirMultiples]="true"
+                      [fotografias]="fotosIEAyrocaSignal()"
+                      [sectionId]="seccionId"
+                      [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
+                      (fotografiasChange)="onFotografiasIEAyrocaChange($event)">
+    </app-image-upload>
+
+    <app-image-upload [permitirMultiples]="true"
+                      [fotografias]="fotosIE40270Signal()"
+                      [sectionId]="seccionId"
+                      [photoPrefix]="PHOTO_PREFIX_IE_40270"
+                      (fotografiasChange)="onFotografiasIE40270Change($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura recreativa</strong></p>
+    
+    <textarea class="form-control"
+              [ngModel]="parrafoRecreacionSignal()"
+              (ngModelChange)="onFieldChange('parrafoSeccion12_recreacion_completo', $event)"
+              placeholder="Texto de infraestructura recreativa"
+              rows="6">
+    </textarea>
+
+    <app-image-upload [permitirMultiples]="true"
+                      [fotografias]="fotosRecreacionSignal()"
+                      [sectionId]="seccionId"
+                      [photoPrefix]="PHOTO_PREFIX_RECREACION"
+                      (fotografiasChange)="onFotografiasRecreacionChange($event)">
+    </app-image-upload>
+  </div>
+
+  <div class="form-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura deportiva</strong></p>
+    
+    <textarea class="form-control"
+              [ngModel]="parrafoDeporteSignal()"
+              (ngModelChange)="onFieldChange('parrafoSeccion12_deporte_completo', $event)"
+              placeholder="Texto de infraestructura deportiva"
+              rows="6">
+    </textarea>
+
+    <app-image-upload [permitirMultiples]="true"
+                      [fotografias]="fotosDeporteSignal()"
+                      [sectionId]="seccionId"
+                      [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+                      (fotografiasChange)="onFotografiasDeporteChange($event)">
+    </app-image-upload>
+  </div>
+</div>

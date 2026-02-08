@@ -37,12 +37,7 @@ export class TableCalculationService {
     }
     
     const tabla = datos[tablaKey] || [];
-    
-    debugLog('[PORCENTAJES] 📊 Datos de la tabla:', {
-      tablaKey,
-      cantidadFilas: tabla.length,
-      datos: tabla
-    });
+    // No verbose logging por defecto. Useizar calcularPorcentajesPorSexo para más trazas específicas de sexo.
     
     if (tabla.length === 0) {
       console.warn('[PORCENTAJES] ⚠️ Tabla vacía, no se puede calcular');
@@ -64,7 +59,6 @@ export class TableCalculationService {
       }
       return sum;
     }, 0);
-    
     debugLog('[PORCENTAJES] ➕ Total calculado:', total);
     
     // Si hay una fila Total y tiene un valor, usar ese valor si es mayor que 0
@@ -220,5 +214,63 @@ export class TableCalculationService {
     
     // Luego calcular los porcentajes (que usarán el total actualizado)
     this.calcularPorcentajes(datos, config);
+  }
+
+  /**
+   * Cálculo especializado para tablas que tienen columnas Hombres / Mujeres / Casos
+   * - Recalcula 'casos' = hombres + mujeres
+   * - Calcula %Hombres, %Mujeres y %Casos (ajustando %Casos para sumar 100)
+   */
+  calcularPorcentajesPorSexo(datos: any, config: TableConfig): void {
+    const tablaKey = config.tablaKey;
+    const tabla = datos[tablaKey] || [];
+    if (!Array.isArray(tabla) || tabla.length === 0) return;
+
+    // Normalizar valores y calcular casos por fila
+    tabla.forEach((row: any) => {
+      row.hombres = Number(row.hombres) || 0;
+      row.mujeres = Number(row.mujeres) || 0;
+      // Recalcular casos desde hombres + mujeres
+      row.casos = row.hombres + row.mujeres;
+    });
+
+    const totalHombres = tabla.reduce((s: number, r: any) => s + (typeof r.hombres === 'number' ? r.hombres : parseInt(r.hombres) || 0), 0);
+    const totalMujeres = tabla.reduce((s: number, r: any) => s + (typeof r.mujeres === 'number' ? r.mujeres : parseInt(r.mujeres) || 0), 0);
+    const totalCasos = tabla.reduce((s: number, r: any) => s + (typeof r.casos === 'number' ? r.casos : parseInt(r.casos) || 0), 0);
+
+
+
+    const porcentajeHombresNums: number[] = [];
+    const porcentajeMujeresNums: number[] = [];
+    const porcentajeCasosNums: number[] = [];
+
+    tabla.forEach((row: any) => {
+      const h = row.hombres || 0;
+      const m = row.mujeres || 0;
+      const c = row.casos || 0;
+
+      const ph = totalHombres > 0 ? Math.round((h / totalHombres) * 10000) / 100 : 0;
+      const pm = totalMujeres > 0 ? Math.round((m / totalMujeres) * 10000) / 100 : 0;
+      const pc = totalCasos > 0 ? Math.round((c / totalCasos) * 10000) / 100 : 0;
+
+      porcentajeHombresNums.push(ph);
+      porcentajeMujeresNums.push(pm);
+      porcentajeCasosNums.push(pc);
+    });
+
+    // Ajustar porcentajesCasos para sumar 100
+    const pcAjustados = this.percentageAdjustment.ajustarParaSumar100(porcentajeCasosNums);
+
+    tabla.forEach((row: any, i: number) => {
+      row.porcentajeHombres = totalHombres > 0 ? this.percentageAdjustment.formatearPorcentaje(porcentajeHombresNums[i]) : '0,00 %';
+      row.porcentajeMujeres = totalMujeres > 0 ? this.percentageAdjustment.formatearPorcentaje(porcentajeMujeresNums[i]) : '0,00 %';
+      row.porcentaje = totalCasos > 0 ? this.percentageAdjustment.formatearPorcentaje(pcAjustados[i]) : '0,00 %';
+    });
+
+
+  }
+
+  private shouldLogTable(tablaKey?: string): boolean {
+    return !!tablaKey && tablaKey.toString().includes('petGruposEdadAISI');
   }
 }

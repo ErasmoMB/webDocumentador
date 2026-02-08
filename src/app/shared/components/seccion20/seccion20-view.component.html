@@ -1,0 +1,33 @@
+<div class="seccion-vista-content">
+  <h5>A.1.16. Festividades, Costumbres y Turismo</h5>
+
+  <div [innerHTML]="textoSignal()"></div>
+
+  <app-table-wrapper [title]="tituloSignal()" [sectionId]="seccionId">
+    <app-generic-table
+      [data]="tablaSignal()"
+      [config]="{
+        columns: [
+          { key: 'festividad', header: 'Festividad', align: 'left' },
+          { key: 'fecha', header: 'Fecha', align: 'left' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+
+  <p class="source">FUENTE: {{ fuenteSignal() }}</p>
+
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotosSignal()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

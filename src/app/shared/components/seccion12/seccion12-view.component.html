@@ -1,0 +1,282 @@
+<div class="section-view">
+  <h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
+
+  <div class="view-section">
+    <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
+    
+    <p class="text-justify" [innerHTML]="formatearParrafo(parrafoSaludSignal())"></p>
+
+    <app-table-wrapper [title]="tituloCaracteristicasSaludSignal()" [sectionId]="seccionId">
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tablaSaludSignal(); trackBy: trackByIndex">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [innerHTML]="item.descripcion || '____'"></td>
+          </tr>
+          <tr *ngIf="!tablaSaludSignal() || tablaSaludSignal().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteCaracteristicasSaludSignal() }}</p>
+
+    <app-image-upload
+        [modoVista]="true"
+        [permitirMultiples]="true"
+        [fotografias]="fotosSaludSignal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_SALUD"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'">
+    </app-image-upload>
+  </div>
+
+  <div class="view-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
+    
+    <p class="text-justify" [innerHTML]="formatearParrafo(parrafoEducacionSignal())"></p>
+
+    <app-table-wrapper [title]="tituloCantidadEstudiantesSignal()" [sectionId]="seccionId">
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th class="table-header">Nombre de IE</th>
+            <th class="table-header">Nivel</th>
+            <th class="table-header">Tipo de Gestión</th>
+            <th class="table-header">Cantidad de estudiantes</th>
+            <th class="table-header">Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of cantidadEstudiantesConPorcentajesSignal(); trackBy: trackByIndex" [class.total-row]="item.institucion === 'Total'">
+            <td class="table-cell">
+              <strong *ngIf="item.institucion === 'Total'">{{ item.institucion }}</strong>
+              <span *ngIf="item.institucion !== 'Total'">{{ item.institucion || '____' }}</span>
+            </td>
+            <td class="table-cell">
+              <strong *ngIf="item.institucion === 'Total'">{{ item.nivel }}</strong>
+              <span *ngIf="item.institucion !== 'Total'">{{ item.nivel || '____' }}</span>
+            </td>
+            <td class="table-cell">
+              <strong *ngIf="item.institucion === 'Total'">{{ item.gestion }}</strong>
+              <span *ngIf="item.institucion !== 'Total'">{{ item.gestion || '____' }}</span>
+            </td>
+            <td class="table-cell">
+              <strong *ngIf="item.institucion === 'Total'">{{ item.total }}</strong>
+              <span *ngIf="item.institucion !== 'Total'">{{ item.total !== undefined && item.total !== '____' ? item.total : '____' }}</span>
+            </td>
+            <td class="table-cell">
+              <strong *ngIf="item.institucion === 'Total'">{{ item.porcentaje }}</strong>
+              <span *ngIf="item.institucion !== 'Total'">{{ item.porcentaje || '____' }}</span>
+            </td>
+          </tr>
+          <tr *ngIf="cantidadEstudiantesConPorcentajesSignal().length === 0">
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+            <td class="table-cell">____</td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteCantidadEstudiantesSignal() }}</p>
+
+    <p class="text-justify" [innerHTML]="formatearParrafo(parrafoInfraestructuraPostSignal())"></p>
+
+    <app-table-wrapper [title]="tituloIEAyrocaSignal()" [sectionId]="seccionId">
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tablaIEAyrocaSignal(); trackBy: trackByIndex">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [innerHTML]="item.descripcion || '____'"></td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteIEAyrocaSignal() }}</p>
+
+    <app-image-upload
+        [modoVista]="true"
+        [permitirMultiples]="true"
+        [fotografias]="fotosIEAyrocaSignal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'">
+    </app-image-upload>
+
+    <app-table-wrapper [title]="tituloIE40270Signal()" [sectionId]="seccionId">
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th class="table-header">Categoría</th>
+            <th class="table-header">Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tablaIE40270Signal(); trackBy: trackByIndex">
+            <td class="table-cell">{{ item.categoria || '____' }}</td>
+            <td class="table-cell" [innerHTML]="item.descripcion || '____'"></td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteIE40270Signal() }}</p>
+
+    <app-image-upload
+        [modoVista]="true"
+        [permitirMultiples]="true"
+        [fotografias]="fotosIE40270Signal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_IE_40270"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'">
+    </app-image-upload>
+
+    <app-table-wrapper [title]="tituloAlumnosIEAyrocaSignal()" [sectionId]="seccionId">
+      <table class="table-container" style="font-size: 12px;">
+        <thead>
+          <tr>
+            <th rowspan="2">Nombre de IE</th>
+            <th rowspan="2">Nivel</th>
+            <th colspan="2">Total</th>
+            <th colspan="2">3 años</th>
+            <th colspan="2">4 años</th>
+            <th colspan="2">5 años</th>
+          </tr>
+          <tr>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tablaAlumnosIEAyrocaSignal(); trackBy: trackByIndex">
+            <td class="table-cell">{{ item.nombre || '____' }}</td>
+            <td class="table-cell">{{ item.nivel || '____' }}</td>
+            <td class="table-cell">{{ item.totalH !== undefined ? item.totalH : '____' }}</td>
+            <td class="table-cell">{{ item.totalM !== undefined ? item.totalM : '____' }}</td>
+            <td class="table-cell">{{ item.tresH !== undefined ? item.tresH : '____' }}</td>
+            <td class="table-cell">{{ item.tresM !== undefined ? item.tresM : '____' }}</td>
+            <td class="table-cell">{{ item.cuatroH !== undefined ? item.cuatroH : '____' }}</td>
+            <td class="table-cell">{{ item.cuatroM !== undefined ? item.cuatroM : '____' }}</td>
+            <td class="table-cell">{{ item.cincoH !== undefined ? item.cincoH : '____' }}</td>
+            <td class="table-cell">{{ item.cincoM !== undefined ? item.cincoM : '____' }}</td>
+          </tr>
+          <tr *ngIf="!tablaAlumnosIEAyrocaSignal() || tablaAlumnosIEAyrocaSignal().length === 0">
+            <td class="table-cell" colspan="10" style="text-align: center; color: #999;">Sin datos</td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteAlumnosIEAyrocaSignal() }}</p>
+
+    <app-table-wrapper [title]="tituloAlumnosIE40270Signal()" [sectionId]="seccionId">
+      <table class="table-container" style="font-size: 12px;">
+        <thead>
+          <tr>
+            <th rowspan="2">Nombre de IE</th>
+            <th rowspan="2">Nivel</th>
+            <th colspan="2">Total</th>
+            <th colspan="2">1º</th>
+            <th colspan="2">2º</th>
+            <th colspan="2">3º</th>
+            <th colspan="2">4º</th>
+            <th colspan="2">5º</th>
+            <th colspan="2">6º</th>
+          </tr>
+          <tr>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+            <th>H</th><th>M</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tablaAlumnosIE40270Signal(); trackBy: trackByIndex">
+            <td class="table-cell">{{ item.nombre || '____' }}</td>
+            <td class="table-cell">{{ item.nivel || '____' }}</td>
+            <td class="table-cell">{{ item.totalH !== undefined ? item.totalH : '____' }}</td>
+            <td class="table-cell">{{ item.totalM !== undefined ? item.totalM : '____' }}</td>
+            <td class="table-cell">{{ item.primeroH !== undefined ? item.primeroH : '____' }}</td>
+            <td class="table-cell">{{ item.primeroM !== undefined ? item.primeroM : '____' }}</td>
+            <td class="table-cell">{{ item.segundoH !== undefined ? item.segundoH : '____' }}</td>
+            <td class="table-cell">{{ item.segundoM !== undefined ? item.segundoM : '____' }}</td>
+            <td class="table-cell">{{ item.terceroH !== undefined ? item.terceroH : '____' }}</td>
+            <td class="table-cell">{{ item.terceroM !== undefined ? item.terceroM : '____' }}</td>
+            <td class="table-cell">{{ item.cuartoH !== undefined ? item.cuartoH : '____' }}</td>
+            <td class="table-cell">{{ item.cuartoM !== undefined ? item.cuartoM : '____' }}</td>
+            <td class="table-cell">{{ item.quintoH !== undefined ? item.quintoH : '____' }}</td>
+            <td class="table-cell">{{ item.quintoM !== undefined ? item.quintoM : '____' }}</td>
+            <td class="table-cell">{{ item.sextoH !== undefined ? item.sextoH : '____' }}</td>
+            <td class="table-cell">{{ item.sextoM !== undefined ? item.sextoM : '____' }}</td>
+          </tr>
+          <tr *ngIf="!tablaAlumnosIE40270Signal() || tablaAlumnosIE40270Signal().length === 0">
+            <td class="table-cell" colspan="16" style="text-align: center; color: #999;">Sin datos</td>
+          </tr>
+        </tbody>
+      </table>
+    </app-table-wrapper>
+
+    <p class="source">Fuente: {{ fuenteAlumnosIE40270Signal() }}</p>
+  </div>
+
+  <div class="view-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura recreativa</strong></p>
+    <p class="text-justify" [innerHTML]="formatearParrafo(parrafoRecreacionSignal())"></p>
+
+    <app-image-upload
+        [modoVista]="true"
+        [permitirMultiples]="true"
+        [fotografias]="fotosRecreacionSignal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_RECREACION"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'">
+    </app-image-upload>
+  </div>
+
+  <div class="view-section">
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura deportiva</strong></p>
+    <p class="text-justify" [innerHTML]="formatearParrafo(parrafoDeporteSignal())"></p>
+
+    <app-image-upload
+        [modoVista]="true"
+        [permitirMultiples]="true"
+        [fotografias]="fotosDeporteSignal()"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+        [labelTitulo]="'Título'"
+        [labelFuente]="'Fuente'"
+        [labelImagen]="'Imagen'">
+    </app-image-upload>
+  </div>
+</div>

@@ -320,7 +320,7 @@ export class PDFRendererService {
       elements.push({
         type: 'heading2',
         content: { 
-          text: this.formatTableName(table.tableKey), 
+          text: `Cuadro N° ${table.tableNumber}`, 
           number: `${sectionNumber}.${tableCounter + (section.fields.length > 0 ? 1 : 0)}` 
         }
       } as PDFHeading);
@@ -334,7 +334,7 @@ export class PDFRendererService {
         elements.push({
           type: 'table',
           content: {
-            caption: this.formatTableName(table.tableKey),
+            caption: `Cuadro N° ${table.tableNumber}`,
             headers: headers.map(h => this.formatFieldName(h)),
             rows
           }

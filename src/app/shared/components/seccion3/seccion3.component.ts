@@ -1,17 +1,13 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, Input, ChangeDetectionStrategy, Signal, computed, effect, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableManagementFacade } from '../../../core/services/tables/table-management.facade';
-import { TableConfig } from '../../../core/services/table-management.service';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { CoreSharedModule } from '../../../shared/modules/core-shared.module';
 import { DataSourceDirective } from '../../directives/data-source.directive';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
-import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { Seccion3TextGeneratorService } from '../../../core/services/seccion3-text-generator.service';
-import { Seccion3FuentesManagementService } from '../../../core/services/seccion3-fuentes-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 
 @Component({
@@ -43,17 +39,10 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
 
-  entrevistadosConfig: TableConfig = {
-    tablaKey: 'entrevistados',
-    totalKey: 'nombre',
-    estructuraInicial: [{ nombre: '', cargo: '', organizacion: '' }]
-  };
-
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private textGenerator: Seccion3TextGeneratorService,
-    private fuentesManagement: Seccion3FuentesManagementService
+    private textGenerator: Seccion3TextGeneratorService
   ) {
     super(cdRef, injector);
 
@@ -62,13 +51,15 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
     });
 
     this.entrevistadosSignal = computed(() => {
-      // ✅ Usar selectTableData() para obtener datos de tabla (no selectField())
-      const value = this.projectFacade.selectTableData(this.seccionId, null, 'entrevistados')();
+      // ✅ Usar selectField() como fuentesSecundariasLista para consistencia
+      const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+      console.log('[Seccion3] entrevistadosSignal evaluado:', value);
       return Array.isArray(value) ? value : [];
     });
 
     this.fuentesSecundariasListaSignal = computed(() => {
       const value = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
+      console.log('[Seccion3] fuentesSecundariasListaSignal evaluado:', value);
       return Array.isArray(value) ? value : [];
     });
 
@@ -119,6 +110,14 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
+    
+    // 🔍 DEBUG: Verificar qué hay en projectFacade después de restauración
+    console.log('[Seccion3] onInitCustom - Entrevistados del projectFacade:');
+    const entrevistadosDelFacade = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+    console.log('[Seccion3] entrevistadosDelFacade:', entrevistadosDelFacade);
+    
+    const fuentesDelFacade = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
+    console.log('[Seccion3] fuentesSecundariasLista:', fuentesDelFacade);
   }
 
   override ngOnDestroy(): void {
@@ -181,8 +180,22 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
     this.cdRef.markForCheck();
   }
 
+  /**
+   * Persiste cambios de la tabla de entrevistados inmediatamente
+   * Se dispara cuando el usuario edita, agrega o elimina filas
+   */
+  onEntrevistadosTableUpdated(): void {
+    const entrevistadosActuales = this.entrevistadosSignal();
+    console.log('[Seccion3] onEntrevistadosTableUpdated - guardando:', entrevistadosActuales);
+    
+    // ✅ Llamar a onFieldChange que persiste correctamente
+    this.onFieldChange('entrevistados', entrevistadosActuales, { refresh: false });
+    this.cdRef.markForCheck();
+  }
+
   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
-    this.projectFacade.setField(this.seccionId, null, fieldId, value);
+    // ✅ Solo llamar a super para que persista correctamente
+    // super.onFieldChange() ya llama a projectFacade.setField() internamente
     super.onFieldChange(fieldId, value, options);
     this.cdRef.markForCheck();
   }
@@ -200,6 +213,119 @@ export class Seccion3Component extends BaseSectionComponent implements OnInit, O
       { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Organización' }
     ];
   }
+
+  // ✅ MÉTODOS PARA GESTIÓN DE FUENTES SECUNDARIAS
+
+  /**
+   * Agrega una nueva fuente secundaria a la lista
+   */
+  agregarFuenteSecundaria(): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    const nuevaFuente = 'Nueva fuente secundaria';
+    const fuentesActualizadas = [...fuentesActuales, nuevaFuente];
+    
+    console.log('[Seccion3] agregarFuenteSecundaria - guardando:', fuentesActualizadas);
+    this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas, { refresh: false });
+    this.cdRef.markForCheck();
+  }
+
+  /**
+   * Actualiza una fuente secundaria existente
+   */
+  actualizarFuenteSecundaria(index: number, valor: string): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    if (index >= 0 && index < fuentesActuales.length) {
+      const fuentesActualizadas = [...fuentesActuales];
+      fuentesActualizadas[index] = valor;
+      
+      console.log('[Seccion3] actualizarFuenteSecundaria[' + index + '] - guardando:', fuentesActualizadas);
+      this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas, { refresh: false });
+      this.cdRef.markForCheck();
+    }
+  }
+
+  /**
+   * Elimina una fuente secundaria de la lista
+   */
+  eliminarFuenteSecundaria(index: number): void {
+    const fuentesActuales = this.fuentesSecundariasListaSignal() || [];
+    if (index >= 0 && index < fuentesActuales.length) {
+      const fuentesActualizadas = fuentesActuales.filter((_, i) => i !== index);
+      
+      console.log('[Seccion3] eliminarFuenteSecundaria[' + index + '] - guardando:', fuentesActualizadas);
+      this.onFieldChange('fuentesSecundariasLista', fuentesActualizadas, { refresh: false });
+      this.cdRef.markForCheck();
+    }
+  }
+
+  /**
+   * Maneja el evento change/blur de un input de fuente
+   * Extrae el valor correctamente y actualiza la fuente
+   */
+  onFuenteInputChange(index: number, event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement && inputElement.value !== undefined) {
+      this.actualizarFuenteSecundaria(index, inputElement.value);
+    }
+  }
+
+  /**
+   * Obtiene la lista actual de fuentes secundarias
+   */
+  obtenerFuentesSecundariasParaEditar(): string[] {
+    return this.fuentesSecundariasListaSignal() || [];
+  }
+
+  // ✅ MÉTODOS PARA GESTIÓN DE ENTREVISTADOS
+
+  /**
+   * Agrega un nuevo entrevistado a la tabla
+   */
+  agregarEntrevistado(): void {
+    const entrevistadosActuales = this.entrevistadosSignal() || [];
+    const nuevoEntrevistado = { nombre: '', cargo: '', organizacion: '' };
+    const entrevistadosActualizados = [...entrevistadosActuales, nuevoEntrevistado];
+    
+    console.log('[Seccion3] agregarEntrevistado - guardando:', entrevistadosActualizados);
+    this.onFieldChange('entrevistados', entrevistadosActualizados, { refresh: false });
+    this.cdRef.markForCheck();
+  }
+
+  /**
+   * Actualiza un campo de un entrevistado
+   */
+  actualizarEntrevistado(index: number, campo: 'nombre' | 'cargo' | 'organizacion', event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const valor = inputElement.value;
+    
+    const entrevistadosActuales = this.entrevistadosSignal() || [];
+    if (index >= 0 && index < entrevistadosActuales.length) {
+      const entrevistadosActualizados = [...entrevistadosActuales];
+      entrevistadosActualizados[index] = {
+        ...entrevistadosActualizados[index],
+        [campo]: valor
+      };
+      
+      console.log(`[Seccion3] actualizarEntrevistado[${index}].${campo} = "${valor}"`);
+      this.onFieldChange('entrevistados', entrevistadosActualizados, { refresh: false });
+      this.cdRef.markForCheck();
+    }
+  }
+
+  /**
+   * Elimina un entrevistado de la tabla
+   */
+  eliminarEntrevistado(index: number): void {
+    const entrevistadosActuales = this.entrevistadosSignal() || [];
+    if (index >= 0 && index < entrevistadosActuales.length) {
+      const entrevistadosActualizados = entrevistadosActuales.filter((_, i) => i !== index);
+      
+      console.log(`[Seccion3] eliminarEntrevistado[${index}]`);
+      this.onFieldChange('entrevistados', entrevistadosActualizados, { refresh: false });
+      this.cdRef.markForCheck();
+    }
+  }
+
 
 }
 

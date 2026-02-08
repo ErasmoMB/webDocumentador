@@ -18,30 +18,28 @@ export class ParagraphEditorComponent implements OnInit, OnChanges {
   @Output() valueChange = new EventEmitter<string>();
 
   internalValue: string = '';
-  private previousValue: string = '';
 
   constructor(private cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.internalValue = this.value || '';
-    this.previousValue = this.internalValue;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['value']) {
       const newValue = changes['value'].currentValue || '';
-      // Solo actualizar si realmente cambió (comparar string)
-      if (newValue !== this.previousValue) {
-        this.internalValue = newValue;
-        this.previousValue = newValue;
-        this.cdRef.markForCheck();
-      }
+      // Siempre actualizar internalValue cuando cambia el valor externo
+      // Esto asegura que el editor refleje los cambios guardados
+      // Evitar emitir evento al aplicar valor externo: solo actualizar internalValue
+      this.internalValue = newValue;
+      this.cdRef.markForCheck();
     }
   }
 
   onModelChange(newValue: string): void {
+    // Evitar eco: si el nuevo valor es igual al valor externo actual, no reemitir
+    if (newValue === (this.value || '')) return;
     this.internalValue = newValue;
-    this.previousValue = newValue;
     this.valueChange.emit(newValue);
   }
 }

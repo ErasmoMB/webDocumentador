@@ -1,0 +1,108 @@
+<div class="form-group-section">
+  <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
+
+  <div class="form-group-section mt-lg">
+    <h4 class="section-title">Editar Párrafos</h4>
+    <app-paragraph-editor
+      [fieldId]="getFieldIdTextoNBI()"
+      label="Necesidades Básicas Insatisfechas - Texto Completo"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos."
+      [rows]="6"
+      [value]="obtenerTextoCompleto()"
+      (valueChange)="onFieldChange(getFieldIdTextoNBI(), $event)">
+    </app-paragraph-editor>
+  </div>
+
+  <!-- ✅ TABLA NBI CC AYROCA CON TÍTULO Y FUENTE EDITABLES -->
+  <div class="form-field mt-xl">
+    <label class="label">Título - Tabla NBI CC</label>
+    <input 
+      type="text" 
+      class="form-control"
+      [(ngModel)]="datos[getTituloNbiCCField()]"
+      (change)="onTituloNbiCCChange($event)"
+      placeholder="Necesidades Básicas Insatisfechas (NBI) según población – CC Ayroca (2017)">
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Tabla NBI CC Ayroca</label>
+    <app-dynamic-table
+      [datos]="projectFacade.obtenerDatos()"
+      [sectionId]="seccionId"
+      [config]="nbiCCAyrocaConfigSignal()"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con hacinamiento', readonly: true },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '', readonly: true }
+      ]"
+      [totalKey]="'categoria'"
+      [showAddButton]="false"
+      [showDeleteButton]="false"
+      (tableUpdated)="onNbiCCTableUpdated($event)">
+    </app-dynamic-table>
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fuente - Tabla NBI CC</label>
+    <input 
+      type="text" 
+      class="form-control"
+      [(ngModel)]="datos[getFuenteNbiCCField()]"
+      (change)="onFuenteNbiCCChange($event)"
+      placeholder="Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas">
+  </div>
+
+  <!-- ✅ TABLA NBI DISTRITO CAHUACHO CON TÍTULO Y FUENTE EDITABLES -->
+  <div class="form-field mt-xl">
+    <label class="label">Título - Tabla NBI Distrito</label>
+    <input 
+      type="text" 
+      class="form-control"
+      [(ngModel)]="datos[getTituloNbiDistritoField()]"
+      (change)="onTituloNbiDistritoChange($event)"
+      placeholder="Tipos de NBI existentes – Distrito Cahuacho (2017)">
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Tabla NBI Distrito Cahuacho</label>
+    <app-dynamic-table
+      [datos]="projectFacade.obtenerDatos()"
+      [sectionId]="seccionId"
+      [config]="nbiDistritoCahuachoConfigSignal()"
+      [columns]="[
+        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas sin servicios higiénicos', readonly: true },
+        { field: 'casos', label: 'Casos', type: 'number', placeholder: '' },
+        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '', readonly: true }
+      ]"
+      [totalKey]="'categoria'"
+      [showAddButton]="false"
+      [showDeleteButton]="false"
+      (tableUpdated)="onNbiDistritoTableUpdated($event)">
+    </app-dynamic-table>
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fuente - Tabla NBI Distrito</label>
+    <input 
+      type="text" 
+      class="form-control"
+      [(ngModel)]="datos[getFuenteNbiDistritoField()]"
+      (change)="onFuenteNbiDistritoChange($event)"
+      placeholder="Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017">
+  </div>
+
+  <div class="form-field mt-lg">
+    <label class="label">Fotografías de NBI</label>
+    <app-image-upload
+      [fotografias]="fotografiasSignal()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [permitirMultiples]="true"
+      labelTitulo="Título de la fotografía"
+      labelFuente="Fuente de la fotografía"
+      labelImagen="Fotografía"
+      [requerido]="false"
+      (fotografiasChange)="onFotografiasChange($event)">
+    </app-image-upload>
+  </div>
+</div>

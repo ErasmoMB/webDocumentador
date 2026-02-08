@@ -1,4 +1,89 @@
-<div class="document-view" *ngIf="viewModel() as vm">
+<!-- Formulario (modo edición) -->
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">3.1.4. Caracterización socioeconómica — Editor</h4>
+
+    <div class="form-group-section" style="margin-top: 12px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+
+      <app-paragraph-editor
+        [fieldId]="'parrafoSeccion4_introduccion_aisd'"
+        label="Introducción AISD"
+        [rows]="4"
+        [value]="getTextoIntroduccionEfectivo()"
+        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        [fieldId]="'parrafoSeccion4_comunidad_completo'"
+        label="Descripción de la Comunidad"
+        [rows]="5"
+        [value]="getTextoComunidadEfectivo()"
+        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+      </app-paragraph-editor>
+
+      <app-paragraph-editor
+        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
+        label="Caracterización - Indicadores"
+        [rows]="4"
+        [value]="getTextoCaracterizacionEfectivo()"
+        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de tabla - Ubicación referencial (A.1)</label>
+      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloAISD1']" (ngModelChange)="onFieldChange('cuadroTituloAISD1', $event)" placeholder="Ej: Ubicación referencial - CC Comunidad">
+    </div>
+
+    <label class="label" style="margin-top:10px">Ubicación referencial (Tabla A1)</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="tableCfg.getTablaAISD1Config()"
+      [columns]="tableCfg.getColumnasAISD1()"
+      [sectionId]="seccionId"
+      [tablaKey]="'tablaAISD1Datos'"
+      [fieldName]="'tablaAISD1Datos'"
+      (tableUpdated)="onTablaUpdated()">
+    </app-dynamic-table>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de tabla - Cantidad total de población y viviendas (A.2)</label>
+      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloAISD2']" (ngModelChange)="onFieldChange('cuadroTituloAISD2', $event)" placeholder="Ej: Cantidad total de población y viviendas">
+    </div>
+
+    <label class="label" style="margin-top:10px">Población y viviendas (Tabla A2)</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="tableCfg.getTablaAISD2Config()"
+      [columns]="tableCfg.getColumnasAISD2()"
+      [sectionId]="seccionId"
+      [tablaKey]="'tablaAISD2Datos'"
+      [fieldName]="'tablaAISD2Datos'"
+      (tableUpdated)="onTablaUpdated()">
+    </app-dynamic-table>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fuente de las tablas</label>
+      <input type="text" class="form-control" [(ngModel)]="datos['cuadroFuenteAISD1']" (ngModelChange)="onFieldChange('cuadroFuenteAISD1', $event)" placeholder="Ej: GEADES (2024)">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasFormMulti"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_UBICACION"
+        [permitirMultiples]="true"
+        (fotografiasChange)="onFotografiasChange($event)">
+      </app-image-upload>
+    </div>
+
+  </div>
+</div>
+
+<!-- Vista previa (modo lectura) -->
+<div class="document-view" *ngIf="!modoFormulario && viewModel() as vm">
   <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
   <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
 

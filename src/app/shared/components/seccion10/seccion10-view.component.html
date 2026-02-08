@@ -1,0 +1,180 @@
+<h5>A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h5>
+
+<div *ngIf="formDataSignal()['parrafoSeccion10_servicios_basicos_intro']; else serviciosBasicosIntroDefault" class="text-justify">{{ formDataSignal()['parrafoSeccion10_servicios_basicos_intro'] }}</div>
+<ng-template #serviciosBasicosIntroDefault>
+  <p class="text-justify">{{ obtenerTextoSeccion10ServiciosBasicosIntro() }}</p>
+</ng-template>
+
+<!-- a. Servicios de agua -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Servicios de agua</strong></p>
+<p class="text-justify">{{ obtenerTextoServiciosAgua() }}</p>
+
+<app-table-wrapper [title]="obtenerTituloAbastecimientoAgua()" [sectionId]="seccionId">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Casos</th>
+        <th class="table-header">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of abastecimientoAguaConPorcentajesSignal(); trackBy: trackByIndex">
+        <td class="table-cell">{{ item.categoria || '____' }}</td>
+        <td class="table-cell">{{ item.casos || '____' }}</td>
+        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+      </tr>
+      <tr *ngIf="!abastecimientoAguaConPorcentajesSignal() || abastecimientoAguaConPorcentajesSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+      <tr *ngIf="obtenerTotalAbastecimientoAgua()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
+        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().categoria }}</td>
+        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().casos }}</td>
+        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().porcentaje?.value }}</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+
+<p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteAbastecimientoAgua() }}</p>
+
+<p class="text-justify">{{ obtenerTextoServiciosAguaDetalle() }}</p>
+
+<!-- b. Servicios básicos de desagüe -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Servicios básicos de desagüe</strong></p>
+<p class="text-justify">{{ obtenerTextoServiciosDesague() }}</p>
+
+<app-table-wrapper [title]="obtenerTituloTiposSaneamiento()" [sectionId]="seccionId">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Casos</th>
+        <th class="table-header">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of tiposSaneamientoConPorcentajesSignal(); trackBy: trackByIndex">
+        <td class="table-cell">{{ item.categoria || '____' }}</td>
+        <td class="table-cell">{{ item.casos || '____' }}</td>
+        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+      </tr>
+      <tr *ngIf="!tiposSaneamientoConPorcentajesSignal() || tiposSaneamientoConPorcentajesSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+      <tr *ngIf="obtenerTotalTiposSaneamiento()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
+        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().categoria }}</td>
+        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().casos }}</td>
+        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().porcentaje?.value }}</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+
+<p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteTiposSaneamiento() }}</p>
+
+<p class="text-justify">{{ obtenerTextoServiciosDesagueDetalle() }}</p>
+
+<!-- c. Gestión y destino de los desechos sólidos -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
+<p class="text-justify">{{ obtenerTextoDesechosSolidos() }}</p>
+<p class="text-justify" *ngIf="!formDataSignal()['textoDesechosSolidos2'] || formDataSignal()['textoDesechosSolidos2'] === '____'">Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.</p>
+<p class="text-justify" *ngIf="formDataSignal()['textoDesechosSolidos2'] && formDataSignal()['textoDesechosSolidos2'] !== '____'">{{ formDataSignal()['textoDesechosSolidos2'] }}</p>
+
+<app-image-upload
+  [modoVista]="true"
+  [permitirMultiples]="true"
+  [fotografias]="fotografiasCache"
+  [sectionId]="seccionId"
+  [photoPrefix]="PHOTO_PREFIX"
+  [labelTitulo]="'Título'"
+  [labelFuente]="'Fuente'"
+  [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<!-- d. Electricidad -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Electricidad</strong></p>
+<p class="text-justify">{{ obtenerTextoElectricidad() }}</p>
+
+<app-table-wrapper [title]="obtenerTituloCoberturaElectrica()" [sectionId]="seccionId">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Casos</th>
+        <th class="table-header">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of coberturaElectricaConPorcentajesSignal(); trackBy: trackByIndex">
+        <td class="table-cell">{{ item.categoria || '____' }}</td>
+        <td class="table-cell">{{ item.casos || '____' }}</td>
+        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+      </tr>
+      <tr *ngIf="!coberturaElectricaConPorcentajesSignal() || coberturaElectricaConPorcentajesSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+      <tr *ngIf="obtenerTotalCoberturaElectrica()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
+        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().categoria }}</td>
+        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().casos }}</td>
+        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().porcentaje?.value }}</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+
+<p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteCoberturaElectrica() }}</p>
+
+<p class="text-justify">{{ obtenerTextoElectricidadDetalle() }}</p>
+
+<app-image-upload
+  [modoVista]="true"
+  [permitirMultiples]="true"
+  [fotografias]="fotografiasCache"
+  [sectionId]="seccionId"
+  [photoPrefix]="PHOTO_PREFIX"
+  [labelTitulo]="'Título'"
+  [labelFuente]="'Fuente'"
+  [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<!-- e. Energía para cocinar -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
+<p class="text-justify">{{ obtenerTextoEnergiaCocinar() }}</p>
+
+<app-table-wrapper [title]="obtenerTituloEnergiaCocinar()" [sectionId]="seccionId">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Casos</th>
+        <th class="table-header">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of energiaCocinarConPorcentajesSignal(); trackBy: trackByIndex">
+        <td class="table-cell">{{ item.categoria || '____' }}</td>
+        <td class="table-cell">{{ item.casos || '____' }}</td>
+        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+      </tr>
+      <tr *ngIf="!energiaCocinarConPorcentajesSignal() || energiaCocinarConPorcentajesSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+      <tr *ngIf="obtenerTotalEnergiaCocinar()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
+        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().categoria }}</td>
+        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().casos }}</td>
+        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().porcentaje?.value }}</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+
+<p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteEnergiaCocinar() }}</p>

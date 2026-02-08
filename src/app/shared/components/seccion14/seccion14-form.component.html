@@ -1,0 +1,133 @@
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">A.1.10. Indicadores de educación</h4>
+
+    <div class="form-group-section mt-lg">
+      <h4 class="section-title">Editar Párrafos</h4>
+
+      <app-paragraph-editor
+        [fieldId]="getFieldIdIndicadoresEducacionIntro()"
+        label="Introducción - Indicadores de Educación"
+        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [rows]="4"
+        [value]="obtenerTextoSeccion14IndicadoresEducacionIntro()"
+        (valueChange)="onFieldChange(getFieldIdIndicadoresEducacionIntro(), $event)">
+      </app-paragraph-editor>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">a. Nivel Educativo de la población</h4>
+
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          [fieldId]="getFieldIdNivelEducativo()"
+          label="Nivel Educativo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="3"
+          [value]="obtenerTextoNivelEducativo()"
+          (valueChange)="onFieldChange(getFieldIdNivelEducativo(), $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="form-control"
+          [value]="datos['cuadroTituloNivelEducativo'] || ('Población de 15 años a más según nivel educativo alcanzado – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          (change)="onFieldChange('cuadroTituloNivelEducativo', $any($event.target).value, { refresh: true })" />
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Tabla Nivel Educativo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="nivelEducativoConfigSignal()"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="'nivelEducativoTabla'"
+          [showAddButton]="true"
+          [showDeleteButton]="true"
+          (tableUpdated)="onNivelEducativoTableUpdated($event)">
+        </app-dynamic-table>
+        <p class="source" style="margin-top:8px;">
+          <label class="label">Fuente</label>
+          <input type="text" class="form-control"
+            [value]="datos['cuadroFuenteNivelEducativo'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            (change)="onFieldChange('cuadroFuenteNivelEducativo', $any($event.target).value, { refresh: true })" />
+        </p>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Fotografías de Indicadores de Educación</label>
+        <app-image-upload
+          [fotografias]="fotografiasFormMulti"
+          [sectionId]="seccionId"
+          [photoPrefix]="PHOTO_PREFIX"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          placeholderTitulo="Ej: Indicadores de educación"
+          placeholderFuente="Ej: GEADES, 2024"
+          tituloDefault="Indicadores de educación"
+          fuenteDefault="GEADES, 2024"
+          [requerido]="false"
+          (fotografiasChange)="onFotografiasChange($event)">
+        </app-image-upload>
+      </div>
+    </div>
+
+    <div class="form-group-section mt-xl">
+      <h4 class="section-title">b. Tasa de analfabetismo</h4>
+
+      <div class="form-group-section mt-md">
+        <h4 class="section-title">Editar Párrafos</h4>
+
+        <app-paragraph-editor
+          [fieldId]="getFieldIdTasaAnalfabetismo()"
+          label="Tasa de Analfabetismo - Texto Completo"
+          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [rows]="2"
+          [value]="obtenerTextoTasaAnalfabetismo()"
+          (valueChange)="onFieldChange(getFieldIdTasaAnalfabetismo(), $event)">
+        </app-paragraph-editor>
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Título del cuadro</label>
+        <input type="text" class="form-control"
+          [value]="datos['cuadroTituloTasaAnalfabetismo'] || ('Tasa de analfabetismo en población de 15 años a más – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          (change)="onFieldChange('cuadroTituloTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
+      </div>
+
+      <div class="form-field mt-lg">
+        <label class="label">Tabla Tasa de Analfabetismo</label>
+        <app-dynamic-table
+          [datos]="datos"
+          [config]="tasaAnalfabetismoConfigSignal()"
+          [columns]="[
+            { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          ]"
+          [sectionId]="seccionId"
+          [tablaKey]="'tasaAnalfabetismoTabla'"
+          [showAddButton]="true"
+          [showDeleteButton]="true"
+          (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
+        </app-dynamic-table>
+        <p class="source" style="margin-top:8px;">
+          <label class="label">Fuente</label>
+          <input type="text" class="form-control"
+            [value]="datos['cuadroFuenteTasaAnalfabetismo'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            (change)="onFieldChange('cuadroFuenteTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
+        </p>
+      </div> 
+    </div>
+  </div>
+</div>

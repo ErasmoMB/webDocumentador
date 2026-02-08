@@ -1,0 +1,49 @@
+<div class="form-group-section">
+  <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
+  <div [innerHTML]="getTextoNBIConResaltado()"></div>
+
+  <app-table-wrapper [title]="getTituloNbiCC()" sectionId="3.1.4.A.1.14">
+    <app-generic-table
+      [data]="getNbiCCAyrocaConPorcentajes()"
+      [config]="{
+        columns: [
+          { key: 'categoria', header: 'Categoría', align: 'left' },
+          { key: 'casos', header: 'Casos', align: 'right' },
+          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: {{ getFuenteNbiCC() }}</p>
+
+  <app-table-wrapper [title]="getTituloNbiDistrito()" sectionId="3.1.4.A.1.14">
+    <app-generic-table
+      [data]="getNbiDistritoCahuachoConPorcentajes()"
+      [config]="{
+        columns: [
+          { key: 'categoria', header: 'Categoría', align: 'left' },
+          { key: 'casos', header: 'Casos', align: 'right' },
+          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="source">FUENTE: {{ getFuenteNbiDistrito() }}</p>
+
+  <app-image-upload
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getFotografiasVista()"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

@@ -1,0 +1,625 @@
+import { Component, ChangeDetectorRef, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BaseSectionComponent } from '../base-section.component';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
+import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
+import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+
+@Component({
+  standalone: true,
+  imports: [CommonModule, FormsModule, CoreSharedModule, ImageUploadComponent, DynamicTableComponent, ParagraphEditorComponent],
+  selector: 'app-seccion25-form',
+  templateUrl: './seccion25-form.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class Seccion25FormComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '3.1.4.B.1.4';
+  @Input() override modoFormulario: boolean = false;
+
+  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB14';
+  override useReactiveSync: boolean = true;
+
+  fotografiasSeccion25: FotoItem[] = [];
+
+  override watchedFields: string[] = [
+    'centroPobladoAISI', 'tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'textoViviendaAISI', 'textoOcupacionViviendaAISI', 'textoEstructuraAISI',
+    'cuadroTituloTiposVivienda', 'cuadroFuenteTiposVivienda', 'cuadroTituloCondicionOcupacion', 'cuadroFuenteCondicionOcupacion', 'cuadroTituloMaterialesVivienda', 'cuadroFuenteMaterialesVivienda'
+  ];
+
+  // SIGNALS
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly textoViviendaSignal = computed(() => {
+    const data = this.formDataSignal();
+    return data['textoViviendaAISI'] || '';
+  });
+
+  readonly textoOcupacionSignal = computed(() => {
+    const data = this.formDataSignal();
+    return data['textoOcupacionViviendaAISI'] || '';
+  });
+
+  readonly textoEstructuraSignal = computed(() => {
+    const data = this.formDataSignal();
+    return data['textoEstructuraAISI'] || '';
+  });
+
+  readonly tiposViviendaSignal = computed(() => {
+    const data = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const key = prefijo ? `tiposViviendaAISI${prefijo}` : 'tiposViviendaAISI';
+    return Array.isArray(data[key]) ? data[key] : [];
+  });
+
+  readonly condicionOcupacionSignal = computed(() => {
+    const data = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const key = prefijo ? `condicionOcupacionAISI${prefijo}` : 'condicionOcupacionAISI';
+    return Array.isArray(data[key]) ? data[key] : [];
+  });
+
+  readonly materialesViviendaSignal = computed(() => {
+    const data = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const key = prefijo ? `materialesViviendaAISI${prefijo}` : 'materialesViviendaAISI';
+    return Array.isArray(data[key]) ? data[key] : [];
+  });
+
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
+
+  // Fotos computed directly from imageFacade like other sections (Seccion24 pattern)
+  readonly fotosSignal: Signal<FotoItem[]> = computed(() => {
+    const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
+    return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
+  });
+
+
+  // Table configs (to be used by dynamic tables in the form)
+  tiposViviendaConfig: TableConfig = {
+    tablaKey: 'tiposViviendaAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  condicionOcupacionConfig: TableConfig = {
+    tablaKey: 'condicionOcupacionAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  materialesViviendaConfig: TableConfig = {
+    tablaKey: 'materialesViviendaAISI',
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
+  // viewModel
+  readonly viewModel = computed(() => ({
+    textoVivienda: this.textoViviendaSignal(),
+    textoOcupacion: this.textoOcupacionSignal(),
+    textoEstructura: this.textoEstructuraSignal(),
+    tiposVivienda: this.tiposViviendaSignal(),
+    condicionOcupacion: this.condicionOcupacionSignal(),
+    materiales: this.materialesViviendaSignal(),
+    fotos: this.fotosSignal(),
+
+    // Mirror cuadro titulo/fuente fields for use in template without reading datos directly
+    cuadroTituloTiposVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloTiposVivienda')() ?? '',
+    cuadroFuenteTiposVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteTiposVivienda')() ?? '',
+    cuadroTituloCondicionOcupacion: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloCondicionOcupacion')() ?? '',
+    cuadroFuenteCondicionOcupacion: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteCondicionOcupacion')() ?? '',
+    cuadroTituloMaterialesVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloMaterialesVivienda')() ?? '',
+    cuadroFuenteMaterialesVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteMaterialesVivienda')() ?? ''
+  }));
+
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumberingService: TableNumberingService) {
+    super(cdRef, injector);
+
+    // EFFECT: Sync datos
+    effect(() => {
+      const data = this.formDataSignal();
+      this.datos = { ...data };
+      this.cdRef.markForCheck();
+    });
+
+    // EFFECT: photos - watch foto fields hash and imageFacade group (ensures form updates when images or metas change)
+    effect(() => {
+      this.photoFieldsHash();
+      // Read fotosSignal so the effect depends on image store
+      const fotos = this.fotosSignal() || [];
+      // synchronize local caches
+      this.fotografiasSeccion25 = fotos;
+      this.fotografiasFormMulti = [...this.fotografiasSeccion25];
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+  }
+
+
+  protected override onInitCustom(): void {
+    this.cargarFotografias();
+
+    // Auto-fill table titles and sources when tables are present but title/source fields are empty
+    try {
+      const datos = this.datos || {};
+
+      // Auto-fill table titles and sources when tables are present but title/source fields are empty
+      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos['cuadroTituloTiposVivienda'] === undefined || datos['cuadroTituloTiposVivienda'] === '' || datos['cuadroTituloTiposVivienda'] === '____')) {
+        this.onFieldChange('cuadroTituloTiposVivienda', 'Tipos de Vivienda');
+      }
+      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos['cuadroFuenteTiposVivienda'] === undefined || datos['cuadroFuenteTiposVivienda'] === '' || datos['cuadroFuenteTiposVivienda'] === '____')) {
+        this.onFieldChange('cuadroFuenteTiposVivienda', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      }
+
+      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos['cuadroTituloCondicionOcupacion'] === undefined || datos['cuadroTituloCondicionOcupacion'] === '' || datos['cuadroTituloCondicionOcupacion'] === '____')) {
+        this.onFieldChange('cuadroTituloCondicionOcupacion', 'Condición de Ocupación');
+      }
+      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos['cuadroFuenteCondicionOcupacion'] === undefined || datos['cuadroFuenteCondicionOcupacion'] === '' || datos['cuadroFuenteCondicionOcupacion'] === '____')) {
+        this.onFieldChange('cuadroFuenteCondicionOcupacion', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      }
+
+      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos['cuadroTituloMaterialesVivienda'] === undefined || datos['cuadroTituloMaterialesVivienda'] === '' || datos['cuadroTituloMaterialesVivienda'] === '____')) {
+        this.onFieldChange('cuadroTituloMaterialesVivienda', 'Tipos de materiales de la vivienda');
+      }
+      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos['cuadroFuenteMaterialesVivienda'] === undefined || datos['cuadroFuenteMaterialesVivienda'] === '' || datos['cuadroFuenteMaterialesVivienda'] === '____')) {
+        this.onFieldChange('cuadroFuenteMaterialesVivienda', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      }
+
+      // Ensure paragraph fields exist so that the preview can display them exactly as in the form
+      const textoViviendaField = this.projectFacade.selectField(this.seccionId, null, 'textoViviendaAISI')();
+      if (textoViviendaField === undefined || textoViviendaField === null || textoViviendaField === '') {
+        this.onFieldChange('textoViviendaAISI', this.obtenerTextoViviendaAISI());
+      }
+
+      const textoOcupacionField = this.projectFacade.selectField(this.seccionId, null, 'textoOcupacionViviendaAISI')();
+      if (textoOcupacionField === undefined || textoOcupacionField === null || textoOcupacionField === '') {
+        this.onFieldChange('textoOcupacionViviendaAISI', this.obtenerTextoOcupacionViviendaAISI());
+      }
+
+      const textoEstructuraField = this.projectFacade.selectField(this.seccionId, null, 'textoEstructuraAISI')();
+      if (textoEstructuraField === undefined || textoEstructuraField === null || textoEstructuraField === '') {
+        this.onFieldChange('textoEstructuraAISI', this.obtenerTextoEstructuraAISI());
+      }
+
+      // Ensure fixed initial structure for "Condición de Ocupación" and persist it (no add/delete in form)
+      try {
+        const condKey = this.getTablaKeyCondicionOcupacion();
+        const currentCond = (this.projectFacade.selectField(this.seccionId, null, condKey)() ??
+                            this.projectFacade.selectTableData(this.seccionId, null, condKey)() ??
+                            this.datos[condKey]) ?? [];
+        if (!Array.isArray(currentCond) || currentCond.length === 0) {
+          const inicialCond = [
+            { categoria: 'Ocupada, con personas presentes', casos: '', porcentaje: '' },
+            { categoria: 'Ocupada, con personas ausentes', casos: '', porcentaje: '' },
+            { categoria: 'Ocupada, de uso ocasional', casos: '', porcentaje: '' },
+            { categoria: 'Desocupada, abandonada o cerrada', casos: '', porcentaje: '' }
+          ];
+          this.projectFacade.setField(this.seccionId, null, condKey, inicialCond);
+          try {
+            const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+            const formChange = this.injector.get(FormChangeServiceToken, null);
+            if (formChange) formChange.persistFields(this.seccionId, 'table', { [condKey]: inicialCond }, { notifySync: true });
+          } catch (e) {}
+          this.datos[condKey] = inicialCond;
+        }
+      } catch (e) {}
+    } catch (e) {
+      /* no bloquear inicio por este auto-fill */
+    }
+  }
+
+  protected override detectarCambios(): boolean { return false; }
+  protected override actualizarValoresConPrefijo(): void { }
+
+  // Handlers
+  onFotografiasChangeHandler(fotografias: FotoItem[], prefix?: string): void {
+    // Delegate to base handler
+    this.onFotografiasChange(fotografias, prefix);
+    this.cdRef.markForCheck();
+  }
+
+  onTiposViviendaFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyTiposVivienda();
+    const tabla = this.datos[tablaKey] || this.datos.tiposViviendaAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      this.datos[tablaKey] = [...tabla];
+
+      // Persistir correctamente como tabla (store y formulario) y notificar sync
+      try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
+      try {
+        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+        const formChange = this.injector.get(FormChangeServiceToken, null);
+        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+      } catch (e) {}
+
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onTiposViviendaTableUpdated(updated?: any[]): void {
+    const key = this.getTablaKeyTiposVivienda();
+    const datos = updated || this.datos[key] || [];
+    this.datos[key] = [...datos];
+    try { this.projectFacade.setTableData(this.seccionId, null, key, this.datos[key]); } catch (e) {}
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = this.injector.get(FormChangeServiceToken, null);
+      if (formChange) {
+        // Incluir párrafos actuales en la misma persistencia para evitar races que sobrescriban ediciones de texto
+        const textPayload: any = {};
+        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
+        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
+        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+
+        formChange.persistFields(this.seccionId, 'table', { [key]: this.datos[key], ...textPayload }, { notifySync: true });
+      }
+    } catch (e) {}
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onCondicionOcupacionFieldChange(index: number, field: string, value: any): void {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      if (field === 'casos') {
+        const total = tabla.reduce((sum: number, item: any) => {
+          const categoria = item.categoria?.toString().toLowerCase() || '';
+          if (categoria.includes('total')) return sum;
+          const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+          return sum + casos;
+        }, 0);
+        if (total > 0) {
+          tabla.forEach((item: any) => {
+            const categoria = item.categoria?.toString().toLowerCase() || '';
+            if (!categoria.includes('total')) {
+              const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100)
+                .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .replace('.', ',') + ' %';
+              item.porcentaje = porcentaje;
+            }
+          });
+        }
+      }
+      this.datos[tablaKey] = [...tabla];
+      try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
+      try {
+        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+        const formChange = this.injector.get(FormChangeServiceToken, null);
+        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+      } catch (e) {}
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onCondicionOcupacionTableUpdated() {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
+    this.datos[tablaKey] = [...tabla];
+    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = this.injector.get(FormChangeServiceToken, null);
+      if (formChange) {
+        const textPayload: any = {};
+        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
+        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
+        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+
+        formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
+      }
+    } catch (e) {}
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  onMaterialesViviendaFieldChange(index: number, field: string, value: any) {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    
+    if (index >= 0 && index < tabla.length) {
+      tabla[index][field] = value;
+      
+      if (field === 'casos') {
+        this.calcularPorcentajesMaterialesViviendaAISI();
+      }
+      
+      this.datos[tablaKey] = [...tabla];
+      try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
+      try {
+        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+        const formChange = this.injector.get(FormChangeServiceToken, null);
+        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+      } catch (e) {}
+      this.actualizarDatos();
+      this.cdRef.detectChanges();
+    }
+  }
+
+  onMaterialesViviendaTableUpdated() {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    this.calcularPorcentajesMaterialesViviendaAISI();
+    this.datos[tablaKey] = [...tabla];
+    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = this.injector.get(FormChangeServiceToken, null);
+      if (formChange) {
+        const textPayload: any = {};
+        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
+        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
+        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+
+        formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
+      }
+    } catch (e) {}
+    this.actualizarDatos();
+    this.cdRef.detectChanges();
+  }
+
+  // Tabla key helpers
+  getTablaKeyTiposVivienda(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `tiposViviendaAISI${prefijo}` : 'tiposViviendaAISI';
+  }
+
+  getTablaKeyCondicionOcupacion(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `condicionOcupacionAISI${prefijo}` : 'condicionOcupacionAISI';
+  }
+
+  getTablaKeyMaterialesVivienda(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `materialesViviendaAISI${prefijo}` : 'materialesViviendaAISI';
+  }
+
+  // Helpers similar to monolith for defaults and totals
+  getTiposViviendaSinTotal(): any[] {
+    const tablaKey = this.getTablaKeyTiposVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.tiposViviendaAISI || [];
+    if (!tabla || !Array.isArray(tabla)) return [];
+    return tabla.filter((item: any) => !item.categoria || !item.categoria.toLowerCase().includes('total'));
+  }
+
+  getTotalTiposVivienda(): number {
+    const filtered = this.getTiposViviendaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  getCondicionOcupacionSinTotal(): any[] {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    if (!tabla || !Array.isArray(tabla)) return [];
+    return tabla.filter((item: any) => !item.categoria || !item.categoria.toLowerCase().includes('total'));
+  }
+
+  getTotalCondicionOcupacion(): number {
+    const filtered = this.getCondicionOcupacionSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  getViviendasOcupadasPresentes(): string {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
+      return '____';
+    }
+    const item = tabla.find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('ocupada') && item.categoria.toLowerCase().includes('presentes')
+    );
+    return item?.casos?.toString() || '____';
+  }
+
+  getPorcentajeOcupadasPresentes(): string {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tabla = this.datos[tablaKey] || this.datos?.condicionOcupacionAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
+      return '____';
+    }
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase() === 'ocupado');
+    if (!item) {
+      return '____';
+    }
+    const total = this.getTotalCondicionOcupacion();
+    if (total === 0) {
+      return '0,00 %';
+    }
+    const casos = Number(item.casos) || 0;
+    const porcentaje = (casos / total) * 100;
+    return this.formatearPorcentaje(porcentaje);
+  }
+
+  getPorcentajePisosTierra(): string {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
+      return '____';
+    }
+    const item = tabla.find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('piso') && item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('tierra')
+    );
+    return item?.porcentaje || '____';
+  }
+
+  getPorcentajePisosCemento(): string {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    if (!tabla || !Array.isArray(tabla)) {
+      return '____';
+    }
+    const item = tabla.find((item: any) => 
+      item.categoria && item.categoria.toLowerCase().includes('piso') && item.tipoMaterial && item.tipoMaterial.toLowerCase().includes('cemento')
+    );
+    return item?.porcentaje || '____';
+  }
+  getMaterialesViviendaSinTotal(): any[] {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos?.materialesViviendaAISI || [];
+    if (!tabla || !Array.isArray(tabla)) return [];
+    const filtered = tabla.filter((item: any) => !item.categoria || !item.categoria.toLowerCase().includes('total'));
+    return filtered;
+  }
+
+  getTotalMaterialesVivienda(): number {
+    const filtered = this.getMaterialesViviendaSinTotal();
+    return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+  }
+
+  calcularPorcentajesMaterialesViviendaAISI() {
+    const tablaKey = this.getTablaKeyMaterialesVivienda();
+    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    
+    if (!tabla || tabla.length === 0) {
+      return;
+    }
+    
+    const categorias = ['paredes', 'techos', 'pisos'];
+    categorias.forEach(categoria => {
+      const itemsCategoria = tabla.filter((item: any) => 
+        item.categoria && item.categoria.toLowerCase().includes(categoria)
+      );
+      if (itemsCategoria.length > 0) {
+        const totalItem = itemsCategoria.find((item: any) => 
+          item.categoria && item.categoria.toLowerCase().includes('total')
+        );
+        const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
+        
+        if (total > 0) {
+          itemsCategoria.forEach((item: any) => {
+            if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
+              const casos = parseFloat(item.casos) || 0;
+              const porcentaje = ((casos / total) * 100).toFixed(2);
+              item.porcentaje = porcentaje + ' %';
+            }
+          });
+        }
+      }
+    });
+    
+    // Actualizar la tabla en datos
+    this.datos[tablaKey] = [...tabla];
+  }
+
+  // Image handler
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    super.onFotografiasChange(fotografias, customPrefix);
+    this.fotografiasSeccion25 = fotografias;
+    // Also update the BaseSection cache used by other uploads
+    this.fotografiasFormMulti = [...(fotografias || [])];
+    this.cdRef.markForCheck();
+  }
+
+  // Text updates (backward compatible handlers are still available)
+  actualizarTextoVivienda(valor: string): void {
+    this.onFieldChange('textoViviendaAISI', valor);
+  }
+
+  actualizarTextoOcupacion(valor: string): void {
+    this.onFieldChange('textoOcupacionViviendaAISI', valor);
+  }
+
+  actualizarTextoEstructura(valor: string): void {
+    this.onFieldChange('textoEstructuraAISI', valor);
+  }
+
+  // --- Helpers for form defaults (copied from monolith) ---
+  obtenerTextoViviendaAISI(): string {
+    if (this.datos.textoViviendaAISI && this.datos.textoViviendaAISI !== '____') {
+      return this.datos.textoViviendaAISI;
+    }
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const totalViviendas = this.getTotalViviendasEmpadronadas();
+    return `Según los Censos Nacionales 2017, en el CP ${centroPoblado} se hallan un total de ${totalViviendas} viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.`;
+  }
+
+  obtenerTextoOcupacionViviendaAISI(): string {
+    if (this.datos.textoOcupacionViviendaAISI && this.datos.textoOcupacionViviendaAISI !== '____') {
+      return this.datos.textoOcupacionViviendaAISI;
+    }
+    const viviendasOcupadas = this.getViviendasOcupadasPresentes();
+    const porcentajeOcupadas = this.getPorcentajeOcupadasPresentes();
+    return `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${viviendasOcupadas}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentajeOcupadas} del conjunto analizado.`;
+  }
+
+  obtenerTextoEstructuraAISI(): string {
+    if (this.datos.textoEstructuraAISI && this.datos.textoEstructuraAISI !== '____') {
+      return this.datos.textoEstructuraAISI;
+    }
+    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const porcentajePisosTierra = this.getPorcentajePisosTierra();
+    const porcentajePisosCemento = this.getPorcentajePisosCemento();
+    return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;
+  }
+
+  // Small helper used by the text defaults
+  getTotalViviendasEmpadronadas(): number {
+    return this.getTotalTiposVivienda();
+  }
+
+  private formatearPorcentaje(num: number): string {
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+  }
+  // Cuadros numbering
+  obtenerNumeroCuadroTiposVivienda(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+  }
+
+  obtenerNumeroCuadroCondicionOcupacion(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+  }
+
+  obtenerNumeroCuadroMateriales(): string {
+    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+  }
+}

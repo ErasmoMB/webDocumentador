@@ -203,8 +203,11 @@ export class SectionFlowNavigationService {
 
     // Es el primer grupo AISI, retroceder al último grupo AISD
     const aisdGroupCount = this.getAISDGroupCount();
+    console.log('[Navegación] B.1 → Anterior: aisdGroupCount =', aisdGroupCount);
     if (aisdGroupCount > 0) {
-      return `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
+      const targetSection = `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
+      console.log('[Navegación] B.1 → Anterior: targetSection =', targetSection);
+      return targetSection;
     }
 
     return null;
@@ -259,6 +262,27 @@ export class SectionFlowNavigationService {
    */
   hasPreviousSection(currentSectionId: string): boolean {
     return this.getPreviousSection(currentSectionId) !== null;
+  }
+
+  /**
+   * Verifica si es el final del flujo AISI (última subsección del último grupo AISI)
+   * Solo retorna true para B.X.9 cuando X es el último grupo AISI
+   */
+  isEndOfAISIFlow(currentSectionId: string): boolean {
+    const parsed = this.parseSectionId(currentSectionId);
+    
+    if (!parsed || parsed.groupType !== 'AISI') {
+      return false;
+    }
+
+    // Verificar si es la última subsección AISI (9)
+    const isLastSubSection = parsed.subSectionNumber === this.AISI_SUBSECTIONS;
+    
+    // Verificar si es el último grupo AISI
+    const aisiGroupCount = this.getAISIGroupCount();
+    const isLastGroup = parsed.groupNumber >= aisiGroupCount;
+
+    return isLastSubSection && isLastGroup;
   }
 
   /**

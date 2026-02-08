@@ -49,7 +49,8 @@ export class SectionReactiveSyncCoordinator {
 				this.handleReactiveChanges(host, changes);
 			});
 		} catch (error) {
-			console.warn('No se pudo inicializar sincronización reactiva:', error);
+			// optional debug
+			try { const { debugWarn } = require('src/app/shared/utils/debug'); debugWarn('No se pudo inicializar sincronización reactiva:', error); } catch {}
 		}
 	}
 
@@ -88,23 +89,29 @@ export class SectionReactiveSyncCoordinator {
 		const prefijo = host.obtenerPrefijoGrupo();
 
 		Object.keys(changes).forEach(fieldName => {
+			// Si el host indica que el campo está siendo editado activamente, no sobrescribirlo
+			if ((host as any).isFieldBeingEdited && typeof (host as any).isFieldBeingEdited === 'function' && (host as any).isFieldBeingEdited(fieldName)) {
+				return;
+			}
+
 			const nuevoValor = changes[fieldName];
 			const valorAnterior = host.datos[fieldName];
+			console.debug('[SectionReactiveSync] handleReactiveChanges', { section: host.seccionId, fieldName, nuevoValor, valorAnterior });
 
 			if (Array.isArray(nuevoValor)) {
-				const nuevoArray = nuevoValor.map(item => (typeof item === 'object' && item !== null ? { ...item } : item));
-
+				// Normalizar array y comparar contenido
+				const nuevoArray = nuevoValor.map((item: any) => (typeof item === 'object' && item !== null ? { ...item } : item));
 				const contenidoAnterior = JSON.stringify(valorAnterior);
 				const contenidoNuevo = JSON.stringify(nuevoArray);
 
 				if (contenidoAnterior !== contenidoNuevo) {
 					host.datos[fieldName] = nuevoArray;
-					host.datosAnteriores[fieldName] = nuevoArray.map(item => (typeof item === 'object' && item !== null ? { ...item } : item));
+					host.datosAnteriores[fieldName] = nuevoArray.map((item: any) => (typeof item === 'object' && item !== null ? { ...item } : item));
 					hayCambiosReales = true;
 
 					if (prefijo && fieldName.endsWith(prefijo)) {
 						const campoBase = fieldName.replace(prefijo, '');
-						host.datos[campoBase] = nuevoArray.map(item => (typeof item === 'object' && item !== null ? { ...item } : item));
+						host.datos[campoBase] = nuevoArray.map((item: any) => (typeof item === 'object' && item !== null ? { ...item } : item));
 					}
 				}
 			} else {

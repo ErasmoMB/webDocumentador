@@ -46,6 +46,7 @@ export class TableManagementFacade {
     value: any,
     autoCalcular: boolean = true
   ): void {
+    // No logging ruidoso por defecto aquí. Use debugLog para trazas detalladas si es necesario.
     debugLog('[PORCENTAJES] 🔄 actualizarFila() llamado', {
       tablaKey: config.tablaKey,
       index,
@@ -104,6 +105,19 @@ export class TableManagementFacade {
 
   calcularTotalesYPorcentajes(datos: any, config: TableConfig): void {
     this.calculation.calcularTotalesYPorcentajes(datos, config);
+  }
+
+  /**
+   * Cálculo especializado para tablas que tienen columnas Hombres / Mujeres / Casos
+   * - Casos = Hombres + Mujeres
+   * - %Hombres = Hombres / totalHombres
+   * - %Mujeres = Mujeres / totalMujeres
+   * - %Casos = Casos / totalCasos (ajustado para sumar 100)
+   */
+  calcularPorcentajesPorSexo(datos: any, config: TableConfig): void {
+    if (typeof this.calculation.calcularPorcentajesPorSexo === 'function') {
+      (this.calculation as any).calcularPorcentajesPorSexo(datos, config);
+    }
   }
 
   obtenerValorDeTabla(

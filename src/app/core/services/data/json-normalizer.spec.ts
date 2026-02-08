@@ -207,7 +207,10 @@ describe('JSON Normalizer - Format A', () => {
 
       expect(result.format).toBe('A');
       expect(result.ccppList.length).toBe(3);
-      expect(result.rawData.length).toBe(3);
+      // groups ahora contiene solo AISD (default group)
+      expect(result.groups.length).toBe(1);
+      // AISI separados (no hay AISI cuando solo se pasa array)
+      expect(result.aisiGroups.length).toBe(0);
     });
 
     it('should create one default group with all CCPP', () => {
@@ -389,6 +392,7 @@ describe('JSON Normalizer - Command Generation', () => {
         format: 'A',
         ccppList: [],
         groups: [],
+        aisiGroups: [],
         ubicacion: { departamento: '', provincia: '', distrito: '' },
         rawData: []
       };
@@ -519,6 +523,7 @@ describe('JSON Normalizer - Validation', () => {
       const stats = getJSONStats(result);
 
       expect(stats.totalCCPP).toBe(4);
+      // totalGroups mantiene conteo de AISD (compatibilidad con tests previos)
       expect(stats.totalGroups).toBe(2);
       expect(stats.format).toBe('B');
     });

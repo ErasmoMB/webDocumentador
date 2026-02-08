@@ -1,3 +1,5 @@
+import { debugLog, debugWarn, debugError } from './debug';
+
 export class ViewChildHelper {
   private static componentMap = new Map<string, any>();
   private static isUpdating = false;
@@ -13,25 +15,26 @@ export class ViewChildHelper {
   }
 
   static updateAllComponents(method: string): void {
-    // updateAllComponents called with method logged
     // Guard against recursive calls to prevent stack overflow
     if (this.isUpdating) {
       return;
     }
-    
+
     this.isUpdating = true;
     try {
       this.componentMap.forEach((component, id) => {
-        // calling method on component logged
-        if (component && typeof component[method] === 'function') {
+        if (!component) return;
+
+        // Call the requested method if present
+        if (typeof component[method] === 'function') {
           try {
             component[method]();
           } catch (error) {
-            console.error('[ViewChildHelper] Error calling', method, 'on', id, ':', error);
+            debugError('[ViewChildHelper] Error calling', method, 'on', id, ':', error);
           }
-        } else {
-          console.warn('[ViewChildHelper] Component', id, 'does not have method', method);
         }
+        // Eliminado: cargarFotografias() y markForCheck() 
+        // Los componentes ahora manejan su propia detección de cambios
       });
     } finally {
       this.isUpdating = false;

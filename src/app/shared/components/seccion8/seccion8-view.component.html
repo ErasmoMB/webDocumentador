@@ -1,0 +1,147 @@
+<h5>A.1.4. Actividades económicas de la población</h5>
+<p class="text-justify" [innerHTML]="obtenerTextoActividadesEconomicasConResaltado()"></p>
+<p class="text-justify">{{ obtenerTextoFuentesActividadesEconomicas() }}</p>
+
+<app-table-wrapper [title]="obtenerTituloPEA()" sectionId="3.1.4.A.1.4">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Casos</th>
+        <th class="table-header">Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of getPEAOcupacionesConPorcentajes()" [class.total-row]="item.categoria === 'Total'">
+        <td class="table-cell">
+          <span *ngIf="item.categoria && item.categoria !== '____'">
+            <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
+            <span *ngIf="item.categoria !== 'Total'" [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria }}</span>
+          </span>
+          <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+        </td>
+        <td class="table-cell">
+          <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="item.categoria === 'Total' ? 'calculated' : 'backend'" [fieldName]="'casos'">
+            <strong *ngIf="item.categoria === 'Total'">{{ item.casos | number:'1.0-0' }}</strong>
+            <span *ngIf="item.categoria !== 'Total'">{{ item.casos | number:'1.0-0' }}</span>
+          </span>
+          <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+        </td>
+        <td class="table-cell">
+          <span *ngIf="item.porcentaje" [appDataSource]="'calculated'">
+            <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
+            <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
+          </span>
+          <span *ngIf="!item.porcentaje">____</span>
+        </td>
+      </tr>
+      <tr *ngIf="getPEAOcupacionesConPorcentajes().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+<p class="source">Fuente: {{ datos['cuadroFuentePEA'] || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú' }}</p>
+
+<p class="text-justify" [innerHTML]="obtenerTextoAnalisisCuadro310ConResaltado()"></p>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Ganadería</strong></p>
+<div class="text-justify" [innerHTML]="obtenerTextoSeccion8GanaderiaCompletoConResaltado()"></div>
+
+<app-table-wrapper [title]="obtenerTituloGanaderia()" sectionId="3.1.4.A.1.4">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Especie</th>
+        <th class="table-header">Cantidad promedio por familia</th>
+        <th class="table-header">Venta por unidad</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of (poblacionPecuariaSignal() || [])">
+        <td class="table-cell"><span *ngIf="item.especie && item.especie !== '____'" [appDataSource]="'manual'" [fieldName]="'especie'">{{ item.especie }}</span><span *ngIf="!item.especie || item.especie === '____'">____</span></td>
+        <td class="table-cell"><span *ngIf="item.cantidadPromedio && item.cantidadPromedio !== '____'" [appDataSource]="'manual'" [fieldName]="'cantidadPromedio'">{{ item.cantidadPromedio }}</span><span *ngIf="!item.cantidadPromedio || item.cantidadPromedio === '____'">____</span></td>
+        <td class="table-cell"><span *ngIf="item.ventaUnidad && item.ventaUnidad !== '____'" [appDataSource]="'manual'" [fieldName]="'ventaUnidad'">{{ formatearMoneda(item.ventaUnidad) }}</span><span *ngIf="!item.ventaUnidad || item.ventaUnidad === '____'">____</span></td>
+      </tr>
+      <tr *ngIf="!poblacionPecuariaSignal() || poblacionPecuariaSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+      <tr *ngIf="(poblacionPecuariaSignal() || []).length > 0" [class.total-row]="true">
+        <td class="table-cell"><strong>Total</strong></td>
+        <td class="table-cell"><strong>{{ calcularTotalCantidadPecuaria() }}</strong></td>
+        <td class="table-cell"><strong>{{ formatearMoneda(calcularTotalVentaPecuaria()) }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+<p class="source">Fuente: {{ datos['cuadroFuentePoblacionPecuaria'] || 'GEADES (2024)' }}</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasGanaderiaVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_GANADERIA"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Agricultura</strong></p>
+<div class="text-justify" [innerHTML]="obtenerTextoSeccion8AgriculturaCompletoConResaltado()"></div>
+
+<app-table-wrapper [title]="obtenerTituloAgricultura()" sectionId="3.1.4.A.1.4">
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th class="table-header">Categoría</th>
+        <th class="table-header">Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of (caracteristicasAgriculturaSignal() || [])">
+        <td class="table-cell"><span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span><span *ngIf="!item.categoria || item.categoria === '____'">____</span></td>
+        <td class="table-cell"><span *ngIf="item.detalle && item.detalle !== '____'" [appDataSource]="'manual'" [fieldName]="'detalle'">{{ item.detalle }}</span><span *ngIf="!item.detalle || item.detalle === '____'">____</span></td>
+      </tr>
+      <tr *ngIf="!caracteristicasAgriculturaSignal() || caracteristicasAgriculturaSignal().length === 0">
+        <td class="table-cell">____</td>
+        <td class="table-cell">____</td>
+      </tr>
+    </tbody>
+  </table>
+</app-table-wrapper>
+<p class="source">Fuente: {{ datos['cuadroFuenteCaracteristicasAgricultura'] || 'GEADES (2024)' }}</p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasAgriculturaVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Mercado y comercialización de productos</strong></p>
+<p class="text-justify" [innerHTML]="obtenerTextoMercadoComercializacion1ConResaltado()"></p>
+<p class="text-justify" [innerHTML]="obtenerTextoMercadoComercializacion2ConResaltado()"></p>
+
+<app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="getFotografiasComercioVista()"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX_COMERCIO"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+</app-image-upload>
+
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Hábitos de consumo</strong></p>
+<p class="text-justify" [innerHTML]="obtenerTextoHabitosConsumo1ConResaltado()"></p>
+<p class="text-justify" [innerHTML]="obtenerTextoHabitosConsumo2ConResaltado()"></p>

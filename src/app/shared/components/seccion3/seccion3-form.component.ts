@@ -61,8 +61,8 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
     });
 
     this.entrevistadosSignal = computed(() => {
-      // ✅ Usar selectTableData() para obtener datos de tabla (no selectField())
-      const value = this.projectFacade.selectTableData(this.seccionId, null, 'entrevistados')();
+      // ✅ Usar selectField() como fuentesSecundariasLista para consistencia
+      const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
       return Array.isArray(value) ? value : [];
     });
 
@@ -96,6 +96,10 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // ✅ CRÍTICO: Restaurar datos desde localStorage cuando se inicializa
+    console.log(`🔄 [Seccion3FormComponent] ngOnInit() - Restaurando datos desde localStorage`);
+    this.formChange.restoreSectionState(this.seccionId, this.formData);
+    this.cdRef.markForCheck();
   }
 
   ngOnDestroy() {

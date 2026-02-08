@@ -16,6 +16,9 @@ export class FormChangeService {
   private _formularioService: FormularioService | null = null;
   private _projectFacade: ProjectStateFacade | null = null;
 
+  private saveDebounceMs = 200;
+  private saveTimeouts = new Map<string, any>();
+
   constructor(
     private injector: Injector,
     private formState: FormStateService,
@@ -83,6 +86,7 @@ export class FormChangeService {
     if (!updates || Object.keys(updates).length === 0) return;
 
     const opts = this.resolvePersistOptions(options);
+    // No logging por defecto para persistFields (demasiado ruidoso en producción)
 
     // 1. Actualizar FormularioService (fuente de verdad)
     if (opts.updateLegacy) {
@@ -99,6 +103,18 @@ export class FormChangeService {
       });
     }
 
+    // 2b. También sincronizar inmediatamente con ProjectStateFacade (store) para
+    // asegurar que las vistas que dependen de selectField()/selectSectionFields()
+    // reevalúen de forma inmediata sin requerir recarga manual.
+    const facadeImmediateSync = this.projectFacade;
+    if (facadeImmediateSync && opts.updateState) {
+      try {
+        facadeImmediateSync.setFields(resolvedSectionId, null, updates);
+      } catch (e) {
+        console.warn('[FormChangeService] Error setting fields in ProjectStateFacade', e);
+      }
+    }
+
     // 2b. Actualizar store (ProjectStateFacade) para que la vista y cuadros reflejen los datos
     const facade = this.projectFacade;
     if (facade && Object.keys(updates).length > 0) {
@@ -108,37 +124,58 @@ export class FormChangeService {
         Object.keys(updates).forEach(tableKey => {
           const value = updates[tableKey];
           if (Array.isArray(value)) {
-            // ✅ Usar setTableData() para tablas
+            // Persistir en la tabla del store
             facade.setTableData(resolvedSectionId, null, tableKey, value);
-          } else {
-            // Fallback: si no es array, usar setField()
-            facade.setField(resolvedSectionId, null, tableKey, value);
+
+            // Además sincronizar el campo legacy (sin prefijo y con prefijo) para compatibilidad
+            try {
+              // Guardar también como campo para que selectField() devuelva datos consistentes
+              facade.setField(resolvedSectionId, null, tableKey, value);
+              const prefixed = require('src/app/shared/utils/prefix-manager').PrefixManager.getFieldKey(resolvedSectionId, tableKey);
+              if (prefixed && prefixed !== tableKey) {
+                facade.setField(resolvedSectionId, null, prefixed, value);
+              }
+            } catch (e) {
+              // Si algo falla, no romper la persistencia de tablas
+              console.warn('[FormChangeService] Error sincronizando campos legacy para tabla', tableKey, e);
+            }
           }
         });
-      } else {
-        // Para campos normales, usar setFields()
-        facade.setFields(resolvedSectionId, null, updates);
+      }
+
+      // Notificar a SectionSyncService inmediatamente si se solicita (notifySync)
+      try {
+        if (opts.notifySync && this.sectionSync) {
+          this.sectionSync.notifyChanges(resolvedSectionId, updates);
+        }
+      } catch (e) {
+        console.warn('[FormChangeService] Error notifying SectionSyncService', e);
       }
     }
 
-    // 3. Notificar a SectionSyncService para actualización inmediata
-    if (opts.notifySync) {
-      this.sectionSync.notifyChanges(resolvedSectionId, updates);
-    }
-
-    // 4. Persistir estado
     if (opts.persist && opts.updateState) {
-      const sectionState = this.formState.getFormSnapshot()[resolvedSectionId];
-      if (sectionState) {
-        this.formPersistence.saveSectionState(resolvedSectionId, sectionState);
+      const sectionIdToSave = resolvedSectionId;
+      if (this.saveTimeouts.has(sectionIdToSave)) {
+        clearTimeout(this.saveTimeouts.get(sectionIdToSave));
       }
+      this.saveTimeouts.set(sectionIdToSave, setTimeout(() => {
+        const snapshot = this.formState.getFormSnapshot();
+        const sectionStateNow = snapshot[sectionIdToSave];
+        if (sectionStateNow) {
+          this.formPersistence.saveSectionState(sectionIdToSave, sectionStateNow);
+        }
+        this.saveTimeouts.delete(sectionIdToSave);
+      }, this.saveDebounceMs));
     }
   }
 
   restoreSectionState(sectionId: string | undefined, currentData: Record<string, any>): void {
     const resolvedSectionId = sectionId || 'global';
     const saved = this.formPersistence.loadSectionState(resolvedSectionId);
-    if (!saved) return;
+
+    if (!saved) {
+      return;
+    }
 
     const updates: Record<string, any> = {};
     Object.keys(saved).forEach(groupId => {
@@ -157,6 +194,12 @@ export class FormChangeService {
       const formularioService = this.formularioService;
       if (formularioService) {
         formularioService.actualizarDatos(updates as any);
+      }
+
+      // ✅ CRÍTICO: También actualizar ProjectStateFacade
+      const facade = this.projectFacade;
+      if (facade) {
+        facade.setFields(resolvedSectionId, null, updates);
       }
     }
 

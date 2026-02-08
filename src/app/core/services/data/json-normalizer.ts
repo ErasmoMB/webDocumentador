@@ -81,7 +81,14 @@ export interface NormalizedUbicacion {
 export interface NormalizedJSONResult {
   readonly format: 'A' | 'B' | 'unknown';
   readonly ccppList: readonly NormalizedCCPP[];
+  /**
+   * Grupos AISD (comunidades) — preservamos compatibilidad: `groups` sólo contiene AISD
+   */
   readonly groups: readonly NormalizedGroup[];
+  /**
+   * Grupos AISI (distritos) si aplica — separados para evitar confusión en tests y flujo
+   */
+  readonly aisiGroups: readonly NormalizedGroup[];
   readonly ubicacion: NormalizedUbicacion;
   readonly rawData: readonly CentroPobladoData[];
 }
@@ -213,6 +220,7 @@ export function normalizeFormatA(jsonArray: CentroPobladoData[]): NormalizedJSON
     format: 'A',
     ccppList: normalizedCCPP,
     groups,
+    aisiGroups: [],
     ubicacion,
     rawData: jsonArray
   };
@@ -278,7 +286,7 @@ export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>
       ccppIds: normalizedGroupCCPP.map(c => c.codigo) // ✅ Usar codigo, no id
     });
     
-    // Agrupar CCPP por distrito para crear grupos AISI
+      // Agrupar CCPP por distrito para crear grupos AISI
     normalizedGroupCCPP.forEach(ccpp => {
       const districtName = ccpp.dist || 'Sin Distrito';
       if (!ccppIdsByDistrict[districtName]) {
@@ -288,10 +296,11 @@ export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>
     });
   });
   
-  // Crear grupos AISI (distritos únicos)
+  // Crear grupos AISI (distritos únicos) — los colocamos en aisiGroups, no en `groups`
   let aisiIndex = 0;
+  const aisiGroups: NormalizedGroup[] = [];
   Object.entries(ccppIdsByDistrict).forEach(([districtName, ccppIds]) => {
-    groups.push({
+    aisiGroups.push({
       id: generateGroupId('AISI', districtName, aisiIndex),
       nombre: districtName,
       tipo: 'AISI',
@@ -305,7 +314,8 @@ export function normalizeFormatB(jsonObject: Record<string, CentroPobladoData[]>
   return {
     format: 'B',
     ccppList: allCCPP,
-    groups,
+    groups, // AISD solamente
+    aisiGroups,
     ubicacion,
     rawData
   };
@@ -334,6 +344,7 @@ export function normalizeJSON(json: unknown): NormalizedJSONResult {
         format: 'unknown',
         ccppList: [],
         groups: [],
+        aisiGroups: [],
         ubicacion: { departamento: '', provincia: '', distrito: '' },
         rawData: []
       };
@@ -382,7 +393,8 @@ export function createRegisterCCPPCommand(result: NormalizedJSONResult): Registe
  * Crea AddGroupCommands desde el resultado normalizado
  */
 export function createGroupCommands(result: NormalizedJSONResult): AddGroupCommand[] {
-  const commands = result.groups.map(group => ({
+  // Por compatibilidad, crear comandos SOLO para AISD (result.groups contiene AISD)
+  const commands = result.groups.filter(g => g.tipo === 'AISD').map(group => ({
     type: 'groupConfig/addGroup' as const,
     payload: {
       tipo: group.tipo,

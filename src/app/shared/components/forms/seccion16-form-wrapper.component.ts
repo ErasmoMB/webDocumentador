@@ -1,8 +1,8 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion16Component } from '../seccion16/seccion16.component';
+import { Seccion16FormComponent } from '../seccion16/seccion16-form.component';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
@@ -11,13 +11,14 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { Subscription } from 'rxjs';
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion16Component],
+    imports: [CommonModule, FormsModule, CoreSharedModule, Seccion16FormComponent],
     selector: 'app-seccion16-form-wrapper',
     templateUrl: './seccion16-form-wrapper.component.html',
     styleUrls: ['./seccion16-form-wrapper.component.css']
 })
 export class Seccion16FormWrapperComponent implements OnInit, OnDestroy {
   @Input() seccionId: string = '';
+  @ViewChild(Seccion16FormComponent) seccion16FormComponent?: Seccion16FormComponent;
   
   formData: any = {};
   datos: any = {};
@@ -30,8 +31,14 @@ export class Seccion16FormWrapperComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // ✅ Solo cargar datos iniciales, NO suscribirse a cambios
-    // El formulario ES la fuente de los cambios, no debe reaccionar a ellos
+    // ✅ Registrar el componente interno en ViewChildHelper después del primer ciclo de detección
+    setTimeout(() => {
+      if (this.seccion16FormComponent) {
+        ViewChildHelper.registerComponent('seccion16', this.seccion16FormComponent);
+      }
+    }, 0);
+    
+    // Solo cargar datos iniciales, NO suscribirse a cambios
     this.actualizarDatos();
   }
 
@@ -57,18 +64,10 @@ export class Seccion16FormWrapperComponent implements OnInit, OnDestroy {
   }
 
   obtenerTextoSeccion16AguaCompleto(): string {
-    const component = ViewChildHelper.getComponent('seccion16');
-    if (component && component['obtenerTextoSeccion16AguaCompleto']) {
-      return component['obtenerTextoSeccion16AguaCompleto']();
-    }
-    return '';
+    return this.seccion16FormComponent?.obtenerTextoAguaCompleto() ?? '';
   }
 
   obtenerTextoSeccion16RecursosNaturalesCompleto(): string {
-    const component = ViewChildHelper.getComponent('seccion16');
-    if (component && component['obtenerTextoSeccion16RecursosNaturalesCompleto']) {
-      return component['obtenerTextoSeccion16RecursosNaturalesCompleto']();
-    }
-    return '';
+    return this.seccion16FormComponent?.obtenerTextoRecursosNaturalesCompleto() ?? '';
   }
 }

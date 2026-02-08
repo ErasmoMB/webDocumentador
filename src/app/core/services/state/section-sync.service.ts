@@ -100,6 +100,7 @@ export class SectionSyncService {
 
     // También suscribirse a cambios notificados directamente (más inmediato)
     const changeSubscription = this.changes$.pipe(
+      debounceTime(50),
       map(notification => {
         if (notification.sectionId !== sectionId) return null;
         
@@ -166,6 +167,7 @@ export class SectionSyncService {
    * Notifica cambios manualmente (usado por FormChangeService)
    */
   notifyChanges(sectionId: string, changes: Record<string, any>): void {
+    // Notificar cambios internamente sin logging ruidoso por defecto
     this.changeNotifier.next({ sectionId, changes });
   }
 

@@ -21,11 +21,7 @@ export class Seccion8TableConfigService {
       campoPorcentaje: 'porcentaje',
       calcularPorcentajes: true,
       camposParaCalcular: ['casos'],
-      estructuraInicial: [
-        { categoria: 'Trabajador independiente', casos: 0 },
-        { categoria: 'Empleado', casos: 0 },
-        { categoria: 'Obrero', casos: 0 }
-      ]
+      estructuraInicial: [] // ✅ Tabla vacía por defecto
     };
   }
 
@@ -61,12 +57,8 @@ export class Seccion8TableConfigService {
   getTablaPoblacionPecuariaConfig(): TableConfig {
     return {
       tablaKey: 'poblacionPecuariaTabla',
-      totalKey: 'especie',
-      campoTotal: 'especie',
-      campoPorcentaje: 'cantidadPromedio',
-      estructuraInicial: [
-        { especie: '', cantidadPromedio: '', ventaUnidad: '' }
-      ]
+      totalKey: '',
+      estructuraInicial: [] // ✅ Tabla vacía por defecto
     };
   }
 
@@ -102,12 +94,8 @@ export class Seccion8TableConfigService {
   getTablaCaracteristicasAgriculturaConfig(): TableConfig {
     return {
       tablaKey: 'caracteristicasAgriculturaTabla',
-      totalKey: 'categoria',
-      campoTotal: 'categoria',
-      campoPorcentaje: 'detalle',
-      estructuraInicial: [
-        { categoria: '', detalle: '' }
-      ]
+      totalKey: '',
+      estructuraInicial: [] // ✅ Tabla vacía por defecto
     };
   }
 

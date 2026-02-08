@@ -1,13 +1,11 @@
-import { Component, Input, ChangeDetectorRef, OnDestroy, Injector } from '@angular/core';
+import { Component, Input, ChangeDetectorRef, OnDestroy, Injector, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { FotoItem } from '../image-upload/image-upload.component';
+import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
 import { Seccion5DataService } from 'src/app/core/services/domain/seccion5-data.service';
 import { Seccion5TextGeneratorService } from 'src/app/core/services/domain/seccion5-text-generator.service';
-import { Subscription } from 'rxjs';
 
 @Component({
     imports: [
@@ -19,11 +17,12 @@ import { Subscription } from 'rxjs';
 })
 export class Seccion5ViewInternalComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
+  @Input() override modoFormulario: boolean = false;
   
   override readonly PHOTO_PREFIX = 'fotografiaInstitucionalidad';
-  
+  override useReactiveSync: boolean = true;
+
   fotografiasVista: FotoItem[] = [];
-  private stateSubscription?: Subscription;
 
   override watchedFields: string[] = [
     'parrafoSeccion5_institucionalidad',
@@ -39,36 +38,104 @@ export class Seccion5ViewInternalComponent extends BaseSectionComponent implemen
     'grupoAISD_A2'
   ];
 
+  // ✅ SIGNALS: Datos reactivos puros
+  readonly vistDataSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly vistParrafoSignal: Signal<string> = computed(() => {
+    const data = this.vistDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Intentar leer con prefijo primero, luego sin prefijo
+    const fieldKey = `parrafoSeccion5_institucionalidad${prefijo}`;
+    const fieldKeyNoPrefix = 'parrafoSeccion5_institucionalidad';
+    
+    const manual = data[fieldKey] || data[fieldKeyNoPrefix];
+    if (manual && manual.trim().length > 0) return manual;
+    
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.textGenerator.obtenerTextoInstitucionalidad(data, nombreComunidad);
+  });
+
+  readonly vistInstitucionesSignal: Signal<any[]> = computed(() => {
+    const data = this.vistDataSignal();
+    const instituciones = data['institucionesSeccion5'];
+    return Array.isArray(instituciones) ? instituciones : [];
+  });
+
+  // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
+  // Este Signal dispara un effect() que sincroniza cargarFotografias() reactivamente
+  // Siguiendo el patrón de Sección 4 (referencia)
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+      
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
+
+  readonly viewModel: Signal<any> = computed(() => {
+    return {
+      data: this.vistDataSignal(),
+      parrafo: this.vistParrafoSignal(),
+      instituciones: this.vistInstitucionesSignal()
+    };
+  });
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
     public tableCfg: Seccion5TableConfigService,
     private dataSrv: Seccion5DataService,
-    private textGenSrv: Seccion5TextGeneratorService,
-    private stateAdapter: ReactiveStateAdapter
+    private textGenerator: Seccion5TextGeneratorService
   ) {
     super(cdRef, injector);
+
+    // ✅ EFFECT 1: Auto-sync view data changes
+    effect(() => {
+      const data = this.vistDataSignal();
+      this.datos = { ...data };
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
+    // Este efecto replica el patrón de Sección 4 (MODO IDEAL)
+    effect(() => {
+      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
+      this.cargarFotografias();  // Recarga fotografías reactivamente
+      
+      // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasVista
+      // Esto asegura que el template se renderice con las nuevas imágenes
+      this.fotografiasVista = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
   }
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
-    
-    this.stateSubscription = this['stateAdapter'].datos$.subscribe(() => {
-      this.cargarFotografias();
-      this.cdRef.detectChanges();
-    });
+    // ✅ Sincronizar fotografiasVista con fotografiasCache después de cargar
+    this.fotografiasVista = [...this.fotografiasCache];
   }
 
   override ngOnDestroy() {
-    this.stateSubscription?.unsubscribe();
     super.ngOnDestroy();
   }
 
   obtenerParrafoInstitucionalidad(): string {
-    return this.textGenSrv.obtenerTextoInstitucionalidad(
-      this.datos,
-      this.obtenerNombreComunidadActual()
-    );
+    return this.vistParrafoSignal();
+  }
+
+  obtenerSubseccionId(): string {
+    return this.seccionId.split('.').pop() || '1';
   }
 
   get institucionesConfig() {
@@ -81,50 +148,30 @@ export class Seccion5ViewInternalComponent extends BaseSectionComponent implemen
 
   // ✅ Obtiene nombre de comunidad actual (con fallback)
   override obtenerNombreComunidadActual(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
+    const data = this.vistDataSignal();
+    return this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
   }
 
-  obtenerSubseccionId(): string {
-    const index = this.seccionId.includes('.A.1') ? '1' : (this.seccionId.includes('.A.2') ? '2' : '1');
-    return `A.${index}.1`;
-  }
-
-  override cargarFotografias(): void {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    this.fotografiasVista = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX,
-      groupPrefix
-    );
+  // ✅ Override: Simple - dejar que PhotoCoordinator persista las imágenes
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    super.onFotografiasChange(fotografias, customPrefix);
+    this.fotografiasVista = fotografias;
     this.cdRef.markForCheck();
   }
 
   // ✅ Métodos obligatorios de BaseSectionComponent
   protected override detectarCambios(): boolean {
-    const actual = JSON.stringify(this.projectFacade.obtenerDatos());
-    const anterior = JSON.stringify(this.datosAnteriores);
-    if (actual !== anterior) {
-      this.datosAnteriores = JSON.parse(actual);
-      return true;
-    }
-    return false;
+    return false;  // Cambios detectados automáticamente por Signals
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    const prefijo = this.obtenerPrefijoGrupo();
+    // No necesario: Los Signals ya están sincronizados
+  }
 
-    // Siempre intentar obtener valores con prefijo (si existe)
-    this.datos.grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
-    this.datos.tablepagina6 = this.obtenerValorConPrefijo('tablepagina6') || this.datos.tablepagina6;
-    this.datos.parrafoSeccion5_institucionalidad = this.obtenerValorConPrefijo('parrafoSeccion5_institucionalidad') || this.datos.parrafoSeccion5_institucionalidad;
-
-    // Si aún no hay datos en tablepagina6, intentar mapear el arreglo legacy `instituciones` al formato esperado
-    if ((!this.datos.tablepagina6 || !Array.isArray(this.datos.tablepagina6) || this.datos.tablepagina6.length === 0) && Array.isArray(this.datos.instituciones) && this.datos.instituciones.length > 0) {
-      this.datos.tablepagina6 = this.datos.instituciones.map((inst: any) => ({
-        categoria: inst.institucion || inst.categoria || '',
-        respuesta: inst.disponibilidad || inst.respuesta || '',
-        comentario: inst.ubicacion || inst.comentario || inst.nombre || ''
-      }));
-    }
+  protected override actualizarDatosCustom(): void {
+    this.cargarFotografias();
   }
 }
+
+// ✅ Alias para compatibilidad backward (deprecated, usar Seccion5ViewInternalComponent)
+export class Seccion5ViewComponent extends Seccion5ViewInternalComponent {}
