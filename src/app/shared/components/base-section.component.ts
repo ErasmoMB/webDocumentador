@@ -689,6 +689,8 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     const matchAISD = this.seccionId.match(/^3\.1\.4\.A\.(\d+)/);
     const matchAISI = this.seccionId.match(/^3\.1\.4\.B\.(\d+)/);
     
+    console.log(`[DEBUG logGrupoActual] sectionId: ${this.seccionId}, matchAISD: ${!!matchAISD}, matchAISI: ${!!matchAISI}`);
+    
     if (matchAISD) {
       this.logGrupoAISD(parseInt(matchAISD[1], 10));
     } else if (matchAISI) {
@@ -757,7 +759,10 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   private logGrupoAISI(numeroGrupo: number): void {
     const datos = this.projectFacade.obtenerDatos();
+    console.log(`[DEBUG logGrupoAISI] numeroGrupo: ${numeroGrupo}, datos keys: ${Object.keys(datos).join(', ')}`);
+    
     const distritos = datos['distritosAISI'] || [];
+    console.log(`[DEBUG logGrupoAISI] distritos.length: ${distritos.length}, numeroGrupo: ${numeroGrupo}`);
     
     if (distritos.length === 0) {
       console.log('%c⚠️ No hay distritos cargados.', 'color: #f59e0b; font-weight: bold');
@@ -766,7 +771,7 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     
     const distritoActual = distritos[numeroGrupo - 1];
     if (!distritoActual) {
-      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}.`, 'color: #f59e0b; font-weight: bold');
+      console.log(`%c⚠️ No existe distrito B.${numeroGrupo}. distritos.length: ${distritos.length}`, 'color: #f59e0b; font-weight: bold');
       return;
     }
     

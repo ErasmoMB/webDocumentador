@@ -428,6 +428,74 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   actualizarTitulo() {
+    // ✅ Títulos dinámicos para cualquier grupo AISI (B.3, B.4, etc.)
+    const matchAISI = this.seccionId.match(/^3\.1\.4\.B\.(\d+)(?:\.(\d+))?$/);
+    if (matchAISI) {
+      const grupo = matchAISI[1];
+      const subseccion = matchAISI[2];
+      
+      if (!subseccion) {
+        this.seccionTitulo = `B.${grupo} Centro Poblado`;
+      } else {
+        // Títulos para subsecciones AISI
+        const subtitulosAISI: { [key: string]: string } = {
+          '1': 'Aspectos demográficos',
+          '2': 'Indicadores y distribución de la PEA',
+          '3': 'Actividades económicas',
+          '4': 'Vivienda',
+          '5': 'Servicios básicos',
+          '6': 'Infraestructura de transporte y comunicaciones',
+          '7': 'Infraestructura en salud, educación, recreación y deporte',
+          '8': 'Indicadores de salud',
+          '9': 'Indicadores de educación',
+          '10': 'Aspectos culturales',
+          '11': 'Agua, uso de suelos y recursos naturales',
+          '12': 'Índice de Desarrollo Humano (IDH)',
+          '13': 'Necesidades Básicas Insatisfechas (NBI)',
+          '14': 'Organización social y liderazgo',
+          '15': 'Festividades, costumbres y turismo',
+          '16': 'Mapa de actores'
+        };
+        this.seccionTitulo = `B.${grupo}.${subseccion} ${subtitulosAISI[subseccion] || ''}`;
+      }
+      this.obtenerTituloSeccionPadre();
+      return;
+    }
+    
+    // ✅ Títulos dinámicos para cualquier grupo AISD (A.3, A.4, etc.)
+    const matchAISD = this.seccionId.match(/^3\.1\.4\.A\.(\d+)(?:\.(\d+))?$/);
+    if (matchAISD) {
+      const grupo = matchAISD[1];
+      const subseccion = matchAISD[2];
+      
+      if (!subseccion) {
+        this.seccionTitulo = `A.${grupo} Área de Influencia Social Directa`;
+      } else {
+        // Títulos para subsecciones AISD
+        const subtitulosAISD: { [key: string]: string } = {
+          '1': 'Institucionalidad local',
+          '2': 'Aspectos demográficos',
+          '3': 'Aspectos económicos',
+          '4': 'Actividades económicas',
+          '5': 'Viviendas',
+          '6': 'Servicios básicos',
+          '7': 'Transporte y telecomunicaciones',
+          '8': 'Infraestructura en salud, educación, recreación y deporte',
+          '9': 'Indicadores de salud',
+          '10': 'Indicadores de educación',
+          '11': 'Aspectos culturales',
+          '12': 'Agua, uso de suelos y recursos naturales',
+          '13': 'Índice de Desarrollo Humano (IDH)',
+          '14': 'Necesidades Básicas Insatisfechas (NBI)',
+          '15': 'Organización social y liderazgo',
+          '16': 'Festividades y tradiciones'
+        };
+        this.seccionTitulo = `A.${grupo}.${subseccion} ${subtitulosAISD[subseccion] || ''}`;
+      }
+      this.obtenerTituloSeccionPadre();
+      return;
+    }
+    
     const titulos: { [key: string]: string } = {
       '3.1.1': '3.1.1 Objetivos de la línea base social',
       '3.1.2': '3.1.2 Delimitación de las áreas de influencia social',
@@ -506,6 +574,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       '3.1.4.B.2.14': 'B.2.14 Organización social y liderazgo',
       '3.1.4.B.2.15': 'B.2.15 Festividades, costumbres y turismo'
     };
+    
     this.seccionTitulo = titulos[this.seccionId] || 'Sección';
     this.obtenerTituloSeccionPadre();
   }
@@ -616,6 +685,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private resolveComponentId(seccionId: string): string | undefined {
+    // Mapa estático para secciones conocidas
     const componentIdMap: { [key: string]: string } = {
       '3.1.1': 'seccion1',
       '3.1.2': 'seccion2',
@@ -627,74 +697,72 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       '3.1.4.A': 'seccion4',
       '3.1.4.A.1': 'seccion4',
       '3.1.4.A.2': 'seccion4',
-      '3.1.4.A.1.1': 'seccion5',
-      '3.1.4.A.1.2': 'seccion6',
-      '3.1.4.A.1.3': 'seccion7',
-      '3.1.4.A.1.4': 'seccion8',
-      '3.1.4.A.1.5': 'seccion9',
-      '3.1.4.A.1.6': 'seccion10',
-      '3.1.4.A.1.7': 'seccion11',
-      '3.1.4.A.1.8': 'seccion12',
-      '3.1.4.A.1.9': 'seccion13',
-      '3.1.4.A.1.10': 'seccion14',
-      '3.1.4.A.1.11': 'seccion15',
-      '3.1.4.A.1.12': 'seccion16',
-      '3.1.4.A.1.13': 'seccion17',
-      '3.1.4.A.1.14': 'seccion18',
-      '3.1.4.A.1.15': 'seccion19',
-      '3.1.4.A.1.16': 'seccion20',
-      '3.1.4.A.2.1': 'seccion5',
-      '3.1.4.A.2.2': 'seccion6',
-      '3.1.4.A.2.3': 'seccion7',
-      '3.1.4.A.2.4': 'seccion8',
-      '3.1.4.A.2.5': 'seccion9',
-      '3.1.4.A.2.6': 'seccion10',
-      '3.1.4.A.2.7': 'seccion11',
-      '3.1.4.A.2.8': 'seccion12',
-      '3.1.4.A.2.9': 'seccion13',
-      '3.1.4.A.2.10': 'seccion14',
-      '3.1.4.A.2.11': 'seccion15',
-      '3.1.4.A.2.12': 'seccion16',
-      '3.1.4.A.2.13': 'seccion17',
-      '3.1.4.A.2.14': 'seccion18',
-      '3.1.4.A.2.15': 'seccion19',
-      '3.1.4.A.2.16': 'seccion20',
       '3.1.4.B': 'seccion21',
       '3.1.4.B.1': 'seccion21',
-      '3.1.4.B.1.1': 'seccion22',
-      '3.1.4.B.1.2': 'seccion23',
-      '3.1.4.B.1.3': 'seccion24',
-      '3.1.4.B.1.4': 'seccion25',
-      '3.1.4.B.1.5': 'seccion26',
-      '3.1.4.B.1.6': 'seccion27',
-      '3.1.4.B.1.7': 'seccion28',
-      '3.1.4.B.1.8': 'seccion29',
-      '3.1.4.B.1.9': 'seccion30',
-      '3.1.4.B.1.10': 'seccion31',
-      '3.1.4.B.1.11': 'seccion32',
-      '3.1.4.B.1.12': 'seccion33',
-      '3.1.4.B.1.13': 'seccion34',
-      '3.1.4.B.1.14': 'seccion35',
-      '3.1.4.B.1.15': 'seccion36',
-      '3.1.4.B.2': 'seccion21',
-      '3.1.4.B.2.1': 'seccion22',
-      '3.1.4.B.2.2': 'seccion23',
-      '3.1.4.B.2.3': 'seccion24',
-      '3.1.4.B.2.4': 'seccion25',
-      '3.1.4.B.2.5': 'seccion26',
-      '3.1.4.B.2.6': 'seccion27',
-      '3.1.4.B.2.7': 'seccion28',
-      '3.1.4.B.2.8': 'seccion29',
-      '3.1.4.B.2.9': 'seccion30',
-      '3.1.4.B.2.10': 'seccion31',
-      '3.1.4.B.2.11': 'seccion32',
-      '3.1.4.B.2.12': 'seccion33',
-      '3.1.4.B.2.13': 'seccion34',
-      '3.1.4.B.2.14': 'seccion35',
-      '3.1.4.B.2.15': 'seccion36'
+      '3.1.4.B.2': 'seccion21'
     };
-
-    return componentIdMap[seccionId];
+    
+    // Verificar en el mapa estático primero
+    const staticResult = componentIdMap[seccionId];
+    if (staticResult) return staticResult;
+    
+    // ✅ Resolver dinámicamente para AISD (cualquier grupo A.3, A.4, etc.)
+    if (seccionId.startsWith('3.1.4.A.')) {
+      const match = seccionId.match(/^3\.1\.4\.A\.(\d+)(?:\.(\d+))?$/);
+      if (match) {
+        const grupo = parseInt(match[1], 10);
+        const subseccion = match[2] ? parseInt(match[2], 10) : null;
+        
+        if (!subseccion) {
+          return 'seccion4'; // Raíz del grupo AISI (sección 4)
+        }
+        
+        // Mapeo de subsecciones para cualquier grupo AISD
+        const subseccionMap: { [key: number]: string } = {
+          1: 'seccion5', 2: 'seccion6', 3: 'seccion7', 4: 'seccion8',
+          5: 'seccion9', 6: 'seccion10', 7: 'seccion11', 8: 'seccion12',
+          9: 'seccion13', 10: 'seccion14', 11: 'seccion15', 12: 'seccion16',
+          13: 'seccion17', 14: 'seccion18', 15: 'seccion19', 16: 'seccion20'
+        };
+        return subseccionMap[subseccion] || 'seccion4';
+      }
+    }
+    
+    // ✅ Resolver dinámicamente para AISI (cualquier grupo B.3, B.4, etc.)
+    if (seccionId.startsWith('3.1.4.B.')) {
+      const match = seccionId.match(/^3\.1\.4\.B\.(\d+)(?:\.(\d+))?$/);
+      if (match) {
+        const grupo = parseInt(match[1], 10);
+        const subseccion = match[2] ? parseInt(match[2], 10) : null;
+        
+        if (!subseccion) {
+          return 'seccion21'; // Raíz del grupo AISI
+        }
+        
+        // Mapeo de subsecciones para cualquier grupo AISI (1-9)
+        const subseccionMap: { [key: number]: string } = {
+          1: 'seccion22', 2: 'seccion23', 3: 'seccion24', 4: 'seccion25',
+          5: 'seccion26', 6: 'seccion27', 7: 'seccion28', 8: 'seccion29', 9: 'seccion30',
+          10: 'seccion31', 11: 'seccion32', 12: 'seccion33', 13: 'seccion34',
+          14: 'seccion35', 15: 'seccion36'
+        };
+        return subseccionMap[subseccion] || 'seccion21';
+      }
+    }
+    
+    // Manejo legacy para subsecciones estáticas de B.1 y B.2
+    if (seccionId.startsWith('3.1.4.B.1.') || seccionId.startsWith('3.1.4.B.2.')) {
+      const subseccion = parseInt(seccionId.split('.').pop() || '0', 10);
+      const subseccionMap: { [key: number]: string } = {
+        1: 'seccion22', 2: 'seccion23', 3: 'seccion24', 4: 'seccion25',
+        5: 'seccion26', 6: 'seccion27', 7: 'seccion28', 8: 'seccion29', 9: 'seccion30',
+        10: 'seccion31', 11: 'seccion32', 12: 'seccion33', 13: 'seccion34',
+        14: 'seccion35', 15: 'seccion36'
+      };
+      return subseccionMap[subseccion] || 'seccion21';
+    }
+    
+    return undefined;
   }
 
   private resolveFormRenderer(seccionId: string | undefined | null): { loader: ComponentLoader; inputs: { [key: string]: any } } | null {
@@ -726,6 +794,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders['seccion2FormWrapper'], inputs: withSeccionId },
       { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders['seccion3Form'], inputs: withSeccionId },
       { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders['seccion21FormWrapper'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B (B.3, B.4, etc.)
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+$/), loader: this.componentLoaders['seccion21FormWrapper'], inputs: withModoFormulario },
       { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders['seccion4FormWrapper'], inputs: withSeccionId },
 
       { matches: aisd(1), loader: this.componentLoaders['seccion5'], inputs: withModoFormulario },
@@ -746,14 +816,40 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: aisd(16), loader: this.componentLoaders['seccion20FormWrapper'], inputs: withModoFormulario },
 
       { matches: eq('3.1.4.B.1.1', '3.1.4.B.2.1'), loader: this.componentLoaders['seccion22'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B (B.3, B.4, etc.)
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.1$/), loader: this.componentLoaders['seccion22'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.2', '3.1.4.B.2.2'), loader: this.componentLoaders['seccion23'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.2$/), loader: this.componentLoaders['seccion23'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.3', '3.1.4.B.2.3'), loader: this.componentLoaders['seccion24'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.3$/), loader: this.componentLoaders['seccion24'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.4', '3.1.4.B.2.4'), loader: this.componentLoaders['seccion25Form'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.4$/), loader: this.componentLoaders['seccion25Form'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.5', '3.1.4.B.2.5'), loader: this.componentLoaders['seccion26Form'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.5$/), loader: this.componentLoaders['seccion26Form'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.6', '3.1.4.B.2.6'), loader: this.componentLoaders['seccion27Form'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.6$/), loader: this.componentLoaders['seccion27Form'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.7', '3.1.4.B.2.7'), loader: this.componentLoaders['seccion28Form'], inputs: withModoFormulario },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.7$/), loader: this.componentLoaders['seccion28Form'], inputs: withModoFormulario },
+      
       { matches: eq('3.1.4.B.1.8', '3.1.4.B.2.8'), loader: this.componentLoaders['seccion29FormWrapper'], inputs: withModoFormulario },
-      { matches: eq('3.1.4.B.1.9', '3.1.4.B.2.9'), loader: this.componentLoaders['seccion30FormWrapper'], inputs: withSeccionId }
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.8$/), loader: this.componentLoaders['seccion29FormWrapper'], inputs: withModoFormulario },
+      
+      { matches: eq('3.1.4.B.1.9', '3.1.4.B.2.9'), loader: this.componentLoaders['seccion30FormWrapper'], inputs: withSeccionId },
+      // ✅ AISI dinámico: cualquier grupo B
+      { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+\.9$/), loader: this.componentLoaders['seccion30FormWrapper'], inputs: withSeccionId }
     ];
   }
 

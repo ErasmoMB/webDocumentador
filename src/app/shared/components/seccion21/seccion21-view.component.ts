@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion21-view',
@@ -16,8 +17,45 @@ import { BaseSectionComponent } from '../base-section.component';
 export class Seccion21ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B';
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuacho';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
+
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private sanitizer: DomSanitizer) {
+    super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    effect(() => {
+      const data = this.formDataSignal();
+      // Solo actualizar si hay datos disponibles
+      if (!data || Object.keys(data).length === 0) {
+        this.cdRef.markForCheck();
+        return;
+      }
+      const prefijo = this.obtenerPrefijoGrupo();
+      const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+      const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+      const tituloTablaKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
+      
+      const tablas: Record<string, any> = {};
+      tablas[tablaKey] = this.ubicacionCpSignal();
+      tablas['ubicacionCpTabla'] = tablas[tablaKey]; // Para compatibilidad
+      tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
+      tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
+      tablas[tituloTablaKey] = PrefijoHelper.obtenerValorConPrefijo(data, 'cuadroTituloUbicacionCp', this.seccionId) || `Ubicación referencial – Centro Poblado ${tablas[centroConPrefijo]}`;
+      
+      this.datos = { ...data, ...tablas };
+      this.cdRef.markForCheck();
+    });
+
+    effect(() => {
+      this.photoFieldsHash();
+      this.fotosCacheSignal();
+      this.cdRef.markForCheck();
+    });
+  }
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
@@ -26,7 +64,8 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_aisi_intro_completo')();
     if (manual && manual.trim().length > 0) return manual;
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const data = this.formDataSignal();
+    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
     const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
     const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
     return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
@@ -35,7 +74,8 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_centro_poblado_completo')();
     if (manual && manual.trim().length > 0) return manual;
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const data = this.formDataSignal();
+    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
     const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
     const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
     const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '8004';
@@ -46,7 +86,7 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     const origen2 = this.projectFacade.selectField(this.seccionId, null, 'origenPobladores2')() || 'Parinacochas';
     const deptoOrigen = this.projectFacade.selectField(this.seccionId, null, 'departamentoOrigen')() || 'Ayacucho';
     const anexos = this.projectFacade.selectField(this.seccionId, null, 'anexosEjemplo')() || 'Ayroca o Sóndor';
-    return `El CP ${centro} es la capital del distrito homónimo, perteneciente a la provincia de ${provincia}, en el departamento de ${departamento}. Su designación como capital distrital se oficializó mediante la Ley N°${ley}, promulgada el ${fecha}, fecha en que se creó el distrito de ${distrito}. Antes de ello, este asentamiento era un caserío del distrito de ${distritoAnterior}, marcando un importante cambio en su desarrollo administrativo y social.\n\nLos primeros pobladores de ${centro} provenían principalmente de ${origen1} y la provincia de ${origen2}, en ${deptoOrigen}. Entre las familias pioneras destacan apellidos como Espinoza, Miralles, De la Cruz y Aguayo, quienes sentaron las bases de la localidad actual. El nombre "${centro}" proviene del término quechua Ccahuayhuachu, que se traduce como "mírame desde aquí", reflejando posiblemente su ubicación estratégica o una percepción cultural del entorno.\n\nA diferencia de algunos anexos del distrito, como ${anexos}, que son centros administrativos de sus respectivas comunidades campesinas, el centro poblado ${centro} no se encuentra dentro de los límites de ninguna comunidad campesina. Esto le otorga una característica particular dentro del contexto rural, marcando su identidad como un núcleo urbano-administrativo independiente en el distrito.`;
+    return `El CP ${centro} es la capital del distrito homónimo, perteneciente a la provincia de ${provincia}, en el departamento de ${departamento}. Su designación como capital distrital se oficializó mediante la Ley N°${ley}, promulgada el ${fecha}, fecha en que se creó el distrito de ${distrito}. Antes de ello, este asentamiento era un caserío del distrito de ${distritoAnterior}, marcando un importante cambio en su desarrollo administrativo y social.\n\nLos primeros poblado ${centro} provenían principalmente de ${origen1} y la provincia de ${origen2}, en ${deptoOrigen}. Entre las familias pioneras destacan apellidos como Espinoza, Miralles, De la Cruz y Aguayo, quienes sentaron las bases de la localidad actual. El nombre "${centro}" proviene del término quechua Ccahuayhuachu, que se traduce como "mírame desde aquí", reflejando posiblemente su ubicación estratégica o una percepción cultural del entorno.\n\nA diferencia de algunos anexos del distrito, como ${anexos}, que son centros administrativos de sus respectivas comunidades campesinas, el centro poblado ${centro} no se encuentra dentro de los límites de ninguna comunidad campesina. Esto le otorga una característica particular dentro del contexto rural, marcando su identidad como un núcleo urbano-administrativo independiente en el distrito.`;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -74,8 +114,10 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly ubicacionCpSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'ubicacionCpTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'ubicacionCpTabla')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
   });
 
@@ -85,24 +127,6 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     fotos: this.fotosCacheSignal(),
     ubicacionCp: this.ubicacionCpSignal()
   }));
-
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private sanitizer: DomSanitizer) {
-    super(cdRef, injector);
-
-    effect(() => {
-      const data = this.formDataSignal();
-      const tablas: Record<string, any> = {};
-      tablas['ubicacionCpTabla'] = this.ubicacionCpSignal();
-      this.datos = { ...data, ...tablas };
-      this.cdRef.markForCheck();
-    });
-
-    effect(() => {
-      this.photoFieldsHash();
-      this.fotosCacheSignal();
-      this.cdRef.markForCheck();
-    });
-  }
 
   formatearParrafo(texto: string): SafeHtml {
     if (!texto) return '' as any;
@@ -115,11 +139,48 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    // no-op
+    // Inicializar datos con prefijos correctos
+    const data = this.formDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    const tituloTablaKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
+    
+    const tablas: Record<string, any> = {};
+    tablas[tablaKey] = this.ubicacionCpSignal();
+    tablas['ubicacionCpTabla'] = tablas[tablaKey]; // Para compatibilidad
+    tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
+    tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
+    tablas[tituloTablaKey] = PrefijoHelper.obtenerValorConPrefijo(data, 'cuadroTituloUbicacionCp', this.seccionId) || `Ubicación referencial – Centro Poblado ${tablas[centroConPrefijo]}`;
+    
+    this.datos = { ...data, ...tablas };
   }
 
   protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void { }
+  protected override actualizarValoresConPrefijo(): void {
+    // Agregar valores con prefijos para que la plantilla HTML pueda usarlos
+    const prefijo = this.obtenerPrefijoGrupo();
+    const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    const tituloTablaKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
+    
+    // Asegurar que centroPobladoAISI esté disponible para la plantilla
+    if (!this.datos.centroPobladoAISI || this.datos.centroPobladoAISI === '____') {
+      const centroConPrefijoValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+      if (centroConPrefijoValor && centroConPrefijoValor !== '____') {
+        this.datos.centroPobladoAISI = centroConPrefijoValor;
+      }
+    }
+    
+    // Asegurar que cuadroTituloUbicacionCp esté disponible para la plantilla
+    if (!this.datos['cuadroTituloUbicacionCp'] || this.datos['cuadroTituloUbicacionCp'] === '____') {
+      const tituloConPrefijoValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'cuadroTituloUbicacionCp', this.seccionId);
+      if (tituloConPrefijoValor && tituloConPrefijoValor !== '____') {
+        this.datos['cuadroTituloUbicacionCp'] = tituloConPrefijoValor;
+      } else if (this.datos.centroPobladoAISI && this.datos.centroPobladoAISI !== '____') {
+        this.datos['cuadroTituloUbicacionCp'] = `Ubicación referencial – Centro Poblado ${this.datos.centroPobladoAISI}`;
+      }
+    }
+  }
 
   trackByIndex(index: number): number { return index; }
 }

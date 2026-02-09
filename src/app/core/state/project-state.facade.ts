@@ -35,7 +35,7 @@ import {
   ImageWithGlobalIndex
 } from './section.selectors';
 import { sectionContentReducer, addImageToSection } from './section-content.reducer';
-import { generateInitialSections } from '../utils/section-generator.util';
+import { generateInitialSections, regenerateSectionsForGroupType } from '../utils/section-generator.util';
 import { FormularioService } from '../services/formulario.service';
 import { Injector } from '@angular/core';
 
@@ -180,6 +180,12 @@ export class ProjectStateFacade {
   }
   addGroup(tipo: 'AISD' | 'AISI', nombre: string, parentId: string | null = null): void {
     this.dispatch(Commands.addGroup(tipo, nombre, parentId));
+    // Regenerar secciones del tipo correspondiente
+    if (tipo === 'AISD') {
+      this.regenerateAISDSections();
+    } else {
+      this.regenerateAISISections();
+    }
   }
   removeGroup(tipo: 'AISD' | 'AISI', groupId: string, cascade: boolean = false): void {
     this.dispatch(Commands.removeGroup(tipo, groupId, cascade));
@@ -412,6 +418,30 @@ export class ProjectStateFacade {
     const projectState = this.store.getSnapshot();
     const newSectionsState = generateInitialSections(projectState);
     this._sectionsContent.set(newSectionsState);
+  }
+  
+  /**
+   * Regenera las secciones AISI cuando se agregan nuevos grupos
+   * Debe llamarse después de agregar un grupo AISI
+   */
+  regenerateAISISections(): void {
+    const currentState = this._sectionsContent();
+    const projectState = this.store.getSnapshot();
+    const newSectionsState = regenerateSectionsForGroupType(currentState, projectState, 'AISI');
+    this._sectionsContent.set(newSectionsState);
+    console.log('[AISI] Secciones regeneradas. Total:', newSectionsState.sectionOrder.filter(s => s.startsWith('3.1.4.B')).length);
+  }
+
+  /**
+   * Regenera las secciones AISD cuando se agregan nuevos grupos
+   * Debe llamarse después de agregar un grupo AISD
+   */
+  regenerateAISDSections(): void {
+    const currentState = this._sectionsContent();
+    const projectState = this.store.getSnapshot();
+    const newSectionsState = regenerateSectionsForGroupType(currentState, projectState, 'AISD');
+    this._sectionsContent.set(newSectionsState);
+    console.log('[AISD] Secciones regeneradas. Total:', newSectionsState.sectionOrder.filter(s => s.startsWith('3.1.4.A')).length);
   }
   setActiveSectionContent(sectionId: string): void {
     const command: SectionContentCommand = {

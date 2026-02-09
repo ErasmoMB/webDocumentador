@@ -203,10 +203,8 @@ export class SectionFlowNavigationService {
 
     // Es el primer grupo AISI, retroceder al último grupo AISD
     const aisdGroupCount = this.getAISDGroupCount();
-    console.log('[Navegación] B.1 → Anterior: aisdGroupCount =', aisdGroupCount);
     if (aisdGroupCount > 0) {
       const targetSection = `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
-      console.log('[Navegación] B.1 → Anterior: targetSection =', targetSection);
       return targetSection;
     }
 

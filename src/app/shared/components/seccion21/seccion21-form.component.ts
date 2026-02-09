@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
@@ -17,8 +18,30 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuacho';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
+
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
+    super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    effect(() => {
+      const data = this.formDataSignal();
+      const tablas: Record<string, any> = {};
+      tablas['ubicacionCpTabla'] = this.ubicacionCpSignal();
+      this.datos = { ...data, ...tablas };
+      this.cdRef.markForCheck();
+    });
+
+    effect(() => {
+      this.photoFieldsHash();
+      this.fotosCacheSignal();
+      this.cdRef.markForCheck();
+    });
+  }
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
@@ -27,16 +50,35 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_aisi_intro_completo')();
     if (manual && manual.trim().length > 0) return manual;
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const data = this.formDataSignal();
+    const centro = this.getCentroPobladoAISI() || 'Cahuacho';
     const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
     const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
     return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente.`;
   });
 
+  readonly centroPobladoAisiSignal: Signal<string> = computed(() => {
+    return this.getCentroPobladoAISI() || '____';
+  });
+
+  readonly labelFotografiasSignal: Signal<string> = computed(() => {
+    return `Fotografías de ${this.getCentroPobladoAISI() || '____'}`;
+  });
+
+  readonly tituloDefaultFotoSignal: Signal<string> = computed(() => {
+    return `Centro Poblado ${this.getCentroPobladoAISI() || '____'}`;
+  });
+
+  getCentroPobladoAISI(): string {
+    const data = this.formDataSignal();
+    return PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+  }
+
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_centro_poblado_completo')();
     if (manual && manual.trim().length > 0) return manual;
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const data = this.formDataSignal();
+    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
     const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
     const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
     const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '8004';
@@ -76,8 +118,9 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly ubicacionCpSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'ubicacionCpTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'ubicacionCpTabla')();
+    const tablaKey = this.getTablaKeyUbicacionCp();
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
   });
 
@@ -133,42 +176,24 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     ubicacionCp: this.ubicacionCpSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
-    super(cdRef, injector);
-
-    effect(() => {
-      const data = this.formDataSignal();
-      const tablas: Record<string, any> = {};
-      tablas['ubicacionCpTabla'] = this.ubicacionCpSignal();
-      this.datos = { ...data, ...tablas };
-      this.cdRef.markForCheck();
-    });
-
-    effect(() => {
-      this.photoFieldsHash();
-      this.fotosCacheSignal();
-      this.cdRef.markForCheck();
-    });
-  }
-
   protected override onInitCustom(): void {
-    // 🔍 AGREGAR LOG PARA VERIFICAR GRUPOS AISI
+    // 📋 LOG DEL GRUPO AISI ACTUAL
     this.logGrupoActual();
     
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual (siempre)
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
-    console.log(`[Seccion21] Auto-llenando centroPobladoAISI: "${centroPobladoAISI}"`);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
     
     // Actualizar tanto el objeto local como el store para que el título se actualice
-    this.datos['centroPobladoAISI'] = centroPobladoAISI;
-    this.projectFacade.setField(this.seccionId, null, 'centroPobladoAISI', centroPobladoAISI);
-    this.onFieldChange('centroPobladoAISI', centroPobladoAISI, { refresh: false });
-    try { this.formChange.persistFields(this.seccionId, 'form', { centroPobladoAISI }); } catch (e) {}
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI; // Mantener compatibilidad
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
     
     // 🔍 FORZAR DETECCIÓN DE CAMBIOS PARA ACTUALIZAR EL TÍTULO
     this.cdRef.detectChanges();
-    
-    console.log(`[Seccion21] Título actualizado a: "B.1. Centro Poblado ${centroPobladoAISI}"`);
     
     // Asegurar inicialización de tabla y campos (como en Seccion20)
     const tablaKey = this.getTablaKeyUbicacionCp();
@@ -180,10 +205,11 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     }
 
     // Inicializar Título y Fuente de tabla
-    const tituloField = 'cuadroTituloUbicacionCp';
-    const valorTitulo = `Ubicación referencial – Centro Poblado ${this.datos.centroPobladoAISI || this.datos.informacionReferencialAISI?.centro_poblado || '____'}`;
+    const tituloField = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
+    const valorTitulo = `Ubicación referencial – Centro Poblado ${this.getCentroPobladoAISI() || '____'}`;
     if (!this.datos[tituloField] || this.datos[tituloField] !== valorTitulo) {
       this.datos[tituloField] = valorTitulo;
+      this.datos['cuadroTituloUbicacionCp'] = valorTitulo; // Para compatibilidad
       this.projectFacade.setField(this.seccionId, null, tituloField, valorTitulo);
       this.onFieldChange(tituloField, valorTitulo, { refresh: false });
     }
@@ -259,16 +285,20 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTituloUbicacionChange(valor: string): void {
-    const fieldId = 'cuadroTituloUbicacionCp';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
     this.datos[fieldId] = valor;
+    this.datos['cuadroTituloUbicacionCp'] = valor; // Compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
   onFuenteUbicacionChange(valor: string): void {
-    const fieldId = 'cuadroFuenteUbicacionCp';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroFuenteUbicacionCp${prefijo}` : 'cuadroFuenteUbicacionCp';
     this.datos[fieldId] = valor;
+    this.datos['cuadroFuenteUbicacionCp'] = valor; // Compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();

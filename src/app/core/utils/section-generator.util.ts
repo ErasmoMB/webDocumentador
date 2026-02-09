@@ -108,8 +108,8 @@ function generateAISDSections(
   const newSectionsById = { ...sectionsById };
   const newSectionOrder = [...sectionOrder];
   
-  // ID base para este grupo (a.1, a.2, etc.)
-  const rootId = `a.${groupIndex + 1}`;
+  // ID base para este grupo (3.1.4.A.1, 3.1.4.A.2, etc.)
+  const rootId = `3.1.4.A.${groupIndex + 1}`;
   
   // Crear sección raíz del grupo
   const rootSection = createSection(
@@ -125,7 +125,7 @@ function generateAISDSections(
   newSectionsById[rootId] = rootSection;
   newSectionOrder.push(rootId);
   
-  // Crear subsecciones (a.1.1 a a.1.20)
+  // Crear subsecciones (3.1.4.A.1.1 a 3.1.4.A.1.20)
   for (let i = 0; i < AISD_SUBSECTIONS.length; i++) {
     const subDef = AISD_SUBSECTIONS[i];
     const subId = `${rootId}.${subDef.suffix}`;
@@ -166,8 +166,8 @@ function generateAISISections(
   const newSectionsById = { ...sectionsById };
   const newSectionOrder = [...sectionOrder];
   
-  // ID base para este grupo (b.1, b.2, etc.)
-  const rootId = `b.${groupIndex + 1}`;
+  // ID base para este grupo (3.1.4.B.1, 3.1.4.B.2, etc.)
+  const rootId = `3.1.4.B.${groupIndex + 1}`;
   
   // Crear sección raíz del grupo
   const rootSection = createSection(
@@ -183,7 +183,7 @@ function generateAISISections(
   newSectionsById[rootId] = rootSection;
   newSectionOrder.push(rootId);
   
-  // Crear subsecciones (b.1.1 a b.1.9)
+  // Crear subsecciones (3.1.4.B.1.1 a 3.1.4.B.1.9)
   for (let i = 0; i < AISI_SUBSECTIONS.length; i++) {
     const subDef = AISI_SUBSECTIONS[i];
     const subId = `${rootId}.${subDef.suffix}`;
@@ -275,7 +275,7 @@ export function regenerateSectionsForGroupType(
   groupType: 'AISD' | 'AISI'
 ): SectionsContentState {
   const timestamp = Date.now();
-  const prefix = groupType === 'AISD' ? 'a.' : 'b.';
+  const prefix = groupType === 'AISD' ? '3.1.4.A.' : '3.1.4.B.';
   
   // Filtrar secciones existentes que NO son del tipo a regenerar
   const filteredById: Record<string, Section> = {};

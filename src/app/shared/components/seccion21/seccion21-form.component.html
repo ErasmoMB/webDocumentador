@@ -15,7 +15,7 @@
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">B.1. Centro Poblado {{ datos.centroPobladoAISI || 'Cahuacho' }}</h4>
+      <h4 class="section-title">B.1. Centro Poblado {{ centroPobladoAisiSignal() }}</h4>
 
       <div class="form-group-section mt-md">
         <h4 class="section-title">Editar Párrafos</h4>
@@ -91,7 +91,7 @@
       <div class="form-field mt-lg">
         <div class="form-group" style="margin-bottom: 12px;">
           <label class="label">Título del Cuadro</label>
-          <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloUbicacionCp']" (ngModelChange)="onTituloUbicacionChange($event)" placeholder="Ubicación referencial – Centro Poblado {{ datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____' }}">
+          <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloUbicacionCp']" (ngModelChange)="onTituloUbicacionChange($event)" placeholder="Ubicación referencial – Centro Poblado {{ centroPobladoAisiSignal() }}">
         </div>
 
         <app-dynamic-table
@@ -112,7 +112,7 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Cahuacho</label>
+        <label class="label">{{ labelFotografiasSignal() }}</label>
         <app-image-upload
           [fotografias]="fotosCacheSignal()"
           [sectionId]="seccionId"
@@ -121,9 +121,9 @@
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
           labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Centro Poblado Cahuacho"
+          placeholderTitulo="Ej: {{ tituloDefaultFotoSignal() }}"
           placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Centro Poblado Cahuacho"
+          tituloDefault="{{ tituloDefaultFotoSignal() }}"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">

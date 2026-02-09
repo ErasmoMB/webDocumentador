@@ -105,7 +105,7 @@ export type SectionType = 'STATIC' | 'AISD_ROOT' | 'AISD_SUB' | 'AISI_ROOT' | 'A
  * Definición completa de una sección
  */
 export interface Section {
-  readonly id: string;                          // "2.1", "a.1.1", "b.2.3"
+  readonly id: string;                          // "2.1", "3.1.4.A.1", "3.1.4.B.2.3"
   readonly title: string;                       // "Generalidades"
   readonly sectionType: SectionType;            // Tipo de sección
   readonly groupId: string | null;              // ID del grupo asociado (si aplica)
