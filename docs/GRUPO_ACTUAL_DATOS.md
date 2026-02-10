@@ -38,15 +38,17 @@ Obtiene el prefijo del grupo actual según el `seccionId`.
 
 ```typescript
 /**
- * @returns Prefijo del grupo (ej: 'A.1', 'B.2', 'C.3')
+ * @returns Prefijo del grupo (ej: '_A1', '_B2', '_C3')
  */
 obtenerPrefijoGrupo(): string
 ```
 
 **Ejemplos:**
-- `3.1.4.A.1` → `"A.1"`
-- `3.1.4.B.2` → `"B.2"`
-- `3.1.4.C.3` → `"C.3"`
+- `3.1.4.A.1` → `"_A1"`
+- `3.1.4.B.2` → `"_B2"`
+- `3.1.4.C.3` → `"_C3"`
+
+**Nota:** Este prefijo se usa para aislar los datos entre grupos. Ver [`AISI_GROUPS_ISOLATION.md`](./AISI_GROUPS_ISOLATION.md) para más detalles.
 
 ---
 
@@ -307,4 +309,98 @@ console.log(`[Seccion21] Título actualizado a: "B.1. Centro Poblado ${centroPob
 
 ---
 
-*Última actualización: 8 de febrero de 2026*
+## 🔐 Sistema de Prefijos para Aislamiento de Datos
+
+### Propósito
+
+El sistema de prefijos asegura que los datos de cada grupo AISI (B.1, B.2, B.3, etc.) y AISD (A.1, A.2, etc.) estén completamente aislados, evitando mezclas de información entre grupos.
+
+### Cómo Funciona
+
+```
+ID de sección: 3.1.4.B.1
+Prefijo extraído: _B1
+
+Campos con prefijo:
+- centroPobladoAISI_B1
+- ubicacionCpTabla_B1
+- fotografia_B1
+- cuadroTituloUbicacionCp_B1
+```
+
+### Prefijos por Tipo de Grupo
+
+| Tipo de Grupo | Prefijo | Ejemplo |
+|---------------|---------|---------|
+| AISD (Comunidades Campesinas) | `_A1`, `_A2`, `_A3` | `3.1.4.A.1` → `_A1` |
+| AISI (Distritos) | `_B1`, `_B2`, `_B3` | `3.1.4.B.1` → `_B1` |
+
+### Aislamiento de Datos
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🗺️ GRUPO AISI: B.1 - SAN PEDRO                                │
+│ 📂 URL: seccion/3.1.4.B.1.*                                   │
+│ 📝 Datos guardados con prefijo: _B1                            │
+│                                                                 │
+│   • tablaPoblacion_B1  → tablaPoblacion_B3 (vacío, separado)   │
+│   • parrafos_B1        → parrafos_B3 (vacío, separado)         │
+│   • imagenes_B1        → imagenes_B3 (vacío, separado)         │
+│   • CP: ['0214090010', '0214090059', ...] (47 CP)            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🗺️ GRUPO AISI: B.3 - OTRO DISTRITO                           │
+│ 📂 URL: seccion/3.1.4.B.3.*                                   │
+│ 📝 Datos guardados con prefijo: _B3                            │
+│                                                                 │
+│   • tablaPoblacion_B3  → tablaPoblacion_B1 (vacío, separado)   │
+│   • parrafos_B3        → parrafos_B1 (vacío, separado)         │
+│   • imagenes_B3        → imagenes_B1 (vacío, separado)        │
+│   • CP: [códigos diferentes del B.3]                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Componentes Clave
+
+- **[`PrefijoHelper`](../src/app/shared/utils/prefijo-helper.ts)**: Extrae el prefijo del `sectionId`
+- **[`BaseSectionComponent`](../src/app/shared/components/base-section.component.ts)**: Proporciona métodos para obtener el prefijo
+- **[`GlobalNumberingService`](../src/app/core/services/global-numbering.service.ts)**: Calcula numeración global con prefijos
+
+**Documentación detallada:** Ver [`AISI_GROUPS_ISOLATION.md`](./AISI_GROUPS_ISOLATION.md) para más información.
+
+---
+
+## 🔢 Sistema de Numeración Global
+
+### Propósito
+
+El sistema de numeración global asegura que las imágenes y tablas tengan números consecutivos en todo el documento, sin duplicados.
+
+### Imágenes
+
+```
+Capítulo 3: Línea Base Social
+├── 3.1 - Primera imagen del documento
+├── 3.2 - Segunda imagen del documento
+├── 3.3 - Tercera imagen del documento
+└── 3.N - N-ésima imagen (consecutivo)
+```
+
+### Tablas
+
+```
+Capítulo 3: Línea Base Social
+├── 3.1 - Primera tabla del documento
+├── 3.2 - Segunda tabla del documento
+├── 3.3 - Tercera tabla del documento
+└── 3.N - N-ésima tabla (consecutivo)
+```
+
+**Regla:** No puede existir duplicados. Si una sección tiene imagen 3.5, la siguiente sección continúa con 3.6.
+
+**Implementación:** Ver [`GLOBAL_NUMBERING_IMAGES.md`](./GLOBAL_NUMBERING_IMAGES.md) y [`GLOBAL_NUMBERING_TABLES.md`](./GLOBAL_NUMBERING_TABLES.md) para más detalles.
+
+---
+
+*Última actualización: 10 de febrero de 2026*
