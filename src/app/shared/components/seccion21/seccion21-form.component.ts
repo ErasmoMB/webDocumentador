@@ -377,6 +377,31 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       this.projectFacade.setField(this.seccionId, null, fuenteField, valorFuente);
       this.onFieldChange(fuenteField, valorFuente, { refresh: false });
     }
+
+    // ✅ EFFECT: Detectar cambios en CCPPs del grupo y re-autollar tabla si es necesario
+    effect(() => {
+      const ccppsActuales = this.obtenerCCPPsDelGrupoAISI();
+      const ccppIdsActuales = ccppsActuales.map(cc => cc.id || cc.codigo).sort().join(',');
+      const prefijo = this.obtenerPrefijoGrupo();
+      const tablaKeyPref = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+      const tablaActual = this.projectFacade.selectField(this.seccionId, null, tablaKeyPref)();
+      
+      // Verificar si necesitamos re-autollar
+      const tieneCapitalActual = ccppsActuales.some(cc => 
+        cc.categoria && cc.categoria.toLowerCase().includes('capital')
+      );
+      
+      // Si la tabla está vacía O el CCPP actual ya no es capital del grupo, re-autollar
+      const tablaVacia = !tablaActual || !Array.isArray(tablaActual) || tablaActual.length === 0 || !tablaActual[0]?.localidad;
+      
+      if (tablaVacia || tieneCapitalActual) {
+        console.debug(`[AISI-DEBUG] 🔄 DETECTADO CAMBIO EN CCPPs | prefijo: ${prefijo} | ccppIds: ${ccppIdsActuales.substring(0, 50)}... | re-autollar: ${tablaVacia || tieneCapitalActual}`);
+        // Re-autollar después de un pequeño delay para asegurar que los datos estén sincronizados
+        setTimeout(() => {
+          this.autoPoblarTablaUbicacionCp(this.getCentroPobladoAISI() || '', prefijo);
+        }, 100);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean { return false; }
@@ -492,46 +517,64 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   private autoPoblarTablaUbicacionCp(nombreCentroPoblado: string, prefijo: string): void {
     const tablaKeyPref = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
     
-    console.debug(`[AISI-DEBUG] 🔍 AUTO-POBLAR TABLA | seccion: ${this.seccionId} | prefijo: ${prefijo} | centro: ${nombreCentroPoblado}`);
+    console.debug(`[AISI-DEBUG] 🔍 AUTO-POBLAR TABLA | seccion: ${this.seccionId} | prefijo: ${prefijo}`);
     
-    if (!nombreCentroPoblado || nombreCentroPoblado === '____') {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - sin centro poblado`);
+    // ✅ NUEVA LÓGICA: Obtener CCPPs del grupo AISI actual
+    const ccppsDelGrupo = this.obtenerCCPPsDelGrupoAISI();
+    console.debug(`[AISI-DEBUG] 📋 CCPPs del grupo: ${ccppsDelGrupo.length}`);
+    
+    if (ccppsDelGrupo.length === 0) {
+      console.debug(`[AISI-DEBUG] ⏭️ SKIP - no hay CCPPs en el grupo`);
       return;
     }
     
-    // ✅ SÓLO AUTO-POBLAR SI LA TABLA ESTÁ VACÍA (no sobreescribir datos guardados)
+    // Buscar capital en LOS CCPPs DEL GRUPO ACTUAL
+    const capitalDelGrupo = ccppsDelGrupo.find(cc => 
+      cc.categoria && cc.categoria.toLowerCase().includes('capital')
+    );
+    
+    // Si no hay capital en el grupo, usar el de mayor población del grupo
+    let ccppSeleccionado = capitalDelGrupo;
+    if (!ccppSeleccionado) {
+      console.debug(`[AISI-DEBUG] ℹ️ No se encontró capital en el grupo, buscando el de mayor población...`);
+      ccppSeleccionado = ccppsDelGrupo.reduce((max, cc) => 
+        (cc.poblacion > (max?.poblacion || 0)) ? cc : max
+      , ccppsDelGrupo[0]);
+    }
+    
+    if (!ccppSeleccionado) {
+      console.debug(`[AISI-DEBUG] ⏭️ SKIP - no se pudo seleccionar CCPP`);
+      return;
+    }
+    
+    console.debug(`[AISI-DEBUG] ✅ CCPP SELECCIONADO: ${ccppSeleccionado.nombre} | categoria: ${ccppSeleccionado.categoria} | poblacion: ${ccppSeleccionado.poblacion}`);
+    
+    // ✅ VERIFICAR SI LA TABLA YA TIENE EL CCPP CORRECTO
     const tablaActual = this.projectFacade.selectField(this.seccionId, null, tablaKeyPref)();
-    if (tablaActual && Array.isArray(tablaActual) && tablaActual.length > 0 && tablaActual[0]?.localidad) {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - ya tiene datos: ${tablaActual[0]?.localidad}`);
+    const ccppActualTabla = tablaActual?.[0]?.localidad;
+    
+    // Si la tabla ya tiene el CCPP correcto del grupo, no re-autollar
+    if (ccppActualTabla === ccppSeleccionado.nombre) {
+      console.debug(`[AISI-DEBUG] ⏭️ SKIP - tabla ya tiene el CCPP correcto: ${ccppActualTabla}`);
       return;
     }
     
-    // Obtener lista de centros poblados desde datos
-    const datos = this.projectFacade.obtenerDatos();
-    const centrosPobladosJSON = datos['centrosPobladosJSON'] || [];
-    
-    console.debug(`[AISI-DEBUG] 📋 CCPP disponibles: ${centrosPobladosJSON.length} | buscando: ${nombreCentroPoblado}`);
-    
-    // Buscar el centro poblado por nombre en los CCPP
-    const ccpp = centrosPobladosJSON.find((cc: any) => cc.nombre === nombreCentroPoblado);
-    
-    if (!ccpp) {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - no se encontró CCPP en centrosPobladosJSON`);
-      console.debug(`[AISI-DEBUG] 📋 Primer CCPP disponible: ${centrosPobladosJSON[0]?.nombre || 'ninguno'}`);
-      return;
+    // Si la tabla tiene datos old de otro CCPP, re-autollar
+    if (ccppActualTabla && ccppActualTabla !== ccppSeleccionado.nombre) {
+      console.debug(`[AISI-DEBUG] 🔄 ACTUALIZANDO - tabla tiene: ${ccppActualTabla} → grupo necesita: ${ccppSeleccionado.nombre}`);
     }
     
     // Crear fila con datos del centro poblado
     const tabla = [{
-      localidad: ccpp.nombre || '',
-      coordenadas: ccpp.este && ccpp.norte ? `${ccpp.este}, ${ccpp.norte}` : '',
-      altitud: ccpp.altitud ? `${ccpp.altitud} m.s.n.m.` : '',
-      distrito: ccpp.dist || '',
-      provincia: ccpp.prov || '',
-      departamento: ccpp.dpto || ''
+      localidad: ccppSeleccionado.nombre || '',
+      coordenadas: ccppSeleccionado.este && ccppSeleccionado.norte ? `${ccppSeleccionado.este}, ${ccppSeleccionado.norte}` : '',
+      altitud: ccppSeleccionado.altitud ? `${ccppSeleccionado.altitud} m.s.n.m.` : '',
+      distrito: ccppSeleccionado.dist || '',
+      provincia: ccppSeleccionado.prov || '',
+      departamento: ccppSeleccionado.dpto || ''
     }];
     
-    console.debug(`[AISI-DEBUG] ✅ AUTO-POBLAR TABLA | ccpp: ${ccpp.nombre} | coordenadas: ${tabla[0].coordenadas} | altitud: ${tabla[0].altitud}`);
+    console.debug(`[AISI-DEBUG] ✅ AUTO-POBLAR TABLA | ccpp: ${ccppSeleccionado.nombre} | coordenadas: ${tabla[0].coordenadas} | altitud: ${tabla[0].altitud}`);
     
     // Guardar en tabla prefijada (aislamiento)
     this.projectFacade.setField(this.seccionId, null, tablaKeyPref, tabla);

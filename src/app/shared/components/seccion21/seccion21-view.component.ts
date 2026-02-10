@@ -42,8 +42,18 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
         const grupoId = match ? `B.${match[1]}` : prefijo;
         
         const ccppIds = grupo.ccppIds || [];
+        
+        // Obtener CCPPs del grupo y determinar cuál será usado
+        const ccppsDelGrupo = this.obtenerCCPPsDelGrupoAISI();
+        const capital = ccppsDelGrupo.find(cc => cc.categoria?.toLowerCase().includes('capital'));
+        const mayorPoblacion = ccppsDelGrupo.reduce((max, cc) => 
+          cc.poblacion > (max?.poblacion || 0) ? cc : max
+        , ccppsDelGrupo[0]);
+        const ccppSeleccionado = capital || mayorPoblacion;
+        
         console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
         console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
+        console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
       }
     });
 
