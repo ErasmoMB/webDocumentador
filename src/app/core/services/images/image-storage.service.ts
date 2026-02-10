@@ -33,15 +33,11 @@ export class ImageStorageService {
     // ✅ Usar projectFacade.obtenerDatos() que ya lee de localStorage primero
     const datos = this.projectFacade.obtenerDatos();
     
-    console.log(`[FOTOS-DEBUG] loadImages | sectionId: ${sectionId} | prefix: ${prefix} | groupPrefix: "${groupPrefix}"`);
-    
     // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
     // Si prefix ya tiene el grupo (ej: "fotografia_B1") y groupPrefix es "_B1",
     // no añadir groupPrefix de nuevo para evitar "fotografia_B11Imagen_B1"
     const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
     const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
-    
-    console.log(`[FOTOS-DEBUG]   prefixHasGroup: ${prefixHasGroup} | finalGroupPrefix: "${finalGroupPrefix}"`);
     
     for (let i = 1; i <= maxPhotos; i++) {
       // ✅ CLAVE CORREGIDA: {prefix}{i}Imagen{finalGroupPrefix}
@@ -50,11 +46,7 @@ export class ImageStorageService {
       const tituloKey = finalGroupPrefix ? `${prefix}${i}Titulo${finalGroupPrefix}` : `${prefix}${i}Titulo`;
       const fuenteKey = finalGroupPrefix ? `${prefix}${i}Fuente${finalGroupPrefix}` : `${prefix}${i}Fuente`;
       
-      console.log(`[FOTOS-DEBUG]   Buscando clave: "${imagenKey}"`);
-      
       const imagen = datos[imagenKey];
-      
-      console.log(`[FOTOS-DEBUG]   imagen: ${imagen ? 'ENCONTRADA' : 'NO ENCONTRADA'}`);
       
       // ✅ SIN FALLBACK - Si no hay imagen en clave prefijada, NO buscar en clave base
       // Esto asegura aislamiento completo entre grupos AISI
@@ -74,11 +66,9 @@ export class ImageStorageService {
           fuente,
           imagen: imagenUrl
         });
-        console.log(`[FOTOS-DEBUG]   ✅ Foto ${i} cargada: ${titulo}`);
       }
     }
     
-    console.log(`[FOTOS-DEBUG] loadImages FINAL | fotosCargadas: ${fotografias.length}`);
     return fotografias;
   }
 
@@ -94,8 +84,6 @@ export class ImageStorageService {
     // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
     const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
     const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
-    
-    console.log(`[FOTOS-DEBUG] saveImages | sectionId: ${sectionId} | prefix: ${prefix} | groupPrefix: "${groupPrefix}" | prefixHasGroup: ${prefixHasGroup} | finalGroupPrefix: "${finalGroupPrefix}"`);
     
     for (let i = 1; i <= maxPhotos; i++) {
       // ✅ CLAVES CORREGIDAS: {prefix}{i}Imagen{finalGroupPrefix}

@@ -124,7 +124,6 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
-    this.logGrupoActual();
   }
 
   override ngOnDestroy(): void {
@@ -233,11 +232,6 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
     this.fotografiasTelecomunicacionesCache = fotosTelecomunicaciones && fotosTelecomunicaciones.length > 0 ? [...fotosTelecomunicaciones] : [];
 
     this.cdRef.markForCheck();
-  }
-
-  protected override logGrupoActual(): void {
-    const grupoAISD = this.grupoAISDSignal();
-    console.log(`[Seccion11-View] Grupo AISD actual: ${grupoAISD}`);
   }
 
   // ✅ MÉTODOS PARA TÍTULO Y FUENTE DE LA TABLA

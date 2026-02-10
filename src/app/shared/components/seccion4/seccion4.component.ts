@@ -225,7 +225,6 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
   override ngOnInit(): void {
     super.ngOnInit();
     this.cargarFotografias();
-    this.logGrupoActual();
     this.autoLlenarTablas();
     
     if (this.modoFormulario) {

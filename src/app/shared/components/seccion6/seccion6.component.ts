@@ -41,7 +41,6 @@ export class Seccion6Component extends AutoLoadSectionComponent implements OnDes
 
   protected override onInitCustom(): void {
     this.actualizarDatos();
-    this.logGrupoActual();
   }
 
   protected getSectionKey(): string {

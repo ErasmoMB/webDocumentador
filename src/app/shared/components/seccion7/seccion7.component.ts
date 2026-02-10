@@ -104,8 +104,6 @@ export class Seccion7Component extends AutoLoadSectionComponent implements OnDes
         this.actualizandoDatos = false;
       }, 0);
     });
-    
-    this.logGrupoActual();
   }
 
   override ngOnDestroy() {

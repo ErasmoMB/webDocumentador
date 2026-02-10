@@ -37,6 +37,7 @@ import {
 import { sectionContentReducer, addImageToSection } from './section-content.reducer';
 import { generateInitialSections, regenerateSectionsForGroupType } from '../utils/section-generator.util';
 import { FormularioService } from '../services/formulario.service';
+import { GroupConfigService } from '../services/group-config.service';
 import { Injector } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
@@ -54,6 +55,19 @@ export class ProjectStateFacade {
       }
     }
     return this._formularioService;
+  }
+  
+  // ✅ AGREGAR: GroupConfigService para leer distritosAISI y comunidadesCampesinas
+  private _groupConfigService: GroupConfigService | null = null;
+  private get groupConfigService(): GroupConfigService | null {
+    if (!this._groupConfigService) {
+      try {
+        this._groupConfigService = this.injector.get(GroupConfigService, null);
+      } catch {
+        return null;
+      }
+    }
+    return this._groupConfigService;
   }
   
   private readonly _sectionsContent = signal<SectionsContentState>(INITIAL_SECTIONS_CONTENT_STATE);
@@ -164,8 +178,46 @@ export class ProjectStateFacade {
   }
 
   dispatch(command: ProjectStateCommand): void {
+    // Log de depuración para todos los dispatch
+    if (command.type.startsWith('groupConfig/')) {
+      console.log(`[FACADE-DISPATCH] 📥 ${command.type}`, (command as any).payload);
+    }
+    
+    // ✅ Interceptar comandos de grupos para sincronizar con GroupConfigService
+    if (command.type.startsWith('groupConfig/')) {
+      this.syncGroupConfigCommand(command);
+    }
     this.store.dispatch(command);
   }
+  
+  /**
+   * Sincroniza comandos de GroupConfig hacia GroupConfigService
+   */
+  private syncGroupConfigCommand(command: ProjectStateCommand): void {
+    const groupConfig = this.groupConfigService;
+    if (!groupConfig) return;
+    
+    // Solo procesar comandos de CCPP
+    if (command.type === 'groupConfig/setGroupCCPP') {
+      const payload = (command as any).payload;
+      const { tipo, groupId, ccppIds } = payload;
+      
+      console.log(`[FACADE-SYNC] 🔄 Sincronizando ${tipo} | grupo: ${groupId} | CCPPs: ${ccppIds.length}`);
+      
+      // Extraer índice del grupo del ID (B.1 -> índice 0)
+      const match = groupId.match(/\.(\d+)$/);
+      const indice = match ? parseInt(match[1]) - 1 : 0;
+      
+      if (tipo === 'AISI') {
+        groupConfig.setAISICCPPActivos(ccppIds, indice);
+        console.log(`[FACADE-SYNC] ✅ setAISICCPPActivos(${indice}) = ${ccppIds.length} CCPPs`);
+      } else if (tipo === 'AISD') {
+        groupConfig.setAISDCCPPActivos(ccppIds, indice);
+        console.log(`[FACADE-SYNC] ✅ setAISDCCPPActivos(${indice}) = ${ccppIds.length} CCPPs`);
+      }
+    }
+  }
+
   dispatchBatch(commands: ProjectStateCommand[]): void {
     this.store.dispatchBatch(commands);
   }
@@ -337,52 +389,57 @@ export class ProjectStateFacade {
     const state = this.store.getSnapshot();
     const result: Record<string, any> = {};
     
-    // ✅ IMPORTANTE: Leer distritosAISI y comunidadesCampesinas DEL ESTADO DE REDUX directamente
-    // Esto asegura que siempre tengamos los datos más actuales, incluso si el localStorage está stale
-    if (state.groupConfig?.aisd && state.groupConfig.aisd.length > 0) {
-      result['comunidadesCampesinas'] = state.groupConfig.aisd.map((g: any) => ({
-        id: g.id,
-        nombre: g.nombre,
-        centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
-      }));
-    }
-    if (state.groupConfig?.aisi && state.groupConfig.aisi.length > 0) {
-      result['distritosAISI'] = state.groupConfig.aisi.map((g: any) => ({
-        id: g.id,
-        nombre: g.nombre,
-        nombreOriginal: g.nombre,
-        centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
-      }));
-      result['distritoSeleccionado'] = state.groupConfig.aisi[0]?.nombre || '';
-    }
-    
-    // Luego leer otros datos del formulario (localStorage)
-    // Estos se sobrescribirán solo si no vienen del estado de Redux
-    const formService = this.formularioService;
-    if (formService) {
-      const persistedData = formService.obtenerDatos();
-      if (persistedData && typeof persistedData === 'object') {
-        Object.keys(persistedData).forEach(key => {
-          if (key !== 'distritosAISI' && key !== 'comunidadesCampesinas') {
-            result[key] = persistedData[key];
-          }
-        });
+    // ✅ LEER DESDE GroupConfigService (la fuente de verdad para CCPPs)
+    const groupConfig = this.groupConfigService;
+    if (groupConfig) {
+      const config = groupConfig.configSubject.value;
+      if (config?.aisd || config?.aisi) {
+        // Leer AISD (comunidades campesinas)
+        if (config?.aisd) {
+          const aisd = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
+          result['comunidadesCampesinas'] = aisd.map((g: any) => ({
+            id: g.id,
+            nombre: g.nombre,
+            centrosPobladosSeleccionados: (g.ccppActivos || []).map((c: string) => String(c).trim())
+          }));
+        }
+        // Leer AISI (distritos)
+        if (config?.aisi) {
+          const aisi = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
+          result['distritosAISI'] = aisi.map((g: any, index: number) => ({
+            id: g.id,
+            nombre: g.nombre,
+            nombreOriginal: g.nombre,
+            centrosPobladosSeleccionados: (g.ccppActivos || []).map((c: string) => String(c).trim()),
+            grupoIndex: index
+          }));
+          result['distritoSeleccionado'] = aisi[0]?.nombre || '';
+        }
+      } else {
+        // ⚠️ GroupConfigService vacío, sincronizar desde Redux
+        this.syncFromReduxToGroupConfig(state, groupConfig);
+      }
+    } else {
+      // Fallback a Redux si GroupConfigService no está disponible
+      if (state.groupConfig?.aisd && state.groupConfig.aisd.length > 0) {
+        result['comunidadesCampesinas'] = state.groupConfig.aisd.map((g: any) => ({
+          id: g.id,
+          nombre: g.nombre,
+          centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
+        }));
+      }
+      if (state.groupConfig?.aisi && state.groupConfig.aisi.length > 0) {
+        result['distritosAISI'] = state.groupConfig.aisi.map((g: any) => ({
+          id: g.id,
+          nombre: g.nombre,
+          nombreOriginal: g.nombre,
+          centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
+        }));
+        result['distritoSeleccionado'] = state.groupConfig.aisi[0]?.nombre || '';
       }
     }
     
-    if (state.metadata) {
-      if (state.metadata.projectName) result['projectName'] = state.metadata.projectName;
-      if (state.metadata.consultora) result['consultora'] = state.metadata.consultora;
-      if (state.metadata.detalleProyecto) result['detalleProyecto'] = state.metadata.detalleProyecto;
-    }
-    if (state.globalRegistry?.ubicacion) {
-      if (state.globalRegistry.ubicacion.departamento) result['departamento'] = state.globalRegistry.ubicacion.departamento;
-      if (state.globalRegistry.ubicacion.provincia) result['provincia'] = state.globalRegistry.ubicacion.provincia;
-      if (state.globalRegistry.ubicacion.distrito) result['distrito'] = state.globalRegistry.ubicacion.distrito;
-    }
-    if (state.globalRegistry?.entrevistados && state.globalRegistry.entrevistados.length > 0) {
-      result['entrevistados'] = state.globalRegistry.entrevistados;
-    }
+    // Resto del código...
     if (state.fields?.byKey) {
       for (const [key, entry] of Object.entries(state.fields.byKey)) {
         if (entry?.state?.value !== undefined && entry.state.value !== '') {
@@ -525,5 +582,49 @@ export class ProjectStateFacade {
   }
   resetSection(sectionId: string): void {
     this.store.dispatch(Commands.resetSection(sectionId, false));
+  }
+  
+  /**
+   * Sincroniza los datos de Redux hacia GroupConfigService
+   * Esto asegura que ambos sistemas tengan los mismos datos
+   */
+  private syncFromReduxToGroupConfig(state: ProjectState, groupConfigService: GroupConfigService): void {
+    if (!groupConfigService) return;
+    
+    // Sincronizar AISD
+    if (state.groupConfig?.aisd && state.groupConfig.aisd.length > 0) {
+      const currentConfig = groupConfigService.configSubject.value || {} as any;
+      const aisdActualizados = state.groupConfig.aisd.map((g: any) => ({
+        id: g.id,
+        nombre: g.nombre,
+        ccppActivos: g.ccppIds || []
+      }));
+      
+      const updatedConfig = {
+        ...currentConfig,
+        aisd: aisdActualizados,
+        lastUpdated: Date.now()
+      };
+      
+      groupConfigService.configSubject.next(updatedConfig);
+    }
+    
+    // Sincronizar AISI
+    if (state.groupConfig?.aisi && state.groupConfig.aisi.length > 0) {
+      const currentConfig = groupConfigService.configSubject.value || {} as any;
+      const aisiActualizados = state.groupConfig.aisi.map((g: any, index: number) => ({
+        id: g.id || `B.${index + 1}`,
+        nombre: g.nombre,
+        ccppActivos: g.ccppIds || []
+      }));
+      
+      const updatedConfig = {
+        ...currentConfig,
+        aisi: aisiActualizados,
+        lastUpdated: Date.now()
+      };
+      
+      groupConfigService.configSubject.next(updatedConfig);
+    }
   }
 }

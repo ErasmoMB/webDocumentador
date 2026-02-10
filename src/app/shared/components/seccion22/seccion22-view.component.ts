@@ -222,9 +222,6 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
-    // ✅ LOG DEBUG: Mostrar grupo AISI actual (igual formato que base-section)
-    this.logGrupoAISI22();
-
     effect(() => {
       const data = this.formDataSignal();
       this.datos = { ...data };
@@ -263,59 +260,6 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void { }
   protected override detectarCambios(): boolean { return false; }
-  
-  /**
-   * Log debug del grupo AISI actual - replica el formato de base-section.component.ts
-   */
-  private logGrupoAISI22(): void {
-    // El sectionId es 3.1.4.B.2.1 donde B.2 es el grupo y .1 es la subsección
-    const matchAISI = this.seccionId.match(/^3\.1\.4\.B\.(\d+)\./);
-    if (!matchAISI) return;
-    
-    const numeroGrupo = parseInt(matchAISI[1], 10);
-    const datos = this.projectFacade.obtenerDatos();
-    const distritos = datos['distritosAISI'] || [];
-    const distritoActual = distritos[numeroGrupo - 1];
-    
-    if (!distritoActual) return;
-    
-    console.log(`%c🗺️ SECCION22 - GRUPO AISI: B.${numeroGrupo} - ${distritoActual.nombre || 'Sin nombre'}`, 'color: #dc2626; font-weight: bold; font-size: 14px');
-    console.log(`%cCentros Poblados (CCPP):`, 'color: #b91c1c; font-weight: bold');
-    
-    const centrosPobladosSeleccionados = distritoActual.centrosPobladosSeleccionados || [];
-    console.log(`[DEBUG] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
-    
-    if (centrosPobladosSeleccionados.length === 0) {
-      console.log('  (Sin centros poblados asignados)');
-      return;
-    }
-    
-    const jsonCompleto = datos['jsonCompleto'] || {};
-    const centrosDetalles: any[] = [];
-    
-    centrosPobladosSeleccionados.forEach((codigo: any) => {
-      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
-        const grupoData = jsonCompleto[grupoKey];
-        if (Array.isArray(grupoData)) {
-          const centro = grupoData.find((c: any) => {
-            const codigoCentro = String(c.CODIGO || '').trim();
-            const codigoBuscado = String(codigo).trim();
-            return codigoCentro === codigoBuscado;
-          });
-          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
-            centrosDetalles.push(centro);
-          }
-        }
-      });
-    });
-    
-    if (centrosDetalles.length > 0) {
-      centrosDetalles.forEach((cp: any, index: number) => {
-        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
-        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
-      });
-    }
-  }
 
   protected override actualizarValoresConPrefijo(): void {
     // Restaurar centroPobladoAISI con el prefijo correcto

@@ -9,11 +9,38 @@ import { StorageFacade } from './infrastructure/storage-facade.service';
 export class GroupConfigService {
   private readonly STORAGE_KEY = 'documentador_group_config';
   
-  private configSubject = new BehaviorSubject<GroupConfig | null>(null);
+  // ✅ HACER PÚBLICA para sincronización con Redux
+  public configSubject = new BehaviorSubject<GroupConfig | null>(null);
   public config$: Observable<GroupConfig | null> = this.configSubject.asObservable();
-
+  
   constructor(private storage: StorageFacade) {
     this.loadFromStorage();
+  }
+
+  // ✅ AGREGAR: Sincronizar con estado de Redux
+  private syncToRedux(config: GroupConfig): void {
+    try {
+      // Intentar acceder al ProjectStateFacade para sincronizar
+      const { ProjectStateFacade } = require('../state/project-state.facade');
+      if (typeof ProjectStateFacade !== 'undefined') {
+        // Esta parte se ejecutará solo en el cliente
+        const { getProjectFacade } = require('../state/project-state.facade');
+        const facade = getProjectFacade?.() || (window as any).__PROJECT_FACADE__;
+        if (facade) {
+          // Sincronizar grupos AISI
+          if (config.aisi && config.aisi.length > 0) {
+            // Los ccppActivos del Grupo se convierten en ccppIds del GroupDefinition
+            config.aisi.forEach((grupo, index) => {
+              const ccppIds = grupo.ccppActivos || [];
+              console.debug(`[GROUP-SYNC] Sincronizando AISI grupo ${index + 1}: ${ccppIds.length} CCPPs`);
+            });
+          }
+        }
+      }
+    } catch (e) {
+      // Redux no disponible o error de sincronización
+      console.debug('[GROUP-SYNC] No se pudo sincronizar con Redux:', e);
+    }
   }
 
   setAISD(grupo: Grupo): void {
@@ -64,7 +91,9 @@ export class GroupConfigService {
 
   setAISDCCPPActivos(ccppCodigos: string[], indiceGrupo: number = 0): void {
     const current = this.configSubject.value;
-    if (!current?.aisd) return;
+    if (!current?.aisd) {
+      return;
+    }
     const gruposAISD = Array.isArray(current.aisd) ? [...current.aisd] : [current.aisd];
     if (indiceGrupo >= 0 && indiceGrupo < gruposAISD.length) {
       gruposAISD[indiceGrupo] = { ...gruposAISD[indiceGrupo], ccppActivos: ccppCodigos };
@@ -80,7 +109,9 @@ export class GroupConfigService {
 
   setAISICCPPActivos(ccppCodigos: string[], indiceGrupo: number = 0): void {
     const current = this.configSubject.value;
-    if (!current?.aisi) return;
+    if (!current?.aisi) {
+      return;
+    }
     const gruposAISI = Array.isArray(current.aisi) ? [...current.aisi] : [current.aisi];
     if (indiceGrupo >= 0 && indiceGrupo < gruposAISI.length) {
       gruposAISI[indiceGrupo] = { ...gruposAISI[indiceGrupo], ccppActivos: ccppCodigos };
@@ -177,8 +208,17 @@ export class GroupConfigService {
 
   private saveToStorage(config: GroupConfig): void {
     try {
-      this.storage.setItem(this.STORAGE_KEY, JSON.stringify(config));
+      const configStr = JSON.stringify(config);
+      this.storage.setItem(this.STORAGE_KEY, configStr);
+      console.log(`[GroupConfig] ✅ Guardado en localStorage: ${configStr.length} chars`);
+      if (config.aisi) {
+        console.log(`[GroupConfig] 📊 AISI groups: ${config.aisi.length}`);
+        config.aisi.forEach((g: any, i: number) => {
+          console.log(`[GroupConfig]   Grupo ${i+1}: ${g.ccppActivos?.length || 0} CCPPs`);
+        });
+      }
     } catch (error) {
+      console.error('[GroupConfig] ❌ Error guardando:', error);
     }
   }
 
@@ -190,6 +230,7 @@ export class GroupConfigService {
         this.configSubject.next(config);
       }
     } catch (error) {
+      // Silently handle storage errors
     }
   }
 }

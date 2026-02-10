@@ -332,7 +332,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     // 📋 LOG DEL GRUPO AISI ACTUAL
-    this.logGrupoActual();
     
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual (siempre)
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();

@@ -249,7 +249,6 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   protected override onInitCustom(): void {
     this.actualizarFotografiasFormMulti();
     this.cargarFotografias();
-    this.logGrupoActual();
   }
 
   override ngOnDestroy() {

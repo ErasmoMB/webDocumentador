@@ -32,9 +32,14 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
       return prefix;
     });
 
-    // Effect para logging (opcional, para debug)
+    // ✅ Effect para loguear el grupo AISI actual (se ejecuta cuando cambian los datos)
     effect(() => {
-      console.debug(`[PHOTO-PREFIX-SIGNAL] ${this.photoPrefixSignal()}`);
+      const grupo = this.obtenerGrupoActualAISI();
+      if (grupo) {
+        const ccppIds = grupo.ccppIds || [];
+        console.log(`🗺️ GRUPO AISI: ${grupo.id} - ${grupo.nombre || 'Sin nombre'}`);
+        console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
+      }
     });
 
     effect(() => {

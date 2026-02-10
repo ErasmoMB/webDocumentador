@@ -159,7 +159,6 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
-    this.logGrupoActual();
   }
 
   override ngOnDestroy() {
