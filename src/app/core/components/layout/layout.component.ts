@@ -21,7 +21,7 @@ interface SidebarSection {
     standalone: false
 })
 export class LayoutComponent implements OnInit, OnDestroy {
-  sidebarOpen = false;
+  sidebarOpen = true;
   private subscription?: Subscription;
   private groupsSubscription?: Subscription;
   private resizeTimeout: any;
@@ -279,13 +279,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
       id: 'capitulo3',
       title: 'CAPÍTULO III – LÍNEA BASE',
       level: 0,
-      expanded: false,
+      expanded: true,
       children: [
         {
           id: '3.1',
           title: '3.1 Descripción y caracterización de los aspectos sociales, culturales y antropológicos',
           level: 1,
-          expanded: false,
+          expanded: true,
           children: [
             {
               id: '3.1.1',
@@ -297,7 +297,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
               id: '3.1.2',
               title: '3.1.2 Delimitación de las áreas de influencia social',
               level: 2,
-              expanded: false,
+              expanded: true,
               children: [
                 {
                   id: '3.1.2.A',
@@ -317,7 +317,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
               id: '3.1.3',
               title: '3.1.3 Índices demográficos, sociales, económicos, de ocupación laboral y otros similares',
               level: 2,
-              expanded: false,
+              expanded: true,
               children: [
                 {
                   id: '3.1.3.A',
@@ -337,14 +337,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
               id: '3.1.4',
               title: '3.1.4 Caracterización socioeconómica de las áreas de influencia social',
               level: 2,
-              expanded: false,
+              expanded: true,
               children: [
                 {
                   id: '3.1.4.A',
                   title: 'A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)',
                   route: '/seccion/3.1.4.A.1',
                   level: 3,
-                  expanded: false,
+                  expanded: true,
                   children: this.generarSeccionesAISD()
                 },
                 {
@@ -352,7 +352,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                   title: 'B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)',
                   route: '/seccion/3.1.4.B.1',
                   level: 3,
-                  expanded: false,
+                  expanded: true,
                   children: this.generarSeccionesAISI()
                 }
               ]
@@ -388,6 +388,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
         this.applyExpandedState(this.sections, expandedIds);
       } catch (e) {
       }
+    } else {
+      // Si no hay estado guardado, expandir todos los items por defecto
+      this.expandAll(this.sections);
+      this.saveExpandedState();
     }
   }
 
@@ -409,6 +413,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
       if (section.children) {
         this.applyExpandedState(section.children, expandedIds);
+      }
+    });
+  }
+
+  private expandAll(sections: SidebarSection[]) {
+    sections.forEach(section => {
+      if (section.children && section.children.length > 0) {
+        section.expanded = true;
+        this.expandAll(section.children);
       }
     });
   }

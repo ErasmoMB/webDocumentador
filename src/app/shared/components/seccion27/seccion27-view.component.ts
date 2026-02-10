@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
@@ -8,6 +8,7 @@ import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { DomSanitizer } from '@angular/platform-browser';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -19,7 +20,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 export class Seccion27ViewComponent extends AutoLoadSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.6';
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB16';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   readonly PHOTO_PREFIX_TRANSPORTE = 'fotografiaTransporteAISI';
   readonly PHOTO_PREFIX_TELECOMUNICACIONES = 'fotografiaTelecomunicacionesAISI';
 
@@ -34,6 +36,20 @@ export class Seccion27ViewComponent extends AutoLoadSectionComponent implements 
     private sanitizer: DomSanitizer
   ) {
     super(cdRef, autoLoader, injector);
+
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    // Effect para aplicar prefijo a centroPobladoAISI (leer del store, no de this.datos)
+    effect(() => {
+      const data = this.projectFacade.selectSectionFields(this.seccionId, null)();
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
+      this.cdRef.markForCheck();
+    });
   }
 
   protected override onInitCustom(): void {

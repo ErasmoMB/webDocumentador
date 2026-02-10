@@ -336,21 +336,10 @@ export class ProjectStateFacade {
   obtenerDatos(): Record<string, any> {
     const state = this.store.getSnapshot();
     const result: Record<string, any> = {};
-    const formService = this.formularioService;
-    if (formService) {
-      const persistedData = formService.obtenerDatos();
-      if (persistedData && typeof persistedData === 'object') {
-        Object.assign(result, persistedData);
-      }
-    }
-    if (state.metadata) {
-      if (state.metadata.projectName) result['projectName'] = state.metadata.projectName;
-      if (state.metadata.consultora) result['consultora'] = state.metadata.consultora;
-      if (state.metadata.detalleProyecto) result['detalleProyecto'] = state.metadata.detalleProyecto;
-    }
+    
+    // ✅ IMPORTANTE: Leer distritosAISI y comunidadesCampesinas DEL ESTADO DE REDUX directamente
+    // Esto asegura que siempre tengamos los datos más actuales, incluso si el localStorage está stale
     if (state.groupConfig?.aisd && state.groupConfig.aisd.length > 0) {
-      result['grupoAISD'] = state.groupConfig.aisd[0]?.nombre || '';
-      result['gruposAISD'] = state.groupConfig.aisd.map((g: any) => g.nombre);
       result['comunidadesCampesinas'] = state.groupConfig.aisd.map((g: any) => ({
         id: g.id,
         nombre: g.nombre,
@@ -365,6 +354,26 @@ export class ProjectStateFacade {
         centrosPobladosSeleccionados: (g.ccppIds || []).map((c: string) => String(c).trim())
       }));
       result['distritoSeleccionado'] = state.groupConfig.aisi[0]?.nombre || '';
+    }
+    
+    // Luego leer otros datos del formulario (localStorage)
+    // Estos se sobrescribirán solo si no vienen del estado de Redux
+    const formService = this.formularioService;
+    if (formService) {
+      const persistedData = formService.obtenerDatos();
+      if (persistedData && typeof persistedData === 'object') {
+        Object.keys(persistedData).forEach(key => {
+          if (key !== 'distritosAISI' && key !== 'comunidadesCampesinas') {
+            result[key] = persistedData[key];
+          }
+        });
+      }
+    }
+    
+    if (state.metadata) {
+      if (state.metadata.projectName) result['projectName'] = state.metadata.projectName;
+      if (state.metadata.consultora) result['consultora'] = state.metadata.consultora;
+      if (state.metadata.detalleProyecto) result['detalleProyecto'] = state.metadata.detalleProyecto;
     }
     if (state.globalRegistry?.ubicacion) {
       if (state.globalRegistry.ubicacion.departamento) result['departamento'] = state.globalRegistry.ubicacion.departamento;
@@ -394,6 +403,7 @@ export class ProjectStateFacade {
         result['centrosPobladosJSON'] = ccppList;
       }
     }
+    
     return result;
   }
   getSectionContent(sectionId: string): Section | undefined {

@@ -37,6 +37,20 @@ export class NavigationIndexService {
     this.loadExpandedState();
   }
 
+  private expandAllItems(items: IndexItem[]): Set<string> {
+    const expanded = new Set<string>();
+    const traverse = (itemList: IndexItem[]) => {
+      itemList.forEach(item => {
+        if (item.children && item.children.length > 0) {
+          expanded.add(item.id);
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(items);
+    return expanded;
+  }
+
   getIndexStructure(): IndexItem[] {
     return this.indexStructure;
   }
@@ -90,6 +104,11 @@ export class NavigationIndexService {
       const expandedArray = JSON.parse(saved) as string[];
       const expanded = new Set<string>(expandedArray);
       this.expandedItems.next(expanded);
+    } else {
+      // Si no hay estado guardado, expandir todos los items por defecto
+      const allExpanded = this.expandAllItems(this.indexStructure);
+      this.expandedItems.next(allExpanded);
+      this.saveExpandedState(allExpanded);
     }
   }
 }

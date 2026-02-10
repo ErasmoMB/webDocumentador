@@ -8,6 +8,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule, DynamicTableComponent, ImageUploadComponent, ParagraphEditorComponent],
@@ -20,7 +21,8 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.3';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB13';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -73,6 +75,9 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
     effect(() => {
       const data = this.formDataSignal();
@@ -88,6 +93,18 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    
     // Ensure table has initial structure (use table store as primary)
     const tablaKey = 'actividadesEconomicasAISI';
     const current = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
@@ -96,14 +113,18 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
       const inicial = [{ actividad: '', casos: '', porcentaje: '' }];
       console.info('[Seccion24] Inicializando tabla actividadesEconomicasAISI con 1 fila vacía');
       try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, inicial); } catch (e) { console.error('[Seccion24] setTableData init error', e); }
-      try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: inicial }); } catch (e) { console.error('[Seccion24] persist init error', e); }
+      try { const payloadInit: any = { [tablaKey]: inicial }; const prefInit = this.obtenerPrefijoGrupo(); if (prefInit) payloadInit[`${tablaKey}${prefInit}`] = inicial; this.formChange.persistFields(this.seccionId, 'table', payloadInit); } catch (e) { console.error('[Seccion24] persist init error', e); }
       // Mantener sincronía con campo legacy para compatibilidad
       try { this.projectFacade.setField(this.seccionId, null, tablaKey, inicial); } catch (e) { console.error('[Seccion24] setField init error', e); }
     }
   }
 
   protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void { }
+  protected override actualizarValoresConPrefijo(): void {
+    // Restaurar centroPobladoAISI con el prefijo correcto
+    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    this.datos.centroPobladoAISI = centro || null;
+  }
 
   actualizarCentroPoblado(valor: string): void {
     this.projectFacade.setField(this.seccionId, null, 'centroPobladoAISI', valor);
@@ -114,8 +135,14 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     console.info('[Seccion24] onActividadesEconomicasChange payload len:', Array.isArray(tabla) ? tabla.length : typeof tabla);
     // Persist primarily as TABLE and mirror to legacy field for compatibility
     try { this.projectFacade.setTableData(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { console.error('[Seccion24] setTableData error', e); }
-    try { this.formChange.persistFields(this.seccionId, 'table', { actividadesEconomicasAISI: tabla }); } catch (e) { console.error('[Seccion24] formChange.persistFields error', e); }
+    try {
+      const payload: any = { actividadesEconomicasAISI: tabla };
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) payload[`actividadesEconomicasAISI${prefijo}`] = tabla;
+      this.formChange.persistFields(this.seccionId, 'table', payload);
+    } catch (e) { console.error('[Seccion24] formChange.persistFields error', e); }
     // Mirror to legacy field so components reading fields see the update immediately
+    try { const prefijo = this.obtenerPrefijoGrupo(); if (prefijo) this.projectFacade.setField(this.seccionId, null, `actividadesEconomicasAISI${prefijo}`, tabla); } catch (e) { console.error('[Seccion24] setField error', e); }
     try { this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { console.error('[Seccion24] setField error', e); }
     // Notify section about the change (updates this.datos and triggers persistence)
     this.onFieldChange('actividadesEconomicasAISI', tabla);
@@ -124,6 +151,12 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
 
   actualizarCiudadOrigenComercio(valor: string): void {
     this.projectFacade.setField(this.seccionId, null, 'ciudadOrigenComercio', valor);
+    try {
+      const payload: any = { ciudadOrigenComercio: valor };
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) payload[`ciudadOrigenComercio${prefijo}`] = valor;
+      this.formChange.persistFields(this.seccionId, 'form', payload);
+    } catch (e) {}
     this.onFieldChange('ciudadOrigenComercio', valor);
   }
 
@@ -138,14 +171,24 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
       const second = (storedSecond && storedSecond.trim().length > 0) ? storedSecond : (generatedSecond || '');
       const nuevo = second && second.trim().length > 0 ? `${valor}\n\n${second}` : valor;
       this.projectFacade.setField(this.seccionId, null, fieldId, nuevo);
-      try { this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: nuevo }); } catch (e) {}
+      try {
+        const payload: any = { [fieldId]: nuevo };
+        const prefijo = this.obtenerPrefijoGrupo();
+        if (prefijo) payload[`${fieldId}${prefijo}`] = nuevo;
+        this.formChange.persistFields(this.seccionId, 'text', payload);
+      } catch (e) {}
       this.onFieldChange(fieldId, nuevo);
       return;
     }
 
     // Default behavior: save exactly what the user typed (no merging with other generated texts)
     this.projectFacade.setField(this.seccionId, null, fieldId, valor);
-    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor }); } catch (e) {}
+    try {
+      const payload: any = { [fieldId]: valor };
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) payload[`${fieldId}${prefijo}`] = valor;
+      this.formChange.persistFields(this.seccionId, 'text', payload);
+    } catch (e) {}
     this.onFieldChange(fieldId, valor);
   }
 
@@ -156,7 +199,7 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     const first = parts[0] || this.generarTextoIntroDefault();
     const nuevo = `${first}\n\n${valor}`;
     this.projectFacade.setField(this.seccionId, null, fieldId, nuevo);
-    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: nuevo }); } catch (e) {}
+    try { const payload: any = { [fieldId]: nuevo }; const prefijo = this.obtenerPrefijoGrupo(); if (prefijo) payload[`${fieldId}${prefijo}`] = nuevo; this.formChange.persistFields(this.seccionId, 'text', payload); } catch (e) {}
     this.onFieldChange(fieldId, nuevo);
   }
 
@@ -206,7 +249,12 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
 
   actualizarFuente(valor: string): void {
     this.projectFacade.setField(this.seccionId, null, 'fuenteActividadesEconomicasAISI', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { fuenteActividadesEconomicasAISI: valor }); } catch (e) {}
+    try {
+      const payload: any = { fuenteActividadesEconomicasAISI: valor };
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (prefijo) payload[`fuenteActividadesEconomicasAISI${prefijo}`] = valor;
+      this.formChange.persistFields(this.seccionId, 'form', payload);
+    } catch (e) {}
     this.onFieldChange('fuenteActividadesEconomicasAISI', valor);
   }
 

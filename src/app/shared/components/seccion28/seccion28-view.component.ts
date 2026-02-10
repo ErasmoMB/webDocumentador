@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -7,6 +7,7 @@ import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.com
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { LoadSeccion28UseCase, Seccion28ViewModel } from 'src/app/core/application/use-cases';
 import { takeUntil } from 'rxjs/operators';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -19,7 +20,8 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   seccion28ViewModel$ = this.loadSeccion28UseCase.execute();
   seccion28ViewModel?: Seccion28ViewModel;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB17';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   readonly PHOTO_PREFIX_SALUD = 'fotografiaSaludAISI';
   readonly PHOTO_PREFIX_EDUCACION = 'fotografiaEducacionAISI';
   readonly PHOTO_PREFIX_RECREACION = 'fotografiaRecreacionAISI';
@@ -31,6 +33,20 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     private loadSeccion28UseCase: LoadSeccion28UseCase
   ) {
     super(cdRef, undefined as any, injector);
+
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    // Effect para aplicar prefijo a centroPobladoAISI (leer del store, no de this.datos)
+    effect(() => {
+      const data = this.projectFacade.selectSectionFields(this.seccionId, null)();
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
+      this.cdRef.markForCheck();
+    });
     
     // Suscribirse a cambios del formulario
     this.seccion28ViewModel$

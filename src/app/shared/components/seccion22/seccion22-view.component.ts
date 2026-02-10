@@ -5,6 +5,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion22-view',
@@ -16,7 +17,8 @@ import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 export class Seccion22ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.1';
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB11';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -26,14 +28,24 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
-    return this.textGenerator.generateDemografiaText(data);
+    // ✅ Usar el valor con prefijo para el textGenerator
+    const dataConPrefijo = {
+      ...data,
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI
+    };
+    return this.textGenerator.generateDemografiaText(dataConPrefijo);
   });
 
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoGrupoEtarioAISI')();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
-    return this.textGenerator.generateGrupoEtarioText(data);
+    // ✅ Usar el valor con prefijo para el textGenerator
+    const dataConPrefijo = {
+      ...data,
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI
+    };
+    return this.textGenerator.generateGrupoEtarioText(dataConPrefijo);
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -153,7 +165,7 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionSexoSignal();
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
+    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
     const year = '2017';
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -174,7 +186,7 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionEtarioSignal();
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
+    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
     const year = '2017';
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -206,10 +218,40 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private textGenerator: ISeccion22TextGeneratorService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    // ✅ LOG DEBUG: Mostrar grupo AISI actual (igual formato que base-section)
+    this.logGrupoAISI22();
 
     effect(() => {
       const data = this.formDataSignal();
       this.datos = { ...data };
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ SINCRONIZAR centroPobladoAISI con prefijo
+    effect(() => {
+      const data = this.formDataSignal();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      const campoPrefijado = `centroPobladoAISI${prefijo}`;
+      const valorPrefijado = data[campoPrefijado];
+      
+      console.log(`🔍 SYNC DEBUG - sectionId: ${this.seccionId}`);
+      console.log(`   prefijo: '${prefijo}', campo: '${campoPrefijado}'`);
+      console.log(`   valorPrefijado: '${valorPrefijado}'`);
+      console.log(`   data.centroPobladoAISI (base): '${data['centroPobladoAISI']}'`);
+      
+      // Primero intentar usar el valor con prefijo
+      if (valorPrefijado && valorPrefijado.trim() !== '') {
+        this.datos.centroPobladoAISI = valorPrefijado;
+        console.log(`   -> Sincronizado con prefijo: '${valorPrefijado}'`);
+      } else {
+        // Fallback al base
+        this.datos.centroPobladoAISI = data['centroPobladoAISI'] || null;
+        console.log(`   -> Sincronizado con base: '${data['centroPobladoAISI']}'`);
+      }
       this.cdRef.markForCheck();
     });
 
@@ -221,7 +263,65 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void { }
   protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void { }
+  
+  /**
+   * Log debug del grupo AISI actual - replica el formato de base-section.component.ts
+   */
+  private logGrupoAISI22(): void {
+    // El sectionId es 3.1.4.B.2.1 donde B.2 es el grupo y .1 es la subsección
+    const matchAISI = this.seccionId.match(/^3\.1\.4\.B\.(\d+)\./);
+    if (!matchAISI) return;
+    
+    const numeroGrupo = parseInt(matchAISI[1], 10);
+    const datos = this.projectFacade.obtenerDatos();
+    const distritos = datos['distritosAISI'] || [];
+    const distritoActual = distritos[numeroGrupo - 1];
+    
+    if (!distritoActual) return;
+    
+    console.log(`%c🗺️ SECCION22 - GRUPO AISI: B.${numeroGrupo} - ${distritoActual.nombre || 'Sin nombre'}`, 'color: #dc2626; font-weight: bold; font-size: 14px');
+    console.log(`%cCentros Poblados (CCPP):`, 'color: #b91c1c; font-weight: bold');
+    
+    const centrosPobladosSeleccionados = distritoActual.centrosPobladosSeleccionados || [];
+    console.log(`[DEBUG] centrosPobladosSeleccionados:`, centrosPobladosSeleccionados);
+    
+    if (centrosPobladosSeleccionados.length === 0) {
+      console.log('  (Sin centros poblados asignados)');
+      return;
+    }
+    
+    const jsonCompleto = datos['jsonCompleto'] || {};
+    const centrosDetalles: any[] = [];
+    
+    centrosPobladosSeleccionados.forEach((codigo: any) => {
+      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
+        const grupoData = jsonCompleto[grupoKey];
+        if (Array.isArray(grupoData)) {
+          const centro = grupoData.find((c: any) => {
+            const codigoCentro = String(c.CODIGO || '').trim();
+            const codigoBuscado = String(codigo).trim();
+            return codigoCentro === codigoBuscado;
+          });
+          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
+            centrosDetalles.push(centro);
+          }
+        }
+      });
+    });
+    
+    if (centrosDetalles.length > 0) {
+      centrosDetalles.forEach((cp: any, index: number) => {
+        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
+        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
+      });
+    }
+  }
+
+  protected override actualizarValoresConPrefijo(): void {
+    // Restaurar centroPobladoAISI con el prefijo correcto
+    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    this.datos.centroPobladoAISI = centro || null;
+  }
 
   trackByIndex(index: number): number { return index; }
 }

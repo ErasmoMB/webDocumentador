@@ -20,7 +20,8 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.9';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB19';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   // Textos por defecto
@@ -178,6 +179,10 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     this.mockMergeService = injector.get(TableMockMergeService);
     this.tableFacade = injector.get(TableManagementFacade);
 
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
     effect(() => {
       const data = this.formDataSignal();
       const legacy = this.projectFacade.obtenerDatos();
@@ -194,6 +199,17 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    
     this.cargarFotografias();
 
     // Inicializar tabla Nivel Educativo con merge inteligente

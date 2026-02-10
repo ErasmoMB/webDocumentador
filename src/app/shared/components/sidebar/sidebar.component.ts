@@ -10,7 +10,7 @@ import { Subscription } from 'rxjs';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Output() toggleState = new EventEmitter<boolean>();
-  isExpanded = false;
+  isExpanded = true;
   indexStructure: IndexItem[] = [];
   expandedItems = new Set<string>();
   completedItems = new Set<string>();

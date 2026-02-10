@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -18,7 +19,8 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
 export class Seccion25ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.4';
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB14';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   override watchedFields: string[] = [
@@ -162,10 +164,21 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumberingService: TableNumberingService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
     effect(() => {
       const data = this.formDataSignal();
-      this.datos = { ...data };
+      // Merge instead of replace: keep existing datos when selector is empty (fallback to BaseSectionComponent data)
+      if (data && Object.keys(data).length > 0) {
+        this.datos = { ...this.datos, ...data };
+      }
+      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
       this.cdRef.markForCheck();
     });
 

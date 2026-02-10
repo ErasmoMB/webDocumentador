@@ -21,7 +21,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB15';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidosAISI';
   readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidadAISI';
   readonly PHOTO_PREFIX_COCINAR = 'fotografiaEnergiaCocinarAISI';
@@ -140,6 +141,9 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
     effect(() => {
       const data = this.formDataSignal();
@@ -156,6 +160,17 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    
     this.cargarFotografias();
     // Ensure paragraph and cuadro title/source fields exist so view can show them
     const keys = ['textoIntroServiciosBasicosAISI','textoServiciosAguaAISI','textoDesagueCP','textoDesechosSolidosCP','textoElectricidadCP','textoEnergiaCocinarCP',

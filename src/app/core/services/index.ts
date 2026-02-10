@@ -22,6 +22,9 @@ export * from './word-generator.facade.service';
 export * from './section-table-registry.service';
 export * from './table-handler-factory.service';
 
+// ✅ NUEVO: Servicio para grupos AISI
+export * from './aisi-group.service';
+
 // Sub-módulos
 export * from './orchestration';
 export * from './state';

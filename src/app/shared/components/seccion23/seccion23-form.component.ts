@@ -37,7 +37,8 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     'textoEmpleoAISI', 'textoEmpleoDependiente_AISI', 'textoIndiceDesempleoAISI'
   ];
 
-  override readonly PHOTO_PREFIX = 'fotografiaPEA';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly petGruposEdadConfig: TableConfig = {
@@ -145,15 +146,27 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     private tableNumbering: TableNumberingService
   ) {
     super(cdRef, autoLoader, injector, undefined, tableFacade);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
 
-    // Sync this.datos for compatibility
+    // Sync this.datos for compatibility - usar claves con prefijo
     effect(() => {
       const data = this.formDataSignal();
       // Merge tables from signals to ensure tables are present in this.datos
       const pet = this.petGruposEdadSignal();
       const distrito = this.peaDistritoSexoSignal();
       const ocup = this.peaOcupadaDesocupadaSignal();
+      
       this.datos = { ...data };
+      // Asignar con claves que usan prefijo
+      const pref = this.obtenerPrefijoGrupo();
+      if (pref) {
+        this.datos[`petGruposEdadAISI${pref}`] = pet;
+        this.datos[`peaDistritoSexoTabla${pref}`] = distrito;
+        this.datos[`peaOcupadaDesocupadaTabla${pref}`] = ocup;
+      }
+      // Mantener compatibilidad con código legacy que usa claves sin prefijo
       this.datos.petGruposEdadAISI = pet;
       this.datos.peaDistritoSexoTabla = distrito;
       this.datos.peaOcupadaDesocupadaTabla = ocup;
@@ -183,6 +196,18 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   protected get formChange(): FormChangeService { return this.injector.get(FormChangeService); }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    
     this.actualizarFotografiasFormMulti();
     this.eliminarFilasTotal();
     this.cargarDatosPEA();
@@ -569,7 +594,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
 
   getTotalPeaDistritoSexo(): string {
-    const tabla = this.datos[this.peaDistritoSexoConfig.tablaKey] || this.datos.peaDistritoSexoTabla || [];
+    const tabla = this.peaDistritoSexoSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => {
       const categoria = (item?.categoria || '').toString().toLowerCase();
@@ -580,7 +605,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
 
   getTotalPeaDistritoSexoHombres(): string {
-    const tabla = this.datos[this.peaDistritoSexoConfig.tablaKey] || this.datos.peaDistritoSexoTabla || [];
+    const tabla = this.peaDistritoSexoSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => {
       const categoria = (item?.categoria || '').toString().toLowerCase();
@@ -591,7 +616,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
 
   getTotalPeaDistritoSexoMujeres(): string {
-    const tabla = this.datos[this.peaDistritoSexoConfig.tablaKey] || this.datos.peaDistritoSexoTabla || [];
+    const tabla = this.peaDistritoSexoSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => {
       const categoria = (item?.categoria || '').toString().toLowerCase();
@@ -625,26 +650,30 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
 
   getPorcentajePEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
+    const tabla = this.peaDistritoSexoSignal() || [];
+    if (!Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
     return item?.porcentaje || '';
   }
 
   getPorcentajeNoPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
+    const tabla = this.peaDistritoSexoSignal() || [];
+    if (!Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentaje || '';
   }
 
   getPorcentajeHombresPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
+    const tabla = this.peaDistritoSexoSignal() || [];
+    if (!Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
     return item?.porcentajeHombres || '';
   }
 
   getPorcentajeMujeresNoPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
+    const tabla = this.peaDistritoSexoSignal() || [];
+    if (!Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentajeMujeres || '';
   }
 
@@ -652,20 +681,23 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   getRankingIngreso(): string { return this.datos?.rankingIngresoAISI || '1191'; }
 
   getPorcentajeDesempleo(): string {
-    if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) return '0,00 %';
-    const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('desocupada'));
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
+    if (!Array.isArray(tabla)) return '0,00 %';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('desocupada'));
     return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeHombresOcupados(): string {
-    if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) return '0,00 %';
-    const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('ocupada'));
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
+    if (!Array.isArray(tabla)) return '0,00 %';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('ocupada'));
     return item?.porcentajeHombres || '0,00 %';
   }
 
   getPorcentajeMujeresOcupadas(): string {
-    if (!this.datos?.peaOcupadaDesocupadaTabla || !Array.isArray(this.datos.peaOcupadaDesocupadaTabla)) return '0,00 %';
-    const item = this.datos.peaOcupadaDesocupadaTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('ocupada'));
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
+    if (!Array.isArray(tabla)) return '0,00 %';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('ocupada'));
     return item?.porcentajeMujeres || '0,00 %';
   }
   obtenerTextoPEA_AISI(): string {
@@ -754,7 +786,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
 
   // Compatibility helpers for template (PEA Ocupada/Desocupada totals)
   getTotalPeaOcupadaDesocupada(): string {
-    const tabla = this.datos[this.peaOcupadaDesocupadaConfig.tablaKey] || this.datos.peaOcupadaDesocupadaTabla || [];
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => {
       const categoria = (item?.categoria || '').toString().toLowerCase();
@@ -765,14 +797,14 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
 
   getTotalPeaOcupadaDesocupadaHombres(): string {
-    const tabla = this.datos[this.peaOcupadaDesocupadaConfig.tablaKey] || this.datos.peaOcupadaDesocupadaTabla || [];
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => sum + (typeof item.hombres === 'number' ? item.hombres : parseInt(item.hombres) || 0), 0);
     return total.toString();
   }
 
-  getTotalPeaOcupadaDesocupadaMujeres(): string {
-    const tabla = this.datos[this.peaOcupadaDesocupadaConfig.tablaKey] || this.datos.peaOcupadaDesocupadaTabla || [];
+  getTotalPeaOcupadaDesocupadasMujeres(): string {
+    const tabla = this.peaOcupadaDesocupadaSignal() || [];
     if (!Array.isArray(tabla)) return '0';
     const total = tabla.reduce((sum: number, item: any) => sum + (typeof item.mujeres === 'number' ? item.mujeres : parseInt(item.mujeres) || 0), 0);
     return total.toString();

@@ -20,7 +20,8 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   @Input() override seccionId: string = '3.1.4.B.1.8';
   @Input() override modoFormulario: boolean = false;
   // Photo prefix used by SectionPhotoCoordinator and ImageUpload flow
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB18';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -100,6 +101,10 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
 
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
     // Sync legacy data object for backward compatibility
     effect(() => {
       const d = this.formDataSignal();
@@ -158,6 +163,17 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    
     // Initialize empty tables if missing
     if (!Array.isArray(this.natalidadTablaSignal())) {
       this.onFieldChange('natalidadMortalidadCpTabla', []);

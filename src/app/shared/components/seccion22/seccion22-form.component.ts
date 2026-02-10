@@ -21,7 +21,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.1';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB11';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -77,7 +78,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   // Full title includes CP name and year when not already provided
   readonly fullTituloPoblacionSexoSignal: Signal<string> = computed(() => {
     const base = this.tituloPoblacionSexoSignal();
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
+    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
     const year = '2017';
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -94,7 +95,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly fullTituloPoblacionEtarioSignal: Signal<string> = computed(() => {
     const base = this.tituloPoblacionEtarioSignal();
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
+    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
     const year = '2017';
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -121,6 +122,9 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService, private textGenerator: ISeccion22TextGeneratorService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
     effect(() => {
       const data = this.formDataSignal();
@@ -136,6 +140,18 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    
     // Inicializar párrafos con valores por defecto
     const textoDemografia = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
     if (!textoDemografia || textoDemografia.trim() === '') {
@@ -204,7 +220,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     // Inicializar Títulos y Fuentes de cuadros (patrón Sección 21)
     const tituloSexoField = 'cuadroTituloPoblacionSexo';
     if (!this.datos[tituloSexoField]) {
-      const valorTitulo = `Población por sexo – CP ${this.datos.centroPobladoAISI || 'Cahuacho'} (2017)`;
+      const valorTitulo = `Población por sexo – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
       this.datos[tituloSexoField] = valorTitulo;
       this.onFieldChange(tituloSexoField, valorTitulo, { refresh: false });
     }
@@ -218,7 +234,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
     const tituloEtarioField = 'cuadroTituloPoblacionEtario';
     if (!this.datos[tituloEtarioField]) {
-      const valorTitulo = `Población por grupo etario – CP ${this.datos.centroPobladoAISI || 'Cahuacho'} (2017)`;
+      const valorTitulo = `Población por grupo etario – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
       this.datos[tituloEtarioField] = valorTitulo;
       this.onFieldChange(tituloEtarioField, valorTitulo, { refresh: false });
     }
@@ -232,7 +248,11 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void { }
+  protected override actualizarValoresConPrefijo(): void {
+    // Restaurar centroPobladoAISI con el prefijo correcto
+    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    this.datos.centroPobladoAISI = centro || null;
+  }
 
   actualizarTextoDemografia(valor: string): void {
     this.projectFacade.setField(this.seccionId, null, 'textoDemografiaAISI', valor);
@@ -353,7 +373,11 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     if (prefijo) {
       this.projectFacade.setField(this.seccionId, null, `poblacionSexoAISI${prefijo}`, tablaNormalizada);
     }
-    try { this.formChange.persistFields(this.seccionId, 'table', { poblacionSexoAISI: tablaNormalizada }); } catch (e) {}
+    try {
+      const payload: any = { poblacionSexoAISI: tablaNormalizada };
+      if (prefijo) payload[`poblacionSexoAISI${prefijo}`] = tablaNormalizada;
+      this.formChange.persistFields(this.seccionId, 'table', payload);
+    } catch (e) {}
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
@@ -373,7 +397,11 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     if (prefijo) {
       this.projectFacade.setField(this.seccionId, null, `poblacionEtarioAISI${prefijo}`, tablaNormalizada);
     }
-    try { this.formChange.persistFields(this.seccionId, 'table', { poblacionEtarioAISI: tablaNormalizada }); } catch (e) {}
+    try {
+      const payload: any = { poblacionEtarioAISI: tablaNormalizada };
+      if (prefijo) payload[`poblacionEtarioAISI${prefijo}`] = tablaNormalizada;
+      this.formChange.persistFields(this.seccionId, 'table', payload);
+    } catch (e) {}
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 

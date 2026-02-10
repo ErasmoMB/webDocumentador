@@ -11,6 +11,7 @@ import { CacheCleanupService } from 'src/app/core/services/infrastructure/cache-
 import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { AISIGroupService } from 'src/app/core/services/aisi-group.service';
 import { FotoItem } from './image-upload/image-upload.component';
 import { PhotoGroupConfig } from '../utils/photo-group-config';
 import { Subject, Subscription } from 'rxjs';
@@ -88,6 +89,14 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
 
   protected get photoNumberingService(): PhotoNumberingService | null {
     return this.resolveOptional(PhotoNumberingService);
+  }
+
+  /**
+   * ✅ AGREGADO: Servicio para acceder a datos del grupo AISI actual
+   * Proporciona métodos claros para obtener centros poblados, nombres, etc.
+   */
+  protected get aisiGroupService(): AISIGroupService {
+    return this.resolve(AISIGroupService);
   }
 
   private resolve<T>(token: ProviderToken<T>): T {
@@ -405,6 +414,54 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     }
     
     return '____';
+  }
+
+  // ============================================================================
+  // ✅ MÉTODOS DE CONVENIENCIA PARA GRUPOS AISI (usando AISIGroupService)
+  // ============================================================================
+
+  /**
+   * Obtiene los códigos de centros poblados del grupo AISI actual
+   * Ej: ['0214090010', '0214090059', ...]
+   */
+  protected getCodigosCentrosPobladosAISI(): readonly string[] {
+    return this.aisiGroupService.obtenerCodigosCentrosPoblados(this.seccionId);
+  }
+
+  /**
+   * Obtiene los nombres de los centros poblados del grupo AISI actual
+   * Útil para autocompletar y dropdowns
+   */
+  protected getNombresCentrosPobladosAISI(): readonly string[] {
+    return this.aisiGroupService.obtenerNombresCentrosPoblados(this.seccionId);
+  }
+
+  /**
+   * Obtiene el nombre de un centro poblado dado su código
+   */
+  protected getNombreCentroPobladoPorCodigoAISI(codigo: string): string | null {
+    return this.aisiGroupService.obtenerNombrePorCodigo(this.seccionId, codigo);
+  }
+
+  /**
+   * Obtiene el código de un centro poblado dado su nombre
+   */
+  protected getCodigoCentroPobladoPorNombreAISI(nombre: string): string | null {
+    return this.aisiGroupService.obtenerCodigoPorNombre(this.seccionId, nombre);
+  }
+
+  /**
+   * Verifica si un código de centro poblado pertenece al grupo AISI actual
+   */
+  protected perteneceCentroPobladoAlGrupoAISI(codigo: string): boolean {
+    return this.aisiGroupService.perteneceAlGrupoActual(this.seccionId, codigo);
+  }
+
+  /**
+   * DEBUG: Obtiene información detallada del grupo AISI actual
+   */
+  protected getAISIGroupDebugInfo(): object {
+    return this.aisiGroupService.obtenerInfoDebug(this.seccionId);
   }
 
   protected actualizarFotografiasCache(): void {
@@ -759,13 +816,23 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   private logGrupoAISI(numeroGrupo: number): void {
     const datos = this.projectFacade.obtenerDatos();
-    console.log(`[DEBUG logGrupoAISI] numeroGrupo: ${numeroGrupo}, datos keys: ${Object.keys(datos).join(', ')}`);
+    const gruposAISI = this.aisiGroups();
+    
+    console.log(`[DEBUG logGrupoAISI] numeroGrupo: ${numeroGrupo}`);
+    console.log(`[DEBUG logGrupoAISI] groupConfig.aisi.length: ${gruposAISI.length}`);
+    console.log(`[DEBUG logGrupoAISI] districtosAISI.length: ${(datos['distritosAISI'] || []).length}`);
+    
+    // Mostrar groupConfig.aisi directamente
+    console.log(`[DEBUG logGrupoAISI] groupConfig.aisi:`);
+    gruposAISI.forEach((g, i) => {
+      console.log(`  B.${i+1}: ${g.nombre} | CCPPs: ${g.ccppIds.length} | ${g.ccppIds.slice(0,3).join(', ')}...`);
+    });
     
     const distritos = datos['distritosAISI'] || [];
-    console.log(`[DEBUG logGrupoAISI] distritos.length: ${distritos.length}, numeroGrupo: ${numeroGrupo}`);
+    console.log(`[DEBUG logGrupoAISI] distritos.length: ${distritos.length}`);
     
     if (distritos.length === 0) {
-      console.log('%c⚠️ No hay distritos cargados.', 'color: #f59e0b; font-weight: bold');
+      console.log('%c⚠️ No hay distritos cargados en datos.', 'color: #f59e0b; font-weight: bold');
       return;
     }
     

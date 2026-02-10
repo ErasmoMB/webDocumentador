@@ -33,15 +33,31 @@ export class ImageStorageService {
     // ✅ Usar projectFacade.obtenerDatos() que ya lee de localStorage primero
     const datos = this.projectFacade.obtenerDatos();
     
+    console.log(`[FOTOS-DEBUG] loadImages | sectionId: ${sectionId} | prefix: ${prefix} | groupPrefix: "${groupPrefix}"`);
+    
+    // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
+    // Si prefix ya tiene el grupo (ej: "fotografia_B1") y groupPrefix es "_B1",
+    // no añadir groupPrefix de nuevo para evitar "fotografia_B11Imagen_B1"
+    const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
+    const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
+    
+    console.log(`[FOTOS-DEBUG]   prefixHasGroup: ${prefixHasGroup} | finalGroupPrefix: "${finalGroupPrefix}"`);
+    
     for (let i = 1; i <= maxPhotos; i++) {
-      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
-      let imagen = datos[imagenKey];
-      if (i === 1 && !imagen) {
-        const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-        imagen = datos[imagenBaseKey];
-      }
+      // ✅ CLAVE CORREGIDA: {prefix}{i}Imagen{finalGroupPrefix}
+      // Ej: "fotografia1Imagen_B1" o "fotografia_B11Imagen" (si prefix ya tiene grupo)
+      const imagenKey = finalGroupPrefix ? `${prefix}${i}Imagen${finalGroupPrefix}` : `${prefix}${i}Imagen`;
+      const tituloKey = finalGroupPrefix ? `${prefix}${i}Titulo${finalGroupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = finalGroupPrefix ? `${prefix}${i}Fuente${finalGroupPrefix}` : `${prefix}${i}Fuente`;
+      
+      console.log(`[FOTOS-DEBUG]   Buscando clave: "${imagenKey}"`);
+      
+      const imagen = datos[imagenKey];
+      
+      console.log(`[FOTOS-DEBUG]   imagen: ${imagen ? 'ENCONTRADA' : 'NO ENCONTRADA'}`);
+      
+      // ✅ SIN FALLBACK - Si no hay imagen en clave prefijada, NO buscar en clave base
+      // Esto asegura aislamiento completo entre grupos AISI
       if (this.imageLogic.isValidImage(imagen)) {
         const imagenUrl = this.imageLogic.getImageUrl(imagen);
         const titulo = datos[tituloKey] || `Foto ${i}`;
@@ -50,7 +66,7 @@ export class ImageStorageService {
           sectionId,
           i,
           prefix,
-          groupPrefix
+          finalGroupPrefix
         );
         fotografias.push({
           numero: numeroGlobal,
@@ -58,8 +74,11 @@ export class ImageStorageService {
           fuente,
           imagen: imagenUrl
         });
+        console.log(`[FOTOS-DEBUG]   ✅ Foto ${i} cargada: ${titulo}`);
       }
     }
+    
+    console.log(`[FOTOS-DEBUG] loadImages FINAL | fotosCargadas: ${fotografias.length}`);
     return fotografias;
   }
 
@@ -71,21 +90,28 @@ export class ImageStorageService {
     maxPhotos: number = 10
   ): void {
     const updates: Record<string, any> = {};
-
+    
+    // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
+    const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
+    const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
+    
+    console.log(`[FOTOS-DEBUG] saveImages | sectionId: ${sectionId} | prefix: ${prefix} | groupPrefix: "${groupPrefix}" | prefixHasGroup: ${prefixHasGroup} | finalGroupPrefix: "${finalGroupPrefix}"`);
+    
     for (let i = 1; i <= maxPhotos; i++) {
-      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
-      const numeroKey = groupPrefix ? `${prefix}${i}Numero${groupPrefix}` : `${prefix}${i}Numero`;
+      // ✅ CLAVES CORREGIDAS: {prefix}{i}Imagen{finalGroupPrefix}
+      const imagenKey = finalGroupPrefix ? `${prefix}${i}Imagen${finalGroupPrefix}` : `${prefix}${i}Imagen`;
+      const tituloKey = finalGroupPrefix ? `${prefix}${i}Titulo${finalGroupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = finalGroupPrefix ? `${prefix}${i}Fuente${finalGroupPrefix}` : `${prefix}${i}Fuente`;
+      const numeroKey = finalGroupPrefix ? `${prefix}${i}Numero${finalGroupPrefix}` : `${prefix}${i}Numero`;
       updates[imagenKey] = '';
       updates[tituloKey] = '';
       updates[fuenteKey] = '';
       updates[numeroKey] = '';
     }
 
-    const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-    const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
-    const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
+    const imagenBaseKey = finalGroupPrefix ? `${prefix}Imagen${finalGroupPrefix}` : `${prefix}Imagen`;
+    const tituloBaseKey = finalGroupPrefix ? `${prefix}Titulo${finalGroupPrefix}` : `${prefix}Titulo`;
+    const fuenteBaseKey = finalGroupPrefix ? `${prefix}Fuente${finalGroupPrefix}` : `${prefix}Fuente`;
     updates[imagenBaseKey] = '';
     updates[tituloBaseKey] = '';
     updates[fuenteBaseKey] = '';
@@ -95,16 +121,16 @@ export class ImageStorageService {
       if (this.imageLogic.isValidImage(foto.imagen)) {
         validIndex++;
         const num = validIndex;
-        const imagenKey = groupPrefix ? `${prefix}${num}Imagen${groupPrefix}` : `${prefix}${num}Imagen`;
-        const tituloKey = groupPrefix ? `${prefix}${num}Titulo${groupPrefix}` : `${prefix}${num}Titulo`;
-        const fuenteKey = groupPrefix ? `${prefix}${num}Fuente${groupPrefix}` : `${prefix}${num}Fuente`;
-        const numeroKey = groupPrefix ? `${prefix}${num}Numero${groupPrefix}` : `${prefix}${num}Numero`;
+        const imagenKey = finalGroupPrefix ? `${prefix}${num}Imagen${finalGroupPrefix}` : `${prefix}${num}Imagen`;
+        const tituloKey = finalGroupPrefix ? `${prefix}${num}Titulo${finalGroupPrefix}` : `${prefix}${num}Titulo`;
+        const fuenteKey = finalGroupPrefix ? `${prefix}${num}Fuente${finalGroupPrefix}` : `${prefix}${num}Fuente`;
+        const numeroKey = finalGroupPrefix ? `${prefix}${num}Numero${finalGroupPrefix}` : `${prefix}${num}Numero`;
 
         const numeroGlobal = foto.numero || this.photoNumberingService.getGlobalPhotoNumber(
           sectionId,
           num,
           prefix,
-          groupPrefix
+          finalGroupPrefix
         );
         
         const imagenValue = foto.imagen 
@@ -117,9 +143,9 @@ export class ImageStorageService {
         updates[fuenteKey] = foto.fuente || '';
 
         if (num === 1) {
-          const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
-          const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
-          const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
+          const imagenBaseKey = finalGroupPrefix ? `${prefix}Imagen${finalGroupPrefix}` : `${prefix}Imagen`;
+          const tituloBaseKey = finalGroupPrefix ? `${prefix}Titulo${finalGroupPrefix}` : `${prefix}Titulo`;
+          const fuenteBaseKey = finalGroupPrefix ? `${prefix}Fuente${finalGroupPrefix}` : `${prefix}Fuente`;
 
           updates[imagenBaseKey] = imagenValue;
           updates[tituloBaseKey] = foto.titulo || '';
@@ -133,41 +159,20 @@ export class ImageStorageService {
       this.projectFacade.setFields(sectionId, null, updates);
       try { this.formChange.persistFields(sectionId, 'form', updates); } catch (e) { /* persist form error */ }
       try { this.formChange.persistFields(sectionId, 'images', updates); } catch (e) { /* persist images error */ }
-
-      // DEBUG: check stored sample keys (first image slot)
-      try {
-        const sampleImgKey = Object.keys(updates).find(k => k.toLowerCase().includes('imagen'));
-        if (sampleImgKey) {
-          // sample key saved (debug removed)
-        }
-      } catch (e) { /* debug sample read error */ }
     }
 
     // ✅ Notificar al ReactiveStateAdapter para actualizar la vista inmediatamente
-    // refreshing state adapter and notifying views
     this.stateAdapter.refreshFromStorage();
 
     // ✅ Forzar actualización en todos los componentes registrados (preview y formularios)
     try {
       const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
       if (ViewChildHelper && typeof ViewChildHelper.updateAllComponents === 'function') {
-        // calling ViewChildHelper.updateAllComponents
         ViewChildHelper.updateAllComponents('actualizarDatos');
-        // fallback extra tick to avoid timing/race issues when many updates occur quickly
         setTimeout(() => {
-          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
-        }, 120);
+          ViewChildHelper.updateAllComponents('actualizarDatos');
+        });
       }
-    } catch (e) {
-      // ignore if helper not available
-    }
-
-    // Recompute global photo numbering and persist changes (if any) so numbers stay globally consecutive.
-    // Use a scheduled renumber to coalesce rapid successive saves and avoid race conditions.
-    try {
-      this.photoNumberingService.scheduleRenumber(80);
-    } catch (e) {
-      /* renumber schedule error */
-    }
+    } catch (e) { /* ViewChildHelper not available */ }
   }
 }

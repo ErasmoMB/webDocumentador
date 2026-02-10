@@ -22,7 +22,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.4';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB14';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   fotografiasSeccion25: FotoItem[] = [];
@@ -140,6 +141,9 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumberingService: TableNumberingService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
     // EFFECT: Sync datos
     effect(() => {
@@ -162,6 +166,22 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    try {
+      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
+      const formChange = this.injector.get(FormChangeServiceToken, null);
+      if (formChange) formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI });
+    } catch (e) {}
+    
     this.cargarFotografias();
 
     // Auto-fill table titles and sources when tables are present but title/source fields are empty

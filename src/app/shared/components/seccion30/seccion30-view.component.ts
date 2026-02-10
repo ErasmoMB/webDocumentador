@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion30-view',
@@ -16,7 +17,8 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
   @Input() override seccionId: string = '3.1.4.B.1.9';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB19';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   // Textos por defecto
@@ -127,9 +129,21 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
 
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
     effect(() => {
       const data = this.formDataSignal();
-      this.datos = { ...data };
+      // Merge instead of replace: keep existing datos when selector is empty (fallback to BaseSectionComponent data)
+      if (data && Object.keys(data).length > 0) {
+        this.datos = { ...this.datos, ...data };
+      }
+      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
       this.cdRef.markForCheck();
     });
 

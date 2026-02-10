@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -18,7 +19,8 @@ import { TableNumberingService } from 'src/app/core/services/table-numbering.ser
 export class Seccion26ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.5';
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB15';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidosAISI';
   readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidadAISI';
   readonly PHOTO_PREFIX_COCINAR = 'fotografiaEnergiaCocinarAISI';
@@ -209,9 +211,21 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
 
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
     effect(() => {
       const data = this.formDataSignal();
-      this.datos = { ...data };
+      // Merge instead of replace: keep existing datos when selector is empty (fallback to BaseSectionComponent data)
+      if (data && Object.keys(data).length > 0) {
+        this.datos = { ...this.datos, ...data };
+      }
+      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
       this.cdRef.markForCheck();
     });
 

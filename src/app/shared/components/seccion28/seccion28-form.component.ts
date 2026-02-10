@@ -26,7 +26,8 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
   @Input() override seccionId: string = '3.1.4.B.1.7';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB17';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   readonly PHOTO_PREFIX_SALUD = 'fotografiaSaludAISI';
   readonly PHOTO_PREFIX_EDUCACION = 'fotografiaEducacionAISI';
   readonly PHOTO_PREFIX_RECREACION = 'fotografiaRecreacionAISI';
@@ -81,9 +82,24 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     autoLoader: AutoBackendDataLoaderService
   ) {
     super(cdRef, autoLoader, injector, undefined, tableFacade);
+
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
   }
 
   protected override onInitCustom(): void {
+    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    const centroPobladoAISI = this.obtenerCentroPobladoAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    
+    // Actualizar tanto el objeto local como el store
+    this.datos[campoConPrefijo] = centroPobladoAISI;
+    this.datos['centroPobladoAISI'] = centroPobladoAISI;
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
+    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
+    
     this.actualizarFotografiasFormMulti();
     // ✅ ORDEN CORREGIDO: Primero cargar datos, LUEGO inicializar
     this.inicializarPuestoSalud();

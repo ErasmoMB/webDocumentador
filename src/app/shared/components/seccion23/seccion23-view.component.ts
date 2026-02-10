@@ -30,7 +30,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     'textoEmpleoAISI', 'textoEmpleoDependiente_AISI', 'textoIndiceDesempleoAISI'
   ];
 
-  override readonly PHOTO_PREFIX = 'fotografiaPEA';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -69,12 +70,20 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
     super(cdRef, injector);
+    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
 
     effect(() => {
       const data = this.formDataSignal();
       // Merge instead of replace: keep existing datos when selector is empty (fallback to BaseSectionComponent data)
       if (data && Object.keys(data).length > 0) {
         this.datos = { ...this.datos, ...data };
+      }
+      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
       }
       this.cdRef.markForCheck();
     });

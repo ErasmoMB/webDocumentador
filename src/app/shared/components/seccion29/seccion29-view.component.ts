@@ -1,10 +1,10 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Signal, computed, effect } from '@angular/core';
 import { BaseSectionComponent } from '../base-section.component';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion29-view',
@@ -18,7 +18,8 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   @Input() override modoFormulario: boolean = false;
 
   // Photo prefix used by SectionPhotoCoordinator and to load images into `fotografiasCache`
-  override readonly PHOTO_PREFIX = 'fotografiaCahuachoB18';
+  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  override readonly PHOTO_PREFIX: string;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -64,9 +65,18 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
 
+    // ✅ Inicializar PHOTO_PREFIX dinámicamente
+    const prefijo = this.obtenerPrefijoGrupo();
+    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
     effect(() => {
       const d = this.formDataSignal();
       this.datos = { ...this.datos, ...d };
+      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
+      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(d, 'centroPobladoAISI', this.seccionId);
+      if (centroPrefijado) {
+        this.datos.centroPobladoAISI = centroPrefijado;
+      }
       this.cdRef.markForCheck();
     });
 

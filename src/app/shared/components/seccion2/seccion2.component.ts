@@ -109,9 +109,18 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
         nombre: g.nombre,
         centrosPobladosSeleccionados: g.ccppIds || []
       }));
-      this.formChangeService.persistFields('3.1.2', 'form', {
-        distritosAISI: distritosParaPersistir
-      });
+      
+      console.debug(`[SECCION2-DEBUG] 🔄 EFFECT EJECUTADO | grupos: ${gruposAISI.length}`);
+      console.debug(`[SECCION2-DEBUG]   B.1: ${gruposAISI[0]?.nombre} | CCPPs: ${gruposAISI[0]?.ccppIds?.length || 0}`);
+      console.debug(`[SECCION2-DEBUG]   B.2: ${gruposAISI[1]?.nombre} | CCPPs: ${gruposAISI[1]?.ccppIds?.length || 0}`);
+      
+      // Persistir solo si hay datos
+      if (distritosParaPersistir.length > 0) {
+        this.formChangeService.persistFields('3.1.2', 'form', {
+          distritosAISI: distritosParaPersistir
+        });
+        console.debug(`[SECCION2-DEBUG] ✅ distritosAISI persistido`);
+      }
     });
 
     effect(() => {
@@ -239,54 +248,62 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
   }
 
   addCCPPToComunidad(communityId: string, ccppId: string): void {
-    const grupo = this.aisdGroups().find(g => g.id === communityId);
-    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/addCCPPToGroup | tipo: AISD | groupId: ${communityId} | ccppId: ${ccppId}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
-    console.log(`✅ Centro poblado ${ccppId} agregado a AISD A.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
+    this.persistirComunidadesCampesinas();
+    
+    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   removeCCPPFromComunidad(communityId: string, ccppId: string): void {
-    const grupo = this.aisdGroups().find(g => g.id === communityId);
-    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/removeCCPPFromGroup | tipo: AISD | groupId: ${communityId} | ccppId: ${ccppId}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
-    console.log(`❌ Centro poblado ${ccppId} removido de AISD A.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
+    this.persistirComunidadesCampesinas();
+    
+    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   addCCPPToDistrito(districtId: string, ccppId: string): void {
-    const grupo = this.aisiGroups().find(g => g.id === districtId);
-    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/addCCPPToGroup | tipo: AISI | groupId: ${districtId} | ccppId: ${ccppId}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
     });
-    console.log(`✅ Centro poblado ${ccppId} agregado a AISI B.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de distritosAISI después del dispatch
+    this.persistirDistritosAISI();
+    
+    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   removeCCPPFromDistrito(districtId: string, ccppId: string): void {
-    const grupo = this.aisiGroups().find(g => g.id === districtId);
-    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/removeCCPPFromGroup | tipo: AISI | groupId: ${districtId} | ccppId: ${ccppId}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
     });
-    console.log(`❌ Centro poblado ${ccppId} removido de AISI B.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de distritosAISI después del dispatch
+    this.persistirDistritosAISI();
+    
+    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
@@ -313,6 +330,8 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     if (!codigoNormalizado) return;
 
     const existe = grupo.ccppIds.includes(codigoNormalizado);
+    console.debug(`[SECCION2-DEBUG] 🔄 toggleCentroPobladoDistrito | id: ${id} | codigo: ${codigoNormalizado} | existe: ${existe}`);
+    
     if (existe) {
       this.removeCCPPFromDistrito(id, codigoNormalizado);
     } else {
@@ -340,10 +359,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
     
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (seleccionar todos) | AISD A.${numeroGrupo} | ccppIds: ${codigos.length}`);
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: codigos }
     });
+    
+    // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
+    this.persistirComunidadesCampesinas();
+    
     console.log(`✅ Seleccionados ${codigos.length} centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
@@ -353,10 +378,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
     const nombreGrupo = grupo?.nombre || '?';
     
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (deseleccionar todos) | AISD A.${numeroGrupo} | ccppIds: []`);
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: [] }
     });
+    
+    // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
+    this.persistirComunidadesCampesinas();
+    
     console.log(`❌ Deseleccionados todos los centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
@@ -367,11 +398,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
     
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (seleccionar todos) | AISI B.${numeroGrupo} | ccppIds: ${codigos.length}`);
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISI', groupId: id, ccppIds: codigos }
     });
-    console.log(`✅ Seleccionados ${codigos.length} centros poblados en AISI B.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de distritosAISI después del dispatch
+    this.persistirDistritosAISI();
+    
     this.cdRef.markForCheck();
   }
 
@@ -380,11 +416,16 @@ export class Seccion2Component extends BaseSectionComponent implements OnDestroy
     const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
     const nombreGrupo = grupo?.nombre || '?';
     
+    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (deseleccionar todos) | AISI B.${numeroGrupo} | ccppIds: []`);
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISI', groupId: id, ccppIds: [] }
     });
-    console.log(`❌ Deseleccionados todos los centros poblados en AISI B.${numeroGrupo} - ${nombreGrupo}`);
+    
+    // ✅ FORZAR persistencia de distritosAISI después del dispatch
+    this.persistirDistritosAISI();
+    
     this.cdRef.markForCheck();
   }
 
@@ -619,5 +660,47 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
 
   trackByDistritoId(index: number, distrito: GroupDefinition): string {
     return distrito.id;
+  }
+
+  /**
+   * ✅ Persiste distritosAISI en localStorage después de cambios
+   */
+  private persistirDistritosAISI(): void {
+    const gruposAISI = this.aisiGroups();
+    const distritosParaPersistir = gruposAISI.map(g => ({
+      id: g.id,
+      nombre: g.nombre,
+      centrosPobladosSeleccionados: g.ccppIds || []
+    }));
+    
+    console.debug(`[SECCION2-DEBUG] 💾 persistirDistritosAISI | grupos: ${gruposAISI.length}`);
+    console.debug(`[SECCION2-DEBUG]   B.1: ${gruposAISI[0]?.nombre} | CCPPs: ${gruposAISI[0]?.ccppIds?.length || 0}`);
+    console.debug(`[SECCION2-DEBUG]   B.2: ${gruposAISI[1]?.nombre} | CCPPs: ${gruposAISI[1]?.ccppIds?.length || 0}`);
+    
+    this.formChangeService.persistFields('3.1.2', 'form', {
+      distritosAISI: distritosParaPersistir
+    });
+    
+    console.debug(`[SECCION2-DEBUG] ✅ distritosAISI persistido`);
+  }
+
+  /**
+   * ✅ Persiste comunidadesCampesinas en localStorage después de cambios
+   */
+  private persistirComunidadesCampesinas(): void {
+    const gruposAISD = this.aisdGroups();
+    const comunidadesParaPersistir = gruposAISD.map(g => ({
+      id: g.id,
+      nombre: g.nombre,
+      centrosPobladosSeleccionados: g.ccppIds || []
+    }));
+    
+    console.debug(`[SECCION2-DEBUG] 💾 persistirComunidadesCampesinas | grupos: ${gruposAISD.length}`);
+    
+    this.formChangeService.persistFields('3.1.2', 'form', {
+      comunidadesCampesinas: comunidadesParaPersistir
+    });
+    
+    console.debug(`[SECCION2-DEBUG] ✅ comunidadesCampesinas persistido`);
   }
 }

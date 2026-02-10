@@ -17,15 +17,25 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 export class Seccion21ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B';
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
-  override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
+  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  readonly photoPrefixSignal: Signal<string>;
+  
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private sanitizer: DomSanitizer) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
+      return prefix;
+    });
+
+    // Effect para logging (opcional, para debug)
+    effect(() => {
+      console.debug(`[PHOTO-PREFIX-SIGNAL] ${this.photoPrefixSignal()}`);
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -91,23 +101,31 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const prefix = this.photoPrefixSignal();
+    console.debug(`[FOTOS-VIEW-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
+    
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      
+      console.debug(`[FOTOS-VIEW-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
+      
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
+    console.debug(`[FOTOS-VIEW-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
+    const prefix = this.photoPrefixSignal();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
