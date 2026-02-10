@@ -35,9 +35,14 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Effect para loguear el grupo AISI actual (se ejecuta cuando cambian los datos)
     effect(() => {
       const grupo = this.obtenerGrupoActualAISI();
-      if (grupo) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (grupo && prefijo) {
+        // Extraer ID del prefijo: "_B1" → "B.1"
+        const match = prefijo.match(/_B(\d+)/);
+        const grupoId = match ? `B.${match[1]}` : prefijo;
+        
         const ccppIds = grupo.ccppIds || [];
-        console.log(`🗺️ GRUPO AISI: ${grupo.id} - ${grupo.nombre || 'Sin nombre'}`);
+        console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
         console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
       }
     });
