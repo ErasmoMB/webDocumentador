@@ -6,6 +6,8 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-seccion21-view',
@@ -19,20 +21,53 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
 
   override useReactiveSync: boolean = true;
 
-  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  // PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
   
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private sanitizer: DomSanitizer) {
+  // NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private sanitizer: DomSanitizer,
+    private globalNumbering: GlobalNumberingService,
+    private tableNumbering: TableNumberingService
+  ) {
     super(cdRef, injector);
     
-    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    console.debug('[SECCION21-VIEW] Constructor iniciado');
+    
+    // Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
+      console.debug(`[SECCION21-VIEW] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
-
-    // ✅ Effect para loguear el grupo AISI actual (se ejecuta cuando cambian los datos)
+    
+    // Signal para número global de tabla
+    this.globalTableNumberSignal = computed(() => {
+      // La tabla de ubicación es la primera (índice 0)
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION21-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      const photoNumbers = fotos.map((_, index) => {
+        // NO agregar prefijo "3." porque getGlobalPhotoNumber ya lo incluye
+        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+      });
+      console.debug(`[SECCION21-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
+    
+    // Effect para loguear el grupo AISI actual
     effect(() => {
       const grupo = this.obtenerGrupoActualAISI();
       const prefijo = this.obtenerPrefijoGrupo();
@@ -54,6 +89,7 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
         console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
         console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
         console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
+        console.log(`🔢 NÚMERO GLOBAL DE TABLA: ${this.globalTableNumberSignal()}`);
       }
     });
 
@@ -96,9 +132,10 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal();
     const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
-    const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '';
+    const texto = `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    return texto;
   });
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
@@ -106,8 +143,8 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal();
     const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || 'Caravelí';
-    const departamento = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || 'Arequipa';
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || 'Caravelí';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || 'Arequipa';
     const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '8004';
     const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaCreacionDistrito')() || '22 de febrero de 1935';
     const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || 'Cahuacho';
@@ -146,7 +183,7 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      hash += `${i}:${!!imagen}:`;
     }
     return hash;
   });
@@ -155,70 +192,40 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
     const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return fromField ?? fromTable ?? [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
+    console.debug(`[UBICACION-CP] computed signal triggered for seccionId=${this.seccionId} with key=${tablaKey}, data length=${fromField?.length}`);
+    return (fromField as any[]) || [];
   });
 
   readonly viewModel = computed(() => ({
-    parrafoAisi: this.parrafoAisiSignal(),
-    parrafoCentro: this.parrafoCentroSignal(),
     fotos: this.fotosCacheSignal(),
-    ubicacionCp: this.ubicacionCpSignal()
+    ubicacionCp: this.ubicacionCpSignal(),
+    parrafoAisi: this.parrafoAisiSignal(),
+    parrafoCentro: this.parrafoCentroSignal()
   }));
 
   formatearParrafo(texto: string): SafeHtml {
-    if (!texto) return '' as any;
-    const parrafos = texto.split(/\n\n+/);
-    const resultado = parrafos.map(p => {
-      const textoLimpio = p.trim().replace(/\n/g, '<br>');
-      return `<p class="text-justify">${textoLimpio}</p>`;
-    }).join('');
-    return this.sanitizer.bypassSecurityTrustHtml(resultado);
+    if (!texto) return '';
+    // Reemplazar saltos de línea con <br>
+    const textoConBR = texto.replace(/\n/g, '<br>');
+    return this.sanitizer.bypassSecurityTrustHtml(textoConBR);
   }
 
-  protected override onInitCustom(): void {
-    // Inicializar datos con prefijos correctos
-    const data = this.formDataSignal();
+  getFotoByIndex(index: number): FotoItem {
+    const fotos = this.fotosCacheSignal();
+    return fotos[index] || null;
+  }
+
+  // Helper para obtener tabla de ubicación
+  getTableData(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
-    const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
     const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
-    const tituloTablaKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
-    
-    const tablas: Record<string, any> = {};
-    tablas[tablaKey] = this.ubicacionCpSignal();
-    tablas['ubicacionCpTabla'] = tablas[tablaKey]; // Para compatibilidad
-    tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
-    tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
-    tablas[tituloTablaKey] = PrefijoHelper.obtenerValorConPrefijo(data, 'cuadroTituloUbicacionCp', this.seccionId) || `Ubicación referencial – Centro Poblado ${tablas[centroConPrefijo]}`;
-    
-    this.datos = { ...data, ...tablas };
+    return this.ubicacionCpSignal();
   }
 
   protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void {
-    // Agregar valores con prefijos para que la plantilla HTML pueda usarlos
-    const prefijo = this.obtenerPrefijoGrupo();
-    const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
-    const tituloTablaKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
-    
-    // Asegurar que centroPobladoAISI esté disponible para la plantilla
-    if (!this.datos.centroPobladoAISI || this.datos.centroPobladoAISI === '____') {
-      const centroConPrefijoValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-      if (centroConPrefijoValor && centroConPrefijoValor !== '____') {
-        this.datos.centroPobladoAISI = centroConPrefijoValor;
-      }
-    }
-    
-    // Asegurar que cuadroTituloUbicacionCp esté disponible para la plantilla
-    if (!this.datos['cuadroTituloUbicacionCp'] || this.datos['cuadroTituloUbicacionCp'] === '____') {
-      const tituloConPrefijoValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'cuadroTituloUbicacionCp', this.seccionId);
-      if (tituloConPrefijoValor && tituloConPrefijoValor !== '____') {
-        this.datos['cuadroTituloUbicacionCp'] = tituloConPrefijoValor;
-      } else if (this.datos.centroPobladoAISI && this.datos.centroPobladoAISI !== '____') {
-        this.datos['cuadroTituloUbicacionCp'] = `Ubicación referencial – Centro Poblado ${this.datos.centroPobladoAISI}`;
-      }
-    }
-  }
+  protected override actualizarValoresConPrefijo(): void { }
 
-  trackByIndex(index: number): number { return index; }
+  override ngOnDestroy(): void {
+    console.debug('[SECCION21-VIEW] ngOnDestroy');
+  }
 }

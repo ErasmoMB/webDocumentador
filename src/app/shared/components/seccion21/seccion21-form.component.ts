@@ -6,6 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -20,22 +21,54 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   override useReactiveSync: boolean = true;
 
-  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  // PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
+  
+  // NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private formChange: FormChangeService,
+    private globalNumbering: GlobalNumberingService
+  ) {
     super(cdRef, injector);
     
-    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    console.debug('[SECCION21-FORM] Constructor iniciado');
+    
+    // Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
+      console.debug(`[SECCION21-FORM] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
+    
+    // Signal para número global de tabla
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION21-FORM] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      const photoNumbers = fotos.map((_, index) => {
+        // NO agregar prefijo "3." porque getGlobalPhotoNumber ya lo incluye
+        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+      });
+      console.debug(`[SECCION21-FORM] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
 
-    // Effect para logging (opcional, para debug)
+    // Effect para logging
     effect(() => {
       console.debug(`[PHOTO-PREFIX-SIGNAL-FORM] ${this.photoPrefixSignal()}`);
+      console.debug(`[NUMERACION-GLOBAL-FORM] Tabla: ${this.globalTableNumberSignal()}`);
     });
 
     effect(() => {

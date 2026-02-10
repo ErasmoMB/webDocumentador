@@ -12,7 +12,13 @@
     <p class="text-justify">El CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____' }}</span> es la capital del distrito homónimo, perteneciente a la provincia de <span [appDataSource]="'section'">{{ datos.provinciaSeleccionada || '____' }}</span>, en el departamento de <span [appDataSource]="'section'">{{ datos.departamentoSeleccionado || '____' }}</span>. Su designación como capital distrital se oficializó mediante la Ley N°<span [appDataSource]="'manual'">{{ datos.leyCreacionDistrito || '____' }}</span>, promulgada el <span [appDataSource]="'manual'">{{ datos.fechaCreacionDistrito || '____' }}</span>.</p>
   </ng-template>
 
-  <app-table-wrapper [title]="datos['cuadroTituloUbicacionCp'] || ('Ubicación referencial – Centro Poblado ' + (datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____'))" [sectionId]="seccionId">
+  <!-- Número de cuadro con numeración global -->
+  <p class="table-title">Cuadro N° {{ globalTableNumberSignal() }}</p>
+  
+  <app-table-wrapper 
+    [title]="datos['cuadroTituloUbicacionCp'] || ('Ubicación referencial – Centro Poblado ' + (datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____'))" 
+    [sectionId]="seccionId"
+    [hideNumber]="true">
     <app-generic-table
       [data]="viewModel().ubicacionCp"
       [config]="{

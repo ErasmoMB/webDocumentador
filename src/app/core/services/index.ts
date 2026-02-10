@@ -22,6 +22,9 @@ export * from './word-generator.facade.service';
 export * from './section-table-registry.service';
 export * from './table-handler-factory.service';
 
+// ✅ NUEVO: Servicio de numeración global para cuadros y fotos
+export * from './global-numbering.service';
+
 // ✅ NUEVO: Servicio para grupos AISI
 export * from './aisi-group.service';
 
