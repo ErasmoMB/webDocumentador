@@ -509,10 +509,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   private calculateGlobalPhotoNumber(index: number): string {
     try {
       const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      const photoIndexOneBased = (index || 0) + 1; // index is 0-based in templates
+      // photoIndex 0-basado (igual que GlobalNumberingService espera)
+      // La fórmula en GlobalNumberingService es: fotosAnteriores + photoIndex + 1
+      const photoIndex = index; // NO sumar +1 aquí
       const numero = this.photoNumberingService.getGlobalPhotoNumber(
         this.sectionId,
-        photoIndexOneBased,
+        photoIndex,
         this.photoPrefix,
         groupPrefix
       );

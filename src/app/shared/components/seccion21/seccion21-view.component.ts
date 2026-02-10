@@ -59,13 +59,31 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     this.globalPhotoNumbersSignal = computed(() => {
       const prefix = this.photoPrefixSignal();
       const fotos = this.fotosCacheSignal();
+      console.log(`[SECCION21-VIEW] 📷 Calculando fotos para ${this.seccionId}`);
+      console.log(`[SECCION21-VIEW]   prefix: ${prefix}, fotos.length: ${fotos.length}`);
+      
       const photoNumbers = fotos.map((_, index) => {
-        // NO agregar prefijo "3." porque getGlobalPhotoNumber ya lo incluye
-        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+        // photoIndex 0-basado (la primera foto del grupo es 0)
+        // La fórmula en GlobalNumberingService es: offset + photoIndex + 1
+        const globalNum = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+        console.log(`[SECCION21-VIEW]   foto ${index}: ${globalNum}`);
+        return globalNum;
       });
-      console.debug(`[SECCION21-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      
+      console.log(`[SECCION21-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
+    
+    // Effect para logs de fotos (ya no necesario, removemos)
+    // effect(() => {
+    //   const prefix = this.photoPrefixSignal();
+    //   const fotos = this.fotosCacheSignal();
+    //   console.log(`[DEBUG-FOTOS] ===> sectionId: ${this.seccionId}, prefix: ${prefix}, fotos: ${fotos.length}`);
+    //   fotos.forEach((foto, index) => {
+    //     const num = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+    //     console.log(`[DEBUG-FOTOS] Foto ${index}: ${num}`);
+    //   });
+    // });
     
     // Effect para loguear el grupo AISI actual
     effect(() => {

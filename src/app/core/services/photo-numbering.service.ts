@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ProjectStateFacade } from '../state/project-state.facade';
 import { FormChangeService } from './state/form-change.service';
+import { GlobalNumberingService } from './global-numbering.service';
 
 /**
  * PhotoNumberingService - Servicio para numeración de fotografías
  * 
  * ✅ FASE 4: Migrado a usar solo ProjectStateFacade
+ * ✅ FASE 5: Delega a GlobalNumberingService para grupos AISI dinámicos (B.2, B.3, etc.)
  */
 @Injectable({
   providedIn: 'root'
@@ -85,7 +87,8 @@ export class PhotoNumberingService {
 
   constructor(
     private projectFacade: ProjectStateFacade,
-    private formChange: FormChangeService
+    private formChange: FormChangeService,
+    private globalNumbering: GlobalNumberingService
   ) {
     this.printConfigurationSummary();
   }
@@ -187,6 +190,14 @@ export class PhotoNumberingService {
     prefix: string,
     groupPrefix: string = ''
   ): string {
+    // ✅ NUEVO: Delegar a GlobalNumberingService para secciones AISI dinámicas (B.2, B.3, etc.)
+    if (sectionId.includes('.B.')) {
+      const prefijoGrupo = groupPrefix || this.extractGroupSuffix(sectionId);
+      console.log(`[PHOTO-NUM] Delegando a GlobalNumberingService: sectionId=${sectionId}, prefix=${prefix}, groupPrefix=${prefijoGrupo}`);
+      return this.globalNumbering.getGlobalPhotoNumber(sectionId, prefijoGrupo, photoIndexInSection);
+    }
+    
+    // ✅ Lógica original para secciones no-AISI (3.1.1, 3.1.2, 3.1.3, AISD)
     const currentSection = this.getSectionConfig(sectionId);
     
     if (!currentSection) {
@@ -263,7 +274,6 @@ export class PhotoNumberingService {
 
             // Sort deterministically (alphabetical) and accumulate counts until target prefix
             const ordered = Array.from(discovered).sort();
-            // discovered prefixes for section (debug removed)
 
             for (const p of ordered) {
               if (p === prefix) break;
