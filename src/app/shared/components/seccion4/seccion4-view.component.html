@@ -1,0 +1,94 @@
+<!-- Vista previa (modo lectura) -->
+<div class="document-view">
+  <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
+  <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
+
+  <!-- Párrafos dinámicos procesados por TextGeneratorService -->
+  <div [innerHTML]="viewModel().texts.introduccionText"></div>
+
+  <h5 class="cc-identifier">A.1. Comunidad Campesina {{ viewModel().nombreComunidad }}</h5>
+
+  <div [innerHTML]="viewModel().texts.comunidadText"></div>
+
+  <!-- Tabla de Ubicación Referencial -->
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD1'] || 'Ubicación referencial') + ' – CC ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A1'">
+    <app-generic-table
+      [data]="viewModel().tables.tablaAISD1"
+      [config]="{
+        columns: [
+          { key: 'localidad', header: 'Localidad', align: 'left' },
+          { key: 'coordenadas', header: 'Coordenadas', align: 'left' },
+          { key: 'altitud', header: 'Altitud', align: 'right' },
+          { key: 'distrito', header: 'Distrito', align: 'left' },
+          { key: 'provincia', header: 'Provincia', align: 'left' },
+          { key: 'departamento', header: 'Departamento', align: 'left' }
+        ],
+        showFooter: false,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="text-justify data-source">
+    FUENTE:
+    <span *ngIf="viewModel().sources.tablaAISD1Source">{{ viewModel().sources.tablaAISD1Source }}</span>
+    <span *ngIf="!viewModel().sources.tablaAISD1Source" [appDataSource]="'manual'">GEADES (2024)</span>
+  </p>
+
+  <!-- Fotografías de Ubicación -->
+  <app-image-upload
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX_UBICACION + obtenerPrefijoGrupo()"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
+  </app-image-upload>
+
+  <div [innerHTML]="viewModel().texts.caracterizacionText"></div>
+
+  <!-- Tabla de Población y Viviendas -->
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD2'] || 'Cantidad total de población y viviendas') + ' – CC ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A2'">
+    <app-generic-table
+      [data]="viewModel().tables.tablaAISD2"
+      [config]="{
+        columns: [
+          { key: 'punto', header: 'Punto de Población (INEI)', align: 'left' },
+          { key: 'codigo', header: 'Código', align: 'left' },
+          { key: 'poblacion', header: 'Población', align: 'right' },
+          { key: 'viviendasEmpadronadas', header: 'Viviendas empadronadas', align: 'right' },
+          { key: 'viviendasOcupadas', header: 'Viviendas ocupadas', align: 'right' }
+        ],
+        totalRow: {
+          punto: 'Total',
+          poblacion: viewModel().calculations.totalesAISD2.poblacion,
+          viviendasEmpadronadas: viewModel().calculations.totalesAISD2.empadronadas,
+          viviendasOcupadas: viewModel().calculations.totalesAISD2.ocupadas
+        },
+        showFooter: true,
+        striped: true,
+        hover: true
+      }">
+    </app-generic-table>
+  </app-table-wrapper>
+  <p class="text-justify data-source">
+    FUENTE:
+    <span *ngIf="viewModel().sources.tablaAISD2Source && viewModel().sources.tablaAISD2Source !== '____'">{{ viewModel().sources.tablaAISD2Source }}</span>
+    <span *ngIf="!viewModel().sources.tablaAISD2Source" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span>
+    <span *ngIf="viewModel().sources.tablaAISD2Source === '____'">____</span>
+  </p>
+
+  <!-- Fotografías de Población -->
+  <app-image-upload
+      [modoVista]="true"
+      [permitirMultiples]="true"
+      [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
+      [sectionId]="seccionId"
+      [photoPrefix]="PHOTO_PREFIX_POBLACION + obtenerPrefijoGrupo()"
+      [labelTitulo]="'Título'"
+      [labelFuente]="'Fuente'"
+      [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

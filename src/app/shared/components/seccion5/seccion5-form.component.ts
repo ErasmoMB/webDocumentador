@@ -1,46 +1,28 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, Signal, computed, effect } from '@angular/core';
+import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, Signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
-import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
+import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
 import { Seccion5DataService } from 'src/app/core/services/domain/seccion5-data.service';
 import { Seccion5TextGeneratorService } from 'src/app/core/services/domain/seccion5-text-generator.service';
+import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX } from './seccion5-constants';
 
 @Component({
-    imports: [
-        CommonModule,
-        FormsModule,
-        CoreSharedModule,
-        ParagraphEditorComponent,
-        DynamicTableComponent
-    ],
+    standalone: true,
+    imports: [CommonModule, FormsModule, CoreSharedModule, ImageUploadComponent],
     selector: 'app-seccion5-form',
-    templateUrl: './seccion5-form.component.html'
+    templateUrl: './seccion5-form.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion5FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
-  @Input() override modoFormulario: boolean = false;
+  @Input() override modoFormulario: boolean = true;
   
-  override readonly PHOTO_PREFIX = 'fotografiaInstitucionalidad';
+  override readonly PHOTO_PREFIX = SECCION5_PHOTO_PREFIX.INSTITUCIONALIDAD;
   override useReactiveSync: boolean = true;
-
-  override watchedFields: string[] = [
-    'parrafoSeccion5_institucionalidad',
-    'tablepagina6',
-    'tituloInstituciones',
-    'fuenteInstituciones',
-    'grupoAISD',
-    'parrafoSeccion5_institucionalidad_A1',
-    'parrafoSeccion5_institucionalidad_A2',
-    'tablepagina6_A1',
-    'tablepagina6_A2',
-    'grupoAISD_A1',
-    'grupoAISD_A2'
-  ];
+  override watchedFields: string[] = SECCION5_WATCHED_FIELDS;
 
   // ✅ SIGNALS: Datos reactivos puros
   readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());

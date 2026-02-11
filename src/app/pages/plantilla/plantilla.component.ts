@@ -13,9 +13,7 @@ import { Seccion2ViewComponent } from 'src/app/shared/components/seccion2/seccio
 import { Seccion2FormWrapperComponent } from 'src/app/shared/components/forms/seccion2-form-wrapper.component';
 import { Seccion3ViewComponent } from 'src/app/shared/components/seccion3/seccion3-view.component';
 import { Seccion3FormWrapperComponent } from 'src/app/shared/components/forms/seccion3-form-wrapper.component';
-import { Seccion4Component } from 'src/app/shared/components/seccion4/seccion4.component';
-import { Seccion5Component } from 'src/app/shared/components/seccion5/seccion5.component';
-import { Seccion6Component } from 'src/app/shared/components/seccion6/seccion6.component';
+import { Seccion6FormWrapperComponent } from 'src/app/shared/components/forms/seccion6-form-wrapper.component';
 import { Seccion7ViewComponent } from 'src/app/shared/components/seccion7/seccion7-view.component';
 import { Seccion8ViewComponent } from 'src/app/shared/components/seccion8/seccion8-view.component';
 import { Seccion9ViewComponent } from 'src/app/shared/components/seccion9/seccion9-view.component';
@@ -58,8 +56,12 @@ import { Seccion30FormWrapperComponent } from 'src/app/shared/components/forms/s
 import { Seccion31Component } from 'src/app/shared/components/seccion31/seccion31.component';
 import { Seccion32Component } from 'src/app/shared/components/seccion32/seccion32.component';
 import { Seccion33Component } from 'src/app/shared/components/seccion33/seccion33.component';
-import { Seccion34Component } from 'src/app/shared/components/seccion34/seccion34.component';
-import { Seccion35Component } from 'src/app/shared/components/seccion35/seccion35.component';
+import { Seccion4FormComponent } from 'src/app/shared/components/seccion4/seccion4-form.component';
+import { Seccion4ViewComponent } from 'src/app/shared/components/seccion4/seccion4-view.component';
+import { Seccion4FormWrapperComponent } from 'src/app/shared/components/forms/seccion4-form-wrapper.component';
+import { Seccion5FormComponent } from 'src/app/shared/components/seccion5/seccion5-form.component';
+import { Seccion5ViewComponent } from 'src/app/shared/components/seccion5/seccion5-view.component';
+import { Seccion5FormWrapperComponent } from 'src/app/shared/components/forms/seccion5-form-wrapper.component';
 import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion36.component';
 
 
@@ -92,13 +94,25 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   @ViewChild(Seccion3FormWrapperComponent) set seccion3Form(comp: Seccion3FormWrapperComponent) {
     ViewChildHelper.registerComponent('seccion3Form', comp);
   }
-  @ViewChild(Seccion4Component) set seccion4(comp: Seccion4Component) {
+  @ViewChild(Seccion4FormComponent) set seccion4Form(comp: Seccion4FormComponent) {
+    ViewChildHelper.registerComponent('seccion4Form', comp);
+  }
+  @ViewChild(Seccion4ViewComponent) set seccion4(comp: Seccion4ViewComponent) {
     ViewChildHelper.registerComponent('seccion4', comp);
   }
-  @ViewChild(Seccion5Component) set seccion5(comp: Seccion5Component) {
+  @ViewChild(Seccion4FormWrapperComponent) set seccion4FormWrapper(comp: Seccion4FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion4FormWrapper', comp);
+  }
+  @ViewChild(Seccion5FormComponent) set seccion5Form(comp: Seccion5FormComponent) {
+    ViewChildHelper.registerComponent('seccion5Form', comp);
+  }
+  @ViewChild(Seccion5ViewComponent) set seccion5(comp: Seccion5ViewComponent) {
     ViewChildHelper.registerComponent('seccion5', comp);
   }
-  @ViewChild(Seccion6Component) set seccion6(comp: Seccion6Component) {
+  @ViewChild(Seccion5FormWrapperComponent) set seccion5FormWrapper(comp: Seccion5FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion5FormWrapper', comp);
+  }
+  @ViewChild(Seccion6FormWrapperComponent) set seccion6(comp: Seccion6FormWrapperComponent) {
     ViewChildHelper.registerComponent('seccion6', comp);
   }
   @ViewChild(Seccion7ViewComponent) set seccion7(comp: Seccion7ViewComponent) {
@@ -220,12 +234,6 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   }
   @ViewChild(Seccion33Component) set seccion33(comp: Seccion33Component) {
     ViewChildHelper.registerComponent('seccion33', comp);
-  }
-  @ViewChild(Seccion34Component) set seccion34(comp: Seccion34Component) {
-    ViewChildHelper.registerComponent('seccion34', comp);
-  }
-  @ViewChild(Seccion35Component) set seccion35(comp: Seccion35Component) {
-    ViewChildHelper.registerComponent('seccion35', comp);
   }
   @ViewChild(Seccion36Component) set seccion36(comp: Seccion36Component) {
     ViewChildHelper.registerComponent('seccion36', comp);

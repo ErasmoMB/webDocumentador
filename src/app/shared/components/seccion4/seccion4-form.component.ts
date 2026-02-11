@@ -1,123 +1,173 @@
-import { Component, Input, ChangeDetectorRef, OnInit, OnDestroy, Injector, Signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, OnInit, Injector, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
-import { ImageUploadComponent } from '../image-upload/image-upload.component';
-import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { BaseSectionComponent } from '../base-section.component';
-import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
-import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
+import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
+import { CCPPEntry, GroupDefinition } from 'src/app/core/state/project-state.model';
 import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/seccion4-text-generator.service';
+import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
+import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
+import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { ImageUploadComponent } from '../image-upload/image-upload.component';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES } from './seccion4-constants';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        CoreSharedModule
-    ],
-    selector: 'app-seccion4-form',
-    templateUrl: './seccion4-form.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+  standalone: true,
+  imports: [CommonModule, FormsModule, CoreSharedModule, ImageUploadComponent],
+  selector: 'app-seccion4-form',
+  templateUrl: './seccion4-form.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion4FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1';
-  
-  readonly PHOTO_PREFIX_UBICACION = 'fotografiaUbicacionReferencial';
-  readonly PHOTO_PREFIX_POBLACION = 'fotografiaPoblacionViviendas';
+  @Input() override modoFormulario: boolean = true;
 
-  override useReactiveSync = true;
+  readonly PHOTO_PREFIX_UBICACION = SECCION4_PHOTO_PREFIXES.UBICACION;
+  readonly PHOTO_PREFIX_POBLACION = SECCION4_PHOTO_PREFIXES.POBLACION;
+  override readonly PHOTO_PREFIX = '';
 
-  override watchedFields: string[] = [
-    'tablaAISD1Datos', 'tablaAISD2Datos',
-    'tablaAISD1Datos_A1', 'tablaAISD2Datos_A1',
-    'tablaAISD1Datos_A2', 'tablaAISD2Datos_A2',
-    'parrafoSeccion4_introduccion_aisd', 'parrafoSeccion4_comunidad_completo',
-    'parrafoSeccion4_caracterizacion_indicadores'
-  ];
+  override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION4_WATCHED_FIELDS;
 
-  // ✅ SEÑALES PARA PREFijos Y DATOS
-  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
-
-  readonly photoPrefixUbicacionSignal: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    return prefijo ? `${this.PHOTO_PREFIX_UBICACION}${prefijo}` : this.PHOTO_PREFIX_UBICACION;
-  });
-
-  readonly photoPrefixPoblacionSignal: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    return prefijo ? `${this.PHOTO_PREFIX_POBLACION}${prefijo}` : this.PHOTO_PREFIX_POBLACION;
-  });
-
-  readonly tablaAISD1Signal: Signal<any[]> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    const tablaKey = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
-           this.obtenerValorConPrefijo('tablaAISD1Datos') ?? [];
-  });
-
-  readonly tablaAISD2Signal: Signal<any[]> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    const tablaKey = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
-           this.obtenerValorConPrefijo('tablaAISD2Datos') ?? [];
-  });
-
-  // ✅ SEÑALES PARA TABLA KEYS CON PREFIJO
-  readonly tablaKeyAISD1Signal: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    return prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
-  });
-
-  readonly tablaKeyAISD2Signal: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    return prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
-  });
-
-  // ✅ SEÑALES PARA PÁRRAFOS CON PREFIJO
-  readonly parrafoIntroduccionSignal: Signal<string> = computed(() => {
-    return this.obtenerValorConPrefijo('parrafoSeccion4_introduccion_aisd') || '';
-  });
-
-  readonly parrafoComunidadSignal: Signal<string> = computed(() => {
-    return this.obtenerValorConPrefijo('parrafoSeccion4_comunidad_completo') || '';
-  });
-
-  readonly parrafoCaracterizacionSignal: Signal<string> = computed(() => {
-    return this.obtenerValorConPrefijo('parrafoSeccion4_caracterizacion_indicadores') || '';
-  });
+  private autoLlenarTablasExecuted = false;
+  private isProcessingPipeline = false;
 
   readonly formDataSignal: Signal<Record<string, any>>;
+  readonly tablaAISD1Signal: Signal<any[]>;
+  readonly tablaAISD2Signal: Signal<any[]>;
+  readonly photoFieldsHash: Signal<string>;
+  readonly viewModel: Signal<any>;
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private formChange: FormChangeService,
-    public tableCfg: Seccion4TableConfigService,
+    private textGen: Seccion4TextGeneratorService,
     private dataSrv: Seccion4DataService,
-    private textGen: Seccion4TextGeneratorService
+    public tableCfg: Seccion4TableConfigService,
+    private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);
+
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX_UBICACION, label: 'Ubicación' },
       { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
     ];
-    this.formDataSignal = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
+
+    this.formDataSignal = computed(() => {
+      const sectionData = this.projectFacade.selectSectionFields(this.seccionId, null)();
+      const seccion2Data = this.projectFacade.selectSectionFields('3.1.2', null)();
+      return { ...sectionData, comunidadesCampesinas: seccion2Data['comunidadesCampesinas'] || sectionData['comunidadesCampesinas'] };
+    });
+
+    this.tablaAISD1Signal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const keyA1 = `tablaAISD1Datos${prefijo}`;
+      const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA1)();
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
+    });
+
+    this.tablaAISD2Signal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const keyA2 = `tablaAISD2Datos${prefijo}`;
+      const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA2)();
+      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
+    });
+
+    this.photoFieldsHash = computed(() => {
+      let hash = '';
+      const prefijo = this.obtenerPrefijoGrupo();
+      for (const basePrefix of [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION]) {
+        const prefix = basePrefix + prefijo;
+        for (let i = 1; i <= 10; i++) {
+          const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+          const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+          const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+          hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+        }
+      }
+      return hash;
+    });
+
+    this.viewModel = computed(() => {
+      const sectionData = this.formDataSignal();
+      const data = sectionData;
+      const nombreComunidad = this.obtenerNombreComunidadActual();
+      const tablaAISD1 = this.tablaAISD1Signal();
+      const tablaAISD2 = this.tablaAISD2Signal();
+      const totales = this.dataSrv.calcularTotalesAISD2(Array.isArray(tablaAISD2) ? tablaAISD2 : []);
+      
+      return {
+        nombreComunidad,
+        data: {
+          ...data,
+          comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? [],
+          cuadroTituloAISD1: data['cuadroTituloAISD1' + this.obtenerPrefijoGrupo()] ?? '',
+          tablaAISD1Datos: tablaAISD1,
+          tablaAISD2Datos: tablaAISD2
+        },
+        texts: {
+          introduccionText: this.textGen.obtenerTextoIntroduccionAISD(data, nombreComunidad, this.seccionId),
+          comunidadText: this.textGen.obtenerTextoComunidadCompleto(data, nombreComunidad, this.seccionId),
+          caracterizacionText: this.textGen.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad, this.seccionId)
+        },
+        tables: {
+          tablaAISD1: Array.isArray(tablaAISD1) ? tablaAISD1 : [],
+          tablaAISD2: Array.isArray(tablaAISD2) ? tablaAISD2 : []
+        },
+        calculations: {
+          totalesAISD2: {
+            poblacion: totales.poblacion,
+            empadronadas: totales.empadronadas,
+            ocupadas: totales.ocupadas
+          }
+        },
+        sources: {
+          tablaAISD1Source: data['cuadroFuenteAISD1' + this.obtenerPrefijoGrupo()] ?? '',
+          tablaAISD2Source: data['cuadroFuenteAISD2' + this.obtenerPrefijoGrupo()] ?? ''
+        }
+      };
+    });
+
     effect(() => {
       const sectionData = this.formDataSignal();
       const legacyData = this.projectFacade.obtenerDatos();
       this.datos = { ...legacyData, ...sectionData };
       this.cdRef.markForCheck();
     });
+
+    effect(() => {
+      this.photoFieldsHash();
+      this.cargarFotografias();
+      this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      if (this.autoLlenarTablasExecuted) return;
+      const tablaA1 = this.tablaAISD1Signal();
+      const tablaA2 = this.tablaAISD2Signal();
+      const datos = this.datos;
+      const tieneDatosCompletos = datos && Object.keys(datos).length > 0;
+      
+      if (tieneDatosCompletos && this.modoFormulario === false) {
+        this.autoLlenarTablasExecuted = true;
+        setTimeout(() => {
+          this.autoLlenarTablas();
+        }, 0);
+      }
+    }, { allowSignalWrites: true });
   }
 
-  private isProcessingPipeline = false;
-
-  protected override onInitCustom(): void {
-    this.initDataPipeline();
+  override ngOnInit(): void {
+    super.ngOnInit();
+    this.cargarFotografias();
+    this.autoLlenarTablas();
+    
+    if (this.modoFormulario) {
+      this.initDataPipeline();
+    }
   }
 
   private initDataPipeline(): void {
@@ -131,127 +181,164 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     }
   }
 
-  /** Auto-llena las tablas AISD1 y AISD2 si están vacías o desincronizadas */
   private autoLlenarTablas(): void {
     const prefijo = this.obtenerPrefijoGrupo();
-    const dataKeyA2 = `tablaAISD2Datos${prefijo}`;
     const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
+    const dataKeyA2 = `tablaAISD2Datos${prefijo}`;
     
-    if (!prefijo?.startsWith('_A')) return;
-
-    const codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
-    if (!codigosComunidad || codigosComunidad.length === 0) return;
-
-    const tablaA2Actual = this.datos[dataKeyA2];
-    const filasActuales = Array.isArray(tablaA2Actual) ? tablaA2Actual.length : 0;
+    if (!prefijo || !prefijo.startsWith('_A')) return;
     
-    // ✅ Sincronizar solo si hay diferencia entre filas actuales y códigos seleccionados
-    if (filasActuales === codigosComunidad.length && filasActuales > 0) return;
-
-    const jsonCompleto = this.datos['jsonCompleto'];
-    if (!jsonCompleto) return;
-
-    const centrosPoblados = this.dataSrv.obtenerDatosCentrosPorCodigos(jsonCompleto, codigosComunidad);
+    const gruposAISD = this.aisdGroups();
+    const centrosPoblados = this.allPopulatedCenters();
     
-    if (centrosPoblados.length > 0) {
-      const filas = centrosPoblados.map(cp => ({
-        punto: cp.CCPP || cp.ccpp || '____',
-        nombre: cp.CCPP || cp.ccpp || '____',
-        codigo: (cp.CODIGO || cp.codigo || '').toString(),
-        poblacion: (cp.POBLACION || cp.poblacion || '0').toString(),
-        viviendasEmpadronadas: '0', 
-        viviendasOcupadas: '0'
-      }));
-      
-      // ✅ SIEMPRE guardar con prefijo
-      this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
-
-      // Llenar tabla A1 (Capital) - también con prefijo
-      const actualA1 = this.datos[dataKeyA1] || [];
-      if (actualA1.length === 0 || (actualA1.length === 1 && !actualA1[0].localidad)) {
-        const nombreComunidad = this.obtenerNombreComunidad();
-        const capital = this.dataSrv.obtenerCapitalComunidad(this.datos, this.seccionId) || nombreComunidad;
-        const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
-        const filaA1 = [{
-          localidad: capital,
-          coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || '____',
-          altitud: datosCap?.altitud || this.datos.altitudAISD || '____',
-          distrito: datosCap?.distrito || this.datos.distritoSeleccionado || '____',
-          provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || '____',
-          departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || '____'
-        }];
-        this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
+    const match = prefijo.match(/_A(\d+)/);
+    const index = match ? parseInt(match[1]) - 1 : -1;
+    const grupoActual = index >= 0 && index < gruposAISD.length ? gruposAISD[index] : null;
+    
+    // Tabla A1
+    const tablaA1Actual = this.datos[dataKeyA1] || [];
+    const estaVaciaA1 = !tablaA1Actual || tablaA1Actual.length === 0;
+    const estaInvalidaA1 = tablaA1Actual.length === 1 && (!tablaA1Actual[0].localidad || tablaA1Actual[0].localidad === '____');
+    
+    if (estaVaciaA1 || estaInvalidaA1) {
+      const tablaA1Mock = this.datos['tablaAISD1Datos'];
+      if (tablaA1Mock && tablaA1Mock.length > 0 && tablaA1Mock[0].localidad && tablaA1Mock[0].localidad !== '____') {
+        this.onFieldChange(dataKeyA1 as any, tablaA1Mock, { refresh: false });
+        this.datos[dataKeyA1] = tablaA1Mock;
+      } else {
+        const tablaA2Actual = this.datos[dataKeyA2] || this.datos['tablaAISD2Datos'] || [];
+        let filaCapital = tablaA2Actual.find((f: any) => f.poblacion && parseInt(f.poblacion) > 0);
+        if (!filaCapital && tablaA2Actual.length > 0) filaCapital = tablaA2Actual[0];
+        
+        if (filaCapital) {
+          const capital = filaCapital.punto || filaCapital.nombre || '____';
+          const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
+          const filaA1 = [{
+            localidad: capital,
+            coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || this.datos['tablaAISD1Coordenadas'] || '____',
+            altitud: datosCap?.altitud || this.datos.altitudAISD || this.datos['tablaAISD1Altitud'] || '____',
+            distrito: datosCap?.distrito || this.datos.distritoSeleccionado || this.datos['tablaAISD1Fila1Distrito'] || '____',
+            provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
+            departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
+          }];
+          this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
+          this.datos[dataKeyA1] = filaA1;
+        }
       }
-
-      this.actualizarDatos(); // Forzar actualización local
     }
+
+    // Tabla A2
+    let codigosComunidad: string[] = [];
+    if (grupoActual && grupoActual.ccppIds && grupoActual.ccppIds.length > 0) {
+      codigosComunidad = grupoActual.ccppIds as string[];
+    } else {
+      codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
+    }
+    
+    const tablaA2Actual = this.datos[dataKeyA2] || [];
+    const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
+    
+    if (estaVaciaA2) {
+      if (codigosComunidad.length > 0 && centrosPoblados.length > 0) {
+        const filas = codigosComunidad.map(codigo => {
+          const ccpp = centrosPoblados.find(c => c.id === codigo || c.codigo === codigo);
+          return {
+            punto: ccpp?.nombre || codigo,
+            codigo: codigo,
+            poblacion: ccpp?.poblacion?.toString() || '0',
+            viviendasEmpadronadas: '0',
+            viviendasOcupadas: '0'
+          };
+        });
+        if (filas.length > 0) {
+          this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
+          this.datos[dataKeyA2] = filas;
+        }
+      } else {
+        const tablaA2Mock = this.datos['tablaAISD2Datos'];
+        if (tablaA2Mock && tablaA2Mock.length > 0) {
+          this.onFieldChange(dataKeyA2 as any, tablaA2Mock, { refresh: false });
+          this.datos[dataKeyA2] = tablaA2Mock;
+        } else {
+          const puntosPoblacionMock = this.datos['puntosPoblacion'];
+          if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
+            const filas = puntosPoblacionMock.map((cp: any) => ({
+              punto: cp.nombre || cp.punto || '____',
+              codigo: (cp.codigo || '').toString(),
+              poblacion: (cp.poblacion || '0').toString(),
+              viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
+              viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
+            }));
+            this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
+            this.datos[dataKeyA2] = filas;
+          }
+        }
+      }
+    }
+
+    this.actualizarDatos();
+    this.cdRef.markForCheck();
   }
 
   onTablaUpdated(): void {
-    setTimeout(() => {
-      const prefijo = this.obtenerPrefijoGrupo();
-      const keyA1 = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
-      const keyA2 = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
-      const payload: Record<string, any> = {};
-      if (this.datos[keyA1] !== undefined) {
-        payload[keyA1] = Array.isArray(this.datos[keyA1])
-          ? this.datos[keyA1].map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r))
-          : this.datos[keyA1];
-      }
-      if (this.datos[keyA2] !== undefined) {
-        payload[keyA2] = Array.isArray(this.datos[keyA2])
-          ? this.datos[keyA2].map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r))
-          : this.datos[keyA2];
-      }
-      if (Object.keys(payload).length > 0) {
-        this.projectFacade.setFields(this.seccionId, null, payload);
-        this.formChange.persistFields(this.seccionId, 'form', payload);
-      }
-      this.actualizarDatos();
-      const raw = this.obtenerValorConPrefijo('tablaAISD2Datos') || [];
-      const totals = this.dataSrv.calcularTotalesAISD2(raw);
-      this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion);
-      this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas);
-      this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const keyA1 = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
+    const keyA2 = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
+    
+    let tablaA1Actual = this.tablaAISD1Signal();
+    const tablaA2Actual = this.tablaAISD2Signal();
+    
+    if (!tablaA1Actual || tablaA1Actual.length === 0) {
+      const nombreComunidad = this.obtenerNombreComunidadActual();
+      const capital = this.dataSrv.obtenerCapitalComunidad(this.datos, this.seccionId) || nombreComunidad;
+      const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
+      tablaA1Actual = [{
+        localidad: capital,
+        coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || '____',
+        altitud: datosCap?.altitud || this.datos.altitudAISD || '____',
+        distrito: datosCap?.distrito || this.datos.distritoSeleccionado || '____',
+        provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || '____',
+        departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || '____'
+      }];
+    }
+    
+    const payload: Record<string, any> = {};
+    if (tablaA1Actual && tablaA1Actual.length > 0) {
+      payload[keyA1] = tablaA1Actual.map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r));
+    }
+    if (tablaA2Actual && tablaA2Actual.length > 0) {
+      payload[keyA2] = tablaA2Actual.map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r));
+    }
+    
+    if (Object.keys(payload).length > 0) {
+      this.projectFacade.setFields(this.seccionId, null, payload);
+    }
+    
+    const totals = this.dataSrv.calcularTotalesAISD2(tablaA2Actual || []);
+    this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion, { refresh: false });
+    this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas, { refresh: false });
+    this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas, { refresh: false });
+    
+    this.actualizarDatos();
+    this.cdRef.markForCheck();
+  }
+
+  protected override cargarFotografias(): void {
+    if (this.photoGroupsConfig.length > 0) {
+      this.cargarTodosLosGrupos();
       this.cdRef.markForCheck();
-    }, 0);
-  }
-
-  obtenerNombreComunidad(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.datos, this.seccionId);
-  }
-
-  /** Mismo texto que muestra la vista (personalizado o por defecto) para sincronizar formulario ↔ vista */
-  getTextoIntroduccionEfectivo(): string {
-    return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidad(), this.seccionId);
-  }
-
-  /** Mismo texto que muestra la vista (personalizado o por defecto) */
-  getTextoComunidadEfectivo(): string {
-    return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidad(), this.seccionId);
-  }
-
-  /** Mismo texto que muestra la vista (personalizado o por defecto) */
-  getTextoCaracterizacionEfectivo(): string {
-    return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidad(), this.seccionId);
+    } else {
+      super.cargarFotografias();
+    }
   }
 
   protected override detectarCambios(): boolean {
-    const actual = JSON.stringify(this.projectFacade.obtenerDatos());
-    const anterior = JSON.stringify(this.datosAnteriores);
-    if (actual !== anterior) {
-      this.datosAnteriores = JSON.parse(actual);
-      return true;
-    }
     return false;
   }
 
-  protected override actualizarValoresConPrefijo(): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) {
-      this.datos.grupoAISD = this.obtenerValorConPrefijo('grupoAISD');
-      this.datos.tablaAISD1Datos = this.obtenerValorConPrefijo('tablaAISD1Datos');
-      this.datos.tablaAISD2Datos = this.obtenerValorConPrefijo('tablaAISD2Datos');
-    }
+  protected override actualizarValoresConPrefijo(): void {}
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
   }
 }

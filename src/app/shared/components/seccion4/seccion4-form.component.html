@@ -1,104 +1,94 @@
-<div class="formulario-seccion">
-  <header class="form-header">
-    <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
-    <h4>Edición: AISD - {{ obtenerNombreComunidad() }}</h4>
-  </header>
+<!-- Formulario (modo edición) -->
+<div class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">3.1.4. Caracterización socioeconómica — Editor</h4>
 
-  <div class="form-grid">
-    <!-- Editores de Párrafos -->
-    <section class="form-card">
-      <h5 class="section-subtitle">1. Narrativa y Caracterización</h5>
-      
+    <div class="form-group-section" style="margin-top: 12px;">
+      <h4 class="section-title">Editar Párrafos</h4>
+
       <app-paragraph-editor
-          [fieldId]="'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo()"
-          label="Introducción AISD"
-          hint="Placeholder CC ___ se reemplaza automáticamente."
-          [rows]="4"
-          [value]="parrafoIntroduccionSignal()"
-          (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
+        [fieldId]="'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo()"
+        label="Introducción AISD"
+        [rows]="4"
+        [value]="viewModel().texts.introduccionText"
+        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo()"
-        label="Información Histórica y Ubicación"
-        [rows]="6"
-        [value]="parrafoComunidadSignal()"
+        label="Descripción de la Comunidad"
+        [rows]="5"
+        [value]="viewModel().texts.comunidadText"
         (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo()"
-        label="Contexto de Indicadores"
-        [rows]="3"
-        [value]="parrafoCaracterizacionSignal()"
+        label="Caracterización - Indicadores"
+        [rows]="4"
+        [value]="viewModel().texts.caracterizacionText"
         (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
-    </section>
+    </div>
 
-    <!-- Tablas de Datos -->
-    <section class="form-card">
-      <h5 class="section-subtitle">2. Tablas Estadísticas</h5>
-      
-      <div class="table-edit-container">
-        <app-table-wrapper [title]="'Ubicación Referencial (Tabla A1)'" [sectionId]="'3.1.4.A1'" [hideNumber]="true">
-          <app-dynamic-table
-            [datos]="datos"
-            [sectionId]="seccionId"
-            [config]="tableCfg.getTablaAISD1Config()"
-            [columns]="tableCfg.getColumnasAISD1()"
-            [tablaKey]="tablaKeyAISD1Signal()"
-            [totalKey]="'localidad'"
-            [showAddButton]="true"
-            [showDeleteButton]="true"
-            (tableUpdated)="onTablaUpdated()">
-          </app-dynamic-table>
-        </app-table-wrapper>
-      </div>
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de tabla - Ubicación referencial (A.1)</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Ubicación referencial - CC Comunidad">
+    </div>
 
-      <div class="table-edit-container" style="margin-top: 2rem;">
-        <app-table-wrapper [title]="'Población y Viviendas (Tabla A2)'" [sectionId]="'3.1.4.A2'" [hideNumber]="true">
-          <app-dynamic-table
-            [datos]="datos"
-            [sectionId]="seccionId"
-            [config]="tableCfg.getTablaAISD2Config()"
-            [columns]="tableCfg.getColumnasAISD2()"
-            [tablaKey]="tablaKeyAISD2Signal()"
-            [totalKey]="'punto'"
-            [showAddButton]="true"
-            [showDeleteButton]="true"
-            (tableUpdated)="onTablaUpdated()">
-          </app-dynamic-table>
-        </app-table-wrapper>
-      </div>
-    </section>
+    <label class="label" style="margin-top:10px">Ubicación referencial (Tabla A1)</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="tableCfg.getTablaAISD1Config()"
+      [columns]="tableCfg.getColumnasAISD1()"
+      [sectionId]="seccionId"
+      [tablaKey]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
+      [fieldName]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
+      (tableUpdated)="onTablaUpdated()">
+    </app-dynamic-table>
 
-    <!-- Gestión de Imágenes -->
-    <section class="form-card photos-section">
-      <h5 class="section-subtitle">3. Archivo Fotográfico</h5>
-      
-      <div class="photo-group-edit">
-        <h6>A. Ubicación Referencial</h6>
-        <app-image-upload
-          [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
-          [sectionId]="seccionId"
-          [photoPrefix]="photoPrefixUbicacionSignal()"
-          [permitirMultiples]="true"
-          [requerido]="false"
-          (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_UBICACION, $event)">
-        </app-image-upload>
-      </div>
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Título de tabla - Cantidad total de población y viviendas (A.2)</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD2' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Cantidad total de población y viviendas">
+    </div>
 
-      <div class="photo-group-edit" style="margin-top: 2rem;">
-        <h6>B. Población y Viviendas</h6>
-        <app-image-upload
-          [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
-          [sectionId]="seccionId"
-          [photoPrefix]="photoPrefixPoblacionSignal()"
-          [permitirMultiples]="true"
-          [requerido]="false"
-          (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_POBLACION, $event)">
-        </app-image-upload>
-      </div>
-    </section>
+    <label class="label" style="margin-top:10px">Población y viviendas (Tabla A2)</label>
+    <app-dynamic-table
+      [datos]="datos"
+      [config]="tableCfg.getTablaAISD2Config()"
+      [columns]="tableCfg.getColumnasAISD2()"
+      [sectionId]="seccionId"
+      [tablaKey]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"
+      [fieldName]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"
+      (tableUpdated)="onTablaUpdated()">
+    </app-dynamic-table>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fuente de las tablas</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD1Source" (ngModelChange)="onFieldChange('cuadroFuenteAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: GEADES (2024)">
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías - Ubicación Referencial</label>
+      <app-image-upload
+        [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_UBICACION + obtenerPrefijoGrupo()"
+        [permitirMultiples]="true"
+        (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_UBICACION, $event)">
+      </app-image-upload>
+    </div>
+
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">Fotografías - Población y Viviendas</label>
+      <app-image-upload
+        [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX_POBLACION + obtenerPrefijoGrupo()"
+        [permitirMultiples]="true"
+        (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_POBLACION, $event)">
+      </app-image-upload>
+    </div>
+
   </div>
 </div>

@@ -17,10 +17,15 @@ import { Seccion3ViewComponent } from '../components/seccion3/seccion3-view.comp
 import { Seccion3FormComponent } from '../components/seccion3/seccion3-form.component';
 import { Seccion3FormWrapperComponent } from '../components/forms/seccion3-form-wrapper.component';
 
-// Secciones 4-12 
-import { Seccion4Component } from '../components/seccion4/seccion4.component';
-import { Seccion5Component } from '../components/seccion5/seccion5.component';
-import { Seccion6Component } from '../components/seccion6/seccion6.component';
+// Secciones 4-12
+import { Seccion4FormComponent } from '../components/seccion4/seccion4-form.component';
+import { Seccion4ViewComponent } from '../components/seccion4/seccion4-view.component';
+import { Seccion4FormWrapperComponent } from '../components/forms/seccion4-form-wrapper.component';
+import { Seccion5FormComponent } from '../components/seccion5/seccion5-form.component';
+import { Seccion5ViewComponent } from '../components/seccion5/seccion5-view.component';
+import { Seccion5FormWrapperComponent } from '../components/forms/seccion5-form-wrapper.component';
+import { Seccion6FormWrapperComponent } from '../components/forms/seccion6-form-wrapper.component';
+import { Seccion6ViewComponent } from '../components/seccion6/seccion6-view.component';
 import { Seccion7ViewComponent } from '../components/seccion7/seccion7-view.component';
 import { Seccion7FormComponent } from '../components/seccion7/seccion7-form.component';
 import { Seccion7FormWrapperComponent } from '../components/forms/seccion7-form-wrapper.component';
@@ -38,7 +43,6 @@ import { Seccion11FormComponent } from '../components/seccion11/seccion11-form.c
 import { Seccion12FormWrapperComponent } from '../components/forms/seccion12-form-wrapper.component';
 import { Seccion12FormComponent } from '../components/seccion12/seccion12-form.component';
 import { Seccion12ViewComponent } from '../components/seccion12/seccion12-view.component';
-import { Seccion4FormWrapperComponent } from '../components/forms/seccion4-form-wrapper.component';
 
 @NgModule({
   imports: [
@@ -57,27 +61,39 @@ import { Seccion4FormWrapperComponent } from '../components/forms/seccion4-form-
     Seccion3FormComponent,
     Seccion3FormWrapperComponent,
     // Secciones 4-12
-    Seccion4Component,
-    Seccion5Component,
-    Seccion6Component,
+    Seccion4FormComponent,
+    Seccion4ViewComponent,
+    Seccion4FormWrapperComponent,
+    // Sección 5
+    Seccion5FormComponent,
+    Seccion5ViewComponent,
+    Seccion5FormWrapperComponent,
+    // Sección 6
+    Seccion6FormWrapperComponent,
+    Seccion6ViewComponent,
+    // Sección 7
     Seccion7ViewComponent,
     Seccion7FormComponent,
     Seccion7FormWrapperComponent,
+    // Sección 8
     Seccion8ViewComponent,
     Seccion8FormComponent,
     Seccion8FormWrapperComponent,
+    // Sección 9
     Seccion9ViewComponent,
     Seccion9FormComponent,
     Seccion9FormWrapperComponent,
+    // Sección 10
     Seccion10FormWrapperComponent,
     Seccion10ViewComponent,
+    // Sección 11
     Seccion11FormWrapperComponent,
     Seccion11ViewComponent,
     Seccion11FormComponent,
+    // Sección 12
     Seccion12FormWrapperComponent,
     Seccion12FormComponent,
-    Seccion12ViewComponent,
-    Seccion4FormWrapperComponent
+    Seccion12ViewComponent
   ],
   exports: [
     // Sección 1
@@ -93,28 +109,39 @@ import { Seccion4FormWrapperComponent } from '../components/forms/seccion4-form-
     Seccion3FormComponent,
     Seccion3FormWrapperComponent,
     // Secciones 4-12
-    Seccion4Component,
-    Seccion5Component,
-    Seccion6Component,
+    Seccion4FormComponent,
+    Seccion4ViewComponent,
+    Seccion4FormWrapperComponent,
+    // Sección 5
+    Seccion5FormComponent,
+    Seccion5ViewComponent,
+    Seccion5FormWrapperComponent,
+    // Sección 6
+    Seccion6FormWrapperComponent,
+    Seccion6ViewComponent,
+    // Sección 7
     Seccion7ViewComponent,
     Seccion7FormComponent,
     Seccion7FormWrapperComponent,
+    // Sección 8
     Seccion8ViewComponent,
     Seccion8FormComponent,
     Seccion8FormWrapperComponent,
+    // Sección 9
     Seccion9ViewComponent,
     Seccion9FormComponent,
     Seccion9FormWrapperComponent,
+    // Sección 10
     Seccion10FormWrapperComponent,
     Seccion10ViewComponent,
+    // Sección 11
     Seccion11FormWrapperComponent,
     Seccion11ViewComponent,
     Seccion11FormComponent,
+    // Sección 12
     Seccion12FormWrapperComponent,
     Seccion12FormComponent,
-    Seccion12ViewComponent,
-    Seccion4FormWrapperComponent
+    Seccion12ViewComponent
   ]
 })
 export class SeccionesGroupAModule { }
-

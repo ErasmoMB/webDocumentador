@@ -13,11 +13,11 @@ import { debugLog } from 'src/app/shared/utils/debug';
 @Component({
   standalone: true,
   imports: [CommonModule, CoreSharedModule],
-  selector: 'app-seccion6-view-internal',
+  selector: 'app-seccion6-view',
   templateUrl: './seccion6-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Seccion6ViewInternalComponent extends BaseSectionComponent implements OnDestroy {
+export class Seccion6ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1.2';
   @Input() override modoFormulario: boolean = false;
   
@@ -107,14 +107,9 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     });
 
     // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
-    // Este efecto replica el patrón de Sección 5 (MODO IDEAL)
-    // allowSignalWrites: true permite escribir a fotografiasVista después de cargarFotografias()
     effect(() => {
-      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
-      this.cargarFotografias();  // Recarga fotografías reactivamente
-      
-      // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasVista
-      // Esto asegura que el template se renderice con las nuevas imágenes
+      this.photoFieldsHash();
+      this.cargarFotografias();
       this.fotografiasVista = [...this.fotografiasCache];
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
@@ -145,24 +140,20 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
   }
 
   obtenerTextoPoblacionSexoView(): string {
-    // ✅ PATRÓN SIMPLE: Usar el signal directamente (como sección 5)
     const texto = this.vistTextoPoblacionSexoSignal();
     const nombreComunidad = this.obtenerNombreComunidadActual();
     if (texto && texto.trim() !== '' && texto !== '____') {
       return texto.replace(/___/g, nombreComunidad);
     }
-    // Fallback al texto por defecto
     return this.textGenSrv.obtenerTextoPoblacionSexo(this.vistDataSignal(), nombreComunidad, this.seccionId);
   }
 
   obtenerTextoPoblacionEtarioView(): string {
-    // ✅ PATRÓN SIMPLE: Usar el signal directamente (como sección 5)
     const texto = this.vistTextoPoblacionEtarioSignal();
     const nombreComunidad = this.obtenerNombreComunidadActual();
     if (texto && texto.trim() !== '' && texto !== '____') {
       return texto.replace(/___/g, nombreComunidad);
     }
-    // Fallback al texto por defecto
     return this.textGenSrv.obtenerTextoPoblacionEtario(this.vistDataSignal(), nombreComunidad, this.seccionId);
   }
 
@@ -324,50 +315,17 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     return total === 0 ? '0,00 %' : '100,00 %';
   }
 
-  getInstituciones(): any[] {
-    const prefijo = this.obtenerPrefijoGrupo();
-    
-    const tablaConPrefijo = prefijo ? this.datos[`institucionesAISD${prefijo}`] : null;
-    if (tablaConPrefijo && this.tieneContenidoRealInstituciones(tablaConPrefijo)) {
-      return tablaConPrefijo;
-    }
-    
-    if (this.datos.institucionesAISD && this.tieneContenidoRealInstituciones(this.datos.institucionesAISD)) {
-      return this.datos.institucionesAISD;
-    }
-    
-    if (this.datos.institucionesTabla && this.tieneContenidoRealInstituciones(this.datos.institucionesTabla)) {
-      return this.datos.institucionesTabla;
-    }
-    
-    return [];
-  }
-
-  private tieneContenidoRealInstituciones(tabla: any[]): boolean {
-    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return false;
-    return tabla.some(item => {
-      const institucion = item.institucion?.toString().trim() || '';
-      const disponibilidad = item.disponibilidad?.toString().trim() || '';
-      const ubicacion = item.ubicacion?.toString().trim() || '';
-      return institucion !== '' || disponibilidad !== '' || ubicacion !== '';
-    });
-  }
-
   // ✅ OVERRIDE CRÍTICO: cargarFotografias() DEBE LEER DEL SIGNAL REACTIVO (vistDataSignal)
-  // NO de imageFacade.loadImages() que lee localStorage desactualizado
-  // Esto asegura que los cambios de titulo/fuente se reflejen inmediatamente en la vista
   override cargarFotografias(): void {
-    const formData = this.vistDataSignal();  // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.vistDataSignal();
     const prefijo = this.prefijoGrupoSignal();
     const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
     
-    // ✅ Reconstruir array de fotografías leyendo directamente del state reactivo
     for (let i = 1; i <= 10; i++) {
       const imagenKey = `${prefix}${i}Imagen`;
       const imagen = formData[imagenKey];
       
-      // Si hay imagen, agregar a array
       if (imagen) {
         const tituloKey = `${prefix}${i}Titulo`;
         const fuenteKey = `${prefix}${i}Fuente`;
