@@ -6,6 +6,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from '../../../core/services/table-management.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
     standalone: true,
@@ -27,67 +28,100 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
 
   fotografiasIglesia: FotoItem[] = [];
 
-  override watchedFields: string[] = [
-    'lenguasMaternasTabla',
-    'religionesTabla',
-    'parrafoSeccion15_religion_completo',
-    'textoAspectosCulturales',
-    'textoIdioma',
-    'fotografiaIglesia'
-  ];
+  // ✅ HELPER PARA OBTENER PREFIJO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
+  // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
+
   readonly textoAspectosCulturalesSignal: Signal<string> = computed(() => {
-    const stored = this.projectFacade.selectField(this.seccionId, null, 'textoAspectosCulturales')();
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = `textoAspectosCulturales${prefijo}`;
+    const stored = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     return stored && String(stored).trim().length > 0 ? stored : this.generarTextoAspectosCulturalesDefault();
   });
 
   readonly textoIdiomaSignal: Signal<string> = computed(() => {
-    const stored = this.projectFacade.selectField(this.seccionId, null, 'textoIdioma')();
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = `textoIdioma${prefijo}`;
+    const stored = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     return stored && String(stored).trim().length > 0 ? stored : this.generarTextoIdiomaDefault();
   });
 
   readonly parrafoReligionSignal: Signal<string> = computed(() => {
-    const stored = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion15_religion_completo')();
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = `parrafoSeccion15_religion_completo${prefijo}`;
+    const stored = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     return stored && String(stored).trim().length > 0 ? stored : this.generarTextoReligionDefault();
   });
 
   readonly lenguasMaternasSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'lenguasMaternasTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'lenguasMaternasTabla')();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [];
   });
 
   readonly religionesSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'religionesTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'religionesTabla')();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [];
   });
 
-  readonly lenguasMaternasConfigSignal: Signal<TableConfig> = computed(() => ({
-    tablaKey: 'lenguasMaternasTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos'],
-    permiteAgregarFilas: true,
-    permiteEliminarFilas: true
-  }));
+  readonly lenguasMaternasConfigSignal: Signal<TableConfig> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
+    return {
+      tablaKey: tablaKey,
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      calcularPorcentajes: true,
+      camposParaCalcular: ['casos'],
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
+    };
+  });
 
-  readonly religionesConfigSignal: Signal<TableConfig> = computed(() => ({
-    tablaKey: 'religionesTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos'],
-    permiteAgregarFilas: true,
-    permiteEliminarFilas: true
-  }));
+  readonly religionesConfigSignal: Signal<TableConfig> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
+    return {
+      tablaKey: tablaKey,
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      calcularPorcentajes: true,
+      camposParaCalcular: ['casos'],
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
+    };
+  });
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -105,6 +139,7 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       this.lenguasMaternasSignal();
       this.religionesSignal();
+      this.photoFieldsHash();
       this.cdRef.markForCheck();
     });
   }
@@ -122,7 +157,7 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
   private generarTextoReligionDefault(): string {
     const comunidad = this.obtenerNombreComunidadActual();
     const nombre = comunidad && comunidad !== '____' ? comunidad : '____';
-    return `En la actualidad, la confesión predominante dentro de la CC ${nombre} es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz ${nombre}, y a la inexistencia de templos evangélicos o de otras confesiones.\n\nEsta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar se halla al sur del anexo ${nombre}.`;
+    return `En la actualidad, la confesión predominante dentro de la CC ${nombre} es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz ${nombre}, y a la inexistencia de templos evangélicos o de otras confesiones.\n\nEsta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar sehalla al sur del anexo ${nombre}.`;
   }
 
   protected override onInitCustom(): void {
@@ -130,27 +165,31 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onLenguasMaternasTableUpdated(updatedData?: any[]): void {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
     const dataToPersist = updatedData || this.lenguasMaternasSignal();
     this.formChangeService.persistFields(this.seccionId, 'table', {
-      lenguasMaternasTabla: dataToPersist
+      [tablaKey]: dataToPersist
     }, { updateState: true, notifySync: true, persist: false });
 
-    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, 'lenguasMaternasTabla')() || dataToPersist || [];
-    this.datos['lenguasMaternasTabla'] = tablaPersistida;
-    this.onFieldChange('lenguasMaternasTabla', tablaPersistida, { refresh: false });
+    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || dataToPersist || [];
+    this.datos[tablaKey] = tablaPersistida;
+    this.onFieldChange(tablaKey, tablaPersistida, { refresh: false });
     this.cdRef.markForCheck();
     this.cdRef.detectChanges();
   }
 
   onReligionesTableUpdated(updatedData?: any[]): void {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
     const dataToPersist = updatedData || this.religionesSignal();
     this.formChangeService.persistFields(this.seccionId, 'table', {
-      religionesTabla: dataToPersist
+      [tablaKey]: dataToPersist
     }, { updateState: true, notifySync: true, persist: false });
 
-    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, 'religionesTabla')() || dataToPersist || [];
-    this.datos['religionesTabla'] = tablaPersistida;
-    this.onFieldChange('religionesTabla', tablaPersistida, { refresh: false });
+    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || dataToPersist || [];
+    this.datos[tablaKey] = tablaPersistida;
+    this.onFieldChange(tablaKey, tablaPersistida, { refresh: false });
     this.cdRef.markForCheck();
     this.cdRef.detectChanges();
   }

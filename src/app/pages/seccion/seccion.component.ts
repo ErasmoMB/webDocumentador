@@ -994,7 +994,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   actualizarEstadoNavegacion() {
     // Si estamos en una sección AISD/AISI, usar el flujo secuencial
     if (this.esSeccionAISDOAISI(this.seccionId)) {
-      this.puedeIrSiguiente = this.sectionFlowNavigation.hasNextSection(this.seccionId);
+      this.puedeIrSiguiente = true; // Nunca deshabilitar el botón Siguiente
       this.puedeIrAnterior = this.sectionFlowNavigation.hasPreviousSection(this.seccionId);
       // "Ver Plantilla" solo se muestra en la última sección AISI (B.X.9 del último grupo AISI)
       // En AISD siempre muestra "Siguiente" aunque sea la última subsección
@@ -1039,6 +1039,16 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       const seccionAnterior = this.sectionFlowNavigation.getPreviousSection(this.seccionId);
       if (seccionAnterior) {
         this.router.navigate(['/seccion', seccionAnterior]);
+        return;
+      }
+      // Si no hay sección anterior en el flujo AISD/AISI, usar navegación normal
+      let anteriorNormal = this.navigationService.obtenerSeccionAnterior(this.seccionId, this.datos);
+      if (anteriorNormal) {
+        // Si es 3.1.4.A o 3.1.4.B (sin subsección), convertir a 3.1.4.A.1 o 3.1.4.B.1
+        if (anteriorNormal === '3.1.4.A' || anteriorNormal === '3.1.4.B') {
+          anteriorNormal = anteriorNormal + '.1';
+        }
+        this.router.navigate(['/seccion', anteriorNormal]);
       }
       return;
     }
@@ -1088,6 +1098,16 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       const seccionSiguiente = this.sectionFlowNavigation.getNextSection(this.seccionId);
       if (seccionSiguiente) {
         this.router.navigate(['/seccion', seccionSiguiente]);
+        return;
+      }
+      // Si no hay más secciones en el flujo AISD/AISI, usar navegación normal
+      let siguienteNormal = this.navigationService.obtenerSeccionSiguiente(this.seccionId, this.datos);
+      if (siguienteNormal) {
+        // Si es 3.1.4.A o 3.1.4.B (sin subsección), convertir a 3.1.4.A.1 o 3.1.4.B.1
+        if (siguienteNormal === '3.1.4.A' || siguienteNormal === '3.1.4.B') {
+          siguienteNormal = siguienteNormal + '.1';
+        }
+        this.router.navigate(['/seccion', siguienteNormal]);
       }
       return;
     }

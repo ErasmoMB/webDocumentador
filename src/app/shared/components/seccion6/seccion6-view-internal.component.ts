@@ -46,6 +46,7 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
     const manualKey = `textoPoblacionSexoAISD${prefijo}`;
     const manual = data[manualKey];
+    
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -143,24 +144,26 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     return this.dataSrv.obtenerValorConPrefijo(this.vistDataSignal(), campo, this.seccionId);
   }
 
-  obtenerTextoPoblacionSexoConResaltado(): SafeHtml {
+  obtenerTextoPoblacionSexoView(): string {
+    // ✅ PATRÓN SIMPLE: Usar el signal directamente (como sección 5)
     const texto = this.vistTextoPoblacionSexoSignal();
-    const html = this.textGenSrv.obtenerTextoPoblacionSexoConResaltado(
-      this.vistDataSignal(),
-      this.obtenerNombreComunidadActual(),
-      this.seccionId
-    );
-    return html;
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    if (texto && texto.trim() !== '' && texto !== '____') {
+      return texto.replace(/___/g, nombreComunidad);
+    }
+    // Fallback al texto por defecto
+    return this.textGenSrv.obtenerTextoPoblacionSexo(this.vistDataSignal(), nombreComunidad, this.seccionId);
   }
 
-  obtenerTextoPoblacionEtarioConResaltado(): SafeHtml {
+  obtenerTextoPoblacionEtarioView(): string {
+    // ✅ PATRÓN SIMPLE: Usar el signal directamente (como sección 5)
     const texto = this.vistTextoPoblacionEtarioSignal();
-    const html = this.textGenSrv.obtenerTextoPoblacionEtarioConResaltado(
-      this.vistDataSignal(),
-      this.obtenerNombreComunidadActual(),
-      this.seccionId
-    );
-    return html;
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    if (texto && texto.trim() !== '' && texto !== '____') {
+      return texto.replace(/___/g, nombreComunidad);
+    }
+    // Fallback al texto por defecto
+    return this.textGenSrv.obtenerTextoPoblacionEtario(this.vistDataSignal(), nombreComunidad, this.seccionId);
   }
 
   getPoblacionSexoConPorcentajes(): any[] {

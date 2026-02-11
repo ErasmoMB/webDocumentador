@@ -32,30 +32,43 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.selectSectionFields(this.seccionId, null)()
   );
 
+  // ✅ Helper para obtener prefijo
+  private obtenerPrefijo(): string {
+    return this.obtenerPrefijoGrupo();
+  }
+
   readonly natalidadMortalidadTablaSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'natalidadMortalidadTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadTabla')();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `natalidadMortalidadTabla${prefijo}`;
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [];
   });
 
   readonly morbilidadTablaSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'morbilidadTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadTabla')();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `morbilidadTabla${prefijo}`;
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [];
   });
 
   readonly afiliacionSaludTablaSignal: Signal<any[]> = computed(() => {
-    const fromField = this.projectFacade.selectField(this.seccionId, null, 'afiliacionSaludTabla')();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `afiliacionSaludTabla${prefijo}`;
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return fromField ?? fromTable ?? [];
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -63,7 +76,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ CONFIGURACIONES DE TABLAS - Patrón MODO IDEAL
   readonly natalidadMortalidadConfigSignal: Signal<TableConfig> = computed(() => ({
-    tablaKey: 'natalidadMortalidadTabla',
+    tablaKey: `natalidadMortalidadTabla${this.obtenerPrefijo()}`,
     totalKey: 'anio',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
@@ -74,7 +87,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }));
 
   readonly morbilidadConfigSignal: Signal<TableConfig> = computed(() => ({
-    tablaKey: 'morbilidadTabla',
+    tablaKey: `morbilidadTabla${this.obtenerPrefijo()}`,
     totalKey: 'grupo',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
@@ -85,7 +98,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }));
 
   readonly afiliacionSaludConfigSignal: Signal<TableConfig> = computed(() => ({
-    tablaKey: 'afiliacionSaludTabla',
+    tablaKey: `afiliacionSaludTabla${this.obtenerPrefijo()}`,
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
@@ -175,16 +188,23 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  // ✅ Sobrescribir onFieldChange para agregar prefijos automáticamente
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
+
   getTablaKeyNatalidadMortalidad(): string {
-    return 'natalidadMortalidadTabla';
+    return `natalidadMortalidadTabla${this.obtenerPrefijo()}`;
   }
 
   getTablaKeyMorbilidad(): string {
-    return 'morbilidadTabla';
+    return `morbilidadTabla${this.obtenerPrefijo()}`;
   }
 
   getTablaKeyAfiliacionSalud(): string {
-    return 'afiliacionSaludTabla';
+    return `afiliacionSaludTabla${this.obtenerPrefijo()}`;
   }
 
   override obtenerNombreComunidadActual(): string {
@@ -366,9 +386,10 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
         this.calcularTotalesMorbilidad();
         return;
       }
-      this.onFieldChange(this.getTablaKeyMorbilidad(), tabla, { refresh: true });
-      const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadTabla')() || tabla;
-      this.datos['morbilidadTabla'] = tablaPersistida;
+      const tablaKey = this.getTablaKeyMorbilidad();
+      this.onFieldChange(tablaKey, tabla, { refresh: true });
+      const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || tabla;
+      this.datos[tablaKey] = tablaPersistida;
       this.cdRef.detectChanges();
     }
   }
@@ -385,47 +406,41 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
       const total = rango0_11 + rango12_17 + rango18_29 + rango30_59 + rango60;
       return { ...item, casos: total };
     });
-    this.onFieldChange(this.getTablaKeyMorbilidad(), nuevos, { refresh: true });
-    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadTabla')() || nuevos;
-    this.datos['morbilidadTabla'] = tablaPersistida;
+    const tablaKey = this.getTablaKeyMorbilidad();
+    this.onFieldChange(tablaKey, nuevos, { refresh: true });
+    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || nuevos;
+    this.datos[tablaKey] = tablaPersistida;
     this.cdRef.detectChanges();
   }
 
   onNatalidadMortalidadTableUpdated(updatedData?: any[]): void {
-    // Priorizar updatedData para evitar race conditions cuando el store todavía no se actualiza
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadTabla')() || []);
-    this.datos['natalidadMortalidadTabla'] = datos;
-
-    // Persistir explícitamente como tabla para evitar inconsistencias
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `natalidadMortalidadTabla${prefijo}`;
+    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { natalidadMortalidadTabla: datos }, { updateState: true, notifySync: true, persist: false } as any);
-
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
+    this.cdRef.detectChanges();
   }
 
   onMorbilidadTableUpdated(updatedData?: any[]): void {
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadTabla')() || []);
-    this.datos['morbilidadTabla'] = datos;
-
+    const tablaKey = this.getTablaKeyMorbilidad();
+    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { morbilidadTabla: datos }, { updateState: true, notifySync: true, persist: false } as any);
-
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
+    this.cdRef.detectChanges();
   }
 
   onAfiliacionSaludTableUpdated(updatedData?: any[]): void {
-    const datosRaw = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')() || []);
-
-    // ✅ Calcular porcentajes manualmente para evitar ocultamiento de filas
+    const tablaKey = this.getTablaKeyAfiliacionSalud();
+    const datosRaw = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
     const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
     const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosRaw, cuadro);
-
-    this.datos['afiliacionSaludTabla'] = datosConPorcentajes;
-
+    this.datos[tablaKey] = datosConPorcentajes;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { afiliacionSaludTabla: datosConPorcentajes }, { updateState: true, notifySync: true, persist: false } as any);
-
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosConPorcentajes }, { updateState: true, notifySync: true, persist: false } as any);
+    this.cdRef.detectChanges();
   }
 
   private obtenerRegExp(pattern: string): RegExp {

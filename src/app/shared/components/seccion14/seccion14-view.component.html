@@ -4,7 +4,7 @@
 <p class="mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoNivelEducativoConResaltado()"></div>
 
-<app-table-wrapper [title]="(datos.cuadroTituloNivelEducativo || 'Población de 15 años a más según nivel educativo alcanzado') + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
+<app-table-wrapper [title]="obtenerTituloCuadroNivelEducativo() + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
 <app-generic-table
   [data]="getNivelEducativoConPorcentajes()"
   [config]="{
@@ -19,14 +19,14 @@
   }">
 </app-generic-table>
 </app-table-wrapper>
-<p class="source">Fuente:<span *ngIf="datos.cuadroFuenteNivelEducativo && datos.cuadroFuenteNivelEducativo !== '____'" appDataHighlight="manual">{{ datos.cuadroFuenteNivelEducativo }}</span><span *ngIf="!datos.cuadroFuenteNivelEducativo || datos.cuadroFuenteNivelEducativo === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+<p class="source">Fuente:<span *ngIf="obtenerFuenteCuadroNivelEducativo() && obtenerFuenteCuadroNivelEducativo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroNivelEducativo() }}</span><span *ngIf="!obtenerFuenteCuadroNivelEducativo() || obtenerFuenteCuadroNivelEducativo() === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
 <app-image-upload
     [modoVista]="true"
     [permitirMultiples]="true"
     [fotografias]="getFotografiasEducacionIndicadoresVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
+    [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -35,7 +35,7 @@
 <p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoTasaAnalfabetismoConResaltado()"></div>
 
-<app-table-wrapper [title]="(datos.cuadroTituloTasaAnalfabetismo || 'Tasa de analfabetismo en población de 15 años a más') + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
+<app-table-wrapper [title]="obtenerTituloCuadroTasaAnalfabetismo() + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
 <app-generic-table
   [data]="getTasaAnalfabetismoConPorcentajes()"
   [config]="{
@@ -50,4 +50,4 @@
   }">
 </app-generic-table>
 </app-table-wrapper>
-<p class="source">Fuente:<span *ngIf="datos.cuadroFuenteTasaAnalfabetismo && datos.cuadroFuenteTasaAnalfabetismo !== '____'" appDataHighlight="manual">{{ datos.cuadroFuenteTasaAnalfabetismo }}</span><span *ngIf="!datos.cuadroFuenteTasaAnalfabetismo || datos.cuadroFuenteTasaAnalfabetismo === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p> 
+<p class="source">Fuente:<span *ngIf="obtenerFuenteCuadroTasaAnalfabetismo() && obtenerFuenteCuadroTasaAnalfabetismo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroTasaAnalfabetismo() }}</span><span *ngIf="!obtenerFuenteCuadroTasaAnalfabetismo() || obtenerFuenteCuadroTasaAnalfabetismo() === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p> 

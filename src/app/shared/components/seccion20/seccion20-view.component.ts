@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion20-view',
@@ -61,6 +62,26 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
     this.projectFacade.selectSectionFields(this.seccionId, null)();
     const gp = this.imageFacade.getGroupPrefix(this.seccionId);
     return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, gp);
+  });
+
+  // Signal de prefijo de foto para aislamiento AISD
+  readonly photoPrefixSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+  });
+
+  // photoFieldsHash con prefijo para reactividad de fotos
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
   });
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, public sanitizer: DomSanitizer) {

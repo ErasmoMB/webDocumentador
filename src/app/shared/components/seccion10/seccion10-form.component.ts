@@ -96,6 +96,18 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
+  // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
+  // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
+
   override obtenerNombreComunidadActual(): string {
     return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
   }
@@ -139,7 +151,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloAbastecimientoAgua(): string {
-    const tituloKey = 'tituloAbastecimientoAgua';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloAbastecimientoAgua' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -147,7 +160,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloTiposSaneamiento(): string {
-    const tituloKey = 'tituloTiposSaneamiento';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloTiposSaneamiento' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -155,7 +169,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloCoberturaElectrica(): string {
-    const tituloKey = 'tituloCoberturaElectrica';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloCoberturaElectrica' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -163,21 +178,24 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerFuenteAbastecimientoAgua(): string {
-    const fuenteKey = 'fuenteAbastecimientoAgua';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteAbastecimientoAgua' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
   }
 
   obtenerFuenteTiposSaneamiento(): string {
-    const fuenteKey = 'fuenteTiposSaneamiento';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteTiposSaneamiento' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
   }
 
   obtenerFuenteCoberturaElectrica(): string {
-    const fuenteKey = 'fuenteCoberturaElectrica';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteCoberturaElectrica' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
@@ -341,7 +359,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
 
   // ✅ MÉTODOS PARA GENERACIÓN DE TEXTOS (COPIADOS DEL VIEW COMPONENT)
   obtenerTextoServiciosAgua(): string {
-    const manual = this.datos['textoServiciosAgua'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAgua' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -349,7 +368,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoServiciosAguaDetalle(): string {
-    const manual = this.datos['textoServiciosAguaDetalle'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAguaDetalle' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -357,7 +377,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoServiciosDesague(): string {
-    const manual = this.datos['textoServiciosDesague'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesague' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -365,7 +386,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoServiciosDesagueDetalle(): string {
-    const manual = this.datos['textoServiciosDesagueDetalle'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesagueDetalle' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -373,7 +395,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoDesechosSolidos1(): string {
-    const manual = this.datos['textoDesechosSolidos1'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos1' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -381,7 +404,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoDesechosSolidos2(): string {
-    const manual = this.datos['textoDesechosSolidos2'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos2' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -389,7 +413,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoDesechosSolidos3(): string {
-    const manual = this.datos['textoDesechosSolidos3'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos3' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -397,7 +422,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoElectricidad1(): string {
-    const manual = this.datos['textoElectricidad1'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad1' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -405,7 +431,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoElectricidad2(): string {
-    const manual = this.datos['textoElectricidad2'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad2' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -413,7 +440,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoEnergiaParaCocinar(): string {
-    const manual = this.datos['textoEnergiaParaCocinar'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoEnergiaParaCocinar' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -478,7 +506,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
 
   // ✅ MÉTODOS PARA TÍTULOS Y FUENTES (ENERGÍA PARA COCINAR)
   obtenerTituloEnergiaCocinar(): string {
-    const tituloKey = 'tituloEnergiaCocinar';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloEnergiaCocinar' + prefijo;
     const manual = this.datos[tituloKey];
     if (manual && manual.trim().length > 0) {
       return manual;
@@ -495,7 +524,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerFuenteEnergiaCocinar(): string {
-    const fuenteKey = 'fuenteEnergiaCocinar';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteEnergiaCocinar' + prefijo;
     const manual = this.datos[fuenteKey];
     if (manual && manual.trim().length > 0) {
       return manual;
@@ -512,7 +542,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
 
   // ✅ MÉTODOS PARA TÍTULOS Y FUENTES (TECNOLOGÍA DE COMUNICACIONES)
   obtenerTituloTecnologiaComunicaciones(): string {
-    const tituloKey = 'tituloTecnologiaComunicaciones';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloTecnologiaComunicaciones' + prefijo;
     const manual = this.datos[tituloKey];
     if (manual && manual.trim().length > 0) {
       return manual;

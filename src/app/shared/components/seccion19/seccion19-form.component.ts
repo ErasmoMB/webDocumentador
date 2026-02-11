@@ -7,6 +7,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
     imports: [
@@ -28,6 +29,18 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   override useReactiveSync: boolean = true;
 
   override fotografiasFormMulti: FotoItem[] = [];
+
+  // ✅ HELPER PARA OBTENER PREFIJO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
+  // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
 
   // ✅ SIGNALS PUROS
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -80,12 +93,20 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
   });
 
+  // Signal de prefijo de foto para aislamiento AISD
+  readonly photoPrefixSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+  });
+
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
+    const prefijo = this.obtenerPrefijo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }

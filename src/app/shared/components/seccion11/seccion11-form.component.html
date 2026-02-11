@@ -14,7 +14,7 @@
           hint="Edite todo el bloque de texto sobre transporte. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="6"
           [value]="textoTransporteSignal()"
-          (valueChange)="onFieldChange('parrafoSeccion11_transporte_completo', $event)">
+          (valueChange)="onFieldChange('parrafoSeccion11_transporte_completo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -23,13 +23,13 @@
           <label class="label">Costo Transporte Mínimo (S/.)</label>
           <input type="text" class="input" placeholder="0"
             [value]="costoMinSignal()"
-            (input)="onFieldChange('costoTransporteMinimo', $any($event.target).value)">
+            (input)="onFieldChange('costoTransporteMinimo' + obtenerPrefijoGrupo(), $any($event.target).value)">
         </div>
         <div class="form-field">
           <label class="label">Costo Transporte Máximo (S/.)</label>
           <input type="text" class="input" placeholder="0"
             [value]="costoMaxSignal()"
-            (input)="onFieldChange('costoTransporteMaximo', $any($event.target).value)">
+            (input)="onFieldChange('costoTransporteMaximo' + obtenerPrefijoGrupo(), $any($event.target).value)">
         </div>
       </div>
 
@@ -67,7 +67,7 @@
           hint="Edite todo el bloque de texto sobre telecomunicaciones. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="6"
           [value]="textoTelecomunicacionesSignal()"
-          (valueChange)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo', $event)">
+          (valueChange)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 

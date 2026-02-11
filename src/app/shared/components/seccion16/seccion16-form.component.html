@@ -3,7 +3,7 @@
 
   <div class="form-group-section mt-lg">
     <h4 class="section-title">Editar Párrafos</h4>
-    
+
     <app-paragraph-editor
       [fieldId]="getFieldIdAguaCompleto()"
       label="Agua - Texto Completo"
@@ -28,7 +28,7 @@
     <app-image-upload
       [fotografias]="fotografiasReservorio"
       [sectionId]="seccionId"
-      photoPrefix="fotografiaReservorio"
+      [photoPrefix]="PHOTO_PREFIX_RESERVORIO"
       [permitirMultiples]="true"
       labelTitulo="Título de la fotografía"
       labelFuente="Fuente de la fotografía"
@@ -47,7 +47,7 @@
     <app-image-upload
       [fotografias]="fotografiasUsoSuelos"
       [sectionId]="seccionId"
-      photoPrefix="fotografiaUsoSuelos"
+      [photoPrefix]="PHOTO_PREFIX_USO_SUELOS"
       [permitirMultiples]="true"
       labelTitulo="Título de la fotografía"
       labelFuente="Fuente de la fotografía"

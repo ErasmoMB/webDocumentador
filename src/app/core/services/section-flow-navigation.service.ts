@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProjectStateFacade } from '../state/project-state.facade';
 import { ReactiveStateAdapter } from './state-adapters/reactive-state-adapter.service';
+import { SectionAccessControlService } from './section-access-control.service';
 
 interface SectionFlow {
   sectionId: string;
@@ -31,7 +32,8 @@ export class SectionFlowNavigationService {
   constructor(
     private router: Router,
     private projectFacade: ProjectStateFacade,
-    private stateAdapter: ReactiveStateAdapter
+    private stateAdapter: ReactiveStateAdapter,
+    private accessControl: SectionAccessControlService
   ) {}
 
   /**
@@ -117,7 +119,12 @@ export class SectionFlowNavigationService {
     if (!isLastSubSection) {
       // Hay más subsecciones en el grupo actual
       const nextSubSection = subSectionNumber + 1;
-      return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}.${nextSubSection}`;
+      const nextSectionId = `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}.${nextSubSection}`;
+      // Verificar si la subsección es accesible
+      if (this.accessControl.canAccessSection(nextSectionId)) {
+        return nextSectionId;
+      }
+      return null;
     }
 
     // Se alcanzó la última subsección del grupo actual
@@ -125,28 +132,40 @@ export class SectionFlowNavigationService {
     if (groupType === 'AISD') {
       const aisdGroupCount = this.getAISDGroupCount();
       if (groupNumber < aisdGroupCount) {
-        // Hay más grupos AISD - retornar la vista del siguiente grupo (sin subsección)
-        return `3.1.4.A.${groupNumber + 1}`;
+        // Hay más grupos AISD - verificar si el siguiente grupo es accesible
+        const nextGroupSection = `3.1.4.A.${groupNumber + 1}`;
+        if (this.accessControl.canAccessSection(nextGroupSection)) {
+          return nextGroupSection;
+        }
+        return null;
       }
 
       // No hay más grupos AISD, pasar a AISI
       const aisiGroupCount = this.getAISIGroupCount();
-      if (aisiGroupCount > 0) {
-        return `3.1.4.B.1`;
+      // Buscar el primer grupo AISI que sea accesible
+      for (let i = 1; i <= aisiGroupCount; i++) {
+        const aisiSection = `3.1.4.B.${i}`;
+        if (this.accessControl.canAccessSection(aisiSection)) {
+          return aisiSection;
+        }
       }
 
-      // No hay grupos AISI, terminar
+      // No hay grupos AISI accesibles - retornar null para que el componente principal navegue a la siguiente sección no-AISD/AISI
       return null;
     }
 
     // groupType === 'AISI'
     const aisiGroupCount = this.getAISIGroupCount();
     if (groupNumber < aisiGroupCount) {
-      // Hay más grupos AISI - retornar la vista del siguiente grupo (sin subsección)
-      return `3.1.4.B.${groupNumber + 1}`;
+      // Hay más grupos AISI - verificar si el siguiente grupo es accesible
+      const nextGroupSection = `3.1.4.B.${groupNumber + 1}`;
+      if (this.accessControl.canAccessSection(nextGroupSection)) {
+        return nextGroupSection;
+      }
+      return null;
     }
 
-    // Se alcanzó el final del flujo
+    // Se alcanzó el final del flujo AISI - retornar null para navegar a la siguiente sección
     return null;
   }
 
@@ -166,11 +185,29 @@ export class SectionFlowNavigationService {
     if (subSectionNumber > 1) {
       // Hay subsecciones anteriores en el grupo actual
       const prevSubSection = subSectionNumber - 1;
-      return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}.${prevSubSection}`;
+      const prevSectionId = `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}.${prevSubSection}`;
+      // Verificar si la subsección anterior es accesible
+      if (this.accessControl.canAccessSection(prevSectionId)) {
+        return prevSectionId;
+      }
+      return null;
     }
 
     // Se está en la primera subsección del grupo actual (subSectionNumber === 1)
-    // Retornar la vista del grupo sin subsección específica
+    if (groupType === 'AISI' && groupNumber === 1) {
+      // Es el primer grupo AISI - retroceder al último grupo AISD
+      const aisdGroupCount = this.getAISDGroupCount();
+      if (aisdGroupCount > 0) {
+        const targetSection = `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
+        // Verificar si es accesible
+        if (this.accessControl.canAccessSection(targetSection)) {
+          return targetSection;
+        }
+      }
+      return null;
+    }
+
+    // Retroceder a la vista del grupo sin subsección específica
     // Ej: 3.1.4.A.1.1 → 3.1.4.A.1
     return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}`;
   }

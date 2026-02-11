@@ -21,7 +21,7 @@
                        [config]="caracteristicasSaludConfigSignal()"
                        [columns]="columnasSalud"
                        [sectionId]="seccionId"
-                       [tablaKey]="'caracteristicasSaludTabla'"
+                       [tablaKey]="'caracteristicasSaludTabla' + obtenerPrefijo()"
                        [showAddButton]="false"
                        [showDeleteButton]="false"
                        (tableUpdated)="onCaracteristicasSaludTableUpdated($event)">
@@ -35,13 +35,13 @@
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosSaludSignal()"
                       [sectionId]="seccionId"
-                      [photoPrefix]="PHOTO_PREFIX_SALUD"
+                      [photoPrefix]="photoPrefixSaludSignal()"
                       (fotografiasChange)="onFotografiasSaludChange($event)">
     </app-image-upload>
   </div>
 
   <div class="form-section">
-    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Infraestructura en educación</strong></p>
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. infraestructura en educación</strong></p>
     
     <textarea class="form-control"
               [ngModel]="parrafoEducacionSignal()"
@@ -54,13 +54,13 @@
     <input class="form-control" type="text"
            [ngModel]="tituloCantidadEstudiantesSignal()"
            (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionTitulo', $event)"
-           placeholder="Ej: Infraestructura educativa – CC (2023)">
+           placeholder="Ej: infraestructura educativa – CC (2023)">
 
     <app-dynamic-table [datos]="datos"
                        [config]="cantidadEstudiantesEducacionConfigSignal()"
                        [columns]="columnasEstudiantes"
                        [sectionId]="seccionId"
-                       [tablaKey]="'cantidadEstudiantesEducacionTabla'"
+                       [tablaKey]="'cantidadEstudiantesEducacionTabla' + obtenerPrefijo()"
                        (tableUpdated)="onCantidadEstudiantesTableUpdated()">
     </app-dynamic-table>
     <label class="label">Fuente</label>
@@ -86,7 +86,7 @@
                        [config]="ieAyrocaConfigSignal()"
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"
-                       [tablaKey]="'ieAyrocaTabla'"
+                       [tablaKey]="'ieAyrocaTabla' + obtenerPrefijo()"
                        [showAddButton]="false"
                        [showDeleteButton]="false"
                        (tableUpdated)="onIEAyrocaTableUpdated($event)">
@@ -107,7 +107,7 @@
                        [config]="ie40270ConfigSignal()"
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"
-                       [tablaKey]="'ie40270Tabla'"
+                       [tablaKey]="'ie40270Tabla' + obtenerPrefijo()"
                        [showAddButton]="false"
                        [showDeleteButton]="false"
                        (tableUpdated)="onIE40270TableUpdated($event)">
@@ -227,14 +227,14 @@
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosIEAyrocaSignal()"
                       [sectionId]="seccionId"
-                      [photoPrefix]="PHOTO_PREFIX_IE_AYROCA"
+                      [photoPrefix]="photoPrefixIEAyrocaSignal()"
                       (fotografiasChange)="onFotografiasIEAyrocaChange($event)">
     </app-image-upload>
 
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosIE40270Signal()"
                       [sectionId]="seccionId"
-                      [photoPrefix]="PHOTO_PREFIX_IE_40270"
+                      [photoPrefix]="photoPrefixIE40270Signal()"
                       (fotografiasChange)="onFotografiasIE40270Change($event)">
     </app-image-upload>
   </div>
@@ -252,7 +252,7 @@
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosRecreacionSignal()"
                       [sectionId]="seccionId"
-                      [photoPrefix]="PHOTO_PREFIX_RECREACION"
+                      [photoPrefix]="photoPrefixRecreacionSignal()"
                       (fotografiasChange)="onFotografiasRecreacionChange($event)">
     </app-image-upload>
   </div>
@@ -270,7 +270,7 @@
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosDeporteSignal()"
                       [sectionId]="seccionId"
-                      [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+                      [photoPrefix]="photoPrefixDeporteSignal()"
                       (fotografiasChange)="onFotografiasDeporteChange($event)">
     </app-image-upload>
   </div>

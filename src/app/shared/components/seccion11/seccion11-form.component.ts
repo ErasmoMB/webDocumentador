@@ -64,15 +64,19 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly costoMinSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMinimo')() || '';
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    return this.projectFacade.selectField(this.seccionId, null, `costoTransporteMinimo${prefijo}`)() || '';
   });
 
   readonly costoMaxSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMaximo')() || '';
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    return this.projectFacade.selectField(this.seccionId, null, `costoTransporteMaximo${prefijo}`)() || '';
   });
 
   readonly telecomunicacionesTablaSignal: Signal<any[]> = computed(() => {
-    const tabla = this.projectFacade.selectField(this.seccionId, null, 'telecomunicacionesTabla')() || [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `telecomunicacionesTabla${prefijo}` : 'telecomunicacionesTabla';
+    const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
     return Array.isArray(tabla) ? tabla : [];
   });
 
@@ -85,15 +89,16 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo`)();
-      const fuenteTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente`)();
-      const imagenTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen`)();
+      const tituloTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo${prefijo}`)();
+      const fuenteTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente${prefijo}`)();
+      const imagenTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen${prefijo}`)();
       
-      const tituloTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo`)();
-      const fuenteTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente`)();
-      const imagenTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen`)();
+      const tituloTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo${prefijo}`)();
+      const fuenteTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente${prefijo}`)();
+      const imagenTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen${prefijo}`)();
       
       hash += `${tituloTransporte || ''}|${fuenteTransporte || ''}|${imagenTransporte ? '1' : '0'}|`;
       hash += `${tituloTele || ''}|${fuenteTele || ''}|${imagenTele ? '1' : '0'}|`;
@@ -300,7 +305,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoSeccion11TransporteCompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion11_transporte_completo')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const manual = this.projectFacade.selectField(this.seccionId, null, `parrafoSeccion11_transporte_completo${prefijo}`)();
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -334,7 +340,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoSeccion11TelecomunicacionesCompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion11_telecomunicaciones_completo')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const manual = this.projectFacade.selectField(this.seccionId, null, `parrafoSeccion11_telecomunicaciones_completo${prefijo}`)();
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -413,7 +420,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ MÉTODOS PARA TÍTULO Y FUENTE DE LA TABLA
   obtenerTituloTelecomunicaciones(): string {
-    const tituloKey = 'tituloTelecomunicaciones';
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tituloKey = `tituloTelecomunicaciones${prefijo}`;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -421,7 +429,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerFuenteTelecomunicaciones(): string {
-    const fuenteKey = 'fuenteTelecomunicaciones';
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const fuenteKey = `fuenteTelecomunicaciones${prefijo}`;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'GEADES (2024)';
@@ -429,13 +438,17 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
 
   onTituloTelecomunicacionesChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('tituloTelecomunicaciones', valor, { refresh: false });
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const campoKey = `tituloTelecomunicaciones${prefijo}`;
+    this.onFieldChange(campoKey, valor, { refresh: false });
     this.cdRef.markForCheck();
   }
 
   onFuenteTelecomunicacionesChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('fuenteTelecomunicaciones', valor, { refresh: false });
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const campoKey = `fuenteTelecomunicaciones${prefijo}`;
+    this.onFieldChange(campoKey, valor, { refresh: false });
     this.cdRef.markForCheck();
   }
 

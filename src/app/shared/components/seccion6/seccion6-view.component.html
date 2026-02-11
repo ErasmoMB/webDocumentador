@@ -3,7 +3,7 @@
 
   <!-- Sección a: Población según sexo -->
   <p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
-  <p class="text-justify" [innerHTML]="obtenerTextoPoblacionSexoConResaltado()"></p>
+  <p class="text-justify">{{ obtenerTextoPoblacionSexoView() }}</p>
 
   <app-table-wrapper 
     [title]="obtenerValorConPrefijo('tituloPoblacionSexoAISD') || 'Población por sexo – CC ' + obtenerNombreComunidadActual() + ' (2017)'" 
@@ -56,7 +56,7 @@
 
   <!-- Sección b: Población según grupo etario -->
   <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Población según grupo etario</strong></p>
-  <p class="text-justify" [innerHTML]="obtenerTextoPoblacionEtarioConResaltado()"></p>
+  <p class="text-justify">{{ obtenerTextoPoblacionEtarioView() }}</p>
 
   <app-table-wrapper 
     [title]="obtenerValorConPrefijo('tituloPoblacionEtarioAISD') || 'Población por grandes grupos de edad – CC ' + obtenerNombreComunidadActual() + ' (2017)'" 

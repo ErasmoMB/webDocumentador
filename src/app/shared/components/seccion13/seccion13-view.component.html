@@ -18,7 +18,7 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>"
+  </app-table-wrapper>
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroNatalidad() }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
@@ -51,7 +51,7 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>"
+  </app-table-wrapper>
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroMorbilidad() }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
@@ -71,7 +71,7 @@
         hover: true
       }">
     </app-generic-table>
-  </app-table-wrapper>"
+  </app-table-wrapper>
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroAfiliacion() }}</span></p>
 
   <app-image-upload
@@ -79,7 +79,7 @@
     [permitirMultiples]="true"
     [fotografias]="fotografiasCache"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
+    [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">

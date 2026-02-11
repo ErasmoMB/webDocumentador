@@ -82,6 +82,48 @@ Los siguientes servicios YA soportan AISD y AISI. NO los modifiques:
 - ✅ HTML actualizado para usar signals con prefijos
 - ⚠️ Las tablas aún usan `tablaKey` estático (pendiente de mejora)
 
+## Proceso de Migracion por Seccion
+
+### Archivos a Revisar por Seccion
+
+Por CADA seccion que se migra, se deben revisar y modificar los siguientes archivos:
+
+| Archivo | Descripcion | Accion Requerida
+|---------|-------------|------------------
+| `seccionX-form.component.ts` | Lógica del formulario | Agregar signals, handlers con prefijos
+| `seccionX-form.component.html` | Vista del formulario | Actualizar bindings con signals
+| `seccionX-view.component.ts` | Lógica de visualizacion | Agregar signals, metodos con prefijos
+| `seccionX-view.component.html` | Vista de visualizacion | Actualizar bindings con metodos prefijados
+
+> ⚠️ **IMPORTANTE**: Se deben revisar y modificar los 4 archivos. No basta con solo el TS.
+
+### Flujo de Trabajo para Migrar UNA Seccion
+
+```
+1. Analizar seccionX-form.component.ts
+   └─ Identificar campos sin prefijo
+   └─ Agregar signals con prefijos
+   └─ Actualizar handlers de cambio
+
+2. Analizar seccionX-form.component.html  
+   └─ Cambiar acceso directo a datos por signals/metodos
+   └─ Usar metodos del componente en lugar de datos['campo']
+
+3. Analizar seccionX-view.component.ts
+   └─ Agregar signals para tablas con prefijos
+   └─ Agregar photoFieldsHash con prefijo
+   └─ Agregar metodos para titulos/fuentes con prefijos
+
+4. Analizar seccionX-view.component.html
+   └─ Usar metodos del componente en lugar de datos['campo']
+   └─ Verificar que no haya acceso directo sin prefijo
+
+5. Verificar CONSISTENCIA entre Form y View
+   └─ Ambos deben usar los MISMOS keys de tabla
+   └─ photoFieldsHash debe incluir prefijo
+   └─ Los metodos deben retornar el mismo resultado
+```
+
 ## Pasos de Migracion
 
 ### Paso 1: Agregar Signal de Prefijo de Foto
@@ -131,6 +173,34 @@ onTablaAISD1Change(valor: any[]): void {
   const campoKey = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
   this.projectFacade.updateField(this.seccionId, null, campoKey, valor);
 }
+```
+
+### Paso 3b: Sobrescribir onFieldChange para agregar prefijos automáticamente
+
+**PROBLEMA COMÚN:** Los campos se guardan sin prefijo pero se leen con prefijo, causando que los cambios no se vean en la Vista.
+
+**SOLUCIÓN:** Sobrescribir `onFieldChange` en el componente Form para que agregue el prefijo automáticamente:
+
+```typescript
+// En seccionX-form.component.ts
+override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+  // Agregar prefijo al campo para aislamiento AISD
+  const prefijo = this.obtenerPrefijo();
+  const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+  super.onFieldChange(campoConPrefijo, value, options);
+}
+```
+
+**Beneficio:** No necesitas modificar el HTML para agregar prefijos en los handlers. El método `onFieldChange` se encarga automáticamente.
+
+**Ejemplo de uso en HTML:**
+```html
+<!-- El HTML usa el fieldId sin prefijo -->
+<textarea [ngModel]="parrafoSignal()"
+          (ngModelChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)">
+</textarea>
+
+<!-- Se guarda automáticamente como: parrafoSeccion12_salud_completo_A1 -->
 ```
 
 ### Paso 4: Actualizar HTML
@@ -339,6 +409,36 @@ readonly miTablaConfig: TableConfig = {
 - Si hay datos del backend -> se muestran
 - Si no hay datos -> tabla vacia []
 
+### Paso 11: Patrón para Textos en View (SIMPLE)
+
+**PROBLEMA COMÚN:** Usar `[innerHTML]` con servicios de texto resaltado puede causar que los cambios no se reflejen en la Vista.
+
+**SOLUCIÓN:** Usar interpolación simple `{{ }}` con un método que lee directamente del signal (patrón sección 5):
+
+```typescript
+// View Component - Método simple que lee del signal
+obtenerTextoPoblacionSexoView(): string {
+  const texto = this.vistTextoPoblacionSexoSignal();
+  const nombreComunidad = this.obtenerNombreComunidadActual();
+  if (texto && texto.trim() !== '' && texto !== '____') {
+    return texto.replace(/___/g, nombreComunidad);
+  }
+  // Fallback al texto por defecto
+  return this.textGenSrv.obtenerTextoPoblacionSexo(
+    this.vistDataSignal(),
+    nombreComunidad,
+    this.seccionId
+  );
+}
+```
+
+```html
+<!-- View HTML - Interpolación simple -->
+<p class="text-justify">{{ obtenerTextoPoblacionSexoView() }}</p>
+```
+
+> **Nota:** Este patrón es más simple y directo que usar `[innerHTML]` con servicios de texto resaltado. Evita problemas de reactividad.
+
 ## Helper Functions
 
 ### obtenerPrefijoCP()
@@ -415,11 +515,11 @@ Activar logs en global-numbering.service.ts:
 | 7 | ✅ Completada | Media |
 | 8 | ✅ Completada | Media |
 | 9 | ✅ Completada | Media |
-| 10 | ⏳ Pendiente | Media |
+| 10 | ✅ Completada | Media |
 | 11 | ⏳ Pendiente | Media |
-| 12 | ⏳ Pendiente | Media |
-| 13 | ⏳ Pendiente | Media |
-| 14 | ⏳ Pendiente | Media |
+| 12 | ✅ Completada | Media |
+| 13 | ✅ Completada | Media |
+| 14 | ✅ Completada | Media |
 | 15 | ⏳ Pendiente | Media |
 | 16 | ⏳ Pendiente | Media |
 | 17 | ⏳ Pendiente | Media |
@@ -458,6 +558,40 @@ Solucion: Verificar que photoPrefixSignal() genere el prefijo correcto.
 Sintoma: Los cambios se guardan en el Form pero no se ven en el View.
 
 Causa: Form y View usan keys diferentes para las mismas tablas/fotos.
+
+**Causa comun:** El `onFieldChange` se llama con fieldId sin prefijo, pero el View lee con prefijo.
+
+**Solucion:** Sobrescribir `onFieldChange` en el componente Form:
+
+```typescript
+override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+  const prefijo = this.obtenerPrefijo();
+  const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+  super.onFieldChange(campoConPrefijo, value, options);
+}
+```
+
+### 6. Datos guardados antes de la migracion no se muestran
+
+Sintoma: Los datos existentes (guardados antes de implementar prefijos) no aparecen en la Vista.
+
+Causa: Los datos antiguos están guardados en campos sin prefijo (ej: `parrafoSeccion12_salud_completo`), pero la Vista busca campos con prefijo (ej: `parrafoSeccion12_salud_completo_A1`).
+
+Solucion: El usuario debe re-ingresar los datos para que se guarden con el nuevo formato.
+
+Alternativamente, implementar un fallback en el signal:
+
+```typescript
+readonly parrafoSaludSignal: Signal<string> = computed(() => {
+  const prefijo = this.obtenerPrefijo();
+  const data = this.allSectionData();
+  // Primero intentar con prefijo, luego sin prefijo (fallback)
+  const manual = data[`parrafoSeccion12_salud_completo${prefijo}`] || 
+                 data['parrafoSeccion12_salud_completo'];
+  // ... resto del codigo
+});
+```
+
 
 Solucion: Verificar que ambos usen los MISMOS keys:
 
@@ -633,6 +767,77 @@ Los siguientes servicios ya fueron modificados para respetar noInicializarDesdeE
 Si las tablas NO usan noInicializarDesdeEstructura, mantendran su comportamiento original:
 - Con estructuraInicial: Usan la estructura predefined
 - Sin estructuraInicial: Crean 1 fila vacia [{}]
+
+## Lecciones Aprendidas de la Seccion 14
+
+### Problema 1: Doble Prefijo en el Guardado
+
+**Sintoma:** Los cambios en el Form no se ven en el View.
+
+**Causa:** El HTML pasaba el campo CON prefijo, y el TS también agregaba otro prefijo:
+
+```typescript
+// HTML: onFieldChange('parrafoSeccion14_indicadores_educacion_intro_A1', $event)
+// TS: const campoConPrefijo = `${fieldId}${prefijo}`; // 'parrafoSeccion14_indicadores_educacion_intro_A1_A1'
+```
+
+**Solucion:** El HTML NO debe agregar prefijo. El `onFieldChange` lo hace automáticamente:
+
+```html
+<!-- ❌ INCORRECTO - Doble prefijo -->
+<textarea (ngModelChange)="onFieldChange('campo' + obtenerPrefijoGrupo(), $event)">
+
+<!-- ✅ CORRECTO - Solo el TS agrega prefijo -->
+<textarea (ngModelChange)="onFieldChange('campo', $event)">
+```
+
+**Y en el TS:**
+
+```typescript
+override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+  const prefijo = this.obtenerPrefijo();
+  const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;  // TS agrega prefijo
+  super.onFieldChange(campoConPrefijo, value, options);
+}
+```
+
+---
+
+### Problema 2: Signals no detectan cambios (actualizacion en tiempo real)
+
+**Sintoma:** Los cambios requieren recargar la página para verse.
+
+**Causa:** Los signals de texto usaban `obtenerValorConPrefijo()` que lee de `this.datos`, pero no tenían dependencia explícita con `formDataSignal()`. Angular no detectaba los cambios.
+
+**Solucion:** Los signals deben depender directamente de `formDataSignal()`:
+
+```typescript
+// ❌ INCORRECTO - No detecta cambios
+readonly textoSignal: Signal<string> = computed(() => {
+  return this.obtenerValorConPrefijo('campo') || 'valor por defecto';
+});
+
+// ✅ CORRECTO - Detecta cambios en tiempo real
+readonly textoSignal: Signal<string> = computed(() => {
+  const prefijo = this.obtenerPrefijo();
+  const campo = 'campo' + prefijo;
+  const data = this.formDataSignal();  // ✅ Dependencia explícita
+  const valor = data[campo];
+  return (valor && String(valor).trim().length > 0) ? String(valor) : 'valor por defecto';
+});
+```
+
+---
+
+### Verificacion de Funcionalidad
+
+Para verificar que la seccion funciona correctamente:
+
+1. **Cambios en tiempo real:** Editar un párrafo en el Form y ver que se actualice inmediatamente en el View.
+2. **Prefijo correcto:** Verificar en la consola que los logs muestren el prefijo correcto (`_A1`, `_A2`, etc.).
+3. **Consistencia Form/View:** Ambos componentes deben usar los mismos keys de campo.
+
+---
 
 ## Recursos Adicionales
 

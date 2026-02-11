@@ -6,6 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from 'src/app/core/services/table-management.service';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   selector: 'app-seccion20-form',
@@ -19,6 +20,18 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
 
   override readonly PHOTO_PREFIX = 'fotografiaFestividades';
+
+  // ✅ HELPER PARA OBTENER PREFIJO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
+  // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
 
   festividadesConfig: TableConfig = {
     tablaKey: 'festividades',
@@ -50,6 +63,26 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.selectSectionFields(this.seccionId, null)();
     const gp = this.imageFacade.getGroupPrefix(this.seccionId);
     return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, gp);
+  });
+
+  // Signal de prefijo de foto para aislamiento AISD
+  readonly photoPrefixSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+  });
+
+  // photoFieldsHash con prefijo para reactividad de fotos
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    const prefijo = this.obtenerPrefijo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
   });
 
   // Helpers (copiados de la implementación previa para mantener el mismo texto por defecto)

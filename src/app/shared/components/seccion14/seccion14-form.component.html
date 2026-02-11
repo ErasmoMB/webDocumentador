@@ -6,12 +6,12 @@
       <h4 class="section-title">Editar Párrafos</h4>
 
       <app-paragraph-editor
-        [fieldId]="getFieldIdIndicadoresEducacionIntro()"
+        [fieldId]="'parrafoSeccion14_indicadores_educacion_intro' + obtenerPrefijo()"
         label="Introducción - Indicadores de Educación"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
-        [value]="obtenerTextoSeccion14IndicadoresEducacionIntro()"
-        (valueChange)="onFieldChange(getFieldIdIndicadoresEducacionIntro(), $event)">
+        [value]="textoIndicadoresEducacionIntroSignal()"
+        (valueChange)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $event)">
       </app-paragraph-editor>
     </div>
 
@@ -22,19 +22,19 @@
         <h4 class="section-title">Editar Párrafos</h4>
 
         <app-paragraph-editor
-          [fieldId]="getFieldIdNivelEducativo()"
+          [fieldId]="'textoNivelEducativo' + obtenerPrefijo()"
           label="Nivel Educativo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="obtenerTextoNivelEducativo()"
-          (valueChange)="onFieldChange(getFieldIdNivelEducativo(), $event)">
+          [value]="textoNivelEducativoSignal()"
+          (valueChange)="onFieldChange('textoNivelEducativo', $event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field mt-lg">
         <label class="label">Título del cuadro</label>
         <input type="text" class="form-control"
-          [value]="datos['cuadroTituloNivelEducativo'] || ('Población de 15 años a más según nivel educativo alcanzado – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          [value]="datos['cuadroTituloNivelEducativo' + obtenerPrefijo()] || ('Población de 15 años a más según nivel educativo alcanzado – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
           (change)="onFieldChange('cuadroTituloNivelEducativo', $any($event.target).value, { refresh: true })" />
       </div>
 
@@ -49,7 +49,7 @@
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
-          [tablaKey]="'nivelEducativoTabla'"
+          [tablaKey]="'nivelEducativoTabla' + obtenerPrefijo()"
           [showAddButton]="true"
           [showDeleteButton]="true"
           (tableUpdated)="onNivelEducativoTableUpdated($event)">
@@ -57,7 +57,7 @@
         <p class="source" style="margin-top:8px;">
           <label class="label">Fuente</label>
           <input type="text" class="form-control"
-            [value]="datos['cuadroFuenteNivelEducativo'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            [value]="datos['cuadroFuenteNivelEducativo' + obtenerPrefijo()] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
             (change)="onFieldChange('cuadroFuenteNivelEducativo', $any($event.target).value, { refresh: true })" />
         </p>
       </div>
@@ -67,7 +67,7 @@
         <app-image-upload
           [fotografias]="fotografiasFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX"
+          [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -89,19 +89,19 @@
         <h4 class="section-title">Editar Párrafos</h4>
 
         <app-paragraph-editor
-          [fieldId]="getFieldIdTasaAnalfabetismo()"
+          [fieldId]="'textoTasaAnalfabetismo' + obtenerPrefijo()"
           label="Tasa de Analfabetismo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="2"
-          [value]="obtenerTextoTasaAnalfabetismo()"
-          (valueChange)="onFieldChange(getFieldIdTasaAnalfabetismo(), $event)">
+          [value]="textoTasaAnalfabetismoSignal()"
+          (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field mt-lg">
         <label class="label">Título del cuadro</label>
         <input type="text" class="form-control"
-          [value]="datos['cuadroTituloTasaAnalfabetismo'] || ('Tasa de analfabetismo en población de 15 años a más – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          [value]="datos['cuadroTituloTasaAnalfabetismo' + obtenerPrefijo()] || ('Tasa de analfabetismo en población de 15 años a más – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
           (change)="onFieldChange('cuadroTituloTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
       </div>
 
@@ -116,7 +116,7 @@
             { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
-          [tablaKey]="'tasaAnalfabetismoTabla'"
+          [tablaKey]="'tasaAnalfabetismoTabla' + obtenerPrefijo()"
           [showAddButton]="true"
           [showDeleteButton]="true"
           (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
@@ -124,7 +124,7 @@
         <p class="source" style="margin-top:8px;">
           <label class="label">Fuente</label>
           <input type="text" class="form-control"
-            [value]="datos['cuadroFuenteTasaAnalfabetismo'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            [value]="datos['cuadroFuenteTasaAnalfabetismo' + obtenerPrefijo()] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
             (change)="onFieldChange('cuadroFuenteTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
         </p>
       </div> 

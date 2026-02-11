@@ -6,6 +6,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { TableConfig, TableColumn } from 'src/app/core/services/table-management.service';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({
     standalone: true,
@@ -21,10 +22,28 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     override readonly PHOTO_PREFIX = 'fotografiaIDH';
     override useReactiveSync: boolean = true;
 
+    // ✅ HELPER PARA OBTENER PREFIJO
+    private obtenerPrefijo(): string {
+        return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+    }
+
+    // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+    override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+        const prefijo = this.obtenerPrefijo();
+        const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+        super.onFieldChange(campoConPrefijo, value, options);
+    }
+
     // Signal para fotos reactivas
     readonly fotografiasSignal: Signal<FotoItem[]> = computed(() => {
         const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
         return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
+    });
+
+    // Signal de prefijo de foto para aislamiento AISD
+    readonly photoPrefixSignal: Signal<string> = computed(() => {
+        const prefijo = this.obtenerPrefijo();
+        return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
     });
 
     // Configuración de tabla IDH como Signal

@@ -22,47 +22,75 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     override readonly PHOTO_PREFIX = 'fotografiaNBI';
     override useReactiveSync: boolean = true;
 
+    // ✅ HELPER PARA OBTENER PREFIJO
+    private obtenerPrefijo(): string {
+        return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+    }
+
+    // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
+    override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+        const prefijo = this.obtenerPrefijo();
+        const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+        super.onFieldChange(campoConPrefijo, value, options);
+    }
+
+    // Signal para fotos reactivas
     readonly fotografiasSignal: Signal<FotoItem[]> = computed(() => {
         const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
         return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
     });
 
-    readonly nbiCCAyrocaConfigSignal: Signal<TableConfig> = computed(() => ({
-        tablaKey: 'nbiCCAyrocaTabla',
-        totalKey: 'categoria',
-        campoTotal: 'casos',
-        campoPorcentaje: 'porcentaje',
-        calcularPorcentajes: true,
-        camposParaCalcular: ['casos'],
-        // Estructura inicial fija (no editable en categorías)
-        estructuraInicial: [
-            { categoria: 'Población en Viviendas con características físicas inadecuadas', casos: '', porcentaje: '' },
-            { categoria: 'Población en Viviendas con hacinamiento', casos: '', porcentaje: '' },
-            { categoria: 'Población en Viviendas sin servicios higiénicos', casos: '', porcentaje: '' },
-            { categoria: 'Población en Hogares con niños que no asisten a la escuela', casos: '', porcentaje: '' }
-        ],
-        permiteAgregarFilas: false,
-        permiteEliminarFilas: false
-    }));
+    // Signal de prefijo de foto para aislamiento AISD
+    readonly photoPrefixSignal: Signal<string> = computed(() => {
+        const prefijo = this.obtenerPrefijo();
+        return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+    });
 
-    readonly nbiDistritoCahuachoConfigSignal: Signal<TableConfig> = computed(() => ({
-        tablaKey: 'nbiDistritoCahuachoTabla',
-        totalKey: 'categoria',
-        campoTotal: 'casos',
-        campoPorcentaje: 'porcentaje',
-        calcularPorcentajes: true,
-        camposParaCalcular: ['casos'],
-        // Estructura inicial fija (no editable en categorías)
-        estructuraInicial: [
-            { categoria: 'Viviendas con características físicas inadecuadas', casos: '', porcentaje: '' },
-            { categoria: 'Viviendas con hacinamiento', casos: '', porcentaje: '' },
-            { categoria: 'Viviendas sin servicios higiénicos', casos: '', porcentaje: '' },
-            { categoria: 'Hogares con niños que no asisten a la escuela', casos: '', porcentaje: '' },
-            { categoria: 'Hogares con alta dependencia económica', casos: '', porcentaje: '' }
-        ],
-        permiteAgregarFilas: false,
-        permiteEliminarFilas: false
-    }));
+    // photoFieldsHash con prefijo para reactividad de fotos
+    readonly photoFieldsHash: Signal<string> = computed(() => {
+        let hash = '';
+        const prefijo = this.obtenerPrefijo();
+        const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+        for (let i = 1; i <= 10; i++) {
+            const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+            const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+            const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+            hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+        }
+        return hash;
+    });
+
+    readonly nbiCCAyrocaConfigSignal: Signal<TableConfig> = computed(() => {
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
+        return {
+            tablaKey: tablaKey,
+            totalKey: 'categoria',
+            campoTotal: 'casos',
+            campoPorcentaje: 'porcentaje',
+            calcularPorcentajes: true,
+            camposParaCalcular: ['casos'],
+            noInicializarDesdeEstructura: true,
+            permiteAgregarFilas: false,
+            permiteEliminarFilas: false
+        };
+    });
+
+    readonly nbiDistritoCahuachoConfigSignal: Signal<TableConfig> = computed(() => {
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
+        return {
+            tablaKey: tablaKey,
+            totalKey: 'categoria',
+            campoTotal: 'casos',
+            campoPorcentaje: 'porcentaje',
+            calcularPorcentajes: true,
+            camposParaCalcular: ['casos'],
+            noInicializarDesdeEstructura: true,
+            permiteAgregarFilas: false,
+            permiteEliminarFilas: false
+        };
+    });
 
     constructor(cdRef: ChangeDetectorRef, injector: Injector) {
         super(cdRef, injector);

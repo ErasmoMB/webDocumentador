@@ -78,48 +78,13 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  readonly abastecimientoAguaSignal: Signal<any[]> = computed(() => {
-    const data = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
-    return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-  });
-
-  readonly tiposSaneamientoSignal: Signal<any[]> = computed(() => {
-    const data = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `tiposSaneamientoTabla${prefijo}` : 'tiposSaneamientoTabla';
-    return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-  });
-
-  readonly alumbradoElectricoSignal: Signal<any[]> = computed(() => {
-    const data = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla';
-    return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-  });
-
-  readonly abastecimientoAguaConPorcentajesSignal: Signal<any[]> = computed(() => {
-    const tabla = this.abastecimientoAguaSignal();
-    return this.calcularPorcentajesPuros(tabla);
-  });
-
-  readonly tiposSaneamientoConPorcentajesSignal: Signal<any[]> = computed(() => {
-    const tabla = this.tiposSaneamientoSignal();
-    return this.calcularPorcentajesPuros(tabla);
-  });
-
-  readonly coberturaElectricaConPorcentajesSignal: Signal<any[]> = computed(() => {
-    const tabla = this.alumbradoElectricoSignal();
-    return this.calcularPorcentajesPuros(tabla);
-  });
-
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -144,18 +109,6 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       this.photoFieldsHash();
       this.cargarFotografias();
-      this.cdRef.markForCheck();
-    });
-
-    // ✅ EFFECT 3: Sincronización automática de señales calculadas (para reactividad en vista)
-    effect(() => {
-      // Monitorear señales calculadas para asegurar reactividad automática
-      this.abastecimientoAguaConPorcentajesSignal();
-      this.tiposSaneamientoConPorcentajesSignal();
-      this.coberturaElectricaConPorcentajesSignal();
-      this.abastecimientoAguaSignal();
-      this.tiposSaneamientoSignal();
-      this.alumbradoElectricoSignal();
       this.cdRef.markForCheck();
     });
   }
@@ -184,8 +137,14 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
   }
 
+  // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
   obtenerTextoSeccion10ServiciosBasicosIntro(): string {
-    const manual = this.datos['parrafoSeccion10_servicios_basicos_intro'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['parrafoSeccion10_servicios_basicos_intro' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -194,123 +153,6 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoSeccion10ServiciosBasicosIntroConResaltado(): SafeHtml {
     const texto = this.obtenerTextoSeccion10ServiciosBasicosIntro();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoServiciosAgua(): string {
-    const manual = this.datos['textoServiciosAgua'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosAgua();
-  }
-
-  obtenerTextoServiciosAguaConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoServiciosAgua();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoServiciosAguaDetalle(): string {
-    const manual = this.datos['textoServiciosAguaDetalle'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosAguaDetalle();
-  }
-
-  obtenerTextoServiciosAguaDetalleConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoServiciosAguaDetalle();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoServiciosDesague(): string {
-    const manual = this.datos['textoServiciosDesague'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosDesague();
-  }
-
-  obtenerTextoServiciosDesagueConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoServiciosDesague();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoServiciosDesagueDetalle(): string {
-    const manual = this.datos['textoServiciosDesagueDetalle'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosDesagueDetalle();
-  }
-
-  obtenerTextoServiciosDesagueDetalleConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoServiciosDesagueDetalle();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoElectricidad(): string {
-    const manual = this.datos['textoElectricidad1'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoElectricidad();
-  }
-
-  obtenerTextoElectricidadConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoElectricidad();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoElectricidadDetalle(): string {
-    const manual = this.datos['textoElectricidad2'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoElectricidadDetalle();
-  }
-
-  obtenerTextoElectricidadDetalleConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoElectricidadDetalle();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoDesechosSolidos(): string {
-    const manual = this.datos['textoDesechosSolidos1'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoDesechosSolidos();
-  }
-
-  obtenerTextoDesechosSolidosConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoDesechosSolidos();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoDesechosSolidosDetalle(): string {
-    const manual = this.datos['textoDesechosSolidos2'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoDesechosSolidosDetalle();
-  }
-
-  obtenerTextoDesechosSolidosDetalleConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoDesechosSolidosDetalle();
-    return this.sanitizer.bypassSecurityTrustHtml(texto);
-  }
-
-  obtenerTextoEnergiaCocinar(): string {
-    const manual = this.datos['textoEnergiaParaCocinar'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoEnergiaCocinar();
-  }
-
-  obtenerTextoEnergiaCocinarConResaltado(): SafeHtml {
-    const texto = this.obtenerTextoEnergiaCocinar();
     return this.sanitizer.bypassSecurityTrustHtml(texto);
   }
 
@@ -324,6 +166,176 @@ El criterio social para la delimitación de un área de influencia debe tener en
 En base a estos criterios se han identificado las áreas de influencia social directa e indirecta:`;
   }
 
+  // ✅ SEÑALES PARA TABLAS CON PORCENTAJES
+  private getTablaSignal(tablaKeyBase: string): Signal<any[]> {
+    return computed(() => {
+      const data = this.formDataSignal();
+      const prefijo = this.obtenerPrefijo();
+      const tablaKey = prefijo ? `${tablaKeyBase}${prefijo}` : tablaKeyBase;
+      return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
+    });
+  }
+
+  readonly abastecimientoAguaSignal: Signal<any[]> = this.getTablaSignal('abastecimientoAguaTabla');
+  readonly tiposSaneamientoSignal: Signal<any[]> = this.getTablaSignal('tiposSaneamientoTabla');
+  readonly alumbradoElectricoSignal: Signal<any[]> = this.getTablaSignal('alumbradoElectricoTabla');
+
+  readonly abastecimientoAguaConPorcentajesSignal: Signal<any[]> = computed(() => {
+    return this.calcularPorcentajesPuros(this.abastecimientoAguaSignal());
+  });
+
+  readonly tiposSaneamientoConPorcentajesSignal: Signal<any[]> = computed(() => {
+    return this.calcularPorcentajesPuros(this.tiposSaneamientoSignal());
+  });
+
+  readonly coberturaElectricaConPorcentajesSignal: Signal<any[]> = computed(() => {
+    return this.calcularPorcentajesPuros(this.alumbradoElectricoSignal());
+  });
+
+  energiaCocinarConPorcentajesSignal(): any[] {
+    const data = this.formDataSignal();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
+    const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
+    return this.calcularPorcentajesPuros(tabla);
+  }
+
+  tecnologiaComunicacionesConPorcentajesSignal(): any[] {
+    const data = this.formDataSignal();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
+    const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
+    return this.calcularPorcentajesPuros(tabla);
+  }
+
+  // ✅ TEXTOS CON PREFIJO
+  obtenerTextoServiciosAgua(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAgua' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosAgua();
+  }
+
+  obtenerTextoServiciosAguaConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoServiciosAgua();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoServiciosAguaDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAguaDetalle' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosAguaDetalle();
+  }
+
+  obtenerTextoServiciosAguaDetalleConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoServiciosAguaDetalle();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoServiciosDesague(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesague' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosDesague();
+  }
+
+  obtenerTextoServiciosDesagueConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoServiciosDesague();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoServiciosDesagueDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesagueDetalle' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosDesagueDetalle();
+  }
+
+  obtenerTextoServiciosDesagueDetalleConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoServiciosDesagueDetalle();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoElectricidad(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad1' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoElectricidad();
+  }
+
+  obtenerTextoElectricidadConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoElectricidad();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoElectricidadDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad2' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoElectricidadDetalle();
+  }
+
+  obtenerTextoElectricidadDetalleConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoElectricidadDetalle();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoDesechosSolidos(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos1' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoDesechosSolidos();
+  }
+
+  obtenerTextoDesechosSolidosConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoDesechosSolidos();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoDesechosSolidosDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos2' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoDesechosSolidosDetalle();
+  }
+
+  obtenerTextoDesechosSolidosDetalleConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoDesechosSolidosDetalle();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  obtenerTextoEnergiaCocinar(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoEnergiaParaCocinar' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoEnergiaCocinar();
+  }
+
+  obtenerTextoEnergiaCocinarConResaltado(): SafeHtml {
+    const texto = this.obtenerTextoEnergiaCocinar();
+    return this.sanitizer.bypassSecurityTrustHtml(texto);
+  }
+
+  // ✅ GENERADORES DE TEXTO
   private generarTextoServiciosAgua(): string {
     const comunidad = this.obtenerNombreComunidadActual();
     const porcentajeRedPublica = this.getPorcentajeAguaRedPublica();
@@ -371,6 +383,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return `Para la preparación de alimentos, la comunidad utiliza principalmente leña y gas, lo que representa un riesgo para la salud debido a la exposición prolongada al humo y la deforestación de áreas cercanas.`;
   }
 
+  // ✅ PORCENTAJES CON PREFIJO
   private getPorcentajeAguaRedPublica(): string {
     const tabla = this.abastecimientoAguaConPorcentajesSignal();
     if (!tabla || !Array.isArray(tabla)) return '____';
@@ -441,6 +454,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return conElectricidad?.porcentaje?.value || conElectricidad?.porcentaje || '____';
   }
 
+  // ✅ NÚMEROS DE CUADRO CON PREFIJO
   obtenerNumeroCuadroAbastecimientoAgua(): string {
     return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
   }
@@ -453,8 +467,10 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
   }
 
+  // ✅ TÍTULOS Y FUENTES CON PREFIJO
   obtenerTituloAbastecimientoAgua(): string {
-    const tituloKey = 'tituloAbastecimientoAgua';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloAbastecimientoAgua' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -462,7 +478,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloTiposSaneamiento(): string {
-    const tituloKey = 'tituloTiposSaneamiento';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloTiposSaneamiento' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -470,7 +487,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloCoberturaElectrica(): string {
-    const tituloKey = 'tituloCoberturaElectrica';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloCoberturaElectrica' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
@@ -478,21 +496,24 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerFuenteAbastecimientoAgua(): string {
-    const fuenteKey = 'fuenteAbastecimientoAgua';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteAbastecimientoAgua' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
   }
 
   obtenerFuenteTiposSaneamiento(): string {
-    const fuenteKey = 'fuenteTiposSaneamiento';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteTiposSaneamiento' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
   }
 
   obtenerFuenteCoberturaElectrica(): string {
-    const fuenteKey = 'fuenteCoberturaElectrica';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteCoberturaElectrica' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
@@ -509,23 +530,17 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloEnergiaCocinar(): string {
-    const tituloKey = 'tituloEnergiaCocinar';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloEnergiaCocinar' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
     return `Energía utilizada para cocinar en las viviendas – CC ${comunidad} (2017)`;
   }
 
-  energiaCocinarConPorcentajesSignal(): any[] {
-    const data = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
-    const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-    return this.calcularPorcentajesPuros(tabla);
-  }
-
   obtenerFuenteEnergiaCocinar(): string {
-    const fuenteKey = 'fuenteEnergiaCocinar';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteEnergiaCocinar' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
@@ -542,23 +557,17 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTituloTecnologiaComunicaciones(): string {
-    const tituloKey = 'tituloTecnologiaComunicaciones';
+    const prefijo = this.obtenerPrefijo();
+    const tituloKey = 'tituloTecnologiaComunicaciones' + prefijo;
     const titulo = this.datos[tituloKey];
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
     return `Tecnología de comunicaciones en las viviendas – CC ${comunidad} (2017)`;
   }
 
-  tecnologiaComunicacionesConPorcentajesSignal(): any[] {
-    const data = this.formDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
-    const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-    return this.calcularPorcentajesPuros(tabla);
-  }
-
   obtenerFuenteTecnologiaComunicaciones(): string {
-    const fuenteKey = 'fuenteTecnologiaComunicaciones';
+    const prefijo = this.obtenerPrefijo();
+    const fuenteKey = 'fuenteTecnologiaComunicaciones' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
     return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
@@ -579,7 +588,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   private obtenerTextoEnergiaCocinarDetalle(): string {
-    const manual = this.datos['textoEnergiaCocinarDetalle'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoEnergiaCocinarDetalle' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
@@ -587,15 +597,17 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   obtenerTextoTecnologiaComunicaciones(): string {
-    const manual = this.datos['textoTecnologiaComunicaciones'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoTecnologiaComunicaciones' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
-    return 'Las tecnologías de comunicación son cada vez más importante en el desarrollo rural. Los pobladores tienen acceso a diferentes tipos de tecnologías según las características de su territorio y su capacidad económica.';
+    return 'Las tecnologías de comunicación son cada vez más importante en el desarrollo rural. Los poblaciones tienen acceso a diferentes tipos de tecnologías según las características de su territorio y su capacidad económica.';
   }
 
   private obtenerTextoTecnologiaComunicacionesDetalle(): string {
-    const manual = this.datos['textoTecnologiaComunicacionesDetalle'];
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoTecnologiaComunicacionesDetalle' + prefijo];
     if (manual && manual.trim().length > 0) {
       return manual;
     }

@@ -65,6 +65,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
     const manualKey = `textoPoblacionSexoAISD${prefijo}`;
     const manual = data[manualKey];
+    
     if (manual && manual.trim().length > 0) {
       return manual;
     }

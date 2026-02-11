@@ -1,6 +1,6 @@
 <h5>A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h5>
 
-<div *ngIf="formDataSignal()['parrafoSeccion10_servicios_basicos_intro']; else serviciosBasicosIntroDefault" class="text-justify">{{ formDataSignal()['parrafoSeccion10_servicios_basicos_intro'] }}</div>
+<div *ngIf="obtenerTextoSeccion10ServiciosBasicosIntro() && obtenerTextoSeccion10ServiciosBasicosIntro().trim().length > 0; else serviciosBasicosIntroDefault" class="text-justify">{{ obtenerTextoSeccion10ServiciosBasicosIntro() }}</div>
 <ng-template #serviciosBasicosIntroDefault>
   <p class="text-justify">{{ obtenerTextoSeccion10ServiciosBasicosIntro() }}</p>
 </ng-template>
@@ -82,8 +82,8 @@
 <!-- c. Gestión y destino de los desechos sólidos -->
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
 <p class="text-justify">{{ obtenerTextoDesechosSolidos() }}</p>
-<p class="text-justify" *ngIf="!formDataSignal()['textoDesechosSolidos2'] || formDataSignal()['textoDesechosSolidos2'] === '____'">Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.</p>
-<p class="text-justify" *ngIf="formDataSignal()['textoDesechosSolidos2'] && formDataSignal()['textoDesechosSolidos2'] !== '____'">{{ formDataSignal()['textoDesechosSolidos2'] }}</p>
+<p class="text-justify" *ngIf="!obtenerTextoDesechosSolidosDetalle() || obtenerTextoDesechosSolidosDetalle() === '____'">Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo.</p>
+<p class="text-justify" *ngIf="obtenerTextoDesechosSolidosDetalle() && obtenerTextoDesechosSolidosDetalle() !== '____'">{{ obtenerTextoDesechosSolidosDetalle() }}</p>
 
 <app-image-upload
   [modoVista]="true"

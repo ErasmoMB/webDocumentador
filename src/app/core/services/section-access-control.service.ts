@@ -121,27 +121,31 @@ export class SectionAccessControlService {
     if (/^3\.1\.4\.B\.1\.([1-9])$/.test(sectionId)) {
       return true;
     }
-    const groupType = getSectionGroupType(sectionId);
-    const config = this.groupConfig.getConfig();
+  // Comment out the group validation checks
+  /*
+  const groupType = getSectionGroupType(sectionId);
+  const config = this.groupConfig.getConfig();
 
-    switch (groupType) {
-      case 'AISD':
-        if (!config?.aisd) return false;
-        const aisdGroups = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
-        return aisdGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
+  switch (groupType) {
+    case 'AISD':
+      if (!config?.aisd) return false;
+      const aisdGroups = Array.isArray(config.aisd) ? config.aisd : [config.aisd];
+      return aisdGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
 
-      case 'AISI':
-        if (!config?.aisi) return false;
-        const aisiGroups = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
-        return aisiGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
+    case 'AISI':
+      if (!config?.aisi) return false;
+      const aisiGroups = Array.isArray(config.aisi) ? config.aisi : [config.aisi];
+      return aisiGroups.some(grupo => grupo.ccppActivos && grupo.ccppActivos.length > 0);
 
-      case 'BOTH':
-        return this.groupValidation.isConfigValid();
+    case 'BOTH':
+      return this.groupValidation.isConfigValid();
 
-      case 'NONE':
-      default:
-        return true;
-    }
+    case 'NONE':
+    default:
+      return true;
+  }
+  */
+    return true; // Always allow access to all sections
   }
 
   /**
