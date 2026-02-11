@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Injectable({
   providedIn: 'root'
@@ -8,8 +9,12 @@ export class Seccion4TextGeneratorService {
 
   constructor(private sanitizer: DomSanitizer) {}
 
-  obtenerTextoIntroduccionAISD(datos: any, nombreComunidad: string): string {
-    let textoPersonalizado = datos['parrafoSeccion4_introduccion_aisd'];
+  private obtenerCampoConPrefijo(datos: any, campoBase: string, seccionId: string): string {
+    return PrefijoHelper.obtenerValorConPrefijo(datos, campoBase, seccionId) || datos[campoBase] || '';
+  }
+
+  obtenerTextoIntroduccionAISD(datos: any, nombreComunidad: string, seccionId: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_introduccion_aisd', seccionId);
     
     const textoPorDefecto = `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${nombreComunidad}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
     
@@ -20,8 +25,8 @@ export class Seccion4TextGeneratorService {
     return textoPorDefecto;
   }
 
-  obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string): string {
-    let textoPersonalizado = datos['parrafoSeccion4_comunidad_completo'];
+  obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string, seccionId: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_comunidad_completo', seccionId);
     
     const distrito = datos.distritoSeleccionado || '____';
     const provincia = datos.provinciaSeleccionada || '____';
@@ -46,8 +51,8 @@ export class Seccion4TextGeneratorService {
     return textoPorDefecto;
   }
 
-  obtenerTextoCaracterizacionIndicadores(datos: any, nombreComunidad: string): string {
-    let textoPersonalizado = datos['parrafoSeccion4_caracterizacion_indicadores'];
+  obtenerTextoCaracterizacionIndicadores(datos: any, nombreComunidad: string, seccionId: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_caracterizacion_indicadores', seccionId);
     
     const textoPorDefecto = `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${nombreComunidad}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
     

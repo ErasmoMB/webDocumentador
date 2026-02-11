@@ -83,15 +83,15 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
     };
     
     this.getTextoIntroduccionEfectivo = () => {
-      return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidadPublico());
+      return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidadPublico(), this.seccionId);
     };
     
     this.getTextoComunidadEfectivo = () => {
-      return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidadPublico());
+      return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidadPublico(), this.seccionId);
     };
     
     this.getTextoCaracterizacionEfectivo = () => {
-      return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidadPublico());
+      return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidadPublico(), this.seccionId);
     };
 
     this.formDataSignal = computed(() => {
@@ -116,7 +116,9 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
 
     this.photoFieldsHash = computed(() => {
       let hash = '';
-      for (const prefix of [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION]) {
+      const prefijo = this.obtenerPrefijoGrupo();
+      for (const basePrefix of [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION]) {
+        const prefix = basePrefix + prefijo;
         for (let i = 1; i <= 10; i++) {
           const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
           const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
@@ -144,14 +146,14 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
         data: {
           ...data,
           comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? [],
-          cuadroTituloAISD1: data['cuadroTituloAISD1'],
+          cuadroTituloAISD1: data['cuadroTituloAISD1' + this.obtenerPrefijoGrupo()] ?? '',
           tablaAISD1Datos: tablaAISD1,
           tablaAISD2Datos: tablaAISD2
         },
         texts: {
-          introduccionText: this.textGen.obtenerTextoIntroduccionAISD(data, nombreComunidad),
-          comunidadText: this.textGen.obtenerTextoComunidadCompleto(data, nombreComunidad),
-          caracterizacionText: this.textGen.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad)
+          introduccionText: this.textGen.obtenerTextoIntroduccionAISD(data, nombreComunidad, this.seccionId),
+          comunidadText: this.textGen.obtenerTextoComunidadCompleto(data, nombreComunidad, this.seccionId),
+          caracterizacionText: this.textGen.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad, this.seccionId)
         },
         tables: {
           tablaAISD1: Array.isArray(tablaAISD1) ? tablaAISD1 : [],
@@ -165,8 +167,8 @@ export class Seccion4Component extends BaseSectionComponent implements OnInit, O
           }
         },
         sources: {
-          tablaAISD1Source: data['cuadroFuenteAISD1'] ?? '',
-          tablaAISD2Source: data['cuadroFuenteAISD1'] ?? ''
+          tablaAISD1Source: data['cuadroFuenteAISD1' + this.obtenerPrefijoGrupo()] ?? '',
+          tablaAISD2Source: data['cuadroFuenteAISD2' + this.obtenerPrefijoGrupo()] ?? ''
         }
       };
     });

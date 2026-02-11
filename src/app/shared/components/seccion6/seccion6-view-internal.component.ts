@@ -25,16 +25,11 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
   override useReactiveSync: boolean = true;
   fotografiasVista: FotoItem[] = [];
 
+  // ✅ Signal de prefijo de grupo AISD
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
   override watchedFields: string[] = [
-    'grupoAISD',
-    'poblacionSexoAISD',
-    'poblacionEtarioAISD',
-    'textoPoblacionSexoAISD',
-    'textoPoblacionEtarioAISD',
-    'tituloPoblacionSexoAISD',
-    'tituloPoblacionEtarioAISD',
-    'fuentePoblacionSexoAISD',
-    'fuentePoblacionEtarioAISD'
+    'grupoAISD'
   ];
 
   poblacionSexoConfig!: TableConfig;
@@ -45,31 +40,43 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
   });
 
   readonly vistTextoPoblacionSexoSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.vistDataSignal();
-    const manual = data['textoPoblacionSexoAISD'];
+    
+    // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
+    const manualKey = `textoPoblacionSexoAISD${prefijo}`;
+    const manual = data[manualKey];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
+    
     const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad);
+    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad, this.seccionId);
   });
 
   readonly vistTextoPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.vistDataSignal();
-    const manual = data['textoPoblacionEtarioAISD'];
+    
+    // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
+    const manualKey = `textoPoblacionEtarioAISD${prefijo}`;
+    const manual = data[manualKey];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
+    
     const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad);
+    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad, this.seccionId);
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      const imagenKey = `${prefix}${i}Imagen`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -140,7 +147,8 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     const texto = this.vistTextoPoblacionSexoSignal();
     const html = this.textGenSrv.obtenerTextoPoblacionSexoConResaltado(
       this.vistDataSignal(),
-      this.obtenerNombreComunidadActual()
+      this.obtenerNombreComunidadActual(),
+      this.seccionId
     );
     return html;
   }
@@ -149,7 +157,8 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
     const texto = this.vistTextoPoblacionEtarioSignal();
     const html = this.textGenSrv.obtenerTextoPoblacionEtarioConResaltado(
       this.vistDataSignal(),
-      this.obtenerNombreComunidadActual()
+      this.obtenerNombreComunidadActual(),
+      this.seccionId
     );
     return html;
   }
@@ -346,18 +355,20 @@ export class Seccion6ViewInternalComponent extends BaseSectionComponent implemen
   // Esto asegura que los cambios de titulo/fuente se reflejen inmediatamente en la vista
   override cargarFotografias(): void {
     const formData = this.vistDataSignal();  // ✅ LEER DEL SIGNAL REACTIVO
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
     
     // ✅ Reconstruir array de fotografías leyendo directamente del state reactivo
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagenKey = `${prefix}${i}Imagen`;
       const imagen = formData[imagenKey];
       
       // Si hay imagen, agregar a array
       if (imagen) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+        const tituloKey = `${prefix}${i}Titulo`;
+        const fuenteKey = `${prefix}${i}Fuente`;
+        const numeroKey = `${prefix}${i}Numero`;
         
         fotos.push({
           imagen: imagen,

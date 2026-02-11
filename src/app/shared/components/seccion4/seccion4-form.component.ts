@@ -10,6 +10,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
 import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
 import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/seccion4-text-generator.service';
+import { FotoItem } from '../image-upload/image-upload.component';
 
 @Component({
     standalone: true,
@@ -37,6 +38,57 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     'parrafoSeccion4_introduccion_aisd', 'parrafoSeccion4_comunidad_completo',
     'parrafoSeccion4_caracterizacion_indicadores'
   ];
+
+  // ✅ SEÑALES PARA PREFijos Y DATOS
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
+  readonly photoPrefixUbicacionSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `${this.PHOTO_PREFIX_UBICACION}${prefijo}` : this.PHOTO_PREFIX_UBICACION;
+  });
+
+  readonly photoPrefixPoblacionSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `${this.PHOTO_PREFIX_POBLACION}${prefijo}` : this.PHOTO_PREFIX_POBLACION;
+  });
+
+  readonly tablaAISD1Signal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const tablaKey = prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.obtenerValorConPrefijo('tablaAISD1Datos') ?? [];
+  });
+
+  readonly tablaAISD2Signal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const tablaKey = prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.obtenerValorConPrefijo('tablaAISD2Datos') ?? [];
+  });
+
+  // ✅ SEÑALES PARA TABLA KEYS CON PREFIJO
+  readonly tablaKeyAISD1Signal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `tablaAISD1Datos${prefijo}` : 'tablaAISD1Datos';
+  });
+
+  readonly tablaKeyAISD2Signal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `tablaAISD2Datos${prefijo}` : 'tablaAISD2Datos';
+  });
+
+  // ✅ SEÑALES PARA PÁRRAFOS CON PREFIJO
+  readonly parrafoIntroduccionSignal: Signal<string> = computed(() => {
+    return this.obtenerValorConPrefijo('parrafoSeccion4_introduccion_aisd') || '';
+  });
+
+  readonly parrafoComunidadSignal: Signal<string> = computed(() => {
+    return this.obtenerValorConPrefijo('parrafoSeccion4_comunidad_completo') || '';
+  });
+
+  readonly parrafoCaracterizacionSignal: Signal<string> = computed(() => {
+    return this.obtenerValorConPrefijo('parrafoSeccion4_caracterizacion_indicadores') || '';
+  });
 
   readonly formDataSignal: Signal<Record<string, any>>;
 
@@ -171,17 +223,17 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
 
   /** Mismo texto que muestra la vista (personalizado o por defecto) para sincronizar formulario ↔ vista */
   getTextoIntroduccionEfectivo(): string {
-    return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidad());
+    return this.textGen.obtenerTextoIntroduccionAISD(this.datos, this.obtenerNombreComunidad(), this.seccionId);
   }
 
   /** Mismo texto que muestra la vista (personalizado o por defecto) */
   getTextoComunidadEfectivo(): string {
-    return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidad());
+    return this.textGen.obtenerTextoComunidadCompleto(this.datos, this.obtenerNombreComunidad(), this.seccionId);
   }
 
   /** Mismo texto que muestra la vista (personalizado o por defecto) */
   getTextoCaracterizacionEfectivo(): string {
-    return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidad());
+    return this.textGen.obtenerTextoCaracterizacionIndicadores(this.datos, this.obtenerNombreComunidad(), this.seccionId);
   }
 
   protected override detectarCambios(): boolean {

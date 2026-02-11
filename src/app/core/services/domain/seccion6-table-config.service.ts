@@ -21,13 +21,9 @@ export class Seccion6TableConfigService {
       campoPorcentaje: 'porcentaje',
       calcularPorcentajes: true,          // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],      // ✅ Campos que disparan recálculo
-      estructuraInicial: [
-        { sexo: 'Hombre', casos: 0 },
-        { sexo: 'Mujer', casos: 0 }
-      ],
-      permiteAgregarFilas: false,         // ✅ No agregar filas con estructura inicial
-      permiteEliminarFilas: false,        // ✅ No eliminar filas de estructura inicial
-      camposNoEditables: ['sexo']         // ✅ Campo de categoría no editable
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      permiteAgregarFilas: true,           // ✅ Usuario puede agregar filas si es necesario
+      permiteEliminarFilas: true           // ✅ Usuario puede eliminar filas si es necesario
     };
   }
 
@@ -69,16 +65,9 @@ export class Seccion6TableConfigService {
       campoPorcentaje: 'porcentaje',
       calcularPorcentajes: true,          // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],      // ✅ Campos que disparan recálculo
-      estructuraInicial: [
-        { categoria: '0 a 14 años', casos: 0 },
-        { categoria: '15 a 29 años', casos: 0 },
-        { categoria: '30 a 44 años', casos: 0 },
-        { categoria: '45 a 64 años', casos: 0 },
-        { categoria: '65 años a más', casos: 0 }
-      ],
-      permiteAgregarFilas: false,         // ✅ No agregar filas con estructura inicial
-      permiteEliminarFilas: false,        // ✅ No eliminar filas de estructura inicial
-      camposNoEditables: ['categoria']    // ✅ Campo de categoría no editable
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      permiteAgregarFilas: true,           // ✅ Usuario puede agregar filas si es necesario
+      permiteEliminarFilas: true           // ✅ Usuario puede eliminar filas si es necesario
     };
   }
 

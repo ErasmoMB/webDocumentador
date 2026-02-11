@@ -9,8 +9,9 @@ export interface ISeccion5TextGeneratorService {
    * Genera párrafo de institucionalidad con información sobre estructura organizativa
    * @param datos Datos de la sección
    * @param nombreComunidad Nombre de la comunidad
+   * @param seccionId ID de la sección para extraer prefijo de grupo
    */
-  obtenerTextoInstitucionalidad(datos: Seccion5Data, nombreComunidad: string): string;
+  obtenerTextoInstitucionalidad(datos: Seccion5Data, nombreComunidad: string, seccionId: string): string;
 
   /**
    * Valida que el párrafo contenga contenido significativo

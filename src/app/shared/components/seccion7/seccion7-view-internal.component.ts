@@ -25,6 +25,14 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override fotografiasCache: FotoItem[] = [];
 
+  // ✅ Signal de prefijo de grupo AISD
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
+  // ✅ Helper para usar en templates
+  obtenerPrefijo(): string {
+    return this.prefijoGrupoSignal();
+  }
+
   tablaPETConfig = this.tableConfigService.getTablaPETConfig();
   tablaPEAConfig = this.tableConfigService.getTablaPEAConfig();
   tablaPEAOcupadaConfig = this.tableConfigService.getTablaPEAOcupadaConfig();
@@ -54,16 +62,7 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
       const tablaActual = Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
       
-      if (tablaActual.length === 0) {
-        return [
-          { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
-          { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
-          { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
-          { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
-          { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
-        ];
-      }
-      
+      // Si no hay datos, retornar array vacío (el backend llenará los datos)
       return tablaActual;
     });
 
@@ -73,14 +72,7 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
       const tablaActual = Array.isArray(formData[peaTablaKey]) ? formData[peaTablaKey] : [];
       
-      if (tablaActual.length === 0) {
-        return [
-          { categoria: 'PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-          { categoria: 'No PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-          { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
-        ];
-      }
-      
+      // Si no hay datos, retornar array vacío (el backend llenará los datos)
       return tablaActual;
     });
 
@@ -90,23 +82,18 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
       const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
       const tablaActual = Array.isArray(formData[peaOcupadaTablaKey]) ? formData[peaOcupadaTablaKey] : [];
       
-      if (tablaActual.length === 0) {
-        return [
-          { categoria: 'PEA Ocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-          { categoria: 'PEA Desocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-          { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
-        ];
-      }
-      
+      // Si no hay datos, retornar array vacío (el backend llenará los datos)
       return tablaActual;
     });
 
     this.photoFieldsHash = computed(() => {
+      const prefijo = this.prefijoGrupoSignal();
+      const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
       let hash = '';
       for (let i = 1; i <= 10; i++) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-        const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+        const tituloKey = `${prefix}${i}Titulo`;
+        const fuenteKey = `${prefix}${i}Fuente`;
+        const imagenKey = `${prefix}${i}Imagen`;
         
         const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
         const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -167,16 +154,18 @@ export class Seccion7ViewInternalComponent extends BaseSectionComponent {
 
   override cargarFotografias(): void {
     const formData = this.formDataSignal();
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
 
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagenKey = `${prefix}${i}Imagen`;
       const imagen = formData[imagenKey];
 
       if (imagen) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+        const tituloKey = `${prefix}${i}Titulo`;
+        const fuenteKey = `${prefix}${i}Fuente`;
+        const numeroKey = `${prefix}${i}Numero`;
 
         fotos.push({
           imagen: imagen,

@@ -68,11 +68,12 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -164,10 +165,7 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas ocupadas', casos: null, porcentaje: null },
-        { categoria: 'Viviendas con otra condición', casos: null, porcentaje: null }
-      ],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }
@@ -298,5 +296,12 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  /**
+   * ✅ Helper para templates - retorna prefijo de grupo para uso en HTML
+   */
+  obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 }

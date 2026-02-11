@@ -49,13 +49,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   readonly condicionOcupacionConPorcentajesSignal: Signal<any[]> = computed(() => {
     let datos = this.getCondicionOcupacion() || [];
     
-    // ✅ Si la tabla está vacía, usar estructura inicial
-    if (!datos || datos.length === 0) {
-      datos = [
-        { categoria: 'Viviendas ocupadas', casos: null, porcentaje: null },
-        { categoria: 'Viviendas con otra condición', casos: null, porcentaje: null }
-      ];
-    }
+    // ✅ Si no hay datos, retornar array vacío (el backend llenará datos)
+    // Eliminado: estructura inicial
 
     const total = datos.reduce((sum, item) => {
       const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
@@ -101,11 +96,12 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -290,5 +286,12 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
 
   trackByCategoria(_: number, cat: string): string {
     return cat;
+  }
+
+  /**
+   * ✅ Helper para templates - retorna prefijo de grupo para uso en HTML
+   */
+  obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 }

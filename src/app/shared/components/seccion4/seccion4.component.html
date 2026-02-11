@@ -7,33 +7,33 @@
       <h4 class="section-title">Editar Párrafos</h4>
 
       <app-paragraph-editor
-        [fieldId]="'parrafoSeccion4_introduccion_aisd'"
+        [fieldId]="'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo()"
         label="Introducción AISD"
         [rows]="4"
         [value]="getTextoIntroduccionEfectivo()"
-        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
-        [fieldId]="'parrafoSeccion4_comunidad_completo'"
+        [fieldId]="'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo()"
         label="Descripción de la Comunidad"
         [rows]="5"
         [value]="getTextoComunidadEfectivo()"
-        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
-        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
+        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo()"
         label="Caracterización - Indicadores"
         [rows]="4"
         [value]="getTextoCaracterizacionEfectivo()"
-        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Título de tabla - Ubicación referencial (A.1)</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloAISD1']" (ngModelChange)="onFieldChange('cuadroTituloAISD1', $event)" placeholder="Ej: Ubicación referencial - CC Comunidad">
+      <input type="text" class="form-control" [ngModel]="datos['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Ubicación referencial - CC Comunidad">
     </div>
 
     <label class="label" style="margin-top:10px">Ubicación referencial (Tabla A1)</label>
@@ -42,14 +42,14 @@
       [config]="tableCfg.getTablaAISD1Config()"
       [columns]="tableCfg.getColumnasAISD1()"
       [sectionId]="seccionId"
-      [tablaKey]="'tablaAISD1Datos'"
-      [fieldName]="'tablaAISD1Datos'"
+      [tablaKey]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
+      [fieldName]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
       (tableUpdated)="onTablaUpdated()">
     </app-dynamic-table>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Título de tabla - Cantidad total de población y viviendas (A.2)</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloAISD2']" (ngModelChange)="onFieldChange('cuadroTituloAISD2', $event)" placeholder="Ej: Cantidad total de población y viviendas">
+      <input type="text" class="form-control" [ngModel]="datos['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD2' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Cantidad total de población y viviendas">
     </div>
 
     <label class="label" style="margin-top:10px">Población y viviendas (Tabla A2)</label>
@@ -58,14 +58,14 @@
       [config]="tableCfg.getTablaAISD2Config()"
       [columns]="tableCfg.getColumnasAISD2()"
       [sectionId]="seccionId"
-      [tablaKey]="'tablaAISD2Datos'"
-      [fieldName]="'tablaAISD2Datos'"
+      [tablaKey]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"
+      [fieldName]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"
       (tableUpdated)="onTablaUpdated()">
     </app-dynamic-table>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fuente de las tablas</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroFuenteAISD1']" (ngModelChange)="onFieldChange('cuadroFuenteAISD1', $event)" placeholder="Ej: GEADES (2024)">
+      <input type="text" class="form-control" [ngModel]="datos['cuadroFuenteAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroFuenteAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: GEADES (2024)">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
@@ -73,7 +73,7 @@
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX_UBICACION"
+        [photoPrefix]="PHOTO_PREFIX_UBICACION + obtenerPrefijoGrupo()"
         [permitirMultiples]="true"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>
@@ -125,7 +125,7 @@
       [permitirMultiples]="true"
       [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
       [sectionId]="seccionId"
-      [photoPrefix]="PHOTO_PREFIX_UBICACION"
+      [photoPrefix]="PHOTO_PREFIX_UBICACION + obtenerPrefijoGrupo()"
       [labelTitulo]="'Título'"
       [labelFuente]="'Fuente'"
       [labelImagen]="'Imagen'">
@@ -134,7 +134,7 @@
   <div [innerHTML]="vm.texts.caracterizacionText"></div>
 
   <!-- Tabla de Población y Viviendas -->
-  <app-table-wrapper [title]="(vm.data['cuadroTituloAISD1'] || 'Cantidad total de población y viviendas') + ' – CC ' + vm.nombreComunidad" [sectionId]="'3.1.4.A2'">
+  <app-table-wrapper [title]="(vm.data['cuadroTituloAISD2'] || 'Cantidad total de población y viviendas') + ' – CC ' + vm.nombreComunidad" [sectionId]="'3.1.4.A2'">
     <app-generic-table
       [data]="vm.tables.tablaAISD2"
       [config]="{
@@ -170,7 +170,7 @@
       [permitirMultiples]="true"
       [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
       [sectionId]="seccionId"
-      [photoPrefix]="PHOTO_PREFIX_POBLACION"
+      [photoPrefix]="PHOTO_PREFIX_POBLACION + obtenerPrefijoGrupo()"
       [labelTitulo]="'Título'"
       [labelFuente]="'Fuente'"
       [labelImagen]="'Imagen'">

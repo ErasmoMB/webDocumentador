@@ -63,12 +63,16 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
 
   readonly poblacionPecuariaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
-    return Array.isArray(formData['poblacionPecuariaTabla']) ? formData['poblacionPecuariaTabla'] : [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionPecuariaTabla${prefijo}` : 'poblacionPecuariaTabla';
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
   readonly caracteristicasAgriculturaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
-    return Array.isArray(formData['caracteristicasAgriculturaTabla']) ? formData['caracteristicasAgriculturaTabla'] : [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `caracteristicasAgriculturaTabla${prefijo}` : 'caracteristicasAgriculturaTabla';
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
   readonly peaOcupacionesConPorcentajesSignal: Signal<any[]> = computed(() => {
@@ -445,6 +449,13 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
 
   override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  /**
+   * ✅ Helper para templates - retorna prefijo de grupo para uso en HTML
+   */
+  obtenerPrefijo(): string {
+    return this.obtenerPrefijoGrupo();
   }
 
   formatearMoneda(valor: any): string {

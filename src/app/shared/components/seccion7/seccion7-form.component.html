@@ -10,12 +10,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          [fieldId]="'parrafoSeccion7_pet_completo'"
+          [fieldId]="'parrafoSeccion7_pet_completo' + obtenerPrefijoGrupo()"
           label="PET - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoSeccion7PETCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_pet_completo', $event)">
+          (valueChange)="onFieldChange('parrafoSeccion7_pet_completo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -25,8 +25,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPET']"
-            (ngModelChange)="onFieldChange('cuadroTituloPET', $event)"
+            [(ngModel)]="datos['cuadroTituloPET' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroTituloPET' + obtenerPrefijo(), $event)"
             placeholder="Ej: PET según grupos de edad">
         </div>
 
@@ -36,7 +36,7 @@
           [config]="petConfig"
           [columns]="tableCfg.getColumnasPET()"
           [sectionId]="seccionId"
-          [tablaKey]="'petTabla'"
+          [tablaKey]="'petTabla' + obtenerPrefijo()"
           [showAddButton]="false"
           [showDeleteButton]="false"
           (tableUpdated)="onTablaPETActualizada()">
@@ -47,8 +47,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePET']"
-            (ngModelChange)="onFieldChange('cuadroFuentePET', $event)"
+            [(ngModel)]="datos['cuadroFuentePET' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroFuentePET' + obtenerPrefijo(), $event)"
             placeholder="Ej: GEADES, 2024">
         </div>
       </div>
@@ -62,12 +62,12 @@
         <h4 class="section-title">Editar Párrafos - Detalle PEA</h4>
         
         <app-paragraph-editor
-          [fieldId]="'textoDetalePEA'"
+          [fieldId]="'textoDetalePEA' + obtenerPrefijoGrupo()"
           label="Detalle PEA - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoDetalePEA()"
-          (valueChange)="onFieldChange('textoDetalePEA', $event)">
+          (valueChange)="onFieldChange('textoDetalePEA' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -75,12 +75,12 @@
         <h4 class="section-title">Editar Párrafos - Definición PEA</h4>
         
         <app-paragraph-editor
-          [fieldId]="'textoDefinicionPEA'"
+          [fieldId]="'textoDefinicionPEA' + obtenerPrefijoGrupo()"
           label="Definición PEA - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoDefinicionPEA()"
-          (valueChange)="onFieldChange('textoDefinicionPEA', $event)">
+          (valueChange)="onFieldChange('textoDefinicionPEA' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -88,12 +88,12 @@
         <h4 class="section-title">Editar Párrafos - Análisis PEA</h4>
         
         <app-paragraph-editor
-          [fieldId]="'textoAnalisisPEA'"
+          [fieldId]="'textoAnalisisPEA' + obtenerPrefijoGrupo()"
           label="Análisis PEA - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoAnalisisPEA()"
-          (valueChange)="onFieldChange('textoAnalisisPEA', $event)">
+          (valueChange)="onFieldChange('textoAnalisisPEA' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -103,8 +103,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPEA']"
-            (ngModelChange)="onFieldChange('cuadroTituloPEA', $event)"
+            [(ngModel)]="datos['cuadroTituloPEA' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroTituloPEA' + obtenerPrefijo(), $event)"
             placeholder="Ej: Conformación de la PEA y No PEA, según sexo">
         </div>
 
@@ -114,7 +114,7 @@
           [config]="peaConfig"
           [columns]="tableCfg.getColumnasPEA()"
           [sectionId]="seccionId"
-          [tablaKey]="'peaTabla'"
+          [tablaKey]="'peaTabla' + obtenerPrefijo()"
           [showAddButton]="false"
           [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAActualizada()">
@@ -125,8 +125,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePEA']"
-            (ngModelChange)="onFieldChange('cuadroFuentePEA', $event)"
+            [(ngModel)]="datos['cuadroFuentePEA' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroFuentePEA' + obtenerPrefijo(), $event)"
             placeholder="Ej: INEI 2018">
         </div>
       </div>
@@ -140,12 +140,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          [fieldId]="'parrafoSeccion7_situacion_empleo_completo'"
+          [fieldId]="'parrafoSeccion7_situacion_empleo_completo' + obtenerPrefijoGrupo()"
           label="Situación del Empleo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo', $event)">
+          (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -158,12 +158,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          [fieldId]="'parrafoSeccion7_ingresos_completo'"
+          [fieldId]="'parrafoSeccion7_ingresos_completo' + obtenerPrefijoGrupo()"
           label="Ingresos - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoSeccion7IngresosCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo', $event)">
+          (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -176,12 +176,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
         
         <app-paragraph-editor
-          [fieldId]="'textoIndiceDesempleo'"
+          [fieldId]="'textoIndiceDesempleo' + obtenerPrefijoGrupo()"
           label="Índice de Desempleo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoIndiceDesempleo()"
-          (valueChange)="onFieldChange('textoIndiceDesempleo', $event)">
+          (valueChange)="onFieldChange('textoIndiceDesempleo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -191,8 +191,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPEAOcupada']"
-            (ngModelChange)="onFieldChange('cuadroTituloPEAOcupada', $event)"
+            [(ngModel)]="datos['cuadroTituloPEAOcupada' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroTituloPEAOcupada' + obtenerPrefijo(), $event)"
             placeholder="Ej: Conformación de la PEA Ocupada y Desocupada, según sexo">
         </div>
 
@@ -202,7 +202,7 @@
           [config]="peaOcupadaConfig"
           [columns]="tableCfg.getColumnasPEAOcupada()"
           [sectionId]="seccionId"
-          [tablaKey]="'peaOcupadaTabla'"
+          [tablaKey]="'peaOcupadaTabla' + obtenerPrefijo()"
           [showAddButton]="false"
           [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAOcupadaActualizada()">
@@ -213,8 +213,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePEAOcupada']"
-            (ngModelChange)="onFieldChange('cuadroFuentePEAOcupada', $event)"
+            [(ngModel)]="datos['cuadroFuentePEAOcupada' + obtenerPrefijo()]"
+            (ngModelChange)="onFieldChange('cuadroFuentePEAOcupada' + obtenerPrefijo(), $event)"
             placeholder="Ej: INEI 2018">
         </div>
       </div>
@@ -225,12 +225,12 @@
       <label class="label">Editar Párrafo - Análisis de Ocupación</label>
       
       <app-paragraph-editor
-        [fieldId]="'textoAnalisisOcupacion'"
+        [fieldId]="'textoAnalisisOcupacion' + obtenerPrefijoGrupo()"
         label="Análisis de Ocupación - Texto Completo"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
         [value]="obtenerTextoAnalisisOcupacion()"
-        (valueChange)="onFieldChange('textoAnalisisOcupacion', $event)">
+        (valueChange)="onFieldChange('textoAnalisisOcupacion' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
     </div>
 
@@ -240,7 +240,7 @@
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
+        [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
         [permitirMultiples]="true"
         labelTitulo="Título de la fotografía"
         labelFuente="Fuente de la fotografía"

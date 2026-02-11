@@ -28,16 +28,11 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   override readonly PHOTO_PREFIX = 'fotografiaDemografia';
   override useReactiveSync: boolean = true;
 
+  // ✅ Signal de prefijo de grupo AISD
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
   override watchedFields: string[] = [
-    'grupoAISD',
-    'poblacionSexoAISD',
-    'poblacionEtarioAISD',
-    'textoPoblacionSexoAISD',
-    'textoPoblacionEtarioAISD',
-    'tituloPoblacionSexoAISD',
-    'tituloPoblacionEtarioAISD',
-    'fuentePoblacionSexoAISD',
-    'fuentePoblacionEtarioAISD'
+    'grupoAISD'
   ];
 
   poblacionSexoConfig!: TableConfig;
@@ -50,41 +45,49 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   });
 
   readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
-    return data['poblacionSexoAISD'] || [];
+    const tablaKey = `poblacionSexoAISD${prefijo}`;
+    return data[tablaKey] || data['poblacionSexoAISD'] || [];
   });
 
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
-    return data['poblacionEtarioAISD'] || [];
+    const tablaKey = `poblacionEtarioAISD${prefijo}`;
+    return data[tablaKey] || data['poblacionEtarioAISD'] || [];
   });
 
   readonly textoPoblacionSexoSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
     
-    // ✅ Prioridad: leer valor manual si existe
-    const manual = data['textoPoblacionSexoAISD'];
+    // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
+    const manualKey = `textoPoblacionSexoAISD${prefijo}`;
+    const manual = data[manualKey];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
     
     // Fallback: generar texto automático
     const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad);
+    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad, this.seccionId);
   });
 
   readonly textoPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
     
-    // ✅ Prioridad: leer valor manual si existe
-    const manual = data['textoPoblacionEtarioAISD'];
+    // ✅ Prioridad: leer valor manual si existe (con prefijo y sin prefijo)
+    const manualKey = `textoPoblacionEtarioAISD${prefijo}`;
+    const manual = data[manualKey];
     if (manual && manual.trim().length > 0) {
       return manual;
     }
     
     // Fallback: generar texto automático
     const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad);
+    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad, this.seccionId);
   });
 
   readonly totalPoblacionSexoSignal: Signal<number> = computed(() => {
@@ -102,11 +105,13 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
 
   // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      const imagenKey = `${prefix}${i}Imagen`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -127,7 +132,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
-      { prefix: this.PHOTO_PREFIX, label: 'Demografía' }
+      { prefix: `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`, label: 'Demografía' }
     ];
     this.poblacionSexoConfig = this.tableCfg.getTablaPoblacionSexoConfig();
     this.poblacionEtarioConfig = this.tableCfg.getTablaPoblacionEtarioConfig();
@@ -161,6 +166,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
 
     // ✅ EFFECT 3: Calcular porcentajes cuando los datos de población cambien
     effect(() => {
+      const prefijo = this.prefijoGrupoSignal();
       const sexoData = this.poblacionSexoSignal();
       const etarioData = this.poblacionEtarioSignal();
       
@@ -169,7 +175,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
         debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla sexo...');
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
-          { ...this.poblacionSexoConfig, tablaKey: 'poblacionSexoAISD' }
+          { ...this.poblacionSexoConfig, tablaKey: `poblacionSexoAISD${prefijo}` }
         );
       }
 
@@ -177,7 +183,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
         debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla etario...');
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
-          { ...this.poblacionEtarioConfig, tablaKey: 'poblacionEtarioAISD' }
+          { ...this.poblacionEtarioConfig, tablaKey: `poblacionEtarioAISD${prefijo}` }
         );
       }
 
@@ -346,18 +352,20 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   // Esto asegura que los cambios de titulo/fuente se reflejen inmediatamente
   override cargarFotografias(): void {
     const formData = this.sectionDataSignal();  // ✅ LEER DEL SIGNAL REACTIVO
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
     
     // ✅ Reconstruir array de fotografías leyendo directamente del state reactivo
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagenKey = `${prefix}${i}Imagen`;
       const imagen = formData[imagenKey];
       
       // Si hay imagen, agregar a array
       if (imagen) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+        const tituloKey = `${prefix}${i}Titulo`;
+        const fuenteKey = `${prefix}${i}Fuente`;
+        const numeroKey = `${prefix}${i}Numero`;
         
         fotos.push({
           imagen: imagen,

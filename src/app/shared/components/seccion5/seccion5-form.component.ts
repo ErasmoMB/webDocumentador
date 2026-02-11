@@ -43,6 +43,13 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
   ];
 
   // ✅ SIGNALS: Datos reactivos puros
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
+  readonly photoPrefixSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+  });
+
   readonly formularioDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
@@ -59,24 +66,39 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     if (manual && manual.trim().length > 0) return manual;
     
     const nombreComunidad = this.obtenerNombreComunidadActual();
-    return this.textGenerator.obtenerTextoInstitucionalidad(formData, nombreComunidad);
+    return this.textGenerator.obtenerTextoInstitucionalidad(formData, nombreComunidad, this.seccionId);
   });
 
   readonly institucionesTableSignal: Signal<any[]> = computed(() => {
-    const formData = this.formularioDataSignal();
-    const instituciones = formData['institucionesSeccion5'];
-    return Array.isArray(instituciones) ? instituciones : [];
+    const prefijo = this.prefijoGrupoSignal();
+    const tablaKey = prefijo ? `institucionesSeccion5${prefijo}` : 'institucionesSeccion5';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.obtenerValorConPrefijo('institucionesSeccion5') ?? [];
+  });
+
+  readonly tablaKeyInstitucionesSignal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    return prefijo ? `institucionesSeccion5${prefijo}` : 'institucionesSeccion5';
+  });
+
+  readonly tituloInstitucionesSignal: Signal<string> = computed(() => {
+    return this.obtenerValorConPrefijo('tituloInstituciones') || '';
+  });
+
+  readonly fuenteInstitucionesSignal: Signal<string> = computed(() => {
+    return this.obtenerValorConPrefijo('fuenteInstituciones') || '';
   });
 
   // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
   // Este Signal dispara un effect() que sincroniza cargarFotografias() reactivamente
   // Siguiendo el patrón de Sección 4 (referencia)
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefix = this.photoPrefixSignal();
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      const imagenKey = `${prefix}${i}Imagen`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -150,7 +172,9 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
   // ✅ Sincronizar tabla cuando se actualiza (agregar/eliminar filas)
   onTablaActualizada(): void {
     const institucionesActuales = this.institucionesTableSignal();
-    this.onFieldChange('institucionesSeccion5', institucionesActuales, { refresh: false });
+    const prefijo = this.prefijoGrupoSignal();
+    const fieldKey = prefijo ? `institucionesSeccion5${prefijo}` : 'institucionesSeccion5';
+    this.onFieldChange(fieldKey, institucionesActuales, { refresh: false });
     this.cdRef.markForCheck();
   }
 

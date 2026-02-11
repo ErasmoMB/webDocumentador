@@ -42,7 +42,7 @@
         [config]="peaOcupacionesConfig"
         [columns]="tableCfg.getColumnasPEAOcupaciones()"
         [sectionId]="seccionId"
-        [tablaKey]="'peaOcupacionesTabla'"
+        [tablaKey]="'peaOcupacionesTabla' + obtenerPrefijo()"
         [showAddButton]="true"
         [showDeleteButton]="true"
         (tableUpdated)="onPEATableUpdated($event)">
@@ -105,7 +105,7 @@
           [config]="poblacionPecuariaConfig"
           [columns]="tableCfg.getColumnasPoblacionPecuaria()"
           [sectionId]="seccionId"
-          [tablaKey]="'poblacionPecuariaTabla'"
+          [tablaKey]="'poblacionPecuariaTabla' + obtenerPrefijo()"
           [showAddButton]="true"
           [showDeleteButton]="true"
           (tableUpdated)="onPoblacionPecuariaTableUpdated($event)">
@@ -127,7 +127,7 @@
         <app-image-upload
           [fotografias]="fotografiasGanaderiaFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_GANADERIA"
+          [photoPrefix]="PHOTO_PREFIX_GANADERIA + obtenerPrefijo()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -175,7 +175,7 @@
           [config]="caracteristicasAgriculturaConfig"
           [columns]="tableCfg.getColumnasCaracteristicasAgricultura()"
           [sectionId]="seccionId"
-          [tablaKey]="'caracteristicasAgriculturaTabla'"
+          [tablaKey]="'caracteristicasAgriculturaTabla' + obtenerPrefijo()"
           [showAddButton]="true"
           [showDeleteButton]="true"
           (tableUpdated)="onCaracteristicasAgriculturaTableUpdated($event)">
@@ -197,7 +197,7 @@
         <app-image-upload
           [fotografias]="fotografiasAgriculturaFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
+          [photoPrefix]="PHOTO_PREFIX_AGRICULTURA + obtenerPrefijo()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -243,7 +243,7 @@
         <app-image-upload
           [fotografias]="fotografiasComercioFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_COMERCIO"
+          [photoPrefix]="PHOTO_PREFIX_COMERCIO + obtenerPrefijo()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"

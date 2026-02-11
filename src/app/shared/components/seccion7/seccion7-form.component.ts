@@ -28,6 +28,14 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override useReactiveSync: boolean = true;
 
+  // ✅ Signal de prefijo de grupo AISD
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
+  // ✅ Helper para usar en templates
+  obtenerPrefijo(): string {
+    return this.prefijoGrupoSignal();
+  }
+
   fotografiasSeccion7: FotoItem[] = [];
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -38,61 +46,31 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const tablaActual = Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
-    
-    if (tablaActual.length === 0) {
-      return [
-        { categoria: '15 a 29 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '30 a 44 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '45 a 64 años', casos: 0, porcentaje: '0,00 %' },
-        { categoria: '65 años a más', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Total', casos: 0, porcentaje: '100,00 %' }
-      ];
-    }
-    
-    return tablaActual;
+    return Array.isArray(formData[petTablaKey]) ? formData[petTablaKey] : [];
   });
 
   readonly peaTablaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-    const tablaActual = Array.isArray(formData[peaTablaKey]) ? formData[peaTablaKey] : [];
-    
-    if (tablaActual.length === 0) {
-      return [
-        { categoria: 'PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'No PEA', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
-      ];
-    }
-    
-    return tablaActual;
+    return Array.isArray(formData[peaTablaKey]) ? formData[peaTablaKey] : [];
   });
 
   readonly peaOcupadaTablaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-    const tablaActual = Array.isArray(formData[peaOcupadaTablaKey]) ? formData[peaOcupadaTablaKey] : [];
-    
-    if (tablaActual.length === 0) {
-      return [
-        { categoria: 'PEA Ocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'PEA Desocupada', hombres: 0, porcentajeHombres: '0,00 %', mujeres: 0, porcentajeMujeres: '0,00 %', casos: 0, porcentaje: '0,00 %' },
-        { categoria: 'Total', hombres: 0, porcentajeHombres: '100,00 %', mujeres: 0, porcentajeMujeres: '100,00 %', casos: 0, porcentaje: '100,00 %' }
-      ];
-    }
-    
-    return tablaActual;
+    return Array.isArray(formData[peaOcupadaTablaKey]) ? formData[peaOcupadaTablaKey] : [];
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      const imagenKey = `${prefix}${i}Imagen`;
 
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -168,8 +146,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   get petConfig() {
+    const prefijo = this.prefijoGrupoSignal();
     return {
-      tablaKey: 'petTabla',
+      tablaKey: `petTabla${prefijo}`,
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
@@ -179,8 +158,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   get peaConfig() {
+    const prefijo = this.prefijoGrupoSignal();
     return {
-      tablaKey: 'peaTabla',
+      tablaKey: `peaTabla${prefijo}`,
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
@@ -190,8 +170,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   get peaOcupadaConfig() {
+    const prefijo = this.prefijoGrupoSignal();
     return {
-      tablaKey: 'peaOcupadaTabla',
+      tablaKey: `peaOcupadaTabla${prefijo}`,
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',

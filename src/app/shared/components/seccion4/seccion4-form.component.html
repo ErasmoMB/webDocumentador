@@ -10,28 +10,28 @@
       <h5 class="section-subtitle">1. Narrativa y Caracterización</h5>
       
       <app-paragraph-editor
-          [fieldId]="'parrafoSeccion4_introduccion_aisd'"
+          [fieldId]="'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo()"
           label="Introducción AISD"
           hint="Placeholder CC ___ se reemplaza automáticamente."
           [rows]="4"
-          [value]="getTextoIntroduccionEfectivo()"
-          (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd', $event)">
+          [value]="parrafoIntroduccionSignal()"
+          (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
-        [fieldId]="'parrafoSeccion4_comunidad_completo'"
+        [fieldId]="'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo()"
         label="Información Histórica y Ubicación"
         [rows]="6"
-        [value]="getTextoComunidadEfectivo()"
-        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo', $event)">
+        [value]="parrafoComunidadSignal()"
+        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
-        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores'"
+        [fieldId]="'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo()"
         label="Contexto de Indicadores"
         [rows]="3"
-        [value]="getTextoCaracterizacionEfectivo()"
-        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores', $event)">
+        [value]="parrafoCaracterizacionSignal()"
+        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
     </section>
 
@@ -46,7 +46,7 @@
             [sectionId]="seccionId"
             [config]="tableCfg.getTablaAISD1Config()"
             [columns]="tableCfg.getColumnasAISD1()"
-            [tablaKey]="'tablaAISD1Datos'"
+            [tablaKey]="tablaKeyAISD1Signal()"
             [totalKey]="'localidad'"
             [showAddButton]="true"
             [showDeleteButton]="true"
@@ -62,7 +62,7 @@
             [sectionId]="seccionId"
             [config]="tableCfg.getTablaAISD2Config()"
             [columns]="tableCfg.getColumnasAISD2()"
-            [tablaKey]="'tablaAISD2Datos'"
+            [tablaKey]="tablaKeyAISD2Signal()"
             [totalKey]="'punto'"
             [showAddButton]="true"
             [showDeleteButton]="true"
@@ -81,7 +81,7 @@
         <app-image-upload
           [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_UBICACION"
+          [photoPrefix]="photoPrefixUbicacionSignal()"
           [permitirMultiples]="true"
           [requerido]="false"
           (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_UBICACION, $event)">
@@ -93,7 +93,7 @@
         <app-image-upload
           [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_POBLACION"
+          [photoPrefix]="photoPrefixPoblacionSignal()"
           [permitirMultiples]="true"
           [requerido]="false"
           (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_POBLACION, $event)">

@@ -44,11 +44,12 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -225,11 +226,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con abastecimiento de agua por red pública', casos: null, porcentaje: null },
-        { categoria: 'Viviendas con abastecimiento de agua por pilón', casos: null, porcentaje: null },
-        { categoria: 'Viviendas sin abastecimiento de agua por los medios mencionados', casos: null, porcentaje: null }
-      ],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }
@@ -241,11 +238,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con saneamiento vía red pública', casos: null, porcentaje: null },
-        { categoria: 'Viviendas con saneamiento vía pozo séptico', casos: null, porcentaje: null },
-        { categoria: 'Viviendas sin saneamiento vía los medios mencionados', casos: null, porcentaje: null }
-      ],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }
@@ -257,10 +250,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Viviendas con acceso a electricidad', casos: null, porcentaje: null },
-        { categoria: 'Viviendas sin acceso a electricidad', casos: null, porcentaje: null }
-      ],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }
@@ -308,11 +298,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [
-        { categoria: 'Gas (Balón GLP)', casos: null, porcentaje: null },
-        { categoria: 'Leña', casos: null, porcentaje: null },
-        { categoria: 'Guano o bosta', casos: null, porcentaje: null }
-      ],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }
@@ -336,7 +322,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      estructuraInicial: [],
+      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
       calcularPorcentajes: true
     };
   }

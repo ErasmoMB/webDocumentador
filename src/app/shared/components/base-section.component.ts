@@ -12,6 +12,7 @@ import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/react
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { AISIGroupService } from 'src/app/core/services/aisi-group.service';
+import { AISDGroupService } from 'src/app/core/services/aisd-group.service';
 import { FotoItem } from './image-upload/image-upload.component';
 import { PhotoGroupConfig } from '../utils/photo-group-config';
 import { Subject, Subscription } from 'rxjs';
@@ -97,6 +98,14 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   protected get aisiGroupService(): AISIGroupService {
     return this.resolve(AISIGroupService);
+  }
+
+  /**
+   * ✅ AGREGADO: Servicio para acceder a datos del grupo AISD actual
+   * Proporciona métodos claros para obtener centros poblados, nombres, etc.
+   */
+  protected get aisdGroupService(): AISDGroupService {
+    return this.resolve(AISDGroupService);
   }
 
   private resolve<T>(token: ProviderToken<T>): T {
@@ -462,6 +471,54 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   protected getAISIGroupDebugInfo(): object {
     return this.aisiGroupService.obtenerInfoDebug(this.seccionId);
+  }
+
+  // ============================================================================
+  // ✅ MÉTODOS DE CONVENIENCIA PARA GRUPOS AISD (usando AISDGroupService)
+  // ============================================================================
+
+  /**
+   * Obtiene los códigos de centros poblados del grupo AISD actual
+   * Ej: ['0214090010', '0214090059', ...]
+   */
+  protected getCodigosCentrosPobladosAISD(): readonly string[] {
+    return this.aisdGroupService.obtenerCodigosCentrosPoblados(this.seccionId);
+  }
+
+  /**
+   * Obtiene los nombres de los centros poblados del grupo AISD actual
+   * Útil para autocompletar y dropdowns
+   */
+  protected getNombresCentrosPobladosAISD(): readonly string[] {
+    return this.aisdGroupService.obtenerNombresCentrosPoblados(this.seccionId);
+  }
+
+  /**
+   * Obtiene el nombre de un centro poblado dado su código
+   */
+  protected getNombreCentroPobladoPorCodigoAISD(codigo: string): string | null {
+    return this.aisdGroupService.obtenerNombrePorCodigo(this.seccionId, codigo);
+  }
+
+  /**
+   * Obtiene el código de un centro poblado dado su nombre
+   */
+  protected getCodigoCentroPobladoPorNombreAISD(nombre: string): string | null {
+    return this.aisdGroupService.obtenerCodigoPorNombre(this.seccionId, nombre);
+  }
+
+  /**
+   * Verifica si un código de centro poblado pertenece al grupo AISD actual
+   */
+  protected perteneceCentroPobladoAlGrupoAISD(codigo: string): boolean {
+    return this.aisdGroupService.perteneceAlGrupoActual(this.seccionId, codigo);
+  }
+
+  /**
+   * DEBUG: Obtiene información detallada del grupo AISD actual
+   */
+  protected getAISDGroupDebugInfo(): object {
+    return this.aisdGroupService.obtenerInfoDebug(this.seccionId);
   }
 
   protected actualizarFotografiasCache(): void {

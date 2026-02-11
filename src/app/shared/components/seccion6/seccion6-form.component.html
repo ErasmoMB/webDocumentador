@@ -10,12 +10,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
 
         <app-paragraph-editor
-          [fieldId]="'textoPoblacionSexoAISD'"
+          [fieldId]="'textoPoblacionSexoAISD' + obtenerPrefijoGrupo()"
           label="Población según Sexo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoPoblacionSexo()"
-          (valueChange)="onFieldChange('textoPoblacionSexoAISD', $event)">
+          (valueChange)="onFieldChange('textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -25,8 +25,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionSexoAISD']"
-            (ngModelChange)="onFieldChange('tituloPoblacionSexoAISD', $event)"
+            [(ngModel)]="datos['tituloPoblacionSexoAISD' + obtenerPrefijoGrupo()]"
+            (ngModelChange)="onFieldChange('tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             placeholder="Ej: Población por sexo">
         </div>
 
@@ -36,8 +36,8 @@
           [config]="poblacionSexoConfig"
           [columns]="tableCfg.getColumnasPoblacionSexo()"
           [sectionId]="seccionId"
-          [tablaKey]="'poblacionSexoAISD'"
-          [fieldName]="'poblacionSexoAISD'"
+          [tablaKey]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
+          [fieldName]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
           (tableUpdated)="onTablaSexoActualizada()">
         </app-dynamic-table>
         <div class="table-editor" *ngIf="getPoblacionSexoSinTotal() && getPoblacionSexoSinTotal().length > 0" style="margin-top: 10px;">
@@ -67,8 +67,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionSexoAISD']"
-            (ngModelChange)="onFieldChange('fuentePoblacionSexoAISD', $event)"
+            [(ngModel)]="datos['fuentePoblacionSexoAISD' + obtenerPrefijoGrupo()]"
+            (ngModelChange)="onFieldChange('fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             placeholder="Ej: GEADES, 2024">
         </div>
       </div>
@@ -82,12 +82,12 @@
         <h4 class="section-title">Editar Párrafos</h4>
 
         <app-paragraph-editor
-          [fieldId]="'textoPoblacionEtarioAISD'"
+          [fieldId]="'textoPoblacionEtarioAISD' + obtenerPrefijoGrupo()"
           label="Población por Grupo Etario - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
           [value]="obtenerTextoPoblacionEtario()"
-          (valueChange)="onFieldChange('textoPoblacionEtarioAISD', $event)">
+          (valueChange)="onFieldChange('textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -97,8 +97,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionEtarioAISD']"
-            (ngModelChange)="onFieldChange('tituloPoblacionEtarioAISD', $event)"
+            [(ngModel)]="datos['tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
+            (ngModelChange)="onFieldChange('tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             placeholder="Ej: Población por grupos de edad">
         </div>
 
@@ -108,8 +108,8 @@
           [config]="poblacionEtarioConfig"
           [columns]="tableCfg.getColumnasPoblacionEtario()"
           [sectionId]="seccionId"
-          [tablaKey]="'poblacionEtarioAISD'"
-          [fieldName]="'poblacionEtarioAISD'"
+          [tablaKey]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"
+          [fieldName]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"
           (tableUpdated)="onTablaEtarioActualizada()">
         </app-dynamic-table>
         <div class="table-editor" *ngIf="getPoblacionEtarioSinTotal() && getPoblacionEtarioSinTotal().length > 0" style="margin-top: 10px;">
@@ -139,8 +139,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionEtarioAISD']"
-            (ngModelChange)="onFieldChange('fuentePoblacionEtarioAISD', $event)"
+            [(ngModel)]="datos['fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
+            (ngModelChange)="onFieldChange('fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             placeholder="Ej: GEADES, 2024">
         </div>
       </div>
@@ -152,7 +152,7 @@
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
+        [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
         [permitirMultiples]="true"
         labelTitulo="Título de la fotografía"
         labelFuente="Fuente de la fotografía"

@@ -64,20 +64,25 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
 
   readonly poblacionPecuariaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
-    return Array.isArray(formData['poblacionPecuariaTabla']) ? formData['poblacionPecuariaTabla'] : [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionPecuariaTabla${prefijo}` : 'poblacionPecuariaTabla';
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
   readonly caracteristicasAgriculturaSignal: Signal<any[]> = computed(() => {
     const formData = this.formDataSignal();
-    return Array.isArray(formData['caracteristicasAgriculturaTabla']) ? formData['caracteristicasAgriculturaTabla'] : [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `caracteristicasAgriculturaTabla${prefijo}` : 'caracteristicasAgriculturaTabla';
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen`;
+      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen${prefijo}`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -133,14 +138,18 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onPoblacionPecuariaTableUpdated(updatedData?: any[]): void {
-    const pecuariaActuales = updatedData || this.datos['poblacionPecuariaTabla'] || [];
-    this.onFieldChange('poblacionPecuariaTabla', pecuariaActuales, { refresh: true });
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionPecuariaTabla${prefijo}` : 'poblacionPecuariaTabla';
+    const pecuariaActuales = updatedData || this.datos[tablaKey] || [];
+    this.onFieldChange(tablaKey, pecuariaActuales, { refresh: true });
     this.cdRef.detectChanges();
   }
 
   onCaracteristicasAgriculturaTableUpdated(updatedData?: any[]): void {
-    const agriculturaActuales = updatedData || this.datos['caracteristicasAgriculturaTabla'] || [];
-    this.onFieldChange('caracteristicasAgriculturaTabla', agriculturaActuales, { refresh: true });
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `caracteristicasAgriculturaTabla${prefijo}` : 'caracteristicasAgriculturaTabla';
+    const agriculturaActuales = updatedData || this.datos[tablaKey] || [];
+    this.onFieldChange(tablaKey, agriculturaActuales, { refresh: true });
     this.cdRef.detectChanges();
   }
 
@@ -393,6 +402,13 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
 
   override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  /**
+   * ✅ Helper para templates - retorna prefijo de grupo para uso en HTML
+   */
+  obtenerPrefijo(): string {
+    return this.obtenerPrefijoGrupo();
   }
 
   formatearParrafo(texto: string): string {

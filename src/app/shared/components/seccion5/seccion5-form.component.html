@@ -18,8 +18,8 @@
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Título del Cuadro</label>
       <input type="text" class="input" placeholder="Ej: Instituciones existentes – CC PATIVILCA"
-        [value]="datos.tituloInstituciones || ''"
-        (input)="onFieldChange('tituloInstituciones', $any($event.target).value)">
+        [value]="tituloInstitucionesSignal()"
+        (input)="onFieldChange('tituloInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
@@ -29,7 +29,7 @@
         [config]="institucionesConfig"
         [columns]="columnasInstituciones"
         [sectionId]="seccionId"
-        [tablaKey]="'tablepagina6'"
+        [tablaKey]="tablaKeyInstitucionesSignal()"
         (tableUpdated)="onTablaActualizada()">
       </app-dynamic-table>
     </div>
@@ -37,8 +37,8 @@
     <div class="form-field" style="margin-top: 15px;">
       <label class="label">Fuente del Cuadro</label>
       <input type="text" class="input" placeholder="Ej: GEADES (2024)"
-        [value]="datos.fuenteInstituciones || ''"
-        (input)="onFieldChange('fuenteInstituciones', $any($event.target).value)">
+        [value]="fuenteInstitucionesSignal()"
+        (input)="onFieldChange('fuenteInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
@@ -46,7 +46,7 @@
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
-        [photoPrefix]="PHOTO_PREFIX"
+        [photoPrefix]="photoPrefixSignal()"
         [permitirMultiples]="true"
         labelTitulo="Título de la fotografía"
         labelFuente="Fuente de la fotografía"

@@ -55,13 +55,23 @@ export class Seccion5ViewInternalComponent extends BaseSectionComponent implemen
     if (manual && manual.trim().length > 0) return manual;
     
     const nombreComunidad = this.obtenerNombreComunidadActual();
-    return this.textGenerator.obtenerTextoInstitucionalidad(data, nombreComunidad);
+    return this.textGenerator.obtenerTextoInstitucionalidad(data, nombreComunidad, this.seccionId);
   });
 
   readonly vistInstitucionesSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = `institucionesSeccion5${prefijo}`;
     const data = this.vistDataSignal();
-    const instituciones = data['institucionesSeccion5'];
+    const instituciones = data[tablaKey];
     return Array.isArray(instituciones) ? instituciones : [];
+  });
+
+  readonly vistFuenteInstitucionesSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.vistDataSignal();
+    const fieldKey = `fuenteInstituciones${prefijo}`;
+    const fieldKeyNoPrefix = 'fuenteInstituciones';
+    return data[fieldKey] || data[fieldKeyNoPrefix] || '';
   });
 
   // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
@@ -69,10 +79,12 @@ export class Seccion5ViewInternalComponent extends BaseSectionComponent implemen
   // Siguiendo el patrón de Sección 4 (referencia)
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      const imagenKey = `${prefix}${i}Imagen`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
