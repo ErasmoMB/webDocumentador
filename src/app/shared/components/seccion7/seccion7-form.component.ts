@@ -6,9 +6,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { Seccion7TableConfigService } from 'src/app/core/services/domain/seccion7-table-config.service';
-import { Seccion7DataService } from 'src/app/core/services/domain/seccion7-data.service';
-import { Seccion7TextGeneratorService } from 'src/app/core/services/domain/seccion7-text-generator.service';
+import { TableColumn } from '../dynamic-table/dynamic-table.component';
 
 @Component({
   standalone: true,
@@ -23,7 +21,7 @@ import { Seccion7TextGeneratorService } from 'src/app/core/services/domain/secci
 })
 export class Seccion7FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1.3';
-  @Input() override modoFormulario: boolean = false;
+  @Input() override modoFormulario: boolean = true;
 
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override useReactiveSync: boolean = true;
@@ -81,13 +79,37 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ COLUMNAS DE TABLAS (INTEGRADO - SIN SERVICIOS EXTERNOS)
+  readonly columnasTableaPET: TableColumn[] = [
+    { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Grupo de edad', readonly: true },
+    { field: 'casos', label: 'Casos', type: 'number', dataType: 'number' },
+    { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+  ];
+
+  readonly columnasTableaPEA: TableColumn[] = [
+    { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'PEA, No PEA', readonly: true },
+    { field: 'hombres', label: 'Hombres', type: 'number', dataType: 'number' },
+    { field: 'porcentajeHombres', label: '% Hombres', type: 'text', readonly: true },
+    { field: 'mujeres', label: 'Mujeres', type: 'number', dataType: 'number' },
+    { field: 'porcentajeMujeres', label: '% Mujeres', type: 'text', readonly: true },
+    { field: 'casos', label: 'Total', type: 'number', dataType: 'number', readonly: true },
+    { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+  ];
+
+  readonly columnasTableaPEAOcupada: TableColumn[] = [
+    { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ocupada, Desocupada', readonly: true },
+    { field: 'hombres', label: 'Hombres', type: 'number', dataType: 'number' },
+    { field: 'porcentajeHombres', label: '% Hombres', type: 'text', readonly: true },
+    { field: 'mujeres', label: 'Mujeres', type: 'number', dataType: 'number' },
+    { field: 'porcentajeMujeres', label: '% Mujeres', type: 'text', readonly: true },
+    { field: 'casos', label: 'Total', type: 'number', dataType: 'number', readonly: true },
+    { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+  ];
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer,
-    public tableCfg: Seccion7TableConfigService,
-    public dataService: Seccion7DataService,
-    public textGenerator: Seccion7TextGeneratorService
+    private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);
 
@@ -608,77 +630,62 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.cdRef.markForCheck();
   }
 
-  // ============ MÉTODOS DE TEXTO (delegados a TextGeneratorService) ============
+  // ============ MÉTODOS DE TEXTO (INTEGRADOS - SIN SERVICIOS EXTERNOS) ============
 
   obtenerTextoSeccion7PETCompleto(): string {
-    return this.textGenerator.obtenerTextoSeccion7PETCompleto(
-      this.datos,
-      this.seccionId,
-      () => this.getPorcentajePET(),
-      (grupo: string) => this.getPorcentajePETGrupo(grupo),
-      () => this.obtenerNombreComunidadActual()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `parrafoSeccion7_pet_completo${prefijo}`;
+    const texto = this.datos[manualKey] || this.datos['parrafoSeccion7_pet_completo'];
+    if (texto && texto.trim() !== '') return texto;
+    
+    const grupoAISD = this.obtenerNombreComunidadActual();
+    return `En concordancia con el Convenio 138 de la Organización Internacional de Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001, la población cumplida los 14 años de edad se encuentra en edad de trabajar.\n\nLa población en edad de trabajar (PET) de la CC ${grupoAISD}, considerada desde los 15 años a más, se compone de la población total. El bloque etario que más aporta a la PEA es el de 15 a 29 años. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más.`;
   }
 
   obtenerTextoPET(): string {
-    return this.textGenerator.obtenerTextoPET(
-      this.datos,
-      (grupo: string) => this.getPorcentajePETGrupo(grupo),
-      () => this.obtenerNombreComunidadActual()
-    );
+    return this.obtenerTextoSeccion7PETCompleto();
   }
 
   obtenerTextoDetalePEA(): string {
-    return this.textGenerator.obtenerTextoDetalePEA(this.datos);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `textoDetalePEA${prefijo}`;
+    return this.datos[manualKey] || this.datos['textoDetalePEA'] || '____';
   }
 
   obtenerTextoDefinicionPEA(): string {
-    return this.textGenerator.obtenerTextoDefinicionPEA(
-      this.datos,
-      () => this.obtenerNombreComunidadActual()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `textoDefinicionPEA${prefijo}`;
+    return this.datos[manualKey] || this.datos['textoDefinicionPEA'] || 'La Población Económicamente Activa (PEA) corresponde a todas aquellas personas en edad de trabajar que se encuentran empleadas o desempleadas activamente buscando empleo.';
   }
 
   obtenerTextoAnalisisPEA(): string {
-    return this.textGenerator.obtenerTextoAnalisisPEA(
-      this.datos,
-      () => this.getPorcentajePEA(),
-      () => this.getPorcentajeNoPEA(),
-      () => this.getPorcentajePEAHombres(),
-      () => this.getPorcentajeNoPEAMujeres()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `textoAnalisisPEA${prefijo}`;
+    return this.datos[manualKey] || this.datos['textoAnalisisPEA'] || '____';
   }
 
   obtenerTextoIndiceDesempleo(): string {
-    return this.textGenerator.obtenerTextoIndiceDesempleo(
-      this.datos,
-      () => this.obtenerNombreComunidadActual()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `textoIndiceDesempleo${prefijo}`;
+    return this.datos[manualKey] || this.datos['textoIndiceDesempleo'] || '____';
   }
 
   obtenerTextoAnalisisOcupacion(): string {
-    return this.textGenerator.obtenerTextoAnalisisOcupacion(
-      this.datos,
-      () => this.getPorcentajePEADesocupada(),
-      () => this.getPorcentajePEAOcupadaHombres(),
-      () => this.getPorcentajePEAOcupadaMujeres()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `textoAnalisisOcupacion${prefijo}`;
+    return this.datos[manualKey] || this.datos['textoAnalisisOcupacion'] || 'Del cuadro precedente, se halla que la PEA Desocupada representa un porcentaje del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada.';
   }
 
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {
-    return this.textGenerator.obtenerTextoSeccion7SituacionEmpleoCompleto(
-      this.datos,
-      this.seccionId,
-      () => this.obtenerNombreComunidadActual()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `parrafoSeccion7_situacion_empleo_completo${prefijo}`;
+    return this.datos[manualKey] || this.datos['parrafoSeccion7_situacion_empleo_completo'] || '____';
   }
 
   obtenerTextoSeccion7IngresosCompleto(): string {
-    return this.textGenerator.obtenerTextoSeccion7IngresosCompleto(
-      this.datos,
-      this.seccionId,
-      () => this.obtenerNombreComunidadActual()
-    );
+    const prefijo = this.obtenerPrefijoGrupo();
+    const manualKey = `parrafoSeccion7_ingresos_completo${prefijo}`;
+    return this.datos[manualKey] || this.datos['parrafoSeccion7_ingresos_completo'] || '____';
   }
 
   // ============ MÉTODOS DE PORCENTAJES ============

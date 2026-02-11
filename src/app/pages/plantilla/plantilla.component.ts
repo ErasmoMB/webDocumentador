@@ -116,9 +116,9 @@ export class ResumenComponent implements OnInit, AfterViewInit {
     ViewChildHelper.registerComponent('seccion6', comp);
   }
   @ViewChild(Seccion7ViewComponent) set seccion7(comp: Seccion7ViewComponent) {
-    // El componente de vista contiene la lógica de Seccion7 internamente
-    if (comp && comp.seccion7InternalComponent) {
-      ViewChildHelper.registerComponent('seccion7', comp.seccion7InternalComponent);
+    // ✅ Registrar directamente el componente (MODO IDEAL)
+    if (comp) {
+      ViewChildHelper.registerComponent('seccion7', comp);
     }
   }
   @ViewChild(Seccion8ViewComponent) set seccion8(comp: Seccion8ViewComponent) {

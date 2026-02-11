@@ -34,7 +34,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="petConfig"
-          [columns]="tableCfg.getColumnasPET()"
+          [columns]="columnasTableaPET"
           [sectionId]="seccionId"
           [tablaKey]="'petTabla' + obtenerPrefijo()"
           [showAddButton]="false"
@@ -112,7 +112,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="peaConfig"
-          [columns]="tableCfg.getColumnasPEA()"
+          [columns]="columnasTableaPEA"
           [sectionId]="seccionId"
           [tablaKey]="'peaTabla' + obtenerPrefijo()"
           [showAddButton]="false"
@@ -200,7 +200,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="peaOcupadaConfig"
-          [columns]="tableCfg.getColumnasPEAOcupada()"
+          [columns]="columnasTableaPEAOcupada"
           [sectionId]="seccionId"
           [tablaKey]="'peaOcupadaTabla' + obtenerPrefijo()"
           [showAddButton]="false"

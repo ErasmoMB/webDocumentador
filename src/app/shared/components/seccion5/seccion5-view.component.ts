@@ -4,9 +4,8 @@ import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
-import { Seccion5DataService } from 'src/app/core/services/domain/seccion5-data.service';
-import { Seccion5TextGeneratorService } from 'src/app/core/services/domain/seccion5-text-generator.service';
 import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX } from './seccion5-constants';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
     standalone: true,
@@ -36,9 +35,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    public tableCfg: Seccion5TableConfigService,
-    private dataSrv: Seccion5DataService,
-    private textGen: Seccion5TextGeneratorService
+    public tableCfg: Seccion5TableConfigService
   ) {
     super(cdRef, injector);
 
@@ -84,7 +81,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
       const fieldKeyNoPrefix = 'parrafoSeccion5_institucionalidad';
       let parrafo = data[fieldKey] || data[fieldKeyNoPrefix];
       if (!parrafo || parrafo.trim().length === 0) {
-        parrafo = this.textGen.obtenerTextoInstitucionalidad(data, nombreComunidad, this.seccionId);
+        parrafo = this.obtenerTextoInstitucionalidad(data, nombreComunidad);
       }
 
       return {
@@ -147,5 +144,22 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+  }
+
+  // ✅ MÉTODO INLINE DE TEXTO (sin servicio)
+  private obtenerCampoConPrefijo(datos: any, campo: string): string {
+    return PrefijoHelper.obtenerValorConPrefijo(datos, campo, this.seccionId) || datos[campo] || '';
+  }
+
+  obtenerTextoInstitucionalidad(datos: any, nombreComunidad: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion5_institucionalidad');
+    
+    const textoPorDefecto = `La CC ${nombreComunidad} posee una estructura organizativa que responde a sus necesidades locales y a los principios de autogobierno indígena. La asamblea general comunal es la máxima autoridad, integrada por todos los comuneros hábiles que participan activamente en la toma de decisiones. Este sistema de gobierno rotativo permite que diversos miembros de la comunidad asuman responsabilidades de liderazgo, fortaleciendo así la distribución equitativa del poder y la representación de los intereses colectivos.\n\nLa organización comunal incluye diversas instituciones que trabajan de manera coordinada para cumplir con las funciones administrativas, educativas y sanitarias que requiere la comunidad. Entre las principales instituciones se encuentran la Asamblea General, la Junta Directiva Comunal, las organizaciones de base como las rondas campesinas, las instituciones educativas, los centros de salud, y las organizaciones de mujeres. Cada una de estas instituciones tiene responsabilidades específicas que contribuyen al bienestar integral de la comunidad.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);
+    }
+    
+    return textoPorDefecto;
   }
 }

@@ -64,10 +64,11 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion6View: () => import('src/app/shared/components/seccion6/seccion6-view.component').then(m => m.Seccion6ViewComponent as unknown as Type<any>),
     seccion6FormWrapper: () => import('src/app/shared/components/forms/seccion6-form-wrapper.component').then(m => m.Seccion6FormWrapperComponent as unknown as Type<any>),
     seccion7View: () => import('src/app/shared/components/seccion7/seccion7-view.component').then(m => m.Seccion7ViewComponent as unknown as Type<any>),
-    seccion8: () => import('src/app/shared/components/seccion8/seccion8-view.component').then(m => m.Seccion8ViewComponent as unknown as Type<any>),
-    seccion8Form: () => import('src/app/shared/components/forms/seccion8-form-wrapper.component').then(m => m.Seccion8FormWrapperComponent as unknown as Type<any>),
-    seccion9Form: () => import('src/app/shared/components/forms/seccion9-form-wrapper.component').then(m => m.Seccion9FormWrapperComponent as unknown as Type<any>),
-    seccion9: () => import('src/app/shared/components/seccion9/seccion9-view.component').then(m => m.Seccion9ViewComponent as unknown as Type<any>),
+    seccion7FormWrapper: () => import('src/app/shared/components/forms/seccion7-form-wrapper.component').then(m => m.Seccion7FormWrapperComponent as unknown as Type<any>),
+    seccion8View: () => import('src/app/shared/components/seccion8/seccion8-view.component').then(m => m.Seccion8ViewComponent as unknown as Type<any>),
+    seccion8FormWrapper: () => import('src/app/shared/components/forms/seccion8-form-wrapper.component').then(m => m.Seccion8FormWrapperComponent as unknown as Type<any>),
+    seccion9View: () => import('src/app/shared/components/seccion9/seccion9-view.component').then(m => m.Seccion9ViewComponent as unknown as Type<any>),
+    seccion9FormWrapper: () => import('src/app/shared/components/forms/seccion9-form-wrapper.component').then(m => m.Seccion9FormWrapperComponent as unknown as Type<any>),
     seccion10: () => import('src/app/shared/components/forms/seccion10-form-wrapper.component').then(m => m.Seccion10FormWrapperComponent as unknown as Type<any>),
     seccion10View: () => import('src/app/shared/components/seccion10/seccion10-view.component').then(m => m.Seccion10ViewComponent as unknown as Type<any>),
     seccion11: () => import('src/app/shared/components/forms/seccion11-form-wrapper.component').then(m => m.Seccion11FormWrapperComponent as unknown as Type<any>),
@@ -125,7 +126,6 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     seccion3Form: () => import('src/app/shared/components/seccion3/seccion3-form.component').then(m => m.Seccion3FormComponent as unknown as Type<any>),
 
-    seccion7FormWrapper: () => import('src/app/shared/components/forms/seccion7-form-wrapper.component').then(m => m.Seccion7FormWrapperComponent as unknown as Type<any>),
     seccion14FormWrapper: () => import('src/app/shared/components/forms/seccion14-form-wrapper.component').then(m => m.Seccion14FormWrapperComponent as unknown as Type<any>),
     seccion15FormWrapper: () => import('src/app/shared/components/forms/seccion15-form-wrapper.component').then(m => m.Seccion15FormWrapperComponent as unknown as Type<any>),
     seccion16FormWrapper: () => import('src/app/shared/components/forms/seccion16-form-wrapper.component').then(m => m.Seccion16FormWrapperComponent as unknown as Type<any>),
@@ -417,12 +417,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (preferPreview && ViewChildHelper.hasComponent(componentId)) {
       return;
     }
-    // Casos especiales: wrappers que exponen componente interno
-    // ✅ S1, S2, S3 ya son MODO IDEAL: no necesitan casos especiales
-    if (componentId === 'seccion7' && instance.seccion7InternalComponent) {
-      ViewChildHelper.registerComponent(componentId, instance.seccion7InternalComponent);
-      return;
-    }
+    // ✅ Todos los componentes se registran directamente (MODO IDEAL)
 
     ViewChildHelper.registerComponent(componentId, instance);
   }
@@ -609,8 +604,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esSubseccionAISD(seccionId, 1)) return { loader: this.componentLoaders['seccion5View'], inputs };
     if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders['seccion6View'], inputs };
     if (this.esSubseccionAISD(seccionId, 3)) return { loader: this.componentLoaders['seccion7View'], inputs };
-    if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders['seccion8'], inputs };
-    if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders['seccion9'], inputs };
+    if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders['seccion8View'], inputs };
+    if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders['seccion9View'], inputs };
     if (this.esSubseccionAISD(seccionId, 6)) return { loader: this.componentLoaders['seccion10View'], inputs };
     if (this.esSubseccionAISD(seccionId, 7)) return { loader: this.componentLoaders['seccion11View'], inputs };
     if (this.esSubseccionAISD(seccionId, 8)) return { loader: this.componentLoaders['seccion12View'], inputs };
@@ -801,8 +796,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: aisd(1), loader: this.componentLoaders['seccion5FormWrapper'], inputs: withSeccionId },
       { matches: aisd(2), loader: this.componentLoaders['seccion6FormWrapper'], inputs: withSeccionId },
       { matches: aisd(3), loader: this.componentLoaders['seccion7FormWrapper'], inputs: withSeccionId },
-      { matches: aisd(4), loader: this.componentLoaders['seccion8Form'], inputs: withSeccionId },
-      { matches: aisd(5), loader: this.componentLoaders['seccion9Form'], inputs: withSeccionId },
+      { matches: aisd(4), loader: this.componentLoaders['seccion8FormWrapper'], inputs: withSeccionId },
+      { matches: aisd(5), loader: this.componentLoaders['seccion9FormWrapper'], inputs: withSeccionId },
       { matches: aisd(6), loader: this.componentLoaders['seccion10'], inputs: withModoFormulario },
       { matches: aisd(7), loader: this.componentLoaders['seccion11'], inputs: withModoFormulario },
       { matches: aisd(8), loader: this.componentLoaders['seccion12'], inputs: withModoFormulario },

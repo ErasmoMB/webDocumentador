@@ -6,6 +6,20 @@
 
 ---
 
+## ⚠️ CRITERIO MÁS IMPORTANTE
+
+### 🚫 **NO hay servicios de texto** (OBLIGATORIO EN TODAS LAS MIGRACIONES)
+
+- ❌ NO crear `SeccionXTextGeneratorService`
+- ❌ NO crear `SeccionXTextGeneratorStrategy`
+- ✅ **TODOS** los métodos de texto van **INLINE en el componente**
+- ✅ **CADA** componente (form y view) tiene sus métodos duplicados
+- ✅ Eliminar servicios de texto después de inline
+
+**Esta es la regla #1 de la migración. Sin esto, no es MODO IDEAL.**
+
+---
+
 ## 🎯 Estructura Final (4 Archivos + Constants)
 
 Cada sección debe tener esta estructura:
@@ -14,9 +28,9 @@ Cada sección debe tener esta estructura:
 src/app/shared/components/
 ├── seccionX/
 │   ├── seccionX-constants.ts           ← Constantes compartidas
-│   ├── seccionX-form.component.ts      ← Lógica de edición (423 líneas)
+│   ├── seccionX-form.component.ts      ← Lógica de edición (423 líneas) - SIN servicios
 │   ├── seccionX-form.component.html    ← Template formulario
-│   ├── seccionX-view.component.ts      ← Lógica de visualización (494 líneas)
+│   ├── seccionX-view.component.ts      ← Lógica de visualización (494 líneas) - SIN servicios
 │   └── seccionX-view.component.html    ← Template vista
 └── forms/
     └── seccionX-form-wrapper.component.ts ← Wrapper minimalista (28 líneas)
@@ -24,13 +38,188 @@ src/app/shared/components/
 
 ### Distribución de Líneas:
 - **form-wrapper**: ~28 líneas (delegación pura)
-- **seccionX-form.ts**: ~400-450 líneas (edición)
-- **seccionX-view.ts**: ~450-550 líneas (visualización)
+- **seccionX-form.ts**: ~400-450 líneas (edición) - SIN servicios de texto
+- **seccionX-view.ts**: ~450-550 líneas (visualización) - SIN servicios de texto
 - **constants.ts**: ~20-40 líneas (reutilizable)
 
 **Total: ~5 archivos, < 1200 líneas por sección**
 
 ---
+
+## 🚫 **REGLA DE ORO: NO USAR SERVICIOS PARA PÁRRAFOS**
+
+**TODOS los métodos que generan texto deben estar INLINE en el componente, NO en servicios.**
+
+### ❌ **NO hacer esto (PROHIBIDO):**
+```typescript
+// seccionX-text-generator.service.ts ❌ NO CREAR ESTE ARCHIVO
+export class SeccionXTextGeneratorService {
+  obtenerTextoIntro(...): string { ... }
+  obtenerTextoPrincipal(...): string { ... }
+  obtenerTextoAnalisis(...): string { ... }
+}
+
+// seccionX-form.component.ts ❌ NO INYECTAR
+constructor(
+  private textGenerator: SeccionXTextGeneratorService  // ❌ MAL
+) { }
+
+obtenerTextoIntro(): string {
+  return this.textGenerator.obtenerTextoIntro(...);  // ❌ MAL
+}
+```
+
+### ✅ **HACER ESTO (OBLIGATORIO - Inline en componente):**
+```typescript
+// seccionX-form.component.ts (SIN inyecciones de servicios de texto)
+
+export class SeccionXFormComponent extends BaseSectionComponent {
+  // NO hay inyección de TextGeneratorService
+  constructor(
+    cdRef: ChangeDetectorRef,
+    injector: Injector,
+    private sanitizer: DomSanitizer
+    // ← NO agregar SeccionXTextGeneratorService aquí
+  ) { }
+
+  // ✅ MÉTODO INLINE #1: Texto introductorio
+  obtenerTextoIntro(datos: any, nombreComunidad: string): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    
+    // 1️⃣ Leer del estado primero (personalización del usuario)
+    const customKey = `textoIntro${prefijo}`;
+    if (datos[customKey] && datos[customKey].trim() !== '') {
+      return datos[customKey];
+    }
+    
+    // 2️⃣ Si no hay personalización, generar default con contexto
+    return `En ${nombreComunidad}, la situación actual es...`;
+  }
+
+  // ✅ MÉTODO INLINE #2: Texto principal
+  obtenerTextoPrincipal(datos: any, nombreComunidad: string): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const customKey = `textoPrincipal${prefijo}`;
+    
+    if (datos[customKey] && datos[customKey].trim() !== '') {
+      return datos[customKey];
+    }
+    
+    return `Análisis detallado de...`;
+  }
+
+  // ✅ MÉTODO INLINE #3: Texto de análisis
+  obtenerTextoAnalisis(datos: any, tabla: any[]): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const customKey = `textoAnalisis${prefijo}`;
+    
+    if (datos[customKey] && datos[customKey].trim() !== '') {
+      return datos[customKey];
+    }
+    
+    // Generar análisis desde tabla si está disponible
+    const suma = tabla.reduce((acc, item) => acc + (item.valor || 0), 0);
+    return `Total reportado: ${suma}`;
+  }
+}
+```
+
+### **Patrones de 3 Capas (Patrón Obligatorio):**
+
+Cada método de texto DEBE seguir **3 capas de fallback**:
+
+```typescript
+obtenerTexto(datos: any, contexto?: any): string {
+  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  
+  // CAPA 1: Personalización del usuario (máxima prioridad)
+  const customKey = `textoXXX${prefijo}`;
+  if (datos[customKey] && datos[customKey].trim() !== '') {
+    return datos[customKey];
+  }
+  
+  // CAPA 2: De base de datos o estado (si existe)
+  const fallbackKey = `textoXXXDefault${prefijo}`;
+  if (datos[fallbackKey] && datos[fallbackKey].trim() !== '') {
+    return datos[fallbackKey];
+  }
+  
+  // CAPA 3: Texto default hardcodeado (último recurso)
+  return `Texto por defecto para XXX...`;
+}
+```
+
+### **¿Por qué es OBLIGATORIO?**
+- ✅ **Menos acoplamiento** - El componente es autosuficiente, sin servicios de texto
+- ✅ **Mismo aislamiento** - Prefijo dinámico funciona igual que en form
+- ✅ **Más mantenible** - Todo en un único lugar (el componente)
+- ✅ **Testing simple** - No necesita mockear servicios de texto
+- ✅ **Escalable** - Agregar nuevos métodos es trivial
+- ✅ **Rendimiento** - Sin inyecciones de servicios innecesarias
+- ✅ **MODO IDEAL** - Cumple con estándar de arquitectura del proyecto
+
+---
+
+## 🎬 **RENDERIZADO CORRECTO: Form vs View**
+
+### ⚠️ **PROBLEMA: Ambos aparecen como formularios**
+
+**Causa:** Ambos tenían `modoFormulario = true` o el template era igual
+
+### ✅ **SOLUCIÓN: Distintos templates y modo**
+
+**Form Component:**
+```typescript
+export class SeccionXFormComponent extends BaseSectionComponent {
+  @Input() override modoFormulario: boolean = true;  // ← EDICIÓN
+  
+  // Template: formulario con inputs editables
+}
+```
+
+**View Component:**
+```typescript
+export class SeccionXViewComponent extends BaseSectionComponent {
+  @Input() override modoFormulario: boolean = false;  // ← LECTURA
+  
+  // Template: solo visualización, no inputs
+}
+```
+
+**Form-Wrapper:**
+```typescript
+@Component({
+  template: `<app-seccionX-form [seccionId]="seccionId" [modoFormulario]="true"></app-seccionX-form>`
+})
+export class SeccionXFormWrapperComponent extends BaseSectionComponent { }
+```
+
+**Registro en componente.ts:**
+```typescript
+{ matches: aisd(X), loader: this.componentLoaders['seccionXFormWrapper'], inputs: withSeccionId }  // ← Form
+{ matches: aisd(X), loader: this.componentLoaders['seccionXView'], inputs: withSeccionId }         // ← View
+```
+
+### **Diferencia en Templates:**
+
+**Form (editable):**
+```html
+<div class="form-group">
+  <label>Texto Intro</label>
+  <textarea [(ngModel)]="datos['textoIntro']" (ngModelChange)="onFieldChange('textoIntro', $event)"></textarea>
+</div>
+```
+
+**View (solo lectura):**
+```html
+<div class="view-section">
+  <p>{{ obtenerTextoIntro() }}</p>
+</div>
+```
+
+---
+
+
 
 ## 📄 1. Archivo de Constantes (`seccionX-constants.ts`)
 
@@ -542,6 +731,176 @@ estado.datos = {
 
 ---
 
+## 🔧 Migración de Métodos: De Servicio a Inline
+
+Cuando una sección ya tiene `SeccionXTextGeneratorService`, seguir estos pasos:
+
+### Paso 1: Identificar métodos a migrar
+
+```bash
+# Buscar archivo del servicio de texto
+ls src/app/core/services/seccionX-text-generator.service.ts
+
+# Verificar qué métodos públicos tiene
+grep -n "^  [a-z].*(" seccionX-text-generator.service.ts
+```
+
+Típicamente habrá métodos como:
+- `obtenerTextoIntro()`
+- `obtenerTextoPrincipal()`
+- `obtenerTextoAnalisis()`
+- `obtenerTextoCaracterizacion()`
+- etc.
+
+### Paso 2: Copiar código del servicio al componente
+
+```typescript
+// ANTES (en servicio)
+export class Seccion4TextGeneratorService {
+  obtenerIntroduccion(datos: any, nombreComunidad: string): string {
+    if (datos.introPersonalizado?.trim()) {
+      return datos.introPersonalizado;
+    }
+    return `En ${nombreComunidad}...`;
+  }
+}
+
+// DESPUÉS (en componente)
+export class Seccion4FormComponent {
+  obtenerIntroduccion(datos: any, nombreComunidad: string): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    
+    // Buscar personalización (CAPA 1)
+    const customKey = `introPersonalizado${prefijo}`;
+    if (datos[customKey]?.trim()) {
+      return datos[customKey];
+    }
+    
+    // Default (CAPA 3)
+    return `En ${nombreComunidad}...`;
+  }
+}
+```
+
+### Paso 3: Agregar aislamiento de prefijo
+
+**Clave:** Todos los accesos a `datos` deben ser prefijados para aislamiento AISD.
+
+```typescript
+// INCORRECTO ❌ (sin prefijo)
+const valor = datos['campoX'];
+
+// CORRECTO ✅ (con prefijo)
+const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+const valor = datos['campoX' + prefijo];
+// O notación bracket:
+const valor = datos['campoX' + prefijo];
+```
+
+### Paso 4: Aplicar patrón 3-capas
+
+```typescript
+obtenerTextoXXX(datos: any, contexto?: any): string {
+  const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  
+  // CAPA 1: Personalización del usuario
+  const customKey = `textoXXX${prefijo}`;
+  if (datos[customKey] && datos[customKey].trim() !== '') {
+    return datos[customKey];
+  }
+  
+  // CAPA 2: Campo alternativo (si existe)
+  const fallbackKey = `textoXXXAlternativo${prefijo}`;
+  if (datos[fallbackKey] && datos[fallbackKey].trim() !== '') {
+    return datos[fallbackKey];
+  }
+  
+  // CAPA 3: Default hardcodeado
+  return `Texto por defecto...`;
+}
+```
+
+### Paso 5: Copiar a View component
+
+El `view.component.ts` DEBE tener exactamente los mismos métodos:
+
+```typescript
+// In seccionX-view.component.ts
+export class SeccionXViewComponent {
+  // ✅ COPIAR EXACTAMENTE IGUAL que en form
+  obtenerTextoXXX(datos: any, contexto?: any): string {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const customKey = `textoXXX${prefijo}`;
+    if (datos[customKey] && datos[customKey].trim() !== '') {
+      return datos[customKey];
+    }
+    return `Texto por defecto...`;
+  }
+}
+```
+
+### Paso 6: Eliminar servicio
+
+Una vez migrado a inline:
+
+```bash
+# 1. Verificar no hay más referencias
+grep -r "SeccionXTextGeneratorService" src/
+
+# 2. Eliminar archivo
+rm src/app/core/services/seccionX-text-generator.service.ts
+
+# 3. Eliminar imports en dependency-injection.config
+# 4. Eliminar imports en text-generator.service.ts
+# 5. Eliminar estrategia del registry
+
+# 6. Compilar y verificar cero errores
+npm start
+```
+
+---
+
+## ✅ Checklist de Métodos Inline (QA)
+
+Antes de marcar un componente como MIGRADO, verificar:
+
+```
+VERIFICACIÓN DE MÉTODOS INLINE
+
+[ ] SIN imports de TextGeneratorService
+    [ ] No en: import { [servicio] } from '...'
+    [ ] No en: constructor(private [servicio]: ...)
+
+[ ] TODOS los métodos de texto migrados
+    [ ] obtenerTextoIntro(): string ✅
+    [ ] obtenerTextoPrincipal(): string ✅
+    [ ] obtenerTextoAnalisis(): string ✅
+    [ ] ... (completar con métodos específicos de la sección)
+
+[ ] CADA método usa patrón 3-capas
+    [ ] Lee prefijo: PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)
+    [ ] Busca custom: `campo${prefijo}` en datos
+    [ ] Fallback a field: datos[`campo${prefijo}`]
+    [ ] Default: texto hardcodeado
+    [ ] Retorna string sin null
+
+[ ] Métodos iguales en Form y View
+    [ ] form.component.ts: obtenerTextoXXX() ✅
+    [ ] view.component.ts: obtenerTextoXXX() (idéntico) ✅
+
+[ ] Template usa métodos correctamente
+    [ ] Form: {{ obtenerTextoXXX(datos, nombreComunidad) }}
+    [ ] View: {{ obtenerTextoXXX(datos) }}
+
+[ ] Compila sin errores
+    [ ] npm start → 0 errors ✅
+    [ ] npm test → tests pasan ✅
+
+🔴 TODO ITEM DEBE SER [✅] ANTES DE MARCAR COMO MIGRADO
+```
+
+---
+
 ## ✅ Checklist de Migración
 
 Para migrar cada sección al patrón, seguir este checklist:
@@ -563,21 +922,39 @@ PASO 1: CREAR ARCHIVOS BASE
       [ ] formDataSignal = computed()
       [ ] Señales aisladas por prefijo
       [ ] Effects para reactividad
-      [ ] Métodos helper para template
+      
+      🚨 MÉTODOS DE TEXTO INLINE (OBLIGATORIO):
+      [ ] IDENTIFICAR: ¿Hay SeccionXTextGeneratorService? → NO usarlo
+      [ ] MIGRAR: Copiar todos los métodos de texto-generator al componente
+      [ ] RENOMBRAR: obtenerTextoXXX() con patrón 3-capas (custom → field → default)
+      [ ] AISLAR: Agregar prefijo dinámico a claves: `textoXXX${prefijo}`
+      [ ] VERIFICAR: NO debe haber imports de SeccionXTextGeneratorService
+      [ ] VERIFICAR: NO debe haber inyección del servicio en constructor
+      [ ] VERIFICAR: Todos los métodos usan PrefijoHelper.obtenerPrefijoGrupo()
+      
+      [ ] Métodos helper para template (usando inline obtenerTextoXXX)
   
   [ ] Crear seccionX-form.component.html
       [ ] Template edit con form controls
+      [ ] Llamar métodos obtenerTextoXXX(datos, nombreComunidad)
       [ ] Usar dynamic-table si hay tablas
       [ ] Usar image-upload si hay fotos
   
   [ ] Crear seccionX-view.component.ts
       [ ] Espejo de form (same signals)
+      [ ] ✅ COPIAR MISMOS MÉTODOS INLINE de form
       [ ] Señales derivadas (cálculos)
       [ ] Solo lectura (no modifica)
       [ ] watchedFields = SECCIONX_WATCHED_FIELDS
+      
+      🚨 MÉTODOS DE TEXTO INLINE (OBLIGATORIO):
+      [ ] COPIAR: Todos los obtenerTextoXXX() del form component
+      [ ] MISMO PATRÓN: 3-capas (custom → field → default)
+      [ ] MISMO AISLAMIENTO: prefijo dinámico en claves
   
   [ ] Crear seccionX-view.component.html
       [ ] Template visualización
+      [ ] Llamar métodos obtenerTextoXXX(datos) en view
       [ ] Usar app-table-wrapper
       [ ] Mostrar datos calculados
 
@@ -622,11 +999,13 @@ PASO 5: CLEANUP
 | **Archivos por sección** | 5-10+ (inconsistente) | 5 (consistente) |
 | **Líneas totales** | 1500+ (variado) | ~1200 (estándar) |
 | **Duplicación** | Mucha (`watchedFields`, prefijos) | Cero (constantes.ts) |
+| **Servicios de texto** | SeccionXTextGeneratorService | ❌ ELIMINADO (inline en componente) |
+| **Métodos de texto** | En servicio externo | Inline en form + view components |
 | **Aislamiento datos** | Manual/frágil | Automático vía prefijo |
 | **Reactividad** | RxJS subscriptions | Signals + effects |
 | **Form-wrapper** | Complejo | 28 líneas |
-| **Mantenibilidad** | Difícil (patrones variados) | Fácil (patrón único) |
-| **Testing** | Complicado (dependencias) | Simple (standalone) |
+| **Mantenibilidad** | Difícil (patrones variados) | Fácil (patrón único, sin servicios) |
+| **Testing** | Complicado (dependencias) | Simple (standalone, sin mocks) |
 | **Reutilización** | Baja | Alta (mismo patrón) |
 
 ---
@@ -671,32 +1050,89 @@ npm start
 
 ---
 
-## 💡 Notas Importantes
+## � Estado de Servicios de Texto (Referencia)
 
-1. **PrefijoHelper** es crítico:
+Cuando migres una sección, verifica este estado:
+
+### ✅ Servicios a ELIMINAR (Ya migrados):
+- ✅ `seccion1-text-generator.service.ts` - ELIMINADO
+- ✅ `seccion2-text-generator.service.ts` - ELIMINADO
+- ✅ `seccion3-text-generator.service.ts` - ELIMINADO
+- ✅ `seccion4-text-generator.service.ts` - ELIMINADO
+- ✅ `seccion5-text-generator.service.ts` - ELIMINADO
+- ✅ `seccion6-text-generator.service.ts` - ELIMINADO
+- ✅ `iseccion5-text-generator.service.ts` - ELIMINADO (interface)
+
+### 🟡 Servicios aún en código (no eliminar sin verificar uso):
+- 🟡 `seccion7-text-generator.service.ts` - En código pero NO usado en forma
+- 🟡 `seccion8-text-generator.service.ts` - Aún activo, migración pendiente
+
+### 🔍 Verificar al eliminar un servicio:
+
+```bash
+# 1. Buscar references
+grep -r "SeccionXTextGeneratorService" src/
+
+# 2. Verificar imports en:
+#    - src/app/core/dependency-injection.config.ts
+#    - src/app/core/services/infrastructure/services.ts
+#    - src/app/core/services/text-generation/text-generator.service.ts
+#    - src/app/core/use-cases/
+
+# 3. Si encuentra algo, migrate esos métodos a inline primero
+# 4. Luego elimine archivo
+# 5. Compile y verifique 0 errores: npm start
+```
+
+---
+
+## 💡 Notas de Implementación
+
+1. **NO hay servicios de texto** ⚠️ (CRÍTICO):
+   - ❌ NO crear `SeccionXTextGeneratorService`
+   - ❌ NO crear estrategias de género (`SeccionXTextGeneratorStrategy`)
+   - ✅ TODOS los métodos de texto van inline en el componente
+   - ✅ Cada componente (form y view) tiene sus propios métodos
+   - ✅ Métodos usar patrón 3-capas (custom → field → default)
+   - ✅ Métodos incluyen PrefijoHelper para aislamiento
+
+2. **PrefijoHelper es crítico**:
    - Extrae prefijo del `seccionId`
    - Transforma "3.1.4.A.1.1" → "A1"
-   - Usado en todas los aislamiento de datos
+   - Usado en: aislamiento de datos y generación de claves dinámicas
+   - Aplicar en TODOS los métodos de texto inline
 
-2. **Signals reemplazan RxJS**:
+3. **Signals reemplazan RxJS**:
    - `computed()` para derivaciones
    - `effect()` para reactividad
-   - Sin subscriptions manuales
+   - ❌ Sin subscriptions manuales
+   - ❌ Sin servicios TextGeneratorService
 
-3. **Aislamiento automático**:
+4. **Aislamiento automático**:
    - Campo "tablaDatos" → "tablaDatos" + "A1" = "tablaDatosA1"
    - Cada grupo AISD tiene sus propios datos
    - Completo, automático, escalable
+   - Aplicar en métodos inline con `${fieldName}${prefijo}`
 
-4. **Form-wrapper mínimo**:
+5. **Form-wrapper mínimo**:
    - No contiene lógica
    - Solo delega a componente principal
    - Punto de entrada en router
+   - ~28 líneas máximo
 
-5. **View es espejo de Form**:
+6. **View es espejo de Form**:
    - Mismas signals
+   - Mismos métodos de texto inline
    - Mismo aislamiento
-   - Diferentes métodos de renderizado
+   - Diferentes métodos de renderizado (solo lectura)
+
+7. **Eliminación de servicios** (post-migración):
+   - Después de migrar métodos a inline ✅
+   - Actualizar DI (dependency-injection.config.ts) ✅
+   - Actualizar infrastructure/services.ts ✅
+   - Actualizar text-generator.service.ts (strategy registry) ✅
+   - Limpiar use-cases.ts si los hay ✅
+   - Verificar 0 errores de compilación ✅
 
 ---
 

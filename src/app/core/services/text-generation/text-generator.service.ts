@@ -1,9 +1,6 @@
 import { Injectable, Injector } from '@angular/core';
 import { TextGeneratorStrategy, TextGenerationContext } from './text-generator-strategy.interface';
-import { Seccion2TextGeneratorStrategy } from './seccion2-text-generator.strategy';
 import { Seccion3TextGeneratorStrategy } from './seccion3-text-generator.strategy';
-import { Seccion4TextGeneratorStrategy } from './seccion4-text-generator.strategy';
-import { Seccion5TextGeneratorStrategy } from './seccion5-text-generator.strategy';
 import { Seccion6TextGeneratorStrategy } from './seccion6-text-generator.strategy';
 import { Seccion7TextGeneratorStrategy } from './seccion7-text-generator.strategy';
 import { Seccion8TextGeneratorStrategy } from './seccion8-text-generator.strategy';
@@ -41,10 +38,7 @@ export class TextGeneratorService {
     if (this.initialized) return;
 
     const estrategias = [
-      this.injector.get(Seccion2TextGeneratorStrategy),
       this.injector.get(Seccion3TextGeneratorStrategy),
-      this.injector.get(Seccion4TextGeneratorStrategy),
-      this.injector.get(Seccion5TextGeneratorStrategy),
       this.injector.get(Seccion6TextGeneratorStrategy),
       this.injector.get(Seccion7TextGeneratorStrategy),
       this.injector.get(Seccion8TextGeneratorStrategy)

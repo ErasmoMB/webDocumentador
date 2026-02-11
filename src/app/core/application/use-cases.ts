@@ -294,20 +294,18 @@ export class UpdateSeccion3DataUseCase {
 })
 export class LoadSeccion4UseCase {
   constructor(
-    private seccion4DataService: ISeccion4DataService,
-    private seccion4TextGenerator: ISeccion4TextGeneratorService
+    private seccion4DataService: ISeccion4DataService
   ) {}
 
   execute(): Observable<Seccion4ViewModel> {
     return this.seccion4DataService.getSeccion4Data().pipe(
       map(data => {
-        const nombreComunidad = data.comunidadesCampesinas?.[0]?.nombre || 'Comunidad';
         return {
           data,
           texts: {
-            introduccionText: this.seccion4TextGenerator.obtenerTextoIntroduccionAISD(data, nombreComunidad),
-            comunidadText: this.seccion4TextGenerator.obtenerTextoComunidadCompleto(data, nombreComunidad),
-            caracterizacionText: this.seccion4TextGenerator.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad)
+            introduccionText: '',
+            comunidadText: '',
+            caracterizacionText: ''
           },
           tables: {
             tablaAISD1: data['tablaAISD1Datos'] || [],
@@ -1509,7 +1507,6 @@ export class UpdateSeccion28DataUseCase {
 export class LoadSeccion5UseCase {
   constructor(
     private seccion5DataService: ISeccion5DataService,
-    private seccion5TextGenerator: ISeccion5TextGeneratorService,
     private photoService: IPhotoService
   ) {}
 
@@ -1522,7 +1519,7 @@ export class LoadSeccion5UseCase {
         return {
           data,
           texts: {
-            institucionalidadText: this.seccion5TextGenerator.obtenerTextoInstitucionalidad(data, nombreComunidad)
+            institucionalidadText: ''
           },
           tables: {
             institucionesTable: data.tablepagina6 || []

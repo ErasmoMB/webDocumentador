@@ -7,7 +7,6 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DataHighlightService } from '../../../core/services/data-highlight.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
-import { Seccion3TextGeneratorService } from '../../../core/services/seccion3-text-generator.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { SECCION3_WATCHED_FIELDS, SECCION3_CONFIG, SECCION3_TEMPLATES } from './seccion3-constants';
 import { TableConfig } from '../../../core/services/table-management.service';
@@ -109,7 +108,6 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
 
   private readonly dataHighlightService = this.injector.get(DataHighlightService);
   private readonly formChangeService = this.injector.get(FormChangeService);
-  private readonly textGenerator = this.injector.get(Seccion3TextGeneratorService);
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -158,19 +156,30 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     this.cdRef.markForCheck();
   }
 
+  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
   obtenerTextoMetodologia(): string {
     const formData = this.formDataSignal();
-    return this.textGenerator.obtenerTextoMetodologia(formData);
+    if (formData['parrafoSeccion3_metodologia']) {
+      return formData['parrafoSeccion3_metodologia'];
+    }
+    return 'Para la descripción del aspecto socioeconómico se ha utilizado una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que luego son contrastados y completados con la consulta de diversas fuentes de información oficiales actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale – MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre otros.';
   }
 
   obtenerTextoFuentesPrimarias(): string {
     const formData = this.formDataSignal();
-    return this.textGenerator.obtenerTextoFuentesPrimarias(formData);
+    if (formData['parrafoSeccion3_fuentes_primarias']) {
+      return formData['parrafoSeccion3_fuentes_primarias'];
+    }
+    const cantidadEntrevistas = formData['cantidadEntrevistas'] || '____';
+    return `Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de ${cantidadEntrevistas} entrevistas en profundidad a informantes calificados y autoridades locales.`;
   }
 
   obtenerTextoFuentesSecundarias(): string {
     const formData = this.formDataSignal();
-    return this.textGenerator.obtenerTextoFuentesSecundarias(formData);
+    if (formData['parrafoSeccion3_fuentes_secundarias']) {
+      return formData['parrafoSeccion3_fuentes_secundarias'];
+    }
+    return 'En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:';
   }
 
   obtenerListaFuentesSecundarias(): string[] {

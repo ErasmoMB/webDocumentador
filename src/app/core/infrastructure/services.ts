@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, map, from } from 'rxjs';
-import { ISectionDataService, IPercentageCalculatorService, ISectionCalculatorService, ITextGeneratorService, IPhotoService, ISeccion2DataService, ISeccion2TextGeneratorService, ISeccion23DataService, ISeccion23TextGeneratorService, ISeccion3DataService, ISeccion3TextGeneratorService, ISeccion10DataService, ISeccion10TextGeneratorService, ISeccion6DataService, ISeccion6TextGeneratorService, ISeccion7DataService, ISeccion7TextGeneratorService, ISeccion8DataService, ISeccion8TextGeneratorService, ISeccion9DataService, ISeccion9TextGeneratorService, ISeccion26DataService, ISeccion26TextGeneratorService, ISeccion12DataService, ISeccion12TextGeneratorService, ISeccion25DataService, ISeccion25TextGeneratorService, ISeccion28DataService, ISeccion28TextGeneratorService, ISeccion29DataService, ISeccion29TextGeneratorService, ISeccion24DataService, ISeccion24TextGeneratorService, ISeccion22DataService, ISeccion22TextGeneratorService, ISeccion30DataService, ISeccion30TextGeneratorService, ISeccion4DataService, ISeccion4TextGeneratorService, ISeccion5DataService, ISeccion5TextGeneratorService } from '../domain/interfaces';
+import { ISectionDataService, IPercentageCalculatorService, ISectionCalculatorService, ITextGeneratorService, IPhotoService, ISeccion2DataService, ISeccion2TextGeneratorService, ISeccion23DataService, ISeccion23TextGeneratorService, ISeccion3DataService, ISeccion3TextGeneratorService, ISeccion10DataService, ISeccion10TextGeneratorService, ISeccion6DataService, ISeccion6TextGeneratorService, ISeccion7DataService, ISeccion7TextGeneratorService, ISeccion8DataService, ISeccion8TextGeneratorService, ISeccion9DataService, ISeccion9TextGeneratorService, ISeccion26DataService, ISeccion26TextGeneratorService, ISeccion12DataService, ISeccion12TextGeneratorService, ISeccion25DataService, ISeccion25TextGeneratorService, ISeccion28DataService, ISeccion28TextGeneratorService, ISeccion29DataService, ISeccion29TextGeneratorService, ISeccion24DataService, ISeccion24TextGeneratorService, ISeccion22DataService, ISeccion22TextGeneratorService, ISeccion30DataService, ISeccion30TextGeneratorService, ISeccion4DataService, ISeccion5DataService } from '../domain/interfaces';
 import { SectionData, CalculatedSectionData, PETData, PEAData, PEAOcupadaData, Seccion2Data, ComunidadCampesina, DistritoAISI, Seccion23Data, PETGrupoEdad, PEADistritoSexo, PEAOcupadaDesocupada, Seccion3Data, Entrevistado, Seccion10Data, Seccion6Data, Seccion7Data, Seccion8Data, Seccion9Data, Seccion26Data, Seccion12Data, Seccion25Data, Seccion28Data, Seccion29Data, Seccion24Data, Seccion22Data, Seccion30Data, Seccion4Data, Seccion5Data } from '../domain/entities';
 import { MockDataService } from '../services/infrastructure/mock-data.service';
 import { ProjectStateFacade } from '../state/project-state.facade';
@@ -1750,14 +1750,10 @@ export class Seccion4DataServiceAdapter extends ISeccion4DataService {
 
 // Import and export Seccion4 services
 import { Seccion4DataService as Seccion4DataServiceImpl } from '../services/domain/seccion4-data.service';
-import { Seccion4TextGeneratorService as Seccion4TextGeneratorServiceImpl } from '../services/domain/seccion4-text-generator.service';
 
 // Import and export Seccion5 services
 import { Seccion5DataService as Seccion5DataServiceImpl } from '../services/domain/seccion5-data.service';
-import { Seccion5TextGeneratorService as Seccion5TextGeneratorServiceImpl } from '../services/domain/seccion5-text-generator.service';
 
 export { Seccion4DataServiceAdapter as Seccion4DataService };
-export { Seccion4TextGeneratorServiceImpl as Seccion4TextGeneratorService };
 
 export { Seccion5DataServiceImpl as Seccion5DataService };
-export { Seccion5TextGeneratorServiceImpl as Seccion5TextGeneratorService };

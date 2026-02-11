@@ -8,7 +8,6 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { Seccion8TableConfigService } from '../../../core/services/domain/seccion8-table-config.service';
 import { Seccion8DataService } from '../../../core/services/domain/seccion8-data.service';
-import { Seccion8TextGeneratorService } from '../../../core/services/domain/seccion8-text-generator.service';
 
 @Component({
   standalone: true,
@@ -98,8 +97,7 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     injector: Injector,
     private sanitizer: DomSanitizer,
     public tableCfg: Seccion8TableConfigService,
-    public dataService: Seccion8DataService,
-    public textGenerator: Seccion8TextGeneratorService
+    public dataService: Seccion8DataService
   ) {
     super(cdRef, injector);
 

@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { CCPPEntry, GroupDefinition } from 'src/app/core/state/project-state.model';
-import { Seccion4TextGeneratorService } from 'src/app/core/services/domain/seccion4-text-generator.service';
-import { Seccion4DataService } from 'src/app/core/services/domain/seccion4-data.service';
 import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
@@ -44,8 +42,6 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private textGen: Seccion4TextGeneratorService,
-    private dataSrv: Seccion4DataService,
     public tableCfg: Seccion4TableConfigService,
     private sanitizer: DomSanitizer
   ) {
@@ -97,7 +93,14 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       const nombreComunidad = this.obtenerNombreComunidadActual();
       const tablaAISD1 = this.tablaAISD1Signal();
       const tablaAISD2 = this.tablaAISD2Signal();
-      const totales = this.dataSrv.calcularTotalesAISD2(Array.isArray(tablaAISD2) ? tablaAISD2 : []);
+      
+      // Calcular totales inline
+      const tablaAISD2Array = Array.isArray(tablaAISD2) ? tablaAISD2 : [];
+      const totales = {
+        poblacion: tablaAISD2Array.map(f => Number(f['poblacion']) || 0).reduce((a, b) => a + b, 0),
+        empadronadas: tablaAISD2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
+        ocupadas: tablaAISD2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
+      };
       
       return {
         nombreComunidad,
@@ -109,20 +112,16 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
           tablaAISD2Datos: tablaAISD2
         },
         texts: {
-          introduccionText: this.textGen.obtenerTextoIntroduccionAISD(data, nombreComunidad, this.seccionId),
-          comunidadText: this.textGen.obtenerTextoComunidadCompleto(data, nombreComunidad, this.seccionId),
-          caracterizacionText: this.textGen.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad, this.seccionId)
+          introduccionText: this.obtenerTextoIntroduccionAISD(data, nombreComunidad),
+          comunidadText: this.obtenerTextoComunidadCompleto(data, nombreComunidad),
+          caracterizacionText: this.obtenerTextoCaracterizacionIndicadores(data, nombreComunidad)
         },
         tables: {
           tablaAISD1: Array.isArray(tablaAISD1) ? tablaAISD1 : [],
           tablaAISD2: Array.isArray(tablaAISD2) ? tablaAISD2 : []
         },
         calculations: {
-          totalesAISD2: {
-            poblacion: totales.poblacion,
-            empadronadas: totales.empadronadas,
-            ocupadas: totales.ocupadas
-          }
+          totalesAISD2: totales
         },
         sources: {
           tablaAISD1Source: data['cuadroFuenteAISD1' + this.obtenerPrefijoGrupo()] ?? '',
@@ -212,14 +211,13 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
         
         if (filaCapital) {
           const capital = filaCapital.punto || filaCapital.nombre || '____';
-          const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
           const filaA1 = [{
             localidad: capital,
-            coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || this.datos['tablaAISD1Coordenadas'] || '____',
-            altitud: datosCap?.altitud || this.datos.altitudAISD || this.datos['tablaAISD1Altitud'] || '____',
-            distrito: datosCap?.distrito || this.datos.distritoSeleccionado || this.datos['tablaAISD1Fila1Distrito'] || '____',
-            provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
-            departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
+            coordenadas: this.datos.coordenadasAISD || this.datos['tablaAISD1Coordenadas'] || '____',
+            altitud: this.datos.altitudAISD || this.datos['tablaAISD1Altitud'] || '____',
+            distrito: this.datos.distritoSeleccionado || this.datos['tablaAISD1Fila1Distrito'] || '____',
+            provincia: this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
+            departamento: filaCapital?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
           }];
           this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
           this.datos[dataKeyA1] = filaA1;
@@ -232,7 +230,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     if (grupoActual && grupoActual.ccppIds && grupoActual.ccppIds.length > 0) {
       codigosComunidad = grupoActual.ccppIds as string[];
     } else {
-      codigosComunidad = this.dataSrv.obtenerCodigosPorPrefijo(this.datos, this.seccionId);
+      codigosComunidad = [];
     }
     
     const tablaA2Actual = this.datos[dataKeyA2] || [];
@@ -290,15 +288,14 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     
     if (!tablaA1Actual || tablaA1Actual.length === 0) {
       const nombreComunidad = this.obtenerNombreComunidadActual();
-      const capital = this.dataSrv.obtenerCapitalComunidad(this.datos, this.seccionId) || nombreComunidad;
-      const datosCap = this.dataSrv.buscarDatosCentro(this.datos, capital);
+      const capital = nombreComunidad;
       tablaA1Actual = [{
         localidad: capital,
-        coordenadas: datosCap?.coordenadas || this.datos.coordenadasAISD || '____',
-        altitud: datosCap?.altitud || this.datos.altitudAISD || '____',
-        distrito: datosCap?.distrito || this.datos.distritoSeleccionado || '____',
-        provincia: datosCap?.provincia || this.datos.provinciaSeleccionada || '____',
-        departamento: datosCap?.departamento || this.datos.departamentoSeleccionado || '____'
+        coordenadas: this.datos['coordenadasAISD'] || '____',
+        altitud: this.datos['altitudAISD'] || '____',
+        distrito: this.datos['distritoSeleccionado'] || '____',
+        provincia: this.datos['provinciaSeleccionada'] || '____',
+        departamento: this.datos['departamentoSeleccionado'] || '____'
       }];
     }
     
@@ -314,7 +311,13 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       this.projectFacade.setFields(this.seccionId, null, payload);
     }
     
-    const totals = this.dataSrv.calcularTotalesAISD2(tablaA2Actual || []);
+    // Calcular totales inline
+    const tablaA2Array = Array.isArray(tablaA2Actual) ? tablaA2Actual : [];
+    const totals = {
+      poblacion: tablaA2Array.map(f => Number(f['poblacion']) || 0).reduce((a, b) => a + b, 0),
+      empadronadas: tablaA2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
+      ocupadas: tablaA2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
+    };
     this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion, { refresh: false });
     this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas, { refresh: false });
     this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas, { refresh: false });
@@ -341,4 +344,60 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   override ngOnDestroy(): void {
     super.ngOnDestroy();
   }
+
+  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  private obtenerCampoConPrefijo(datos: any, campoBase: string): string {
+    return PrefijoHelper.obtenerValorConPrefijo(datos, campoBase, this.seccionId) || datos[campoBase] || '';
+  }
+
+  obtenerTextoIntroduccionAISD(datos: any, nombreComunidad: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_introduccion_aisd');
+    
+    const textoPorDefecto = `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${nombreComunidad}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_comunidad_completo');
+    
+    const distrito = datos['distritoSeleccionado'] || '____';
+    const provincia = datos['provinciaSeleccionada'] || '____';
+    const aisd1 = datos['aisdComponente1'] || '____';
+    const aisd2 = datos['aisdComponente2'] || '____';
+    const departamento = datos['departamentoSeleccionado'] || '____';
+    const grupoAISI = datos['grupoAISI'] || datos['distritoSeleccionado'] || '____';
+    
+    const textoPorDefecto = `La CC ${nombreComunidad} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${nombreComunidad}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${nombreComunidad}.\n\nEn cuanto al nombre "${nombreComunidad}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${nombreComunidad} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado
+        .replace(/CC\s*___/g, `CC ${nombreComunidad}`)
+        .replace(/distrito de\s*___/g, `distrito de ${distrito}`)
+        .replace(/provincia de\s*___/g, `provincia de ${provincia}`)
+        .replace(/distritos de\s*___\s*y de/g, `distritos de ${aisd1} y de`)
+        .replace(/y de\s*___\s*del departamento/g, `y de ${aisd2} del departamento`)
+        .replace(/departamento de\s*___/g, `departamento de ${departamento}`)
+        .replace(/CP\s*___/g, `CP ${grupoAISI}`);
+    }
+    
+    return textoPorDefecto;
+  }
+
+  obtenerTextoCaracterizacionIndicadores(datos: any, nombreComunidad: string): string {
+    const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_caracterizacion_indicadores');
+    
+    const textoPorDefecto = `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${nombreComunidad}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
+    
+    if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
+      return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);
+    }
+    
+    return textoPorDefecto;
+  }
 }
+

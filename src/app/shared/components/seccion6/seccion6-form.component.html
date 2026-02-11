@@ -14,7 +14,7 @@
           label="Población según Sexo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="obtenerTextoPoblacionSexo()"
+          [value]="obtenerTextoPoblacionSexo(datos, obtenerNombreComunidadActual())"
           (valueChange)="onFieldChange('textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
@@ -86,7 +86,7 @@
           label="Población por Grupo Etario - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="obtenerTextoPoblacionEtario()"
+          [value]="obtenerTextoPoblacionEtario(datos, obtenerNombreComunidadActual())"
           (valueChange)="onFieldChange('textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>

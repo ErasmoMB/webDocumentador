@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { Seccion6TableConfigService } from 'src/app/core/services/domain/seccion6-table-config.service';
-import { Seccion6DataService } from 'src/app/core/services/domain/seccion6-data.service';
-import { Seccion6TextGeneratorService } from 'src/app/core/services/domain/seccion6-text-generator.service';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { debugLog } from 'src/app/shared/utils/debug';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -71,8 +70,8 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     }
     
     // Fallback: generar texto automático
-    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad, this.seccionId);
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.obtenerTextoPoblacionSexo(data, nombreComunidad);
   });
 
   readonly textoPoblacionEtarioSignal: Signal<string> = computed(() => {
@@ -87,16 +86,30 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     }
     
     // Fallback: generar texto automático
-    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad, this.seccionId);
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.obtenerTextoPoblacionEtario(data, nombreComunidad);
   });
 
   readonly totalPoblacionSexoSignal: Signal<number> = computed(() => {
-    return this.dataSrv.getTotalPoblacionSexo(this.sectionDataSignal());
+    const poblacion = this.sectionDataSignal()['poblacionSexoAISD'] || [];
+    const sinTotal = Array.isArray(poblacion) 
+      ? poblacion.filter((item: any) => item['sexo'] && item['sexo'] !== 'Total')
+      : [];
+    return sinTotal.reduce((sum: number, item: any) => {
+      const casos = parseInt(item['casos'], 10);
+      return sum + (isNaN(casos) ? 0 : casos);
+    }, 0);
   });
 
   readonly totalPoblacionEtarioSignal: Signal<number> = computed(() => {
-    return this.dataSrv.getTotalPoblacionEtario(this.sectionDataSignal());
+    const poblacion = this.sectionDataSignal()['poblacionEtarioAISD'] || [];
+    const sinTotal = Array.isArray(poblacion)
+      ? poblacion.filter((item: any) => item['categoria'] && item['categoria'] !== 'Total')
+      : [];
+    return sinTotal.reduce((sum: number, item: any) => {
+      const casos = parseInt(item['casos'], 10);
+      return sum + (isNaN(casos) ? 0 : casos);
+    }, 0);
   });
 
   // ✅ SIGNAL PARA INFORMACIÓN DE GRUPOS AISD (Sección 6 pertenece a un grupo)
@@ -127,8 +140,6 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     cdRef: ChangeDetectorRef,
     injector: Injector,
     public tableCfg: Seccion6TableConfigService,
-    private dataSrv: Seccion6DataService,
-    private textGenSrv: Seccion6TextGeneratorService,
     private tableFacade: TableManagementFacade
   ) {
     super(cdRef, injector);
@@ -277,27 +288,46 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   }
 
   override obtenerNombreComunidadActual(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.sectionDataSignal(), this.seccionId);
+    const datos = this.sectionDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(datos, 'grupoAISD', this.seccionId);
+    
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? datos[`grupoAISD${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    if (datos['comunidadesCampesinas'] && Array.isArray(datos['comunidadesCampesinas']) && datos['comunidadesCampesinas'].length > 0) {
+      const primerCC = datos['comunidadesCampesinas'][0];
+      if (primerCC && primerCC['nombre'] && primerCC['nombre'].trim() !== '') {
+        return primerCC['nombre'];
+      }
+    }
+    
+    return '____';
   }
 
   override obtenerValorConPrefijo(campo: string): any {
-    return this.dataSrv.obtenerValorConPrefijo(this.sectionDataSignal(), campo, this.seccionId);
-  }
-
-  obtenerTextoPoblacionSexo(): string {
-    return this.textoPoblacionSexoSignal();
-  }
-
-  obtenerTextoPoblacionEtario(): string {
-    return this.textoPoblacionEtarioSignal();
+    const datos = this.sectionDataSignal();
+    return PrefijoHelper.obtenerValorConPrefijo(datos, campo, this.seccionId);
   }
 
   getPoblacionSexoSinTotal(): any[] {
-    return this.dataSrv.getPoblacionSexoSinTotal(this.sectionDataSignal());
+    const poblacion = this.sectionDataSignal()['poblacionSexoAISD'] || [];
+    return Array.isArray(poblacion) 
+      ? poblacion.filter((item: any) => item['sexo'] && item['sexo'] !== 'Total')
+      : [];
   }
 
   getPoblacionEtarioSinTotal(): any[] {
-    return this.dataSrv.getPoblacionEtarioSinTotal(this.sectionDataSignal());
+    const poblacion = this.sectionDataSignal()['poblacionEtarioAISD'] || [];
+    return Array.isArray(poblacion)
+      ? poblacion.filter((item: any) => item['categoria'] && item['categoria'] !== 'Total')
+      : [];
   }
 
   getTotalPoblacionSexo(): number {
@@ -386,5 +416,31 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     this.guardarTodosLosGrupos();
     super.ngOnDestroy();
   }
+
+  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  obtenerTextoPoblacionSexo(datos: any, nombreComunidad: string): string {
+    if (!datos || !nombreComunidad || nombreComunidad === '____') {
+      return `Respecto a la población de la CC ___, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___).`;
+    }
+
+    const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionSexoAISD', this.seccionId);
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado.replace(/___/, nombreComunidad);
+    }
+    return `Respecto a la población de la CC ${nombreComunidad}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___)`.replace(/___/, nombreComunidad);
+  }
+
+  obtenerTextoPoblacionEtario(datos: any, nombreComunidad: string): string {
+    if (!datos || !nombreComunidad || nombreComunidad === '____') {
+      return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ___ es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
+    }
+
+    const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionEtarioAISD', this.seccionId);
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado.replace(/___/, nombreComunidad);
+    }
+    return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${nombreComunidad} es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
+  }
 }
+
 

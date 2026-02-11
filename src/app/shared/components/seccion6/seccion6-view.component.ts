@@ -4,11 +4,10 @@ import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { Seccion6TableConfigService } from 'src/app/core/services/domain/seccion6-table-config.service';
-import { Seccion6DataService } from 'src/app/core/services/domain/seccion6-data.service';
-import { Seccion6TextGeneratorService } from 'src/app/core/services/domain/seccion6-text-generator.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { debugLog } from 'src/app/shared/utils/debug';
+import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
   standalone: true,
@@ -51,8 +50,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       return manual;
     }
     
-    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionSexo(data, nombreComunidad, this.seccionId);
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.obtenerTextoPoblacionSexo(data, nombreComunidad);
   });
 
   readonly vistTextoPoblacionEtarioSignal: Signal<string> = computed(() => {
@@ -66,8 +65,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       return manual;
     }
     
-    const nombreComunidad = this.dataSrv.obtenerNombreComunidadActual(data, this.seccionId);
-    return this.textGenSrv.obtenerTextoPoblacionEtario(data, nombreComunidad, this.seccionId);
+    const nombreComunidad = this.obtenerNombreComunidadActual();
+    return this.obtenerTextoPoblacionEtario(data, nombreComunidad);
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -92,8 +91,6 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     public tableCfg: Seccion6TableConfigService,
-    private dataSrv: Seccion6DataService,
-    private textGenSrv: Seccion6TextGeneratorService,
     private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);
@@ -132,11 +129,32 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   override obtenerNombreComunidadActual(): string {
-    return this.dataSrv.obtenerNombreComunidadActual(this.vistDataSignal(), this.seccionId);
+    const datos = this.vistDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(datos, 'grupoAISD', this.seccionId);
+    
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? datos[`grupoAISD${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    if (datos['comunidadesCampesinas'] && Array.isArray(datos['comunidadesCampesinas']) && datos['comunidadesCampesinas'].length > 0) {
+      const primerCC = datos['comunidadesCampesinas'][0];
+      if (primerCC && primerCC['nombre'] && primerCC['nombre'].trim() !== '') {
+        return primerCC['nombre'];
+      }
+    }
+    
+    return '____';
   }
 
   override obtenerValorConPrefijo(campo: string): any {
-    return this.dataSrv.obtenerValorConPrefijo(this.vistDataSignal(), campo, this.seccionId);
+    const datos = this.vistDataSignal();
+    return PrefijoHelper.obtenerValorConPrefijo(datos, campo, this.seccionId);
   }
 
   obtenerTextoPoblacionSexoView(): string {
@@ -145,7 +163,7 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     if (texto && texto.trim() !== '' && texto !== '____') {
       return texto.replace(/___/g, nombreComunidad);
     }
-    return this.textGenSrv.obtenerTextoPoblacionSexo(this.vistDataSignal(), nombreComunidad, this.seccionId);
+    return this.obtenerTextoPoblacionSexo(this.vistDataSignal(), nombreComunidad);
   }
 
   obtenerTextoPoblacionEtarioView(): string {
@@ -154,7 +172,7 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     if (texto && texto.trim() !== '' && texto !== '____') {
       return texto.replace(/___/g, nombreComunidad);
     }
-    return this.textGenSrv.obtenerTextoPoblacionEtario(this.vistDataSignal(), nombreComunidad, this.seccionId);
+    return this.obtenerTextoPoblacionEtario(this.vistDataSignal(), nombreComunidad);
   }
 
   getPoblacionSexoConPorcentajes(): any[] {
@@ -344,4 +362,30 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     this.fotografiasVista = [...this.fotografiasCache];
     this.cdRef.markForCheck();
   }
+
+  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  obtenerTextoPoblacionSexo(datos: any, nombreComunidad: string): string {
+    if (!datos || !nombreComunidad || nombreComunidad === '____') {
+      return `Respecto a la población de la CC ___, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___).`;
+    }
+
+    const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionSexoAISD', this.seccionId);
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado.replace(/___/, nombreComunidad);
+    }
+    return `Respecto a la población de la CC ${nombreComunidad}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___)`.replace(/___/, nombreComunidad);
+  }
+
+  obtenerTextoPoblacionEtario(datos: any, nombreComunidad: string): string {
+    if (!datos || !nombreComunidad || nombreComunidad === '____') {
+      return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ___ es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
+    }
+
+    const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionEtarioAISD', this.seccionId);
+    if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
+      return textoPersonalizado.replace(/___/, nombreComunidad);
+    }
+    return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${nombreComunidad} es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
+  }
 }
+
