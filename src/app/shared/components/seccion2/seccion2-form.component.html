@@ -1,247 +1,210 @@
-<div class="form-group-section">
-  <h4 class="section-title">Delimitación de Áreas de Influencia Social</h4>
-  
-  <!-- Gestión de Comunidades Campesinas (AISD) -->
-  <div *ngFor="let comunidad of obtenerComunidades(); let i = index; trackBy: trackByComunidadId" 
-       style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
+<!-- ✅ SECCION2-FORM: Formulario de edición (solo modoFormulario = true) --> 
+<div *ngIf="modoFormulario" class="seccion-formulario-content">
+  <div class="form-group-section">
+    <h4 class="section-title">Delimitación de Áreas de Influencia Social</h4>
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h5 style="margin: 0; color: #333;">Comunidad Campesina {{ i + 1 }}</h5>
+    <!-- Gestión de Comunidades Campesinas (AISD) -->
+    <div *ngFor="let comunidad of aisdGroups(); let i = index; trackBy: trackByComunidadId" 
+         style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h5 style="margin: 0; color: #333;">Comunidad Campesina {{ i + 1 }}</h5>
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="eliminarComunidadCampesina(comunidad.id)"
+          style="font-size: 12px; padding: 5px 10px;"
+          *ngIf="aisdGroups().length > 1">
+          Eliminar
+        </button>
+      </div>
+
+      <div class="form-field">
+        <label class="label">Seleccionar Centros Poblados para AISD <span class="required">*</span></label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="seleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
+            style="font-size: 12px; padding: 5px 10px;">
+            Seleccionar Todos
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="deseleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
+            style="font-size: 12px; padding: 5px 10px;">
+            Deseleccionar Todos
+          </button>
+        </div>
+        <div style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white; overflow-y: auto; max-height: 220px;">
+          <div *ngFor="let cp of allPopulatedCenters(); let j = index" 
+               style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
+            <input 
+              type="checkbox" 
+              [id]="'aisd_cb_' + comunidad.id + '_' + j"
+              [name]="'aisd_cb_' + comunidad.id + '_' + j"
+              [checked]="estaCentroPobladoSeleccionadoComunidad(comunidad.id, cp.codigo.toString() || '')"
+              (change)="toggleCentroPobladoComunidad(comunidad.id, cp.codigo.toString() || '')"
+              style="margin-right: 8px;">
+            <label [for]="'aisd_cb_' + comunidad.id + '_' + j" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
+          </div>
+          <div *ngIf="allPopulatedCenters().length === 0" style="padding: 10px; text-align: center; color: #999;">
+            No hay centros poblados disponibles para esta comunidad
+          </div>
+        </div>
+        <small class="form-hint">Seleccione los centros poblados que formarán parte del AISD. Debe seleccionar al menos uno.</small>
+      </div>
+
+      <div class="form-field">
+        <label class="label" [for]="'cc_nombre_' + comunidad.id">Comunidad Campesina (CC) AISD <span class="required">*</span></label>
+        <input 
+          #nombreInput
+          [id]="'cc_nombre_' + comunidad.id"
+          [name]="'cc_nombre_' + comunidad.id"
+          type="text" 
+          class="input" 
+          placeholder="Ingrese el nombre de la comunidad campesina"
+          [ngModel]="comunidad.nombre"
+          (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)"
+          (keyup.enter)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
+        <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
       <button 
         type="button" 
-        class="btn btn-danger" 
-        (click)="eliminarComunidadCampesina(comunidad.id)"
-        style="font-size: 12px; padding: 5px 10px;"
-        *ngIf="obtenerComunidades().length > 1">
-        Eliminar
+        class="btn btn-primary" 
+        (click)="agregarComunidadCampesina()"
+        style="font-size: 14px; padding: 10px 20px;">
+        + Agregar Otra Comunidad Campesina
       </button>
     </div>
 
-    <div class="form-field" *ngIf="debeMostrarCentrosPobladosComunidad(comunidad)">
-      <label class="label">Seleccionar Centros Poblados para AISD <span class="required">*</span></label>
-      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <!-- Gestión de Distritos AISI -->
+    <h4 class="section-title" style="margin-top: 40px;">Distritos AISI</h4>
+
+    <div *ngFor="let distrito of aisiGroups(); let i = index; trackBy: trackByDistritoId" 
+         style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h5 style="margin: 0; color: #333;">Distrito {{ i + 1 }}</h5>
         <button 
           type="button" 
-          class="btn btn-secondary" 
-          (click)="seleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
-          style="font-size: 12px; padding: 5px 10px;">
-          Seleccionar Todos
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-secondary" 
-          (click)="deseleccionarTodosCentrosPobladosComunidad(comunidad.id)" 
-          style="font-size: 12px; padding: 5px 10px;">
-          Deseleccionar Todos
+          class="btn btn-danger" 
+          (click)="eliminarDistritoAISI(distrito.id)"
+          style="font-size: 12px; padding: 5px 10px;"
+          *ngIf="aisiGroups().length > 1">
+          Eliminar
         </button>
       </div>
-      <div
-        style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white; overflow-y: auto; max-height: 220px;">
-        <div *ngFor="let cp of obtenerCentrosPobladosVisibles(comunidad); let j = index" 
-             style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
-          <input 
-            type="checkbox" 
-            [id]="'aisd_cb_' + comunidad.id + '_' + j"
-            [name]="'aisd_cb_' + comunidad.id + '_' + j"
-            [checked]="estaCentroPobladoSeleccionadoComunidad(comunidad.id, cp.codigo.toString() || '')"
-            (change)="toggleCentroPobladoComunidad(comunidad.id, cp.codigo.toString() || '')"
-            style="margin-right: 8px;">
-          <label [for]="'aisd_cb_' + comunidad.id + '_' + j" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
+
+      <div class="form-field">
+        <label class="label">Seleccionar Centros Poblados para AISI <span class="required">*</span></label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="seleccionarTodosCentrosPobladosDistrito(distrito.id)" 
+            style="font-size: 12px; padding: 5px 10px;">
+            Seleccionar Todos
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="deseleccionarTodosCentrosPobladosDistrito(distrito.id)" 
+            style="font-size: 12px; padding: 5px 10px;">
+            Deseleccionar Todos
+          </button>
         </div>
-        <div *ngIf="obtenerCentrosPobladosDeComunidad(comunidad.id).length === 0" style="padding: 10px; text-align: center; color: #999;">
-          No hay centros poblados disponibles para esta comunidad
+        <div style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white; overflow-y: auto; max-height: 220px;">
+          <div *ngFor="let cp of allPopulatedCenters(); let k = index" 
+               style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
+            <input 
+              type="checkbox" 
+              [id]="'aisi_cb_' + distrito.id + '_' + k"
+              [name]="'aisi_cb_' + distrito.id + '_' + k"
+              [checked]="estaCentroPobladoSeleccionadoDistrito(distrito.id, cp.codigo.toString() || '')"
+              (change)="toggleCentroPobladoDistrito(distrito.id, cp.codigo.toString() || '')"
+              style="margin-right: 8px;">
+            <label [for]="'aisi_cb_' + distrito.id + '_' + k" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
+          </div>
+          <div *ngIf="allPopulatedCenters().length === 0" style="padding: 10px; text-align: center; color: #999;">
+            No hay centros poblados disponibles para este distrito
+          </div>
         </div>
+        <small class="form-hint">Seleccione los centros poblados que formarán parte del AISI. Debe seleccionar al menos uno.</small>
       </div>
-      <small class="form-hint">Seleccione los centros poblados que formarán parte del AISD. Debe seleccionar al menos uno.</small>
+
+      <div class="form-field">
+        <label class="label" [for]="'aisi_nombre_' + distrito.id">Distrito AISI <span class="required">*</span></label>
+        <input 
+          #nombreDistritoInput
+          [id]="'aisi_nombre_' + distrito.id"
+          [name]="'aisi_nombre_' + distrito.id"
+          type="text" 
+          class="input" 
+          placeholder="Ingrese el nombre del distrito"
+          [ngModel]="distrito.nombre"
+          (blur)="actualizarNombreDistrito(distrito.id, nombreDistritoInput.value || distrito.nombre)"
+          (keyup.enter)="actualizarNombreDistrito(distrito.id, nombreDistritoInput.value || distrito.nombre)">
+        <small class="form-hint">Asigne un nombre a Distrito.</small>
+      </div>
     </div>
 
-    <div class="form-field">
-      <label class="label" [for]="'cc_nombre_' + comunidad.id">Comunidad Campesina (CC) AISD <span class="required">*</span></label>
-      <input 
-        #nombreInput
-        [id]="'cc_nombre_' + comunidad.id"
-        [name]="'cc_nombre_' + comunidad.id"
-        type="text" 
-        class="input" 
-        placeholder="Ingrese el nombre de la comunidad campesina"
-        [ngModel]="comunidad.nombre"
-        (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)"
-        (keyup.enter)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
-      <small class="form-hint">Asigne un nombre a la Comunidad Campesina.</small>
-    </div>
-  </div>
-
-  <div style="margin-top: 20px;">
-    <button 
-      type="button" 
-      class="btn btn-primary" 
-      (click)="agregarComunidadCampesina()"
-      style="font-size: 14px; padding: 10px 20px;">
-      + Agregar Otra Comunidad Campesina
-    </button>
-  </div>
-
-  <!-- Gestión de Distritos AISI -->
-  <h4 class="section-title" style="margin-top: 40px;">Distritos AISI</h4>
-
-  <div *ngFor="let distrito of obtenerDistritos(); let i = index; trackBy: trackByDistritoId" 
-       style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #f9f9f9;">
-
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h5 style="margin: 0; color: #333;">Distrito {{ i + 1 }}</h5>
+    <div style="margin-top: 20px;">
       <button 
         type="button" 
-        class="btn btn-danger" 
-        (click)="eliminarDistritoAISI(distrito.id)"
-        style="font-size: 12px; padding: 5px 10px;"
-        *ngIf="obtenerDistritos().length > 1">
-        Eliminar
+        class="btn btn-primary" 
+        (click)="agregarDistritoAISI()"
+        style="font-size: 14px; padding: 10px 20px;">
+        + Agregar Otro Distrito
       </button>
     </div>
-
-    <div class="form-field" *ngIf="obtenerCentrosPobladosVisiblesDistrito(distrito).length > 0">
-      <label class="label">Seleccionar Centros Poblados para AISI <span class="required">*</span></label>
-      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <button 
-          type="button" 
-          class="btn btn-secondary" 
-          (click)="seleccionarTodosCentrosPobladosDistrito(distrito.id)" 
-          style="font-size: 12px; padding: 5px 10px;">
-          Seleccionar Todos
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-secondary" 
-          (click)="deseleccionarTodosCentrosPobladosDistrito(distrito.id)" 
-          style="font-size: 12px; padding: 5px 10px;">
-          Deseleccionar Todos
-        </button>
-      </div>
-      <div
-        style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: white; overflow-y: auto; max-height: 220px;">
-        <div *ngFor="let cp of obtenerCentrosPobladosVisiblesDistrito(distrito); let k = index" 
-             style="display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
-          <input 
-            type="checkbox" 
-            [id]="'aisi_cb_' + distrito.id + '_' + k"
-            [name]="'aisi_cb_' + distrito.id + '_' + k"
-            [checked]="estaCentroPobladoSeleccionadoDistrito(distrito.id, cp.codigo.toString() || '')"
-            (change)="toggleCentroPobladoDistrito(distrito.id, cp.codigo.toString() || '')"
-            style="margin-right: 8px;">
-          <label [for]="'aisi_cb_' + distrito.id + '_' + k" style="flex: 1; cursor: pointer; margin: 0;">{{ cp.nombre }}</label>
-        </div>
-        <div *ngIf="obtenerCentrosPobladosVisiblesDistrito(distrito).length === 0" 
-             style="padding: 10px; text-align: center; color: #999;">
-          No hay centros poblados disponibles para este distrito
-        </div>
-      </div>
-      <small class="form-hint">Seleccione los centros poblados que formarán parte del AISI. Debe seleccionar al menos uno.</small>
-    </div>
-
-    <div class="form-field">
-      <label class="label" [for]="'aisi_nombre_' + distrito.id">Distrito AISI <span class="required">*</span></label>
-      <input 
-        #nombreDistritoInput
-        [id]="'aisi_nombre_' + distrito.id"
-        [name]="'aisi_nombre_' + distrito.id"
-        type="text" 
-        class="input" 
-        placeholder="Ingrese el nombre del distrito"
-        [ngModel]="distrito.nombre"
-        (blur)="actualizarNombreDistrito(distrito.id, nombreDistritoInput.value || distrito.nombre)">
-      <small class="form-hint">Asigne un nombre al Distrito.</small>
-    </div>
   </div>
 
-  <div style="margin-top: 20px;">
-    <button 
-      type="button" 
-      class="btn btn-primary" 
-      (click)="agregarDistritoAISI()"
-      style="font-size: 14px; padding: 10px 20px;">
-      + Agregar Otro Distrito
-    </button>
-  </div>
+  <div class="form-group-section">
+    <h4 class="section-title">Editar Párrafos</h4>
+    
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_introduccion"
+      label="Introducción - Delimitación de Áreas"
+      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [rows]="8"
+      [value]="obtenerTextoSeccion2Introduccion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
+    </app-paragraph-editor>
 
-  <div class="form-row" style="margin-top: 30px;">
-    <div class="form-field">
-      <label class="label" for="aisd_extra_1">Distrito Adicional 1</label>
-      <input
-        id="aisd_extra_1"
-        name="aisd_extra_1"
-        type="text"
-        class="input"
-        placeholder="Ingrese un distrito adicional"
-        [value]="seccion2Component.datos['aisdComponente1']"
-        (input)="onFieldChange('aisdComponente1', getInputValue($event))"
-        (blur)="onFieldChange('aisdComponente1', seccion2Component.datos['aisdComponente1'])">
-      <small class="form-hint">Escribe el nombre del distrito adicional manualmente.</small>
-    </div>
-    <div class="form-field">
-      <label class="label" for="aisd_extra_2">Distrito Adicional 2</label>
-      <input
-        id="aisd_extra_2"
-        name="aisd_extra_2"
-        type="text"
-        class="input"
-        placeholder="Ingrese otro distrito adicional"
-        [value]="seccion2Component.datos['aisdComponente2']"
-        (input)="onFieldChange('aisdComponente2', getInputValue($event))"
-        (blur)="onFieldChange('aisdComponente2', seccion2Component.datos['aisdComponente2'])">
-      <small class="form-hint">Escribe otro distrito extra si lo necesitas.</small>
-    </div>
-  </div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisd_completo"
+      label="Área de Influencia Social Directa (AISD)"
+      hint="Edite el texto completo de AISD. Deje vacío para usar el texto automáticamente generado."
+      [rows]="6"
+      [value]="obtenerTextoSeccion2AISDParaEdicion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
+    </app-paragraph-editor>
 
-  <!-- Edición de Párrafos e Imágenes (mover los editores aquí para que sólo estén en el formulario) -->
-
-  <div class="form-header" style="margin-top: 20px;">
-    <h4 class="section-title" style="margin: 0;">Editar Párrafos</h4>
-  </div>
-
-  <app-paragraph-editor
-    fieldId="parrafoSeccion2_introduccion"
-    label="Introducción - Delimitación de Áreas"
-    hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="6"
-    [value]="seccion2Component.datos['parrafoSeccion2_introduccion']"
-    (valueChange)="onFieldChange('parrafoSeccion2_introduccion', $event)">
-  </app-paragraph-editor>
-
-  <app-paragraph-editor
-    fieldId="parrafoSeccion2_aisd_completo"
-    label="A. Áreas de influencia social directa (AISD) - Texto Completo"
-    hint="Edite todo el bloque de texto de AISD. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="10"
-    [value]="seccion2Component.datos['parrafoSeccion2_aisd_completo']"
-    (valueChange)="onFieldChange('parrafoSeccion2_aisd_completo', $event)">
-  </app-paragraph-editor>
-
-  <app-paragraph-editor
-    fieldId="parrafoSeccion2_aisi_completo"
-    label="B. Áreas de influencia social indirecta (AISI) - Texto Completo"
-    hint="Edite todo el bloque de texto de AISI. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
-    [rows]="8"
-    [value]="seccion2Component.datos['parrafoSeccion2_aisi_completo']"
-    (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
-  </app-paragraph-editor>
-
-  <div class="form-field" style="margin-top: 20px;">
-    <label class="label">Fotografías</label>
-    <app-image-upload
-      [fotografias]="fotografias"
-      [sectionId]="seccionId"
-      [photoPrefix]="photoPrefix"
-      [permitirMultiples]="true"
-      [key]="key"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Fotografía de la sección 2"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Sección 2"
-      fuenteDefault="GEADES, 2024"
-      [requerido]="false"
-      (fotografiasChange)="onFotografiasChange($event)">
-    </app-image-upload>
-  </div>
-</div>
+    <app-paragraph-editor
+      fieldId="parrafoSeccion2_aisi_completo"
+      label="Área de Influencia Social Indirecta (AISI)"
+      hint="Edite el texto completo de AISI. Deje vacío para usar el texto automáticamente generado."
+      [rows]="6"
+      [value]="obtenerTextoSeccion2AISIParaEdicion()"
+      (valueChange)="onFieldChange('parrafoSeccion2_aisi_completo', $event)">
+    </app-paragraph-editor>    <div class="form-field mt-lg">
+      <label class="label">Fotografías</label>
+      <app-image-upload
+        [fotografias]="fotografiasSeccion2"
+        [sectionId]="seccionId"
+        [photoPrefix]="PHOTO_PREFIX"
+        [permitirMultiples]="true"
+        labelTitulo="Título de la fotografía"
+        labelFuente="Fuente de la fotografía"
+        labelImagen="Fotografía - Imagen"
+        placeholderTitulo="Ej: Fotografía de la sección 2"
+        placeholderFuente="Ej: GEADES, 2024"
+        tituloDefault="Sección 2"
+        fuenteDefault="GEADES, 2024"
+        [requerido]="false"
+        (fotografiasChange)="onFotografiasChange($event)">

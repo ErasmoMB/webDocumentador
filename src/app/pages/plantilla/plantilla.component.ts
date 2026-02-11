@@ -7,9 +7,12 @@ import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { FormularioDatos, CentroPobladoData, Entrevistado } from 'src/app/core/models/formulario.model';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { FormularioService } from 'src/app/core/services/formulario.service';
-import { Seccion1Component } from 'src/app/shared/components/seccion1/seccion1.component';
+import { Seccion1FormComponent } from 'src/app/shared/components/seccion1/seccion1-form.component';
+import { Seccion1ViewComponent } from 'src/app/shared/components/seccion1/seccion1-view.component';
 import { Seccion2ViewComponent } from 'src/app/shared/components/seccion2/seccion2-view.component';
+import { Seccion2FormWrapperComponent } from 'src/app/shared/components/forms/seccion2-form-wrapper.component';
 import { Seccion3ViewComponent } from 'src/app/shared/components/seccion3/seccion3-view.component';
+import { Seccion3FormWrapperComponent } from 'src/app/shared/components/forms/seccion3-form-wrapper.component';
 import { Seccion4Component } from 'src/app/shared/components/seccion4/seccion4.component';
 import { Seccion5Component } from 'src/app/shared/components/seccion5/seccion5.component';
 import { Seccion6Component } from 'src/app/shared/components/seccion6/seccion6.component';
@@ -68,20 +71,26 @@ import { Seccion36Component } from 'src/app/shared/components/seccion36/seccion3
     standalone: false
 })
 export class ResumenComponent implements OnInit, AfterViewInit {
-  @ViewChild(Seccion1Component) set seccion1(comp: Seccion1Component) {
+  // ✅ Set para registrar secciones en edición
+  readonly seccionesEnEdicion = new Set<string>();
+
+  @ViewChild(Seccion1FormComponent) set seccion1Form(comp: Seccion1FormComponent) {
+    if (comp) this.seccionesEnEdicion.add('3.1.1');
+  }
+  @ViewChild(Seccion1ViewComponent) set seccion1View(comp: Seccion1ViewComponent) {
     ViewChildHelper.registerComponent('seccion1', comp);
   }
   @ViewChild(Seccion2ViewComponent) set seccion2(comp: Seccion2ViewComponent) {
-    // El componente de vista contiene Seccion2Component internamente
-    if (comp && comp.seccion2Component) {
-      ViewChildHelper.registerComponent('seccion2', comp.seccion2Component);
-    }
+    ViewChildHelper.registerComponent('seccion2', comp);
+  }
+  @ViewChild(Seccion2FormWrapperComponent) set seccion2Form(comp: Seccion2FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion2Form', comp);
   }
   @ViewChild(Seccion3ViewComponent) set seccion3(comp: Seccion3ViewComponent) {
-    // El componente de vista contiene Seccion3Component internamente
-    if (comp && comp.seccion3Component) {
-      ViewChildHelper.registerComponent('seccion3', comp.seccion3Component);
-    }
+    ViewChildHelper.registerComponent('seccion3', comp);
+  }
+  @ViewChild(Seccion3FormWrapperComponent) set seccion3Form(comp: Seccion3FormWrapperComponent) {
+    ViewChildHelper.registerComponent('seccion3Form', comp);
   }
   @ViewChild(Seccion4Component) set seccion4(comp: Seccion4Component) {
     ViewChildHelper.registerComponent('seccion4', comp);

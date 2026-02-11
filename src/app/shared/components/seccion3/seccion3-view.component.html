@@ -1,3 +1,57 @@
-<!-- ✅ Componente de VISTA: Solo muestra contenido -->
-<!-- Delega toda la lógica y presentación a Seccion3Component -->
-<app-seccion3 [seccionId]="seccionId" [modoFormulario]="false"></app-seccion3>
+<!-- ✅ SECCION3-VIEW: Vista de lectura (solo lectura) -->
+<div class="seccion-view-content">
+  <h3>3.1.3 Características Sociodemográficas</h3>
+
+  <!-- Metodología -->
+  <div class="text-justify" [innerHTML]="textoMetodologiaFormateado()"></div>
+
+  <!-- A. Fuentes Primarias -->
+  <h4>A. Fuentes Primarias</h4>
+  <div class="text-justify" [innerHTML]="textoFuentesPrimariasFormateado()"></div>
+
+  <!-- Tabla de Entrevistados -->
+  <div class="table-section mt-lg">
+    <h5>Lista de Entrevistados</h5>
+    <table class="table table-striped" *ngIf="obtenerTablaEntrevistados().length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Cargo</th>
+          <th>Organización</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entrevistado of obtenerTablaEntrevistados()">
+          <td>{{ entrevistado.nombre }}</td>
+          <td>{{ entrevistado.cargo }}</td>
+          <td>{{ entrevistado.organizacion }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="obtenerTablaEntrevistados().length === 0" class="text-muted">No hay entrevistados registrados.</p>
+  </div>
+
+  <!-- B. Fuentes Secundarias -->
+  <h4>B. Fuentes Secundarias</h4>
+  <div class="text-justify" [innerHTML]="textoFuentesSecundariasFormateado()"></div>
+
+  <!-- Lista de Fuentes Secundarias -->
+  <div class="list-section mt-md">
+    <ul *ngIf="obtenerListaFuentesSecundarias().length > 0">
+      <li *ngFor="let fuente of obtenerListaFuentesSecundarias()">{{ fuente }}</li>
+    </ul>
+    <p *ngIf="obtenerListaFuentesSecundarias().length === 0" class="text-muted">No hay fuentes secundarias registradas.</p>
+  </div>
+
+  <!-- Fotografías -->
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasSeccion3"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

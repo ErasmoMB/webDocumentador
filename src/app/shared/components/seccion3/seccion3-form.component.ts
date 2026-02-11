@@ -1,31 +1,38 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, effect, Signal, computed } from '@angular/core';
+import { Component, Input, OnDestroy, ChangeDetectorRef, Injector, ChangeDetectionStrategy, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion3Component } from './seccion3.component';
-import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
-import { Seccion3TextGeneratorService } from 'src/app/core/services/seccion3-text-generator.service';
-import { Seccion3FuentesManagementService } from 'src/app/core/services/seccion3-fuentes-management.service';
+import { DataHighlightService } from '../../../core/services/data-highlight.service';
+import { FormChangeService } from '../../../core/services/state/form-change.service';
+import { ProjectStateFacade } from '../../../core/state/project-state.facade';
+import { Seccion3TextGeneratorService } from '../../../core/services/seccion3-text-generator.service';
+import { BaseSectionComponent } from '../base-section.component';
+import { SECCION3_WATCHED_FIELDS, SECCION3_CONFIG, SECCION3_TEMPLATES } from './seccion3-constants';
+import { TableConfig } from '../../../core/services/table-management.service';
 
 @Component({
-    imports: [
-        CommonModule,
-        FormsModule,
-        CoreSharedModule,
-        Seccion3Component
-    ],
-    selector: 'app-seccion3-form',
-    templateUrl: './seccion3-form.component.html'
+  selector: 'app-seccion3-form',
+  templateUrl: './seccion3-form.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ImageUploadComponent,
+    CoreSharedModule
+  ],
+  standalone: true
 })
-export class Seccion3FormComponent implements OnInit, OnDestroy {
-  @Input() seccionId: string = '';
-  @ViewChild(Seccion3Component) seccion3Component!: Seccion3Component;
-  
-  formData: any = {};
-  fuentesSecundarias: string[] = [];
+export class Seccion3FormComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = '3.1.3';
+  @Input() override modoFormulario: boolean = false;
+
+  override readonly PHOTO_PREFIX = 'fotografiaSeccion3';
+  override useReactiveSync: boolean = true;
+
+  fotografiasSeccion3: FotoItem[] = [];
+  imageUploadKey: number = 0;
 
   entrevistadosConfig: TableConfig = {
     tablaKey: 'entrevistados',
@@ -39,80 +46,115 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
     { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Organización' }
   ];
 
-  readonly formDataSignal: Signal<Record<string, any>>;
-  readonly fuentesSecundariasListaSignal: Signal<string[]>;
-  readonly entrevistadosSignal: Signal<any[]>;
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly fuentesSecundariasListaSignal: Signal<string[]> = computed(() => {
+    const value = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
+    return Array.isArray(value) ? value : [];
+  });
+
+  readonly entrevistadosSignal: Signal<any[]> = computed(() => {
+    const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+    return Array.isArray(value) ? value : [];
+  });
+
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    for (let i = 1; i <= 10; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
+      
+      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+    }
+    return hash;
+  });
+
+  readonly textoMetodologiaFormateado: Signal<SafeHtml> = computed(() => {
+    const texto = this.obtenerTextoMetodologia();
+    const html = this.formatearParrafo(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
+  readonly textoFuentesPrimariasFormateado: Signal<SafeHtml> = computed(() => {
+    const texto = this.obtenerTextoFuentesPrimarias();
+    const html = this.formatearParrafo(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
+  readonly textoFuentesSecundariasFormateado: Signal<SafeHtml> = computed(() => {
+    const texto = this.obtenerTextoFuentesSecundarias();
+    const html = this.formatearParrafo(texto);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
+  // ✅ Propiedades getter para compatibilidad con template
+  get formData(): Record<string, any> {
+    return this.formDataSignal();
+  }
+
+  get fotografias(): FotoItem[] {
+    return this.fotografiasSeccion3;
+  }
+
+  get photoPrefix(): string {
+    return this.PHOTO_PREFIX;
+  }
+
+  private readonly dataHighlightService = this.injector.get(DataHighlightService);
+  private readonly formChangeService = this.injector.get(FormChangeService);
+  private readonly textGenerator = this.injector.get(Seccion3TextGeneratorService);
 
   constructor(
-    private projectFacade: ProjectStateFacade,
-    private cdRef: ChangeDetectorRef,
-    private formChange: FormChangeService,
-    private tableFacade: TableManagementFacade,
-    private textGenerator: Seccion3TextGeneratorService,
-    private fuentesManagement: Seccion3FuentesManagementService
+    cdRef: ChangeDetectorRef,
+    injector: Injector,
+    private sanitizer: DomSanitizer
   ) {
-    this.formDataSignal = computed(() => {
-      return this.projectFacade.selectSectionFields(this.seccionId, null)();
-    });
-
-    this.fuentesSecundariasListaSignal = computed(() => {
-      const value = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
-      return Array.isArray(value) ? value : [];
-    });
-
-    this.entrevistadosSignal = computed(() => {
-      // ✅ Usar selectField() como fuentesSecundariasLista para consistencia
-      const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
-      return Array.isArray(value) ? value : [];
-    });
+    super(cdRef, injector);
 
     effect(() => {
       const formData = this.formDataSignal();
       const fuentesSecundariasLista = this.fuentesSecundariasListaSignal();
       const entrevistados = this.entrevistadosSignal();
-      
-      console.log(`🔄 [Seccion3] effect re-ejecutado - fuentesSecundariasLista del signal:`, fuentesSecundariasLista);
-      
-      const formDataCopy = { ...formData };
-      
-      // ✅ CRÍTICO: SIEMPRE actualizar desde los signals (prioridad del estado)
-      // Esto asegura que los cambios se reflejen inmediatamente
-      formDataCopy['entrevistados'] = Array.isArray(entrevistados) && entrevistados.length > 0 
-        ? [...entrevistados] 
-        : formDataCopy['entrevistados'] || [];
-      
-      // ✅ SINCRONIZAR FUENTES SECUNDARIAS desde el signal
-      formDataCopy['fuentesSecundariasLista'] = Array.isArray(fuentesSecundariasLista) && fuentesSecundariasLista.length > 0
-        ? [...fuentesSecundariasLista]
-        : [];
-      
-      console.log(`🔄 [Seccion3] formData.fuentesSecundariasLista actualizado:`, formDataCopy['fuentesSecundariasLista']);
-      
-      this.formData = formDataCopy;
-      this.fuentesSecundarias = this.fuentesManagement.inicializarFuentes(formData);
-      
       this.cdRef.markForCheck();
     });
   }
 
-  ngOnInit() {
-    // ✅ CRÍTICO: Restaurar datos desde localStorage cuando se inicializa
-    console.log(`🔄 [Seccion3FormComponent] ngOnInit() - Restaurando datos desde localStorage`);
-    this.formChange.restoreSectionState(this.seccionId, this.formData);
-    this.cdRef.markForCheck();
+  protected override onInitCustom(): void {
+    // Restaurar datos desde localStorage cuando se inicializa
+    this.formChangeService.restoreSectionState(this.seccionId, this.formDataSignal());
   }
 
-  ngOnDestroy() {
+  protected override detectarCambios(): boolean {
+    return true;
   }
 
-  onFieldChange(fieldId: string, value: any) {
+  protected override actualizarValoresConPrefijo(): void {
+    // S3 no tiene prefijos dinámicos
+  }
+
+  formatearParrafo(texto: string): string {
+    if (!texto) return '';
+    const parrafos = texto.split(/\n\n+/);
+    return parrafos.map(p => {
+      const textoLimpio = p.trim().replace(/\n/g, '<br>');
+      return `<p class="text-justify">${textoLimpio}</p>`;
+    }).join('');
+  }
+
+  override onFieldChange(fieldId: string, value: any): void {
     let valorLimpio = '';
     if (value !== undefined && value !== null && value !== 'undefined') {
       valorLimpio = value;
     }
-    this.formData[fieldId] = valorLimpio;
     this.projectFacade.setField(this.seccionId, null, fieldId, valorLimpio);
-    this.formChange.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
+    this.formChangeService.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
     this.cdRef.markForCheck();
   }
 
@@ -137,64 +179,28 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
 
   actualizarFuenteSecundaria(index: number, valor: string): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
-    console.log(`📝 [Seccion3] actualizarFuenteSecundaria() - índice: ${index}, valor: "${valor}"`);
-    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
-    
     if (listaActual[index] !== valor) {
       listaActual[index] = valor;
-      console.log(`📝 [Seccion3] listaActual después:`, listaActual);
-      
       this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-      console.log(`✅ [Seccion3] setField() llamado`);
-      
-      this.formChange.persistFields(this.seccionId, 'form', { 
-        fuentesSecundariasLista: listaActual 
-      });
-      console.log(`✅ [Seccion3] persistFields() llamado`);
-      
+      this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
       this.cdRef.markForCheck();
-      console.log(`✅ [Seccion3] markForCheck() llamado`);
     }
   }
 
   eliminarFuenteSecundaria(index: number): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
-    console.log(`📝 [Seccion3] eliminarFuenteSecundaria() - índice: ${index}`);
-    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
-    
     listaActual.splice(index, 1);
-    console.log(`📝 [Seccion3] listaActual después:`, listaActual);
-    
     this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-    console.log(`✅ [Seccion3] setField() llamado`);
-    
-    this.formChange.persistFields(this.seccionId, 'form', { 
-      fuentesSecundariasLista: listaActual 
-    });
-    console.log(`✅ [Seccion3] persistFields() llamado`);
-    
+    this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
     this.cdRef.markForCheck();
-    console.log(`✅ [Seccion3] markForCheck() llamado`);
   }
 
   agregarFuenteSecundaria(): void {
     const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
-    console.log(`📝 [Seccion3] agregarFuenteSecundaria()`);
-    console.log(`📝 [Seccion3] listaActual antes:`, listaActual);
-    
     listaActual.push('');
-    console.log(`📝 [Seccion3] listaActual después:`, listaActual);
-    
     this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-    console.log(`✅ [Seccion3] setField() llamado`);
-    
-    this.formChange.persistFields(this.seccionId, 'form', { 
-      fuentesSecundariasLista: listaActual 
-    });
-    console.log(`✅ [Seccion3] persistFields() llamado`);
-    
+    this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
     this.cdRef.markForCheck();
-    console.log(`✅ [Seccion3] markForCheck() llamado`);
   }
 
   trackByIndex(index: number): number {
@@ -202,8 +208,6 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
   }
 
   trackByFuente(index: number, fuente: string): string {
-    // Track por el contenido de la fuente, no por índice
-    // Esto asegura que Angular re-renderiza correctamente cuando se elimina
     return fuente || `empty-${index}`;
   }
 
@@ -211,57 +215,28 @@ export class Seccion3FormComponent implements OnInit, OnDestroy {
     return this.entrevistadosSignal();
   }
 
-  /**
-   * Sincroniza formData desde el store (útil tras "Llenar datos" para que el cuadro del formulario se actualice de inmediato).
-   */
-  sincronizarDesdeStore(): void {
-    const formData = this.formDataSignal();
-    const entrevistados = this.entrevistadosSignal();
-    const fuentesLista = this.fuentesSecundariasListaSignal();
-    this.formData = { ...formData };
-    if (Array.isArray(entrevistados)) {
-      this.formData['entrevistados'] = [...entrevistados];
-    }
-    this.fuentesSecundarias = Array.isArray(fuentesLista) ? [...fuentesLista] : [];
-    this.cdRef.markForCheck();
-  }
-
   onTablaUpdated(): void {
-    console.log(`📝 [Seccion3] onTablaUpdated() llamado`);
-    console.log(`📝 [Seccion3] formData.entrevistados antes:`, this.formData.entrevistados);
-    
-    setTimeout(() => {
-      const entrevistados = this.formData.entrevistados || [];
-      console.log(`📝 [Seccion3] entrevistados a guardar:`, entrevistados);
-      
-      if (Array.isArray(entrevistados)) {
-        // ✅ Usar setTableData() para tablas, que es el comando apropiado
-        this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistados);
-        console.log(`✅ [Seccion3] setTableData() llamado con ${entrevistados.length} filas`);
-        
-        // Persistir también en FormularioService (legacy storage)
-        this.formChange.persistFields(this.seccionId, 'form', { entrevistados });
-        console.log(`✅ [Seccion3] persistFields() llamado`);
-      }
+    const entrevistados = this.entrevistadosSignal();
+    if (Array.isArray(entrevistados)) {
+      this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistados);
+      this.formChangeService.persistFields(this.seccionId, 'form', { entrevistados });
       this.cdRef.markForCheck();
-    }, 0);
-  }
-
-  onFotografiasChange(fotos: any[]): void {
-    if (this.seccion3Component) {
-      this.seccion3Component.onFotografiasChange(fotos);
     }
   }
 
-  get photoPrefix(): string {
-    return this.seccion3Component?.PHOTO_PREFIX || 'fotografiaSeccion3';
+  override onFotografiasChange(fotografias: FotoItem[]): void {
+    // fotografias es un array de FotoItem[]
+    // Ya están guardadas en el state por ImageUploadComponent
+    // Solo necesitamos actualizar las referencias locales
+    this.fotografiasSeccion3 = fotografias || [];
+    this.cdRef.markForCheck();
   }
 
   get key(): number {
     return Date.now();
   }
 
-  get fotografias(): any[] {
-    return this.seccion3Component?.fotografiasSeccion3 || [];
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
   }
 }

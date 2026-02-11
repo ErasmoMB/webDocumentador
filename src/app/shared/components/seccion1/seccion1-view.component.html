@@ -1,0 +1,27 @@
+<div class="seccion-view-content">
+  <h2>3.1. DESCRIPCIÓN Y CARACTERIZACIÓN DE LOS ASPECTOS SOCIALES, CULTURALES Y ANTROPOLÓGICOS DE LA POBLACIÓN UBICADA EN EL ÁREA DE INFLUENCIA SOCIAL DEL PROYECTO</h2>
+  
+  <!-- Párrafo Principal -->
+  <div *ngIf="parrafoPrincipalSignal() as parrafo" class="text-justify" [innerHTML]="formatearParrafo(parrafo)"></div>
+
+  <!-- Objetivos de la LBS -->
+  <h3>3.1.1 Objetivos de la línea base social</h3>
+  <p class="text-justify">{{ parrafoIntroduccionSignal() }}</p>
+  <ul>
+    <li class="list-item" *ngFor="let objetivo of obtenerObjetivosParaVista(); trackBy: trackByIndex">
+      <span>{{ objetivo }}</span>
+    </li>
+  </ul>
+
+  <!-- Fotografías -->
+  <app-image-upload
+    [modoVista]="true"
+    [permitirMultiples]="true"
+    [fotografias]="fotografiasSeccion1"
+    [sectionId]="seccionId"
+    [photoPrefix]="PHOTO_PREFIX"
+    [labelTitulo]="'Título'"
+    [labelFuente]="'Fuente'"
+    [labelImagen]="'Imagen'">
+  </app-image-upload>
+</div>

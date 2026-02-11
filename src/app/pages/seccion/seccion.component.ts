@@ -45,9 +45,15 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
   private renderSeq = 0;
   isSectionComponentLoading = false;
   private readonly componentLoaders = {
-    seccion1: () => import('src/app/shared/components/seccion1/seccion1.component').then(m => m.Seccion1Component as unknown as Type<any>),
-    seccion2: () => import('src/app/shared/components/seccion2/seccion2.component').then(m => m.Seccion2Component as unknown as Type<any>),
-    seccion3: () => import('src/app/shared/components/seccion3/seccion3.component').then(m => m.Seccion3Component as unknown as Type<any>),
+    seccion1: () => import('src/app/shared/components/seccion1/seccion1-form.component').then(m => m.Seccion1FormComponent as unknown as Type<any>),
+    seccion1View: () => import('src/app/shared/components/seccion1/seccion1-view.component').then(m => m.Seccion1ViewComponent as unknown as Type<any>),
+    seccion1FormWrapper: () => import('src/app/shared/components/forms/seccion1-form-wrapper.component').then(m => m.Seccion1FormWrapperComponent as unknown as Type<any>),
+    seccion2: () => import('src/app/shared/components/seccion2/seccion2-form.component').then(m => m.Seccion2FormComponent as unknown as Type<any>),
+    seccion2View: () => import('src/app/shared/components/seccion2/seccion2-view.component').then(m => m.Seccion2ViewComponent as unknown as Type<any>),
+    seccion2FormWrapper: () => import('src/app/shared/components/forms/seccion2-form-wrapper.component').then(m => m.Seccion2FormWrapperComponent as unknown as Type<any>),
+    seccion3: () => import('src/app/shared/components/seccion3/seccion3-form.component').then(m => m.Seccion3FormComponent as unknown as Type<any>),
+    seccion3View: () => import('src/app/shared/components/seccion3/seccion3-view.component').then(m => m.Seccion3ViewComponent as unknown as Type<any>),
+    seccion3FormWrapper: () => import('src/app/shared/components/forms/seccion3-form-wrapper.component').then(m => m.Seccion3FormWrapperComponent as unknown as Type<any>),
     seccion4: () => import('src/app/shared/components/seccion4/seccion4.component').then(m => m.Seccion4Component as unknown as Type<any>),
     seccion5: () => import('src/app/shared/components/seccion5/seccion5.component').then(m => m.Seccion5Component as unknown as Type<any>),
     seccion6: () => import('src/app/shared/components/seccion6/seccion6.component').then(m => m.Seccion6Component as unknown as Type<any>),
@@ -111,11 +117,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion35: () => import('src/app/shared/components/seccion35/seccion35.component').then(m => m.Seccion35Component as unknown as Type<any>),
     seccion36: () => import('src/app/shared/components/seccion36/seccion36.component').then(m => m.Seccion36Component as unknown as Type<any>),
 
-    seccion2Form: () => import('src/app/shared/components/seccion2/seccion2-form.component').then(m => m.Seccion2FormComponent as unknown as Type<any>),
     seccion3Form: () => import('src/app/shared/components/seccion3/seccion3-form.component').then(m => m.Seccion3FormComponent as unknown as Type<any>),
 
-    seccion1FormWrapper: () => import('src/app/shared/components/forms/seccion1-form-wrapper.component').then(m => m.Seccion1FormWrapperComponent as unknown as Type<any>),
-    seccion2FormWrapper: () => import('src/app/shared/components/forms/seccion2-form-wrapper.component').then(m => m.Seccion2FormWrapperComponent as unknown as Type<any>),
     seccion4FormWrapper: () => import('src/app/shared/components/forms/seccion4-form-wrapper.component').then(m => m.Seccion4FormWrapperComponent as unknown as Type<any>),
     seccion7FormWrapper: () => import('src/app/shared/components/forms/seccion7-form-wrapper.component').then(m => m.Seccion7FormWrapperComponent as unknown as Type<any>),
     seccion14FormWrapper: () => import('src/app/shared/components/forms/seccion14-form-wrapper.component').then(m => m.Seccion14FormWrapperComponent as unknown as Type<any>),
@@ -409,16 +412,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     if (preferPreview && ViewChildHelper.hasComponent(componentId)) {
       return;
     }
-
     // Casos especiales: wrappers que exponen componente interno
-    if (componentId === 'seccion2' && instance.seccion2Component) {
-      ViewChildHelper.registerComponent(componentId, instance.seccion2Component);
-      return;
-    }
-    if (componentId === 'seccion3' && instance.seccion3Component) {
-      ViewChildHelper.registerComponent(componentId, instance.seccion3Component);
-      return;
-    }
+    // ✅ S1, S2, S3 ya son MODO IDEAL: no necesitan casos especiales
     if (componentId === 'seccion7' && instance.seccion7InternalComponent) {
       ViewChildHelper.registerComponent(componentId, instance.seccion7InternalComponent);
       return;
@@ -657,13 +652,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const componentMap: Partial<Record<string, ComponentLoader>> = {
-      '3.1.1': this.componentLoaders['seccion1'],
-      '3.1.2': this.componentLoaders['seccion2'],
-      '3.1.2.A': this.componentLoaders['seccion2'],
-      '3.1.2.B': this.componentLoaders['seccion2'],
-      '3.1.3': this.componentLoaders['seccion3'],
-      '3.1.3.A': this.componentLoaders['seccion3'],
-      '3.1.3.B': this.componentLoaders['seccion3'],
+      '3.1.1': this.componentLoaders['seccion1View'],
+      '3.1.2': this.componentLoaders['seccion2View'],
+      '3.1.2.A': this.componentLoaders['seccion2View'],
+      '3.1.2.B': this.componentLoaders['seccion2View'],
+      '3.1.3': this.componentLoaders['seccion3View'],
+      '3.1.3.A': this.componentLoaders['seccion3View'],
+      '3.1.3.B': this.componentLoaders['seccion3View'],
     };
 
     const loader = componentMap[seccionId];
@@ -792,7 +787,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     return [
       { matches: eq('3.1.1'), loader: this.componentLoaders['seccion1FormWrapper'], inputs: withSeccionId },
       { matches: eq('3.1.2', '3.1.2.A', '3.1.2.B'), loader: this.componentLoaders['seccion2FormWrapper'], inputs: withSeccionId },
-      { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders['seccion3Form'], inputs: withSeccionId },
+      { matches: eq('3.1.3', '3.1.3.A', '3.1.3.B'), loader: this.componentLoaders['seccion3FormWrapper'], inputs: withSeccionId },
       { matches: eq('3.1.4.B', '3.1.4.B.1', '3.1.4.B.2'), loader: this.componentLoaders['seccion21FormWrapper'], inputs: withModoFormulario },
       // ✅ AISI dinámico: cualquier grupo B (B.3, B.4, etc.)
       { matches: (id: string) => !!id.match(/^3\.1\.4\.B\.\d+$/), loader: this.componentLoaders['seccion21FormWrapper'], inputs: withModoFormulario },

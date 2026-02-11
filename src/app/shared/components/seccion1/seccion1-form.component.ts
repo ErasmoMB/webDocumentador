@@ -1,54 +1,84 @@
-import { Component, OnDestroy, Input, SimpleChanges, ChangeDetectionStrategy, Injector, Signal, computed, effect } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, Signal, computed, effect, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BaseSectionComponent } from '../base-section.component';
+import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
 import { GruposService } from 'src/app/core/services/domain/grupos.service';
-import { ChangeDetectorRef } from '@angular/core';
-import { BaseSectionComponent } from '../base-section.component';
-import { FotoItem } from '../image-upload/image-upload.component';
-import { CoreSharedModule } from '../../modules/core-shared.module';
 import { UIStoreService } from 'src/app/core/state/ui-store.contract';
+import { FotoItem } from '../image-upload/image-upload.component';
 import { 
   createJSONProcessingBatch, 
   validateJSONStructure, 
   getJSONStats,
   NormalizedJSONResult 
 } from 'src/app/core/services/data/json-normalizer';
+import {
+  SECCION1_WATCHED_FIELDS,
+  SECCION1_SECTION_ID,
+  SECCION1_TEMPLATES,
+  OBJETIVO_DEFAULT_1,
+  OBJETIVO_DEFAULT_2
+} from './seccion1-constants';
 
 @Component({
-    imports: [
-        CommonModule,
-        FormsModule,
-        CoreSharedModule
-    ],
-    selector: 'app-seccion1',
-    templateUrl: './seccion1.component.html',
+    standalone: true,
+    imports: [CommonModule, FormsModule, CoreSharedModule],
+    selector: 'app-seccion1-form',
+    templateUrl: './seccion1-form.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Seccion1Component extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.1';
-  @Input() override modoFormulario: boolean = false;
-  
+export class Seccion1FormComponent extends BaseSectionComponent implements OnDestroy {
+  @Input() override seccionId: string = SECCION1_SECTION_ID;
+  @Input() override modoFormulario: boolean = true;
+
   override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
   override useReactiveSync: boolean = true;
-  
-  fotografiasSeccion1: FotoItem[] = [];
-  
-  // Objetivos por defecto
-  private readonly objetivoDefault1 = 'Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera {projectName}.';
-  private readonly objetivoDefault2 = 'Brindar información básica de los poblados comprendidos en el área de influencia social donde se realizará el Proyecto que sirvan de base para poder determinar los posibles impactos sociales a originarse en esta primera etapa de exploración y, por ende, prevenir, reducir o mitigar las consecuencias negativas y potenciar las positivas.';
-  
-  override watchedFields: string[] = [
-    'parrafoSeccion1_principal',
-    'parrafoSeccion1_4',
-    'objetivosSeccion1',
-    'projectName',
-    'distritoSeleccionado',
-    'provinciaSeleccionada',
-    'departamentoSeleccionado'
-  ];
+  override watchedFields: string[] = SECCION1_WATCHED_FIELDS;
 
-  // ✅ SIGNALS PUROS
+  // ✅ PROPIEDADES PARA FOTOGRAFÍAS
+  override fotografiasFormMulti: FotoItem[] = [];
+
+  // ✅ SIGNAL PRINCIPAL: Lee todos los datos de la sección actual
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
+
+  // ✅ SIGNALS DERIVADOS POR CAMPO - Data básica
+  readonly projectNameSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '____';
+  });
+
+  readonly geoInfoSignal: Signal<any> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+  });
+
+  readonly departamentoSeleccionadoSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    return formData['departamentoSeleccionado'] ?? formData['geoInfo']?.DPTO ?? '';
+  });
+
+  readonly provinciaSeleccionadaSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    return formData['provinciaSeleccionada'] ?? formData['geoInfo']?.PROV ?? '';
+  });
+
+  readonly distritoSeleccionadoSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    return formData['distritoSeleccionado'] ?? formData['geoInfo']?.DIST ?? '';
+  });
+
+  readonly jsonFileNameSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    return formData['jsonFileName'] ?? '';
+  });
+
+  readonly centrosPobladosJSONSignal: Signal<any[]> = computed(() => {
+    const formData = this.formDataSignal();
+    return formData['centrosPobladosJSON'] ?? [];
+  });
+
+  // ✅ OBJETIVOS: Valores por defecto + valores del store
   readonly objetivosSignal: Signal<string[]> = computed(() => {
     const fromStore = this.projectFacade.selectField(this.seccionId, null, 'objetivosSeccion1')();
     if (Array.isArray(fromStore) && fromStore.length > 0) {
@@ -61,13 +91,39 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     ];
   });
 
-  readonly projectNameSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '____';
+  // ✅ PÁRRAFOS: Valores guardados o por defecto
+  readonly parrafoPrincipalSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    const guardado = formData['parrafoSeccion1_principal'];
+    if (guardado) return guardado;
+    return this.obtenerTextoParrafoPrincipal();
   });
 
-  readonly geoInfoSignal: Signal<any> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+  readonly parrafoIntroduccionSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    const guardado = formData['parrafoSeccion1_4'];
+    if (guardado) return guardado;
+    return this.obtenerTextoIntroduccionObjetivos();
   });
+
+  // ✅ EFFECT para reactividad automática
+  private readonly syncEffect = effect(
+    () => {
+      const _ = [
+        this.projectNameSignal(),
+        this.geoInfoSignal(),
+        this.departamentoSeleccionadoSignal(),
+        this.provinciaSeleccionadaSignal(),
+        this.distritoSeleccionadoSignal(),
+        this.objetivosSignal(),
+        this.parrafoPrincipalSignal(),
+        this.parrafoIntroduccionSignal(),
+        this.centrosPobladosJSONSignal()
+      ];
+      this.cdRef.markForCheck();
+    },
+    { allowSignalWrites: true }
+  );
 
   constructor(
     private textNormalization: TextNormalizationService,
@@ -77,21 +133,6 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     private store: UIStoreService
   ) {
     super(cdRef, injector);
-
-    // ✅ EFFECT: Sincronizar cambios reactivos (sin subscriptions manuales)
-    effect(() => {
-      const objetivos = this.objetivosSignal();
-      const projectName = this.projectNameSignal();
-      const geoInfo = this.geoInfoSignal();
-      
-      console.log('[Seccion1] Datos actualizados reactivamente:', {
-        objetivos: objetivos.length,
-        projectName,
-        geoInfo: Object.keys(geoInfo).length
-      });
-      
-      this.cdRef.markForCheck();
-    });
   }
 
   protected override onInitCustom(): void {
@@ -103,9 +144,9 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     const proyectoNormalizado = this.textNormalization.normalizarNombreProyecto(proyecto === '____' ? undefined : proyecto, false);
     
     if (index === 0) {
-      return this.objetivoDefault1.replace('{projectName}', proyectoNormalizado);
+      return OBJETIVO_DEFAULT_1.replace('{projectName}', proyectoNormalizado);
     }
-    return this.objetivoDefault2;
+    return OBJETIVO_DEFAULT_2;
   }
 
   // ✅ CRUD: Agregar objetivo
@@ -152,7 +193,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   protected override onChangesCustom(changes: SimpleChanges): void {
-    if (changes['modoFormulario'] && !this.modoFormulario) {
+    if (changes['modoFormulario'] && this.modoFormulario) {
       setTimeout(() => {
         this.cargarFotografias();
         this.cdRef.detectChanges();
@@ -217,20 +258,20 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
   }
 
   obtenerTextoParrafoPrincipal(): string {
-    if (this.datos.parrafoSeccion1_principal) {
+    if (this.datos?.parrafoSeccion1_principal) {
       return this.datos.parrafoSeccion1_principal;
     }
     
-    const proyecto = this.datos.projectName || '____';
-    const distrito = this.datos.distritoSeleccionado || '____';
-    const provincia = this.datos.provinciaSeleccionada || '____';
-    const departamento = this.datos.departamentoSeleccionado || '____';
+    const proyecto = this.datos?.projectName || '____';
+    const distrito = this.datos?.distritoSeleccionado || '____';
+    const provincia = this.datos?.provinciaSeleccionada || '____';
+    const departamento = this.datos?.departamentoSeleccionado || '____';
     
     return `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ${proyecto}, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.\n\nEl proyecto ${proyecto} se encuentra ubicado en el distrito de ${distrito}, en la provincia de ${provincia}, en el departamento de ${departamento}, bajo la administración del Gobierno Regional de ${departamento}, en el sur del Perú.\n\nEste estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
   }
 
   obtenerTextoIntroduccionObjetivos(): string {
-    if (this.datos.parrafoSeccion1_4) {
+    if (this.datos?.parrafoSeccion1_4) {
       return this.datos.parrafoSeccion1_4;
     }
     
@@ -461,6 +502,10 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     }
   }
 
+  override onFotografiasChange(fotografias: FotoItem[]): void {
+    this.fotografiasFormMulti = [...fotografias];
+  }
+
   llenarDatosPrueba() {
     const datosPrueba = {
       projectName: 'Paka',
@@ -518,7 +563,7 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
 
     // ✅ GENERAR SIEMPRE el párrafo principal con datos de prueba
     // Solo preservar si el usuario lo editó manualmente (no contiene "____")
-    const parrafoPrincipalActual = this.datos.parrafoSeccion1_principal;
+    const parrafoPrincipalActual = this.datos?.parrafoSeccion1_principal;
     const esParrafoPersonalizado = parrafoPrincipalActual && 
       !parrafoPrincipalActual.includes('____') && 
       parrafoPrincipalActual.trim().length > 0 &&
@@ -551,6 +596,10 @@ export class Seccion1Component extends BaseSectionComponent implements OnDestroy
     // Solo cargar fotografías y detectar cambios
     this.cargarFotografias();
     this.cdRef.detectChanges();
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
   }
 }
 
