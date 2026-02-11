@@ -60,6 +60,8 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     seccion5: () => import('src/app/shared/components/seccion5/seccion5-form.component').then(m => m.Seccion5FormComponent as unknown as Type<any>),
     seccion5View: () => import('src/app/shared/components/seccion5/seccion5-view.component').then(m => m.Seccion5ViewComponent as unknown as Type<any>),
     seccion5FormWrapper: () => import('src/app/shared/components/forms/seccion5-form-wrapper.component').then(m => m.Seccion5FormWrapperComponent as unknown as Type<any>),
+    seccion6: () => import('src/app/shared/components/seccion6/seccion6-form.component').then(m => m.Seccion6FormComponent as unknown as Type<any>),
+    seccion6View: () => import('src/app/shared/components/seccion6/seccion6-view.component').then(m => m.Seccion6ViewComponent as unknown as Type<any>),
     seccion6FormWrapper: () => import('src/app/shared/components/forms/seccion6-form-wrapper.component').then(m => m.Seccion6FormWrapperComponent as unknown as Type<any>),
     seccion7View: () => import('src/app/shared/components/seccion7/seccion7-view.component').then(m => m.Seccion7ViewComponent as unknown as Type<any>),
     seccion8: () => import('src/app/shared/components/seccion8/seccion8-view.component').then(m => m.Seccion8ViewComponent as unknown as Type<any>),
@@ -605,7 +607,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // ✅ AISD: Subsecciones dinámicas (A.1.X, A.2.X, A.3.X, etc.)
     if (this.esSubseccionAISD(seccionId, 1)) return { loader: this.componentLoaders['seccion5View'], inputs };
-    if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders['seccion6'], inputs };
+    if (this.esSubseccionAISD(seccionId, 2)) return { loader: this.componentLoaders['seccion6View'], inputs };
     if (this.esSubseccionAISD(seccionId, 3)) return { loader: this.componentLoaders['seccion7View'], inputs };
     if (this.esSubseccionAISD(seccionId, 4)) return { loader: this.componentLoaders['seccion8'], inputs };
     if (this.esSubseccionAISD(seccionId, 5)) return { loader: this.componentLoaders['seccion9'], inputs };
@@ -797,7 +799,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
       { matches: eq('3.1.4', '3.1.4.A', '3.1.4.A.1', '3.1.4.A.2'), loader: this.componentLoaders['seccion4FormWrapper'], inputs: withSeccionId },
 
       { matches: aisd(1), loader: this.componentLoaders['seccion5FormWrapper'], inputs: withSeccionId },
-      { matches: aisd(2), loader: this.componentLoaders['seccion6'], inputs: withModoFormulario },
+      { matches: aisd(2), loader: this.componentLoaders['seccion6FormWrapper'], inputs: withSeccionId },
       { matches: aisd(3), loader: this.componentLoaders['seccion7FormWrapper'], inputs: withSeccionId },
       { matches: aisd(4), loader: this.componentLoaders['seccion8Form'], inputs: withSeccionId },
       { matches: aisd(5), loader: this.componentLoaders['seccion9Form'], inputs: withSeccionId },
