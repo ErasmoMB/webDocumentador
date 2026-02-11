@@ -38,9 +38,21 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly tituloAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloAfiliacionSalud')() ?? '');
   readonly fuenteAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteAfiliacionSalud')() ?? '');
 
-  readonly natalidadTablaSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'natalidadMortalidadCpTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadCpTabla')() ?? []);
-  readonly morbilidadTablaSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'morbilidadCpTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadCpTabla')() ?? []);
-  readonly afiliacionTablaSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'afiliacionSaludTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')() ?? []);
+  readonly natalidadTablaSignal = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
+  readonly morbilidadTablaSignal = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
+  readonly afiliacionTablaSignal = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
   // Prefer the SectionPhotoCoordinator-populated cache (fotografiasCache) for the view
   readonly fotografiasSignal = computed(() => this.fotografiasCache ?? (this.projectFacade.selectField(this.seccionId, null, 'fotografiasInstitucionalidad')() ?? []));
 
@@ -123,32 +135,19 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     return (this.natalidadTablaSignal() || []).filter((item: any) => !item?.anio?.toString?.().toLowerCase?.().includes('total'));
   }
 
-  getTotalNatalidadMortalidad(): any {
-    return (this.natalidadTablaSignal() || []).find((item: any) => item?.anio?.toString?.().toLowerCase?.().includes('total')) || { anio: 'Total', natalidad: 0, mortalidad: 0 };
-  }
+  // Total removed by user request
 
   getMorbilidadSinTotal(): any[] {
     return (this.morbilidadTablaSignal() || []).filter((item: any) => !item?.grupo?.toString?.().toLowerCase?.().includes('total'));
   }
 
-  // Helper methods used in template (missing from port)
-  getCasosInfeccionesRespiratorias(): number {
-    const item = (this.morbilidadTablaSignal() || []).find((item: any) => item.grupo?.toString?.().toLowerCase?.().includes('infecciones'));
-    return item?.casos || 0;
-  }
-
-  getCasosObesidad(): number {
-    const item = (this.morbilidadTablaSignal() || []).find((item: any) => item.grupo?.toString?.().toLowerCase?.().includes('obesidad'));
-    return item?.casos || 0;
-  }
-
-  // Totals
-  getTotalMorbilidadRango0_11(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.edad0_11 === 'number' ? i.edad0_11 : parseInt(String(i.edad0_11).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
-  getTotalMorbilidadRango12_17(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.edad12_17 === 'number' ? i.edad12_17 : parseInt(String(i.edad12_17).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
-  getTotalMorbilidadRango18_29(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.edad18_29 === 'number' ? i.edad18_29 : parseInt(String(i.edad18_29).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
-  getTotalMorbilidadRango30_59(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.edad30_59 === 'number' ? i.edad30_59 : parseInt(String(i.edad30_59).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
-  getTotalMorbilidadRango60_mas(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.edad60_mas === 'number' ? i.edad60_mas : parseInt(String(i.edad60_mas).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
-  getTotalMorbilidadCasos(): number { return (this.getMorbilidadSinTotal() || []).reduce((s:any,i:any) => s + (typeof i.casos === 'number' ? i.casos : parseInt(String(i.casos).replace(/[^0-9\-\.]/g, '')) || 0), 0); }
+  // Totals removed by user request
+  getTotalMorbilidadRango0_11(): number { return 0; }
+  getTotalMorbilidadRango12_17(): number { return 0; }
+  getTotalMorbilidadRango18_29(): number { return 0; }
+  getTotalMorbilidadRango30_59(): number { return 0; }
+  getTotalMorbilidadRango60_mas(): number { return 0; }
+  getTotalMorbilidadCasos(): number { return 0; }
 
   getAfiliacionSaludAISIConPorcentajes(): any[] {
     return (this.afiliacionTablaSignal() || []).map((item: any) => ({ ...item, porcentaje: item.porcentaje || '0,00 %' }));
@@ -173,11 +172,8 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     return (this.afiliacionTablaSignal() || []).filter((item: any) => !item?.categoria?.toString?.().toLowerCase?.().includes('total'));
   }
 
-  getTotalAfiliacionSalud(): any {
-    const tabla = this.getAfiliacionSaludSinTotal() || [];
-    const casosTotal = tabla.reduce((s: number, it: any) => s + (typeof it.casos === 'number' ? it.casos : parseInt(String(it.casos).replace(/[^0-9\-\.]/g, '')) || 0), 0);
-    return { categoria: 'Total', casos: casosTotal, porcentaje: '100,00 %' };
-  }
+  // Total removed by user request
+  getTotalAfiliacionSalud(): any { return null; }
 
   override getFotografiasVista(): any[] { return this.fotografiasCache; }
 }

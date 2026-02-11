@@ -15,7 +15,7 @@
         type="text" 
         class="form-control"
         [value]="viewModel().cuadroTituloTiposVivienda"
-        (change)="onFieldChange('cuadroTituloTiposVivienda', $any($event.target).value)"
+        (change)="onFieldChange(obtenerPrefijoGrupo() ? 'cuadroTituloTiposVivienda' + obtenerPrefijoGrupo() : 'cuadroTituloTiposVivienda', $any($event.target).value)"
         placeholder="Ej: Tipos de Vivienda">
     </div>
 

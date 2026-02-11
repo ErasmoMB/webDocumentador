@@ -52,15 +52,21 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   });
 
   readonly natalidadTablaSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'natalidadMortalidadCpTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadCpTabla')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly morbilidadTablaSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'morbilidadCpTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadCpTabla')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly afiliacionTablaSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'afiliacionSaludTabla')() ?? this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly fotografiasSignal: Signal<any[]> = computed(() => {
@@ -217,7 +223,8 @@ export class Seccion29FormComponent extends BaseSectionComponent {
     totalKey: 'anio',
     campoTotal: 'natalidad',
     camposParaCalcular: ['natalidad', 'mortalidad'],
-    calcularPorcentajes: false
+    calcularPorcentajes: false,
+    noInicializarDesdeEstructura: true
   };
 
   readonly morbilidadConfig: TableConfig = {
@@ -225,7 +232,8 @@ export class Seccion29FormComponent extends BaseSectionComponent {
     totalKey: 'grupo',
     campoTotal: 'casos',
     camposParaCalcular: ['casos'],
-    calcularPorcentajes: false
+    calcularPorcentajes: false,
+    noInicializarDesdeEstructura: true
   };
 
   readonly afiliacionConfig: TableConfig = {
@@ -235,13 +243,7 @@ export class Seccion29FormComponent extends BaseSectionComponent {
     campoPorcentaje: 'porcentaje',
     calcularPorcentajes: true,
     camposParaCalcular: ['casos'],
-    estructuraInicial: [
-      { categoria: 'Seguro Integral de Salud (SIS)', casos: null, porcentaje: null },
-      { categoria: 'ESSALUD', casos: null, porcentaje: null },
-      { categoria: 'Seguro de fuerzas armadas o policiales', casos: null, porcentaje: null },
-      { categoria: 'Seguro privado de salud', casos: null, porcentaje: null },
-      { categoria: 'Ningún seguro', casos: null, porcentaje: null }
-    ]
+    noInicializarDesdeEstructura: true
   };
 
   actualizarTexto(field: string, valor: string) {

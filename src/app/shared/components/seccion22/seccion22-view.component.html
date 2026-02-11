@@ -5,7 +5,10 @@
     <p style="margin-top: 6px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
     <p class="text-justify" [innerHTML]="vm.texts.demografiaText"></p>
 
-    <app-table-wrapper [title]="vm.fullTituloPoblacionSexo" [sectionId]="seccionId">
+    <!-- Número de cuadro con numeración global -->
+    <p class="table-title">Cuadro N° {{ globalTableNumberSignal() }}</p>
+    
+    <app-table-wrapper [title]="vm.fullTituloPoblacionSexo" [sectionId]="seccionId" [hideNumber]="true">
       <app-generic-table [data]="vm.poblacionSexoView" [config]="poblacionSexoConfigView()"></app-generic-table>
     </app-table-wrapper>
     <p class="source">FUENTE: {{ vm.fuentePoblacionSexo }}</p>
@@ -13,11 +16,14 @@
     <p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
     <p class="text-justify" [innerHTML]="vm.texts.grupoEtarioText"></p>
 
-    <app-table-wrapper [title]="vm.fullTituloPoblacionEtario" [sectionId]="seccionId">
+    <!-- Número de cuadro con numeración global (segunda tabla) -->
+    <p class="table-title">Cuadro N° {{ globalTableNumberSignal2() }}</p>
+    
+    <app-table-wrapper [title]="vm.fullTituloPoblacionEtario" [sectionId]="seccionId" [hideNumber]="true">
       <app-generic-table [data]="vm.poblacionEtarioView" [config]="poblacionEtarioConfigView()"></app-generic-table>
     </app-table-wrapper>
     <p class="source">FUENTE: {{ vm.fuentePoblacionEtario }}</p>
 
-    <app-image-upload *ngIf="vm.fotos && vm.fotos.length > 0" [fotografias]="vm.fotos" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX" [modoVista]="true" [permitirMultiples]="true" [mostrarNumero]="true" [mostrarTitulo]="true" [mostrarFuente]="true"></app-image-upload>
+    <app-image-upload *ngIf="vm.fotos && vm.fotos.length > 0" [fotografias]="vm.fotos" [sectionId]="seccionId" [photoPrefix]="photoPrefixSignal()" [modoVista]="true" [permitirMultiples]="true" [mostrarNumero]="true" [mostrarTitulo]="true" [mostrarFuente]="true"></app-image-upload>
   </div>
 </div>

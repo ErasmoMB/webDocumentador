@@ -46,13 +46,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    // Estructura inicial fija (no editable en cantidad de filas)
-    estructuraInicial: [
-      { categoria: '14 a 29 años', casos: 0, porcentaje: '' },
-      { categoria: '30 a 44 años', casos: 0, porcentaje: '' },
-      { categoria: '45 a 64 años', casos: 0, porcentaje: '' },
-      { categoria: '65 años a más', casos: 0, porcentaje: '' }
-    ],
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -62,12 +56,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    // Estructura inicial fija: PEA / No PEA
-    estructuraInicial: [
-      { categoria: 'PEA', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' },
-      { categoria: 'No PEA', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' }
-    ],
-    // Activar cálculo automático cuando se cambien 'hombres' o 'mujeres'
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['hombres', 'mujeres']
   };
@@ -77,11 +66,7 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
-    // Estructura inicial fija: PEA Ocupada / PEA Desocupada
-    estructuraInicial: [
-      { categoria: 'PEA Ocupada', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' },
-      { categoria: 'PEA Desocupada', hombres: 0, porcentajeHombres: '', mujeres: 0, porcentajeMujeres: '', casos: 0, porcentaje: '' }
-    ],
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['hombres','mujeres']
   };

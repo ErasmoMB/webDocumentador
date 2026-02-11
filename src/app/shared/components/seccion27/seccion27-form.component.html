@@ -50,7 +50,7 @@
         <app-image-upload
           [fotografias]="fotografiasTransporteFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
+          [photoPrefix]="photoPrefixSignalTransporte()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -101,7 +101,9 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [(ngModel)]="datos['cuadroTituloTelecomunicaciones']" (ngModelChange)="onFieldChange('cuadroTituloTelecomunicaciones', $event)" placeholder="Título del cuadro" />
+        <input type="text" class="input" [value]="cuadroTituloTelecomunicacionesSignal()" 
+          (input)="onFieldChange('cuadroTituloTelecomunicaciones', $any($event.target).value)" 
+          placeholder="Título del cuadro" />
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -124,7 +126,9 @@
 
       <div class="form-field" style="margin-top: 10px;">
         <label class="label">Fuente del cuadro</label>
-        <input type="text" class="input" [(ngModel)]="datos['cuadroFuenteTelecomunicaciones']" (ngModelChange)="onFieldChange('cuadroFuenteTelecomunicaciones', $event)" placeholder="Fuente del cuadro" />
+        <input type="text" class="input" [value]="cuadroFuenteTelecomunicacionesSignal()"
+          (input)="onFieldChange('cuadroFuenteTelecomunicaciones', $any($event.target).value)"
+          placeholder="Fuente del cuadro" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
@@ -132,7 +136,7 @@
         <app-image-upload
           [fotografias]="fotografiasTelecomunicacionesFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
+          [photoPrefix]="photoPrefixSignalTelecomunicaciones()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"

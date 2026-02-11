@@ -7,9 +7,10 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   standalone: true,
@@ -22,7 +23,15 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.4';
   @Input() override modoFormulario: boolean = false;
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalTableNumberSignal2: Signal<string>;
+  readonly globalTableNumberSignal3: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
@@ -92,12 +101,13 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   });
 
 
-  // Table configs (to be used by dynamic tables in the form)
+  // ✅ Table configs con noInicializarDesdeEstructura
   tiposViviendaConfig: TableConfig = {
     tablaKey: 'tiposViviendaAISI',
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -107,6 +117,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -116,6 +127,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     totalKey: 'categoria',
     campoTotal: 'casos',
     campoPorcentaje: 'porcentaje',
+    noInicializarDesdeEstructura: true,
     calcularPorcentajes: true,
     camposParaCalcular: ['casos']
   };
@@ -139,11 +151,56 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     cuadroFuenteMaterialesVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteMaterialesVivienda')() ?? ''
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumberingService: TableNumberingService) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private globalNumbering: GlobalNumberingService,
+    private formChange: FormChangeService
+  ) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+      console.debug(`[SECCION25-FORM] photoPrefixSignal: ${prefix}`);
+      return prefix;
+    });
+    
+    // Inicializar PHOTO_PREFIX para compatibilidad
+    this.PHOTO_PREFIX = this.photoPrefixSignal();
+    
+    // ✅ Signal para número global de tabla (primera tabla: tiposViviendaAISI)
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION25-FORM] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (segunda tabla: condicionOcupacionAISI)
+    this.globalTableNumberSignal2 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+      console.debug(`[SECCION25-FORM] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (tercera tabla: materialesViviendaAISI)
+    this.globalTableNumberSignal3 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+      console.debug(`[SECCION25-FORM] globalTableNumberSignal3: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosSignal();
+      const photoNumbers = fotos.map((_, index) => {
+        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+      });
+      console.debug(`[SECCION25-FORM] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
 
     // EFFECT: Sync datos
     effect(() => {
@@ -176,11 +233,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.datos['centroPobladoAISI'] = centroPobladoAISI;
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
-    try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI });
-    } catch (e) {}
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
     
     this.cargarFotografias();
 
@@ -189,65 +242,57 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       const datos = this.datos || {};
 
       // Auto-fill table titles and sources when tables are present but title/source fields are empty
-      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos['cuadroTituloTiposVivienda'] === undefined || datos['cuadroTituloTiposVivienda'] === '' || datos['cuadroTituloTiposVivienda'] === '____')) {
-        this.onFieldChange('cuadroTituloTiposVivienda', 'Tipos de Vivienda');
+      const prefijo = this.obtenerPrefijoGrupo();
+      const tituloTiposKey = prefijo ? `cuadroTituloTiposVivienda${prefijo}` : 'cuadroTituloTiposVivienda';
+      const fuenteTiposKey = prefijo ? `cuadroFuenteTiposVivienda${prefijo}` : 'cuadroFuenteTiposVivienda';
+      const tituloCondKey = prefijo ? `cuadroTituloCondicionOcupacion${prefijo}` : 'cuadroTituloCondicionOcupacion';
+      const fuenteCondKey = prefijo ? `cuadroFuenteCondicionOcupacion${prefijo}` : 'cuadroFuenteCondicionOcupacion';
+      const tituloMatKey = prefijo ? `cuadroTituloMaterialesVivienda${prefijo}` : 'cuadroTituloMaterialesVivienda';
+      const fuenteMatKey = prefijo ? `cuadroFuenteMaterialesVivienda${prefijo}` : 'cuadroFuenteMaterialesVivienda';
+      
+      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos[tituloTiposKey] === undefined || datos[tituloTiposKey] === '' || datos[tituloTiposKey] === '____')) {
+        this.onFieldChange(tituloTiposKey, 'Tipos de Vivienda');
       }
-      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos['cuadroFuenteTiposVivienda'] === undefined || datos['cuadroFuenteTiposVivienda'] === '' || datos['cuadroFuenteTiposVivienda'] === '____')) {
-        this.onFieldChange('cuadroFuenteTiposVivienda', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
-      }
-
-      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos['cuadroTituloCondicionOcupacion'] === undefined || datos['cuadroTituloCondicionOcupacion'] === '' || datos['cuadroTituloCondicionOcupacion'] === '____')) {
-        this.onFieldChange('cuadroTituloCondicionOcupacion', 'Condición de Ocupación');
-      }
-      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos['cuadroFuenteCondicionOcupacion'] === undefined || datos['cuadroFuenteCondicionOcupacion'] === '' || datos['cuadroFuenteCondicionOcupacion'] === '____')) {
-        this.onFieldChange('cuadroFuenteCondicionOcupacion', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
-      }
-
-      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos['cuadroTituloMaterialesVivienda'] === undefined || datos['cuadroTituloMaterialesVivienda'] === '' || datos['cuadroTituloMaterialesVivienda'] === '____')) {
-        this.onFieldChange('cuadroTituloMaterialesVivienda', 'Tipos de materiales de la vivienda');
-      }
-      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos['cuadroFuenteMaterialesVivienda'] === undefined || datos['cuadroFuenteMaterialesVivienda'] === '' || datos['cuadroFuenteMaterialesVivienda'] === '____')) {
-        this.onFieldChange('cuadroFuenteMaterialesVivienda', 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos[fuenteTiposKey] === undefined || datos[fuenteTiposKey] === '' || datos[fuenteTiposKey] === '____')) {
+        this.onFieldChange(fuenteTiposKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
       }
 
-      // Ensure paragraph fields exist so that the preview can display them exactly as in the form
-      const textoViviendaField = this.projectFacade.selectField(this.seccionId, null, 'textoViviendaAISI')();
+      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos[tituloCondKey] === undefined || datos[tituloCondKey] === '' || datos[tituloCondKey] === '____')) {
+        this.onFieldChange(tituloCondKey, 'Condición de Ocupación');
+      }
+      if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos[fuenteCondKey] === undefined || datos[fuenteCondKey] === '' || datos[fuenteCondKey] === '____')) {
+        this.onFieldChange(fuenteCondKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      }
+
+      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos[tituloMatKey] === undefined || datos[tituloMatKey] === '' || datos[tituloMatKey] === '____')) {
+        this.onFieldChange(tituloMatKey, 'Tipos de materiales de la vivienda');
+      }
+      if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos[fuenteMatKey] === undefined || datos[fuenteMatKey] === '' || datos[fuenteMatKey] === '____')) {
+        this.onFieldChange(fuenteMatKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+      }
+
+      // ✅ CORREGIDO - Usar campos con prefijo para párrafos
+      const textoViviendaKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
+      const textoOcupacionKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
+      const textoEstructuraKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+      
+      const textoViviendaField = this.projectFacade.selectField(this.seccionId, null, textoViviendaKey)();
       if (textoViviendaField === undefined || textoViviendaField === null || textoViviendaField === '') {
-        this.onFieldChange('textoViviendaAISI', this.obtenerTextoViviendaAISI());
+        this.onFieldChange(textoViviendaKey, this.obtenerTextoViviendaAISI());
       }
 
-      const textoOcupacionField = this.projectFacade.selectField(this.seccionId, null, 'textoOcupacionViviendaAISI')();
+      const textoOcupacionField = this.projectFacade.selectField(this.seccionId, null, textoOcupacionKey)();
       if (textoOcupacionField === undefined || textoOcupacionField === null || textoOcupacionField === '') {
-        this.onFieldChange('textoOcupacionViviendaAISI', this.obtenerTextoOcupacionViviendaAISI());
+        this.onFieldChange(textoOcupacionKey, this.obtenerTextoOcupacionViviendaAISI());
       }
 
-      const textoEstructuraField = this.projectFacade.selectField(this.seccionId, null, 'textoEstructuraAISI')();
+      const textoEstructuraField = this.projectFacade.selectField(this.seccionId, null, textoEstructuraKey)();
       if (textoEstructuraField === undefined || textoEstructuraField === null || textoEstructuraField === '') {
-        this.onFieldChange('textoEstructuraAISI', this.obtenerTextoEstructuraAISI());
+        this.onFieldChange(textoEstructuraKey, this.obtenerTextoEstructuraAISI());
       }
 
-      // Ensure fixed initial structure for "Condición de Ocupación" and persist it (no add/delete in form)
-      try {
-        const condKey = this.getTablaKeyCondicionOcupacion();
-        const currentCond = (this.projectFacade.selectField(this.seccionId, null, condKey)() ??
-                            this.projectFacade.selectTableData(this.seccionId, null, condKey)() ??
-                            this.datos[condKey]) ?? [];
-        if (!Array.isArray(currentCond) || currentCond.length === 0) {
-          const inicialCond = [
-            { categoria: 'Ocupada, con personas presentes', casos: '', porcentaje: '' },
-            { categoria: 'Ocupada, con personas ausentes', casos: '', porcentaje: '' },
-            { categoria: 'Ocupada, de uso ocasional', casos: '', porcentaje: '' },
-            { categoria: 'Desocupada, abandonada o cerrada', casos: '', porcentaje: '' }
-          ];
-          this.projectFacade.setField(this.seccionId, null, condKey, inicialCond);
-          try {
-            const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-            const formChange = this.injector.get(FormChangeServiceToken, null);
-            if (formChange) formChange.persistFields(this.seccionId, 'table', { [condKey]: inicialCond }, { notifySync: true });
-          } catch (e) {}
-          this.datos[condKey] = inicialCond;
-        }
-      } catch (e) {}
+      // NOTE: Tablas se llenan con datos del backend (no hay estructura inicial)
+      // La configuración `noInicializarDesdeEstructura: true` en los TableConfigs asegura esto
     } catch (e) {
       /* no bloquear inicio por este auto-fill */
     }
@@ -309,17 +354,17 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.datos[key] = [...datos];
     try { this.projectFacade.setTableData(this.seccionId, null, key, this.datos[key]); } catch (e) {}
     try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) {
-        // Incluir párrafos actuales en la misma persistencia para evitar races que sobrescriban ediciones de texto
-        const textPayload: any = {};
-        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
-        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
-        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+      // ✅ CORREGIDO - Usar prefijos para párrafos
+      const prefijo = this.obtenerPrefijoGrupo();
+      const textPayload: any = {};
+      const textoViviendaKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
+      const textoOcupacionKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
+      const textoEstructuraKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+      if (this.datos[textoViviendaKey] !== undefined) textPayload[textoViviendaKey] = this.datos[textoViviendaKey];
+      if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
+      if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-        formChange.persistFields(this.seccionId, 'table', { [key]: this.datos[key], ...textPayload }, { notifySync: true });
-      }
+      this.formChange.persistFields(this.seccionId, 'table', { [key]: this.datos[key], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -368,16 +413,17 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.datos[tablaKey] = [...tabla];
     try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
     try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) {
-        const textPayload: any = {};
-        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
-        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
-        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+      // ✅ CORREGIDO - Usar prefijos para párrafos
+      const prefijo = this.obtenerPrefijoGrupo();
+      const textPayload: any = {};
+      const textoViviendaKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
+      const textoOcupacionKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
+      const textoEstructuraKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+      if (this.datos[textoViviendaKey] !== undefined) textPayload[textoViviendaKey] = this.datos[textoViviendaKey];
+      if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
+      if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-        formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
-      }
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -413,16 +459,17 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.datos[tablaKey] = [...tabla];
     try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
     try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) {
-        const textPayload: any = {};
-        if (this.datos['textoViviendaAISI'] !== undefined) textPayload['textoViviendaAISI'] = this.datos['textoViviendaAISI'];
-        if (this.datos['textoOcupacionViviendaAISI'] !== undefined) textPayload['textoOcupacionViviendaAISI'] = this.datos['textoOcupacionViviendaAISI'];
-        if (this.datos['textoEstructuraAISI'] !== undefined) textPayload['textoEstructuraAISI'] = this.datos['textoEstructuraAISI'];
+      // ✅ CORREGIDO - Usar prefijos para párrafos
+      const prefijo = this.obtenerPrefijoGrupo();
+      const textPayload: any = {};
+      const textoViviendaKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
+      const textoOcupacionKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
+      const textoEstructuraKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+      if (this.datos[textoViviendaKey] !== undefined) textPayload[textoViviendaKey] = this.datos[textoViviendaKey];
+      if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
+      if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-        formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
-      }
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -632,14 +679,14 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   }
   // Cuadros numbering
   obtenerNumeroCuadroTiposVivienda(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
   }
 
   obtenerNumeroCuadroCondicionOcupacion(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
   }
 
   obtenerNumeroCuadroMateriales(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
   }
 }

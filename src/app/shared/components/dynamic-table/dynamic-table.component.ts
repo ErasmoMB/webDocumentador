@@ -199,8 +199,9 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
 
 
     // Si no hubo datos locales, intentar cargar directamente desde ProjectState (table store)
+    // ✅ No cargar si noInicializarDesdeEstructura está activo
     try {
-      if ((!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) && tablaKeyActual) {
+      if ((!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) && tablaKeyActual && !this.config.noInicializarDesdeEstructura) {
         try {
           const fromStore = (this.projectFacade && typeof this.projectFacade.selectTableData === 'function') ? (this.projectFacade.selectTableData(this.sectionId, null, tablaKeyActual)() || (tablaKeyBase ? this.projectFacade.selectTableData(this.sectionId, null, tablaKeyBase)() : undefined)) : undefined;
           if (Array.isArray(fromStore) && fromStore.length > 0) {

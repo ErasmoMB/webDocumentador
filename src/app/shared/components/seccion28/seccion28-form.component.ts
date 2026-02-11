@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, ViewChildren, QueryList } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, ViewChildren, QueryList, Signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
@@ -11,6 +11,7 @@ import { TableConfig } from 'src/app/core/services/table-management.service';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/group-config.service';
 import { EducacionService } from 'src/app/core/services/domain/educacion.service';
+import { AISIGroupService } from 'src/app/core/services/aisi-group.service';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
@@ -32,6 +33,93 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
   readonly PHOTO_PREFIX_EDUCACION = 'fotografiaEducacionAISI';
   readonly PHOTO_PREFIX_RECREACION = 'fotografiaRecreacionAISI';
   readonly PHOTO_PREFIX_DEPORTE = 'fotografiaDeporteAISI';
+
+  // ✅ Signals de prefijos para campos con aislamiento
+  readonly photoPrefixSignalSalud: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaSaludAISI${prefijo}` : 'fotografiaSaludAISI';
+  });
+
+  readonly photoPrefixSignalEducacion: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaEducacionAISI${prefijo}` : 'fotografiaEducacionAISI';
+  });
+
+  readonly photoPrefixSignalRecreacion: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaRecreacionAISI${prefijo}` : 'fotografiaRecreacionAISI';
+  });
+
+  readonly photoPrefixSignalDeporte: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaDeporteAISI${prefijo}` : 'fotografiaDeporteAISI';
+  });
+
+  readonly tituloPuestoSaludSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `puestoSaludTitulo${prefijo}` : 'puestoSaludTitulo';
+    return this.datos[campoKey] || this.datos['puestoSaludTitulo'] || '';
+  });
+
+  readonly fuentePuestoSaludSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `puestoSaludFuente${prefijo}` : 'puestoSaludFuente';
+    return this.datos[campoKey] || this.datos['puestoSaludFuente'] || '';
+  });
+
+  readonly tituloEducacionSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `educacionTitulo${prefijo}` : 'educacionTitulo';
+    return this.datos[campoKey] || this.datos['educacionTitulo'] || '';
+  });
+
+  readonly fuenteEducacionSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `educacionFuente${prefijo}` : 'educacionFuente';
+    return this.datos[campoKey] || this.datos['educacionFuente'] || '';
+  });
+
+  readonly textoSaludSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoSaludCP${prefijo}` : 'textoSaludCP';
+    return this.datos[campoKey] || this.datos['textoSaludCP'] || '';
+  });
+
+  readonly textoEducacionSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoEducacionCP${prefijo}` : 'textoEducacionCP';
+    return this.datos[campoKey] || this.datos['textoEducacionCP'] || '';
+  });
+
+  readonly textoRecreacion1Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoRecreacionCP1${prefijo}` : 'textoRecreacionCP1';
+    return this.datos[campoKey] || this.datos['textoRecreacionCP1'] || '';
+  });
+
+  readonly textoRecreacion2Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoRecreacionCP2${prefijo}` : 'textoRecreacionCP2';
+    return this.datos[campoKey] || this.datos['textoRecreacionCP2'] || '';
+  });
+
+  readonly textoRecreacion3Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoRecreacionCP3${prefijo}` : 'textoRecreacionCP3';
+    return this.datos[campoKey] || this.datos['textoRecreacionCP3'] || '';
+  });
+
+  readonly textoDeporte1Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoDeporteCP1${prefijo}` : 'textoDeporteCP1';
+    return this.datos[campoKey] || this.datos['textoDeporteCP1'] || '';
+  });
+
+  readonly textoDeporte2Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoKey = prefijo ? `textoDeporteCP2${prefijo}` : 'textoDeporteCP2';
+    return this.datos[campoKey] || this.datos['textoDeporteCP2'] || '';
+  });
 
   fotografiasSaludFormMulti: FotoItem[] = [];
   fotografiasEducacionFormMulti: FotoItem[] = [];
@@ -70,7 +158,8 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     campoTotal: 'cantidadEstudiantes',
     campoPorcentaje: 'porcentaje',
     calcularPorcentajes: true,
-    camposParaCalcular: ['cantidadEstudiantes']
+    camposParaCalcular: ['cantidadEstudiantes'],
+    noInicializarDesdeEstructura: true  // ✅ Datos del backend
   };
 
   constructor(

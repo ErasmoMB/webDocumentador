@@ -30,12 +30,13 @@
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
-        [config]="{ tablaKey: 'actividadesEconomicasAISI', totalKey: 'actividad', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true }"
+        [config]="{ tablaKey: tablaKeyActividadesSignal(), totalKey: 'actividad', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, noInicializarDesdeEstructura: true }"
         [columns]="[
           { field: 'actividad', label: 'Actividad Económica', type: 'text', placeholder: 'Ej: Agricultura, ganadería, silvicultura y pesca' },
           { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
         ]"
+        [tablaKey]="tablaKeyActividadesSignal()"
         (tableUpdated)="onActividadesEconomicasChange($event)">
       </app-dynamic-table>
 
@@ -59,15 +60,15 @@
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías de Actividades Económicas</label>
       <app-image-upload
-        [fotografias]="fotosActividadesSignal()"
-        [sectionId]="seccionId"
-        [photoPrefix]="'fotografiaActividadesEconomicas'"
-        [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaActividadesEconomicas')">
-      </app-image-upload>
+          [fotografias]="fotosActividadesSignal()"
+          [sectionId]="seccionId"
+          [photoPrefix]="'fotografiaActividadesEconomicas' + obtenerPrefijoGrupo()"
+          [permitirMultiples]="true"
+          labelTitulo="Título de la fotografía"
+          labelFuente="Fuente de la fotografía"
+          labelImagen="Fotografía - Imagen"
+          (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaActividadesEconomicas')">
+        </app-image-upload>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
@@ -88,9 +89,9 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de Mercado</label>
         <app-image-upload
-        [fotografias]="fotosMercadoSignal()"
+          [fotografias]="fotosMercadoSignal()"
           [sectionId]="seccionId"
-          [photoPrefix]="'fotografiaMercado'"
+          [photoPrefix]="'fotografiaMercado' + obtenerPrefijoGrupo()"
           [permitirMultiples]="true"
           (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaMercado')">
         </app-image-upload>
@@ -112,7 +113,7 @@
         <app-image-upload
           [fotografias]="fotosCacheSignal()"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX"
+          [photoPrefix]="photoPrefixSignal()"
           [permitirMultiples]="true"
           (fotografiasChange)="onFotografiasChangeHandler($event)">
         </app-image-upload>

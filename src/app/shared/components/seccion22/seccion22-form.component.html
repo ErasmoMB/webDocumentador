@@ -14,7 +14,7 @@
 
     <div class="form-field mt-lg">
       <label class="label">Título — Población según sexo</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloPoblacionSexo']" (ngModelChange)="onTituloCuadroPoblacionSexoChange($event)" placeholder="Ej: Población por sexo – CP Cahuacho (2017)">
+      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionSexoSignal()]" (ngModelChange)="onTituloCuadroPoblacionSexoChange($event)" placeholder="Ej: Población por sexo – CP Cahuacho (2017)">
     </div>
 
     <div class="form-field mt-md">
@@ -22,13 +22,13 @@
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
-        [config]="{ tablaKey: 'poblacionSexoAISI', totalKey: 'sexo', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], estructuraInicial: [{ sexo: 'Hombre', casos: '', porcentaje: '' }, { sexo: 'Mujer', casos: '', porcentaje: '' }] }"
+        [config]="{ tablaKey: tablaKeyPoblacionSexoSignal(), totalKey: 'sexo', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }"
         [columns]="[
           { field: 'sexo', label: 'Sexo', type: 'text', readonly: true },
           { field: 'casos', label: 'Casos', type: 'number' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
         ]"
-        [tablaKey]="'poblacionSexoAISI'"
+        [tablaKey]="tablaKeyPoblacionSexoSignal()"
         [showAddButton]="false"
         [showDeleteButton]="false"
         (tableUpdated)="onPoblacionSexoUpdated($event)">
@@ -37,12 +37,12 @@
 
     <div class="form-field mt-md">
       <label class="label">Fuente — Población por Sexo</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroFuentePoblacionSexo']" (ngModelChange)="onFuenteCuadroPoblacionSexoChange($event)" placeholder="Ej: Censos Nacionales 2017">
+      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionSexoSignal()]" (ngModelChange)="onFuenteCuadroPoblacionSexoChange($event)" placeholder="Ej: Censos Nacionales 2017">
     </div>
 
     <div class="form-field mt-lg">
       <label class="label">Título — Población según grupo etario</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroTituloPoblacionEtario']" (ngModelChange)="onTituloCuadroPoblacionEtarioChange($event)" placeholder="Ej: Población por grupo etario – CP Cahuacho (2017)">
+      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionEtarioSignal()]" (ngModelChange)="onTituloCuadroPoblacionEtarioChange($event)" placeholder="Ej: Población por grupo etario – CP Cahuacho (2017)">
     </div>
 
     <div class="form-field mt-md">
@@ -50,13 +50,13 @@
       <app-dynamic-table 
         [datos]="datos" 
         [sectionId]="seccionId"
-        [config]="{ tablaKey: 'poblacionEtarioAISI', totalKey: 'categoria', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], estructuraInicial: [{ categoria: '0 a 14 años', casos: '', porcentaje: '' }, { categoria: '15 a 29 años', casos: '', porcentaje: '' }, { categoria: '30 a 44 años', casos: '', porcentaje: '' }, { categoria: '45 a 64 años', casos: '', porcentaje: '' }, { categoria: '65 años a más', casos: '', porcentaje: '' }] }" 
+        [config]="{ tablaKey: tablaKeyPoblacionEtarioSignal(), totalKey: 'categoria', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }" 
         [columns]="[
           { field: 'categoria', label: 'Categoría', type: 'text', readonly: true },
           { field: 'casos', label: 'Casos', type: 'number' },
           { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
         ]"
-        [tablaKey]="'poblacionEtarioAISI'"
+        [tablaKey]="tablaKeyPoblacionEtarioSignal()"
         [showAddButton]="false"
         [showDeleteButton]="false"
         (tableUpdated)="onPoblacionEtarioUpdated($event)">
@@ -65,12 +65,12 @@
 
     <div class="form-field mt-md">
       <label class="label">Fuente — Población por Grupo Etario</label>
-      <input type="text" class="form-control" [(ngModel)]="datos['cuadroFuentePoblacionEtario']" (ngModelChange)="onFuenteCuadroPoblacionEtarioChange($event)" placeholder="Ej: Censos Nacionales 2017">
+      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionEtarioSignal()]" (ngModelChange)="onFuenteCuadroPoblacionEtarioChange($event)" placeholder="Ej: Censos Nacionales 2017">
     </div>
 
     <div class="form-field mt-lg">
       <label class="label">Fotografías</label>
-      <app-image-upload [fotografias]="viewModel().fotos" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX" [mostrarTitulo]="true" [mostrarFuente]="true" (fotografiasChange)="onFotografiasChange($event)"></app-image-upload>
+      <app-image-upload [fotografias]="viewModel().fotos" [sectionId]="seccionId" [photoPrefix]="photoPrefixSignal()" [mostrarTitulo]="true" [mostrarFuente]="true" (fotografiasChange)="onFotografiasChange($event)"></app-image-upload>
     </div>
   </div>
 </div>

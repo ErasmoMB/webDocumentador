@@ -10,7 +10,13 @@ export class TableInitializationService {
     datos: any,
     config: TableConfig
   ): void {
-    const { tablaKey, estructuraInicial } = config;
+    const { tablaKey, estructuraInicial, noInicializarDesdeEstructura } = config;
+    
+    // ✅ Si noInicializarDesdeEstructura es true, no inicializar nada
+    if (noInicializarDesdeEstructura) {
+      return;
+    }
+    
     const necesitaReinicializar = this.verificarSiNecesitaReinicializarConEstructura(
       datos[tablaKey], 
       estructuraInicial
@@ -24,10 +30,6 @@ export class TableInitializationService {
         if (config.campoTotal) {
           fila[config.campoTotal] = 0;
         }
-        // ✅ FASE 1: NO crear porcentaje por defecto - se calculará dinámicamente
-        // if (config.campoPorcentaje) {
-        //   fila[config.campoPorcentaje] = '0,00 %';
-        // }
         datos[tablaKey] = [fila];
       }
     }

@@ -6,6 +6,8 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 
 @Component({
   selector: 'app-seccion22-view',
@@ -17,46 +19,82 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 export class Seccion22ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.1';
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
-  override readonly PHOTO_PREFIX: string;
+  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalTableNumberSignal2: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
-  // Generate texts using the injected text generator service when manual text is missing
+  // ✅ CORREGIDO - Leer texto con prefijo
   readonly textoDemografiaSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
     // ✅ Usar el valor con prefijo para el textGenerator
     const dataConPrefijo = {
       ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
+      poblacionSexoAISI: this.poblacionSexoSignal(),
+      poblacionEtarioAISI: this.poblacionEtarioSignal()
     };
     return this.textGenerator.generateDemografiaText(dataConPrefijo);
   });
 
+  // ✅ CORREGIDO - Leer texto con prefijo
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoGrupoEtarioAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
     // ✅ Usar el valor con prefijo para el textGenerator
     const dataConPrefijo = {
       ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
+      poblacionSexoAISI: this.poblacionSexoSignal(),
+      poblacionEtarioAISI: this.poblacionEtarioSignal()
     };
     return this.textGenerator.generateGrupoEtarioText(dataConPrefijo);
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const prefix = this.photoPrefixSignal();
+    console.debug(`[FOTOS-VIEW-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
+    
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-      if (imagen) fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      
+      console.debug(`[FOTOS-VIEW-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
     }
+    console.debug(`[FOTOS-VIEW-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
+  });
+
+  readonly photoFieldsHash: Signal<string> = computed(() => {
+    let hash = '';
+    const prefix = this.photoPrefixSignal();
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      hash += `${i}:${!!imagen}:`;
+    }
+    return hash;
   });
 
   // Table configs to match monolithic view
@@ -80,12 +118,20 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     showFooter: false
   };
 
+  // ✅ CORREGIDO - Leer tabla con prefijo
   readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectTableData(this.seccionId, null, 'poblacionSexoAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'poblacionSexoAISI')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
+  // ✅ CORREGIDO - Leer tabla con prefijo
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectTableData(this.seccionId, null, 'poblacionEtarioAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'poblacionEtarioAISI')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
   // Filtered view arrays (exclude 'Total' row appended by percentage helpers)
@@ -155,13 +201,19 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
   // Configs that include footer/total row for the view
   readonly poblacionSexoConfigView = computed(() => ({ ...this.poblacionSexoConfig, showFooter: !!this.poblacionSexoTotalRowSignal(), totalRow: this.poblacionSexoTotalRowSignal() }));
   readonly poblacionEtarioConfigView = computed(() => ({ ...this.poblacionEtarioConfig, showFooter: !!this.poblacionEtarioTotalRowSignal(), totalRow: this.poblacionEtarioTotalRowSignal() }));
+  
+  // ✅ CORREGIDO - Leer título con prefijo
   readonly tituloPoblacionSexoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionSexoAISI')() || 'Población por sexo';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Población por sexo';
   });
 
   readonly fullTituloPoblacionSexoSignal: Signal<string> = computed(() => {
-    // Prefer explicit cuadro field if present
-    const cuadro = this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloPoblacionSexo')();
+    // ✅ Prefer explicit cuadro field with prefijo if present
+    const prefijo = this.obtenerPrefijoGrupo();
+    const cuadroKey = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
+    const cuadro = this.projectFacade.selectField(this.seccionId, null, cuadroKey)();
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionSexoSignal();
@@ -172,17 +224,25 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     return `${base} – CP ${cp} (${year})`;
   });
 
+  // ✅ CORREGIDO - Leer fuente con prefijo
   readonly fuentePoblacionSexoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionSexoAISI')() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
   });
 
+  // ✅ CORREGIDO - Leer título con prefijo
   readonly tituloPoblacionEtarioSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionEtarioAISI')() || 'Población por grupo etario';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Población por grupo etario';
   });
 
   readonly fullTituloPoblacionEtarioSignal: Signal<string> = computed(() => {
-    // Prefer explicit cuadro field if present
-    const cuadro = this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloPoblacionEtario')();
+    // ✅ Prefer explicit cuadro field with prefijo if present
+    const prefijo = this.obtenerPrefijoGrupo();
+    const cuadroKey = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
+    const cuadro = this.projectFacade.selectField(this.seccionId, null, cuadroKey)();
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionEtarioSignal();
@@ -193,8 +253,11 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     return `${base} – CP ${cp} (${year})`;
   });
 
+  // ✅ CORREGIDO - Leer fuente con prefijo
   readonly fuentePoblacionEtarioSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionEtarioAISI')() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
   });
 
   readonly viewModel = computed(() => ({
@@ -216,43 +279,108 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     fuentePoblacionEtario: this.fuentePoblacionEtarioSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private textGenerator: ISeccion22TextGeneratorService) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private textGenerator: ISeccion22TextGeneratorService,
+    private globalNumbering: GlobalNumberingService,
+    private tableNumbering: TableNumberingService
+  ) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
-
-    effect(() => {
-      const data = this.formDataSignal();
-      this.datos = { ...data };
-      this.cdRef.markForCheck();
+    
+    console.debug('[SECCION22-VIEW] Constructor iniciado');
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+      console.debug(`[SECCION22-VIEW] photoPrefixSignal: ${prefix}`);
+      return prefix;
     });
-
-    // ✅ SINCRONIZAR centroPobladoAISI con prefijo
+    
+    // ✅ Signal para número global de tabla (primera tabla: poblacionSexoAISI)
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION22-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (segunda tabla: poblacionEtarioAISI)
+    this.globalTableNumberSignal2 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+      console.debug(`[SECCION22-VIEW] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      console.log(`[SECCION22-VIEW] 📷 Calculando fotos para ${this.seccionId}`);
+      console.log(`[SECCION22-VIEW]   prefix: ${prefix}, fotos.length: ${fotos.length}`);
+      
+      const photoNumbers = fotos.map((_, index) => {
+        const globalNum = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+        console.log(`[SECCION22-VIEW]   foto ${index}: ${globalNum}`);
+        return globalNum;
+      });
+      
+      console.log(`[SECCION22-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
+    
+    // ✅ Effect para loguear el grupo AISI actual
     effect(() => {
-      const data = this.formDataSignal();
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      const campoPrefijado = `centroPobladoAISI${prefijo}`;
-      const valorPrefijado = data[campoPrefijado];
-      
-      console.log(`🔍 SYNC DEBUG - sectionId: ${this.seccionId}`);
-      console.log(`   prefijo: '${prefijo}', campo: '${campoPrefijado}'`);
-      console.log(`   valorPrefijado: '${valorPrefijado}'`);
-      console.log(`   data.centroPobladoAISI (base): '${data['centroPobladoAISI']}'`);
-      
-      // Primero intentar usar el valor con prefijo
-      if (valorPrefijado && valorPrefijado.trim() !== '') {
-        this.datos.centroPobladoAISI = valorPrefijado;
-        console.log(`   -> Sincronizado con prefijo: '${valorPrefijado}'`);
-      } else {
-        // Fallback al base
-        this.datos.centroPobladoAISI = data['centroPobladoAISI'] || null;
-        console.log(`   -> Sincronizado con base: '${data['centroPobladoAISI']}'`);
+      const grupo = this.obtenerGrupoActualAISI();
+      const prefijo = this.obtenerPrefijoGrupo();
+      if (grupo && prefijo) {
+        // Extraer ID del prefijo: "_B1" → "B.1"
+        const match = prefijo.match(/_B(\d+)/);
+        const grupoId = match ? `B.${match[1]}` : prefijo;
+        
+        const ccppIds = grupo.ccppIds || [];
+        
+        // Obtener CCPPs del grupo y determinar cuál será usado
+        const ccppsDelGrupo = this.obtenerCCPPsDelGrupoAISI();
+        const capital = ccppsDelGrupo.find(cc => cc.categoria?.toLowerCase().includes('capital'));
+        const mayorPoblacion = ccppsDelGrupo.reduce((max, cc) => 
+          cc.poblacion > (max?.poblacion || 0) ? cc : max
+        , ccppsDelGrupo[0]);
+        const ccppSeleccionado = capital || mayorPoblacion;
+        
+        console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
+        console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
+        console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
+        console.log(`🔢 NÚMERO GLOBAL DE TABLA: ${this.globalTableNumberSignal()}`);
       }
+    });
+
+    effect(() => {
+      const data = this.formDataSignal();
+      // Solo actualizar si hay datos disponibles
+      if (!data || Object.keys(data).length === 0) {
+        this.cdRef.markForCheck();
+        return;
+      }
+      const prefijo = this.obtenerPrefijoGrupo();
+      const centroConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+      const tablaKeySexo = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+      const tablaKeyEtario = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+      
+      const tablas: Record<string, any> = {};
+      tablas[tablaKeySexo] = this.poblacionSexoSignal();
+      tablas['poblacionSexoAISI'] = tablas[tablaKeySexo]; // Para compatibilidad
+      tablas[tablaKeyEtario] = this.poblacionEtarioSignal();
+      tablas['poblacionEtarioAISI'] = tablas[tablaKeyEtario]; // Para compatibilidad
+      tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
+      tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
+      
+      this.datos = { ...data, ...tablas };
       this.cdRef.markForCheck();
     });
 
     effect(() => {
+      this.photoFieldsHash();
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });

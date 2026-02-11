@@ -9,6 +9,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -21,58 +22,105 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.1';
   @Input() override modoFormulario: boolean = false;
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
-  override readonly PHOTO_PREFIX: string;
+  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalTableNumberSignal2: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
+  // ✅ CORREGIDO - Leer texto con prefijo
   readonly textoDemografiaSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
-    try { return this.textGenerator.generateDemografiaText(data); } catch (e) { return ''; }
+    // ✅ Usar el valor con prefijo para el textGenerator
+    const dataConPrefijo = {
+      ...data,
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
+      poblacionSexoAISI: this.poblacionSexoSignal(),
+      poblacionEtarioAISI: this.poblacionEtarioSignal()
+    };
+    try { return this.textGenerator.generateDemografiaText(dataConPrefijo); } catch (e) { return ''; }
   });
 
+  // ✅ CORREGIDO - Leer texto con prefijo
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoGrupoEtarioAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const data = this.formDataSignal() as any;
-    try { return this.textGenerator.generateGrupoEtarioText(data); } catch (e) { return ''; }
+    // ✅ Usar el valor con prefijo para el textGenerator
+    const dataConPrefijo = {
+      ...data,
+      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
+      poblacionSexoAISI: this.poblacionSexoSignal(),
+      poblacionEtarioAISI: this.poblacionEtarioSignal()
+    };
+    try { return this.textGenerator.generateGrupoEtarioText(dataConPrefijo); } catch (e) { return ''; }
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const prefix = this.photoPrefixSignal();
+    console.debug(`[FOTOS-FORM-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
+    
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-      if (imagen) fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      
+      console.debug(`[FOTOS-FORM-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
     }
+    console.debug(`[FOTOS-FORM-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
+    const prefix = this.photoPrefixSignal();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
   });
 
+  // ✅ CORREGIDO - Leer tabla con prefijo
   readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectTableData(this.seccionId, null, 'poblacionSexoAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'poblacionSexoAISI')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
+  // ✅ CORREGIDO - Leer tabla con prefijo
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
-    return this.projectFacade.selectTableData(this.seccionId, null, 'poblacionEtarioAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'poblacionEtarioAISI')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
+  // ✅ CORREGIDO - Leer título con prefijo
   readonly tituloPoblacionSexoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionSexoAISI')() || 'Población por sexo';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Población por sexo';
   });
 
   // Full title includes CP name and year when not already provided
@@ -85,12 +133,18 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     return `${base} – CP ${cp} (${year})`;
   });
 
+  // ✅ CORREGIDO - Leer fuente con prefijo
   readonly fuentePoblacionSexoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionSexoAISI')() || 'Censos Nacionales 2017';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Censos Nacionales 2017';
   });
 
+  // ✅ CORREGIDO - Leer título con prefijo
   readonly tituloPoblacionEtarioSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'tituloPoblacionEtarioAISI')() || 'Población por grupo etario';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Población por grupo etario';
   });
 
   readonly fullTituloPoblacionEtarioSignal: Signal<string> = computed(() => {
@@ -102,8 +156,43 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     return `${base} – CP ${cp} (${year})`;
   });
 
+  // ✅ CORREGIDO - Leer fuente con prefijo
   readonly fuentePoblacionEtarioSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fuentePoblacionEtarioAISI')() || 'Censos Nacionales 2017';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Censos Nacionales 2017';
+  });
+
+  // ✅ Signals para claves de tablas (para usar en HTML)
+  readonly tablaKeyPoblacionSexoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+  });
+
+  readonly tablaKeyPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+  });
+
+  // ✅ Signals para claves de títulos y fuentes (para usar en HTML)
+  readonly tituloKeyPoblacionSexoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
+  });
+
+  readonly fuenteKeyPoblacionSexoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
+  });
+
+  readonly tituloKeyPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
+  });
+
+  readonly fuenteKeyPoblacionEtarioSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
   });
 
   readonly viewModel = computed(() => ({
@@ -120,11 +209,55 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     fuentePoblacionEtario: this.fuentePoblacionEtarioSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService, private textGenerator: ISeccion22TextGeneratorService) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private formChange: FormChangeService, 
+    private textGenerator: ISeccion22TextGeneratorService,
+    private globalNumbering: GlobalNumberingService
+  ) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    console.debug('[SECCION22-FORM] Constructor iniciado');
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+      console.debug(`[SECCION22-FORM] photoPrefixSignal: ${prefix}`);
+      return prefix;
+    });
+    
+    // ✅ Signal para número global de tabla (primera tabla: poblacionSexoAISI)
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION22-FORM] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (segunda tabla: poblacionEtarioAISI)
+    this.globalTableNumberSignal2 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+      console.debug(`[SECCION22-FORM] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      const photoNumbers = fotos.map((_, index) => {
+        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+      });
+      console.debug(`[SECCION22-FORM] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
+
+    // Effect para logging
+    effect(() => {
+      console.debug(`[PHOTO-PREFIX-SIGNAL-FORM] ${this.photoPrefixSignal()}`);
+      console.debug(`[NUMERACION-GLOBAL-FORM] Tabla: ${this.globalTableNumberSignal()}`);
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -140,9 +273,33 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ LOG DEL GRUPO AISI ACTUAL (como en Sección 21)
+    const grupo = this.obtenerGrupoActualAISI();
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    if (grupo && prefijo) {
+      // Extraer ID del prefijo: "_B1" → "B.1"
+      const match = prefijo.match(/_B(\d+)/);
+      const grupoId = match ? `B.${match[1]}` : prefijo;
+      
+      const ccppIds = grupo.ccppIds || [];
+      
+      // Obtener CCPPs del grupo y determinar cuál será usado
+      const ccppsDelGrupo = this.obtenerCCPPsDelGrupoAISI();
+      const capital = ccppsDelGrupo.find(cc => cc.categoria?.toLowerCase().includes('capital'));
+      const mayorPoblacion = ccppsDelGrupo.reduce((max, cc) => 
+        cc.poblacion > (max?.poblacion || 0) ? cc : max
+      , ccppsDelGrupo[0]);
+      const ccppSeleccionado = capital || mayorPoblacion;
+      
+      console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
+      console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
+      console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
+      console.log(`🔢 NÚMERO GLOBAL DE TABLA: ${this.globalTableNumberSignal()}`);
+    }
+    
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
-    const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
     
     // Actualizar tanto el objeto local como el store
@@ -152,97 +309,55 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
     
-    // Inicializar párrafos con valores por defecto
-    const textoDemografia = this.projectFacade.selectField(this.seccionId, null, 'textoDemografiaAISI')();
+    // 🔍 FORZAR DETECCIÓN DE CAMBIOS PARA ACTUALIZAR EL TÍTULO
+    this.cdRef.detectChanges();
+    
+    // ✅ Inicializar párrafos con valores por defecto (con prefijo)
+    const textoDemografiaKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
+    const textoDemografia = this.projectFacade.selectField(this.seccionId, null, textoDemografiaKey)();
     if (!textoDemografia || textoDemografia.trim() === '') {
-      this.projectFacade.setField(this.seccionId, null, 'textoDemografiaAISI', '');
-      try { this.formChange.persistFields(this.seccionId, 'text', { textoDemografiaAISI: '' }); } catch (e) {}
+      this.projectFacade.setField(this.seccionId, null, textoDemografiaKey, '');
+      try { this.formChange.persistFields(this.seccionId, 'text', { [textoDemografiaKey]: '' }); } catch (e) {}
     }
-    const textoGrupoEtario = this.projectFacade.selectField(this.seccionId, null, 'textoGrupoEtarioAISI')();
+    
+    const textoGrupoEtarioKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
+    const textoGrupoEtario = this.projectFacade.selectField(this.seccionId, null, textoGrupoEtarioKey)();
     if (!textoGrupoEtario || textoGrupoEtario.trim() === '') {
-      this.projectFacade.setField(this.seccionId, null, 'textoGrupoEtarioAISI', '');
-      try { this.formChange.persistFields(this.seccionId, 'text', { textoGrupoEtarioAISI: '' }); } catch (e) {}
+      this.projectFacade.setField(this.seccionId, null, textoGrupoEtarioKey, '');
+      try { this.formChange.persistFields(this.seccionId, 'text', { [textoGrupoEtarioKey]: '' }); } catch (e) {}
     }
 
-    // Inicializar tabla Población por Sexo con estructura fija (Hombre / Mujer) y no editable
-    const tablaKeySexo = 'poblacionSexoAISI';
-    const existingFieldSexo = this.projectFacade.selectField(this.seccionId, null, tablaKeySexo)();
-    const existingTableSexo = this.projectFacade.selectTableData(this.seccionId, null, tablaKeySexo)();
-    const currentSexo = existingFieldSexo ?? existingTableSexo ?? [];
 
-    if (!Array.isArray(currentSexo) || currentSexo.length === 0) {
-      const inicialSexo = [
-        { sexo: 'Hombre', casos: '', porcentaje: '' },
-        { sexo: 'Mujer', casos: '', porcentaje: '' }
-      ];
-
-      // Persistir en clave base y clave con prefijo si aplica
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      if (prefijo) {
-        this.projectFacade.setField(this.seccionId, null, `${tablaKeySexo}${prefijo}`, inicialSexo);
-      }
-      this.projectFacade.setField(this.seccionId, null, tablaKeySexo, inicialSexo);
-      try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKeySexo]: inicialSexo }); } catch (e) {}
-
-      // Actualizar datos locales
-      this.datos[tablaKeySexo] = inicialSexo;
-      this.cdRef.markForCheck();
-    }
-
-    // Inicializar tabla Población por Grupo Etario con estructura fija
-    const tablaKeyEtario = 'poblacionEtarioAISI';
-    const existingFieldEtario = this.projectFacade.selectField(this.seccionId, null, tablaKeyEtario)();
-    const existingTableEtario = this.projectFacade.selectTableData(this.seccionId, null, tablaKeyEtario)();
-    const currentEtario = existingFieldEtario ?? existingTableEtario ?? [];
-
-    if (!Array.isArray(currentEtario) || currentEtario.length === 0) {
-      const inicialEtario = [
-        { categoria: '0 a 14 años', casos: '', porcentaje: '' },
-        { categoria: '15 a 29 años', casos: '', porcentaje: '' },
-        { categoria: '30 a 44 años', casos: '', porcentaje: '' },
-        { categoria: '45 a 64 años', casos: '', porcentaje: '' },
-        { categoria: '65 años a más', casos: '', porcentaje: '' }
-      ];
-
-      // Persistir en clave base y clave con prefijo si aplica
-      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-      if (prefijo) {
-        this.projectFacade.setField(this.seccionId, null, `${tablaKeyEtario}${prefijo}`, inicialEtario);
-      }
-      this.projectFacade.setField(this.seccionId, null, tablaKeyEtario, inicialEtario);
-      try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKeyEtario]: inicialEtario }); } catch (e) {}
-
-      // Actualizar datos locales
-      this.datos[tablaKeyEtario] = inicialEtario;
-      this.cdRef.markForCheck();
-    }
-
-    // Inicializar Títulos y Fuentes de cuadros (patrón Sección 21)
-    const tituloSexoField = 'cuadroTituloPoblacionSexo';
+    // ✅ Inicializar Títulos y Fuentes de cuadros CON PREFIJO (patrón Sección 21)
+    const tituloSexoField = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
     if (!this.datos[tituloSexoField]) {
       const valorTitulo = `Población por sexo – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
       this.datos[tituloSexoField] = valorTitulo;
+      this.datos['cuadroTituloPoblacionSexo'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloSexoField, valorTitulo, { refresh: false });
     }
 
-    const fuenteSexoField = 'cuadroFuentePoblacionSexo';
+    const fuenteSexoField = prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
     if (!this.datos[fuenteSexoField]) {
       const valorFuente = 'Censos Nacionales 2017';
       this.datos[fuenteSexoField] = valorFuente;
+      this.datos['cuadroFuentePoblacionSexo'] = valorFuente; // Para compatibilidad
       this.onFieldChange(fuenteSexoField, valorFuente, { refresh: false });
     }
 
-    const tituloEtarioField = 'cuadroTituloPoblacionEtario';
+    const tituloEtarioField = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
     if (!this.datos[tituloEtarioField]) {
       const valorTitulo = `Población por grupo etario – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
       this.datos[tituloEtarioField] = valorTitulo;
+      this.datos['cuadroTituloPoblacionEtario'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloEtarioField, valorTitulo, { refresh: false });
     }
 
-    const fuenteEtarioField = 'cuadroFuentePoblacionEtario';
+    const fuenteEtarioField = prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
     if (!this.datos[fuenteEtarioField]) {
       const valorFuente = 'Censos Nacionales 2017';
       this.datos[fuenteEtarioField] = valorFuente;
+      this.datos['cuadroFuentePoblacionEtario'] = valorFuente; // Para compatibilidad
       this.onFieldChange(fuenteEtarioField, valorFuente, { refresh: false });
     }
   }
@@ -254,85 +369,102 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     this.datos.centroPobladoAISI = centro || null;
   }
 
+  // ✅ CORREGIDO - Handler con prefijo
   actualizarTextoDemografia(valor: string): void {
-    this.projectFacade.setField(this.seccionId, null, 'textoDemografiaAISI', valor);
-    this.onFieldChange('textoDemografiaAISI', valor);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
+    this.projectFacade.setField(this.seccionId, null, fieldKey, valor);
+    this.onFieldChange(fieldKey, valor);
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
+  // ✅ CORREGIDO - Handler con prefijo
   actualizarTextoGrupoEtario(valor: string): void {
-    this.projectFacade.setField(this.seccionId, null, 'textoGrupoEtarioAISI', valor);
-    this.onFieldChange('textoGrupoEtarioAISI', valor);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
+    this.projectFacade.setField(this.seccionId, null, fieldKey, valor);
+    this.onFieldChange(fieldKey, valor);
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
   actualizarTituloPoblacionSexo(valor: string): void {
-    this.projectFacade.setField(this.seccionId, null, 'tituloPoblacionSexoAISI', valor);
-    this.onFieldChange('tituloPoblacionSexoAISI', valor);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `tituloPoblacionSexoAISI${prefijo}` : 'tituloPoblacionSexoAISI';
+    this.projectFacade.setField(this.seccionId, null, fieldKey, valor);
+    this.onFieldChange(fieldKey, valor);
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
   actualizarFuentePoblacionSexo(valor: string): void {
-    this.projectFacade.setField(this.seccionId, null, 'fuentePoblacionSexoAISI', valor);
-    this.onFieldChange('fuentePoblacionSexoAISI', valor);
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `fuentePoblacionSexoAISI${prefijo}` : 'fuentePoblacionSexoAISI';
+    this.projectFacade.setField(this.seccionId, null, fieldKey, valor);
+    this.onFieldChange(fieldKey, valor);
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
-  // Handlers para editar el título completo del cuadro (patrón Sección 21)
+  // ✅ CORREGIDO - Handler con prefijo
   onTituloCuadroPoblacionSexoChange(valor: string): void {
-    const fieldId = 'cuadroTituloPoblacionSexo';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
     this.datos[fieldId] = valor;
+    this.datos['cuadroTituloPoblacionSexo'] = valor; // Para compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
 
-    // Also update base title for compatibility
     try {
-      this.projectFacade.setField(this.seccionId, null, 'tituloPoblacionSexoAISI', valor);
-      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor, tituloPoblacionSexoAISI: valor });
+      this.projectFacade.setField(this.seccionId, null, fieldId, valor);
+      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
+  // ✅ CORREGIDO - Handler con prefijo
   onFuenteCuadroPoblacionSexoChange(valor: string): void {
-    const fieldId = 'cuadroFuentePoblacionSexo';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
     this.datos[fieldId] = valor;
+    this.datos['cuadroFuentePoblacionSexo'] = valor; // Para compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
 
-    // Also keep base fuente field in sync for compatibility
     try {
-      this.projectFacade.setField(this.seccionId, null, 'fuentePoblacionSexoAISI', valor);
-      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor, fuentePoblacionSexoAISI: valor });
+      this.projectFacade.setField(this.seccionId, null, fieldId, valor);
+      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
+  // ✅ CORREGIDO - Handler con prefijo
   onTituloCuadroPoblacionEtarioChange(valor: string): void {
-    const fieldId = 'cuadroTituloPoblacionEtario';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
     this.datos[fieldId] = valor;
+    this.datos['cuadroTituloPoblacionEtario'] = valor; // Para compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
 
-    // Also update base title for compatibility
     try {
-      this.projectFacade.setField(this.seccionId, null, 'tituloPoblacionEtarioAISI', valor);
-      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor, tituloPoblacionEtarioAISI: valor });
+      this.projectFacade.setField(this.seccionId, null, fieldId, valor);
+      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
+  // ✅ CORREGIDO - Handler con prefijo
   onFuenteCuadroPoblacionEtarioChange(valor: string): void {
-    const fieldId = 'cuadroFuentePoblacionEtario';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldId = prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
     this.datos[fieldId] = valor;
+    this.datos['cuadroFuentePoblacionEtario'] = valor; // Para compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
 
-    // Also keep base fuente field in sync
     try {
-      this.projectFacade.setField(this.seccionId, null, 'fuentePoblacionEtarioAISI', valor);
-      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor, fuentePoblacionEtarioAISI: valor });
+      this.projectFacade.setField(this.seccionId, null, fieldId, valor);
+      this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
@@ -340,7 +472,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
-    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    const prefix = this.photoPrefixSignal();
+    this.onGrupoFotografiasChange(prefix, fotografias);
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
@@ -367,16 +500,13 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     // Normalizar valores (extraer solo valores simples)
     const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
     
-    // Persistir tabla con clave base Y clave con prefijo si aplica
+    // ✅ Persistir tabla con clave base Y clave con prefijo
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaNormalizada);
     this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISI', tablaNormalizada);
-    if (prefijo) {
-      this.projectFacade.setField(this.seccionId, null, `poblacionSexoAISI${prefijo}`, tablaNormalizada);
-    }
     try {
-      const payload: any = { poblacionSexoAISI: tablaNormalizada };
-      if (prefijo) payload[`poblacionSexoAISI${prefijo}`] = tablaNormalizada;
-      this.formChange.persistFields(this.seccionId, 'table', payload);
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaNormalizada, poblacionSexoAISI: tablaNormalizada });
     } catch (e) {}
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
@@ -391,16 +521,13 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     // Normalizar valores (extraer solo valores simples)
     const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
     
-    // Persistir tabla con clave base Y clave con prefijo si aplica
+    // ✅ Persistir tabla con clave base Y clave con prefijo
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaNormalizada);
     this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISI', tablaNormalizada);
-    if (prefijo) {
-      this.projectFacade.setField(this.seccionId, null, `poblacionEtarioAISI${prefijo}`, tablaNormalizada);
-    }
     try {
-      const payload: any = { poblacionEtarioAISI: tablaNormalizada };
-      if (prefijo) payload[`poblacionEtarioAISI${prefijo}`] = tablaNormalizada;
-      this.formChange.persistFields(this.seccionId, 'table', payload);
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaNormalizada, poblacionEtarioAISI: tablaNormalizada });
     } catch (e) {}
     try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }

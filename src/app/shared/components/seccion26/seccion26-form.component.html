@@ -26,7 +26,18 @@
 
       <div class="form-field" style="margin-top: 10px;">
         <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
-        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="abastecimientoConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'abastecimientoAguaCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)" (tableUpdated)="onAbastecimientoAguaTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
+        <app-dynamic-table 
+          [datos]="datos" 
+          [sectionId]="seccionId" 
+          [config]="abastecimientoConfig" 
+          [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
+          [tablaKey]="'abastecimientoAguaCpTabla'" 
+          [totalKey]="'categoria'" 
+          [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)" 
+          (tableUpdated)="onAbastecimientoAguaTableUpdated()" 
+          [showAddButton]="false" 
+          [showDeleteButton]="false">
+        </app-dynamic-table>
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -50,7 +61,18 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
-        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="saneamientoConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'saneamientoCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onSaneamientoFieldChange.bind(this)" (tableUpdated)="onSaneamientoTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
+        <app-dynamic-table 
+          [datos]="datos" 
+          [sectionId]="seccionId" 
+          [config]="saneamientoConfig" 
+          [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
+          [tablaKey]="'saneamientoCpTabla'" 
+          [totalKey]="'categoria'" 
+          [customFieldChangeHandler]="onSaneamientoFieldChange.bind(this)" 
+          (tableUpdated)="onSaneamientoTableUpdated()" 
+          [showAddButton]="false" 
+          [showDeleteButton]="false">
+        </app-dynamic-table>
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -60,7 +82,21 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Fotografías de Desechos Sólidos</label>
-        <app-image-upload [fotografias]="fotografiasDesechosFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_DESECHOS" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Contenedores de residuos sólidos" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Contenedores de residuos sólidos" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasDesechosChange($event)"></app-image-upload>
+        <app-image-upload 
+          [fotografias]="fotografiasDesechosFormMulti" 
+          [sectionId]="seccionId" 
+          [photoPrefix]="photoPrefixSignalDesechos()" 
+          [permitirMultiples]="true" 
+          labelTitulo="Título de la fotografía" 
+          labelFuente="Fuente de la fotografía" 
+          labelImagen="Fotografía - Imagen" 
+          placeholderTitulo="Ej: Contenedores de residuos sólidos" 
+          placeholderFuente="Ej: GEADES, 2024" 
+          tituloDefault="Contenedores de residuos sólidos" 
+          fuenteDefault="GEADES, 2024" 
+          [requerido]="false" 
+          (fotografiasChange)="onFotografiasDesechosChange($event)">
+        </app-image-upload>
       </div>
     </div>
 
@@ -84,21 +120,46 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título del cuadro</label>
         <input type="text" class="input" [value]="viewModel().cuadroTituloCobertura" (change)="onFieldChange('cuadroTituloCobertura', $any($event.target).value)" placeholder="Título del cuadro" />
+      </div>
 
+      <div class="form-field" style="margin-top: 20px;">
         <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
-        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="coberturaConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'coberturaElectricaCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)" (tableUpdated)="onCoberturaElectricaTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>"
-
-
+        <app-dynamic-table 
+          [datos]="datos" 
+          [sectionId]="seccionId" 
+          [config]="coberturaConfig" 
+          [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
+          [tablaKey]="'coberturaElectricaCpTabla'" 
+          [totalKey]="'categoria'" 
+          [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)" 
+          (tableUpdated)="onCoberturaElectricaTableUpdated()" 
+          [showAddButton]="false" 
+          [showDeleteButton]="false">
+        </app-dynamic-table>
+      </div>
 
       <div class="form-field" style="margin-top: 10px;">
         <label class="label">Fuente del cuadro</label>
         <input type="text" class="input" [value]="viewModel().cuadroFuenteCobertura" (change)="onFieldChange('cuadroFuenteCobertura', $any($event.target).value)" placeholder="Fuente del cuadro" />
       </div>
 
-        <div class="form-field" style="margin-top: 20px;">
-          <label class="label">Fotografías de Electricidad</label>
-          <app-image-upload [fotografias]="fotografiasElectricidadFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Infraestructura eléctrica" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Infraestructura eléctrica" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasElectricidadChange($event)"></app-image-upload>
-        </div>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Electricidad</label>
+        <app-image-upload 
+          [fotografias]="fotografiasElectricidadFormMulti" 
+          [sectionId]="seccionId" 
+          [photoPrefix]="photoPrefixSignalElectricidad()" 
+          [permitirMultiples]="true" 
+          labelTitulo="Título de la fotografía" 
+          labelFuente="Fuente de la fotografía" 
+          labelImagen="Fotografía - Imagen" 
+          placeholderTitulo="Ej: Infraestructura eléctrica" 
+          placeholderFuente="Ej: GEADES, 2024" 
+          tituloDefault="Infraestructura eléctrica" 
+          fuenteDefault="GEADES, 2024" 
+          [requerido]="false" 
+          (fotografiasChange)="onFotografiasElectricidadChange($event)">
+        </app-image-upload>
       </div>
     </div>
 
@@ -113,21 +174,46 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título del cuadro</label>
         <input type="text" class="input" [value]="viewModel().cuadroTituloCombustibles" (change)="onFieldChange('cuadroTituloCombustibles', $any($event.target).value)" placeholder="Título del cuadro" />
+      </div>
 
+      <div class="form-field" style="margin-top: 20px;">
         <label class="label">Tabla Combustibles para cocción en los hogares</label>
-        <app-dynamic-table [datos]="datos" [sectionId]="seccionId" [config]="combustiblesConfig" [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" [tablaKey]="'combustiblesCocinarCpTabla'" [totalKey]="'categoria'" [customFieldChangeHandler]="onCombustiblesCocinarFieldChange.bind(this)" (tableUpdated)="onCombustiblesCocinarTableUpdated()" [showAddButton]="false" [showDeleteButton]="false"></app-dynamic-table>
-
-
+        <app-dynamic-table 
+          [datos]="datos" 
+          [sectionId]="seccionId" 
+          [config]="combustiblesConfig" 
+          [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
+          [tablaKey]="'combustiblesCocinarCpTabla'" 
+          [totalKey]="'categoria'" 
+          [customFieldChangeHandler]="onCombustiblesCocinarFieldChange.bind(this)" 
+          (tableUpdated)="onCombustiblesCocinarTableUpdated()" 
+          [showAddButton]="false" 
+          [showDeleteButton]="false">
+        </app-dynamic-table>
+      </div>
 
       <div class="form-field" style="margin-top: 10px;">
         <label class="label">Fuente del cuadro</label>
         <input type="text" class="input" [value]="viewModel().cuadroFuenteCombustibles" (change)="onFieldChange('cuadroFuenteCombustibles', $any($event.target).value)" placeholder="Fuente del cuadro" />
       </div>
 
-        <div class="form-field" style="margin-top: 20px;">
-          <label class="label">Fotografías de Energía para Cocinar</label>
-          <app-image-upload [fotografias]="fotografiasCocinarFormMulti" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_COCINAR" [permitirMultiples]="true" labelTitulo="Título de la fotografía" labelFuente="Fuente de la fotografía" labelImagen="Fotografía - Imagen" placeholderTitulo="Ej: Energía para cocinar" placeholderFuente="Ej: GEADES, 2024" tituloDefault="Energía para cocinar" fuenteDefault="GEADES, 2024" [requerido]="false" (fotografiasChange)="onFotografiasCocinarChange($event)"></app-image-upload>
-        </div>
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Fotografías de Energía para Cocinar</label>
+        <app-image-upload 
+          [fotografias]="fotografiasCocinarFormMulti" 
+          [sectionId]="seccionId" 
+          [photoPrefix]="photoPrefixSignalCocinar()" 
+          [permitirMultiples]="true" 
+          labelTitulo="Título de la fotografía" 
+          labelFuente="Fuente de la fotografía" 
+          labelImagen="Fotografía - Imagen" 
+          placeholderTitulo="Ej: Energía para cocinar" 
+          placeholderFuente="Ej: GEADES, 2024" 
+          tituloDefault="Energía para cocinar" 
+          fuenteDefault="GEADES, 2024" 
+          [requerido]="false" 
+          (fotografiasChange)="onFotografiasCocinarChange($event)">
+        </app-image-upload>
       </div>
     </div>
 

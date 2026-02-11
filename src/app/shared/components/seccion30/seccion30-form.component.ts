@@ -33,20 +33,8 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   readonly TITULO_TASA_ANALFABETISMO_DEFAULT = 'Tasa de analfabetismo en población de 15 años a más';
   readonly FUENTE_TASA_ANALFABETISMO_DEFAULT = 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
 
-  // Estructuras iniciales fijas
-  readonly NIVEL_EDUCATIVO_ESTRUCTURA = [
-    { nivel: 'Sin nivel o Inicial', casos: '', porcentaje: '' },
-    { nivel: 'Primaria', casos: '', porcentaje: '' },
-    { nivel: 'Secundaria', casos: '', porcentaje: '' },
-    { nivel: 'Superior no Universitaria', casos: '', porcentaje: '' },
-    { nivel: 'Superior Universitaria', casos: '', porcentaje: '' }
-  ];
-
-  readonly TASA_ANALFABETISMO_ESTRUCTURA = [
-    { indicador: 'Sabe leer y escribir', casos: '', porcentaje: '' },
-    { indicador: 'No sabe leer ni escribir', casos: '', porcentaje: '' }
-  ];
-
+  // Estructuras iniciales ELIMINADAS por request del usuario
+  
   nivelEducativoDynamicConfig = {
     tablaKey: 'nivelEducativoTabla',
     totalKey: 'nivel',
@@ -54,7 +42,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     campoPorcentaje: 'porcentaje',
     calcularPorcentajes: true,
     camposParaCalcular: ['casos'],
-    estructuraInicial: this.NIVEL_EDUCATIVO_ESTRUCTURA
+    noInicializarDesdeEstructura: true
   };
 
   tasaAnalfabetismoDynamicConfig = {
@@ -64,7 +52,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     campoPorcentaje: 'porcentaje',
     calcularPorcentajes: true,
     camposParaCalcular: ['casos'],
-    estructuraInicial: this.TASA_ANALFABETISMO_ESTRUCTURA
+    noInicializarDesdeEstructura: true
   };
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -122,14 +110,18 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly nivelEducativoSignal: Signal<any[]> = computed(() => {
-    const v = this.projectFacade.selectField(this.seccionId, null, 'nivelEducativoTabla')()
-      ?? this.projectFacade.selectTableData(this.seccionId, null, 'nivelEducativoTabla')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+    const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return Array.isArray(v) ? v : [];
   });
 
   readonly tasaAnalfabetismoSignal: Signal<any[]> = computed(() => {
-    const v = this.projectFacade.selectField(this.seccionId, null, 'tasaAnalfabetismoTabla')()
-      ?? this.projectFacade.selectTableData(this.seccionId, null, 'tasaAnalfabetismoTabla')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
+    const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     return Array.isArray(v) ? v : [];
   });
 
@@ -211,66 +203,26 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     
     this.cargarFotografias();
-
-    // Inicializar tabla Nivel Educativo con merge inteligente
-    this.inicializarTablaConMerge(
-      'nivelEducativoTabla',
-      this.NIVEL_EDUCATIVO_ESTRUCTURA,
-      this.nivelEducativoDynamicConfig
-    );
-
-    // Inicializar tabla Tasa Analfabetismo con merge inteligente
-    this.inicializarTablaConMerge(
-      'tasaAnalfabetismoTabla',
-      this.TASA_ANALFABETISMO_ESTRUCTURA,
-      this.tasaAnalfabetismoDynamicConfig
-    );
+    
+    // Estructura inicial eliminada - solo inicializar vacío si no hay datos
+    this.inicializarTablaVacia('nivelEducativoTabla');
+    this.inicializarTablaVacia('tasaAnalfabetismoTabla');
   }
 
   /**
-   * Inicializa una tabla usando merge inteligente:
-   * - Si hay datos del mock con casos pero sin porcentajes, combina con estructura inicial
-   * - Mantiene las categorías de la estructura inicial
-   * - Calcula porcentajes automáticamente
-   * - Solo se ejecuta UNA VEZ por tabla para evitar bucles
+   * Inicializa una tabla vacía si no hay datos
    */
-  private inicializarTablaConMerge(tablaKey: string, estructura: any[], config: any): void {
-    // Evitar reinicialización múltiple
+  private inicializarTablaVacia(tablaKey: string): void {
     if (this.tablasYaInicializadas.has(tablaKey)) {
       return;
     }
-
     const datosActuales = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
       ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-
-    let datosFinales: any[];
-
     if (!Array.isArray(datosActuales) || datosActuales.length === 0) {
-      // Sin datos: usar estructura inicial
-      datosFinales = JSON.parse(JSON.stringify(estructura));
-    } else if (this.mockMergeService.sonDatosDeMock(datosActuales, config)) {
-      // Datos de mock: combinar con estructura inicial
-      datosFinales = this.mockMergeService.combinarMockConEstructura(
-        datosActuales,
-        estructura,
-        config
-      );
-      // Calcular porcentajes
-      const datosObj = { [tablaKey]: datosFinales };
-      this.tableFacade.calcularPorcentajes(datosObj, { ...config, tablaKey });
-      datosFinales = datosObj[tablaKey];
-    } else {
-      // Datos ya procesados: marcar como inicializado y salir
       this.tablasYaInicializadas.add(tablaKey);
-      return;
+      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+      this.onFieldChange(tablaKey, []);
     }
-
-    // Marcar como inicializado ANTES de persistir para evitar bucle
-    this.tablasYaInicializadas.add(tablaKey);
-
-    this.projectFacade.setField(this.seccionId, null, tablaKey, datosFinales);
-    this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosFinales });
-    this.datos[tablaKey] = datosFinales;
   }
 
   protected override detectarCambios(): boolean { return false; }

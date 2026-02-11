@@ -344,7 +344,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                   title: 'A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)',
                   route: '/seccion/3.1.4.A.1',
                   level: 3,
-                  expanded: true,
+                  expanded: false,
                   children: this.generarSeccionesAISD()
                 },
                 {
@@ -352,7 +352,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                   title: 'B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)',
                   route: '/seccion/3.1.4.B.1',
                   level: 3,
-                  expanded: true,
+                  expanded: false,
                   children: this.generarSeccionesAISI()
                 }
               ]
@@ -417,11 +417,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  private expandAll(sections: SidebarSection[]) {
+  private expandAll(sections: SidebarSection[], maxLevel: number = 2) {
     sections.forEach(section => {
       if (section.children && section.children.length > 0) {
-        section.expanded = true;
-        this.expandAll(section.children);
+        // Solo expandir si el nivel es menor que maxLevel
+        if (section.level < maxLevel) {
+          section.expanded = true;
+          this.expandAll(section.children, maxLevel);
+        }
       }
     });
   }

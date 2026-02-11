@@ -76,17 +76,21 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
   });
 
   readonly nivelEducativoSignal: Signal<any[]> = computed(() => {
-    const v = this.projectFacade.selectField(this.seccionId, null, 'nivelEducativoTabla')()
-      ?? this.projectFacade.selectTableData(this.seccionId, null, 'nivelEducativoTabla')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+    const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = Array.isArray(v) ? v : [];
-    return this.agregarFilaTotalNivelEducativo(datos);
+    return datos;
   });
 
   readonly tasaAnalfabetismoSignal: Signal<any[]> = computed(() => {
-    const v = this.projectFacade.selectField(this.seccionId, null, 'tasaAnalfabetismoTabla')()
-      ?? this.projectFacade.selectTableData(this.seccionId, null, 'tasaAnalfabetismoTabla')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
+    const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = Array.isArray(v) ? v : [];
-    return this.agregarFilaTotalTasaAnalfabetismo(datos);
+    return datos;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -161,30 +165,6 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
 
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void { }
-
-  // Agregar fila de total para Nivel Educativo
-  private agregarFilaTotalNivelEducativo(datos: any[]): any[] {
-    if (!datos || datos.length === 0) return datos;
-    // Filtrar si ya existe una fila de total
-    const sinTotal = datos.filter(item => !item?.nivel?.toString?.().toLowerCase?.().includes('total'));
-    const totalCasos = sinTotal.reduce((sum, item) => {
-      const casos = typeof item.casos === 'number' ? item.casos : (parseInt(String(item.casos).replace(/[^0-9]/g, '')) || 0);
-      return sum + casos;
-    }, 0);
-    return [...sinTotal, { nivel: 'Total', casos: totalCasos, porcentaje: '100,00 %' }];
-  }
-
-  // Agregar fila de total para Tasa de Analfabetismo
-  private agregarFilaTotalTasaAnalfabetismo(datos: any[]): any[] {
-    if (!datos || datos.length === 0) return datos;
-    // Filtrar si ya existe una fila de total
-    const sinTotal = datos.filter(item => !item?.indicador?.toString?.().toLowerCase?.().includes('total'));
-    const totalCasos = sinTotal.reduce((sum, item) => {
-      const casos = typeof item.casos === 'number' ? item.casos : (parseInt(String(item.casos).replace(/[^0-9]/g, '')) || 0);
-      return sum + casos;
-    }, 0);
-    return [...sinTotal, { indicador: 'Total', casos: totalCasos, porcentaje: '100,00 %' }];
-  }
 
   trackByIndex(index: number): number { return index; }
 }

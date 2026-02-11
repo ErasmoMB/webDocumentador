@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
@@ -9,6 +9,8 @@ import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { TableConfig } from 'src/app/core/services/table-management.service';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule, DynamicTableComponent, ImageUploadComponent, ParagraphEditorComponent],
@@ -21,31 +23,60 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.3';
   @Input() override modoFormulario: boolean = false;
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  // ✅ PHOTO_PREFIX como Signal
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
+  // ✅ TableConfig con noInicializarDesdeEstructura
+  readonly actividadesEconomicasConfig: TableConfig = {
+    tablaKey: 'actividadesEconomicasAISI',
+    totalKey: 'actividad',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    noInicializarDesdeEstructura: true,
+    calcularPorcentajes: true,
+    camposParaCalcular: ['casos']
+  };
+
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
+
+  // ✅ Signal para clave de tabla
+  readonly tablaKeyActividadesSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
+  });
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
   readonly actividadesEconomicasSignal: Signal<any[]> = computed(() => {
-    // Prefer table storage (canonical for tabular data) and fallback to legacy field if needed
-    return this.projectFacade.selectTableData(this.seccionId, null, 'actividadesEconomicasAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'actividadesEconomicasAISI')() ?? [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
-    // Fotos generales (PHOTO_PREFIX)
+    const prefix = this.photoPrefixSignal();
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
   readonly fotosActividadesSignal: Signal<FotoItem[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = prefijo ? `fotografiaActividadesEconomicas${prefijo}` : 'fotografiaActividadesEconomicas';
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, 'fotografiaActividadesEconomicas', groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
   readonly fotosMercadoSignal: Signal<FotoItem[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = prefijo ? `fotografiaMercado${prefijo}` : 'fotografiaMercado';
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, 'fotografiaMercado', groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
   readonly viewModel = computed(() => ({
@@ -54,30 +85,71 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     ciudadOrigenComercio: (this.formDataSignal() as any)?.ciudadOrigenComercio || '',
     textos: {
       intro: (() => {
-        const manual = this.projectFacade.selectField(this.seccionId, null, 'textoIntroActividadesEconomicasAISI')();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
         if (manual && manual.trim().length > 0) return (manual.split('\n\n')[0] || manual);
         return this.generarTextoIntroDefault();
       })(),
       introLong: (() => {
-        const manual = this.projectFacade.selectField(this.seccionId, null, 'textoIntroActividadesEconomicasAISI')();
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
         if (manual && manual.trim().length > 0) return (manual.split('\n\n')[1] || '');
         return this.generarTextoIntroLongDefault();
       })(),
-      analisis: this.projectFacade.selectField(this.seccionId, null, 'textoActividadesEconomicasAISI')() || this.generarTextoAnalisisDefault(),
-      mercado: this.projectFacade.selectField(this.seccionId, null, 'textoMercadoProductos')() || this.generarTextoMercadoDefault(),
-      habitos: this.projectFacade.selectField(this.seccionId, null, 'textoHabitosConsumo')() || this.generarTextoHabitosDefault(),
-      fuente: this.projectFacade.selectField(this.seccionId, null, 'fuenteActividadesEconomicasAISI')() || this.generarFuenteDefault()
+      analisis: (() => {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `textoActividadesEconomicasAISI${prefijo}` : 'textoActividadesEconomicasAISI';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+        return manual || this.generarTextoAnalisisDefault();
+      })(),
+      mercado: (() => {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `textoMercadoProductos${prefijo}` : 'textoMercadoProductos';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+        return manual || this.generarTextoMercadoDefault();
+      })(),
+      habitos: (() => {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `textoHabitosConsumo${prefijo}` : 'textoHabitosConsumo';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+        return manual || this.generarTextoHabitosDefault();
+      })(),
+      fuente: (() => {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fieldKey = prefijo ? `fuenteActividadesEconomicasAISI${prefijo}` : 'fuenteActividadesEconomicasAISI';
+        const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+        return manual || this.generarFuenteDefault();
+      })()
     },
-
-
-    fotos: this.fotosCacheSignal()
+    fotos: this.fotosCacheSignal(),
+    globalTableNumber: this.globalTableNumberSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService, private globalNumbering: GlobalNumberingService) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      return prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    });
+    
+    // Inicializar PHOTO_PREFIX para compatibilidad
+    this.PHOTO_PREFIX = this.photoPrefixSignal();
+    
+    // ✅ Signal para número global de tabla
+    this.globalTableNumberSignal = computed(() => {
+      return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      return fotos.map((_, index) => this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index));
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -104,27 +176,14 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
-    
-    // Ensure table has initial structure (use table store as primary)
-    const tablaKey = 'actividadesEconomicasAISI';
-    const current = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
-    if (!Array.isArray(current) || current.length === 0) {
-      // Default: una sola fila vacía para que el cuadro aparezca limpio en el formulario
-      const inicial = [{ actividad: '', casos: '', porcentaje: '' }];
-      console.info('[Seccion24] Inicializando tabla actividadesEconomicasAISI con 1 fila vacía');
-      try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, inicial); } catch (e) { console.error('[Seccion24] setTableData init error', e); }
-      try { const payloadInit: any = { [tablaKey]: inicial }; const prefInit = this.obtenerPrefijoGrupo(); if (prefInit) payloadInit[`${tablaKey}${prefInit}`] = inicial; this.formChange.persistFields(this.seccionId, 'table', payloadInit); } catch (e) { console.error('[Seccion24] persist init error', e); }
-      // Mantener sincronía con campo legacy para compatibilidad
-      try { this.projectFacade.setField(this.seccionId, null, tablaKey, inicial); } catch (e) { console.error('[Seccion24] setField init error', e); }
-    }
   }
 
-  protected override detectarCambios(): boolean { return false; }
-  protected override actualizarValoresConPrefijo(): void {
-    // Restaurar centroPobladoAISI con el prefijo correcto
-    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-    this.datos.centroPobladoAISI = centro || null;
+  protected override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
+  
+  protected override detectarCambios(): boolean { return false; }
+  protected override actualizarValoresConPrefijo(): void { }
 
   actualizarCentroPoblado(valor: string): void {
     this.projectFacade.setField(this.seccionId, null, 'centroPobladoAISI', valor);

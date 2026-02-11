@@ -5,9 +5,9 @@ import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   standalone: true,
@@ -19,7 +19,15 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 export class Seccion25ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.4';
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalTableNumberSignal2: Signal<string>;
+  readonly globalTableNumberSignal3: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
@@ -162,11 +170,51 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     fotoEstructura: this.fotoEstructuraSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumberingService: TableNumberingService) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private globalNumbering: GlobalNumberingService) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+      console.debug(`[SECCION25-VIEW] photoPrefixSignal: ${prefix}`);
+      return prefix;
+    });
+    
+    // Inicializar PHOTO_PREFIX para compatibilidad
+    this.PHOTO_PREFIX = this.photoPrefixSignal();
+    
+    // ✅ Signal para número global de tabla (primera tabla: tiposViviendaAISI)
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION25-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (segunda tabla: condicionOcupacionAISI)
+    this.globalTableNumberSignal2 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+      console.debug(`[SECCION25-VIEW] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (tercera tabla: materialesViviendaAISI)
+    this.globalTableNumberSignal3 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+      console.debug(`[SECCION25-VIEW] globalTableNumberSignal3: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosSignal();
+      const photoNumbers = fotos.map((_, index) => {
+        return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+      });
+      console.debug(`[SECCION25-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -223,33 +271,33 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerNumeroCuadroTiposVivienda(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
   }
 
   obtenerNumeroCuadroCondicionOcupacion(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
   }
 
   obtenerNumeroCuadroMateriales(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
   }
 
   // --- Computed signals for preview (MODO IDEAL) ---
   readonly tiposViviendaConPorcentajes = computed(() => {
     const tabla = this.tiposViviendaSignal() || [];
-    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly condicionOcupacionConPorcentajes = computed(() => {
     const tabla = this.condicionOcupacionSignal() || [];
-    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly materialesConPorcentajes = computed(() => {
     const tabla = this.materialesViviendaSignal() || [];
-    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 

@@ -100,8 +100,14 @@ export class TableHandlerFactoryService {
       const tablaKeyConPrefijo = prefijo ? `${tableKey}${prefijo}` : tableKey;
 
       // Asegurar que la tabla existe
+      // ✅ Respetar noInicializarDesdeEstructura: si está activo, no crear fila vacía
       if (!datos[tablaKeyConPrefijo] || !Array.isArray(datos[tablaKeyConPrefijo])) {
-        datos[tablaKeyConPrefijo] = config.estructuraInicial || [{}];
+        if (config.noInicializarDesdeEstructura) {
+          // No inicializar - dejar como array vacío
+          datos[tablaKeyConPrefijo] = [];
+        } else {
+          datos[tablaKeyConPrefijo] = config.estructuraInicial || [{}];
+        }
       }
 
       const tabla = [...datos[tablaKeyConPrefijo]];

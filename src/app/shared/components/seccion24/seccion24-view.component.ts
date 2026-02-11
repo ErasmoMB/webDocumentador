@@ -1,10 +1,11 @@
-import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   selector: 'app-seccion24-view',
@@ -16,28 +17,41 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 export class Seccion24ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.3';
 
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  // ✅ PHOTO_PREFIX como Signal
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
   readonly textoIntroShortSignal = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoIntroActividadesEconomicasAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return (manual.split('\n\n')[0] || manual);
     const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
     return `Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describirá la estructura y la diversidad de las actividades económicas en la capital distrital de ${cp}, que forma parte del AISI.`;
   });
 
   readonly textoIntroLongSignal = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoIntroActividadesEconomicasAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return (manual.split('\n\n')[1] || '');
     const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
     return `A partir de fuentes oficiales, se exploran las principales fuentes de ingresos y los sectores productivos más relevantes dentro del CP ${cp} (capital distrital). En esta ocasión, se recurre a los datos provistos por los Censos Nacionales 2017.`;
   });
 
-  readonly actividadesEconomicasSignal = computed(() => {
-    const raw = this.projectFacade.selectTableData(this.seccionId, null, 'actividadesEconomicasAISI')() ?? this.projectFacade.selectField(this.seccionId, null, 'actividadesEconomicasAISI')() ?? [];
+  readonly actividadesEconomicasSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
+    const raw = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+                this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
     const rows = Array.isArray(raw) ? raw : [];
     // Excluir filas de "Total" y filas sin casos válidos (>0)
     const filtered = rows.filter((r: any) => {
@@ -61,7 +75,9 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly textoAnalisisSignal = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoActividadesEconomicasAISI')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoActividadesEconomicasAISI${prefijo}` : 'textoActividadesEconomicasAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
 
     const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
@@ -75,38 +91,49 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const prefix = this.photoPrefixSignal();
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
   readonly fotosActividadesSignal: Signal<FotoItem[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = prefijo ? `fotografiaActividadesEconomicas${prefijo}` : 'fotografiaActividadesEconomicas';
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, 'fotografiaActividadesEconomicas', groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
   readonly fotosMercadoSignal: Signal<FotoItem[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = prefijo ? `fotografiaMercado${prefijo}` : 'fotografiaMercado';
     const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, 'fotografiaMercado', groupPrefix);
+    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
   });
 
-  readonly mercadoSignal = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoMercadoProductos')();
+  readonly mercadoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoMercadoProductos${prefijo}` : 'textoMercadoProductos';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
     const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || 'Caravelí';
     return `El CP ${cp} no cuenta con un mercado formal que centralice las actividades comerciales de la localidad. El comercio en este lugar es incipiente y se lleva a cabo principalmente a través de pequeñas bodegas. Estas bodegas atienden la demanda cotidiana en la localidad, pero la oferta sigue siendo limitada y gran parte de los productos llega desde ${ciudadOrigen}.\n\nAdemás, la comercialización de productos en ${cp} se complementa con la presencia de comerciantes mayoristas que viajan hacia la localidad para comprar y vender productos. La mayoría de estos comerciantes provienen de la ciudad de ${ciudadOrigen}, desde donde abastecen las bodegas locales con mercancías diversas. Este sistema de intermediación permite que los pobladores de ${cp} accedan a una variedad más amplia de productos, aunque la oferta sigue siendo limitada en comparación con las zonas urbanas más grandes. La falta de un mercado formal y de una infraestructura de comercio mayor limita el desarrollo del intercambio comercial en la localidad, pero el dinamismo de las pequeñas bodegas y la llegada de comerciantes externos contribuyen a mantener un flujo de productos que satisface las necesidades básicas de la población.`;
   });
 
-  readonly habitosSignal = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoHabitosConsumo')();
+  readonly habitosSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoHabitosConsumo${prefijo}` : 'textoHabitosConsumo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
     const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || 'Caravelí';
     return `En la capital distrital de ${cp}, los hábitos de consumo están basados principalmente en alimentos tradicionales y accesibles dentro de la comunidad. Los productos más consumidos incluyen tubérculos (como papa y oca) y verduras, los cuales son esenciales en la dieta diaria de los hogares. Estos productos se adquieren tanto a través de la producción local, como es el caso de la papa y la oca, como de compras a pequeños comerciantes que llegan a la capital distrital desde ${ciudadOrigen}. La papa, por ser uno de los cultivos más abundantes en la zona, tiene un rol fundamental en la alimentación, acompañando la mayoría de las comidas junto a otros carbohidratos.\n\nEn cuanto al consumo de proteínas, los habitantes del pueblo suelen recurrir a la carne de animales menores como las gallinas y los cuyes, así como de vacuno, los cuales son criados en sus propias viviendas. Estas carnes son un complemento importante en la dieta y una fuente de nutrientes esenciales, especialmente en eventos familiares o festividades. Si bien se consumen otros tipos de carne en menor proporción, como ovino, estas son generalmente reservadas para ocasiones especiales.`;
   });
 
-  readonly fuenteSignal = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fuenteActividadesEconomicasAISI')() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
+  readonly fuenteSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `fuenteActividadesEconomicasAISI${prefijo}` : 'fuenteActividadesEconomicasAISI';
+    return this.projectFacade.selectField(this.seccionId, null, fieldKey)() || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
   });
 
   readonly viewModel = computed(() => ({
@@ -120,14 +147,33 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
       fuente: this.fuenteSignal()
     },
     actividades: this.actividadesEconomicasSignal(),
-    fotos: this.fotosCacheSignal()
+    fotos: this.fotosCacheSignal(),
+    globalTableNumber: this.globalTableNumberSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private globalNumbering: GlobalNumberingService) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      return prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    });
+    
+    // Inicializar PHOTO_PREFIX para compatibilidad
+    this.PHOTO_PREFIX = this.photoPrefixSignal();
+    
+    // ✅ Signal para número global de tabla (única tabla en sección 24)
+    this.globalTableNumberSignal = computed(() => {
+      return globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      return fotos.map((_, index) => globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index));
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -151,6 +197,9 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void { }
   protected override detectarCambios(): boolean { return false; }
+  protected override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
   protected override actualizarValoresConPrefijo(): void { }
 
   trackByIndex(index: number): number { return index; }

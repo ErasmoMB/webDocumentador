@@ -3,7 +3,9 @@
   <p class="text-justify" [innerHTML]="viewModel().textos.introShort"></p>
   <p class="text-justify" *ngIf="viewModel().textos.introLong" [innerHTML]="viewModel().textos.introLong"></p>
 
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloActividadesEconomicasAISI'] || 'PEA Ocupada según actividad económica – CP ' + (viewModel().data['centroPobladoAISI'] || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <p class="table-title">Cuadro N° {{ viewModel().globalTableNumber }}</p>
+  
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloActividadesEconomicasAISI'] || 'PEA Ocupada según actividad económica – CP ' + (viewModel().data['centroPobladoAISI'] || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId" [hideNumber]="true">
     <app-generic-table [data]="viewModel().actividades" [config]="{ columns: [ { key: 'actividad', header: 'Actividad Económica', width: '60%' }, { key: 'casos', header: 'Casos', width: '20%', align: 'center' }, { key: 'porcentaje', header: 'Porcentaje', width: '20%', align: 'center' } ], showHeader: true, showFooter: false }"></app-generic-table>
   </app-table-wrapper>
 
@@ -14,7 +16,7 @@
     *ngIf="fotosActividadesSignal() && fotosActividadesSignal().length > 0"
     [fotografias]="fotosActividadesSignal()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaActividadesEconomicas'"
+    [photoPrefix]="'fotografiaActividadesEconomicas' + obtenerPrefijoGrupo()"
     [modoVista]="true"
     [permitirMultiples]="true"
     [mostrarNumero]="true"
@@ -29,7 +31,7 @@
     *ngIf="fotosMercadoSignal() && fotosMercadoSignal().length > 0"
     [fotografias]="fotosMercadoSignal()"
     [sectionId]="seccionId"
-    [photoPrefix]="'fotografiaMercado'"
+    [photoPrefix]="'fotografiaMercado' + obtenerPrefijoGrupo()"
     [modoVista]="true"
     [permitirMultiples]="true"
     [mostrarNumero]="true"
@@ -45,6 +47,6 @@
     [permitirMultiples]="true"
     [fotografias]="fotosCacheSignal()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX">
+    [photoPrefix]="photoPrefixSignal()">
   </app-image-upload>
 </div>

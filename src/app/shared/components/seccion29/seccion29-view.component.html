@@ -16,8 +16,7 @@
           { key: 'natalidad', header: 'Natalidad', align: 'right' },
           { key: 'mortalidad', header: 'Mortalidad', align: 'right' }
         ],
-        totalRow: getTotalNatalidadMortalidad(),
-        showFooter: true,
+        showFooter: false,
         striped: true,
         hover: true
       }">
@@ -27,7 +26,7 @@
 
   <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
   <p class="text-justify" *ngIf="viewModel().textoMorbilidadCP && viewModel().textoMorbilidadCP !== '____'">{{ viewModel().textoMorbilidadCP }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoMorbilidadCP || viewModel().textoMorbilidadCP === '____'">Entre los grupos de morbilidad que se hallan a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoMorbilidadCP'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al Puesto de Salud <span [appDataSource]="'section'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (<span [appDataSource]="'section'">{{ getCasosInfeccionesRespiratorias() }}</span> casos) y la obesidad y otros de hiperalimentación (<span [appDataSource]="'section'">{{ getCasosObesidad() }}</span> casos). Para el primero, se reportó un mayor número de casos en el grupo etario de 0 a 11 años, mientras que para el segundo, la mayor cantidad se halló en el rango de 30 a 59 años. A continuación, se presenta el cuadro con el número de casos por grupo de morbilidad y bloque etario dentro del distrito, según el portal REUNIS del MINSA.</p>
+  <p class="text-justify" *ngIf="!viewModel().textoMorbilidadCP || viewModel().textoMorbilidadCP === '____'">Entre los grupos de morbilidad que se hallan a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoMorbilidadCP'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al Puesto de Salud <span [appDataSource]="'section'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores y la obesidad y otros de hiperalimentación. A continuación, se presenta el cuadro con el número de casos por grupo de morbilidad y bloque etario dentro del distrito, según el portal REUNIS del MINSA.</p>
 
   <app-table-wrapper [title]="(viewModel().tituloMorbilidad && viewModel().tituloMorbilidad.trim().length>0) ? viewModel().tituloMorbilidad : ('Casos por grupos de morbilidad – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2023)')" sectionId="3.1.4.B.1.8">
     <app-generic-table
@@ -42,16 +41,7 @@
           { key: 'edad60_mas', header: '60 - >', align: 'right' },
           { key: 'casos', header: 'Casos Totales', align: 'right' }
         ],
-        totalRow: {
-          grupo: 'Total',
-          edad0_11: { value: getTotalMorbilidadRango0_11(), isCalculated: true },
-          edad12_17: { value: getTotalMorbilidadRango12_17(), isCalculated: true },
-          edad18_29: { value: getTotalMorbilidadRango18_29(), isCalculated: true },
-          edad30_59: { value: getTotalMorbilidadRango30_59(), isCalculated: true },
-          edad60_mas: { value: getTotalMorbilidadRango60_mas(), isCalculated: true },
-          casos: { value: getTotalMorbilidadCasos(), isCalculated: true }
-        },
-        showFooter: true,
+        showFooter: false,
         striped: true,
         hover: true
       }">
@@ -61,19 +51,18 @@
 
   <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
   <p class="text-justify" *ngIf="viewModel().textoAfiliacionSalud && viewModel().textoAfiliacionSalud !== '____'">{{ viewModel().textoAfiliacionSalud }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoAfiliacionSalud || viewModel().textoAfiliacionSalud === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'textoAfiliacionSalud'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el <span [appDataSource]="'section'">{{ getPorcentajeSIS() }}</span> de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el <span [appDataSource]="'section'">{{ getPorcentajeESSALUD() }}</span> de la población. Por último, cabe mencionar que el <span [appDataSource]="'section'">{{ getPorcentajeSinSeguro() }}</span> de la población no cuenta con ningún tipo de seguro de salud.</p>
+  <p class="text-justify" *ngIf="!viewModel().textoAfiliacionSalud || viewModel().textoAfiliacionSalud === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'textoAfiliacionSalud'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS). En menor medida, se hallan las afiliaciones a ESSALUD y otros. Por último, cabe mencionar el porcentaje de la población que no cuenta con ningún tipo de seguro de salud.</p>
 
   <app-table-wrapper [title]="(viewModel().tituloAfiliacion && viewModel().tituloAfiliacion.trim().length>0) ? viewModel().tituloAfiliacion : ('Población según tipo de seguro de salud afiliado – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" sectionId="3.1.4.B.1.8">
     <app-generic-table
-      [data]="getAfiliacionSaludAISIConPorcentajes()"
+      [data]="getAfiliacionSaludSinTotal()"
       [config]="{
         columns: [
           { key: 'categoria', header: 'Categoría', align: 'left' },
           { key: 'casos', header: 'Casos', align: 'right' },
           { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
         ],
-        totalRow: getTotalAfiliacionSalud(),
-        showFooter: true,
+        showFooter: false,
         striped: true,
         hover: true
       }">

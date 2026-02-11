@@ -26,7 +26,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasSaludVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_SALUD"
+    [photoPrefix]="photoPrefixSignalSalud()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -60,7 +60,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasEducacionVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+    [photoPrefix]="photoPrefixSignalEducacion()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -70,7 +70,7 @@
 <p class="text-justify" *ngIf="datos.textoRecreacionCP1 && datos.textoRecreacionCP1 !== '____'">{{ datos.textoRecreacionCP1 }}</p>
 <p class="text-justify" *ngIf="!datos.textoRecreacionCP1 || datos.textoRecreacionCP1 === '____'">Dentro del CP <span [appDataSource]="'section'" [fieldName]="'centroPobladoAISI'">{{ datos.centroPobladoAISI || 'Cahuacho' }}</span> se cuenta con espacios destinados a la recreación de la población. Entre ellos destacan las plazas, las cuales funcionan como principales áreas de encuentro para la interacción y socialización, especialmente durante festividades y eventos culturales.</p>
 <p class="text-justify" *ngIf="datos.textoRecreacionCP2 && datos.textoRecreacionCP2 !== '____'">{{ datos.textoRecreacionCP2 }}</p>
-<p class="text-justify" *ngIf="!datos.textoRecreacionCP2 || datos.textoRecreacionCP2 === '____'">Otra infraestructura recreativa relevante es la plaza de toros, que se halla en la zona este del centro poblado, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales y celebraciones taurinas. Este espacio funciona como un centro de actividad importante para las festividades taurinas y celebraciones especiales, atrayendo tanto a residentes como a visitantes y promoviendo las tradiciones locales.</p>
+<p class="text-justify" *ngIf="!datos.textoRecreacionCP2 || datos.textoRecreacionCP2 === '____'">Otra infraestructura recreativa relevante es la plaza de toros, que sehalla en la zona este del centro poblado, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales y celebraciones taurinas. Este espacio funciona como un centro de actividad importante para las festividades taurinas y celebraciones especiales, atrayendo tanto a residentes como a visitantes y promoviendo las tradiciones locales.</p>
 <p class="text-justify" *ngIf="datos.textoRecreacionCP3 && datos.textoRecreacionCP3 !== '____'">{{ datos.textoRecreacionCP3 }}</p>
 <p class="text-justify" *ngIf="!datos.textoRecreacionCP3 || datos.textoRecreacionCP3 === '____'">Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.</p>
 
@@ -79,7 +79,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasRecreacionVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_RECREACION"
+    [photoPrefix]="photoPrefixSignalRecreacion()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">
@@ -96,7 +96,7 @@
     [permitirMultiples]="true"
     [fotografias]="getFotografiasDeporteVista()"
     [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+    [photoPrefix]="photoPrefixSignalDeporte()"
     [labelTitulo]="'Título'"
     [labelFuente]="'Fuente'"
     [labelImagen]="'Imagen'">

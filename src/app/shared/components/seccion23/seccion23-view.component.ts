@@ -7,7 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
   selector: 'app-seccion23-view',
@@ -31,6 +31,14 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   ];
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  readonly photoPrefixSignal: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL
+  readonly globalTableNumberSignal: Signal<string>;
+  readonly globalTableNumberSignal2: Signal<string>;
+  readonly globalTableNumberSignal3: Signal<string>;
+  readonly globalPhotoNumbersSignal: Signal<string[]>;
+  
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
 
@@ -68,11 +76,58 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     fotos: this.fotosCacheSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private tableNumbering: TableNumberingService) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private globalNumbering: GlobalNumberingService) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      const prefix = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
+      console.debug(`[SECCION23-VIEW] photoPrefixSignal: ${prefix}`);
+      return prefix;
+    });
+    
+    // Inicializar PHOTO_PREFIX para compatibilidad (usar el valor del signal)
+    const prefijoInit = this.photoPrefixSignal();
+    this.PHOTO_PREFIX = prefijoInit;
+    
+    // ✅ Signal para número global de tabla (primera tabla: petGruposEdadAISI)
+    this.globalTableNumberSignal = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+      console.debug(`[SECCION23-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (segunda tabla: peaDistritoSexoTabla)
+    this.globalTableNumberSignal2 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+      console.debug(`[SECCION23-VIEW] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para número global de tabla (tercera tabla: peaOcupadaDesocupadaTabla)
+    this.globalTableNumberSignal3 = computed(() => {
+      const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+      console.debug(`[SECCION23-VIEW] globalTableNumberSignal3: Cuadro N° ${globalNum}`);
+      return globalNum;
+    });
+    
+    // ✅ Signal para números globales de fotos
+    this.globalPhotoNumbersSignal = computed(() => {
+      const prefix = this.photoPrefixSignal();
+      const fotos = this.fotosCacheSignal();
+      console.log(`[SECCION23-VIEW] 📷 Calculando fotos para ${this.seccionId}`);
+      console.log(`[SECCION23-VIEW]   prefix: ${prefix}, fotos.length: ${fotos.length}`);
+      
+      const photoNumbers = fotos.map((_, index) => {
+        const globalNum = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
+        console.log(`[SECCION23-VIEW]   foto ${index}: ${globalNum}`);
+        return globalNum;
+      });
+      
+      console.log(`[SECCION23-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
+      return photoNumbers;
+    });
 
     effect(() => {
       const data = this.formDataSignal();
@@ -129,18 +184,15 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   override ngOnDestroy(): void { super.ngOnDestroy(); }
 
   getPetGruposEdadAISIConPorcentajes(): any[] {
-    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
-    return TablePercentageHelper.calcularPorcentajesSimple(this.petGruposEdadSignal(), cuadroNumero);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.petGruposEdadSignal(), '');
   }
 
   getPeaDistritoSexoConPorcentajes(): any[] {
-    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
-    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaDistritoSexoSignal(), cuadroNumero);
+    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaDistritoSexoSignal(), '');
   }
 
   getPeaOcupadaDesocupadaConPorcentajes(): any[] {
-    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
-    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaOcupadaDesocupadaSignal(), cuadroNumero);
+    return TablePercentageHelper.calcularPorcentajesMultiples(this.peaOcupadaDesocupadaSignal(), '');
   }
 
   // Keep the same helper names used by template for compatibility

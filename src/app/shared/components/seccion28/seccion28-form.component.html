@@ -21,8 +21,8 @@
       <div class="form-field mt-lg">
         <label class="label">Título — Principales características del Puesto de Salud</label>
         <input type="text" class="input" 
-          [value]="datos['puestoSaludTitulo'] || ''"
-          (input)="onFieldChange('puestoSaludTitulo', $any($event.target).value)"
+          [value]="tituloPuestoSaludSignal()"
+          (input)="onFieldChange('puestoSaludTitulo' + obtenerPrefijoGrupo(), $any($event.target).value)"
           placeholder="Ej: Principales características del Puesto de Salud">
       </div>
 
@@ -44,8 +44,8 @@
       <div class="form-field mt-sm">
         <label class="label">Fuente — Principales características del Puesto de Salud</label>
         <input type="text" class="input" 
-          [value]="datos['puestoSaludFuente'] || ''"
-          (input)="onFieldChange('puestoSaludFuente', $any($event.target).value)"
+          [value]="fuentePuestoSaludSignal()"
+          (input)="onFieldChange('puestoSaludFuente' + obtenerPrefijoGrupo(), $any($event.target).value)"
           placeholder="Ej: Ministerio de Salud (MINSA)">
       </div>
 
@@ -54,7 +54,7 @@
         <app-image-upload
           [fotografias]="fotografiasSaludFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_SALUD"
+          [photoPrefix]="photoPrefixSignalSalud()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -106,8 +106,8 @@
       <div class="form-field mt-lg">
         <label class="label">Título — Infraestructura educativa</label>
         <input type="text" class="input" 
-          [value]="datos['educacionTitulo'] || ''"
-          (input)="onFieldChange('educacionTitulo', $any($event.target).value)"
+          [value]="tituloEducacionSignal()"
+          (input)="onFieldChange('educacionTitulo' + obtenerPrefijoGrupo(), $any($event.target).value)"
           placeholder="Ej: Infraestructura educativa – CP Cahuacho (2023)">
       </div>
 
@@ -127,8 +127,8 @@
       <div class="form-field mt-sm">
         <label class="label">Fuente — Infraestructura educativa</label>
         <input type="text" class="input" 
-          [value]="datos['educacionFuente'] || ''"
-          (input)="onFieldChange('educacionFuente', $any($event.target).value)"
+          [value]="fuenteEducacionSignal()"
+          (input)="onFieldChange('educacionFuente' + obtenerPrefijoGrupo(), $any($event.target).value)"
           placeholder="Ej: Censo Educativo 2023 – ESCALE (MINEDU)">
       </div> 
 
@@ -137,7 +137,7 @@
         <app-image-upload
           [fotografias]="fotografiasEducacionFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_EDUCACION"
+          [photoPrefix]="photoPrefixSignalEducacion()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -191,7 +191,7 @@
         <app-image-upload
           [fotografias]="fotografiasRecreacionFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_RECREACION"
+          [photoPrefix]="photoPrefixSignalRecreacion()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"
@@ -235,7 +235,7 @@
         <app-image-upload
           [fotografias]="fotografiasDeporteFormMulti"
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX_DEPORTE"
+          [photoPrefix]="photoPrefixSignalDeporte()"
           [permitirMultiples]="true"
           labelTitulo="Título de la fotografía"
           labelFuente="Fuente de la fotografía"

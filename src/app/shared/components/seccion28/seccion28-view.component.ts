@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, OnDestroy, effect, Signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -22,10 +22,27 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
-  readonly PHOTO_PREFIX_SALUD = 'fotografiaSaludAISI';
-  readonly PHOTO_PREFIX_EDUCACION = 'fotografiaEducacionAISI';
-  readonly PHOTO_PREFIX_RECREACION = 'fotografiaRecreacionAISI';
-  readonly PHOTO_PREFIX_DEPORTE = 'fotografiaDeporteAISI';
+
+  // ✅ Signals de prefijos para fotos
+  readonly photoPrefixSignalSalud: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaSaludAISI${prefijo}` : 'fotografiaSaludAISI';
+  });
+
+  readonly photoPrefixSignalEducacion: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaEducacionAISI${prefijo}` : 'fotografiaEducacionAISI';
+  });
+
+  readonly photoPrefixSignalRecreacion: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaRecreacionAISI${prefijo}` : 'fotografiaRecreacionAISI';
+  });
+
+  readonly photoPrefixSignalDeporte: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `fotografiaDeporteAISI${prefijo}` : 'fotografiaDeporteAISI';
+  });
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -130,22 +147,22 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
 
   getFotografiasSaludVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_SALUD || 'fotografiaSaludAISI', groupPrefix);
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalSalud(), groupPrefix);
   }
 
   getFotografiasEducacionVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_EDUCACION || 'fotografiaEducacionAISI', groupPrefix);
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalEducacion(), groupPrefix);
   }
 
   getFotografiasRecreacionVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_RECREACION || 'fotografiaRecreacionAISI', groupPrefix);
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalRecreacion(), groupPrefix);
   }
 
   getFotografiasDeporteVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX_DEPORTE || 'fotografiaDeporteAISI', groupPrefix);
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDeporte(), groupPrefix);
   }
 
   override ngOnDestroy(): void {
