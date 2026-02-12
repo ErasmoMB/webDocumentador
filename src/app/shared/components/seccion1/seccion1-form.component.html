@@ -1,6 +1,6 @@
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">Información del Proyecto</h4>
+    <h4 class="section-title">{{ SECCION1_TEMPLATES.seccionInfoProyecto }}</h4>
     
     <div class="form-field">
       <label class="label">{{ SECCION1_TEMPLATES.labelNombreProyecto }} <span class="required">*</span></label>
@@ -8,13 +8,13 @@
         type="text" 
         class="input" 
         [placeholder]="SECCION1_TEMPLATES.placeholderNombreProyecto"
-        [ngModel]="projectNameSignal() === '____' ? '' : projectNameSignal()"
-        (ngModelChange)="onFieldChange('projectName', $event)">
+        [ngModel]="projectName.value() === '____' ? '' : projectName.value()"
+        (ngModelChange)="projectName.update($event)">
     </div>
   </div>
 
   <div class="form-group-section">
-    <h4 class="section-title">Cargar Datos de Centros Poblados</h4>
+    <h4 class="section-title">{{ SECCION1_TEMPLATES.seccionCargarDatos }}</h4>
     
     <div class="form-field">
       <label class="label">{{ SECCION1_TEMPLATES.labelSubirUBIGEO }} <span class="required">*</span></label>
@@ -29,7 +29,7 @@
           type="button" 
           class="btn btn-secondary" 
           (click)="selectJSONFile()">
-          Seleccionar archivo
+          {{ SECCION1_TEMPLATES.botonSeleccionarArchivo }}
         </button>
         <span *ngIf="jsonFileNameSignal()" class="file-name">{{ jsonFileNameSignal() }}</span>
         <span *ngIf="!jsonFileNameSignal()" class="file-name">{{ SECCION1_TEMPLATES.mensajeArchivoNoSeleccionado }}</span>
@@ -45,8 +45,8 @@
           <input 
             type="text" 
             class="input" 
-            [value]="departamentoSeleccionadoSignal()"
-            (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)"
+            [ngModel]="departamentoSeleccionado.value()"
+            (ngModelChange)="departamentoSeleccionado.update($event)"
             [placeholder]="SECCION1_TEMPLATES.placeholderDepartamento">
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
@@ -55,8 +55,8 @@
           <input 
             type="text" 
             class="input" 
-            [value]="provinciaSeleccionadaSignal()"
-            (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)"
+            [ngModel]="provinciaSeleccionada.value()"
+            (ngModelChange)="provinciaSeleccionada.update($event)"
             [placeholder]="SECCION1_TEMPLATES.placeholderProvincia">
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
@@ -65,8 +65,8 @@
           <input 
             type="text" 
             class="input" 
-            [value]="distritoSeleccionadoSignal()"
-            (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)"
+            [ngModel]="distritoSeleccionado.value()"
+            (ngModelChange)="distritoSeleccionado.update($event)"
             [placeholder]="SECCION1_TEMPLATES.placeholderDistrito">
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
@@ -75,15 +75,15 @@
   </div>
 
   <div class="form-group-section">
-    <h4 class="section-title">Editar Párrafos</h4>
+    <h4 class="section-title">{{ SECCION1_TEMPLATES.seccionEditarParrafos }}</h4>
     
     <app-paragraph-editor
       fieldId="parrafoSeccion1_principal"
       [label]="SECCION1_TEMPLATES.labelParrafoPrincipal"
       [hint]="SECCION1_TEMPLATES.hintParrafoPrincipal"
       [rows]="8"
-      [value]="parrafoPrincipalSignal()"
-      (valueChange)="onFieldChange('parrafoSeccion1_principal', $event)">
+      [value]="parrafoPrincipal.value()"
+      (valueChange)="parrafoPrincipal.update($event)">
     </app-paragraph-editor>
 
     <app-paragraph-editor
@@ -91,8 +91,8 @@
       [label]="SECCION1_TEMPLATES.labelIntroduccionObjetivos"
       [hint]="SECCION1_TEMPLATES.hintIntroduccionObjetivos"
       [rows]="2"
-      [value]="parrafoIntroduccionSignal()"
-      (valueChange)="onFieldChange('parrafoSeccion1_4', $event)">
+      [value]="parrafoIntroduccion.value()"
+      (valueChange)="parrafoIntroduccion.update($event)">
     </app-paragraph-editor>
 
     <!-- Objetivos Dinámicos -->
@@ -100,19 +100,19 @@
       <div class="dynamic-list-header">
         <h4 class="section-title">{{ SECCION1_TEMPLATES.labelObjetivos }}</h4>
         <button type="button" class="btn btn--add" (click)="agregarObjetivo()">
-          ➕ Agregar
+          {{ SECCION1_TEMPLATES.botonAgregar }}
         </button>
       </div>
       
-      <div *ngFor="let objetivo of objetivosSignal(); let i = index; trackBy: trackByIndex" class="dynamic-list-item">
+      <div *ngFor="let objetivo of objetivosSeccion1.value(); let i = index; trackBy: trackByIndex" class="dynamic-list-item">
         <div class="dynamic-list-item-header">
           <label class="label">{{ SECCION1_TEMPLATES.labelObjetivoN }} {{ i + 1 }}</label>
           <button 
             type="button" 
             class="btn btn--remove" 
             (click)="eliminarObjetivo(i)"
-            *ngIf="objetivosSignal().length > 1">
-            🗑️ Eliminar
+            *ngIf="objetivosSeccion1.value().length > 1">
+            {{ SECCION1_TEMPLATES.botonEliminar }}
           </button>
         </div>
         <textarea 

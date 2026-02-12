@@ -27,6 +27,8 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   override readonly PHOTO_PREFIX = 'fotografiaSeccion2';
   override useReactiveSync: boolean = false;
 
+  readonly SECCION2_TEMPLATES = SECCION2_TEMPLATES;
+
   fotografiasSeccion2: FotoItem[] = [];
 
   // ✅ Signal derivado para fotografías
@@ -122,7 +124,15 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
       ? `${manualClass} has-data` 
       : highlightClass;
 
-    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) <span class="${comunidadesClass}">${comunidades}</span>, cuya área comunal se encuentra predominantemente en el distrito de <span class="${highlightClass}">${distrito}</span> y en menor proporción en los distritos de <span class="${manualClass}">${componente1}</span> y de <span class="${manualClass}">${componente2}</span>, pertenecientes al departamento de <span class="${highlightClass}">${departamento}</span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC <span class="${comunidadesClass}">${comunidades}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC <span class="${comunidadesClass}">${comunidades}</span>.`;
+    // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    const textoBase = SECCION2_TEMPLATES.textoAISDTemplate
+      .replace('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
+      .replace(/{{distrito}}/g, `<span class="${highlightClass}">${distrito}</span>`)
+      .replace(/{{componente1}}/g, `<span class="${manualClass}">${componente1}</span>`)
+      .replace(/{{componente2}}/g, `<span class="${manualClass}">${componente2}</span>`)
+      .replace(/{{departamento}}/g, `<span class="${highlightClass}">${departamento}</span>`);
+
+    return textoBase;
   }
 
   obtenerTextoSeccion2Introduccion(): string {
@@ -183,13 +193,24 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
       ? `${manualClass} has-data`
       : highlightClass;
 
-    if (distritosNombres.length === 1) {
-      return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${distritosClass}">${textoDistritos}</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
-    } else if (distritosNombres.length > 1) {
-      return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por los distritos de <span class="${distritosClass}">${textoDistritos}</span>, capitales distritales de sus respectivas jurisdicciones, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que estas localidades son los centros políticos de las jurisdicciones donde se ubica el Proyecto, así como al hecho de que mantienen una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, son las localidades de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    // ✅ USAR TEMPLATES DESDE CONSTANTS
+    if (distritosNombres.length >= 1) {
+      // Usar template para 1 o más distritos
+      const template = distritosNombres.length === 1 
+        ? SECCION2_TEMPLATES.textoAISITemplate
+        : SECCION2_TEMPLATES.textoAISIMultiplesTemplate;
+      
+      return template
+        .replace(/{{distritos}}/g, `<span class="${distritosClass}">${textoDistritos}</span>`)
+        .replace(/{{provincia}}/g, `<span class="${highlightClass}">${provincia}</span>`)
+        .replace(/{{departamento}}/g, `<span class="${highlightClass}">${departamento}</span>`);
     }
 
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el <span class="${highlightClass}">____</span>, capital distrital de la jurisdicción homónima, en la provincia de <span class="${highlightClass}">${provincia}</span>, en el departamento de <span class="${highlightClass}">${departamento}</span>. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    // Fallback: usar template con placeholder
+    return SECCION2_TEMPLATES.textoAISIFallbackTemplate
+      .replace(/{{placeholderDistrito}}/g, `<span class="${highlightClass}">____</span>`)
+      .replace(/{{provincia}}/g, `<span class="${highlightClass}">${provincia}</span>`)
+      .replace(/{{departamento}}/g, `<span class="${highlightClass}">${departamento}</span>`);
   }
 
   formatearParrafo(texto: string): string {

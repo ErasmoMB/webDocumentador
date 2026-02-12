@@ -30,8 +30,20 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   override readonly PHOTO_PREFIX = 'fotografiaSeccion2';
   override useReactiveSync: boolean = true;
 
+  readonly SECCION2_TEMPLATES = SECCION2_TEMPLATES;
+
   fotografiasSeccion2: FotoItem[] = [];
   imageUploadKey: number = 0;
+
+  // ✅ SEÑALES REACTIVAS CON AUTO-PERSIST (NUEVA ARQUITECTURA)
+  readonly parrafoIntroduccion = this.createAutoSyncField<string>('parrafoSeccion2_introduccion', '');
+  readonly parrafoAISD = this.createAutoSyncField<string>('parrafoSeccion2_aisd_completo', '');
+  readonly parrafoAISI = this.createAutoSyncField<string>('parrafoSeccion2_aisi_completo', '');
+  readonly geoInfoField = this.createAutoSyncField<any>('geoInfo', {});
+  readonly aisdComponente1 = this.createAutoSyncField<string>('aisdComponente1', '');
+  readonly aisdComponente2 = this.createAutoSyncField<string>('aisdComponente2', '');
+  readonly comunidadesCampesinasField = this.createAutoSyncField<any[]>('comunidadesCampesinas', []);
+  readonly distritosAISIField = this.createAutoSyncField<any[]>('distritosAISI', []);
 
   // ✅ aisiGroups ahora viene de BaseSectionComponent (con override)
   override readonly aisiGroups: Signal<readonly GroupDefinition[]> = this.projectFacade.groupsByType('AISI');
@@ -84,74 +96,53 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
     
+    // ✅ Inicializar campos desde store
+    this.inicializarCamposDesdeStore();
+    
+    // ✅ Effect para sincronización básica
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
       this.allPopulatedCenters();
       this.cdRef.markForCheck();
     });
+  }
 
-    effect(() => {
-      const gruposAISD = this.aisdGroups();
-      const comunidadesParaPersistir = gruposAISD.map(g => ({
-        id: g.id,
-        nombre: g.nombre,
-        centrosPobladosSeleccionados: g.ccppIds || []
-      }));
-      this.formChangeService.persistFields('3.1.2', 'form', {
-        comunidadesCampesinas: comunidadesParaPersistir
-      });
-    });
-
-    effect(() => {
-      const gruposAISI = this.aisiGroups();
-      const distritosParaPersistir = gruposAISI.map(g => ({
-        id: g.id,
-        nombre: g.nombre,
-        centrosPobladosSeleccionados: g.ccppIds || []
-      }));
-      
-      console.debug(`[SECCION2-DEBUG] 🔄 EFFECT EJECUTADO | grupos: ${gruposAISI.length}`);
-      console.debug(`[SECCION2-DEBUG]   B.1: ${gruposAISI[0]?.nombre} | CCPPs: ${gruposAISI[0]?.ccppIds?.length || 0}`);
-      console.debug(`[SECCION2-DEBUG]   B.2: ${gruposAISI[1]?.nombre} | CCPPs: ${gruposAISI[1]?.ccppIds?.length || 0}`);
-      
-      // Persistir solo si hay datos
-      if (distritosParaPersistir.length > 0) {
-        this.formChangeService.persistFields('3.1.2', 'form', {
-          distritosAISI: distritosParaPersistir
-        });
-        console.debug(`[SECCION2-DEBUG] ✅ distritosAISI persistido`);
-      }
-    });
-
-    effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.cdRef.markForCheck();
-    });
-
-    // ✅ Log automático de grupos cargados
-    effect(() => {
-      const gruposAISD = this.aisdGroups();
-      const gruposAISI = this.aisiGroups();
-      
-      // Log solo si hay grupos cargados
-      if (gruposAISD.length > 0 || gruposAISI.length > 0) {
-        console.log('%c=== GRUPOS CARGADOS EN SECCIÓN 2 ===', 'color: #1f2937; background: #f3f4f6; font-weight: bold; padding: 4px 8px; border-radius: 3px');
-        
-        if (gruposAISD.length > 0) {
-          gruposAISD.forEach((grupo, index) => {
-            this.logGrupoParaConsola('AISD', index + 1, grupo);
-          });
-        }
-        
-        if (gruposAISI.length > 0) {
-          gruposAISI.forEach((grupo, index) => {
-            this.logGrupoParaConsola('AISI', index + 1, grupo);
-          });
-        }
-      }
-    });
+  /**
+   * ✅ Inicializa campos desde el store o usa valores por defecto
+   */
+  private inicializarCamposDesdeStore(): void {
+    // Párrafos: usar fallback si no hay dato guardado
+    const parrafoIntro = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_introduccion')() || this.obtenerTextoSeccion2Introduccion();
+    this.parrafoIntroduccion.update(parrafoIntro);
+    
+    const parrafoAISDValor = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')() || this.obtenerTextoSeccion2AISDParaEdicion();
+    this.parrafoAISD.update(parrafoAISDValor);
+    
+    const parrafoAISIValor = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')() || this.obtenerTextoSeccion2AISIParaEdicion();
+    this.parrafoAISI.update(parrafoAISIValor);
+    
+    // Geo info
+    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')();
+    if (geoInfo) this.geoInfoField.update(geoInfo);
+    
+    // Componentes AISD
+    const comp1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')();
+    if (comp1) this.aisdComponente1.update(comp1);
+    
+    const comp2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')();
+    if (comp2) this.aisdComponente2.update(comp2);
+    
+    // Grupos (si ya existen)
+    const comunidades = this.projectFacade.selectField(this.seccionId, null, 'comunidadesCampesinas')();
+    if (comunidades && comunidades.length > 0) {
+      this.comunidadesCampesinasField.update(comunidades);
+    }
+    
+    const distritos = this.projectFacade.selectField(this.seccionId, null, 'distritosAISI')();
+    if (distritos && distritos.length > 0) {
+      this.distritosAISIField.update(distritos);
+    }
   }
 
   /**
@@ -492,7 +483,13 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const componente2 = params.componente2 || '____';
     const departamento = params.departamento || '____';
 
-    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) ${comunidades}, cuya área comunal se encuentra predominantemente en el distrito de ${distrito} y en menor proporción en los distritos de ${componente1} y de ${componente2}, pertenecientes al departamento de ${departamento}. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC ${comunidades}, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC ${comunidades}.`;
+    // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    return SECCION2_TEMPLATES.textoAISDTemplate
+      .replace(/{{comunidades}}/g, comunidades)
+      .replace(/{{distrito}}/g, distrito)
+      .replace(/{{componente1}}/g, componente1)
+      .replace(/{{componente2}}/g, componente2)
+      .replace(/{{departamento}}/g, departamento);
   }
 
   obtenerTextoSeccion2AISDParaEdicion(): string {
@@ -522,8 +519,13 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
+    const distrito = geoInfo.DIST || '____';
 
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el ${geoInfo.DIST || '____'}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
+    // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    return SECCION2_TEMPLATES.textoAISITemplate
+      .replace(/{{distrito}}/g, distrito)
+      .replace(/{{provincia}}/g, provincia)
+      .replace(/{{departamento}}/g, departamento);
   }
 
   generarTextoAISDCompleto(params: { 
@@ -546,7 +548,15 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       ? `${manualClass} has-data` 
       : highlightClass;
 
-    return `El Área de influencia social directa (AISD) se delimita en torno a la comunidad campesina (CC) <span class="${comunidadesClass}">${comunidades}</span>, cuya área comunal se encuentra predominantemente en el distrito de <span class="${highlightClass}">${distrito}</span> y en menor proporción en los distritos de <span class="${manualClass}">${componente1}</span> y de <span class="${manualClass}">${componente2}</span>, pertenecientes al departamento de <span class="${highlightClass}">${departamento}</span>. La delimitación del AISD se fundamenta principalmente en la propiedad de los terrenos superficiales. Esta comunidad posee y gestiona las tierras donde se llevará a cabo la exploración minera, lo que implica una relación directa y significativa con el Proyecto. La titularidad de estas tierras establece un vínculo crucial con los pobladores locales, ya que cualquier actividad realizada en el área puede influir directamente sus derechos, usos y costumbres asociados a la tierra. Además, la gestión y administración de estos terrenos por parte de esta comunidad requiere una consideración detallada en la planificación y ejecución del Proyecto, asegurando que las operaciones se lleven a cabo con respeto a la estructura organizativa y normativa de la comunidad. Los impactos directos en la CC <span class="${comunidadesClass}">${comunidades}</span>, derivados del proyecto de exploración minera, incluyen la contratación de mano de obra local, la interacción con las costumbres y autoridades, y otros efectos socioeconómicos y culturales. La generación de empleo local no solo proporcionará oportunidades económicas inmediatas, sino que también fomentará el desarrollo de habilidades y capacidades en la población. La interacción constante con las autoridades y la comunidad promoverá un diálogo y una cooperación que son esenciales para el éxito del Proyecto, respetando y adaptándose a las prácticas y tradiciones locales. La consideración de estos factores en la delimitación del AISD garantiza que el Proyecto avance de manera inclusiva y sostenible, alineado con las expectativas y necesidades de la CC <span class="${comunidadesClass}">${comunidades}</span>.`;
+    // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    const textoBase = SECCION2_TEMPLATES.textoAISDTemplate
+      .replace('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
+      .replace(/{{distrito}}/g, `<span class="${highlightClass}">${distrito}</span>`)
+      .replace(/{{componente1}}/g, `<span class="${manualClass}">${componente1}</span>`)
+      .replace(/{{componente2}}/g, `<span class="${manualClass}">${componente2}</span>`)
+      .replace(/{{departamento}}/g, `<span class="${highlightClass}">${departamento}</span>`);
+
+    return textoBase;
   }
 
   obtenerTextoSeccion2Introduccion(): string {
@@ -637,19 +647,15 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
 Se ha identificado la presencia de comunidades campesinas organizadas que mantienen prácticas tradicionales de gestión territorial.
 El nivel de organización comunitaria es significativo, con presencia de autoridades locales reconocidas.`;
 
-    this.onFieldChange('parrafoSeccion2_introduccion', parrafoPrueba, { refresh: false });
-    this.onFieldChange('parrafoSeccion2_aisd_completo', 
-      'El área de influencia social directa comprende los centros poblados donde el proyecto tendrá impacto directo sobre la población.', 
-      { refresh: false });
-    this.onFieldChange('parrafoSeccion2_aisi_completo', 
-      'El área de influencia social indirecta comprende los distritos adyacentes que podrían recibir impactos indirectos.', 
-      { refresh: false });
-
-    this.onFieldChange('geoInfo', {
+    // ✅ USAR SEÑALES DIRECTAMENTE
+    this.parrafoIntroduccion.update(parrafoPrueba);
+    this.parrafoAISD.update('El área de influencia social directa comprende los centros poblados donde el proyecto tendrá impacto directo sobre la población.');
+    this.parrafoAISI.update('El área de influencia social indirecta comprende los distritos adyacentes que podrían recibir impactos indirectos.');
+    this.geoInfoField.update({
       DPTO: 'Arequipa',
       PROV: 'Caravelí', 
       DIST: 'Cahuacho'
-    }, { refresh: false });
+    });
     
     this.modoFormulario = false;
     this.cdRef.detectChanges();

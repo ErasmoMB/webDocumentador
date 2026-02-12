@@ -188,11 +188,25 @@ export function extractUbicacion(ccppList: readonly CentroPobladoData[]): Normal
   if (ccppList.length === 0) {
     return { departamento: '', provincia: '', distrito: '' };
   }
-  const first = ccppList[0];
+  
+  // 🔍 Buscar el primer valor no vacío para cada campo (no solo del primer CCPP)
+  let departamento = '';
+  let provincia = '';
+  let distrito = '';
+  
+  for (const ccpp of ccppList) {
+    if (!departamento && ccpp.DPTO) departamento = ccpp.DPTO;
+    if (!provincia && ccpp.PROV) provincia = ccpp.PROV;
+    if (!distrito && ccpp.DIST) distrito = ccpp.DIST;
+    
+    // Si tenemos los 3 valores, salir del loop
+    if (departamento && provincia && distrito) break;
+  }
+  
   return {
-    departamento: first.DPTO ?? '',
-    provincia: first.PROV ?? '',
-    distrito: first.DIST ?? ''
+    departamento,
+    provincia,
+    distrito
   };
 }
 

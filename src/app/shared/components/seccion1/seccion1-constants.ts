@@ -90,4 +90,17 @@ export const SECCION1_TEMPLATES = {
   // Valores por defecto de Fotografías
   tituloFotoDefault: 'Sección 1',
   fuenteFotoDefault: 'GEADES, 2024',
+
+  // Textos de secciones del formulario
+  seccionInfoProyecto: 'Información del Proyecto',
+  seccionCargarDatos: 'Cargar Datos de Centros Poblados',
+  seccionEditarParrafos: 'Editar Párrafos',
+
+  // Botones
+  botonSeleccionarArchivo: 'Seleccionar archivo',
+  botonAgregar: '➕ Agregar',
+  botonEliminar: '🗑️ Eliminar',
+
+  // Sección Objetivos
+  seccionObjetivos: 'Objetivos Dinámicos',
 } as const;

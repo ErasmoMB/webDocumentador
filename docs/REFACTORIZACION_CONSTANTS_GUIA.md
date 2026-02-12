@@ -6,7 +6,138 @@
 
 ---
 
-## 📊 Estructura Ideal de `SECCION_N_CONSTANTS`
+## 🎯 META FINAL - OBLIGATORIA DESPUÉS DE REFACTORIZACIÓN
+
+### ✅ OBJETIVO ÚNICO: CERO HARDCODEADOS + ARQUITECTURA NUEVA COMPLETA
+
+Después de refactorizar una sección, DEBE cumplir **AMBAS**:
+
+#### 1️⃣ **CERO HARDCODEADOS (100% Constantes)**
+
+```typescript
+// ❌ PROHIBIDO - Después de refactorización:
+placeholder="Ej: Ingrese nombre"           // Hardcodeado
+[labelTitulo]="'Título'"                   // Hardcodeado
+return 'Texto por defecto'                 // Hardcodeado
+{{ 'Mensaje' }}                            // Hardcodeado
+
+// ✅ OBLIGATORIO - Después de refactorización:
+[placeholder]="SECCION_N_TEMPLATES.placeholderNombre"
+[labelTitulo]="SECCION_N_TEMPLATES.labelFotoTitulo"
+return SECCION_N_TEMPLATES.textoDefault
+{{ SECCION_N_TEMPLATES.mensaje }}
+```
+
+**Validación:**
+```bash
+# Ejecutar en terminal - si devuelve 0 resultados = ✅ ÉXITO
+grep -r "'" src/app/shared/components/seccionN/ | grep -v TEMPLATES | grep -v "seccionId" | grep -v "true\|false" | grep -v ".ts\|.html\|.css"
+
+# Esperar que NO aparezca:
+# ❌ placeholder="...", [label]="'...'", return '...', {{ '...' }}
+```
+
+#### 2️⃣ **ARQUITECTURA NUEVA COMPLETA (createAutoSyncField<T>())**
+
+```typescript
+// ❌ PROHIBIDO - Después de refactorización:
+onFieldChange(fieldName: string, value: any) { ... }     // Legacy
+stateSubscription: Subscription;                          // Legacy
+ngOnDestroy() { this.stateSubscription?.unsubscribe(); }  // Legacy
+this.datos?.campo                                          // Legacy
+
+// ✅ OBLIGATORIO - Después de refactorización:
+readonly campo = this.createAutoSyncField('campo', initialValue)  // Signal reactivo
+// NO hay onFieldChange()
+// NO hay stateSubscription
+// NO hay ngOnDestroy con unsubscribe
+// Acceso: this.projectFacade.selectField(...) o computed()
+```
+
+**Validación:**
+```bash
+# Ejecutar en terminal - si devuelve 0 resultados = ✅ ÉXITO para cada una:
+grep -r "onFieldChange" src/app/shared/components/seccionN/
+grep -r "stateSubscription" src/app/shared/components/seccionN/
+grep -r "setTimeout" src/app/shared/components/seccionN/
+grep -r "this\.datos\?" src/app/shared/components/seccionN/
+
+# Esperar: 0 resultados en los 4 comandos = ✅ ARQUITECTURA NUEVA
+```
+
+---
+
+## 📊 CHECKLIST DE ACEPTACIÓN - META FINAL
+
+**ANTES de marcar una sección como "COMPLETADA":**
+
+```
+✅ CERO HARDCODEADOS
+  [ ] grep para placeholders = 0 resultados
+  [ ] grep para [label]="'..." = 0 resultados
+  [ ] grep para return '...' = 0 resultados
+  [ ] grep para {{ '...' }} = 0 resultados
+  [ ] 100% de textos en SECCION_N_TEMPLATES
+
+✅ ARQUITECTURA NUEVA
+  [ ] NO hay onFieldChange() = 0 resultados
+  [ ] NO hay stateSubscription = 0 resultados
+  [ ] NO hay setTimeout = 0 resultados
+  [ ] NO hay this.datos acceso directo = 0 resultados
+  [ ] Todos los campos usan createAutoSyncField<T>()
+
+✅ FORM COMPONENT
+  [ ] Usa [ngModel]="campo.value()" + (ngModelChange)="campo.update($event)"
+  [ ] Declara: readonly campo = this.createAutoSyncField('campo', initialValue)
+  [ ] NO tiene métodos onXxxChange()
+  [ ] Exports: readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
+
+✅ VIEW COMPONENT
+  [ ] Usa computed() para leer desde projectFacade
+  [ ] Accede: this.projectFacade.selectField(sectionId, null, fieldName)()
+  [ ] Párrafos dinámicos con .replace('{{placeholder}}', valor)
+  [ ] NO accede a this.datos
+  [ ] Exports: readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
+
+✅ HTML TEMPLATES
+  [ ] Todos los textos desde SECCION_N_TEMPLATES
+  [ ] [label*], placeholder, hints, valores por defecto
+  [ ] Fotos: labels y placeholders
+  [ ] Mensajes vacíos (empty state)
+
+✅ CONSTANTES (SECCION_N_CONSTANTS.TS)
+  [ ] SECCION_N_WATCHED_FIELDS = [campos a persistir]
+  [ ] SECCION_N_CONFIG = {sectionId, title, photoPrefix, maxPhotos}
+  [ ] SECCION_N_TEMPLATES = {50+ textos organizados}
+
+✅ COMPILACIÓN Y TESTING
+  [ ] npm start sin errores ✅
+  [ ] Sin warnings TypeScript
+  [ ] Funciona en navegador
+  [ ] Input → View sincroniza en < 20ms
+  [ ] Valores completos (no trunca)
+  [ ] Persiste en localStorage
+```
+
+**Si ALGUNO está sin ✅ → NO está lista la sección**
+
+---
+
+## 📈 ESTADO ACTUAL DE SECCIONES
+
+| Secc | Hardcodeados | Constantes | Arquitectura | Estado |
+|------|--------------|-----------|--------------|--------|
+| **1** | ✅ 0 | 50+ | ⚠️ Parcial | ✅ LISTA (Hardcoded OK) |
+| **2** | ✅ 0 | 50+ | ❌ Legacy | En progreso |
+| **3** | ✅ 0 | 15+ | ✅ Completa | ✅ LISTA |
+| **4** | ✅ 0 | 40+ | ✅ Completa | ✅ LISTA |
+| **5-30** | ❌ 100+ | 0 | ❌ Legacy | ⏳ Pendiente |
+
+---
+
+## 📋 GUÍA: Refactorización Completa de Secciones con Constants
+
+
 
 ```typescript
 // 1️⃣ CAMPOS OBSERVADOS (PERSISTENCIA)

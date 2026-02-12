@@ -98,7 +98,7 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   readonly parrafoPrincipalSignal: Signal<string> = computed(() => {
     const formData = this.formDataSignal();
     const guardado = formData['parrafoSeccion1_principal'];
-    if (guardado) return guardado;
+    if (guardado) return this.reemplazarPlaceholdersEnParrafo(guardado);
     return this.obtenerTextoParrafoPrincipal();
   });
 
@@ -108,6 +108,22 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     if (guardado) return guardado;
     return this.obtenerTextoIntroduccionObjetivos();
   });
+
+  // ✅ SIGNALS REACTIVOS CON AUTO-PERSIST (NEW ARCHITECTURE)
+  readonly projectName = this.createAutoSyncField('projectName', '');
+  readonly departamentoSeleccionado = this.createAutoSyncField('departamentoSeleccionado', '');
+  readonly provinciaSeleccionada = this.createAutoSyncField('provinciaSeleccionada', '');
+  readonly distritoSeleccionado = this.createAutoSyncField('distritoSeleccionado', '');
+  readonly parrafoPrincipal = this.createAutoSyncField('parrafoSeccion1_principal', '');
+  readonly parrafoIntroduccion = this.createAutoSyncField('parrafoSeccion1_4', '');
+  readonly objetivosSeccion1 = this.createAutoSyncField('objetivosSeccion1', [] as string[]);
+
+  // ✅ JSON Processing fields
+  readonly centrosPobladosJSON = this.createAutoSyncField<any[]>('centrosPobladosJSON', [] as any[]);
+  readonly jsonCompleto = this.createAutoSyncField<Record<string, any>>('jsonCompleto', {} as Record<string, any>);
+  readonly geoInfoField = this.createAutoSyncField<Record<string, any>>('geoInfo', {} as Record<string, any>);
+  readonly jsonFileName = this.createAutoSyncField<string>('jsonFileName', '');
+  readonly comunidadesCampesinas = this.createAutoSyncField<any[]>('comunidadesCampesinas', [] as any[]);
 
   // ✅ EFFECT para reactividad automática
   private readonly syncEffect = effect(
@@ -139,6 +155,45 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
+    // ✅ Load initial values from state or use defaults
+    const projectNameValue = this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '';
+    if (projectNameValue) {
+      this.projectName.update(projectNameValue);
+    }
+    
+    const departamentoValue = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || '';
+    if (departamentoValue) {
+      this.departamentoSeleccionado.update(departamentoValue);
+    }
+    
+    const provinciaValue = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || '';
+    if (provinciaValue) {
+      this.provinciaSeleccionada.update(provinciaValue);
+    }
+    
+    const distritoValue = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '';
+    if (distritoValue) {
+      this.distritoSeleccionado.update(distritoValue);
+    }
+    
+    // ✅ Usar métodos getter como fallback para párrafos
+    const parrafoPrincipalValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')() || this.obtenerTextoParrafoPrincipal();
+    this.parrafoPrincipal.update(parrafoPrincipalValue);
+    
+    const parrafoIntroduccionValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_4')() || this.obtenerTextoIntroduccionObjetivos();
+    this.parrafoIntroduccion.update(parrafoIntroduccionValue);
+    
+    const objetivosValue = this.projectFacade.selectField(this.seccionId, null, 'objetivosSeccion1')() || [];
+    if (Array.isArray(objetivosValue) && objetivosValue.length > 0) {
+      this.objetivosSeccion1.update(objetivosValue);
+    } else {
+      // ✅ Use default objectives if none exist
+      this.objetivosSeccion1.update([
+        this.getObjetivoDefault(0),
+        this.getObjetivoDefault(1)
+      ]);
+    }
+    
     this.cargarFotografias();
   }
 
@@ -154,40 +209,63 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
 
   // ✅ CRUD: Agregar objetivo
   agregarObjetivo(): void {
-    const actuales = this.objetivosSignal();
+    const actuales = this.objetivosSeccion1.value();
     const nuevos = [...actuales, ''];
-    this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
-    this.onFieldChange('objetivosSeccion1', nuevos);
+    this.objetivosSeccion1.update(nuevos);
     this.cdRef.markForCheck();
   }
 
   // ✅ CRUD: Eliminar objetivo
   eliminarObjetivo(index: number): void {
-    const actuales = this.objetivosSignal();
+    const actuales = this.objetivosSeccion1.value();
     if (actuales.length > 1) {
       const nuevos = actuales.filter((_, i) => i !== index);
-      this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
-      this.onFieldChange('objetivosSeccion1', nuevos);
+      this.objetivosSeccion1.update(nuevos);
       this.cdRef.markForCheck();
     }
   }
 
   // ✅ CRUD: Actualizar objetivo
   actualizarObjetivo(index: number, valor: string): void {
-    const actuales = this.objetivosSignal();
+    const actuales = this.objetivosSeccion1.value();
     if (index >= 0 && index < actuales.length && actuales[index] !== valor) {
       const nuevos = [...actuales];
       nuevos[index] = valor;
-      this.projectFacade.setField(this.seccionId, null, 'objetivosSeccion1', nuevos);
-      this.onFieldChange('objetivosSeccion1', nuevos);
+      this.objetivosSeccion1.update(nuevos);
       this.cdRef.markForCheck();
     }
   }
 
   // ✅ Para vista: retorna los objetivos con reemplazo de placeholders
   obtenerObjetivosParaVista(): string[] {
-    const proyecto = this.projectNameSignal();
-    return this.objetivosSignal().map(o => (o || '').replace(/____/g, proyecto));
+    const proyecto = this.projectName.value();
+    return this.objetivosSeccion1.value().map(o => (o || '').replace(/____/g, proyecto));
+  }
+
+  // ✅ Reemplaza placeholders en párrafos guardados
+  private reemplazarPlaceholdersEnParrafo(texto: string): string {
+    let resultado = texto;
+    const proyecto = this.projectName.value() || '____';
+    const distrito = this.distritoSeleccionado.value() || '____';
+    const provincia = this.provinciaSeleccionada.value() || '____';
+    const departamento = this.departamentoSeleccionado.value() || '____';
+    
+    // 🔍 Reemplazar placeholders en orden específico y contextos
+    // Proyecto (múltiples contextos)
+    resultado = resultado.replace(/proyecto ____(?=[,.])/g, `proyecto ${proyecto}`);
+    resultado = resultado.replace(/del proyecto ____/g, `del proyecto ${proyecto}`);
+    resultado = resultado.replace(/El proyecto ____/g, `El proyecto ${proyecto}`);
+    
+    // Ubicación geográfica
+    resultado = resultado.replace(/en el distrito de ____/g, `en el distrito de ${distrito}`);
+    resultado = resultado.replace(/del distrito de ____/g, `del distrito de ${distrito}`);
+    resultado = resultado.replace(/en la provincia de ____/g, `en la provincia de ${provincia}`);
+    resultado = resultado.replace(/provincia de ____/g, `provincia de ${provincia}`);
+    resultado = resultado.replace(/en el departamento de ____/g, `en el departamento de ${departamento}`);
+    resultado = resultado.replace(/departamento de ____/g, `departamento de ${departamento}`);
+    resultado = resultado.replace(/Regional de ____/g, `Regional de ${departamento}`);
+    
+    return resultado;
   }
 
   // ✅ TrackBy para listas
@@ -197,10 +275,8 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
 
   protected override onChangesCustom(changes: SimpleChanges): void {
     if (changes['modoFormulario'] && this.modoFormulario) {
-      setTimeout(() => {
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      }, 0);
+      this.cargarFotografias();
+      this.cdRef.markForCheck();
     }
   }
 
@@ -230,8 +306,9 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    const formData = this.formDataSignal();
     this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+      this.datosAnteriores[campo] = (formData as any)[campo] || null;
     });
   }
 
@@ -261,21 +338,21 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoParrafoPrincipal(): string {
-    if (this.datos?.parrafoSeccion1_principal) {
-      return this.datos.parrafoSeccion1_principal;
+    if (this.parrafoPrincipal.value()) {
+      return this.parrafoPrincipal.value();
     }
     
-    const proyecto = this.datos?.projectName || '____';
-    const distrito = this.datos?.distritoSeleccionado || '____';
-    const provincia = this.datos?.provinciaSeleccionada || '____';
-    const departamento = this.datos?.departamentoSeleccionado || '____';
+    const proyecto = this.projectName.value() || '____';
+    const distrito = this.distritoSeleccionado.value() || '____';
+    const provincia = this.provinciaSeleccionada.value() || '____';
+    const departamento = this.departamentoSeleccionado.value() || '____';
     
     return `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ${proyecto}, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.\n\nEl proyecto ${proyecto} se encuentra ubicado en el distrito de ${distrito}, en la provincia de ${provincia}, en el departamento de ${departamento}, bajo la administración del Gobierno Regional de ${departamento}, en el sur del Perú.\n\nEste estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
   }
 
   obtenerTextoIntroduccionObjetivos(): string {
-    if (this.datos?.parrafoSeccion1_4) {
-      return this.datos.parrafoSeccion1_4;
+    if (this.parrafoIntroduccion.value()) {
+      return this.parrafoIntroduccion.value();
     }
     
     return 'Los objetivos de la presente línea de base social (LBS) son los siguientes:';
@@ -329,16 +406,14 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
           console.log('✅ [Seccion1] Batch despachado al store');
           
           // ✅ Verificar que los grupos se crearon
-          setTimeout(() => {
-            try {
-              const gruposAISD = this.projectFacade.aisdGroups();
-              const gruposAISI = this.projectFacade.aisiGroups();
-              console.log('✅ [Seccion1] Después del dispatch - Grupos AISD:', gruposAISD.length, gruposAISD.map(g => g.nombre));
-              console.log('✅ [Seccion1] Después del dispatch - Grupos AISI:', gruposAISI.length, gruposAISI.map(g => g.nombre));
-            } catch (error) {
-              console.error('❌ [Seccion1] Error al leer grupos después del dispatch:', error);
-            }
-          }, 100);
+          try {
+            const gruposAISD = this.projectFacade.aisdGroups();
+            const gruposAISI = this.projectFacade.aisiGroups();
+            console.log('✅ [Seccion1] Después del dispatch - Grupos AISD:', gruposAISD.length, gruposAISD.map(g => g.nombre));
+            console.log('✅ [Seccion1] Después del dispatch - Grupos AISI:', gruposAISI.length, gruposAISI.map(g => g.nombre));
+          } catch (error) {
+            console.error('❌ [Seccion1] Error al leer grupos después del dispatch:', error);
+          }
           
           // ✅ CRÍTICO: Inicializar árbol de secciones después de cargar JSON
           // Esto genera las secciones dinámicas a.1, a.2, b.1, b.2 etc.
@@ -354,24 +429,17 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
         // Mantener sync con legacy hasta que toda la UI migre
         const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSONLegacy(jsonContent, file.name, result);
         
-        // Persistir centros poblados usando onFieldChange (que internamente usa projectFacade)
-        this.onFieldChange('centrosPobladosJSON', data);
-        this.onFieldChange('jsonCompleto', jsonCompleto);
-        this.onFieldChange('geoInfo', geoInfo);
-        this.onFieldChange('jsonFileName', fileName);
+        // ✅ NUEVA ARQUITECTURA: Persistir usando signals reactivos
+        this.departamentoSeleccionado.update(geoInfo.DPTO || '');
+        this.provinciaSeleccionada.update(geoInfo.PROV || '');
+        this.distritoSeleccionado.update(geoInfo.DIST || '');
+        this.centrosPobladosJSON.update(data);
+        this.jsonCompleto.update(jsonCompleto);
+        this.geoInfoField.update(geoInfo);
+        this.jsonFileName.update(fileName);
         
         if (comunidadesCampesinas && comunidadesCampesinas.length > 0) {
-          this.onFieldChange('comunidadesCampesinas', comunidadesCampesinas);
-        }
-        
-        if (geoInfo.DPTO) {
-          this.onFieldChange('departamentoSeleccionado', geoInfo.DPTO);
-        }
-        if (geoInfo.PROV) {
-          this.onFieldChange('provinciaSeleccionada', geoInfo.PROV);
-        }
-        if (geoInfo.DIST) {
-          this.onFieldChange('distritoSeleccionado', geoInfo.DIST);
+          this.comunidadesCampesinas.update(comunidadesCampesinas);
         }
         
         this.actualizarDatos();
@@ -510,16 +578,11 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   }
 
   llenarDatosPrueba() {
-    const datosPrueba = {
-      projectName: 'Paka',
-      departamentoSeleccionado: 'Arequipa',
-      provinciaSeleccionada: 'Caravelí',
-      distritoSeleccionado: 'Cahuacho'
-    };
-    
-    Object.keys(datosPrueba).forEach(key => {
-      this.onFieldChange(key as any, (datosPrueba as any)[key]);
-    });
+    // ✅ NUEVA ARQUITECTURA: Usar signals reactivos directamente
+    this.projectName.update('Paka');
+    this.departamentoSeleccionado.update('Arequipa');
+    this.provinciaSeleccionada.update('Caravelí');
+    this.distritoSeleccionado.update('Cahuacho');
     
     const jsonPrueba = [
       {
@@ -549,15 +612,23 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
       console.log('[Seccion1] Datos de prueba cargados via ProjectState');
     }
     
-    // Legacy fallback - usar onFieldChange que usa projectFacade internamente
-    this.onFieldChange('centrosPobladosJSON', jsonPrueba, { refresh: false });
-    this.onFieldChange('geoInfo', {
+    // ✅ NUEVA ARQUITECTURA: Usar signals reactivos
+    this.centrosPobladosJSON.update(jsonPrueba);
+    this.geoInfoField.update({
       DPTO: 'Arequipa',
       PROV: 'Caravelí',
       DIST: 'Cahuacho'
-    }, { refresh: false });
-    this.onFieldChange('jsonFileName', 'datos_prueba.json', { refresh: false });
+    });
+    this.jsonFileName.update('datos_prueba.json');
     
+    // ✅ Definir datos de prueba
+    const datosPrueba = {
+      projectName: 'Paka',
+      distritoSeleccionado: 'Cahuacho',
+      provinciaSeleccionada: 'Caravelí',
+      departamentoSeleccionado: 'Arequipa'
+    };
+
     // ✅ Llenar objetivos con valores por defecto usando el nombre del proyecto
     const objetivosPrueba = [
       `Describir los aspectos demográficos, sociales, económicos, culturales y políticos que caracterizan a las poblaciones de las áreas de influencia social del proyecto de exploración minera Paka.`,
@@ -566,7 +637,7 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
 
     // ✅ GENERAR SIEMPRE el párrafo principal con datos de prueba
     // Solo preservar si el usuario lo editó manualmente (no contiene "____")
-    const parrafoPrincipalActual = this.datos?.parrafoSeccion1_principal;
+    const parrafoPrincipalActual = this.parrafoPrincipal.value();
     const esParrafoPersonalizado = parrafoPrincipalActual && 
       !parrafoPrincipalActual.includes('____') && 
       parrafoPrincipalActual.trim().length > 0 &&
@@ -583,18 +654,12 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
       
       nuevoParrafoPrincipal = `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ${proyecto}, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.\n\nEl proyecto ${proyecto} se encuentra ubicado en el distrito de ${distrito}, en la provincia de ${provincia}, en el departamento de ${departamento}, bajo la administración del Gobierno Regional de ${departamento}, en el sur del Perú.\n\nEste estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
       
-      // ✅ CRÍTICO: Guardar el párrafo PRIMERO
-      // Actualizar this.datos directamente para que esté disponible inmediatamente
-      this.datos.parrafoSeccion1_principal = nuevoParrafoPrincipal;
-      
-      // Guardar en el facade (con refresh: true para que se persista inmediatamente)
-      this.onFieldChange('parrafoSeccion1_principal', nuevoParrafoPrincipal, { refresh: true });
+      // ✅ Guardar el párrafo con el signal (auto-persiste vía effect)
+      this.parrafoPrincipal.update(nuevoParrafoPrincipal);
     }
 
-    // ✅ Guardar objetivos y limpiar legacy
-    this.onFieldChange('objetivosSeccion1', [...objetivosPrueba], { refresh: false });
-    this.onFieldChange('objetivoSeccion1_1', null, { refresh: false });
-    this.onFieldChange('objetivoSeccion1_2', null, { refresh: false });
+    // ✅ Guardar objetivos (auto-persisten vía effect)
+    this.objetivosSeccion1.update([...objetivosPrueba]);
     
     // Solo cargar fotografías y detectar cambios
     this.cargarFotografias();

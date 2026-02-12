@@ -104,7 +104,7 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
   readonly parrafoPrincipalSignal: Signal<string> = computed(() => {
     const formData = this.formDataSignal();
     const guardado = formData['parrafoSeccion1_principal'];
-    if (guardado) return guardado;
+    if (guardado) return this.reemplazarPlaceholdersEnParrafo(guardado);
     return this.obtenerTextoParrafoPrincipal();
   });
 
@@ -171,6 +171,32 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
     return this.objetivosSignal().map(o => (o || '').replace(/____/g, proyecto));
   }
 
+  // ✅ Reemplaza placeholders en párrafos guardados
+  private reemplazarPlaceholdersEnParrafo(texto: string): string {
+    let resultado = texto;
+    const proyecto = this.projectNameSignal() || '____';
+    const distrito = this.distritoSeleccionadoSignal() || '____';
+    const provincia = this.provinciaSeleccionadaSignal() || '____';
+    const departamento = this.departamentoSeleccionadoSignal() || '____';
+    
+    // 🔍 Reemplazar placeholders en orden específico y contextos
+    // Proyecto (múltiples contextos)
+    resultado = resultado.replace(/proyecto ____(?=[,.])/g, `proyecto ${proyecto}`);
+    resultado = resultado.replace(/del proyecto ____/g, `del proyecto ${proyecto}`);
+    resultado = resultado.replace(/El proyecto ____/g, `El proyecto ${proyecto}`);
+    
+    // Ubicación geográfica
+    resultado = resultado.replace(/en el distrito de ____/g, `en el distrito de ${distrito}`);
+    resultado = resultado.replace(/del distrito de ____/g, `del distrito de ${distrito}`);
+    resultado = resultado.replace(/en la provincia de ____/g, `en la provincia de ${provincia}`);
+    resultado = resultado.replace(/provincia de ____/g, `provincia de ${provincia}`);
+    resultado = resultado.replace(/en el departamento de ____/g, `en el departamento de ${departamento}`);
+    resultado = resultado.replace(/departamento de ____/g, `departamento de ${departamento}`);
+    resultado = resultado.replace(/Regional de ____/g, `Regional de ${departamento}`);
+    
+    return resultado;
+  }
+
   // ✅ TrackBy para listas
   trackByIndex(index: number): number {
     return index;
@@ -193,8 +219,9 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override actualizarValoresConPrefijo(): void {
+    const formData = this.formDataSignal();
     this.watchedFields.forEach(campo => {
-      this.datosAnteriores[campo] = (this.datos as any)[campo] || null;
+      this.datosAnteriores[campo] = (formData as any)[campo] || null;
     });
   }
 
@@ -237,8 +264,9 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoIntroduccionObjetivos(): string {
-    if (this.datos?.parrafoSeccion1_4) {
-      return this.datos.parrafoSeccion1_4;
+    const guardado = this.formDataSignal()['parrafoSeccion1_4'];
+    if (guardado) {
+      return guardado;
     }
     
     return 'Los objetivos de la presente línea de base social (LBS) son los siguientes:';

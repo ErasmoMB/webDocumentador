@@ -1,16 +1,16 @@
 <!-- ✅ SECCION2-VIEW: Vista de lectura (solo modoFormulario = false) -->
 <div class="seccion-view-content">
-  <h3>3.1.2 Delimitación de las áreas de influencia social</h3>
+  <h3>3.1.2 {{ SECCION2_TEMPLATES.tituloSeccion }}</h3>
   
   <!-- Introducción -->
   <div class="text-justify" [innerHTML]="formatearParrafo(obtenerTextoSeccion2Introduccion())"></div>
 
   <!-- ✅ A. AISD - Áreas de influencia social directa -->
-  <h4>A. Áreas de influencia social directa (AISD)</h4>
+  <h4>{{ SECCION2_TEMPLATES.tituloAISD }}</h4>
   <div class="text-justify" [innerHTML]="textoAISDFormateado()"></div>
 
   <!-- ✅ B. AISI - Áreas de influencia social indirecta -->
-  <h4>B. Áreas de influencia social indirecta (AISI)</h4>
+  <h4>{{ SECCION2_TEMPLATES.tituloAISI }}</h4>
   <div class="text-justify" [innerHTML]="textoAISIFormateado()"></div>
 
   <!-- Fotografías -->
@@ -20,8 +20,8 @@
     [fotografias]="fotografiasSeccion2"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION2_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION2_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION2_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>
