@@ -8,7 +8,7 @@ import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TABLA_AISD1_CONFIG, SECCION4_TABLA_AISD2_CONFIG, SECCION4_COLUMNAS_AISD1, SECCION4_COLUMNAS_AISD2 } from './seccion4-constants';
+import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TABLA_AISD1_CONFIG, SECCION4_TABLA_AISD2_CONFIG, SECCION4_COLUMNAS_AISD1, SECCION4_COLUMNAS_AISD2, SECCION4_TEMPLATES, SECCION4_CONFIG } from './seccion4-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -19,8 +19,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion4FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1';
+  @Input() override seccionId: string = SECCION4_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = true;
+
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION4_TEMPLATES = SECCION4_TEMPLATES;
 
   readonly PHOTO_PREFIX_UBICACION = SECCION4_PHOTO_PREFIXES.UBICACION;
   readonly PHOTO_PREFIX_POBLACION = SECCION4_PHOTO_PREFIXES.POBLACION;
@@ -52,8 +55,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     super(cdRef, injector);
 
     this.photoGroupsConfig = [
-      { prefix: this.PHOTO_PREFIX_UBICACION, label: 'Ubicación' },
-      { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
+      { prefix: this.PHOTO_PREFIX_UBICACION, label: SECCION4_TEMPLATES.labelFotografiasUbicacion },
+      { prefix: this.PHOTO_PREFIX_POBLACION, label: SECCION4_TEMPLATES.labelFotografiasOblacion }
     ];
 
     this.formDataSignal = computed(() => {
@@ -112,6 +115,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
           ...data,
           comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? [],
           cuadroTituloAISD1: data['cuadroTituloAISD1' + this.obtenerPrefijoGrupo()] ?? '',
+          cuadroTituloAISD2: data['cuadroTituloAISD2' + this.obtenerPrefijoGrupo()] ?? '',
           tablaAISD1Datos: tablaAISD1,
           tablaAISD2Datos: tablaAISD2
         },
@@ -206,8 +210,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     if (estaVaciaA1 || estaInvalidaA1) {
       const tablaA1Mock = this.datos['tablaAISD1Datos'];
       if (tablaA1Mock && tablaA1Mock.length > 0 && tablaA1Mock[0].localidad && tablaA1Mock[0].localidad !== '____') {
-        this.onFieldChange(dataKeyA1 as any, tablaA1Mock, { refresh: false });
         this.datos[dataKeyA1] = tablaA1Mock;
+        this.projectFacade.setField(this.seccionId, null, dataKeyA1, tablaA1Mock);
       } else {
         const tablaA2Actual = this.datos[dataKeyA2] || this.datos['tablaAISD2Datos'] || [];
         let filaCapital = tablaA2Actual.find((f: any) => f.poblacion && parseInt(f.poblacion) > 0);
@@ -223,8 +227,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
             provincia: this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
             departamento: filaCapital?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
           }];
-          this.onFieldChange(dataKeyA1 as any, filaA1, { refresh: false });
           this.datos[dataKeyA1] = filaA1;
+          this.projectFacade.setField(this.seccionId, null, dataKeyA1, filaA1);
         }
       }
     }
@@ -253,14 +257,14 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
           };
         });
         if (filas.length > 0) {
-          this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
           this.datos[dataKeyA2] = filas;
+          this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
         }
       } else {
         const tablaA2Mock = this.datos['tablaAISD2Datos'];
         if (tablaA2Mock && tablaA2Mock.length > 0) {
-          this.onFieldChange(dataKeyA2 as any, tablaA2Mock, { refresh: false });
           this.datos[dataKeyA2] = tablaA2Mock;
+          this.projectFacade.setField(this.seccionId, null, dataKeyA2, tablaA2Mock);
         } else {
           const puntosPoblacionMock = this.datos['puntosPoblacion'];
           if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
@@ -271,8 +275,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
               viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
               viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
             }));
-            this.onFieldChange(dataKeyA2 as any, filas, { refresh: false });
             this.datos[dataKeyA2] = filas;
+            this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
           }
         }
       }
@@ -322,9 +326,13 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       empadronadas: tablaA2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
       ocupadas: tablaA2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
     };
-    this.onFieldChange(`tablaAISD2TotalPoblacion${prefijo}`, totals.poblacion, { refresh: false });
-    this.onFieldChange(`tablaAISD2TotalViviendasEmpadronadas${prefijo}`, totals.empadronadas, { refresh: false });
-    this.onFieldChange(`tablaAISD2TotalViviendasOcupadas${prefijo}`, totals.ocupadas, { refresh: false });
+    
+    // ✅ Guardar totales directamente sin onFieldChange
+    const totalesPayload: Record<string, any> = {};
+    totalesPayload[`tablaAISD2TotalPoblacion${prefijo}`] = totals.poblacion;
+    totalesPayload[`tablaAISD2TotalViviendasEmpadronadas${prefijo}`] = totals.empadronadas;
+    totalesPayload[`tablaAISD2TotalViviendasOcupadas${prefijo}`] = totals.ocupadas;
+    this.projectFacade.setFields(this.seccionId, null, totalesPayload);
     
     this.actualizarDatos();
     this.cdRef.markForCheck();

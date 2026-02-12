@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION12_TEMPLATES } from './seccion12-constants';
 
 @Component({
   selector: 'app-seccion12-view',
@@ -23,6 +24,9 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 export class Seccion12ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.12';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION12_TEMPLATES = SECCION12_TEMPLATES;
 
   readonly PHOTO_PREFIX_SALUD = 'fotografiaSalud';
   readonly PHOTO_PREFIX_IE_AYROCA = 'fotografiaIEAyroca';
@@ -84,7 +88,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     if (manual && String(manual).trim().length > 0) return String(manual);
     const grupoAISD = this.grupoAISDSignal();
     const provincia = this.provinciaSignal();
-    return `Dentro de la CC ${grupoAISD} se encuentra un puesto de salud, que está bajo la gestión directa del MINSA. Este establecimiento es de categoría I – 2 y brinda atención primaria a los habitantes de la comunidad. En la actualidad, se viene ofreciendo tres servicios con carácter permanente: medicina, obstetricia y enfermería; aunque también se coordina en conjunto con la MICRORED la realización de campañas de salud como psicología y salud bucal. No obstante, ante casos de mayor complejidad, la población es derivada a establecimientos de mayor categoría, principalmente ubicados en la ciudad de ${provincia}.`;
+    return SECCION12_TEMPLATES.textosDefaultSalud.parrafo(grupoAISD, provincia);
   });
 
   readonly parrafoEducacionSignal: Signal<string> = computed(() => {
@@ -93,7 +97,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const manual = data[`parrafoSeccion12_educacion_completo${prefijo}`];
     if (manual && String(manual).trim().length > 0) return String(manual);
     const grupoAISD = this.grupoAISDSignal();
-    return `Dentro de la CC ${grupoAISD} se hallan instituciones educativas de los dos primeros niveles de educación básica regular (inicial y primaria). Todas ellas se encuentran concentradas en el anexo ${grupoAISD}, el centro administrativo comunal. En base al Censo Educativo 2023, la institución con mayor cantidad de estudiantes dentro de la comunidad es la IE N°40270, la cual es de nivel primaria, con un total de 21 estudiantes. A continuación, se presenta el cuadro con la cantidad de estudiantes por institución educativa y nivel dentro de la localidad en cuestión.`;
+    return SECCION12_TEMPLATES.textosDefaultEducacion.parrafoEducacion(grupoAISD);
   });
 
   readonly parrafoInfraestructuraPostSignal: Signal<string> = computed(() => {
@@ -102,7 +106,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const manual = data[`textoInfraestructuraEducacionPost${prefijo}`];
     if (manual && String(manual).trim().length > 0 && String(manual).trim() !== '____') return String(manual);
     const grupoAISD = this.grupoAISDSignal();
-    return `De las entrevistas aplicadas durante el trabajo de campo, se recopiló información de carácter cualitativo de las instituciones educativas de la CC ${grupoAISD}. En los cuadros que se presentan a continuación se detallan características de cada una de ellas para el año 2024.`;
+    return SECCION12_TEMPLATES.textosDefaultEducacion.parrafoInfraestructuraPost(grupoAISD);
   });
 
   readonly parrafoRecreacionSignal: Signal<string> = computed(() => {
@@ -111,7 +115,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const manual = data[`parrafoSeccion12_recreacion_completo${prefijo}`];
     if (manual && String(manual).trim().length > 0) return String(manual);
     const grupoAISD = this.grupoAISDSignal();
-    return `Dentro de la CC ${grupoAISD} se cuenta con un espacio destinado a la recreación de la población. Este es el parque recreacional público, el cual se ubica entre el puesto de salud y el local comunal. Aquí la población puede reunirse y también cuenta con juegos recreativos destinados a los niños. La siguiente infraestructura es la plaza de toros, que se halla en la zona este del anexo, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales.\n\nEn adición a ello, otro espacio de reunión es la plaza central del anexo ${grupoAISD}. Este lugar sirve ocasionalmente como punto de encuentro para los comuneros, quienes se reúnen allí de manera informal en momentos importantes o festivos.`;
+    return SECCION12_TEMPLATES.textosDefaultRecreacion.parrafo(grupoAISD);
   });
 
   readonly parrafoDeporteSignal: Signal<string> = computed(() => {
@@ -120,7 +124,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const manual = data[`parrafoSeccion12_deporte_completo${prefijo}`];
     if (manual && String(manual).trim().length > 0) return String(manual);
     const grupoAISD = this.grupoAISDSignal();
-    return `En la CC ${grupoAISD}, la infraestructura deportiva es limitada. Los únicos espacios dedicados al deporte son una losa deportiva y un "estadio". Estas infraestructuras son utilizadas principalmente para partidos de fútbol y otros encuentros deportivos informales que se organizan entre los comuneros, especialmente durante festividades locales.\n\nRespecto a la losa deportiva, esta se encuentra hecha a base de cemento. Por otra parte, el "estadio" es un campo de juego de pasto natural de un tamaño más extenso que la losa. No obstante, no cuenta con infraestructura adicional como gradas o servicios higiénicos.`;
+    return SECCION12_TEMPLATES.textosDefaultDeporte.parrafo(grupoAISD);
   });
 
   readonly tablaSaludSignal: Signal<any[]> = computed(() => {

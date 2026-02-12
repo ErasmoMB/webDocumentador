@@ -1,21 +1,21 @@
 <div class="section-form">
-  <h5>A.1.8. Infraestructura en salud, educación, recreativa y deportiva</h5>
+  <h5>{{ SECCION12_TEMPLATES.seccionTitulo }}</h5>
 
   <div class="form-section">
-    <p style="margin-bottom: 10px;"><strong>a. Infraestructura en salud</strong></p>
+    <p style="margin-bottom: 10px;"><strong>{{ SECCION12_TEMPLATES.subtituloSalud }}</strong></p>
     
     <textarea class="form-control" 
               [ngModel]="parrafoSaludSignal()"
               (ngModelChange)="onFieldChange('parrafoSeccion12_salud_completo', $event)"
-              placeholder="Texto de infraestructura en salud"
+              [placeholder]="SECCION12_TEMPLATES.placeholderParrafoSalud"
               rows="4">
     </textarea>
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloCaracteristicasSalud }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloCaracteristicasSaludSignal()"
            (ngModelChange)="onFieldChange('caracteristicasSaludTitulo', $event)"
-           placeholder="Ej: Principales características del Puesto de Salud">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloCaracteristicasSalud">
 
     <app-dynamic-table [datos]="datos"
                        [config]="caracteristicasSaludConfigSignal()"
@@ -26,11 +26,11 @@
                        [showDeleteButton]="false"
                        (tableUpdated)="onCaracteristicasSaludTableUpdated($event)">
     </app-dynamic-table>
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteCaracteristicasSalud }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteCaracteristicasSaludSignal()"
            (ngModelChange)="onFieldChange('caracteristicasSaludFuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteSalud">
 
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosSaludSignal()"
@@ -41,20 +41,20 @@
   </div>
 
   <div class="form-section">
-    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. infraestructura en educación</strong></p>
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION12_TEMPLATES.subtituloEducacion }}</strong></p>
     
     <textarea class="form-control"
               [ngModel]="parrafoEducacionSignal()"
               (ngModelChange)="onFieldChange('parrafoSeccion12_educacion_completo', $event)"
-              placeholder="Texto de infraestructura en educación"
+              [placeholder]="SECCION12_TEMPLATES.placeholderParrafoEducacion"
               rows="4">
     </textarea>
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloEstudiantes }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloCantidadEstudiantesSignal()"
            (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionTitulo', $event)"
-           placeholder="Ej: infraestructura educativa – CC (2023)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloEstudiantes">
 
     <app-dynamic-table [datos]="datos"
                        [config]="cantidadEstudiantesEducacionConfigSignal()"
@@ -63,24 +63,24 @@
                        [tablaKey]="'cantidadEstudiantesEducacionTabla' + obtenerPrefijo()"
                        (tableUpdated)="onCantidadEstudiantesTableUpdated()">
     </app-dynamic-table>
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteEstudiantes }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteCantidadEstudiantesSignal()"
            (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionFuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteEstudiantes">
 
     <textarea class="form-control"
               [ngModel]="parrafoInfraestructuraPostSignal()"
               (ngModelChange)="onFieldChange('textoInfraestructuraEducacionPost', $event)"
-              placeholder="Texto de infraestructura post educación"
+              [placeholder]="SECCION12_TEMPLATES.placeholderParrafoInfraestructuraPost"
               rows="3">
     </textarea>
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloIEAyroca }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloIEAyrocaSignal()"
            (ngModelChange)="onFieldChange('ieAyrocaTitulo', $event)"
-           placeholder="Ej: Características IE Ayroca">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloIEAyroca">
 
     <app-dynamic-table [datos]="datos"
                        [config]="ieAyrocaConfigSignal()"
@@ -91,17 +91,17 @@
                        [showDeleteButton]="false"
                        (tableUpdated)="onIEAyrocaTableUpdated($event)">
     </app-dynamic-table>
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteIEAyroca }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteIEAyrocaSignal()"
            (ngModelChange)="onFieldChange('ieAyrocaFuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteIEAyroca">
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloIE40270 }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloIE40270Signal()"
            (ngModelChange)="onFieldChange('ie40270Titulo', $event)"
-           placeholder="Ej: Características IE N°40270">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloIE40270">
 
     <app-dynamic-table [datos]="datos"
                        [config]="ie40270ConfigSignal()"
@@ -112,17 +112,17 @@
                        [showDeleteButton]="false"
                        (tableUpdated)="onIE40270TableUpdated($event)">
     </app-dynamic-table>
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteIE40270 }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteIE40270Signal()"
            (ngModelChange)="onFieldChange('ie40270Fuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteIE40270">
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloAlumnosAyroca }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloAlumnosIEAyrocaSignal()"
            (ngModelChange)="onFieldChange('alumnosIEAyrocaTitulo', $event)"
-           placeholder="Ej: Alumnos IE Ayroca por sexo y grado">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloAlumnosAyroca">
 
     <!-- Tabla personalizada con encabezado multinivel para IE Ayroca -->
     <table class="table table--editable editor-table" style="font-size: 12px; margin-top: 10px;">
@@ -159,17 +159,17 @@
     </table>
     <!-- Botón eliminado: tabla de Alumnos IE Ayroca usa UNA fila -->
 
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteAlumnosAyroca }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteAlumnosIEAyrocaSignal()"
            (ngModelChange)="onFieldChange('alumnosIEAyrocaFuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteAlumnosAyroca">
 
-    <label class="label">Título del cuadro</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelTituloAlumnos40270 }}</label>
     <input class="form-control" type="text"
            [ngModel]="tituloAlumnosIE40270Signal()"
            (ngModelChange)="onFieldChange('alumnosIE40270Titulo', $event)"
-           placeholder="Ej: Alumnos IE N°40270 por sexo y grado">
+           [placeholder]="SECCION12_TEMPLATES.placeholderTituloAlumnos40270">
 
     <!-- Tabla personalizada con encabezado multinivel para IE 40270 -->
     <table class="table table--editable editor-table" style="font-size: 12px; margin-top: 10px;">
@@ -218,11 +218,11 @@
     </table>
     <!-- Botón eliminado: tabla de Alumnos IE N°40270 usa UNA fila -->
 
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION12_TEMPLATES.labelFuenteAlumnos40270 }}</label>
     <input class="form-control" type="text"
            [ngModel]="fuenteAlumnosIE40270Signal()"
            (ngModelChange)="onFieldChange('alumnosIE40270Fuente', $event)"
-           placeholder="Ej: GEADES (2024)">
+           [placeholder]="SECCION12_TEMPLATES.placeholderFuenteAlumnos40270">
 
     <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosIEAyrocaSignal()"
@@ -240,12 +240,12 @@
   </div>
 
   <div class="form-section">
-    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Infraestructura recreativa</strong></p>
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION12_TEMPLATES.subtituloRecreacion }}</strong></p>
     
     <textarea class="form-control"
               [ngModel]="parrafoRecreacionSignal()"
               (ngModelChange)="onFieldChange('parrafoSeccion12_recreacion_completo', $event)"
-              placeholder="Texto de infraestructura recreativa"
+              [placeholder]="SECCION12_TEMPLATES.placeholderParrafoRecreacion"
               rows="6">
     </textarea>
 
@@ -258,12 +258,12 @@
   </div>
 
   <div class="form-section">
-    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Infraestructura deportiva</strong></p>
+    <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION12_TEMPLATES.subtituloDeporte }}</strong></p>
     
     <textarea class="form-control"
               [ngModel]="parrafoDeporteSignal()"
               (ngModelChange)="onFieldChange('parrafoSeccion12_deporte_completo', $event)"
-              placeholder="Texto de infraestructura deportiva"
+              [placeholder]="SECCION12_TEMPLATES.placeholderParrafoDeporte"
               rows="6">
     </textarea>
 

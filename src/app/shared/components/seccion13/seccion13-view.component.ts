@@ -8,6 +8,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION13_TEMPLATES } from './seccion13-constants';
 
 @Component({
   selector: 'app-seccion13-view',
@@ -21,6 +22,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;  
   // NOTE: seccionId uses AISD-style identifiers (3.1.4.A.1.X) to match table numbering fixed sections
 
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION13_TEMPLATES = SECCION13_TEMPLATES;
   override readonly PHOTO_PREFIX = 'fotografiaSaludIndicadores';
   override useReactiveSync: boolean = true;
 
@@ -189,7 +192,7 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
       return manual;
     }
     const grupoAISD = this.obtenerNombreComunidadActual();
-    return `El presente ítem proporciona una visión crucial sobre las dinámicas demográficas, reflejando las tendencias en el crecimiento poblacional. De los datos obtenidos en el Puesto de Salud ${grupoAISD} durante el trabajo de campo, se obtiene que en el año 2023 solo ocurrió un nacimiento, mientras que para el 2024 (hasta el 13 de noviembre) se dieron un total de tres (03) nacimientos.\n\nRespecto a la mortalidad, según la misma fuente, se obtiene que en el año 2023 se registró un fallecimiento, por suicidio; mientras que para el 2024 no ocurrieron decimos dentro de la CC ${grupoAISD}, hasta la fecha indicada.`;
+    return SECCION13_TEMPLATES.textoNatalidadMortalidadDefault.replace(/____/g, grupoAISD);
   }
 
   obtenerTextoSeccion13MorbilidadCompleto(): string {
@@ -200,7 +203,14 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     }
     const grupoAISD = this.obtenerNombreComunidadActual();
     const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
-    return `De acuerdo con las entrevistas aplicadas durante el trabajo de campo, las autoridades locales y los informantes calificados reportaron que las enfermedades más recurrentes dentro de la CC ${grupoAISD} son las infecciones respiratorias agudas (IRAS) y las enfermedades diarreicas agudas (EDAS). Asimismo, se mencionan casos de hipertensión y diabetes, que son más frecuentes en adultos mayores.\n\nEn cuanto a los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca a los poblados de la CC ${grupoAISD}) para el año 2023, se destaca que las condiciones más frecuentes son las infecciones agudas de las vías respiratorias superiores (1012 casos) y la obesidad y otros de hiperalimentación (191 casos). Para la primera, se reportó un mayor número de casos en el bloque etario de 0-11 años, mientras que para la segunda, el rango de 30-59 años mostró más casos. A continuación, se presenta el cuadro con la cantidad de casos por grupo de morbilidad y bloques etarios dentro del distrito, según el portal REUNIS del MINSA.`;
+    return SECCION13_TEMPLATES.textoMorbilidadDefault
+      .replace(/____/g, (match, offset, string) => {
+        const before = string.substring(0, offset);
+        const countBefore = (before.match(/____/g) || []).length;
+        if (countBefore === 0) return grupoAISD;
+        if (countBefore === 1) return distrito;
+        return grupoAISD;
+      });
   }
 
   obtenerTextoAfiliacionSalud(): string {
@@ -213,44 +223,52 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     const porcentajeSIS = this.getPorcentajeSIS() || '____';
     const porcentajeESSALUD = this.getPorcentajeESSALUD() || '____';
     const porcentajeSinSeguro = this.getPorcentajeSinSeguro() || '____';
-    return `Dentro de la CC ${grupoAISD}, la mayoría de habitantes se encuentran afiliados a algún tipo de seguro de salud. Es así que el Seguro Integral de Salud (SIS) sehalla en primer lugar, al abarcar el ${porcentajeSIS} % de la población. A ello le sigue ESSALUD, con un ${porcentajeESSALUD} %. Por otro lado, el ${porcentajeSinSeguro} % de la población no cuenta con ningún tipo de seguro de salud.`;
+    return SECCION13_TEMPLATES.textoAfiliacionSaludDefault
+      .replace(/____/g, (match, offset, string) => {
+        const before = string.substring(0, offset);
+        const countBefore = (before.match(/____/g) || []).length;
+        if (countBefore === 0) return grupoAISD;
+        if (countBefore === 1) return porcentajeSIS;
+        if (countBefore === 2) return porcentajeESSALUD;
+        return porcentajeSinSeguro;
+      });
   }
 
   obtenerTituloCuadroNatalidad(): string {
     const prefijo = this.obtenerPrefijo();
     const titulo = this.projectFacade.selectField(this.seccionId, null, `cuadroTituloNatalidadMortalidad${prefijo}`)();
-    return titulo || `Indicadores de natalidad y mortalidad – CC ${this.obtenerNombreComunidadActual()}`;
+    return titulo || SECCION13_TEMPLATES.cuadroTituloNatalidadMortalidadDefault.replace(/____/g, this.obtenerNombreComunidadActual());
   }
 
   obtenerFuenteCuadroNatalidad(): string {
     const prefijo = this.obtenerPrefijo();
     const fuente = this.projectFacade.selectField(this.seccionId, null, `cuadroFuenteNatalidadMortalidad${prefijo}`)();
-    return fuente || 'GEADES (2024)';
+    return fuente || SECCION13_TEMPLATES.cuadroFuenteNatalidadMortalidadDefault;
   }
 
   obtenerTituloCuadroMorbilidad(): string {
     const prefijo = this.obtenerPrefijo();
     const titulo = this.projectFacade.selectField(this.seccionId, null, `cuadroTituloMorbilidad${prefijo}`)();
     const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
-    return titulo || `Casos por grupos de morbilidad – Distrito ${distrito} (2023)`;
+    return titulo || SECCION13_TEMPLATES.cuadroTituloMorbilidadDefault.replace(/____/g, distrito);
   }
 
   obtenerFuenteCuadroMorbilidad(): string {
     const prefijo = this.obtenerPrefijo();
     const fuente = this.projectFacade.selectField(this.seccionId, null, `cuadroFuenteMorbilidad${prefijo}`)();
-    return fuente || 'REUNIS (2024)';
+    return fuente || SECCION13_TEMPLATES.cuadroFuenteMorbilidadDefault;
   }
 
   obtenerTituloCuadroAfiliacion(): string {
     const prefijo = this.obtenerPrefijo();
     const titulo = this.projectFacade.selectField(this.seccionId, null, `cuadroTituloAfiliacionSalud${prefijo}`)();
-    return titulo || `Población según tipo de seguro de salud afiliado – CC ${this.obtenerNombreComunidadActual()} (2017)`;
+    return titulo || SECCION13_TEMPLATES.cuadroTituloAfiliacionSaludDefault.replace(/____/g, this.obtenerNombreComunidadActual());
   }
 
   obtenerFuenteCuadroAfiliacion(): string {
     const prefijo = this.obtenerPrefijo();
     const fuente = this.projectFacade.selectField(this.seccionId, null, `cuadroFuenteAfiliacionSalud${prefijo}`)();
-    return fuente || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
+    return fuente || SECCION13_TEMPLATES.cuadroFuenteAfiliacionSaludDefault;
   }
 
   getMorbilidadSinTotal(): any[] {

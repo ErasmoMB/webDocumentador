@@ -1,7 +1,7 @@
 <div>
-  <h5>A.1.9. Indicadores de salud</h5>
+  <h5>{{ SECCION13_TEMPLATES.tituloSeccion }}</h5>
 
-  <p class="mb-sm"><strong>a. Natalidad y Mortalidad</strong></p>
+  <p class="mb-sm"><strong>{{ SECCION13_TEMPLATES.labelNatalidadMortalidad }}</strong></p>
   <p class="text-justify" [innerHTML]="textoNatalidadMortalidadSignal()"></p>
 
   <app-table-wrapper [title]="obtenerTituloCuadroNatalidad()" [sectionId]="seccionId">
@@ -10,8 +10,8 @@
       [config]="{
         columns: [
           { key: 'anio', header: 'Año', align: 'center' },
-          { key: 'natalidad', header: 'Natalidad', align: 'right' },
-          { key: 'mortalidad', header: 'Mortalidad', align: 'right' }
+          { key: 'natalidad', header: SECCION13_TEMPLATES.labelColumnaNatalidad, align: 'right' },
+          { key: 'mortalidad', header: SECCION13_TEMPLATES.labelColumnaMortalidad, align: 'right' }
         ],
         showFooter: false,
         striped: true,
@@ -21,7 +21,7 @@
   </app-table-wrapper>
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroNatalidad() }}</span></p>
 
-  <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION13_TEMPLATES.labelMorbilidad }}</strong></p>
   <p class="text-justify" [innerHTML]="textoMorbilidadSignal()"></p>
 
   <app-table-wrapper [title]="obtenerTituloCuadroMorbilidad()" [sectionId]="seccionId">
@@ -29,13 +29,13 @@
       [data]="getMorbilidadSinTotal()"
       [config]="{
         columns: [
-          { key: 'grupo', header: 'Grupo de Morbilidad', align: 'left' },
-          { key: 'rango0_11', header: '0 – 11', align: 'right' },
-          { key: 'rango12_17', header: '12 – 17', align: 'right' },
-          { key: 'rango18_29', header: '18 – 29', align: 'right' },
-          { key: 'rango30_59', header: '30 – 59', align: 'right' },
-          { key: 'rango60', header: '60 ->', align: 'right' },
-          { key: 'casos', header: 'Casos Totales', align: 'right' }
+          { key: 'grupo', header: SECCION13_TEMPLATES.labelColumnaGrupoMorbilidad, align: 'left' },
+          { key: 'rango0_11', header: SECCION13_TEMPLATES.labelColumnaRango0_11, align: 'right' },
+          { key: 'rango12_17', header: SECCION13_TEMPLATES.labelColumnaRango12_17, align: 'right' },
+          { key: 'rango18_29', header: SECCION13_TEMPLATES.labelColumnaRango18_29, align: 'right' },
+          { key: 'rango30_59', header: SECCION13_TEMPLATES.labelColumnaRango30_59, align: 'right' },
+          { key: 'rango60', header: SECCION13_TEMPLATES.labelColumnaRango60, align: 'right' },
+          { key: 'casos', header: SECCION13_TEMPLATES.labelColumnaCasosTotales, align: 'right' }
         ],
         totalRow: {
           grupo: 'Total',
@@ -54,7 +54,7 @@
   </app-table-wrapper>
   <p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadroMorbilidad() }}</span></p>
 
-  <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION13_TEMPLATES.labelAfiliacionSalud }}</strong></p>
   <p class="text-justify" [innerHTML]="textoAfiliacionSaludSignal()"></p>
 
   <app-table-wrapper [title]="obtenerTituloCuadroAfiliacion()" [sectionId]="seccionId">
@@ -62,9 +62,9 @@
       [data]="getAfiliacionSaludConPorcentajes()"
       [config]="{
         columns: [
-          { key: 'categoria', header: 'Categoría', align: 'left' },
-          { key: 'casos', header: 'Casos', align: 'right' },
-          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+          { key: 'categoria', header: SECCION13_TEMPLATES.labelColumnaCategoria, align: 'left' },
+          { key: 'casos', header: SECCION13_TEMPLATES.labelColumnaCasos, align: 'right' },
+          { key: 'porcentaje', header: SECCION13_TEMPLATES.labelColumnaPorcentaje, align: 'right' }
         ],
         showFooter: false,
         striped: true,

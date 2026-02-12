@@ -1,54 +1,54 @@
-<div class="seccion-formulario-content">
+<div class="seccion-formulario-content" *ngIf="modoFormulario">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.7. Infraestructura en transportes y comunicaciones</h4>
-    
-    <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">a. Transporte</h4>
-      
+    <h4 class="section-title">{{ SECCION11_TEMPLATES.tituloSeccion }}</h4>
+
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">{{ SECCION11_TEMPLATES.subtituloTransporte }}</h4>
+
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
+        <h4 class="section-title">{{ SECCION11_TEMPLATES.seccionEditarParrafos }}</h4>
+
         <app-paragraph-editor
           fieldId="parrafoSeccion11_transporte_completo"
-          label="Transporte - Texto Completo"
-          hint="Edite todo el bloque de texto sobre transporte. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION11_TEMPLATES.labelTransporteParagrafo"
+          [hint]="SECCION11_TEMPLATES.hintTransporte"
           [rows]="6"
-          [value]="textoTransporteSignal()"
-          (valueChange)="onFieldChange('parrafoSeccion11_transporte_completo' + obtenerPrefijoGrupo(), $event)">
+          [value]="parrafoTransporte.value()"
+          (valueChange)="parrafoTransporte.update($any($event))">
         </app-paragraph-editor>
       </div>
 
       <div class="form-row" style="margin-top: 20px;">
         <div class="form-field">
-          <label class="label">Costo Transporte Mínimo (S/.)</label>
-          <input type="text" class="input" placeholder="0"
-            [value]="costoMinSignal()"
-            (input)="onFieldChange('costoTransporteMinimo' + obtenerPrefijoGrupo(), $any($event.target).value)">
+          <label class="label">{{ SECCION11_TEMPLATES.labelCostoMinimo }}</label>
+          <input type="text" class="input" 
+            [ngModel]="costoTransporteMinimo.value()"
+            (ngModelChange)="costoTransporteMinimo.update($any($event))"
+            [placeholder]="SECCION11_TEMPLATES.placeholderCostoMinimo">
         </div>
         <div class="form-field">
-          <label class="label">Costo Transporte Máximo (S/.)</label>
-          <input type="text" class="input" placeholder="0"
-            [value]="costoMaxSignal()"
-            (input)="onFieldChange('costoTransporteMaximo' + obtenerPrefijoGrupo(), $any($event.target).value)">
+          <label class="label">{{ SECCION11_TEMPLATES.labelCostoMaximo }}</label>
+          <input type="text" class="input"
+            [ngModel]="costoTransporteMaximo.value()"
+            (ngModelChange)="costoTransporteMaximo.update($any($event))"
+            [placeholder]="SECCION11_TEMPLATES.placeholderCostoMaximo">
         </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Transporte</label>
+        <label class="label">{{ SECCION11_TEMPLATES.labelFotografiasTransporte }}</label>
         <app-image-upload
           [fotografias]="fotografiasTransporteFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
           [permitirMultiples]="true"
-          [mostrarTitulo]="true"
-          [mostrarFuente]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Infraestructura de transporte en la CC Ayroca"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Infraestructura de transporte en la CC Ayroca"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION11_TEMPLATES.labelTituloFotoTransporte"
+          [labelFuente]="SECCION11_TEMPLATES.labelFuenteFotoTransporte"
+          [labelImagen]="SECCION11_TEMPLATES.labelImagenFotoTransporte"
+          [placeholderTitulo]="SECCION11_TEMPLATES.placeholderTituloFotoTransporte"
+          [placeholderFuente]="SECCION11_TEMPLATES.placeholderFuenteFotoTransporte"
+          [tituloDefault]="SECCION11_TEMPLATES.tituloDefaultFotoTransporte"
+          [fuenteDefault]="SECCION11_TEMPLATES.fuenteDefaultFotoTransporte"
           [requerido]="false"
           (fotografiasChange)="onFotografiasTransporteChange($event)">
         </app-image-upload>
@@ -56,39 +56,39 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Telecomunicaciones</h4>
-      
+      <h4 class="section-title">{{ SECCION11_TEMPLATES.subtituloTelecomunicaciones }}</h4>
+
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        
+        <h4 class="section-title">{{ SECCION11_TEMPLATES.seccionEditarParrafos }}</h4>
+
         <app-paragraph-editor
           fieldId="parrafoSeccion11_telecomunicaciones_completo"
-          label="Telecomunicaciones - Texto Completo"
-          hint="Edite todo el bloque de texto sobre telecomunicaciones. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION11_TEMPLATES.labelTelecomunicacionesParagrafo"
+          [hint]="SECCION11_TEMPLATES.hintTelecomunicaciones"
           [rows]="6"
-          [value]="textoTelecomunicacionesSignal()"
-          (valueChange)="onFieldChange('parrafoSeccion11_telecomunicaciones_completo' + obtenerPrefijoGrupo(), $event)">
+          [value]="parrafoTelecomunicaciones.value()"
+          (valueChange)="parrafoTelecomunicaciones.update($any($event))">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Título de la Tabla</label>
+        <label class="label">{{ SECCION11_TEMPLATES.labelTituloTelecomunicaciones }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerTituloTelecomunicaciones()"
-          (change)="onTituloTelecomunicacionesChange($event)"
-          placeholder="Servicios de telecomunicaciones – CC ____">
+          [ngModel]="tituloTelecomunicaciones.value()"
+          (ngModelChange)="tituloTelecomunicaciones.update($any($event))"
+          [placeholder]="SECCION11_TEMPLATES.placeholderTituloTelecomunicaciones">
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Servicios de Telecomunicaciones</label>
+        <label class="label">{{ SECCION11_TEMPLATES.labelTablaTelecomunicaciones }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="telecomunicacionesConfig"
           [columns]="[
-            { field: 'medio', label: 'Medio de comunicación', type: 'text', placeholder: 'Emisoras de radio' },
-            { field: 'descripcion', label: 'Descripción', type: 'text', placeholder: '--' }
+            { field: 'medio', label: SECCION11_TEMPLATES.labelMedioComunicacion, type: 'text', placeholder: SECCION11_TEMPLATES.placeholderMedioComunicacion },
+            { field: 'descripcion', label: SECCION11_TEMPLATES.labelDescripcion, type: 'text', placeholder: SECCION11_TEMPLATES.placeholderDescripcion }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyTelecomunicaciones()"
@@ -99,31 +99,29 @@
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fuente de la Tabla</label>
+        <label class="label">{{ SECCION11_TEMPLATES.labelFuenteTelecomunicaciones }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerFuenteTelecomunicaciones()"
-          (change)="onFuenteTelecomunicacionesChange($event)"
-          placeholder="GEADES (2024)">
+          [ngModel]="fuenteTelecomunicaciones.value()"
+          (ngModelChange)="fuenteTelecomunicaciones.update($any($event))"
+          [placeholder]="SECCION11_TEMPLATES.placeholderFuenteTelecomunicaciones">
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Telecomunicaciones</label>
+        <label class="label">{{ SECCION11_TEMPLATES.labelFotografiasTelecomunicaciones }}</label>
         <app-image-upload
           [fotografias]="fotografiasTelecomunicacionesFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
           [permitirMultiples]="true"
-          [mostrarTitulo]="true"
-          [mostrarFuente]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Vivienda con antena de DIRECTV en el anexo Ayroca"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Vivienda con antena de DIRECTV en el anexo Ayroca"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION11_TEMPLATES.labelTituloFotoTelecomunicaciones"
+          [labelFuente]="SECCION11_TEMPLATES.labelFuenteFotoTelecomunicaciones"
+          [labelImagen]="SECCION11_TEMPLATES.labelImagenFotoTelecomunicaciones"
+          [placeholderTitulo]="SECCION11_TEMPLATES.placeholderTituloFotoTelecomunicaciones"
+          [placeholderFuente]="SECCION11_TEMPLATES.placeholderFuenteFotoTelecomunicaciones"
+          [tituloDefault]="SECCION11_TEMPLATES.tituloDefaultFotoTelecomunicaciones"
+          [fuenteDefault]="SECCION11_TEMPLATES.fuenteDefaultFotoTelecomunicaciones"
           [requerido]="false"
           (fotografiasChange)="onFotografiasTelecomunicacionesChange($event)">
         </app-image-upload>
@@ -131,4 +129,3 @@
     </div>
   </div>
 </div>
-

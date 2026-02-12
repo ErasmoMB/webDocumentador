@@ -1,27 +1,27 @@
 <!-- Vista previa (modo lectura) -->
 <div class="document-view">
-  <h3>3.1.4. Caracterización socioeconómica de las Áreas de Influencia Social</h3>
-  <h4>A. Caracterización socioeconómica del Área de Influencia Social Directa (AISD)</h4>
+  <h3>{{ SECCION4_TEMPLATES.tituloVista }}</h3>
+  <h4>{{ SECCION4_TEMPLATES.tituloAISD }}</h4>
 
   <!-- Párrafos dinámicos procesados por TextGeneratorService -->
   <div [innerHTML]="viewModel().texts.introduccionText"></div>
 
-  <h5 class="cc-identifier">A.1. Comunidad Campesina {{ viewModel().nombreComunidad }}</h5>
+  <h5 class="cc-identifier">{{ SECCION4_TEMPLATES.tituloA1ComunidadCampesina }} {{ viewModel().nombreComunidad }}</h5>
 
   <div [innerHTML]="viewModel().texts.comunidadText"></div>
 
   <!-- Tabla de Ubicación Referencial -->
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD1'] || 'Ubicación referencial') + ' – CC ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A1'">
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD1'] || SECCION4_TEMPLATES.labelTablaUbicacionReferencial) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A1'">
     <app-generic-table
       [data]="viewModel().tables.tablaAISD1"
       [config]="{
         columns: [
-          { key: 'localidad', header: 'Localidad', align: 'left' },
-          { key: 'coordenadas', header: 'Coordenadas', align: 'left' },
-          { key: 'altitud', header: 'Altitud', align: 'right' },
-          { key: 'distrito', header: 'Distrito', align: 'left' },
-          { key: 'provincia', header: 'Provincia', align: 'left' },
-          { key: 'departamento', header: 'Departamento', align: 'left' }
+          { key: 'localidad', header: SECCION4_TEMPLATES.headerLocalidad, align: 'left' },
+          { key: 'coordenadas', header: SECCION4_TEMPLATES.headerCoordenadas, align: 'left' },
+          { key: 'altitud', header: SECCION4_TEMPLATES.headerAltitud, align: 'right' },
+          { key: 'distrito', header: SECCION4_TEMPLATES.headerDistrito, align: 'left' },
+          { key: 'provincia', header: SECCION4_TEMPLATES.headerProvincia, align: 'left' },
+          { key: 'departamento', header: SECCION4_TEMPLATES.headerDepartamento, align: 'left' }
         ],
         showFooter: false,
         striped: true,
@@ -30,9 +30,9 @@
     </app-generic-table>
   </app-table-wrapper>
   <p class="text-justify data-source">
-    FUENTE:
+    {{ SECCION4_TEMPLATES.labelFuente }}
     <span *ngIf="viewModel().sources.tablaAISD1Source">{{ viewModel().sources.tablaAISD1Source }}</span>
-    <span *ngIf="!viewModel().sources.tablaAISD1Source" [appDataSource]="'manual'">GEADES (2024)</span>
+    <span *ngIf="!viewModel().sources.tablaAISD1Source" [appDataSource]="'manual'">{{ SECCION4_TEMPLATES.fuenteAISD1Default }}</span>
   </p>
 
   <!-- Fotografías de Ubicación -->
@@ -42,27 +42,27 @@
       [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
       [sectionId]="seccionId"
       [photoPrefix]="PHOTO_PREFIX_UBICACION + obtenerPrefijoGrupo()"
-      [labelTitulo]="'Título'"
-      [labelFuente]="'Fuente'"
-      [labelImagen]="'Imagen'">
+      [labelTitulo]="SECCION4_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION4_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION4_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 
   <div [innerHTML]="viewModel().texts.caracterizacionText"></div>
 
   <!-- Tabla de Población y Viviendas -->
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD2'] || 'Cantidad total de población y viviendas') + ' – CC ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A2'">
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD2'] || SECCION4_TEMPLATES.labelTablaPoblacionViviendas) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A2'">
     <app-generic-table
       [data]="viewModel().tables.tablaAISD2"
       [config]="{
         columns: [
-          { key: 'punto', header: 'Punto de Población (INEI)', align: 'left' },
-          { key: 'codigo', header: 'Código', align: 'left' },
-          { key: 'poblacion', header: 'Población', align: 'right' },
-          { key: 'viviendasEmpadronadas', header: 'Viviendas empadronadas', align: 'right' },
-          { key: 'viviendasOcupadas', header: 'Viviendas ocupadas', align: 'right' }
+          { key: 'punto', header: SECCION4_TEMPLATES.headerPunto, align: 'left' },
+          { key: 'codigo', header: SECCION4_TEMPLATES.headerCodigo, align: 'left' },
+          { key: 'poblacion', header: SECCION4_TEMPLATES.headerPoblacion, align: 'right' },
+          { key: 'viviendasEmpadronadas', header: SECCION4_TEMPLATES.headerViviendasEmpadronadas, align: 'right' },
+          { key: 'viviendasOcupadas', header: SECCION4_TEMPLATES.headerViviendasOcupadas, align: 'right' }
         ],
         totalRow: {
-          punto: 'Total',
+          punto: SECCION4_TEMPLATES.headerTotal,
           poblacion: viewModel().calculations.totalesAISD2.poblacion,
           viviendasEmpadronadas: viewModel().calculations.totalesAISD2.empadronadas,
           viviendasOcupadas: viewModel().calculations.totalesAISD2.ocupadas
@@ -74,9 +74,9 @@
     </app-generic-table>
   </app-table-wrapper>
   <p class="text-justify data-source">
-    FUENTE:
+    {{ SECCION4_TEMPLATES.labelFuente }}
     <span *ngIf="viewModel().sources.tablaAISD2Source && viewModel().sources.tablaAISD2Source !== '____'">{{ viewModel().sources.tablaAISD2Source }}</span>
-    <span *ngIf="!viewModel().sources.tablaAISD2Source" [appDataSource]="'manual'">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span>
+    <span *ngIf="!viewModel().sources.tablaAISD2Source" [appDataSource]="'manual'">{{ SECCION4_TEMPLATES.fuenteAISD2Default }}</span>
     <span *ngIf="viewModel().sources.tablaAISD2Source === '____'">____</span>
   </p>
 
@@ -87,8 +87,8 @@
       [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
       [sectionId]="seccionId"
       [photoPrefix]="PHOTO_PREFIX_POBLACION + obtenerPrefijoGrupo()"
-      [labelTitulo]="'Título'"
-      [labelFuente]="'Fuente'"
-      [labelImagen]="'Imagen'">
+      [labelTitulo]="SECCION4_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION4_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION4_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>

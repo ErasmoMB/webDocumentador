@@ -1,29 +1,29 @@
 <div class="formulario-seccion">
   <div class="form-group-section">
-    <h4 class="section-title">{{ obtenerSubseccionId() }}. Institucionalidad local</h4>
+    <h4 class="section-title">{{ SECCION5_TEMPLATES.tituloSubseccion }}</h4>
     
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION5_TEMPLATES.tituloEditarParrafos }}</h4>
       
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion5_institucionalidad' + obtenerPrefijoGrupo()"
-        label="Institucionalidad - Texto Completo"
-        hint="Edite todo el bloque de texto sobre institucionalidad. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION5_TEMPLATES.labelInstitucionalidad"
+        [hint]="SECCION5_TEMPLATES.hintInstitucionalidad"
         [rows]="6"
         [value]="obtenerParrafoInstitucionalidad()"
-        (valueChange)="onFieldChange('parrafoSeccion5_institucionalidad' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion5_institucionalidad' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Título del Cuadro</label>
-      <input type="text" class="input" placeholder="Ej: Instituciones existentes – CC PATIVILCA"
+      <label class="label">{{ SECCION5_TEMPLATES.labelTituloTabla }}</label>
+      <input type="text" class="input" [placeholder]="SECCION5_TEMPLATES.placeholderTituloTabla.replace('{{nombreComunidad}}', obtenerNombreComunidadActual())"
         [value]="tituloInstitucionesSignal()"
-        (input)="onFieldChange('tituloInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
+        (input)="projectFacade.setField(seccionId, null, 'tituloInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Tabla de Instituciones Existentes</label>
+      <label class="label">{{ SECCION5_TEMPLATES.labelTablaInstituciones }}</label>
       <app-dynamic-table
         [datos]="datos"
         [config]="institucionesConfig"
@@ -35,26 +35,26 @@
     </div>
 
     <div class="form-field" style="margin-top: 15px;">
-      <label class="label">Fuente del Cuadro</label>
-      <input type="text" class="input" placeholder="Ej: GEADES (2024)"
+      <label class="label">{{ SECCION5_TEMPLATES.labelFuenteTabla }}</label>
+      <input type="text" class="input" [placeholder]="SECCION5_TEMPLATES.placeholderFuenteTabla"
         [value]="fuenteInstitucionesSignal()"
-        (input)="onFieldChange('fuenteInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
+        (input)="projectFacade.setField(seccionId, null, 'fuenteInstituciones' + obtenerPrefijoGrupo(), $any($event.target).value)">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Institucionalidad</label>
+      <label class="label">{{ SECCION5_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
         [photoPrefix]="photoPrefixSignal()"
         [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        [placeholderTitulo]="'Ej: Local Comunal de la CC ' + obtenerNombreComunidadActual()"
-        placeholderFuente="Ej: GEADES, 2024"
-        [tituloDefault]="'Local Comunal de la CC ' + obtenerNombreComunidadActual()"
-        fuenteDefault="GEADES, 2024"
+        [labelTitulo]="SECCION5_TEMPLATES.labelFotoTitulo"
+        [labelFuente]="SECCION5_TEMPLATES.labelFotoFuente"
+        [labelImagen]="SECCION5_TEMPLATES.labelFotoImagen"
+        [placeholderTitulo]="SECCION5_TEMPLATES.placeholderProfesor.replace('{{nombreComunidad}}', obtenerNombreComunidadActual())"
+        [placeholderFuente]="SECCION5_TEMPLATES.placeholderFotoFuente"
+        [tituloDefault]="SECCION5_TEMPLATES.fotoTituloDefault.replace('{{nombreComunidad}}', obtenerNombreComunidadActual())"
+        [fuenteDefault]="SECCION5_TEMPLATES.fotoFuenteDefault"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>

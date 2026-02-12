@@ -5,6 +5,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { SECCION8_TEMPLATES, SECCION8_WATCHED_FIELDS } from './seccion8-constants';
 
 @Component({
   standalone: true,
@@ -31,7 +32,12 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   @Input() override seccionId: string = '3.1.4.A.1.4';
   @Input() override modoFormulario: boolean = false;
   
+  // ✅ Hacer TEMPLATES accesible en templates
+  readonly SECCION8_TEMPLATES = SECCION8_TEMPLATES;
+  
   override readonly PHOTO_PREFIX = '';
+  override watchedFields: string[] = SECCION8_WATCHED_FIELDS;
+
   readonly PHOTO_PREFIX_GANADERIA = 'fotografiaGanaderia';
   readonly PHOTO_PREFIX_AGRICULTURA = 'fotografiaAgricultura';
   readonly PHOTO_PREFIX_COMERCIO = 'fotografiaComercio';
@@ -39,14 +45,6 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   fotografiasGanaderiaCache: FotoItem[] = [];
   fotografiasAgriculturaCache: FotoItem[] = [];
   fotografiasComercioCache: FotoItem[] = [];
-
-  override watchedFields: string[] = [
-    'grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion8_ganaderia_completo',
-    'parrafoSeccion8_agricultura_completo', 'peaOcupacionesTabla', 'poblacionPecuariaTabla',
-    'caracteristicasAgriculturaTabla', 'textoActividadesEconomicas', 'textoFuentesActividadesEconomicas',
-    'textoAnalisisCuadro310', 'textoMercadoComercializacion1', 'textoMercadoComercializacion2',
-    'textoHabitosConsumo1', 'textoHabitosConsumo2'
-  ];
 
   private readonly regexCache = new Map<string, RegExp>();
 

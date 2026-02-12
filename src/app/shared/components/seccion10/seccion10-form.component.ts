@@ -9,7 +9,13 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
-import { SECCION10_WATCHED_FIELDS, SECCION10_PHOTO_PREFIX } from './seccion10-constants';
+import { 
+  SECCION10_WATCHED_FIELDS, 
+  SECCION10_PHOTO_PREFIX,
+  SECCION10_TEMPLATES,
+  SECCION10_CONFIG,
+  SECCION10_SECTION_ID
+} from './seccion10-constants';
 
 @Component({
   standalone: true,
@@ -26,22 +32,56 @@ import { SECCION10_WATCHED_FIELDS, SECCION10_PHOTO_PREFIX } from './seccion10-co
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion10FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.6';
+  @Input() override seccionId: string = SECCION10_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaSeccion10';
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION10_TEMPLATES = SECCION10_TEMPLATES;
+
+  override readonly PHOTO_PREFIX = SECCION10_PHOTO_PREFIX;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION10_WATCHED_FIELDS;
 
   fotografiasSeccion10: FotoItem[] = [];
 
-  // ✅ SIGNALS PUROS
+  // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
+  private obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  }
+
+  override obtenerNombreComunidadActual(): string {
+    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
+  }
+
+  // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField)
+  readonly parrafoIntroduccion = this.createAutoSyncField('parrafoSeccion10_servicios_basicos_intro', '');
+  readonly textoServiciosAgua = this.createAutoSyncField('textoServiciosAgua', '');
+  readonly textoServiciosAguaDetalle = this.createAutoSyncField('textoServiciosAguaDetalle', '');
+  readonly textoServiciosDesague = this.createAutoSyncField('textoServiciosDesague', '');
+  readonly textoServiciosDesagueDetalle = this.createAutoSyncField('textoServiciosDesagueDetalle', '');
+  readonly textoDesechosSolidos1 = this.createAutoSyncField('textoDesechosSolidos1', '');
+  readonly textoDesechosSolidos2 = this.createAutoSyncField('textoDesechosSolidos2', '');
+  readonly textoDesechosSolidos3 = this.createAutoSyncField('textoDesechosSolidos3', '');
+  readonly textoElectricidad1 = this.createAutoSyncField('textoElectricidad1', '');
+  readonly textoElectricidad2 = this.createAutoSyncField('textoElectricidad2', '');
+  readonly textoEnergiaParaCocinar = this.createAutoSyncField('textoEnergiaParaCocinar', '');
+  readonly textoTecnologiaComunicaciones = this.createAutoSyncField('textoTecnologiaComunicaciones', '');
+  
+  readonly tituloAbastecimientoAgua = this.createAutoSyncField('tituloAbastecimientoAgua', '');
+  readonly tituloTiposSaneamiento = this.createAutoSyncField('tituloTiposSaneamiento', '');
+  readonly tituloCoberturaElectrica = this.createAutoSyncField('tituloCoberturaElectrica', '');
+  readonly tituloEnergiaCocinar = this.createAutoSyncField('tituloEnergiaCocinar', '');
+  readonly tituloTecnologiaComunicaciones = this.createAutoSyncField('tituloTecnologiaComunicaciones', '');
+  
+  readonly fuenteAbastecimientoAgua = this.createAutoSyncField('fuenteAbastecimientoAgua', '');
+  readonly fuenteTiposSaneamiento = this.createAutoSyncField('fuenteTiposSaneamiento', '');
+  readonly fuenteCoberturaElectrica = this.createAutoSyncField('fuenteCoberturaElectrica', '');
+  readonly fuenteEnergiaCocinar = this.createAutoSyncField('fuenteEnergiaCocinar', '');
+  readonly fuenteTecnologiaComunicaciones = this.createAutoSyncField('fuenteTecnologiaComunicaciones', '');
+
+  // ✅ SIGNALS PUROS - Datos del store
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
-  });
-
-  readonly parrafoServiciosBasicosIntroSignal: Signal<string> = computed(() => {
-    const data = this.formDataSignal();
-    return data['parrafoSeccion10_servicios_basicos_intro'] || '';
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -97,183 +137,68 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
-  private obtenerPrefijo(): string {
-    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+  // ✅ MÉTODO PARA TRACKBY EN LOOPS
+  trackByIndex(index: number): number {
+    return index;
   }
 
-  // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
-  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
-    const prefijo = this.obtenerPrefijo();
-    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
-    super.onFieldChange(campoConPrefijo, value, options);
-  }
-
-  override obtenerNombreComunidadActual(): string {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
-  }
-
-  obtenerTextoSeccion10ServiciosBasicosIntro(): string {
-    const manual = this.datos['parrafoSeccion10_servicios_basicos_intro'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosBasicosIntro();
-  }
-
-  private generarTextoServiciosBasicosIntro(): string {
-    return `En términos generales, la delimitación del ámbito de estudio de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales, individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los recursos respecto de los cuales el proyecto de exploración minera tiene incidencia.
-
-Asimismo, el área de influencia social de un proyecto tiene en consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina "grupos de interés" a aquellos grupos humanos que son impactados por dicho proyecto).
-
-El criterio social para la delimitación de un área de influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos, expectativas, intereses y/o demandas del entorno social.
-
-En base a estos criterios se han identificado las áreas de influencia social directa e indirecta:`;
-  }
-
-  obtenerNumeroCuadroAbastecimientoAgua(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
-  }
-
-  obtenerNumeroCuadroTiposSaneamiento(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
-  }
-
-  obtenerNumeroCuadroCoberturaElectrica(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
-  }
-
-  obtenerNumeroCuadroEnergiaCocinar(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 3);
-  }
-
-  obtenerNumeroCuadroTecnologiaComunicaciones(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 4);
-  }
-
-  obtenerTituloAbastecimientoAgua(): string {
-    const prefijo = this.obtenerPrefijo();
-    const tituloKey = 'tituloAbastecimientoAgua' + prefijo;
-    const titulo = this.datos[tituloKey];
-    if (titulo && titulo.trim().length > 0) return titulo;
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Tipos de abastecimiento de agua en las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  obtenerTituloTiposSaneamiento(): string {
-    const prefijo = this.obtenerPrefijo();
-    const tituloKey = 'tituloTiposSaneamiento' + prefijo;
-    const titulo = this.datos[tituloKey];
-    if (titulo && titulo.trim().length > 0) return titulo;
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Tipos de saneamiento en las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  obtenerTituloCoberturaElectrica(): string {
-    const prefijo = this.obtenerPrefijo();
-    const tituloKey = 'tituloCoberturaElectrica' + prefijo;
-    const titulo = this.datos[tituloKey];
-    if (titulo && titulo.trim().length > 0) return titulo;
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Cobertura de alumbrado eléctrico en las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  obtenerFuenteAbastecimientoAgua(): string {
-    const prefijo = this.obtenerPrefijo();
-    const fuenteKey = 'fuenteAbastecimientoAgua' + prefijo;
-    const fuente = this.datos[fuenteKey];
-    if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  obtenerFuenteTiposSaneamiento(): string {
-    const prefijo = this.obtenerPrefijo();
-    const fuenteKey = 'fuenteTiposSaneamiento' + prefijo;
-    const fuente = this.datos[fuenteKey];
-    if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  obtenerFuenteCoberturaElectrica(): string {
-    const prefijo = this.obtenerPrefijo();
-    const fuenteKey = 'fuenteCoberturaElectrica' + prefijo;
-    const fuente = this.datos[fuenteKey];
-    if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  onTituloAbastecimientoAguaChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('tituloAbastecimientoAgua', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  onTituloTiposSaneamientoChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('tituloTiposSaneamiento', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  onTituloCoberturaElectricaChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('tituloCoberturaElectrica', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  onFuenteAbastecimientoAguaChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('fuenteAbastecimientoAgua', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  onFuenteTiposSaneamientoChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('fuenteTiposSaneamiento', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  onFuenteCoberturaElectricaChange(event: Event): void {
-    const valor = (event.target as HTMLInputElement).value;
-    this.onFieldChange('fuenteCoberturaElectrica', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  // ✅ TABLA 1: Abastecimiento de Agua
+  // ✅ CONFIGURACIONES DE TABLAS
   get abastecimientoAguaConfig(): any {
     return {
       tablaKey: this.getTablaKeyAbastecimientoAgua(),
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      noInicializarDesdeEstructura: true,
       calcularPorcentajes: true
     };
   }
 
-  // ✅ TABLA 2: Tipos de Saneamiento
   get tiposSaneamientoConfig(): any {
     return {
       tablaKey: this.getTablaKeyTiposSaneamiento(),
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      noInicializarDesdeEstructura: true,
       calcularPorcentajes: true
     };
   }
 
-  // ✅ TABLA 3: Cobertura Eléctrica
   get coberturaElectricaConfig(): any {
     return {
       tablaKey: this.getTablaKeyCoberturaElectrica(),
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      noInicializarDesdeEstructura: true,
       calcularPorcentajes: true
     };
   }
 
+  get energiaCocinarConfig(): any {
+    return {
+      tablaKey: this.getTablaKeyEnergiaCocinar(),
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      noInicializarDesdeEstructura: true,
+      calcularPorcentajes: true
+    };
+  }
+
+  get tecnologiaComunicacionesConfig(): any {
+    return {
+      tablaKey: this.getTablaKeyTecnologiaComunicaciones(),
+      totalKey: 'categoria',
+      campoTotal: 'casos',
+      campoPorcentaje: 'porcentaje',
+      noInicializarDesdeEstructura: true,
+      calcularPorcentajes: true
+    };
+  }
+
+  // ✅ GETTERS PARA TABLA KEYS
   getTablaKeyAbastecimientoAgua(): string {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     return prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
@@ -289,61 +214,9 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla';
   }
 
-  onAbastecimientoAguaTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyAbastecimientoAgua();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.markForCheck();
-  }
-
-  onTiposSaneamientoTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyTiposSaneamiento();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.markForCheck();
-  }
-
-  onCoberturaElectricaTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyCoberturaElectrica();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.markForCheck();
-  }
-
-  // ✅ TABLA 4: Energía para Cocinar
-  get energiaCocinarConfig(): any {
-    return {
-      tablaKey: this.getTablaKeyEnergiaCocinar(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
-      calcularPorcentajes: true
-    };
-  }
-
   getTablaKeyEnergiaCocinar(): string {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     return prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
-  }
-
-  onEnergiaCocinarTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyEnergiaCocinar();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.markForCheck();
-  }
-
-  // ✅ TABLA 5: Tecnología de Comunicaciones
-  get tecnologiaComunicacionesConfig(): any {
-    return {
-      tablaKey: this.getTablaKeyTecnologiaComunicaciones(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
-      calcularPorcentajes: true
-    };
   }
 
   getTablaKeyTecnologiaComunicaciones(): string {
@@ -351,240 +224,35 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
   }
 
+  // ✅ HANDLERS PARA CAMBIOS DE TABLA (delegados automáticamente por signals)
+  onAbastecimientoAguaTableUpdated(updatedData?: any[]): void {
+    const tablaKey = this.getTablaKeyAbastecimientoAgua();
+    const datos = updatedData || this.datos[tablaKey] || [];
+    // El cambio se sincroniza automáticamente via createAutoSyncField si es necesario
+    this.cdRef.markForCheck();
+  }
+
+  onTiposSaneamientoTableUpdated(updatedData?: any[]): void {
+    const tablaKey = this.getTablaKeyTiposSaneamiento();
+    const datos = updatedData || this.datos[tablaKey] || [];
+    this.cdRef.markForCheck();
+  }
+
+  onCoberturaElectricaTableUpdated(updatedData?: any[]): void {
+    const tablaKey = this.getTablaKeyCoberturaElectrica();
+    const datos = updatedData || this.datos[tablaKey] || [];
+    this.cdRef.markForCheck();
+  }
+
+  onEnergiaCocinarTableUpdated(updatedData?: any[]): void {
+    const tablaKey = this.getTablaKeyEnergiaCocinar();
+    const datos = updatedData || this.datos[tablaKey] || [];
+    this.cdRef.markForCheck();
+  }
+
   onTecnologiaComunicacionesTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyTecnologiaComunicaciones();
     const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
     this.cdRef.markForCheck();
-  }
-
-  // ✅ MÉTODOS PARA GENERACIÓN DE TEXTOS (COPIADOS DEL VIEW COMPONENT)
-  obtenerTextoServiciosAgua(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoServiciosAgua' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosAgua();
-  }
-
-  obtenerTextoServiciosAguaDetalle(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoServiciosAguaDetalle' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosAguaDetalle();
-  }
-
-  obtenerTextoServiciosDesague(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoServiciosDesague' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosDesague();
-  }
-
-  obtenerTextoServiciosDesagueDetalle(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoServiciosDesagueDetalle' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoServiciosDesagueDetalle();
-  }
-
-  obtenerTextoDesechosSolidos1(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoDesechosSolidos1' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoDesechosSolidos1();
-  }
-
-  obtenerTextoDesechosSolidos2(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoDesechosSolidos2' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoDesechosSolidos2();
-  }
-
-  obtenerTextoDesechosSolidos3(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoDesechosSolidos3' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoDesechosSolidos3();
-  }
-
-  obtenerTextoElectricidad1(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoElectricidad1' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoElectricidad1();
-  }
-
-  obtenerTextoElectricidad2(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoElectricidad2' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoElectricidad2();
-  }
-
-  obtenerTextoEnergiaParaCocinar(): string {
-    const prefijo = this.obtenerPrefijo();
-    const manual = this.datos['textoEnergiaParaCocinar' + prefijo];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoEnergiaParaCocinar();
-  }
-
-  // ✅ MÉTODOS DE GENERACIÓN (LÓGICA DINÁMICA)
-  private generarTextoServiciosAgua(): string {
-    const tabla = this.formDataSignal()[this.getTablaKeyAbastecimientoAgua()] || [];
-    if (!tabla || tabla.length === 0) {
-      return 'Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ____ se hallaron viviendas con diferentes tipos de abastecimiento de agua.';
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron viviendas con diferentes tipos de abastecimiento de agua.`;
-  }
-
-  private generarTextoServiciosAguaDetalle(): string {
-    return 'El acceso a agua potable es fundamental para la salud y el bienestar de la población. La disponibilidad y calidad del servicio de agua en la comunidad impacta directamente en las condiciones de vida de los pobladores.';
-  }
-
-  private generarTextoServiciosDesague(): string {
-    const tabla = this.formDataSignal()[this.getTablaKeyTiposSaneamiento()] || [];
-    if (!tabla || tabla.length === 0) {
-      return 'Con respecto a los servicios de saneamiento, en los poblados de la CC ____ se identificaron diferentes tipos de sistemas de disposición de excretas.';
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Con respecto a los servicios de saneamiento, en los poblados de la CC ${comunidad} se identificaron diferentes tipos de sistemas de disposición de excretas.`;
-  }
-
-  private generarTextoServiciosDesagueDetalle(): string {
-    return 'El acceso a servicios de saneamiento adecuados es esencial para prevenir enfermedades relacionadas con la contaminación del agua y mantener condiciones sanitarias aceptables en la comunidad.';
-  }
-
-  private generarTextoDesechosSolidos1(): string {
-    return 'La gestión de desechos sólidos es un aspecto crítico para mantener un entorno saludable en la comunidad. Los pobladores de la CC realizan diferentes prácticas para el manejo de sus residuos.';
-  }
-
-  private generarTextoDesechosSolidos2(): string {
-    return 'Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la comunidad, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos plantea preocupaciones ambientales.';
-  }
-
-  private generarTextoDesechosSolidos3(): string {
-    return 'El mejoramiento de los sistemas de gestión de desechos sólidos constituye una oportunidad para incrementar la calidad de vida y la sostenibilidad ambiental de la comunidad.';
-  }
-
-  private generarTextoElectricidad1(): string {
-    const tabla = this.formDataSignal()[this.getTablaKeyCoberturaElectrica()] || [];
-    if (!tabla || tabla.length === 0) {
-      return 'Respecto a la cobertura de alumbrado eléctrico en la CC ____, los pobladores cuentan con diferentes niveles de acceso al servicio de electricidad.';
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Respecto a la cobertura de alumbrado eléctrico en la CC ${comunidad}, los pobladores cuentan con diferentes niveles de acceso al servicio de electricidad.`;
-  }
-
-  private generarTextoElectricidad2(): string {
-    return 'El acceso a electricidad facilita el desarrollo económico, mejora la calidad de vida y permite el acceso a servicios de comunicación e información en la comunidad.';
-  }
-
-  private generarTextoEnergiaParaCocinar(): string {
-    return 'La disponibilidad de combustible para cocinar y energía es fundamental para las actividades cotidianas. Los pobladores utilizan diferentes fuentes de energía según su disponibilidad y accesibilidad.';
-  }
-
-  // ✅ MÉTODOS PARA TÍTULOS Y FUENTES (ENERGÍA PARA COCINAR)
-  obtenerTituloEnergiaCocinar(): string {
-    const prefijo = this.obtenerPrefijo();
-    const tituloKey = 'tituloEnergiaCocinar' + prefijo;
-    const manual = this.datos[tituloKey];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Energía utilizada para cocinar en las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  onTituloEnergiaCocinarChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    this.onFieldChange('tituloEnergiaCocinar', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerFuenteEnergiaCocinar(): string {
-    const prefijo = this.obtenerPrefijo();
-    const fuenteKey = 'fuenteEnergiaCocinar' + prefijo;
-    const manual = this.datos[fuenteKey];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  onFuenteEnergiaCocinarChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    this.onFieldChange('fuenteEnergiaCocinar', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  // ✅ MÉTODOS PARA TÍTULOS Y FUENTES (TECNOLOGÍA DE COMUNICACIONES)
-  obtenerTituloTecnologiaComunicaciones(): string {
-    const prefijo = this.obtenerPrefijo();
-    const tituloKey = 'tituloTecnologiaComunicaciones' + prefijo;
-    const manual = this.datos[tituloKey];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Tecnología de comunicaciones en las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  onTituloTecnologiaComunicacionesChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    this.onFieldChange('tituloTecnologiaComunicaciones', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerFuenteTecnologiaComunicaciones(): string {
-    const fuenteKey = 'fuenteTecnologiaComunicaciones';
-    const manual = this.datos[fuenteKey];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  onFuenteTecnologiaComunicacionesChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    this.onFieldChange('fuenteTecnologiaComunicaciones', valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerTextoTecnologiaComunicaciones(): string {
-    const manual = this.datos['textoTecnologiaComunicaciones'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    return this.generarTextoTecnologiaComunicaciones();
-  }
-
-  private generarTextoTecnologiaComunicaciones(): string {
-    return 'Las tecnologías de comunicación son cada vez más importante en el desarrollo rural. Los pobladores tienen acceso a diferentes tipos de tecnologías según las características de su territorio y su capacidad económica.';
   }
 }

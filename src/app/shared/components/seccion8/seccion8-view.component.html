@@ -1,4 +1,4 @@
-<h5>A.1.4. Actividades económicas de la población</h5>
+<h5>{{ SECCION8_TEMPLATES.TITULO_VIEW }}</h5>
 <p class="text-justify" [innerHTML]="obtenerTextoActividadesEconomicasConResaltado()"></p>
 <p class="text-justify">{{ obtenerTextoFuentesActividadesEconomicas() }}</p>
 
@@ -43,11 +43,11 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ datos['cuadroFuentePEA'] || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú' }}</p>
+<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuentePEA')() || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú' }}</p>
 
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisCuadro310ConResaltado()"></p>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Ganadería</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionGanaderia }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion8GanaderiaCompletoConResaltado()"></div>
 
 <app-table-wrapper [title]="obtenerTituloGanaderia()" sectionId="3.1.4.A.1.4">
@@ -78,7 +78,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ datos['cuadroFuentePoblacionPecuaria'] || 'GEADES (2024)' }}</p>
+<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuentePoblacionPecuaria')() || 'GEADES (2024)' }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -86,12 +86,12 @@
     [fotografias]="getFotografiasGanaderiaVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_GANADERIA"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Agricultura</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionAgricultura }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion8AgriculturaCompletoConResaltado()"></div>
 
 <app-table-wrapper [title]="obtenerTituloAgricultura()" sectionId="3.1.4.A.1.4">
@@ -114,7 +114,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ datos['cuadroFuenteCaracteristicasAgricultura'] || 'GEADES (2024)' }}</p>
+<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuenteCaracteristicasAgricultura')() || 'GEADES (2024)' }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -122,12 +122,12 @@
     [fotografias]="getFotografiasAgriculturaVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_AGRICULTURA"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Mercado y comercialización de productos</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionMercadoComercializacion }}</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoMercadoComercializacion1ConResaltado()"></p>
 <p class="text-justify" [innerHTML]="obtenerTextoMercadoComercializacion2ConResaltado()"></p>
 
@@ -137,11 +137,11 @@
     [fotografias]="getFotografiasComercioVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_COMERCIO"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Hábitos de consumo</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionHabitosConsumo }}</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoHabitosConsumo1ConResaltado()"></p>
 <p class="text-justify" [innerHTML]="obtenerTextoHabitosConsumo2ConResaltado()"></p>

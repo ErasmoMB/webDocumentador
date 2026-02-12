@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
-import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX, SECCION5_COLUMNAS_INSTITUCIONES } from './seccion5-constants';
+import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX, SECCION5_COLUMNAS_INSTITUCIONES, SECCION5_TEMPLATES, SECCION5_CONFIG } from './seccion5-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
@@ -14,9 +14,12 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion5ViewComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1';
+  @Input() override seccionId: string = SECCION5_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
-  
+
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION5_TEMPLATES = SECCION5_TEMPLATES;
+
   override readonly PHOTO_PREFIX = SECCION5_PHOTO_PREFIX.INSTITUCIONALIDAD;
   override useReactiveSync: boolean = false;
   override watchedFields: string[] = SECCION5_WATCHED_FIELDS;
@@ -41,7 +44,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
     this.columnasInstituciones = SECCION5_COLUMNAS_INSTITUCIONES;
     this.institucionesConfig = {};
     this.photoGroupsConfig = [
-      { prefix: this.PHOTO_PREFIX, label: 'Institucionalidad' }
+      { prefix: this.PHOTO_PREFIX, label: SECCION5_TEMPLATES.labelFotografias }
     ];
 
     this.formDataSignal = computed(() => {
@@ -152,7 +155,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
   obtenerTextoInstitucionalidad(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion5_institucionalidad');
     
-    const textoPorDefecto = `La CC ${nombreComunidad} posee una estructura organizativa que responde a sus necesidades locales y a los principios de autogobierno indígena. La asamblea general comunal es la máxima autoridad, integrada por todos los comuneros hábiles que participan activamente en la toma de decisiones. Este sistema de gobierno rotativo permite que diversos miembros de la comunidad asuman responsabilidades de liderazgo, fortaleciendo así la distribución equitativa del poder y la representación de los intereses colectivos.\n\nLa organización comunal incluye diversas instituciones que trabajan de manera coordinada para cumplir con las funciones administrativas, educativas y sanitarias que requiere la comunidad. Entre las principales instituciones se encuentran la Asamblea General, la Junta Directiva Comunal, las organizaciones de base como las rondas campesinas, las instituciones educativas, los centros de salud, y las organizaciones de mujeres. Cada una de estas instituciones tiene responsabilidades específicas que contribuyen al bienestar integral de la comunidad.`;
+    const textoPorDefecto = SECCION5_TEMPLATES.textoInstitucionalidadLargo.replace('{COMUNIDAD}', nombreComunidad);
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);

@@ -1,13 +1,13 @@
-<h5>A.1.5. Viviendas</h5>
-<p class="text-justify">{{ obtenerTextoViviendas() }}</p>
+<h5>{{ SECCION9_TEMPLATES.seccionViviendas }}</h5>
+<p class="text-justify">{{ textoViviendasSignal() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloCondicionOcupacion()" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroCondicionOcupacion() + ' - ' + tituloCondicionOcupacionSignal()" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>
-        <th class="table-header">Condición de ocupación</th>
-        <th class="table-header">Casos</th>
-        <th class="table-header">Porcentaje</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria }}</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasCondicionOcupacion.casos }}</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasCondicionOcupacion.porcentaje }}</th>
       </tr>
     </thead>
     <tbody>
@@ -42,19 +42,19 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ obtenerFuenteCondicionOcupacion() }}</p>
+<p class="source">{{ SECCION9_TEMPLATES.labelFuente }}: {{ fuenteCondicionOcupacionSignal() }}</p>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Estructura</strong></p>
-<div class="text-justify">{{ obtenerTextoEstructura() }}</div>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION9_TEMPLATES.seccionEstructura }}</strong></p>
+<div class="text-justify">{{ textoEstructuraSignal() }}</div>
 
-<app-table-wrapper [title]="obtenerTituloTiposMateriales()" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroTiposMateriales() + ' - ' + tituloTiposMaterialesSignal()" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>
-        <th class="table-header">Categorías</th>
-        <th class="table-header">Tipos de materiales</th>
-        <th class="table-header">Casos</th>
-        <th class="table-header">Porcentaje</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasTiposMateriales.categoria }}</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasTiposMateriales.tipoMaterial }}</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasTiposMateriales.casos }}</th>
+        <th class="table-header">{{ SECCION9_TEMPLATES.columnasTiposMateriales.porcentaje }}</th>
       </tr>
     </thead>
     <tbody>
@@ -78,7 +78,7 @@
           </td>
         </tr>
         <tr class="total-row" *ngIf="getItemsPorCategoria(categoria).length > 0">
-          <td class="table-cell"><strong>Total</strong></td>
+          <td class="table-cell"><strong>{{ SECCION9_TEMPLATES.labelFuente }}</strong></td>
           <td class="table-cell"><strong>—</strong></td>
           <td class="table-cell"><strong [appDataSource]="'calculated'">{{ calcularTotalPorCategoria(categoria) }}</strong></td>
           <td class="table-cell"><strong [appDataSource]="'calculated'">100,00 %</strong></td>
@@ -93,7 +93,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ obtenerFuenteTiposMateriales() }}</p>
+<p class="source">{{ SECCION9_TEMPLATES.labelFuente }}: {{ fuenteTiposMaterialesSignal() }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -101,7 +101,7 @@
     [fotografias]="getFotografiasVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION9_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION9_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION9_TEMPLATES.labelFotoImagen">
 </app-image-upload>

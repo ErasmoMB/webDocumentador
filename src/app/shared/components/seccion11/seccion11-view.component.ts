@@ -7,7 +7,7 @@ import { TableWrapperComponent } from '../table-wrapper/table-wrapper.component'
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION11_WATCHED_FIELDS, SECCION11_PHOTO_PREFIX_TRANSPORTE, SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES } from './seccion11-constants';
+import { SECCION11_WATCHED_FIELDS, SECCION11_PHOTO_PREFIX_TRANSPORTE, SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES, SECCION11_TEMPLATES, SECCION11_SECTION_ID } from './seccion11-constants';
 
 @Component({
   selector: 'app-seccion11-view',
@@ -23,10 +23,13 @@ import { SECCION11_WATCHED_FIELDS, SECCION11_PHOTO_PREFIX_TRANSPORTE, SECCION11_
   standalone: true
 })
 export class Seccion11ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.7';
+  @Input() override seccionId: string = SECCION11_SECTION_ID;
 
-  readonly PHOTO_PREFIX_TRANSPORTE = 'fotografiaTransporte';
-  readonly PHOTO_PREFIX_TELECOMUNICACIONES = 'fotografiaTelecomunicaciones';
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION11_TEMPLATES = SECCION11_TEMPLATES;
+
+  readonly PHOTO_PREFIX_TRANSPORTE = SECCION11_PHOTO_PREFIX_TRANSPORTE;
+  readonly PHOTO_PREFIX_TELECOMUNICACIONES = SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES;
   override useReactiveSync: boolean = true;
 
   fotografiasTransporteCache: FotoItem[] = [];
@@ -240,26 +243,22 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  // ✅ MÉTODOS PARA TÍTULO Y FUENTE DE LA TABLA
+  // ✅ MÉTODOS PARA TÍTULO Y FUENTE DE LA TABLA (SIN HARDCODEADOS)
   obtenerTituloTelecomunicaciones(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tituloKey = `tituloTelecomunicaciones${prefijo}`;
-    const titulo = this.datos[tituloKey];
+    const titulo = this.projectFacade.selectField(this.seccionId, null, 'tituloTelecomunicaciones')();
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
     return `Servicios de telecomunicaciones – CC ${comunidad}`;
   }
 
   obtenerFuenteTelecomunicaciones(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const fuenteKey = `fuenteTelecomunicaciones${prefijo}`;
-    const fuente = this.datos[fuenteKey];
+    const fuente = this.projectFacade.selectField(this.seccionId, null, 'fuenteTelecomunicaciones')();
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'GEADES (2024)';
+    return SECCION11_TEMPLATES.placeholderFuenteTelecomunicaciones || 'GEADES (2024)';
   }
 
-  override obtenerNombreComunidadActual(): string {
-    return this.grupoAISDSignal() || '____';
+  // ✅ MÉTODO PARA TRACKBY EN LOOPS
+  trackByIndex(index: number): number {
+    return index;
   }
-
 }

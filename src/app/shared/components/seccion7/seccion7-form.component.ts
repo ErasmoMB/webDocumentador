@@ -7,6 +7,12 @@ import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { TableColumn } from '../dynamic-table/dynamic-table.component';
+import {
+  SECCION7_WATCHED_FIELDS,
+  SECCION7_SECTION_ID,
+  SECCION7_TEMPLATES,
+  SECCION7_TEXTOS_DEFAULT
+} from './seccion7-constants';
 
 @Component({
   standalone: true,
@@ -20,11 +26,15 @@ import { TableColumn } from '../dynamic-table/dynamic-table.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion7FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.3';
+  @Input() override seccionId: string = SECCION7_SECTION_ID;
   @Input() override modoFormulario: boolean = true;
+
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION7_TEMPLATES = SECCION7_TEMPLATES;
 
   override readonly PHOTO_PREFIX = 'fotografiaPEA';
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION7_WATCHED_FIELDS;
 
   // ✅ Signal de prefijo de grupo AISD
   readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
@@ -33,6 +43,24 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   obtenerPrefijo(): string {
     return this.prefijoGrupoSignal();
   }
+
+  // ✅ SIGNALS REACTIVOS CON AUTO-PERSIST - Campos editables de títulos y fuentes
+  readonly cuadroTituloPET = this.createAutoSyncField('cuadroTituloPET', '');
+  readonly cuadroFuentePET = this.createAutoSyncField('cuadroFuentePET', '');
+  readonly cuadroTituloPEA = this.createAutoSyncField('cuadroTituloPEA', '');
+  readonly cuadroFuentePEA = this.createAutoSyncField('cuadroFuentePEA', '');
+  readonly cuadroTituloPEAOcupada = this.createAutoSyncField('cuadroTituloPEAOcupada', '');
+  readonly cuadroFuentePEAOcupada = this.createAutoSyncField('cuadroFuentePEAOcupada', '');
+  
+  // ✅ SIGNALS REACTIVOS CON AUTO-PERSIST - Párrafos y textos editable
+  readonly parrafoSeccion7PetCompleto = this.createAutoSyncField('parrafoSeccion7_pet_completo', '');
+  readonly textoDetalePEA = this.createAutoSyncField('textoDetalePEA', '');
+  readonly textoDefinicionPEA = this.createAutoSyncField('textoDefinicionPEA', '');
+  readonly textoAnalisisPEA = this.createAutoSyncField('textoAnalisisPEA', '');
+  readonly parrafoSeccion7SituacionEmpleoCompleto = this.createAutoSyncField('parrafoSeccion7_situacion_empleo_completo', '');
+  readonly parrafoSeccion7IngresosCompleto = this.createAutoSyncField('parrafoSeccion7_ingresos_completo', '');
+  readonly textoIndiceDesempleo = this.createAutoSyncField('textoIndiceDesempleo', '');
+  readonly textoAnalisisOcupacion = this.createAutoSyncField('textoAnalisisOcupacion', '');
 
   fotografiasSeccion7: FotoItem[] = [];
 

@@ -1,55 +1,55 @@
-<div class="seccion-formulario-content">
+<div class="seccion-formulario-content" *ngIf="modoFormulario">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.6. Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones</h4>
+    <h4 class="section-title">{{ SECCION10_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.tituloEditarParrafos }}</h4>
 
       <app-paragraph-editor
         fieldId="parrafoSeccion10_servicios_basicos_intro"
-        label="Introducción - Servicios Básicos"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+        [label]="SECCION10_TEMPLATES.labelIntroduccion"
+        [hint]="SECCION10_TEMPLATES.hintParrafo"
         [rows]="4"
-        [value]="obtenerTextoSeccion10ServiciosBasicosIntro()"
-        (valueChange)="onFieldChange('parrafoSeccion10_servicios_basicos_intro', $event)">
+        [value]="parrafoIntroduccion.value()"
+        (valueChange)="parrafoIntroduccion.update($any($event))">
       </app-paragraph-editor>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">a. Servicios de agua</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloServiciosAgua }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoServiciosAgua"
-          label="Servicios de Agua - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelServiciosAgua"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoServiciosAgua()"
-          (valueChange)="onFieldChange('textoServiciosAgua', $event)">
+          [value]="textoServiciosAgua.value()"
+          (valueChange)="textoServiciosAgua.update($any($event))">
         </app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Título</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTituloAbastecimientoAgua }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerTituloAbastecimientoAgua()"
-          (change)="onTituloAbastecimientoAguaChange($event)"
-          placeholder="Tipos de abastecimiento de agua en las viviendas – CC ____ (2017)">
+          [ngModel]="tituloAbastecimientoAgua.value()"
+          (ngModelChange)="tituloAbastecimientoAgua.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderTituloAbastecimientoAgua">
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Tabla Abastecimiento de Agua</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTablaAbastecimientoAgua }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="abastecimientoAguaConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con abastecimiento de agua por red pública', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: '{{ SECCION10_TEMPLATES.labelCategoria }}', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaAbastecimiento }}', readonly: true },
+            { field: 'casos', label: '{{ SECCION10_TEMPLATES.labelCasos }}', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: '{{ SECCION10_TEMPLATES.labelPorcentaje }}', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyAbastecimientoAgua()"
@@ -60,64 +60,64 @@
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Fuente</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelFuenteAbastecimientoAgua }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerFuenteAbastecimientoAgua()"
-          (change)="onFuenteAbastecimientoAguaChange($event)"
-          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+          [ngModel]="fuenteAbastecimientoAgua.value()"
+          (ngModelChange)="fuenteAbastecimientoAgua.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderFuente">
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoServiciosAguaDetalle"
-          label="Servicios de Agua - Detalle"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelServiciosAguaDetalle"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoServiciosAguaDetalle()"
-          (valueChange)="onFieldChange('textoServiciosAguaDetalle', $event)">
+          [value]="textoServiciosAguaDetalle.value()"
+          (valueChange)="textoServiciosAguaDetalle.update($any($event))">
         </app-paragraph-editor>
       </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloServiciosDesague }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoServiciosDesague"
-          label="Servicios de Desagüe - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelServiciosDesague"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoServiciosDesague()"
-          (valueChange)="onFieldChange('textoServiciosDesague', $event)">
-        </app-paragraph-editor>
+          [value]="textoServiciosDesague.value()"
+          (valueChange)="textoServiciosDesague.update($any($event))">
+</app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Título</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTituloTiposSaneamiento }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerTituloTiposSaneamiento()"
-          (change)="onTituloTiposSaneamientoChange($event)"
-          placeholder="Tipos de saneamiento en las viviendas – CC ____ (2017)">
+          [ngModel]="tituloTiposSaneamiento.value()"
+          (ngModelChange)="tituloTiposSaneamiento.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderTituloTiposSaneamiento">
       </div>
 
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Tipos de Saneamiento</label>
+      <div class="form-group-section" style="margin-top: 15px;">
+        <label class="label">{{ SECCION10_TEMPLATES.labelTablaTiposSaneamiento }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="tiposSaneamientoConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con saneamiento vía red pública', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: '{{ SECCION10_TEMPLATES.labelCategoria }}', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaSaneamiento }}', readonly: true },
+            { field: 'casos', label: '{{ SECCION10_TEMPLATES.labelCasos }}', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: '{{ SECCION10_TEMPLATES.labelPorcentaje }}', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyTiposSaneamiento()"
@@ -128,69 +128,67 @@
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Fuente</label>
-        <input
-          type="text"
-          class="form-control"
-          [value]="obtenerFuenteTiposSaneamiento()"
-          (change)="onFuenteTiposSaneamientoChange($event)"
-          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+        <label class="label">{{ SECCION10_TEMPLATES.labelFuenteTiposSaneamiento }}</label>
+        <input type="text" class="form-control"
+          [ngModel]="fuenteTiposSaneamiento.value()"
+          (ngModelChange)="fuenteTiposSaneamiento.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderFuente">
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoServiciosDesagueDetalle"
-          label="Servicios de Desagüe - Detalle"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelServiciosDesagueDetalle"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="2"
-          [value]="obtenerTextoServiciosDesagueDetalle()"
-          (valueChange)="onFieldChange('textoServiciosDesagueDetalle', $event)">
+          [value]="textoServiciosDesagueDetalle.value()"
+          (valueChange)="textoServiciosDesagueDetalle.update($any($event))">
         </app-paragraph-editor>
       </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloDesechosSolidos }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoDesechosSolidos1"
-          label="Desechos Sólidos - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelDesechosSolidos1"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoDesechosSolidos1()"
-          (valueChange)="onFieldChange('textoDesechosSolidos1', $event)">
+          [value]="textoDesechosSolidos1.value()"
+          (valueChange)="textoDesechosSolidos1.update($any($event))">
         </app-paragraph-editor>
 
         <app-paragraph-editor
           fieldId="textoDesechosSolidos2"
-          label="Desechos Sólidos - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelDesechosSolidos2"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoDesechosSolidos2()"
-          (valueChange)="onFieldChange('textoDesechosSolidos2', $event)"
+          [value]="textoDesechosSolidos2.value()"
+          (valueChange)="textoDesechosSolidos2.update($any($event))"
           style="margin-top: 15px;">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Desechos Sólidos</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelFotografiasDesechos }}</label>
         <app-image-upload
           [fotografias]="fotografiasSeccion10"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Contenedor de residuos sólidos y plásticos en el anexo Ayroca"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION10_TEMPLATES.labelTituloFoto"
+          [labelFuente]="SECCION10_TEMPLATES.labelFuenteFoto"
+          [labelImagen]="SECCION10_TEMPLATES.labelImagenFoto"
+          [placeholderTitulo]="SECCION10_TEMPLATES.placeholderTituloFoto"
+          [placeholderFuente]="SECCION10_TEMPLATES.placeholderFuenteFoto"
+          [tituloDefault]="SECCION10_TEMPLATES.tituloDefaultFoto"
+          [fuenteDefault]="SECCION10_TEMPLATES.fuenteDefaultFoto"
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>
@@ -198,40 +196,40 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">d. Electricidad</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloElectricidad }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoElectricidad1"
-          label="Electricidad - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelElectricidad1"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoElectricidad1()"
-          (valueChange)="onFieldChange('textoElectricidad1', $event)">
+          [value]="textoElectricidad1.value()"
+          (valueChange)="textoElectricidad1.update($any($event))">
         </app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Título</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTituloCoberturaElectrica }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerTituloCoberturaElectrica()"
-          (change)="onTituloCoberturaElectricaChange($event)"
-          placeholder="Cobertura de alumbrado eléctrico en las viviendas – CC ____ (2017)">
+          [ngModel]="tituloCoberturaElectrica.value()"
+          (ngModelChange)="tituloCoberturaElectrica.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderTituloCoberturaElectrica">
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Cobertura Eléctrica</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTablaCoberturaElectrica }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="coberturaElectricaConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con acceso a electricidad', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: '{{ SECCION10_TEMPLATES.labelCategoria }}', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaElectricidad }}', readonly: true },
+            { field: 'casos', label: '{{ SECCION10_TEMPLATES.labelCasos }}', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: '{{ SECCION10_TEMPLATES.labelPorcentaje }}', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyCoberturaElectrica()"
@@ -242,13 +240,13 @@
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Fuente</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelFuenteCoberturaElectrica }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerFuenteCoberturaElectrica()"
-          (change)="onFuenteCoberturaElectricaChange($event)"
-          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+          [ngModel]="fuenteCoberturaElectrica.value()"
+          (ngModelChange)="fuenteCoberturaElectrica.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderFuenteCoberturaElectrica">
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
@@ -256,50 +254,50 @@
 
         <app-paragraph-editor
           fieldId="textoElectricidad2"
-          label="Electricidad - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelElectricidad2"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="obtenerTextoElectricidad2()"
-          (valueChange)="onFieldChange('textoElectricidad2', $event)">
+          [value]="textoElectricidad2.value()"
+          (valueChange)="textoElectricidad2.update($any($event))">
         </app-paragraph-editor>
       </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">e. Energía para cocinar</h4>
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloEnergiaCocinar }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoEnergiaParaCocinar"
-          label="Energía para Cocinar - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION10_TEMPLATES.labelEnergiaCocinar"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
           [rows]="4"
-          [value]="obtenerTextoEnergiaParaCocinar()"
-          (valueChange)="onFieldChange('textoEnergiaParaCocinar', $event)">
+          [value]="textoEnergiaParaCocinar.value()"
+          (valueChange)="textoEnergiaParaCocinar.update($any($event))">
         </app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Título</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTituloEnergiaCocinar }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerTituloEnergiaCocinar()"
-          (change)="onTituloEnergiaCocinarChange($event)"
-          placeholder="Energía utilizada para cocinar en las viviendas – CC ____ (2017)">
+          [ngModel]="tituloEnergiaCocinar.value()"
+          (ngModelChange)="tituloEnergiaCocinar.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderTituloEnergiaCocinar">
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Energía para Cocinar</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelTablaEnergiaCocinar }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="energiaCocinarConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Leña', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: '{{ SECCION10_TEMPLATES.labelCategoria }}', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaEnergia }}', readonly: true },
+            { field: 'casos', label: '{{ SECCION10_TEMPLATES.labelCasos }}', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: '{{ SECCION10_TEMPLATES.labelPorcentaje }}', type: 'text', placeholder: '0%', readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyEnergiaCocinar()"
@@ -310,13 +308,13 @@
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">Fuente</label>
+        <label class="label">{{ SECCION10_TEMPLATES.labelFuenteEnergiaCocinar }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="obtenerFuenteEnergiaCocinar()"
-          (change)="onFuenteEnergiaCocinarChange($event)"
-          placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+          [ngModel]="fuenteEnergiaCocinar.value()"
+          (ngModelChange)="fuenteEnergiaCocinar.update($any($event))"
+          [placeholder]="SECCION10_TEMPLATES.placeholderFuenteEnergiaCocinar">
       </div>
     </div>
   </div>

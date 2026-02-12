@@ -1,12 +1,12 @@
 <div class="document-view">
-  <h5>{{ obtenerSubseccionId() }}. Institucionalidad local</h5>
+  <h5>{{ obtenerSubseccionId() }}. {{ SECCION5_TEMPLATES.labelInstitucionalidadLocal }}</h5>
 
   <!-- Párrafo informativo -->
   <p class="text-justify">
     {{ obtenerParrafoInstitucionalidad() }}
   </p>
 
-  <app-table-wrapper [title]="(datos.tituloInstituciones || 'Instituciones existentes – CC ' + obtenerNombreComunidadActual()) + obtenerPrefijoGrupo()" [sectionId]="'3.1.4.A.1.1'">
+  <app-table-wrapper [title]="viewModel().titulo || SECCION5_TEMPLATES.labelInstituciones.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" [sectionId]="'3.1.4.A.1.1'">
     <app-dynamic-table
       [datos]="datos"
       [config]="institucionesConfig"
@@ -16,9 +16,9 @@
       [modoVista]="true">
     </app-dynamic-table>
     <p class="text-justify data-source">
-      FUENTE: 
+      {{ SECCION5_TEMPLATES.labelFuente }}: 
       <span *ngIf="vistFuenteInstitucionesSignal() && vistFuenteInstitucionesSignal() !== '____'">{{ vistFuenteInstitucionesSignal() }}</span>
-      <span *ngIf="!vistFuenteInstitucionesSignal() || vistFuenteInstitucionesSignal() === '____'" [appDataSource]="'manual'">GEADES (2024)</span>
+      <span *ngIf="!vistFuenteInstitucionesSignal() || vistFuenteInstitucionesSignal() === '____'" [appDataSource]="'manual'">{{ SECCION5_TEMPLATES.sourceGeadesDefault }}</span>
     </p>
   </app-table-wrapper>
 
@@ -32,7 +32,7 @@
       [mostrarTitulo]="true"
       [mostrarFuente]="true"
       [mostrarNumero]="true"
-      [tituloDefault]="'Local Comunal de la CC ' + obtenerNombreComunidadActual()"
-      [fuenteDefault]="'GEADES, 2024'">
+      [tituloDefault]="SECCION5_TEMPLATES.photoDefaultTitle.replace('{COMUNIDAD}', obtenerNombreComunidadActual())"
+      [fuenteDefault]="SECCION5_TEMPLATES.sourceGeadesDefault">
   </app-image-upload>
 </div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { FotoItem } from '../image-upload/image-upload.component';
-import { SECCION7_WATCHED_FIELDS, SECCION7_PHOTO_PREFIX } from './seccion7-constants';
+import { SECCION7_WATCHED_FIELDS, SECCION7_PHOTO_PREFIX, SECCION7_SECTION_ID, SECCION7_TEMPLATES } from './seccion7-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -15,8 +15,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion7ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.3';
+  @Input() override seccionId: string = SECCION7_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
+  
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION7_TEMPLATES = SECCION7_TEMPLATES;
   
   override readonly PHOTO_PREFIX = SECCION7_PHOTO_PREFIX.PEA;
   override useReactiveSync: boolean = true;

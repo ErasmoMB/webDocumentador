@@ -1,42 +1,42 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.4. Actividades económicas de la población</h4>
+    <h4 class="section-title">{{ SECCION8_TEMPLATES.TITULO_FORM }}</h4>
     
     <div class="form-group-section" style="margin-top: 20px;">
-      <h5>Editar Párrafos</h5>
+      <h5>{{ SECCION8_TEMPLATES.seccionEditarParrafos }}</h5>
       
       <app-paragraph-editor
         fieldId="textoActividadesEconomicas"
-        label="Actividades Económicas - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION8_TEMPLATES.labelActividadesEconomicas"
+        [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
         [rows]="3"
-        [value]="obtenerTextoActividadesEconomicas()"
-        (valueChange)="onFieldChange('textoActividadesEconomicas', $event)">
+        [value]="textoActividadesEconomicas.value()"
+        (valueChange)="textoActividadesEconomicas.update($event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
         fieldId="textoFuentesActividadesEconomicas"
-        label="Fuentes Oficiales de Actividades Económicas"
-        hint="Párrafo introductorio sobre fuentes oficiales. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION8_TEMPLATES.labelFuentesActividadesEconomicas"
+        [hint]="SECCION8_TEMPLATES.hintIntroduccionFuentes"
         [rows]="2"
-        [value]="obtenerTextoFuentesActividadesEconomicas()"
-        (valueChange)="onFieldChange('textoFuentesActividadesEconomicas', $event)"
+        [value]="textoFuentesActividadesEconomicas.value()"
+        (valueChange)="textoFuentesActividadesEconomicas.update($event)"
         style="margin-top: 15px;">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 30px;">
       <div class="form-group" style="margin-bottom: 15px;">
-        <label class="label">Título de la Tabla</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelTituloPEA }}</label>
         <input 
           type="text" 
           class="form-control"
-          [(ngModel)]="datos['cuadroTituloPEA']"
-          (ngModelChange)="onFieldChange('cuadroTituloPEA', $event)"
-          placeholder="Ej: PEA Ocupada según ocupaciones principales">
+          [ngModel]="cuadroTituloPEA.value()"
+          (ngModelChange)="cuadroTituloPEA.update($event)"
+          [placeholder]="SECCION8_TEMPLATES.placeholderTituloPEA">
       </div>
       
-      <label class="label">Tabla PEA Ocupada según ocupaciones principales</label>
+      <label class="label">{{ SECCION8_TEMPLATES.labelTablaPEA }}</label>
       <app-dynamic-table
         [datos]="datos"
         [config]="peaOcupacionesConfig"
@@ -49,57 +49,57 @@
       </app-dynamic-table>
 
       <div class="form-group" style="margin-top: 15px;">
-        <label class="label">Fuente de la Tabla</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelFuentePEA }}</label>
         <input 
           type="text" 
           class="form-control"
-          [(ngModel)]="datos['cuadroFuentePEA']"
-          (ngModelChange)="onFieldChange('cuadroFuentePEA', $event)"
-          placeholder="Ej: Plataforma Nacional de Datos Georreferenciados – Geo Perú">
+          [ngModel]="cuadroFuentePEA.value()"
+          (ngModelChange)="cuadroFuentePEA.update($event)"
+          [placeholder]="SECCION8_TEMPLATES.placeholderFuentePEA">
       </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
-      <h5>Análisis</h5>
+      <h5>{{ SECCION8_TEMPLATES.seccionAnalisis }}</h5>
       
       <app-paragraph-editor
         fieldId="textoAnalisisCuadro310"
-        label="Análisis Cuadro 3.10 - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION8_TEMPLATES.labelAnalisisCuadro310"
+        [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
         [rows]="3"
-        [value]="obtenerTextoAnalisisCuadro310()"
-        (valueChange)="onFieldChange('textoAnalisisCuadro310', $event)">
+        [value]="textoAnalisisCuadro310.value()"
+        (valueChange)="textoAnalisisCuadro310.update($event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">a. Ganadería</h4>
+      <h4 class="section-title">{{ SECCION8_TEMPLATES.subseccionGanaderia }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h5>Editar Párrafos</h5>
+        <h5>{{ SECCION8_TEMPLATES.seccionEditarParrafos }}</h5>
         
         <app-paragraph-editor
           fieldId="parrafoSeccion8_ganaderia_completo"
-          label="Ganadería - Texto Completo"
-          hint="Edite todo el bloque de texto sobre ganadería. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelGanaderiaCompleto"
+          [hint]="SECCION8_TEMPLATES.hintParrafoGanaderia"
           [rows]="8"
-          [value]="obtenerTextoSeccion8GanaderiaCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion8_ganaderia_completo', $event)">
+          [value]="parrafoSeccion8_ganaderia_completo.value()"
+          (valueChange)="parrafoSeccion8_ganaderia_completo.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla</label>
+          <label class="label">{{ SECCION8_TEMPLATES.labelTituloPoblacionPecuaria }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPoblacionPecuaria']"
-            (ngModelChange)="onFieldChange('cuadroTituloPoblacionPecuaria', $event)"
-            placeholder="Ej: Población Pecuaria">
+            [ngModel]="cuadroTituloPoblacionPecuaria.value()"
+            (ngModelChange)="cuadroTituloPoblacionPecuaria.update($event)"
+            [placeholder]="SECCION8_TEMPLATES.placeholderTituloPoblacionPecuaria">
         </div>
         
-        <label class="label">Tabla Población Pecuaria</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelTablaPoblacionPecuaria }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionPecuariaConfig"
@@ -112,26 +112,26 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla</label>
+          <label class="label">{{ SECCION8_TEMPLATES.labelFuentePoblacionPecuaria }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePoblacionPecuaria']"
-            (ngModelChange)="onFieldChange('cuadroFuentePoblacionPecuaria', $event)"
-            placeholder="Ej: GEADES, 2024">
+            [ngModel]="cuadroFuentePoblacionPecuaria.value()"
+            (ngModelChange)="cuadroFuentePoblacionPecuaria.update($event)"
+            [placeholder]="SECCION8_TEMPLATES.placeholderFuentePoblacionPecuaria">
         </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Ganadería</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelFotografiasGanaderia }}</label>
         <app-image-upload
           [fotografias]="fotografiasGanaderiaFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX_GANADERIA + obtenerPrefijo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
+          [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen"
           placeholderTitulo="Ej: Ganadería en la CC Ayroca"
           placeholderFuente="Ej: GEADES, 2024"
           tituloDefault="Ganadería"
@@ -143,33 +143,33 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Agricultura</h4>
+      <h4 class="section-title">{{ SECCION8_TEMPLATES.subseccionAgricultura }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h5>Editar Párrafos</h5>
+        <h5>{{ SECCION8_TEMPLATES.seccionEditarParrafos }}</h5>
         
         <app-paragraph-editor
           fieldId="parrafoSeccion8_agricultura_completo"
-          label="Agricultura - Texto Completo"
-          hint="Edite todo el bloque de texto sobre agricultura. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelAgriculturaCompleto"
+          [hint]="SECCION8_TEMPLATES.hintParrafoAgricultura"
           [rows]="6"
-          [value]="obtenerTextoSeccion8AgriculturaCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion8_agricultura_completo', $event)">
+          [value]="parrafoSeccion8_agricultura_completo.value()"
+          (valueChange)="parrafoSeccion8_agricultura_completo.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla</label>
+          <label class="label">{{ SECCION8_TEMPLATES.labelTituloCaracteristicasAgricultura }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloCaracteristicasAgricultura']"
-            (ngModelChange)="onFieldChange('cuadroTituloCaracteristicasAgricultura', $event)"
-            placeholder="Ej: Características de la Agricultura">
+            [ngModel]="cuadroTituloCaracteristicasAgricultura.value()"
+            (ngModelChange)="cuadroTituloCaracteristicasAgricultura.update($event)"
+            [placeholder]="SECCION8_TEMPLATES.placeholderTituloCaracteristicasAgricultura">
         </div>
         
-        <label class="label">Tabla Características de la Agricultura</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelTablaCaracteristicasAgricultura }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="caracteristicasAgriculturaConfig"
@@ -182,26 +182,26 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla</label>
+          <label class="label">{{ SECCION8_TEMPLATES.labelFuenteCaracteristicasAgricultura }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuenteCaracteristicasAgricultura']"
-            (ngModelChange)="onFieldChange('cuadroFuenteCaracteristicasAgricultura', $event)"
-            placeholder="Ej: GEADES, 2024">
+            [ngModel]="cuadroFuenteCaracteristicasAgricultura.value()"
+            (ngModelChange)="cuadroFuenteCaracteristicasAgricultura.update($event)"
+            [placeholder]="SECCION8_TEMPLATES.placeholderFuenteCaracteristicasAgricultura">
         </div>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Agricultura</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelFotografiasAgricultura }}</label>
         <app-image-upload
           [fotografias]="fotografiasAgriculturaFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX_AGRICULTURA + obtenerPrefijo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
+          [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen"
           placeholderTitulo="Ej: Agricultura en la CC Ayroca"
           placeholderFuente="Ej: GEADES, 2024"
           tituloDefault="Agricultura"
@@ -213,41 +213,41 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">c. Mercado y comercialización de productos</h4>
+      <h4 class="section-title">{{ SECCION8_TEMPLATES.subseccionMercadoComercializacion }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h5>Editar Párrafos</h5>
+        <h5>{{ SECCION8_TEMPLATES.seccionEditarParrafos }}</h5>
         
         <app-paragraph-editor
           fieldId="textoMercadoComercializacion1"
-          label="Mercado y Comercialización - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelMercadoComercializacion1"
+          [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="obtenerTextoMercadoComercializacion1()"
-          (valueChange)="onFieldChange('textoMercadoComercializacion1', $event)">
+          [value]="textoMercadoComercializacion1.value()"
+          (valueChange)="textoMercadoComercializacion1.update($event)">
         </app-paragraph-editor>
         
         <app-paragraph-editor
           fieldId="textoMercadoComercializacion2"
-          label="Mercado y Comercialización - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelMercadoComercializacion2"
+          [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="obtenerTextoMercadoComercializacion2()"
-          (valueChange)="onFieldChange('textoMercadoComercializacion2', $event)"
+          [value]="textoMercadoComercializacion2.value()"
+          (valueChange)="textoMercadoComercializacion2.update($event)"
           style="margin-top: 15px;">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Comercio</label>
+        <label class="label">{{ SECCION8_TEMPLATES.labelFotografiasComercio }}</label>
         <app-image-upload
           [fotografias]="fotografiasComercioFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX_COMERCIO + obtenerPrefijo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
+          [labelTitulo]="SECCION8_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION8_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION8_TEMPLATES.labelFotoImagen"
           placeholderTitulo="Ej: Comercio en la CC Ayroca"
           placeholderFuente="Ej: GEADES, 2024"
           tituloDefault="Comercio"
@@ -259,27 +259,27 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">d. Hábitos de consumo</h4>
+      <h4 class="section-title">{{ SECCION8_TEMPLATES.subseccionHabitosConsumo }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h5>Editar Párrafos</h5>
+        <h5>{{ SECCION8_TEMPLATES.seccionEditarParrafos }}</h5>
         
         <app-paragraph-editor
           fieldId="textoHabitosConsumo1"
-          label="Hábitos de Consumo - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelHabitosConsumo1"
+          [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="obtenerTextoHabitosConsumo1()"
-          (valueChange)="onFieldChange('textoHabitosConsumo1', $event)">
+          [value]="textoHabitosConsumo1.value()"
+          (valueChange)="textoHabitosConsumo1.update($event)">
         </app-paragraph-editor>
         
         <app-paragraph-editor
           fieldId="textoHabitosConsumo2"
-          label="Hábitos de Consumo - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION8_TEMPLATES.labelHabitosConsumo2"
+          [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="4"
-          [value]="obtenerTextoHabitosConsumo2()"
-          (valueChange)="onFieldChange('textoHabitosConsumo2', $event)"
+          [value]="textoHabitosConsumo2.value()"
+          (valueChange)="textoHabitosConsumo2.update($event)"
           style="margin-top: 15px;">
         </app-paragraph-editor>
       </div>

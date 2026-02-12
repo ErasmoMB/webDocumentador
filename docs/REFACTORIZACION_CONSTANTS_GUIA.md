@@ -1,52 +1,54 @@
-# 📋 GUÍA: Refactorización Completa de Secciones con Constants
+# GUIA: Refactorizacion Completa de Secciones con Constants
 
-**Objetivo:** Eliminar 100% del hardcoding en una sección y centralizar TODOS los textos en `*-constants.ts`.
+**Objetivo:** Eliminar 100% del hardcoding en una seccion y centralizar TODOS los textos en `*-constants.ts`.
 
-**Patrón Referencia:** `seccion3-constants.ts` (Sección 3 - Características Sociodemográficas)
+**Patrones Referencia:**
+- `seccion1-constants.ts` (Seccion 1 - Identificacion del Proyecto)
+- `seccion2-constants.ts` (Seccion 2 - Delimitacion de Areas)
 
 ---
 
-## 🎯 META FINAL - OBLIGATORIA DESPUÉS DE REFACTORIZACIÓN
+## META FINAL - OBLIGATORIA DESPUES DE REFACTORIZACION
 
-### ✅ OBJETIVO ÚNICO: CERO HARDCODEADOS + ARQUITECTURA NUEVA COMPLETA
+### OBJETIVO UNICO: CERO HARDCODEADOS + ARQUITECTURA NUEVA COMPLETA
 
-Después de refactorizar una sección, DEBE cumplir **AMBAS**:
+Despues de refactorizar una seccion, DEBE cumplir AMBAS:
 
-#### 1️⃣ **CERO HARDCODEADOS (100% Constantes)**
+#### 1. CERO HARDCODEADOS (100% Constantes)
 
 ```typescript
-// ❌ PROHIBIDO - Después de refactorización:
+// ❌ PROHIBIDO - Despues de refactorizacion:
 placeholder="Ej: Ingrese nombre"           // Hardcodeado
-[labelTitulo]="'Título'"                   // Hardcodeado
+[labelTitulo]="'Titulo'"                   // Hardcodeado
 return 'Texto por defecto'                 // Hardcodeado
 {{ 'Mensaje' }}                            // Hardcodeado
 
-// ✅ OBLIGATORIO - Después de refactorización:
+// ✅ OBLIGATORIO - Despues de refactorizacion:
 [placeholder]="SECCION_N_TEMPLATES.placeholderNombre"
 [labelTitulo]="SECCION_N_TEMPLATES.labelFotoTitulo"
 return SECCION_N_TEMPLATES.textoDefault
 {{ SECCION_N_TEMPLATES.mensaje }}
 ```
 
-**Validación:**
-```bash
-# Ejecutar en terminal - si devuelve 0 resultados = ✅ ÉXITO
-grep -r "'" src/app/shared/components/seccionN/ | grep -v TEMPLATES | grep -v "seccionId" | grep -v "true\|false" | grep -v ".ts\|.html\|.css"
+**Validacion:**
+```powershell
+# Windows PowerShell:
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern \"return '\" | Select-Object -ExpandProperty Line"
 
 # Esperar que NO aparezca:
 # ❌ placeholder="...", [label]="'...'", return '...', {{ '...' }}
 ```
 
-#### 2️⃣ **ARQUITECTURA NUEVA COMPLETA (createAutoSyncField<T>())**
+#### 2. ARQUITECTURA NUEVA COMPLETA (createAutoSyncField<T>())
 
 ```typescript
-// ❌ PROHIBIDO - Después de refactorización:
+// ❌ PROHIBIDO - Despues de refactorizacion:
 onFieldChange(fieldName: string, value: any) { ... }     // Legacy
 stateSubscription: Subscription;                          // Legacy
 ngOnDestroy() { this.stateSubscription?.unsubscribe(); }  // Legacy
 this.datos?.campo                                          // Legacy
 
-// ✅ OBLIGATORIO - Después de refactorización:
+// ✅ OBLIGATORIO - Despues de refactorizacion:
 readonly campo = this.createAutoSyncField('campo', initialValue)  // Signal reactivo
 // NO hay onFieldChange()
 // NO hay stateSubscription
@@ -54,93 +56,281 @@ readonly campo = this.createAutoSyncField('campo', initialValue)  // Signal reac
 // Acceso: this.projectFacade.selectField(...) o computed()
 ```
 
-**Validación:**
-```bash
-# Ejecutar en terminal - si devuelve 0 resultados = ✅ ÉXITO para cada una:
-grep -r "onFieldChange" src/app/shared/components/seccionN/
-grep -r "stateSubscription" src/app/shared/components/seccionN/
-grep -r "setTimeout" src/app/shared/components/seccionN/
-grep -r "this\.datos\?" src/app/shared/components/seccionN/
+**Validacion:**
+```powershell
+# Windows PowerShell:
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern 'onFieldChange' | Select-Object -ExpandProperty Line"
 
-# Esperar: 0 resultados en los 4 comandos = ✅ ARQUITECTURA NUEVA
+# Esperar: 0 resultados = ✅ ARQUITECTURA NUEVA
 ```
 
 ---
 
-## 📊 CHECKLIST DE ACEPTACIÓN - META FINAL
-
-**ANTES de marcar una sección como "COMPLETADA":**
-
-```
-✅ CERO HARDCODEADOS
-  [ ] grep para placeholders = 0 resultados
-  [ ] grep para [label]="'..." = 0 resultados
-  [ ] grep para return '...' = 0 resultados
-  [ ] grep para {{ '...' }} = 0 resultados
-  [ ] 100% de textos en SECCION_N_TEMPLATES
-
-✅ ARQUITECTURA NUEVA
-  [ ] NO hay onFieldChange() = 0 resultados
-  [ ] NO hay stateSubscription = 0 resultados
-  [ ] NO hay setTimeout = 0 resultados
-  [ ] NO hay this.datos acceso directo = 0 resultados
-  [ ] Todos los campos usan createAutoSyncField<T>()
-
-✅ FORM COMPONENT
-  [ ] Usa [ngModel]="campo.value()" + (ngModelChange)="campo.update($event)"
-  [ ] Declara: readonly campo = this.createAutoSyncField('campo', initialValue)
-  [ ] NO tiene métodos onXxxChange()
-  [ ] Exports: readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
-
-✅ VIEW COMPONENT
-  [ ] Usa computed() para leer desde projectFacade
-  [ ] Accede: this.projectFacade.selectField(sectionId, null, fieldName)()
-  [ ] Párrafos dinámicos con .replace('{{placeholder}}', valor)
-  [ ] NO accede a this.datos
-  [ ] Exports: readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
-
-✅ HTML TEMPLATES
-  [ ] Todos los textos desde SECCION_N_TEMPLATES
-  [ ] [label*], placeholder, hints, valores por defecto
-  [ ] Fotos: labels y placeholders
-  [ ] Mensajes vacíos (empty state)
-
-✅ CONSTANTES (SECCION_N_CONSTANTS.TS)
-  [ ] SECCION_N_WATCHED_FIELDS = [campos a persistir]
-  [ ] SECCION_N_CONFIG = {sectionId, title, photoPrefix, maxPhotos}
-  [ ] SECCION_N_TEMPLATES = {50+ textos organizados}
-
-✅ COMPILACIÓN Y TESTING
-  [ ] npm start sin errores ✅
-  [ ] Sin warnings TypeScript
-  [ ] Funciona en navegador
-  [ ] Input → View sincroniza en < 20ms
-  [ ] Valores completos (no trunca)
-  [ ] Persiste en localStorage
-```
-
-**Si ALGUNO está sin ✅ → NO está lista la sección**
-
----
-
-## 📈 ESTADO ACTUAL DE SECCIONES
+## ESTADO ACTUAL DE SECCIONES
 
 | Secc | Hardcodeados | Constantes | Arquitectura | Estado |
 |------|--------------|-----------|--------------|--------|
-| **1** | ✅ 0 | 50+ | ⚠️ Parcial | ✅ LISTA (Hardcoded OK) |
-| **2** | ✅ 0 | 50+ | ❌ Legacy | En progreso |
-| **3** | ✅ 0 | 15+ | ✅ Completa | ✅ LISTA |
-| **4** | ✅ 0 | 40+ | ✅ Completa | ✅ LISTA |
+| **1** | ✅ 0 | 50+ | ✅ Completa | ✅ LISTA |
+| **2** | ✅ 0 | 50+ | ✅ Completa | ✅ LISTA |
+| **3** | ✅ 0 | 15+ | ⚠️ Parcial | ✅ LISTA |
+| **4** | ✅ 0 | 40+ | ⚠️ Parcial | ✅ LISTA |
 | **5-30** | ❌ 100+ | 0 | ❌ Legacy | ⏳ Pendiente |
 
 ---
 
-## 📋 GUÍA: Refactorización Completa de Secciones con Constants
+## EJEMPLO COMPLETO: Seccion 1 y 2 (ARQUITECTURA NUEVA)
 
-
+### 2.1 Seccion-Form Component (PATRON COMPLETO)
 
 ```typescript
-// 1️⃣ CAMPOS OBSERVADOS (PERSISTENCIA)
+// src/app/shared/components/seccion1/seccion1-form.component.ts
+
+// 1️⃣ IMPORTS
+import { Component, ChangeDetectorRef, Injector, ChangeDetectionStrategy, Signal, computed, effect, Input } from '@angular/core';
+import { ProjectStateFacade } from '../../../core/state/project-state.facade';
+import { BaseSectionComponent } from '../base-section.component';
+import { SECCION1_WATCHED_FIELDS, SECCION1_TEMPLATES } from './seccion1-constants';
+
+// 2️⃣ DECLARACION DEL COMPONENTE
+export class Seccion1FormComponent extends BaseSectionComponent {
+  @Input() override seccionId: string = SECCION1_SECTION_ID;
+  @Input() override modoFormulario: boolean = true;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION1_TEMPLATES = SECCION1_TEMPLATES;
+  override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
+  override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION1_WATCHED_FIELDS;
+
+  // 3️⃣ SEÑALES REACTIVAS CON createAutoSyncField (NUEVA ARQUITECTURA)
+  readonly projectName = this.createAutoSyncField('projectName', '');
+  readonly parrafoPrincipal = this.createAutoSyncField('parrafoSeccion1_principal', '');
+  readonly parrafoIntroduccion = this.createAutoSyncField('parrafoSeccion1_4', '');
+  readonly objetivosSeccion1 = this.createAutoSyncField<string[]>('objetivosSeccion1', []);
+  readonly geoInfoField = this.createAutoSyncField<any>('geoInfo', {});
+
+  // 4️⃣ SIGNALS COMPUTED PARA DATOS DERIVADOS
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
+
+  readonly projectNameSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '____';
+  });
+
+  // 5️⃣ CONSTRUCTOR
+  constructor(
+    cdRef: ChangeDetectorRef,
+    injector: Injector
+  ) {
+    super(cdRef, injector);
+    
+    // ✅ Inicializar campos desde store O fallback
+    this.inicializarCamposDesdeStore();
+  }
+
+  // 6️⃣ INICIALIZACION CON FALLBACK
+  private inicializarCamposDesdeStore(): void {
+    const parrafoPrincipalValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')() 
+      || this.obtenerTextoParrafoPrincipal();
+    this.parrafoPrincipal.update(parrafoPrincipalValue);
+    
+    const objetivosValue = this.projectFacade.selectField(this.seccionId, null, 'objetivosSeccion1')();
+    if (Array.isArray(objetivosValue) && objetivosValue.length > 0) {
+      this.objetivosSeccion1.update(objetivosValue);
+    } else {
+      this.objetivosSeccion1.update([
+        this.getObjetivoDefault(0),
+        this.getObjetivoDefault(1)
+      ]);
+    }
+  }
+
+  // 7️⃣ METODOS CRUD USANDO SEÑALES
+  agregarObjetivo(): void {
+    const actuales = this.objetivosSeccion1.value();
+    const nuevos = [...actuales, ''];
+    this.objetivosSeccion1.update(nuevos);
+    this.cdRef.markForCheck();
+  }
+
+  eliminarObjetivo(index: number): void {
+    const actuales = this.objetivosSeccion1.value();
+    if (actuales.length > 1) {
+      const nuevos = actuales.filter((_, i) => i !== index);
+      this.objetivosSeccion1.update(nuevos);
+      this.cdRef.markForCheck();
+    }
+  }
+
+  actualizarObjetivo(index: number, valor: string): void {
+    const actuales = this.objetivosSeccion1.value();
+    if (index >= 0 && index < actuales.length && actuales[index] !== valor) {
+      const nuevos = [...actuales];
+      nuevos[index] = valor;
+      this.objetivosSeccion1.update(nuevos);
+      this.cdRef.markForCheck();
+    }
+  }
+}
+```
+
+### 2.2 HTML Form Template (PATRON COMPLETO)
+
+```html
+<!-- src/app/shared/components/seccion1/seccion1-form.component.html -->
+
+<!-- ✅ Parrafo editable con signal -->
+<app-paragraph-editor
+  fieldId="parrafoSeccion1_principal"
+  [label]="SECCION1_TEMPLATES.labelParrafoPrincipal"
+  [hint]="SECCION1_TEMPLATES.hintParrafoPrincipal"
+  [rows]="8"
+  [value]="parrafoPrincipal.value()"
+  (valueChange)="parrafoPrincipal.update($event)">
+</app-paragraph-editor>
+
+<!-- ✅ Lista editable con signals -->
+<div *ngFor="let objetivo of objetivosSeccion1.value(); let i = index; trackBy: trackByIndex">
+  <input 
+    type="text" 
+    [ngModel]="objetivo"
+    (ngModelChange)="actualizarObjetivo(i, $event)"
+    [placeholder]="SECCION1_TEMPLATES.placeholderObjetivo">
+  <button (click)="eliminarObjetivo(i)">{{ SECCION1_TEMPLATES.btnEliminar }}</button>
+</div>
+<button (click)="agregarObjetivo()">{{ SECCION1_TEMPLATES.btnAgregar }}</button>
+
+<!-- ✅ Campo simple con signal -->
+<input 
+  type="text"
+  [ngModel]="projectName.value()"
+  (ngModelChange)="projectName.update($event)"
+  [placeholder]="SECCION1_TEMPLATES.placeholderProjectName">
+```
+
+### 2.3 Seccion-View Component (LECTURA REACTIVA)
+
+```typescript
+// src/app/shared/components/seccion1/seccion1-view.component.ts
+
+export class Seccion1ViewComponent extends BaseSectionComponent {
+  readonly SECCION1_TEMPLATES = SECCION1_TEMPLATES;
+
+  // ✅ Signal computado para datos
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
+
+  // ✅ Signal para mostrar texto con fallback
+  readonly parrafoPrincipalSignal: Signal<string> = computed(() => {
+    const formData = this.formDataSignal();
+    const guardado = formData['parrafoSeccion1_principal'];
+    if (guardado) return this.reemplazarPlaceholdersEnParrafo(guardado);
+    return this.obtenerTextoParrafoPrincipal();
+  });
+
+  // ✅ Para vista: retorna objetivos con reemplazo de placeholders
+  obtenerObjetivosParaVista(): string[] {
+    const proyecto = this.projectNameSignal();
+    return this.objetivosSeccion1.value().map(o => (o || '').replace(/____/g, proyecto));
+  }
+}
+```
+
+### 2.4 HTML View Template (SOLO LECTURA)
+
+```html
+<!-- src/app/shared/components/seccion1/seccion1-view.component.html -->
+
+<!-- ✅ Parrafo desde signal computado -->
+<div *ngIf="parrafoPrincipalSignal() as parrafo" 
+     class="text-justify" 
+     [innerHTML]="formatearParrafo(parrafo)">
+</div>
+
+<!-- ✅ Lista desde signal -->
+<ul>
+  <li *ngFor="let objetivo of obtenerObjetivosParaVista()">{{ objetivo }}</li>
+</ul>
+```
+
+### 2.5 Constants Completo
+
+```typescript
+// src/app/shared/components/seccion1/seccion1-constants.ts
+export const SECCION1_WATCHED_FIELDS = [
+  'projectName',
+  'parrafoSeccion1_principal',
+  'parrafoSeccion1_4',
+  'objetivosSeccion1',
+  'geoInfo',
+  'centrosPobladosJSON',
+  'comunidadesCampesinas',
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Imagen`),
+];
+
+export const SECCION1_SECTION_ID = '3.1.1';
+
+export const SECCION1_TEMPLATES = {
+  // Textos principales
+  tituloSeccion: 'Identificacion del proyecto y area de estudio',
+  labelParrafoPrincipal: 'Parrafo Principal',
+  hintParrafoPrincipal: 'Edite el texto principal del proyecto',
+  placeholderProjectName: 'Ej: Nombre del proyecto minero',
+  
+  // Labels
+  labelProjectName: 'Nombre del Proyecto',
+  labelObjetivo: 'Objetivo',
+  btnAgregar: '+ Agregar Objetivo',
+  btnEliminar: 'Eliminar',
+  
+  // Placeholders
+  placeholderObjetivo: 'Ingrese el objetivo del proyecto',
+  
+  // Fotografias
+  labelFotoTitulo: 'Titulo de la fotografia',
+  labelFotoFuente: 'Fuente',
+  labelFotoImagen: 'Imagen',
+  placeholderFotoTitulo: 'Ej: Vista del area del proyecto',
+  placeholderFotoFuente: 'Ej: GEADES, 2024',
+  tituloFotoDefault: 'Seccion 1',
+  fuenteFotoDefault: 'GEADES, 2024',
+};
+
+// Valores por defecto con template
+export const OBJETIVO_DEFAULT_1 = `El objetivo general del proyecto {projectName} es realizar actividades de exploracion minera...`;
+export const OBJETIVO_DEFAULT_2 = `Los objetivos especificos del proyecto son: analizar las caracteristicas del suelo...`;
+```
+
+### 2.6 Checklist de Validacion Final
+
+```powershell
+# Windows PowerShell:
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern 'onFieldChange' | Select-Object -ExpandProperty Line"
+
+# Verificar: 0 resultados = ✅ EXITO
+```
+
+**TODOS estos deben pasar:**
+- [ ] 0 `onFieldChange()` en TS
+- [ ] 0 hardcodeados de texto visible
+- [ ] Todos los textos en `SECCION_N_TEMPLATES`
+- [ ] `createAutoSyncField` para campos editables
+- [ ] `[value]="campo.value()"` en HTML
+- [ ] `(valueChange)="campo.update($event)"` en HTML
+- [ ] `computed()` para datos derivados
+- [ ] Inicializacion con fallback en `onInitCustom()`
+
+---
+
+## GUIA: Refactorizacion Completa de Secciones con Constants
+
+### 1. CAMPOS OBSERVADOS (PERSISTENCIA)
+
+```typescript
 export const SECCION_N_WATCHED_FIELDS = [
   'parrafoSeccionN_campo1',
   'parrafoSeccionN_campo2',
@@ -151,16 +341,22 @@ export const SECCION_N_WATCHED_FIELDS = [
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccionN${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccionN${i + 1}Imagen`),
 ];
+```
 
-// 2️⃣ CONFIGURACIÓN (METADATOS)
+### 2. CONFIGURACION (METADATOS)
+
+```typescript
 export const SECCION_N_CONFIG = {
   sectionId: '3.1.N',
-  title: 'Título de la Sección',
+  title: 'Titulo de la Seccion',
   photoPrefix: 'fotografiaSeccionN',
   maxPhotos: 10,
 };
+```
 
-// 3️⃣ TEMPLATES (TEXTOS - TODO CENTRALIZADO)
+### 3. TEMPLATES (TEXTOS - TODO CENTRALIZADO)
+
+```typescript
 export const SECCION_N_TEMPLATES = {
   // Textos principales por defecto
   introduccionDefault: '...',
@@ -174,11 +370,11 @@ export const SECCION_N_TEMPLATES = {
   placeholderCampo1: '...',
   placeholderCampo2: '...',
   
-  // Mensajes vacíos/fallback
+  // Mensajes vacios/fallback
   mensajeCampoVacio: '...',
   
-  // Fotografías (si aplica)
-  labelFotoTitulo: 'Título',
+  // Fotografias (si aplica)
+  labelFotoTitulo: 'Titulo',
   labelFotoFuente: 'Fuente',
   labelFotoImagen: 'Imagen',
 };
@@ -186,26 +382,25 @@ export const SECCION_N_TEMPLATES = {
 
 ---
 
-## 🔍 PASO 1: Auditoría - Identificar Hardcoding
+## PASO 1: Auditoria - Identificar Hardcoding
 
 ### 1.1 Buscar en Templates HTML
 
-Ejecuta en terminal desde la sección:
-```bash
-grep -r "'" src/app/shared/components/seccionN/*.html | grep -v TEMPLATES | grep -v formData | grep -v "seccionId"
-grep -r '"' src/app/shared/components/seccionN/*.html | grep -v TEMPLATES | grep -v formData | grep -v "sectionId"
+```powershell
+# Windows PowerShell:
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.html' -Pattern \"'\" | Select-Object -ExpandProperty Line"
 ```
 
-**Busca específicamente:**
+**Busca especificamente:**
 - ✅ `[labelXxx]="'Texto Hardcodeado'"`
 - ✅ `placeholder="Ej: Texto"`
 - ✅ `{{ 'Texto Fijo' }}`
-- ✅ Mensajes de error/vacío en el HTML
+- ✅ Mensajes de error/vacio en el HTML
 
-**Ejemplo - Encontrar en Sección 3:**
+**Ejemplo - Encontrar en Seccion 3:**
 ```html
 <!-- ❌ MAL (Hardcodeado):
-[labelTitulo]="'Título'"
+[labelTitulo]="'Titulo'"
 
 <!-- ✅ BIEN (Constants):
 [labelTitulo]="SECCION3_TEMPLATES.labelFotoTitulo"
@@ -213,13 +408,12 @@ grep -r '"' src/app/shared/components/seccionN/*.html | grep -v TEMPLATES | grep
 
 ### 1.2 Buscar en Componentes TypeScript
 
-```bash
-grep -r "return '" src/app/shared/components/seccionN/*.ts
-grep -r 'return "' src/app/shared/components/seccionN/*.ts
+```powershell
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern \"return '\" | Select-Object -ExpandProperty Line"
 ```
 
-**Busca específicamente:**
-- ✅ `return 'Texto largo hardcodeado'` en métodos
+**Busca especificamente:**
+- ✅ `return 'Texto largo hardcodeado'` en metodos
 - ✅ `const texto = "..."`
 - ✅ Template literals con `${...}` pero sin usar constants
 
@@ -238,15 +432,16 @@ obtenerMensaje(): string {
 
 ---
 
-## 📝 PASO 2: Crear/Completar `SECCION_N_CONSTANTS.TS`
+## PASO 2: Crear/Completar `SECCION_N_CONSTANTS.TS`
 
-### 2.1 Template Mínimo
+### 2.1 Template Minimo
+
 ```typescript
 /**
  * ✅ SECCION_N_CONSTANTS
- * Constantes centralizadas para Sección N - [Título]
+ * Constantes centralizadas para Seccion N - [Titulo]
  * - Campos observados para persistencia
- * - Configuración de sección
+ * - Configuracion de seccion
  * - Todos los textos centralizados
  */
 
@@ -256,53 +451,53 @@ export const SECCION_N_WATCHED_FIELDS = [
 
 export const SECCION_N_CONFIG = {
   sectionId: '3.1.N',
-  title: 'Título',
+  title: 'Titulo',
   photoPrefix: 'fotografiaSeccionN',
   maxPhotos: 10,
 };
 
 export const SECCION_N_TEMPLATES = {
-  // TODO: Agregar todos los textos aquí
+  // TODO: Agregar todos los textos aqui
 };
 ```
 
 ### 2.2 Categorizar Textos en Constants
 
-**Categoría 1: Textos Principales**
+**Categoria 1: Textos Principales**
 ```typescript
-introduccionDefault: `Párrafo completo...`,
-metodologiaDefault: `Párrafo completo...`,
-fuentesPrimariasDefault: `Párrafo completo...`,
+introduccionDefault: `Parrafo completo...`,
+metodologiaDefault: `Parrafo completo...`,
+fuentesPrimariasDefault: `Parrafo completo...`,
 ```
 
-**Categoría 2: Labels**
+**Categoria 2: Labels**
 ```typescript
 labelCampo1: 'Nombre del Campo',
-labelFotoTitulo: 'Título de la Fotografía',
+labelFotoTitulo: 'Titulo de la Fotografia',
 labelFotoFuente: 'Fuente',
 ```
 
-**Categoría 3: Placeholders**
+**Categoria 3: Placeholders**
 ```typescript
 placeholderCampo1: 'Ej: Ingrese valor',
-placeholderFoto: 'Ej: Fotografía de...',
+placeholderFoto: 'Ej: Fotografia de...',
 ```
 
-**Categoría 4: Mensajes Vacíos**
+**Categoria 4: Mensajes Vacios**
 ```typescript
 mensajeNoDatos: 'No hay datos registrados',
 mensajeListaVacia: 'No hay elementos',
 ```
 
-**Categoría 5: Valores por Defecto**
+**Categoria 5: Valores por Defecto**
 ```typescript
-tituloFotoDefault: 'Sección N',
+tituloFotoDefault: 'Seccion N',
 fuenteFotoDefault: 'GEADES, 2024',
 ```
 
 ---
 
-## 🔧 PASO 3: Refactorizar Templates HTML
+## PASO 3: Refactorizar Templates HTML
 
 ### 3.1 Seccion-View (Solo Lectura)
 
@@ -310,11 +505,10 @@ fuenteFotoDefault: 'GEADES, 2024',
 ```html
 <p>{{ PHOTO_PREFIX }}</p>
 <p [innerHTML]="'No hay fotog...."></p>
-[labelTitulo]="'Título'"
-{% endraw %}
+[labelTitulo]="'Titulo'"
 ```
 
-**Después:**
+**Despues:**
 ```html
 <p>{{ SECCION_N_TEMPLATES.introDefault }}</p>
 <p [innerHTML]="SECCION_N_TEMPLATES.mensajeVacio"></p>
@@ -329,7 +523,7 @@ placeholder="Ej: Nombre"
 [labelXxx]="'Etiqueta'"
 ```
 
-**Después:**
+**Despues:**
 ```html
 [placeholder]="SECCION_N_TEMPLATES.placeholderNombre"
 [labelXxx]="SECCION_N_TEMPLATES.labelXxx"
@@ -344,7 +538,7 @@ placeholder="Ej: Nombre"
 
 ---
 
-## 🔧 PASO 4: Refactorizar Componentes TypeScript
+## PASO 4: Refactorizar Componentes TypeScript
 
 ### 4.1 View Component
 
@@ -357,7 +551,7 @@ obtenerTextoMetodologia(): string {
 }
 ```
 
-**Después:**
+**Despues:**
 ```typescript
 obtenerTextoMetodologia(): string {
   const formData = this.formDataSignal();
@@ -375,7 +569,7 @@ columnasTabla = [
 ];
 ```
 
-**Después:**
+**Despues:**
 ```typescript
 columnasTabla = [
   { label: SECCION_N_TEMPLATES.labelNombre, placeholder: SECCION_N_TEMPLATES.placeholderNombre },
@@ -391,41 +585,41 @@ columnasTabla = [
 
 ---
 
-## 🎯 PASO 5: Identificar y Manejar Campos Dinámicos
+## PASO 5: Identificar y Manejar Campos Dinamicos
 
-**IMPORTANTE:** Algunos textos en párrafos y títulos contienen valores que DEBEN ser dinámicos (variables del proyecto).
+**IMPORTANTE:** Algunos textos en parrafos y titulos contienen valores que DEBEN ser dinamicos (variables del proyecto).
 
-### 5.1 Criterio para Identificar Campos Dinámicos
+### 5.1 Criterio para Identificar Campos Dinamicos
 
-Un campo es dinámico si:
+Un campo es dinamico si:
 - ✅ Contiene un nombre de grupo/centro poblado/comunidad
-- ✅ Contiene datos específicos del proyecto (proyecto, provincia, etc.)
-- ✅ Se definieron en Sección 1 o 2
-- ✅ Se reutiliza en múltiples párrafos/títulos
+- ✅ Contiene datos especificos del proyecto (proyecto, provincia, etc.)
+- ✅ Se definieron en Seccion 1 o 2
+- ✅ Se reutiliza en multiples parrafos/titulos
 - ✅ El usuario debe poder editarlo/personalizarlo
 
-### 5.2 Ejemplos de Campos Dinámicos
+### 5.2 Ejemplos de Campos Dinamicos
 
-**EJEMPLO 1 - Párrafo con Nombre de Grupo (Sección 2)**
+**EJEMPLO 1 - Parrafo con Nombre de Grupo (Seccion 2)**
 
 ❌ MALO (Hardcodeado):
 ```
-"En cuanto al área de influencia social indirecta (AISI), 
+"En cuanto al area de influencia social indirecta (AISI), 
 se ha determinado que esta se encuentra conformada por el CP Cahuacho, 
 capital distrital..."
 ```
 
 ✅ BIEN (Con placeholder):
 ```
-"En cuanto al área de influencia social indirecta (AISI), 
+"En cuanto al area de influencia social indirecta (AISI), 
 se ha determinado que esta se encuentra conformada por el CP _____, 
 capital distrital..."
 ```
 
-✅ MEJOR (Con variable dinámica):
+✅ MEJOR (Con variable dinamica):
 ```typescript
 // En constants:
-parrafoAISITemplate: `En cuanto al área de influencia social indirecta (AISI), 
+parrafoAISITemplate: `En cuanto al area de influencia social indirecta (AISI), 
 se ha determinado que esta se encuentra conformada por el CP {{nombreGrupoAISI}}, 
 capital distrital...`
 
@@ -439,55 +633,25 @@ obtenerParrafoAISI(): string {
 
 ---
 
-**EJEMPLO 2 - Título de Tabla con Nombre de Grupo (Sección 3)**
+### 5.3 Checklist de Campos Dinamicos
 
-❌ MALO (Hardcodeado):
-```
-"Cuadro N° 3.2 - PEA Ocupada según actividad económica – CP Cahuacho (2017)"
-```
+**Al refactorizar cada seccion:**
 
-✅ BIEN (Con placeholder):
-```
-"Cuadro N° 3.2 - PEA Ocupada según actividad económica – CP _____"
-```
-
-✅ MEJOR (Como template dinámico):
-```typescript
-// En constants:
-cuadroTituloTemplate: 'PEA Ocupada según actividad económica – CP {{nombreGrupo}}',
-
-// En componente (template):
-{{ cuadroTituloTemplate.replace('{{nombreGrupo}}', nombreGrupoAISI()) }}
-
-// O mejor, con Signal:
-readonly cuadroTituloFormateado = computed(() => {
-  const nombre = this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')();
-  return SECCION_N_TEMPLATES.cuadroTituloTemplate
-    .replace('{{nombreGrupo}}', nombre || '_____');
-});
-```
-
----
-
-### 5.3 Checklist de Campos Dinámicos
-
-**Al refactorizar cada sección:**
-
-- [ ] Buscar nombres específicos (ej: "Cahuacho", "CP", "provincia", "comunidad") en párrafos
-- [ ] Buscar en títulos de tablas/cuadros
-- [ ] Preguntarse: "¿Este valor debe venir de otra sección?"
-- [ ] Si SÍ → Hacerlo dinámico con template + `replace()` o Signal `computed()`
+- [ ] Buscar nombres especificos (ej: "Cahuacho", "CP", "provincia", "comunidad") en parrafos
+- [ ] Buscar en titulos de tablas/cuadros
+- [ ] Preguntarse: "¿Este valor debe venir de otra seccion?"
+- [ ] Si SÍ → Hacerlo dinamico con template + `replace()` o Signal `computed()`
 - [ ] Si NO → Centralizarlo en TEMPLATES como texto fijo
 
-**Patrón general:**
+**Patron general:**
 ```typescript
-// En TEMPLATES (con placeholder para edición manual):
-textoConPlaceholder: 'Texto ...CP _____... más texto',
+// En TEMPLATES (con placeholder para edicion manual):
+textoConPlaceholder: 'Texto ...CP _____... mas texto',
 
-// O con variable (si viene de otra sección):
-textoConVariable: 'Texto ...CP {{nombreGrupo}}... más texto',
+// O con variable (si viene de otra seccion):
+textoConVariable: 'Texto ...CP {{nombreGrupo}}... mas texto',
 
-// En componente (método):
+// En componente (metodo):
 obtenerTexto(): string {
   const nombre = this.projectFacade.selectField('3.1.2', null, 'nombreGrupo')();
   return SECCION_N_TEMPLATES.textoConVariable
@@ -497,777 +661,46 @@ obtenerTexto(): string {
 
 ---
 
-### 5.4 Campos Dinámicos Comunes por Sección
+## VALIDACION FINAL
 
-| Secc | Campo Dinámico | Origen | Ejemplo |
-|------|----------------|--------|---------|
-| 2 | Nombre Grupo AISD | Sección 2 (usuario define) | "CP Cahuacho" |
-| 2 | Nombre Grupo AISI | Sección 2 (usuario define) | "CP Mollendo" |
-| 3+ | Nombre Proyecto | Sección 1 | "Proyecto Exploración X" |
-| 3+ | CP en títulos tablas | Sección 2 | "CP _____" |
-| 3+ | Provincia | Autocompleta desde JSON | "Arequipa" |
-| 4+ | Población AISD | Sección 3 datos | "15,000 hab" |
+### Checklist de Aceptacion
+
+```powershell
+# Verificar que no haya hardcodeados en HTML:
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.html' -Pattern \"'\" | Select-Object -ExpandProperty Line" | Select-String -NotMatch "TEMPLATES"
+```
+
+**TODOS estos deben pasar:**
+- [ ] 0 hardcodeados de texto visible en TS
+- [ ] 0 hardcodeados de texto visible en HTML
+- [ ] 100% de textos en `SECCION_N_TEMPLATES`
+- [ ] `createAutoSyncField` para campos editables
+- [ ] `computed()` para datos derivados
+- [ ] Sin `onFieldChange()` legacy
+- [ ] Compila sin errores
+- [ ] Funciona en navegador
 
 ---
 
-## 🚀 ARQUITECTURA REACTIVA NUEVA - Sincronización Inmediata
+## RECURSOS ADICIONALES
 
-**CAMBIO FUNDAMENTAL:** La nueva arquitectura usa `createAutoSyncField<T>()` para lograr sincronización **INMEDIATA** entre formulario y vista (0-10ms en lugar de 100-300ms).
+### Comandos utiles (Windows PowerShell)
 
-### 6.1 Problema de la Arquitectura Antigua
+```powershell
+# Buscar onFieldChange (legacy)
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern 'onFieldChange' | Select-Object -ExpandProperty Line"
 
-```typescript
-// ❌ ANTIGUO (Lento - 100-300ms de retraso)
-// Flujo: Input → onFieldChange() → FormChangeService → ProjectFacade → Signal → Detector de cambios
+# Buscar hardcodeados en HTML
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.html' -Pattern \"'\" | Select-Object -ExpandProperty Line" | Select-String -NotMatch "TEMPLATES"
 
-export class SeccionFormComponent {
-  onFieldChange(fieldName: string, value: any) {
-    this.formChangeService.persistFields(this.seccionId, [{ fieldName, value }]);
-    // El cambio llega al estado DESPUÉS de varios pasos
-    // El componente view se actualiza solo cuando el detector de cambios corre
-  }
-}
+# Buscar return con strings
+powershell -Command "Select-String -Path 'src/app/shared/components/seccionN/*.ts' -Pattern \"return '\" | Select-Object -ExpandProperty Line"
 ```
 
-**Problemas:**
-- ⏱️ Retraso de 100-300ms entre escribir en input y ver en vista
-- 🔄 Múltiples intermediarios: Input → Method → Service → Facade → State → View
-- 📊 El detector de cambios NO se dispara automáticamente
-- 🐛 Valores truncados (ej: "paka" → "pak") por acceso a `this.datos` obsoleto
-
-### 6.2 Solución: `createAutoSyncField<T>()` en BaseSectionComponent
-
-```typescript
-// ✅ NUEVO (Rápido - 0-10ms de retraso)
-// Flujo: Input → Signal.set() → effect() → FormChangeService + DetectChanges
-
-protected createAutoSyncField<T>(fieldName: string, initialValue: T): {
-  value: Signal<T>,
-  update: (newValue: T) => void
-} {
-  const valueSignal = signal(initialValue);
-  
-  // ⚡ AUTO-PERSIST: effect() se ejecuta INMEDIATAMENTE cuando signal cambia
-  effect(() => {
-    const newValue = valueSignal();
-    
-    // 1. Persiste al estado
-    this.formChangeService.persistFields(this.seccionId, [
-      { fieldName, value: newValue }
-    ]);
-    
-    // 2. Fuerza detector de cambios (OnPush strategy)
-    this.cdRef.markForCheck();
-  });
-
-  return {
-    value: valueSignal,        // Signal síncrono para el template
-    update: (newValue: T) => valueSignal.set(newValue)  // Actualizar signal
-  };
-}
-```
-
-**Ventajas:**
-- ⚡ **INMEDIATO:** El `effect()` corre en MICROSEGUNDOS
-- 🎯 **10 líneas de lógica:** Comparado con métodos de 30+ líneas
-- 📡 **Reactive tracking:** Angular sabe qué signals se usan
-- 🔄 **Auto-sync:** No necesitas llamar manualmente a persistFields
-- ✅ **No trunca valores:** Usa signal, no `this.datos` obsoleto
-
----
-
-### 6.3 Cómo Implementar en Componentes (PASO A PASO)
-
-#### PASO 1: Declarar Signal Reactivo
-
-```typescript
-// seccionN-form.component.ts
-import { Component, Input, computed, signal, effect } from '@angular/core';
-import { BaseSectionComponent } from '../base-section.component';
-
-@Component({
-  selector: 'app-seccionN-form',
-  templateUrl: './seccionN-form.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class SeccionNFormComponent extends BaseSectionComponent {
-  @Input() seccionId: string = '3.1.N';
-
-  // ✅ NUEVO: Signal reactivo con auto-persist
-  readonly projectName = this.createAutoSyncField('projectName', '');
-  readonly provincia = this.createAutoSyncField('provincia', '');
-  readonly notas = this.createAutoSyncField('notas', '');
-
-  // Para tablas:
-  readonly tablaPersonas = this.createAutoSyncField('tablaPersonas', []);
-  readonly fotografias = this.createAutoSyncField('fotografias', []);
-}
-```
-
-#### PASO 2: Usar Signal en Template (Con ngModel)
-
-```html
-<!-- seccionN-form.component.html -->
-
-<!-- ✅ NUEVO: Binding con Signals -->
-<input 
-  [ngModel]="projectName.value()"
-  (ngModelChange)="projectName.update($event)"
-  [placeholder]="SECCION_N_TEMPLATES.placeholderNombre"
-/>
-
-<!-- Para datos más complejos -->
-<textarea 
-  [ngModel]="notas.value()"
-  (ngModelChange)="notas.update($event)"
-  [placeholder]="SECCION_N_TEMPLATES.placeholderNotas"
-></textarea>
-
-<!-- Para tablas (Array signal) -->
-<app-tabla-editable 
-  [datos]="tablaPersonas.value()"
-  (datosChange)="tablaPersonas.update($event)"
-></app-tabla-editable>
-```
-
-#### PASO 3: En Vista - Acceder a Signals Directamente
-
-```typescript
-// seccionN-view.component.ts
-export class SeccionNViewComponent extends BaseSectionComponent {
-  // ✅ Los signals viene automáticamente del estado
-  readonly projectNameSignal = computed(() => 
-    this.projectFacade.selectField(this.seccionId, null, 'projectName')()
-  );
-
-  readonly provinciaSignal = computed(() => 
-    this.projectFacade.selectField(this.seccionId, null, 'provincia')()
-  );
-
-  // Para párrafos dinámicos
-  readonly parrafoCompleto = computed(() => {
-    const nombre = this.projectNameSignal();
-    const provincia = this.provinciaSignal();
-    
-    return SECCION_N_TEMPLATES.introTemplate
-      .replace('{{nombre}}', nombre || '_____')
-      .replace('{{provincia}}', provincia || '_____');
-  });
-}
-```
-
-```html
-<!-- seccionN-view.component.html -->
-<p>{{ parrafoCompleto() }}</p>
-<p>Proyecto: {{ projectNameSignal() }}</p>
-<p>Provincia: {{ provinciaSignal() }}</p>
-```
-
----
-
-### 6.4 Comparativa: Arquitectura Antigua vs Nueva
-
-| Aspecto | ❌ ANTIGUA | ✅ NUEVA |
-|---------|-----------|----------|
-| **Flujo** | Input → Method → Service → Facade → State → Detector | Input → Signal.set() → effect() |
-| **Latencia** | 100-300ms | 0-10ms ⚡ |
-| **Líneas de código** | 30-50 por field | 1 por field |
-| **Truncación de valores** | Sí ("paka" → "pak") | No ✅ |
-| **Auto-persist** | Manual (`onFieldChange()`) | Automático (effect) |
-| **Auto-detectChanges** | No | Sí (dentro effect) |
-| **Reactividad cruzada** | Lenta | Instantánea |
-| **DX (Developer Experience)** | Complejo | Simple |
-
-**Ejemplo lado a lado:**
-
-❌ ANTIGUA - 40 líneas:
-```typescript
-export class SeccionNFormComponent {
-  projectName: any;
-  updateLegacyData: boolean = false;
-
-  onFieldChange(fieldName: string, value: any) {
-    this.projectName = value;
-    this.updateLegacyData = true;
-    
-    this.formChangeService.persistFields(this.seccionId, [
-      { fieldName, value }
-    ]);
-    
-    this.cdRef.markForCheck();
-    
-    setTimeout(() => {
-      this.projectFacade.dispatch({
-        type: 'field/update',
-        payload: { sectionId: this.seccionId, fieldName, value }
-      });
-    }, 50);
-  }
-
-  ngOnInit() {
-    this.stateSubscription = this.projectFacade.select(
-      Selectors.getField(this.seccionId, fieldName)
-    ).subscribe(value => {
-      this.projectName = value;
-      this.cdRef.markForCheck();
-    });
-  }
-
-  ngOnDestroy() {
-    this.stateSubscription?.unsubscribe();
-  }
-}
-```
-
-✅ NUEVA - 3 líneas:
-```typescript
-export class SeccionNFormComponent extends BaseSectionComponent {
-  readonly projectName = this.createAutoSyncField('projectName', '');
-  readonly provincia = this.createAutoSyncField('provincia', '');
-}
-```
-
----
-
-### 6.5 Checklist de Implementación - Arquitectura Reactiva
-
-```
-PREPARACIÓN
-  [ ] BaseSectionComponent tiene createAutoSyncField<T>() importado y declarado
-  [ ] Componentes extienden BaseSectionComponent
-  [ ] FormChangeService inyectado en base
-  [ ] ChangeDetectorRef inyectado en base
-
-FORM COMPONENT
-  [ ] Declara Signals: readonly campo1 = this.createAutoSyncField('campo1', initialValue)
-  [ ] Template usa [ngModel]="campo1.value()" + (ngModelChange)="campo1.update($event)"
-  [ ] No hay onFieldChange() manuales
-  [ ] No hay setTimeout para sync
-  [ ] NO hay stateSubscription en ngOnDestroy
-
-VIEW COMPONENT  
-  [ ] Declara readonly signals con computed() desde projectFacade
-  [ ] Template accede con campo1Signal()
-  [ ] Tabla, párrafos usan computed() para formatos dinámicos
-  [ ] NO accede a this.datos (obsoleto)
-
-TESTING
-  [ ] Input cambia → view se actualiza en < 20ms
-  [ ] valores completos (sin truncación)
-  [ ] cambios persisten en localStorage
-  [ ] Cambiar en forma → ver en vista (OK)
-  [ ] Cambiar en vista → ver en form (OK - si es editable)
-
-VALIDACIÓN
-  [ ] npm start compila sin errores ✅
-  [ ] grep de "onFieldChange" = 0 resultados
-  [ ] grep de "stateSubscription" = 0 resultados
-  [ ] grep de "setTimeout" = 0 resultados
-  [ ] Performance: sin retrasos observables
-```
-
----
-
-### 6.6 Patrón Completo: Sección Refactorizada
-
-**Archivo:** `seccionN-constants.ts`
-```typescript
-export const SECCION_N_WATCHED_FIELDS = [
-  'nombreProyecto',
-  'provincia',
-  'notas',
-  'tablaPersonas',
-];
-
-export const SECCION_N_CONFIG = {
-  sectionId: '3.1.N',
-  title: 'Sección N',
-};
-
-export const SECCION_N_TEMPLATES = {
-  placeholderNombre: 'Ingrese nombre del proyecto',
-  placeholderProvincia: 'Seleccione provincia',
-  placeholderNotas: 'Notas adicionales...',
-  introTemplate: 'El proyecto {{nombre}} está ubicado en {{provincia}}...',
-  tituloTabla: 'Datos de {{provincia}}',
-};
-```
-
-**Archivo:** `seccionN-form.component.ts`
-```typescript
-@Component({
-  selector: 'app-seccionN-form',
-  templateUrl: './seccionN-form.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class SeccionNFormComponent extends BaseSectionComponent implements OnInit {
-  @Input() override seccionId: string = '3.1.N';
-
-  // ✅ NUEVO: Signals reactivos con auto-persist (EN 1 LÍNEA C/U)
-  readonly nombreProyecto = this.createAutoSyncField('nombreProyecto', '');
-  readonly provincia = this.createAutoSyncField('provincia', '');
-  readonly notas = this.createAutoSyncField('notas', '');
-  readonly tablaPersonas = this.createAutoSyncField('tablaPersonas', []);
-
-  readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
-
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, public formChangeService: FormChangeService) {
-    super(cdRef, injector);
-  }
-
-  ngOnInit() {
-    this.initializeBaseComponent(this.seccionId);
-    // Los signals se sincronizan AUTOMÁTICAMENTE
-  }
-}
-```
-
-**Archivo:** `seccionN-form.component.html`
-```html
-<div class="form-section">
-  <div class="form-group">
-    <label>{{ SECCION_N_TEMPLATES.labelNombre }}</label>
-    <input 
-      [ngModel]="nombreProyecto.value()"
-      (ngModelChange)="nombreProyecto.update($event)"
-      [placeholder]="SECCION_N_TEMPLATES.placeholderNombre"
-      class="form-control"
-    />
-  </div>
-
-  <div class="form-group">
-    <label>{{ SECCION_N_TEMPLATES.labelProvincia }}</label>
-    <select
-      [ngModel]="provincia.value()"
-      (ngModelChange)="provincia.update($event)"
-      class="form-control"
-    >
-      <option value="">Seleccione...</option>
-      <option value="Arequipa">Arequipa</option>
-      <option value="Lima">Lima</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label>{{ SECCION_N_TEMPLATES.labelNotas }}</label>
-    <textarea
-      [ngModel]="notas.value()"
-      (ngModelChange)="notas.update($event)"
-      [placeholder]="SECCION_N_TEMPLATES.placeholderNotas"
-      class="form-control"
-      rows="4"
-    ></textarea>
-  </div>
-</div>
-```
-
-**Archivo:** `seccionN-view.component.ts`
-```typescript
-@Component({
-  selector: 'app-seccionN-view',
-  templateUrl: './seccionN-view.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class SeccionNViewComponent extends BaseSectionComponent {
-  @Input() override seccionId: string = '3.1.N';
-
-  readonly SECCION_N_TEMPLATES = SECCION_N_TEMPLATES;
-
-  // ✅ Signals para acceder a datos (automáticamente desde estado)
-  readonly nombreProyectoSignal = computed(() =>
-    this.projectFacade.selectField(this.seccionId, null, 'nombreProyecto')() || '_____'
-  );
-
-  readonly provinciaSignal = computed(() =>
-    this.projectFacade.selectField(this.seccionId, null, 'provincia')() || '_____'
-  );
-
-  readonly tablaPersonasSignal = computed(() =>
-    this.projectFacade.selectField(this.seccionId, null, 'tablaPersonas')() || []
-  );
-
-  // ✅ Párrafo dinámico con placeholders reemplazados
-  readonly parrafoIntroFormateado = computed(() => {
-    const nombre = this.nombreProyectoSignal();
-    const provincia = this.provinciaSignal();
-    
-    return SECCION_N_TEMPLATES.introTemplate
-      .replace('{{nombre}}', nombre)
-      .replace('{{provincia}}', provincia);
-  });
-
-  // ✅ Títulos dinámicos
-  readonly tituloTablaFormateado = computed(() => {
-    const provincia = this.provinciaSignal();
-    return SECCION_N_TEMPLATES.tituloTabla
-      .replace('{{provincia}}', provincia);
-  });
-}
-```
-
-**Archivo:** `seccionN-view.component.html`
-```html
-<div class="section-view">
-  <div class="intro">
-    <p class="text-justify">{{ parrafoIntroFormateado() }}</p>
-  </div>
-
-  <div class="metadata">
-    <p><strong>Proyecto:</strong> {{ nombreProyectoSignal() }}</p>
-    <p><strong>Provincia:</strong> {{ provinciaSignal() }}</p>
-  </div>
-
-  <div class="table-section" *ngIf="(tablaPersonasSignal() | async as personas)">
-    <h3>{{ tituloTablaFormateado() }}</h3>
-    <app-table-viewer 
-      [datos]="personas"
-      [columns]="['nombre', 'cargo', 'contacto']"
-    ></app-table-viewer>
-  </div>
-</div>
-```
-
----
-
-### 6.7 Migración Paso a Paso - De Antigua a Nueva
-
-**Antes de empezar:** Hacer backup (`git commit`)
-
-**Paso 1.** Reemplazar `onFieldChange()` → `createAutoSyncField()`
-
-```typescript
-// ❌ ANTES:
-onNombreChange(value: string) {
-  this.nombre = value;
-  this.formChangeService.persistFields(...);
-  this.cdRef.markForCheck();
-}
-
-// ✅ DESPUÉS:
-readonly nombre = this.createAutoSyncField('nombre', '');
-```
-
-**Paso 2.** Cambiar Template - [value]/(input) → [ngModel]/(ngModelChange)
-
-```html
-<!-- ❌ ANTES: -->
-<input [value]="nombre" (input)="onNombreChange($event.target.value)" />
-
-<!-- ✅ DESPUÉS: -->
-<input [ngModel]="nombre.value()" (ngModelChange)="nombre.update($event)" />
-```
-
-**Paso 3.** Remover stateSubscription
-
-```typescript
-// ❌ ANTES:
-ngOnInit() {
-  this.stateSubscription = this.projectFacade.select(...).subscribe(v => { ... });
-}
-
-ngOnDestroy() {
-  this.stateSubscription?.unsubscribe();
-}
-
-// ✅ DESPUÉS:
-ngOnInit() {
-  this.initializeBaseComponent(this.seccionId);
-  // Nada más - los signals se sincronizan automáticamente
-}
-
-ngOnDestroy() {
-  this.onDestroyCustom?.();
-}
-```
-
-**Paso 4.** Cambiar View - `this.datos` → `computed signals`
-
-```typescript
-// ❌ ANTES:
-obtenerTexto(): string {
-  return this.datos?.nombre || '_____';
-}
-
-// ✅ DESPUÉS:
-readonly nombreSignal = computed(() =>
-  this.projectFacade.selectField(this.seccionId, null, 'nombre')() || '_____'
-);
-
-obtenerTexto(): string {
-  return this.nombreSignal();
-}
-```
-
----
-
-### 6.8 Ventajas Observables Después de Migración
-
-| Métrica | Antes | Después |
-|---------|-------|---------|
-| Latencia form→view | 150-300ms | 0-10ms |
-| Líneas de código/field | 30-50 | 1 |
-| Memoria (subscriptions) | 1+ per field | 0 |
-| Complejidad | Alta | Baja |
-| Sincronización cross-section | Lenta | Instantánea |
-| Truncación de valores | Sí | No ✅ |
-| Developer experience | Confuso | Intuitivo |
-
----
-
-## ✅ VALIDACIÓN FINAL
-
-### 5.1 Checklist de Compilación
-
-```bash
-npm start
-# Ver que compila sin errores ✅
-```
-
-### 5.2 Checklist de Funcionalidad
-
-- [ ] Vista carga correctamente con todos textos
-- [ ] Formulario renderiza sin errores
-- [ ] Tablas dinámicas funcionan
-- [ ] Fotografías cargan correctamente
-- [ ] Mensajes de error/vacío se muestran
-
-### 5.3 Verificación de Cero Hardcoding
-
-```bash
-# Ejecutar auditoría final
-grep -r "'" src/app/shared/components/seccionN/ | grep -v TEMPLATES | grep -v "seccionId" | grep -v "true\|false"
-
-# Si NO hay resultados → ✅ CERO HARDCODING
-```
-
----
-
-## 📋 Checklist Completo de Refactorización
-
-```
-AUDITORÍA (PASO 1)
-  [ ] Identificar todos los textos hardcodeados en HTML
-  [ ] Identificar todos los textos hardcodeados en TS
-  [ ] Documentar cada one en un listado
-  [ ] ⚡ IDENTIFICAR CAMPOS DINÁMICOS (nombres, proyectos, etc.)
-
-CONSTANTS (PASO 2)
-  [ ] Crear estructura base (WATCHED_FIELDS, CONFIG, TEMPLATES)
-  [ ] Agregar textos principales (intro, metodología, etc.)
-  [ ] Agregar labels
-  [ ] Agregar placeholders
-  [ ] Agregar mensajes vacíos
-  [ ] Agregar valores por defecto (fotos)
-  [ ] ⚡ Agregar templates con placeholders {{...}} para campos dinámicos
-
-HTML (PASO 3)
-  [ ] View: Reemplazar [label*]="'...'"
-  [ ] View: Reemplazar placeholder="..."
-  [ ] View: Reemplazar {{ 'Texto' }}
-  [ ] Form: Reemplazar [label*]="'...'"
-  [ ] Form: Reemplazar placeholder="..."
-  [ ] Form: Reemplazar argumentos en componentes
-  [ ] ⚡ Párrafos: Usar {{signal}} para campos dinámicos
-  [ ] ⚡ Títulos: Usar computed() para títulos con variables
-
-TYPESCRIPT (PASO 4)
-  [ ] Importar SECCION_N_TEMPLATES
-  [ ] Crear propiedad readonly en componentes
-  [ ] Reemplazar returns hardcodeados
-  [ ] Reemplazar labels en columnasTabla[]
-  [ ] ⚡ Crear methods/computeds para reemplazar {{variables}} en templates
-  [ ] ⚡ Usar .replace() para sustituir placeholders
-
-VALIDACIÓN (PASO 5)
-  [ ] Compila sin errores (npm start)
-  [ ] Vista funciona correctamente
-  [ ] Formulario funciona correctamente
-  [ ] Grep final: CERO hardcoding
-  [ ] ⚡ Campos dinámicos se llenan correctamente (no muestran {{placeholder}})
-  [ ] ⚡ Cambiar valor en Sección 2 → se refleja en secciones posteriores
-```
-
----
-
-## 🎯 Ejemplo Práctico: Sección 3 (YA COMPLETADA)
-
-**Arquivos modificados:**
-- ✅ `seccion3-constants.ts` → 15+ templates centralizados
-- ✅ `seccion3-view.component.html` → 7 reemplazos
-- ✅ `seccion3-view.component.ts` → 3 métodos actualizados
-- ✅ `seccion3-form.component.html` → 8 reemplazos
-
-**Resultado:**
-```
-Textosources privados: 0
-Hardcoded labels: 0
-Hardcoded placeholders: 0
-Hardcoded messages: 0
-```
-
----
-
-## 🚀 Próximas Secciones
-
-**Orden recomendado (dependencias):**
-1. ✅ **Sección 1** (Ubicación del Proyecto) - COMPLETADA
-   - Define: proyecto, ubicación geográfica
-   - Usado por: todas las secciones
-
-2. ⚡ **Sección 2** (Delimitación de Áreas AISD/AISI) - CRÍTICA
-   - Define: nombres de grupos, comunidades, centros poblados
-   - ⚠️ **IMPORTANTE:** Agregar campos a WATCHED_FIELDS para persistir nombres
-   - Usado por: secciones 3, 4, 5, ... (títulos, párrafos)
-
-3. ⚡ **Sección 3+** (Resto)
-   - Leen nombres de Sección 2 con `selectField()`
-   - Usan templates con `{{nombreGrupo}}` 
-   - Aplican `.replace()` para reemplazar placeholders
-
-**Ejemplo flujo dinámico:**
-```
-Sección 2: Usuario define → "CP Cahuacho" (guardado en projectState)
-           ↓
-Sección 3: Lee nombre → "PEA Ocupada según actividad económica – CP Cahuacho"
-Sección 4: Lee nombre → "En el CP Cahuacho se registran..."
-Sección 5: Lee nombre → "...interacción con Cahuacho..."
-```
-
----
-
-## � Patrones de Implementación - Campos Dinámicos
-
-### Patrón 1: Método Simple con .replace()
-
-```typescript
-// En SECCION_N_CONSTANTS.ts:
-parrafoAISI: `En cuanto al área de influencia social indirecta (AISI), 
-se ha determinado que esta se encuentra conformada por el CP {{grupoAISI}}, 
-capital distrital de la jurisdicción...`,
-
-// En seccionN-view.component.ts:
-obtenerParrafoAISI(): string {
-  const grupoAISI = this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')();
-  return SECCION_N_TEMPLATES.parrafoAISI
-    .replace('{{grupoAISI}}', grupoAISI || '_____');
-}
-
-// En template:
-<div class="text-justify">{{ obtenerParrafoAISI() }}</div>
-```
-
----
-
-### Patrón 2: Signal Computed (Más Eficiente)
-
-```typescript
-// En seccionN-view.component.ts:
-readonly grupoAISISignal: Signal<string> = computed(() => 
-  this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')() || '_____'
-);
-
-readonly parrafoAISIFormateado: Signal<string> = computed(() => 
-  SECCION_N_TEMPLATES.parrafoAISI
-    .replace('{{grupoAISI}}', this.grupoAISISignal())
-);
-
-// En template (más simple):
-<div class="text-justify">{{ parrafoAISIFormateado() }}</div>
-```
-
----
-
-### Patrón 3: Para Títulos de Tablas
-
-```typescript
-// En SECCION_N_CONSTANTS.ts:
-cuadroTituloTemplate: 'PEA Ocupada según actividad económica – CP {{grupoAISI}}',
-
-// En seccionN-form.component.ts:
-readonly cuadroTituloFormateado: Signal<string> = computed(() => {
-  const grupoAISI = this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')();
-  return SECCION_N_TEMPLATES.cuadroTituloTemplate
-    .replace('{{grupoAISI}}', grupoAISI || '_____');
-});
-
-// En template:
-<app-table-wrapper [title]="cuadroTituloFormateado()">
-  <!-- contenido tabla -->
-</app-table-wrapper>
-```
-
----
-
-### Patrón 4: Múltiples Placeholders en un Template
-
-```typescript
-// En SECCION_N_CONSTANTS.ts:
-analisisCompletoTemplate: `El CP {{grupoAISI}} ubicado en {{provincia}}, {{departamento}}, 
-presenta una población de {{poblacion}} habitantes. El proyecto {{nombreProyecto}} 
-interactuará principalmente con {{grupoAISI}}.`,
-
-// En seccionN-view.component.ts:
-obtenerAnalisisCompleto(): string {
-  const grupoAISI = this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')() || '_____';
-  const provincia = this.projectFacade.selectField('3.1.1', null, 'provinciaSeleccionada')() || '_____';
-  const departamento = this.projectFacade.selectField('3.1.1', null, 'departamentoSeleccionado')() || '_____';
-  const poblacion = this.projectFacade.selectField('3.1.3', null, 'poblacionTotal')() || '_____';
-  const nombreProyecto = this.projectFacade.selectField('3.1.1', null, 'projectName')() || '_____';
-
-  return SECCION_N_TEMPLATES.analisisCompletoTemplate
-    .replace('{{grupoAISI}}', grupoAISI)
-    .replace('{{provincia}}', provincia)
-    .replace('{{departamento}}', departamento)
-    .replace('{{poblacion}}', poblacion)
-    .replace('{{nombreProyecto}}', nombreProyecto);
-}
-
-// En template:
-<p class="text-justify">{{ obtenerAnalisisCompleto() }}</p>
-```
-
----
-
-### Patrón 5: En Método Fallback (Si usuario no captura dato)
-
-```typescript
-// En seccionN-view.component.ts:
-obtenerTextoMetodologia(): string {
-  const formData = this.formDataSignal();
-  
-  // Si usuario capturó dato personalizado, usarlo
-  if (formData['parrafoSeccionN_metodologia']) {
-    return formData['parrafoSeccionN_metodologia'];
-  }
-
-  // Si no, usar template dinámico con valores por defecto
-  const grupoAISI = this.projectFacade.selectField('3.1.2', null, 'nombreGrupoAISI')() || '_____';
-  return SECCION_N_TEMPLATES.metodologiaDefaultFallback
-    .replace('{{grupoAISI}}', grupoAISI);
-}
-```
-
----
-
-
-
-**Buscar rápido en VS Code:**
-```
-Ctrl+Shift+F → Buscar en carpeta
-"'" 
--TEMPLATES
-```
-
-**Reemplazar múltiple (Multi-Replace):**
-1. `multi_replace_string_in_file` para cambios coordinados
-2. Incluir 3-5 líneas de contexto antes/después
-
-**Validar cambios:**
-```bash
-npm start  # Compilar
-npm test   # Tests unitarios (si existen)
-```
-
----
-
-**Versión:** 1.0 | **Fecha:** 12/02/2026 | **Patrón:** SECCION3_TEMPLATES
+### Archivos de referencia
+- `seccion1-constants.ts` - 100% refactorizada
+- `seccion2-constants.ts` - 100% refactorizada
+- `seccion1-form.component.ts` - Arquitectura nueva
+- `seccion1-view.component.ts` - Arquitectura nueva
+- `seccion2-form.component.ts` - Arquitectura nueva
+- `seccion2-view.component.ts` - Arquitectura nueva

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { SECCION6_COLUMNAS_POBLACION_SEXO, SECCION6_COLUMNAS_POBLACION_ETARIO, SECCION6_TABLA_POBLACION_SEXO_CONFIG, SECCION6_TABLA_POBLACION_ETARIO_CONFIG } from './seccion6-constants';
+import { SECCION6_COLUMNAS_POBLACION_SEXO, SECCION6_COLUMNAS_POBLACION_ETARIO, SECCION6_TABLA_POBLACION_SEXO_CONFIG, SECCION6_TABLA_POBLACION_ETARIO_CONFIG, SECCION6_TEMPLATES, SECCION6_CONFIG, SECCION6_WATCHED_FIELDS } from './seccion6-constants';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -22,17 +22,17 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion6FormComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.2';
+  @Input() override seccionId: string = SECCION6_CONFIG.sectionId;
   
-  override readonly PHOTO_PREFIX = 'fotografiaDemografia';
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION6_TEMPLATES = SECCION6_TEMPLATES;
+  
+  override readonly PHOTO_PREFIX = SECCION6_CONFIG.photoPrefix;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION6_WATCHED_FIELDS;
 
   // ✅ Signal de prefijo de grupo AISD
   readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
-
-  override watchedFields: string[] = [
-    'grupoAISD'
-  ];
 
   poblacionSexoConfig: TableConfig = SECCION6_TABLA_POBLACION_SEXO_CONFIG;
   poblacionEtarioConfig: TableConfig = SECCION6_TABLA_POBLACION_ETARIO_CONFIG;
@@ -420,30 +420,21 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     this.guardarTodosLosGrupos();
     super.ngOnDestroy();
   }
-
-  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  // ✅ MÉTODOS INLINE DE TEXTO (usando TEMPLATES)
   obtenerTextoPoblacionSexo(datos: any, nombreComunidad: string): string {
-    if (!datos || !nombreComunidad || nombreComunidad === '____') {
-      return `Respecto a la población de la CC ___, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___).`;
-    }
-
     const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionSexoAISD', this.seccionId);
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
-      return textoPersonalizado.replace(/___/, nombreComunidad);
+      return textoPersonalizado.replace(/{COMUNIDAD}/g, nombreComunidad || '____');
     }
-    return `Respecto a la población de la CC ${nombreComunidad}, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de ___ habitantes que residen permanentemente en la comunidad. De este conjunto, el ___ son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos (___)`.replace(/___/, nombreComunidad);
+    return SECCION6_TEMPLATES.textoPoblacionSexoDefault.replace(/{COMUNIDAD}/g, nombreComunidad || '____');
   }
 
   obtenerTextoPoblacionEtario(datos: any, nombreComunidad: string): string {
-    if (!datos || !nombreComunidad || nombreComunidad === '____') {
-      return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ___ es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
-    }
-
     const textoPersonalizado = PrefijoHelper.obtenerValorConPrefijo(datos, 'textoPoblacionEtarioAISD', this.seccionId);
     if (textoPersonalizado && textoPersonalizado.trim() !== '' && textoPersonalizado !== '____') {
-      return textoPersonalizado.replace(/___/, nombreComunidad);
+      return textoPersonalizado.replace(/{COMUNIDAD}/g, nombreComunidad || '____');
     }
-    return `En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC ${nombreComunidad} es el de ___ años, puesto que representa el ___ de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de ___ años (___). Por otro lado, el conjunto minoritario está conformado por la población de ___ años a más, pues solo representa el ___.`;
+    return SECCION6_TEMPLATES.textoPoblacionEtarioDefault.replace(/{COMUNIDAD}/g, nombreComunidad || '____');
   }
 }
 

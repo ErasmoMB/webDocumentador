@@ -1,17 +1,17 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.9. Indicadores de salud</h4>
+    <h4 class="section-title">{{ SECCION13_TEMPLATES.tituloSeccion }}</h4>
     
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">a. Natalidad y Mortalidad</h4>
+      <h4 class="section-title">{{ SECCION13_TEMPLATES.labelNatalidadMortalidad }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION13_TEMPLATES.labelEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="parrafoSeccion13_natalidad_mortalidad_completo"
-          label="Natalidad y Mortalidad - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION13_TEMPLATES.labelParrafoNatalidadMortalidad"
+          [hint]="SECCION13_TEMPLATES.hintParrafo"
           [rows]="4"
           [value]="obtenerTextoSeccion13NatalidadMortalidadCompleto()"
           (valueChange)="onFieldChange('parrafoSeccion13_natalidad_mortalidad_completo', $event)">
@@ -19,14 +19,14 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION13_TEMPLATES.labelTituloDelCuadro }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroTituloNatalidadMortalidad'] || 'Indicadores de natalidad y mortalidad – CC ' + (obtenerNombreComunidadActual())"
+          [value]="datos['cuadroTituloNatalidadMortalidad'] || obtenerTituloCuadroNatalidad()"
           (change)="onFieldChange('cuadroTituloNatalidadMortalidad', $any($event.target).value, { refresh: true })" />
 
-        <label class="label mt-md">Tabla Natalidad y Mortalidad</label>
+        <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaNatalidadMortalidad }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="natalidadMortalidadConfigSignal()"
@@ -37,25 +37,25 @@
           (tableUpdated)="onNatalidadMortalidadTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-sm">Fuente</label>
+        <label class="label mt-sm">{{ SECCION13_TEMPLATES.labelFuente }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroFuenteNatalidadMortalidad'] || 'GEADES (2024)'"
+          [value]="datos['cuadroFuenteNatalidadMortalidad'] || obtenerFuenteCuadroNatalidad()"
           (change)="onFieldChange('cuadroFuenteNatalidadMortalidad', $any($event.target).value, { refresh: true })" />
       </div>
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Morbilidad</h4>
+      <h4 class="section-title">{{ SECCION13_TEMPLATES.labelMorbilidad }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION13_TEMPLATES.labelEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="parrafoSeccion13_morbilidad_completo"
-          label="Morbilidad - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION13_TEMPLATES.labelParrafoMorbilidad"
+          [hint]="SECCION13_TEMPLATES.hintParrafo"
           [rows]="6"
           [value]="obtenerTextoSeccion13MorbilidadCompleto()"
           (valueChange)="onFieldChange('parrafoSeccion13_morbilidad_completo', $event)">
@@ -63,14 +63,14 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION13_TEMPLATES.labelTituloDelCuadro }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroTituloMorbilidad'] || 'Casos por grupos de morbilidad – Distrito ' + (datos.distritoSeleccionado || '____') + ' (2023)'"
+          [value]="datos['cuadroTituloMorbilidad'] || obtenerTituloCuadroMorbilidad()"
           (change)="onFieldChange('cuadroTituloMorbilidad', $any($event.target).value, { refresh: true })" />
 
-        <label class="label mt-md">Tabla Morbilidad</label>
+        <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaMorbilidad }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="morbilidadConfigSignal()"
@@ -81,25 +81,25 @@
           (tableUpdated)="onMorbilidadTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-sm">Fuente</label>
+        <label class="label mt-sm">{{ SECCION13_TEMPLATES.labelFuente }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroFuenteMorbilidad'] || 'REUNIS (2024)'"
+          [value]="datos['cuadroFuenteMorbilidad'] || obtenerFuenteCuadroMorbilidad()"
           (change)="onFieldChange('cuadroFuenteMorbilidad', $any($event.target).value, { refresh: true })" />
       </div>
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">c. Población afiliada a Seguros de Salud</h4>
+      <h4 class="section-title">{{ SECCION13_TEMPLATES.labelAfiliacionSalud }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION13_TEMPLATES.labelEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoAfiliacionSalud"
-          label="Afiliación a Seguros de Salud - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION13_TEMPLATES.labelParrafoAfiliacionSalud"
+          [hint]="SECCION13_TEMPLATES.hintParrafo"
           [rows]="3"
           [value]="obtenerTextoAfiliacionSalud()"
           (valueChange)="onFieldChange('textoAfiliacionSalud', $event)">
@@ -107,14 +107,14 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION13_TEMPLATES.labelTituloDelCuadro }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroTituloAfiliacionSalud'] || 'Población según tipo de seguro de salud afiliado – CC ' + (obtenerNombreComunidadActual()) + ' (2017)'"
+          [value]="datos['cuadroTituloAfiliacionSalud'] || obtenerTituloCuadroAfiliacion()"
           (change)="onFieldChange('cuadroTituloAfiliacionSalud', $any($event.target).value, { refresh: true })" />
 
-        <label class="label mt-md">Tabla Afiliación a Seguros de Salud</label>
+        <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaAfiliacionSalud }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="afiliacionSaludConfigSignal()"
@@ -125,26 +125,26 @@
           (tableUpdated)="onAfiliacionSaludTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-sm">Fuente</label>
+        <label class="label mt-sm">{{ SECCION13_TEMPLATES.labelFuente }}</label>
         <input
           type="text"
           class="form-control"
-          [value]="datos['cuadroFuenteAfiliacionSalud'] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+          [value]="datos['cuadroFuenteAfiliacionSalud'] || obtenerFuenteCuadroAfiliacion()"
           (change)="onFieldChange('cuadroFuenteAfiliacionSalud', $any($event.target).value, { refresh: true })" />
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Indicadores de Salud</label>
+        <label class="label">{{ SECCION13_TEMPLATES.labelFotos }}</label>
         <app-image-upload
           [fotografias]="fotografiasFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Indicadores de Salud"
-          placeholderFuente="Ej: GEADES, 2024"
+          [labelTitulo]="SECCION13_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION13_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION13_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION13_TEMPLATES.placeholderFotoTitulo"
+          [placeholderFuente]="SECCION13_TEMPLATES.placeholderFotoFuente"
           tituloDefault="Indicadores de Salud"
           fuenteDefault="GEADES, 2024"
           [requerido]="false"

@@ -274,7 +274,97 @@ onTablaUpdated(tabla: any[]): void {
 
 ---
 
+## Error 3: Campo Editable (Título de Cuadro) No Se Sincroniza Entre Formulario y Vista
+
+**Síntoma:**
+- Editas el título del cuadro en el **formulario** (input text)
+- El cambio se guarda ✅ (en el store)
+- **PERO** el título NO se actualiza en la **vista** (view component)
+- Tienes que recargar la página (F5) para verlo actualizado
+
+**Sección Afectada:**
+- ❌ Sección 5: **NO se sincronizaba** - Título guardado pero no mostrado en vista (12/02/2026)
+
+**Causa Raíz:**
+
+Las vistas y formularios guardan campos con **prefijo dinámico** (ej: `tituloInstituciones_A1` para grupo A1, `tituloInstituciones_A2` para grupo A2).
+
+El problema ocurre cuando:
+1. El formulario guarda: `projectFacade.setField(..., 'tituloInstituciones' + obtenerPrefijoGrupo(), ...)`
+   - Resultado: `tituloInstituciones_A1`
+2. La vista HTML lee: `datos.tituloInstituciones` (SIN prefijo)
+   - Resultado: lee undefined, usa default
+
+### ❌ INCORRECTO (Sección 5 - Vista):
+```html
+<app-table-wrapper [title]="datos.tituloInstituciones || SECCION5_TEMPLATES.labelInstituciones.replace(...)" ...>
+```
+
+**Problema:** 
+- `datos.tituloInstituciones` está vacío porque se guardó como `datos.tituloInstituciones_A1`
+- El binding siempre usa el default template, nunca el valor editado
+
+### ✅ CORRECTO (Sección 5 - Vista):
+```html
+<app-table-wrapper [title]="viewModel().titulo || SECCION5_TEMPLATES.labelInstituciones.replace(...)" ...>
+```
+
+Y en el componente TypeScript, el `viewModel` computed debe resolver el prefijo:
+
+```typescript
+return {
+  // ...
+  titulo: data[`tituloInstituciones${prefijo}`] || data['tituloInstituciones'] || '',
+  fuente: data[`fuenteInstituciones${prefijo}`] || data['fuenteInstituciones'] || ''
+};
+```
+
+**Por qué funciona:**
+- `viewModel().titulo` busca PRIMERO con prefijo (`_A1`, `_A2`, etc.)
+- Si no encuentra, busca SIN prefijo (retrocompatibilidad)
+- Si tampoco, usa string vacío (fallback)
+- Así siempre lee el valor correcto que el formulario guardó
+
+---
+
+## Solución - Campos Editables con Prefijo
+
+**Checklist al leer campos en vista con valores guardados en formulario:**
+
+```
+[ ] 1. Identificar si el campo se guarda CON prefijo en formulario
+       [ ] Buscar: projectFacade.setField(..., 'nombreCampo' + obtenerPrefijoGrupo(), ...)
+       [ ] Si SÍ tiene prefijo → continuar
+[ ] 2. En view.component.ts crear computed viewModel() que resuelva prefijo
+       [ ] Incluir: data[`nombreCampo${prefijo}`] || data['nombreCampo'] || ''
+[ ] 3. En view.component.html reemplazar:
+       [ ] ❌ [binding]="datos.nombreCampo"
+       [ ] ✅ [binding]="viewModel().nombreCampo"
+[ ] 4. Test: Edita en formulario → cambio aparece INMEDIATAMENTE en vista
+```
+
+**Patrón General para Cualquier Campo with Prefijo:**
+
+```typescript
+// view.component.ts
+this.viewModel = computed(() => {
+  const data = this.formDataSignal();
+  const prefijo = this.obtenerPrefijoGrupo();
+  
+  return {
+    // Resolver TODOS los campos que se guardan con prefijo:
+    tituloTabla: data[`tituloTabla${prefijo}`] || data['tituloTabla'] || '',
+    fuenteTabla: data[`fuenteTabla${prefijo}`] || data['fuenteTabla'] || '',
+    descripcion: data[`descripcion${prefijo}`] || data['descripcion'] || '',
+    // etc...
+  };
+});
+```
+
+---
+
 **Estado Compilación:** ✅ SIN ERRORES  
 **Estado Testing:** ✅ Secciones 28-30 - Filas aparecen INMEDIATAMENTE  
 **Estado Testing:** ✅ Sección 3 - Filas aparecen INMEDIATAMENTE desde primer click  
+**Estado Testing:** ✅ Sección 5 - Títulos de cuadros se sincronizan formulario ↔ vista  
 **Fecha Resolución:** 12 de febrero de 2026

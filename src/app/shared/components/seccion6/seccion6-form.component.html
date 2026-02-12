@@ -1,36 +1,36 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.2 Aspectos Demográficos</h4>
+    <h4 class="section-title">{{ SECCION6_TEMPLATES.tituloSubseccion }}</h4>
 
     <!-- Sección a: Población según sexo -->
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">a. Población según sexo</h4>
+      <h4 class="section-title">{{ SECCION6_TEMPLATES.tituloSexo }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION6_TEMPLATES.tituloEditarParrafos }}</h4>
 
         <app-paragraph-editor
           [fieldId]="'textoPoblacionSexoAISD' + obtenerPrefijoGrupo()"
-          label="Población según Sexo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION6_TEMPLATES.labelTextoPoblacionSexo"
+          [hint]="SECCION6_TEMPLATES.hintTextoPoblacionSexo"
           [rows]="4"
           [value]="obtenerTextoPoblacionSexo(datos, obtenerNombreComunidadActual())"
-          (valueChange)="onFieldChange('textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
+          (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla</label>
+          <label class="label">{{ SECCION6_TEMPLATES.labelTituloTablaSexo }}</label>
           <input 
             type="text" 
             class="form-control"
             [(ngModel)]="datos['tituloPoblacionSexoAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="onFieldChange('tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
-            placeholder="Ej: Población por sexo">
+            (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
+            [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaSexo">
         </div>
 
-        <label class="label">Población por Sexo</label>
+        <label class="label">{{ SECCION6_TEMPLATES.labelTablaPoblacionSexo }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionSexoConfig"
@@ -44,7 +44,7 @@
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
-                <td><strong>Total</strong></td>
+                <td><strong>{{ SECCION6_TEMPLATES.headerTotal }}</strong></td>
                 <td>
                   <input type="text" class="table-input" 
                     [value]="getTotalPoblacionSexo()"
@@ -63,46 +63,46 @@
         </div>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla</label>
+          <label class="label">{{ SECCION6_TEMPLATES.labelFuenteTablaSexo }}</label>
           <input 
             type="text" 
             class="form-control"
             [(ngModel)]="datos['fuentePoblacionSexoAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="onFieldChange('fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
-            placeholder="Ej: GEADES, 2024">
+            (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
+            [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaSexo">
         </div>
       </div>
     </div>
 
     <!-- Sección b: Población según grupo etario -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Población según grupo etario</h4>
+      <h4 class="section-title">{{ SECCION6_TEMPLATES.tituloEtario }}</h4>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION6_TEMPLATES.tituloEditarParrafos }}</h4>
 
         <app-paragraph-editor
           [fieldId]="'textoPoblacionEtarioAISD' + obtenerPrefijoGrupo()"
-          label="Población por Grupo Etario - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION6_TEMPLATES.labelTextoPoblacionEtario"
+          [hint]="SECCION6_TEMPLATES.hintTextoPoblacionEtario"
           [rows]="4"
           [value]="obtenerTextoPoblacionEtario(datos, obtenerNombreComunidadActual())"
-          (valueChange)="onFieldChange('textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
+          (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla</label>
+          <label class="label">{{ SECCION6_TEMPLATES.labelTituloTablaEtario }}</label>
           <input 
             type="text" 
             class="form-control"
             [(ngModel)]="datos['tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="onFieldChange('tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
-            placeholder="Ej: Población por grupos de edad">
+            (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
+            [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaEtario">
         </div>
 
-        <label class="label">Población por Grupo Etario</label>
+        <label class="label">{{ SECCION6_TEMPLATES.labelTablaEtario }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionEtarioConfig"
@@ -116,7 +116,7 @@
           <table class="editor-table">
             <tbody>
               <tr class="total-row">
-                <td><strong>Total</strong></td>
+                <td><strong>{{ SECCION6_TEMPLATES.headerTotal }}</strong></td>
                 <td>
                   <input type="text" class="table-input" 
                     [value]="getTotalPoblacionEtario()"
@@ -135,32 +135,32 @@
         </div>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla</label>
+          <label class="label">{{ SECCION6_TEMPLATES.labelFuenteTablaEtario }}</label>
           <input 
             type="text" 
             class="form-control"
             [(ngModel)]="datos['fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="onFieldChange('fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
-            placeholder="Ej: GEADES, 2024">
+            (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
+            [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaEtario">
         </div>
       </div>
     </div>
 
     <!-- Fotografías -->
     <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Fotografías de Aspectos Demográficos</label>
+      <label class="label">{{ SECCION6_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
         [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Población de la CC"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Población"
-        fuenteDefault="GEADES, 2024"
+        [labelTitulo]="SECCION6_TEMPLATES.labelFotoTitulo"
+        [labelFuente]="SECCION6_TEMPLATES.labelFotoFuente"
+        [labelImagen]="SECCION6_TEMPLATES.labelFotoImagen"
+        [placeholderTitulo]="SECCION6_TEMPLATES.placeholderFotoTitulo.replace('{COMUNIDAD}', obtenerNombreComunidadActual())"
+        [placeholderFuente]="SECCION6_TEMPLATES.placeholderFotoFuente"
+        [tituloDefault]="SECCION6_TEMPLATES.fotoTituloDefault.replace('{COMUNIDAD}', obtenerNombreComunidadActual())"
+        [fuenteDefault]="SECCION6_TEMPLATES.fotoFuenteDefault"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>

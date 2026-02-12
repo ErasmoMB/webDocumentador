@@ -6,7 +6,7 @@ import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES } from './seccion4-constants';
+import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TEMPLATES, SECCION4_CONFIG } from './seccion4-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -17,8 +17,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion4ViewComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1';
+  @Input() override seccionId: string = SECCION4_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION4_TEMPLATES = SECCION4_TEMPLATES;
 
   readonly PHOTO_PREFIX_UBICACION = SECCION4_PHOTO_PREFIXES.UBICACION;
   readonly PHOTO_PREFIX_POBLACION = SECCION4_PHOTO_PREFIXES.POBLACION;
@@ -41,8 +44,8 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
     super(cdRef, injector);
 
     this.photoGroupsConfig = [
-      { prefix: this.PHOTO_PREFIX_UBICACION, label: 'Ubicación' },
-      { prefix: this.PHOTO_PREFIX_POBLACION, label: 'Población' }
+      { prefix: this.PHOTO_PREFIX_UBICACION, label: SECCION4_TEMPLATES.labelFotografiasUbicacion },
+      { prefix: this.PHOTO_PREFIX_POBLACION, label: SECCION4_TEMPLATES.labelFotografiasOblacion }
     ];
 
     this.formDataSignal = computed(() => {
@@ -101,6 +104,7 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
           ...data,
           comunidadesCampesinas: sectionData['comunidadesCampesinas'] ?? [],
           cuadroTituloAISD1: data['cuadroTituloAISD1' + this.obtenerPrefijoGrupo()] ?? '',
+          cuadroTituloAISD2: data['cuadroTituloAISD2' + this.obtenerPrefijoGrupo()] ?? '',
           tablaAISD1Datos: tablaAISD1,
           tablaAISD2Datos: tablaAISD2
         },
@@ -169,7 +173,8 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
   obtenerTextoIntroduccionAISD(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_introduccion_aisd');
     
-    const textoPorDefecto = `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC ${nombreComunidad}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`;
+    const textoPorDefecto = SECCION4_TEMPLATES.introduccionAISDDefault
+      .replace('{{nombreComunidad}}', nombreComunidad || '____');
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);
@@ -188,7 +193,14 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
     const departamento = datos['departamentoSeleccionado'] || '____';
     const grupoAISI = datos['grupoAISI'] || datos['distritoSeleccionado'] || '____';
     
-    const textoPorDefecto = `La CC ${nombreComunidad} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${nombreComunidad}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${nombreComunidad}.\n\nEn cuanto al nombre "${nombreComunidad}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${nombreComunidad} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+    const textoPorDefecto = SECCION4_TEMPLATES.descripcionComunidadDefault
+      .replace(/{{nombreComunidad}}/g, nombreComunidad || '____')
+      .replace('{{distrito}}', distrito)
+      .replace('{{provincia}}', provincia)
+      .replace('{{aisd1}}', aisd1)
+      .replace('{{aisd2}}', aisd2)
+      .replace('{{departamento}}', departamento)
+      .replace('{{grupoAISI}}', grupoAISI);
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado
@@ -207,7 +219,8 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
   obtenerTextoCaracterizacionIndicadores(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_caracterizacion_indicadores');
     
-    const textoPorDefecto = `Para la caracterización de los indicadores demográficos y aquellos relacionados a viviendas, se emplea la sumatoria de casos obtenida al considerar aquellos puntos de población que conforman la CC ${nombreComunidad}. En el siguiente cuadro, se presenta aquellos puntos de población identificados por el INEI que se encuentran dentro de la comunidad en cuestión.`;
+    const textoPorDefecto = SECCION4_TEMPLATES.caracterizacionIndicadoresDefault
+      .replace('{{nombreComunidad}}', nombreComunidad || '____');
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado.replace(/CC\s*___/g, `CC ${nombreComunidad}`);

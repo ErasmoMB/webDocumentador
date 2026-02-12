@@ -176,18 +176,9 @@
     ],
     "textoInstitucionalidad": "Dentro de los límites de la CC Ayroca se hallan instituciones que, además de la comunidad campesina en sí, también ejercen funciones dentro del territorio y coadyuvan en el desarrollo socioeconómico de la capital administrativa comunal y de sus diferentes sectores. Cabe destacar la presencia de diversos programas sociales (como Pensión 65, Juntos o Qali Warma), así como la existencia de una Junta Administradora de Servicios de Saneamiento (JASS).",
     "textoPoblacionSexo": "Respecto a la población de la CC Ayroca, tomando en cuenta data obtenida de los Censos Nacionales 2017 y los puntos de población que la conforman, existen un total de 225 habitantes que residen permanentemente en la comunidad. De este conjunto, el son varones, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares femeninos ().",
-    "poblacionSexoTabla": [
-      { "sexo": "Hombre", "casos": 114 },
-      { "sexo": "Mujer", "casos": 111 }
-    ],
+    "poblacionSexoTabla": [],
     "textoPoblacionEtario": "En una clasificación en grandes grupos de edad, se puede observar que el grupo etario mayoritario en la CC Ayroca es el de 15 a 29 años, puesto que representa el 26.7% de la población total. En segundo lugar, bastante cerca del primero, se halla el bloque etario de 0 a 14 años (26.2%). Por otro lado, el conjunto minoritario está conformado por la población de 65 años a más, pues solo representa un 11.1%.",
-    "poblacionEtarioTabla": [
-      { "categoria": "0 a 14 años", "casos": 59 },
-      { "categoria": "15 a 29 años", "casos": 60 },
-      { "categoria": "30 a 44 años", "casos": 38 },
-      { "categoria": "45 a 64 años", "casos": 43 },
-      { "categoria": "65 años a más", "casos": 25 }
-    ],
+    "poblacionEtarioTabla": [],
     "textoPET": "La población en edad de trabajar (PET) de la CC Ayroca, considerada desde los 15 años a más, se compone del 74.22% de la población total. El bloque etario que más aporta a la PET es el de 15 a 29 años, pues representa el 35.89% de este grupo poblacional. Por otro lado, el grupo etario que menos aporta al indicador es el de 65 años a más al representar solamente un 11.11%.",
     "petTabla": [
       { "categoria": "15 a 29 años", "casos": 60, "porcentaje": "35.89%" },

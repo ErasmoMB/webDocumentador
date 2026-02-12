@@ -1,42 +1,42 @@
 <!-- Formulario (modo edición) -->
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">3.1.4. Caracterización socioeconómica — Editor</h4>
+    <h4 class="section-title">{{ SECCION4_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section" style="margin-top: 12px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION4_TEMPLATES.tituloEditarParrafos }}</h4>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo()"
-        label="Introducción AISD"
+        [label]="SECCION4_TEMPLATES.labelIntroduccionAISD"
         [rows]="4"
         [value]="viewModel().texts.introduccionText"
-        (valueChange)="onFieldChange('parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo()"
-        label="Descripción de la Comunidad"
+        [label]="SECCION4_TEMPLATES.labelDescripcionComunidad"
         [rows]="5"
         [value]="viewModel().texts.comunidadText"
-        (valueChange)="onFieldChange('parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo()"
-        label="Caracterización - Indicadores"
+        [label]="SECCION4_TEMPLATES.labelCaracterizacionIndicadores"
         [rows]="4"
         [value]="viewModel().texts.caracterizacionText"
-        (valueChange)="onFieldChange('parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Título de tabla - Ubicación referencial (A.1)</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Ubicación referencial - CC Comunidad">
+      <label class="label">{{ SECCION4_TEMPLATES.labelTituloTablaUbicacion }}</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroTituloAISD1' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloUbicacion">
     </div>
 
-    <label class="label" style="margin-top:10px">Ubicación referencial (Tabla A1)</label>
+    <label class="label" style="margin-top:10px">{{ SECCION4_TEMPLATES.labelTablaUbicacionReferencial }}</label>
     <app-dynamic-table
       [datos]="datos"
       [config]="tablaAISD1Config"
@@ -48,11 +48,16 @@
     </app-dynamic-table>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Título de tabla - Cantidad total de población y viviendas (A.2)</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="onFieldChange('cuadroTituloAISD2' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: Cantidad total de población y viviendas">
+      <label class="label">{{ SECCION4_TEMPLATES.labelFuenteTablaA1 }}</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD1Source" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroFuenteAISD1' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
     </div>
 
-    <label class="label" style="margin-top:10px">Población y viviendas (Tabla A2)</label>
+    <div class="form-field" style="margin-top: 20px;">
+      <label class="label">{{ SECCION4_TEMPLATES.labelTituloTabla }}</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroTituloAISD2' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloPoblacion">
+    </div>
+
+    <label class="label" style="margin-top:10px">{{ SECCION4_TEMPLATES.labelTablaPoblacionViviendas }}</label>
     <app-dynamic-table
       [datos]="datos"
       [config]="tablaAISD2Config"
@@ -64,12 +69,12 @@
     </app-dynamic-table>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fuente de las tablas</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD1Source" (ngModelChange)="onFieldChange('cuadroFuenteAISD1' + obtenerPrefijoGrupo(), $event)" placeholder="Ej: GEADES (2024)">
+      <label class="label">{{ SECCION4_TEMPLATES.labelFuenteTablaA2 }}</label>
+      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD2Source" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroFuenteAISD2' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías - Ubicación Referencial</label>
+      <label class="label">{{ SECCION4_TEMPLATES.labelFotografiasUbicacion }}</label>
       <app-image-upload
         [fotografias]="getPhotoGroup(PHOTO_PREFIX_UBICACION)"
         [sectionId]="seccionId"
@@ -80,7 +85,7 @@
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías - Población y Viviendas</label>
+      <label class="label">{{ SECCION4_TEMPLATES.labelFotografiasOblacion }}</label>
       <app-image-upload
         [fotografias]="getPhotoGroup(PHOTO_PREFIX_POBLACION)"
         [sectionId]="seccionId"

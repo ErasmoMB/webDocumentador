@@ -1,6 +1,6 @@
-<h5>A.1.7. Infraestructura en transportes y comunicaciones</h5>
+<h5>{{ SECCION11_TEMPLATES.tituloVista }}</h5>
 
-<p style="margin-bottom: 10px;"><strong>a. Transporte</strong></p>
+<p style="margin-bottom: 10px;"><strong>{{ SECCION11_TEMPLATES.subtituloTransporte }}</strong></p>
 <p class="text-justify" [innerHTML]="textoTransporteSignal()"></p>
 
 <app-image-upload
@@ -9,24 +9,24 @@
     [fotografias]="getFotografiasTransporteVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_TRANSPORTE"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION11_TEMPLATES.labelTituloFotoTransporte"
+    [labelFuente]="SECCION11_TEMPLATES.labelFuenteFotoTransporte"
+    [labelImagen]="SECCION11_TEMPLATES.labelImagenFotoTransporte">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION11_TEMPLATES.subtituloTelecomunicaciones }}</strong></p>
 <p class="text-justify" [innerHTML]="textoTelecomunicacionesSignal()"></p>
 
 <app-table-wrapper [title]="obtenerTituloTelecomunicaciones()" [sectionId]="seccionId">
 <table class="table-container">
     <thead>
         <tr>
-            <th class="table-header">Medio de comunicación</th>
-            <th class="table-header">Descripción</th>
+            <th class="table-header">{{ SECCION11_TEMPLATES.labelMedioComunicacion }}</th>
+            <th class="table-header">{{ SECCION11_TEMPLATES.labelDescripcion }}</th>
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getTelecomunicacionesTabla()">
+        <tr *ngFor="let item of getTelecomunicacionesTabla(); trackBy: trackByIndex">
             <td class="table-cell"><span *ngIf="item.medio && item.medio !== '____'">{{ item.medio }}</span><span *ngIf="!item.medio || item.medio === '____'">____</span></td>
             <td class="table-cell"><span *ngIf="item.descripcion && item.descripcion !== '____'">{{ item.descripcion }}</span><span *ngIf="!item.descripcion || item.descripcion === '____'">____</span></td>
         </tr>
@@ -37,7 +37,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ obtenerFuenteTelecomunicaciones() }}</p>
+<p class="source">{{ SECCION11_TEMPLATES.labelFuenteTelecomunicaciones }}: {{ obtenerFuenteTelecomunicaciones() }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -45,7 +45,7 @@
     [fotografias]="getFotografiasTelecomunicacionesVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_TELECOMUNICACIONES"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION11_TEMPLATES.labelTituloFotoTelecomunicaciones"
+    [labelFuente]="SECCION11_TEMPLATES.labelFuenteFotoTelecomunicaciones"
+    [labelImagen]="SECCION11_TEMPLATES.labelImagenFotoTelecomunicaciones">
 </app-image-upload>

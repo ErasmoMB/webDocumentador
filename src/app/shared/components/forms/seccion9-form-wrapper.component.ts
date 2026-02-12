@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { Seccion9FormComponent } from '../seccion9/seccion9-form.component';
 import { BaseSectionComponent } from '../base-section.component';
+import { SECCION9_CONFIG } from '../seccion9/seccion9-constants';
 
 @Component({
     imports: [CommonModule, FormsModule, CoreSharedModule, Seccion9FormComponent],
@@ -12,7 +13,7 @@ import { BaseSectionComponent } from '../base-section.component';
     styles: [`:host { display: block; width: 100%; }`]
 })
 export class Seccion9FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.5';
+  @Input() override seccionId: string = SECCION9_CONFIG.sectionId;
 
   constructor(
     cdRef: ChangeDetectorRef,

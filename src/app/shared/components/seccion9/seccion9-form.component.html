@@ -1,40 +1,40 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.5. Viviendas</h4>
+    <h4 class="section-title">{{ SECCION9_TEMPLATES.seccionViviendas }}</h4>
     
     <!-- Sección Viviendas -->
     <div class="form-group-section" style="margin-top: 20px;">
-      <h5>Condición de ocupación de las viviendas - CC (2017)</h5>
+      <h5>{{ SECCION9_TEMPLATES.subtituloCondicionOcupacion }}</h5>
       
       <app-paragraph-editor
         fieldId="textoViviendas"
-        label="Viviendas - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Los campos con ____ son dinámicos."
+        [label]="SECCION9_TEMPLATES.labelTextoViviendas"
+        [hint]="SECCION9_TEMPLATES.hintTextoViviendas"
         [rows]="4"
-        [value]="obtenerTextoViviendas()"
-        (valueChange)="onFieldChange('textoViviendas', $event)">
+        [value]="textoViviendas.value()"
+        (valueChange)="textoViviendas.update($event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <label class="label">Cuadro Nº {{ obtenerNumeroCuadroCondicionOcupacion() }} - Título</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelTituloCondicionOcupacion }}</label>
       <input 
         type="text"
         class="form-control"
-        [value]="obtenerTituloCondicionOcupacion()"
-        (change)="onTituloCondicionOcupacionChange($event)"
-        placeholder="Condición de ocupación de las viviendas – CC ____">
+        [ngModel]="tituloCondicionOcupacion.value()"
+        (ngModelChange)="tituloCondicionOcupacion.update($event)"
+        [placeholder]="SECCION9_TEMPLATES.placeholderTituloCondicionOcupacion">
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
-      <label class="label">Tabla Condición de Ocupación</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelTablaCondicionOcupacion }}</label>
       <app-dynamic-table
         [datos]="datos"
         [config]="condicionOcupacionConfig"
         [columns]="[
-          { field: 'categoria', label: 'Condición de ocupación', type: 'text', placeholder: 'Viviendas ocupadas', readonly: true },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: false },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          { field: 'categoria', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategoria, readonly: true },
+          { field: 'casos', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.casos, type: 'number', placeholder: '0', readonly: false },
+          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.porcentaje, type: 'text', placeholder: '0%', readonly: true }
         ]"
         [sectionId]="seccionId"
         [tablaKey]="getTablaKeyCondicionOcupacion()"
@@ -45,49 +45,49 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
-      <label class="label">Fuente</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelFuente }}</label>
       <input 
         type="text"
         class="form-control"
-        [value]="obtenerFuenteCondicionOcupacion()"
-        (change)="onFuenteCondicionOcupacionChange($event)"
-        placeholder="Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)">
+        [ngModel]="fuenteCondicionOcupacion.value()"
+        (ngModelChange)="fuenteCondicionOcupacion.update($event)"
+        [placeholder]="SECCION9_TEMPLATES.placeholderFuenteCondicionOcupacion">
     </div>
 
     <!-- Sección Estructura -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h5>Estructura de las viviendas - CC (2017)</h5>
+      <h5>{{ SECCION9_TEMPLATES.seccionEstructura }}</h5>
       
       <app-paragraph-editor
         fieldId="textoEstructura"
-        label="Estructura - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Los campos con ____ son dinámicos."
+        [label]="SECCION9_TEMPLATES.labelTextoEstructura"
+        [hint]="SECCION9_TEMPLATES.hintTextoEstructura"
         [rows]="4"
-        [value]="obtenerTextoEstructura()"
-        (valueChange)="onFieldChange('textoEstructura', $event)">
+        [value]="textoEstructura.value()"
+        (valueChange)="textoEstructura.update($event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <label class="label">Cuadro Nº {{ obtenerNumeroCuadroTiposMateriales() }} - Título</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelTituloTiposMateriales }}</label>
       <input 
         type="text"
         class="form-control"
-        [value]="obtenerTituloTiposMateriales()"
-        (change)="onTituloTiposMaterialesChange($event)"
-        placeholder="Tipos de materiales de las viviendas – CC ____">
+        [ngModel]="tituloTiposMateriales.value()"
+        (ngModelChange)="tituloTiposMateriales.update($event)"
+        [placeholder]="SECCION9_TEMPLATES.placeholderTituloTiposMateriales">
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
-      <label class="label">Tabla Tipos de Materiales</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelTablaTiposMateriales }}</label>
       <app-dynamic-table
         [datos]="datos"
         [config]="tiposMaterialesConfig"
         [columns]="[
-          { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Paredes', readonly: false },
-          { field: 'tipoMaterial', label: 'Tipos de materiales', type: 'text', placeholder: 'Adobe', readonly: false },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: false },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+          { field: 'categoria', label: SECCION9_TEMPLATES.columnasTiposMateriales.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategorias, readonly: false },
+          { field: 'tipoMaterial', label: SECCION9_TEMPLATES.columnasTiposMateriales.tipoMaterial, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderTipoMaterial, readonly: false },
+          { field: 'casos', label: SECCION9_TEMPLATES.columnasTiposMateriales.casos, type: 'number', placeholder: '0', readonly: false },
+          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasTiposMateriales.porcentaje, type: 'text', placeholder: '0%', readonly: true }
         ]"
         [sectionId]="seccionId"
         [tablaKey]="getTablaKeyTiposMateriales()"
@@ -98,27 +98,27 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
-      <label class="label">Fuente</label>
+      <label class="label">{{ SECCION9_TEMPLATES.labelFuente }}</label>
       <input 
         type="text"
         class="form-control"
-        [value]="obtenerFuenteTiposMateriales()"
-        (change)="onFuenteTiposMaterialesChange($event)"
-        placeholder="Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas">
+        [ngModel]="fuenteTiposMateriales.value()"
+        (ngModelChange)="fuenteTiposMateriales.update($event)"
+        [placeholder]="SECCION9_TEMPLATES.placeholderFuenteTiposMateriales">
     </div>
 
     <!-- Sección Fotografías -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h5>Fotografías</h5>
+      <h5>{{ SECCION9_TEMPLATES.seccionFotografias }}</h5>
       <app-image-upload
         [modoVista]="false"
         [permitirMultiples]="true"
         [fotografias]="fotografiasSeccion9"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
-        [labelTitulo]="'Título'"
-        [labelFuente]="'Fuente'"
-        [labelImagen]="'Imagen'"
+        [labelTitulo]="SECCION9_TEMPLATES.labelFotoTitulo"
+        [labelFuente]="SECCION9_TEMPLATES.labelFotoFuente"
+        [labelImagen]="SECCION9_TEMPLATES.labelFotoImagen"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>
     </div>

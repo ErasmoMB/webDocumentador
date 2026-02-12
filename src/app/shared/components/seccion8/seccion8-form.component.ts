@@ -6,7 +6,16 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG, SECCION8_COLUMNAS_PEA_OCUPACIONES, SECCION8_COLUMNAS_POBLACION_PECUARIA, SECCION8_COLUMNAS_CARACTERISTICAS_AGRICULTURA } from './seccion8-constants';
+import { 
+  SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, 
+  SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, 
+  SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG, 
+  SECCION8_COLUMNAS_PEA_OCUPACIONES, 
+  SECCION8_COLUMNAS_POBLACION_PECUARIA, 
+  SECCION8_COLUMNAS_CARACTERISTICAS_AGRICULTURA,
+  SECCION8_TEMPLATES,
+  SECCION8_WATCHED_FIELDS
+} from './seccion8-constants';
 
 @Component({
   standalone: true,
@@ -23,9 +32,14 @@ import { SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, SECCION8_TABLA_POBLACION_PECUARI
 export class Seccion8FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1.4';
   @Input() override modoFormulario: boolean = true;
+
+  // ✅ Hacer TEMPLATES accesible en templates
+  readonly SECCION8_TEMPLATES = SECCION8_TEMPLATES;
   
   override readonly PHOTO_PREFIX = '';
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION8_WATCHED_FIELDS;
+
   readonly PHOTO_PREFIX_GANADERIA = 'fotografiaGanaderia';
   readonly PHOTO_PREFIX_AGRICULTURA = 'fotografiaAgricultura';
   readonly PHOTO_PREFIX_COMERCIO = 'fotografiaComercio';
@@ -38,13 +52,22 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   fotografiasAgriculturaCache: FotoItem[] = [];
   fotografiasComercioCache: FotoItem[] = [];
 
-  override watchedFields: string[] = [
-    'grupoAISD', 'provinciaSeleccionada', 'parrafoSeccion8_ganaderia_completo',
-    'parrafoSeccion8_agricultura_completo', 'peaOcupacionesTabla', 'poblacionPecuariaTabla',
-    'caracteristicasAgriculturaTabla', 'textoActividadesEconomicas', 'textoFuentesActividadesEconomicas',
-    'textoAnalisisCuadro310', 'textoMercadoComercializacion1', 'textoMercadoComercializacion2',
-    'textoHabitosConsumo1', 'textoHabitosConsumo2'
-  ];
+  // ✅ CAMPOS EDITABLES CON createAutoSyncField
+  readonly textoActividadesEconomicas = this.createAutoSyncField('textoActividadesEconomicas', '');
+  readonly textoFuentesActividadesEconomicas = this.createAutoSyncField('textoFuentesActividadesEconomicas', '');
+  readonly textoAnalisisCuadro310 = this.createAutoSyncField('textoAnalisisCuadro310', '');
+  readonly cuadroTituloPEA = this.createAutoSyncField('cuadroTituloPEA', '');
+  readonly cuadroFuentePEA = this.createAutoSyncField('cuadroFuentePEA', '');
+  readonly parrafoSeccion8_ganaderia_completo = this.createAutoSyncField('parrafoSeccion8_ganaderia_completo', '');
+  readonly cuadroTituloPoblacionPecuaria = this.createAutoSyncField('cuadroTituloPoblacionPecuaria', '');
+  readonly cuadroFuentePoblacionPecuaria = this.createAutoSyncField('cuadroFuentePoblacionPecuaria', '');
+  readonly parrafoSeccion8_agricultura_completo = this.createAutoSyncField('parrafoSeccion8_agricultura_completo', '');
+  readonly cuadroTituloCaracteristicasAgricultura = this.createAutoSyncField('cuadroTituloCaracteristicasAgricultura', '');
+  readonly cuadroFuenteCaracteristicasAgricultura = this.createAutoSyncField('cuadroFuenteCaracteristicasAgricultura', '');
+  readonly textoMercadoComercializacion1 = this.createAutoSyncField('textoMercadoComercializacion1', '');
+  readonly textoMercadoComercializacion2 = this.createAutoSyncField('textoMercadoComercializacion2', '');
+  readonly textoHabitosConsumo1 = this.createAutoSyncField('textoHabitosConsumo1', '');
+  readonly textoHabitosConsumo2 = this.createAutoSyncField('textoHabitosConsumo2', '');
 
   // Configs y Columns para tablas
   peaOcupacionesConfig = SECCION8_TABLA_PEA_OCUPACIONES_CONFIG;
@@ -54,9 +77,6 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   peaOcupacionesColumns = SECCION8_COLUMNAS_PEA_OCUPACIONES;
   poblacionPecuariaColumns = SECCION8_COLUMNAS_POBLACION_PECUARIA;
   caracteristicasAgriculturaColumns = SECCION8_COLUMNAS_CARACTERISTICAS_AGRICULTURA;
-  private peaOcupacionesCache: any[] = [];
-  private peaOcupacionesCacheKey: string = '';
-  private totalPEACache: string = '0';
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -122,25 +142,14 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onPEATableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyPEAOcupaciones();
-    const peaActuales = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, peaActuales, { refresh: true });
     this.cdRef.detectChanges();
   }
 
   onPoblacionPecuariaTableUpdated(updatedData?: any[]): void {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `poblacionPecuariaTabla${prefijo}` : 'poblacionPecuariaTabla';
-    const pecuariaActuales = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, pecuariaActuales, { refresh: true });
     this.cdRef.detectChanges();
   }
 
   onCaracteristicasAgriculturaTableUpdated(updatedData?: any[]): void {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tablaKey = prefijo ? `caracteristicasAgriculturaTabla${prefijo}` : 'caracteristicasAgriculturaTabla';
-    const agriculturaActuales = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, agriculturaActuales, { refresh: true });
     this.cdRef.detectChanges();
   }
 
@@ -383,12 +392,6 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   private getTablaKeyPEAOcupaciones(): string {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     return prefijo ? `peaOcupacionesTabla${prefijo}` : 'peaOcupacionesTabla';
-  }
-
-  private invalidarCachePEA(): void {
-    this.peaOcupacionesCache = [];
-    this.peaOcupacionesCacheKey = '';
-    this.totalPEACache = '0';
   }
 
   override obtenerPrefijoGrupo(): string {

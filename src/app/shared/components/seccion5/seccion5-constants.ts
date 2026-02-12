@@ -77,3 +77,73 @@ export const SECCION5_COLUMNAS_INSTITUCIONES = [
     placeholder: 'Ubicación específica'
   }
 ];
+
+export const SECCION5_CONFIG = {
+  sectionId: SECCION5_DEFAULT_SUBSECTION,
+  title: 'Institucionalidad local',
+  photoPrefix: SECCION5_PHOTO_PREFIX.INSTITUCIONALIDAD,
+  maxPhotos: 10
+} as const;
+
+/**
+ * ✅ SECCION5_TEMPLATES - Todos los textos visibles
+ */
+export const SECCION5_TEMPLATES = {
+  // Títulos y encabezados
+  tituloSeccion: 'Institucionalidad local',
+  tituloSubseccion: 'Institucionalidad local — Editor',
+  tituloEditarParrafos: 'Editar Párrafos',
+  tituloVista: 'Institucionalidad local del Área de Influencia Social Directa',
+  labelInstitucionalidadLocal: 'Institucionalidad local',
+
+  // Labels
+  labelInstitucionalidad: 'Institucionalidad - Texto Completo',
+  labelInstituciones: 'Instituciones existentes – CC {COMUNIDAD}',
+  labelTituloTabla: 'Título del Cuadro',
+  labelTablaInstituciones: 'Tabla de Instituciones Existentes',
+  labelFuenteTabla: 'Fuente del Cuadro',
+  labelFotografias: 'Fotografías de Institucionalidad',
+  labelFotoTitulo: 'Título de la fotografía',
+  labelFotoFuente: 'Fuente de la fotografía',
+  labelFotoImagen: 'Fotografía - Imagen',
+  labelFuente: 'FUENTE',
+
+  // Hints
+  hintInstitucionalidad: 'Edite todo el bloque de texto sobre institucionalidad. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto.',
+
+  // Placeholders
+  placeholderTituloTabla: 'Ej: Instituciones existentes – CC {{nombreComunidad}}',
+  placeholderFuenteTabla: 'Ej: GEADES (2024)',
+  placeholderProfesor: 'Ej: Local Comunal de la CC {{nombreComunidad}}',
+  placeholderFotoFuente: 'Ej: GEADES, 2024',
+
+  // Defaults
+  tituloTablaDefault: 'Instituciones existentes – CC {{nombreComunidad}}',
+  photoDefaultTitle: 'Local Comunal de la CC {COMUNIDAD}',
+  fotoTituloDefault: 'Local Comunal de la CC {{nombreComunidad}}',
+  fotoFuenteDefault: 'GEADES, 2024',
+  fuenteTablaDefault: 'GEADES (2024)',
+  sourceGeadesDefault: 'GEADES (2024)',
+
+  // Textos por defecto para párrafos
+  institucionalidadDefault: `En el siguiente cuadro se presentan las instituciones públicas y privadas que se encuentran dentro del Área de Influencia Social Directa (AISD) de la CC {{nombreComunidad}}, incluyendo cuáles de ellas se encuentran disponibles dentro de los límites de la comunidad.
+
+Según el trabajo de campo realizado, las instituciones identificadas son las siguientes:`,
+
+  // Texto largo para obtenerTextoInstitucionalidad()
+  textoInstitucionalidadLargo: `La CC {COMUNIDAD} posee una estructura organizativa que responde a sus necesidades locales y a los principios de autogobierno indígena. La asamblea general comunal es la máxima autoridad, integrada por todos los comuneros hábiles que participan activamente en la toma de decisiones. Este sistema de gobierno rotativo permite que diversos miembros de la comunidad asuman responsabilidades de liderazgo, fortaleciendo así la distribución equitativa del poder y la representación de los intereses colectivos.
+
+La organización comunal incluye diversas instituciones que trabajan de manera coordinada para cumplir con las funciones administrativas, educativas y sanitarias que requiere la comunidad. Entre las principales instituciones se encuentran la Asamblea General, la Junta Directiva Comunal, las organizaciones de base como las rondas campesinas, las instituciones educativas, los centros de salud, y las organizaciones de mujeres. Cada una de estas instituciones tiene responsabilidades específicas que contribuyen al bienestar integral de la comunidad.`,
+
+  // Labels tabla
+  labelColumnaInstitucion: 'Institución',
+  labelColumnaDisponibilidad: 'Disponibilidad',
+  labelColumnaUbicacion: 'Ubicación',
+
+  // Valores tabla
+  valorSI: 'SI',
+  valorNO: 'NO',
+
+  // Placeholders vacíos
+  placeholderVacio: '____'
+} as const;

@@ -6,7 +6,13 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
-import { SECCION10_WATCHED_FIELDS, SECCION10_PHOTO_PREFIX } from './seccion10-constants';
+import { 
+  SECCION10_WATCHED_FIELDS, 
+  SECCION10_PHOTO_PREFIX,
+  SECCION10_TEMPLATES,
+  SECCION10_CONFIG,
+  SECCION10_SECTION_ID
+} from './seccion10-constants';
 
 @Component({
   standalone: true,
@@ -30,10 +36,13 @@ import { SECCION10_WATCHED_FIELDS, SECCION10_PHOTO_PREFIX } from './seccion10-co
   `]
 })
 export class Seccion10ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.6';
+  @Input() override seccionId: string = SECCION10_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaSeccion10';
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION10_TEMPLATES = SECCION10_TEMPLATES;
+
+  override readonly PHOTO_PREFIX = SECCION10_PHOTO_PREFIX;
 
   override fotografiasCache: FotoItem[] = [];
 
@@ -501,7 +510,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const fuenteKey = 'fuenteAbastecimientoAgua' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+    return SECCION10_TEMPLATES.fuenteDefault;
   }
 
   obtenerFuenteTiposSaneamiento(): string {
@@ -509,7 +518,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const fuenteKey = 'fuenteTiposSaneamiento' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+    return SECCION10_TEMPLATES.fuenteDefault;
   }
 
   obtenerFuenteCoberturaElectrica(): string {
@@ -517,7 +526,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const fuenteKey = 'fuenteCoberturaElectrica' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+    return SECCION10_TEMPLATES.fuenteDefault;
   }
 
   // ✅ MÉTODOS FALTANTES PARA EL TEMPLATE
@@ -544,7 +553,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const fuenteKey = 'fuenteEnergiaCocinar' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+    return SECCION10_TEMPLATES.fuenteDefault;
   }
 
   obtenerTextoEnergiaCocinarDetalleConResaltado(): SafeHtml {
@@ -571,7 +580,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const fuenteKey = 'fuenteTecnologiaComunicaciones' + prefijo;
     const fuente = this.datos[fuenteKey];
     if (fuente && fuente.trim().length > 0) return fuente;
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+    return SECCION10_TEMPLATES.fuenteDefault;
   }
 
   obtenerTextoTecnologiaComunicacionesDetalleConResaltado(): SafeHtml {
@@ -594,7 +603,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     if (manual && manual.trim().length > 0) {
       return manual;
     }
-    return 'Detalle generado para energía utilizada para cocinar';
+    return ''; // Sin valor por defecto - usuario debe proporcionar
   }
 
   obtenerTextoTecnologiaComunicaciones(): string {
@@ -603,7 +612,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     if (manual && manual.trim().length > 0) {
       return manual;
     }
-    return 'Las tecnologías de comunicación son cada vez más importante en el desarrollo rural. Los poblaciones tienen acceso a diferentes tipos de tecnologías según las características de su territorio y su capacidad económica.';
+    return ''; // Sin valor por defecto - usuario debe proporcionar
   }
 
   private obtenerTextoTecnologiaComunicacionesDetalle(): string {
@@ -612,7 +621,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     if (manual && manual.trim().length > 0) {
       return manual;
     }
-    return 'Detalle generado para tecnología de comunicaciones';
+    return ''; // Sin valor por defecto - usuario debe proporcionar
   }
 
   // ✅ MÉTODOS PARA FILAS DE TOTAL

@@ -24,42 +24,74 @@ import { TableConfig } from '../../../core/services/tables/table-management.serv
   standalone: true
 })
 export class Seccion3FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.3';
+  @Input() override seccionId: string = SECCION3_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
 
   // ✅ Hacer TEMPLATES accesible en el template
   readonly SECCION3_TEMPLATES = SECCION3_TEMPLATES;
 
-  override readonly PHOTO_PREFIX = 'fotografiaSeccion3';
+  override readonly PHOTO_PREFIX = SECCION3_CONFIG.photoPrefix;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION3_WATCHED_FIELDS;
 
   fotografiasSeccion3: FotoItem[] = [];
   imageUploadKey: number = 0;
 
-  entrevistadosConfig: TableConfig = {
+  // ✅ SEÑALES REACTIVAS CON createAutoSyncField (NUEVA ARQUITECTURA)
+  readonly parrafoMetodologia = this.createAutoSyncField<string>('parrafoSeccion3_metodologia', '');
+  readonly parrafoFuentesPrimarias = this.createAutoSyncField<string>('parrafoSeccion3_fuentes_primarias', '');
+  readonly parrafoFuentesSecundarias = this.createAutoSyncField<string>('parrafoSeccion3_fuentes_secundarias', '');
+  readonly cantidadEntrevistas = this.createAutoSyncField<string>('cantidadEntrevistas', '');
+  readonly fechaTrabajoCampo = this.createAutoSyncField<string>('fechaTrabajoCampo', '');
+  readonly consultora = this.createAutoSyncField<string>('consultora', '');
+  readonly cuadroTituloEntrevistados = this.createAutoSyncField<string>('cuadroTituloEntrevistados', '');
+  readonly cuadroFuenteEntrevistados = this.createAutoSyncField<string>('cuadroFuenteEntrevistados', '');
+  readonly entrevistados = this.createAutoSyncField<any[]>('entrevistados', []);
+  readonly fuentesSecundariasLista = this.createAutoSyncField<string[]>('fuentesSecundariasLista', []);
+
+  // ✅ Configuración de tabla desde constants
+  readonly entrevistadosConfig: TableConfig = {
     tablaKey: 'entrevistados',
     totalKey: 'nombre',
     estructuraInicial: []
   };
 
-  columnasEntrevistados: any[] = [
-    { field: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre completo', readonly: false },
-    { field: 'cargo', label: 'Cargo', type: 'text', placeholder: 'Cargo o función', readonly: false },
-    { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Organización', readonly: false }
+  // ✅ Columns con texts desde TEMPLATES
+  readonly columnasEntrevistados: any[] = [
+    { 
+      field: 'nombre', 
+      label: SECCION3_TEMPLATES.labelColumnaNombre, 
+      type: 'text', 
+      placeholder: SECCION3_TEMPLATES.placeholderColumnaNombre, 
+      readonly: false 
+    },
+    { 
+      field: 'cargo', 
+      label: SECCION3_TEMPLATES.labelColumnaCargo, 
+      type: 'text', 
+      placeholder: SECCION3_TEMPLATES.placeholderColumnaCargo, 
+      readonly: false 
+    },
+    { 
+      field: 'organizacion', 
+      label: SECCION3_TEMPLATES.labelColumnaOrganizacion, 
+      type: 'text', 
+      placeholder: SECCION3_TEMPLATES.placeholderColumnaOrganizacion, 
+      readonly: false 
+    }
   ];
 
+  // ✅ SIGNALS COMPUTED PARA DATOS DERIVADOS
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
   readonly fuentesSecundariasListaSignal: Signal<string[]> = computed(() => {
-    const value = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
-    return Array.isArray(value) ? value : [];
+    return this.fuentesSecundariasLista.value();
   });
 
   readonly entrevistadosSignal: Signal<any[]> = computed(() => {
-    const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
-    return Array.isArray(value) ? value : [];
+    return this.entrevistados.value();
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -109,7 +141,6 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     return this.PHOTO_PREFIX;
   }
 
-  private readonly dataHighlightService = this.injector.get(DataHighlightService);
   private readonly formChangeService = this.injector.get(FormChangeService);
 
   constructor(
@@ -119,12 +150,64 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
 
+    // ✅ Inicializar campos desde store O fallback
+    this.inicializarCamposDesdeStore();
+
     effect(() => {
       const formData = this.formDataSignal();
       const fuentesSecundariasLista = this.fuentesSecundariasListaSignal();
       const entrevistados = this.entrevistadosSignal();
       this.cdRef.markForCheck();
     });
+  }
+
+  /**
+   * ✅ Inicializa campos desde el store O usa valores por defecto
+   */
+  private inicializarCamposDesdeStore(): void {
+    // Metodología
+    const metodologia = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion3_metodologia')() 
+      || SECCION3_TEMPLATES.metodologiaDefaultFallback;
+    this.parrafoMetodologia.update(metodologia);
+
+    // Fuentes primarias
+    const fuentesPrim = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion3_fuentes_primarias')() 
+      || SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback;
+    this.parrafoFuentesPrimarias.update(fuentesPrim);
+
+    // Fuentes secundarias
+    const fuentesSec = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion3_fuentes_secundarias')() 
+      || SECCION3_TEMPLATES.fuentesSecundariasDefaultFallback;
+    this.parrafoFuentesSecundarias.update(fuentesSec);
+
+    // Cantidad entrevistas
+    const cantidad = this.projectFacade.selectField(this.seccionId, null, 'cantidadEntrevistas')();
+    if (cantidad) this.cantidadEntrevistas.update(cantidad);
+
+    // Fecha trabajo campo
+    const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaTrabajoCampo')();
+    if (fecha) this.fechaTrabajoCampo.update(fecha);
+
+    // Consultora
+    const consult = this.projectFacade.selectField(this.seccionId, null, 'consultora')();
+    if (consult) this.consultora.update(consult);
+
+    // Cuadro título
+    const titCuadro = this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloEntrevistados')() 
+      || SECCION3_TEMPLATES.cuadroTituloEntrevistadosDefault;
+    this.cuadroTituloEntrevistados.update(titCuadro);
+
+    // Cuadro fuente
+    const fuenCuadro = this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteEntrevistados')() 
+      || SECCION3_TEMPLATES.cuadroFuenteEntrevistadosDefault;
+    this.cuadroFuenteEntrevistados.update(fuenCuadro);
+
+    // Listas
+    const ent = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+    if (ent && ent.length > 0) this.entrevistados.update(ent);
+
+    const fuenSec = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
+    if (fuenSec && fuenSec.length > 0) this.fuentesSecundariasLista.update(fuenSec);
   }
 
   protected override onInitCustom(): void {
@@ -140,6 +223,13 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     // S3 no tiene prefijos dinámicos
   }
 
+  // ✅ Override onFieldChange para usar markForCheck (no interfiere con onTablaUpdated)
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    this.projectFacade.setField(this.seccionId, null, fieldId, value);
+    this.formChangeService.persistFields(this.seccionId, 'form', { [fieldId]: value });
+    this.cdRef.markForCheck();  // ← Solo marca, no forza detección
+  }
+
   formatearParrafo(texto: string): string {
     if (!texto) return '';
     const parrafos = texto.split(/\n\n+/);
@@ -149,69 +239,54 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     }).join('');
   }
 
-  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
-    let valorLimpio = '';
-    if (value !== undefined && value !== null && value !== 'undefined') {
-      valorLimpio = value;
-    }
-    this.projectFacade.setField(this.seccionId, null, fieldId, valorLimpio);
-    this.formChangeService.persistFields(this.seccionId, 'form', { [fieldId]: valorLimpio });
-    this.cdRef.markForCheck();
-  }
-
-  // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  // ✅ METODOS DE TEXTO USANDO TEMPLATES
   obtenerTextoMetodologia(): string {
-    const formData = this.formDataSignal();
-    if (formData['parrafoSeccion3_metodologia']) {
-      return formData['parrafoSeccion3_metodologia'];
+    if (this.parrafoMetodologia.value()) {
+      return this.parrafoMetodologia.value();
     }
-    return 'Para la descripción del aspecto socioeconómico se ha utilizado una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que luego son contrastados y completados con la consulta de diversas fuentes de información oficiales actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale – MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre otros.';
+    return SECCION3_TEMPLATES.metodologiaDefaultFallback;
   }
 
   obtenerTextoFuentesPrimarias(): string {
-    const formData = this.formDataSignal();
-    if (formData['parrafoSeccion3_fuentes_primarias']) {
-      return formData['parrafoSeccion3_fuentes_primarias'];
+    if (this.parrafoFuentesPrimarias.value()) {
+      return this.parrafoFuentesPrimarias.value();
     }
-    const cantidadEntrevistas = formData['cantidadEntrevistas'] || '____';
-    return `Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de ${cantidadEntrevistas} entrevistas en profundidad a informantes calificados y autoridades locales.`;
+    const cantidad = this.cantidadEntrevistas.value() || '____';
+    return SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback.replace('{{cantidadEntrevistas}}', cantidad);
   }
 
   obtenerTextoFuentesSecundarias(): string {
-    const formData = this.formDataSignal();
-    if (formData['parrafoSeccion3_fuentes_secundarias']) {
-      return formData['parrafoSeccion3_fuentes_secundarias'];
+    if (this.parrafoFuentesSecundarias.value()) {
+      return this.parrafoFuentesSecundarias.value();
     }
-    return 'En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:';
+    return SECCION3_TEMPLATES.fuentesSecundariasDefaultFallback;
   }
 
   obtenerListaFuentesSecundarias(): string[] {
-    return this.fuentesSecundariasListaSignal();
+    return this.fuentesSecundariasLista.value();
   }
 
+  // ✅ CRUD PARA FUENTES SECUNDARIAS USANDO SEÑALES
   actualizarFuenteSecundaria(index: number, valor: string): void {
-    const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    const listaActual = [...this.fuentesSecundariasLista.value()];
     if (listaActual[index] !== valor) {
       listaActual[index] = valor;
-      this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-      this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
+      this.fuentesSecundariasLista.update(listaActual);
       this.cdRef.markForCheck();
     }
   }
 
   eliminarFuenteSecundaria(index: number): void {
-    const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    const listaActual = [...this.fuentesSecundariasLista.value()];
     listaActual.splice(index, 1);
-    this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-    this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
+    this.fuentesSecundariasLista.update(listaActual);
     this.cdRef.markForCheck();
   }
 
   agregarFuenteSecundaria(): void {
-    const listaActual = [...(this.fuentesSecundariasListaSignal() || [])];
+    const listaActual = [...this.fuentesSecundariasLista.value()];
     listaActual.push('');
-    this.projectFacade.setField(this.seccionId, null, 'fuentesSecundariasLista', listaActual);
-    this.formChangeService.persistFields(this.seccionId, 'form', { fuentesSecundariasLista: listaActual });
+    this.fuentesSecundariasLista.update(listaActual);
     this.cdRef.markForCheck();
   }
 
@@ -224,16 +299,17 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTablaEntrevistados(): any[] {
-    return this.entrevistadosSignal();
+    return this.entrevistados.value();
   }
 
+  // ✅ ACTUALIZAR TABLA USANDO PATRÓN DE 3 PASOS
   onTablaUpdated(tabla: any[]): void {
     const tablaKey = 'entrevistados';
     
-    // PASO 1️⃣: CREAR NUEVA REFERENCIA con spread operator
+    // PASO 1️⃣: CREAR NUEVA REFERENCIA
     this.datos[tablaKey] = [...tabla];
     
-    // PASO 2️⃣: PERSISTIR sin refresh=true para evitar sobrescrituras
+    // PASO 2️⃣: PERSISTIR sin refresh para evitar sobrescrituras
     this.onFieldChange(tablaKey, this.datos[tablaKey], { refresh: false });
     
     // PASO 3️⃣: FORZAR CHANGE DETECTION explícitamente

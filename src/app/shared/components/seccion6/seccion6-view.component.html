@@ -1,104 +1,104 @@
 <div class="document-view">
-  <h5>A.1.2 Aspectos Demográficos</h5>
+  <h5>{{ SECCION6_TEMPLATES.tituloSubseccion }}</h5>
 
   <!-- Sección a: Población según sexo -->
-  <p style="margin-bottom: 10px;"><strong>a. Población según sexo</strong></p>
+  <p style="margin-bottom: 10px;"><strong>{{ SECCION6_TEMPLATES.tituloSexo }}</strong></p>
   <p class="text-justify">{{ obtenerTextoPoblacionSexoView() }}</p>
 
   <app-table-wrapper 
-    [title]="obtenerValorConPrefijo('tituloPoblacionSexoAISD') || 'Población por sexo – CC ' + obtenerNombreComunidadActual() + ' (2017)'" 
+    [title]="obtenerValorConPrefijo('tituloPoblacionSexoAISD') || SECCION6_TEMPLATES.tituloTablaSexoDefault.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" 
     sectionId="3.1.4.A.1.2">
     <table class="table-container">
       <thead>
         <tr>
-          <th class="table-header">Sexo</th>
-          <th class="table-header">Casos</th>
-          <th class="table-header">Porcentaje</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerSexo }}</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerCasos }}</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerPorcentaje }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of getPoblacionSexoConPorcentajes()">
           <td class="table-cell">
             <span *ngIf="item.sexo && item.sexo !== '____'" appDataHighlight="database">{{ item.sexo }}</span>
-            <span *ngIf="!item.sexo || item.sexo === '____'">____</span>
+            <span *ngIf="!item.sexo || item.sexo === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
           <td class="table-cell">
             <span *ngIf="item.casos !== undefined && item.casos !== '____'" appDataHighlight="database">{{ item.casos }}</span>
-            <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+            <span *ngIf="item.casos === undefined || item.casos === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
           <td class="table-cell">
             <span *ngIf="item.porcentaje" appDataHighlight="calculated">{{ item.porcentaje }}</span>
-            <span *ngIf="!item.porcentaje">____</span>
+            <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
         </tr>
         <tr class="total-row" *ngIf="getPoblacionSexoConPorcentajes().length > 0">
-          <td class="table-cell"><strong>Total</strong></td>
+          <td class="table-cell"><strong>{{ SECCION6_TEMPLATES.headerTotal }}</strong></td>
           <td class="table-cell"><span appDataHighlight="calculated">{{ getTotalPoblacionSexo() }}</span></td>
           <td class="table-cell"><span appDataHighlight="calculated">{{ getPorcentajeTotalPoblacionSexo() }}</span></td>
         </tr>
         <tr *ngIf="getPoblacionSexoConPorcentajes().length === 0">
-          <td class="table-cell">____</td>
-          <td class="table-cell">____</td>
-          <td class="table-cell">____</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
         </tr>
       </tbody>
     </table>
   </app-table-wrapper>
   <p class="source">
-    Fuente: 
+    {{ SECCION6_TEMPLATES.labelFuente }}: 
     <span *ngIf="obtenerValorConPrefijo('fuentePoblacionSexoAISD') && obtenerValorConPrefijo('fuentePoblacionSexoAISD') !== '____'">
       {{ obtenerValorConPrefijo('fuentePoblacionSexoAISD') }}
     </span>
     <span *ngIf="!obtenerValorConPrefijo('fuentePoblacionSexoAISD') || obtenerValorConPrefijo('fuentePoblacionSexoAISD') === '____'">
-      Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)
+      {{ SECCION6_TEMPLATES.fuenteTablaSexoDefault }}
     </span>
   </p>
 
   <!-- Sección b: Población según grupo etario -->
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Población según grupo etario</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION6_TEMPLATES.tituloEtario }}</strong></p>
   <p class="text-justify">{{ obtenerTextoPoblacionEtarioView() }}</p>
 
   <app-table-wrapper 
-    [title]="obtenerValorConPrefijo('tituloPoblacionEtarioAISD') || 'Población por grandes grupos de edad – CC ' + obtenerNombreComunidadActual() + ' (2017)'" 
+    [title]="obtenerValorConPrefijo('tituloPoblacionEtarioAISD') || SECCION6_TEMPLATES.tituloTablaEtarioDefault.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" 
     sectionId="3.1.4.A.1.2">
     <table class="table-container">
       <thead>
         <tr>
-          <th class="table-header">Categoría</th>
-          <th class="table-header">Casos</th>
-          <th class="table-header">Porcentaje</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerCategoria }}</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerCasos }}</th>
+          <th class="table-header">{{ SECCION6_TEMPLATES.headerPorcentaje }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of getPoblacionEtarioConPorcentajes()">
           <td class="table-cell">
             <span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="database">{{ item.categoria }}</span>
-            <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+            <span *ngIf="!item.categoria || item.categoria === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
           <td class="table-cell">
             <span *ngIf="item.casos !== undefined && item.casos !== '____'" appDataHighlight="database">{{ item.casos }}</span>
-            <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+            <span *ngIf="item.casos === undefined || item.casos === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
           <td class="table-cell">
             <span *ngIf="item.porcentaje" appDataHighlight="calculated">{{ item.porcentaje }}</span>
-            <span *ngIf="!item.porcentaje">____</span>
+            <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
         </tr>
         <tr *ngIf="getPoblacionEtarioConPorcentajes().length === 0">
-          <td class="table-cell">____</td>
-          <td class="table-cell">____</td>
-          <td class="table-cell">____</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
         </tr>
       </tbody>
     </table>
   </app-table-wrapper>
   <p class="source">
-    Fuente: 
+    {{ SECCION6_TEMPLATES.labelFuente }}: 
     <span *ngIf="obtenerValorConPrefijo('fuentePoblacionEtarioAISD') && obtenerValorConPrefijo('fuentePoblacionEtarioAISD') !== '____'">
       {{ obtenerValorConPrefijo('fuentePoblacionEtarioAISD') }}
     </span>
     <span *ngIf="!obtenerValorConPrefijo('fuentePoblacionEtarioAISD') || obtenerValorConPrefijo('fuentePoblacionEtarioAISD') === '____'">
-      Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)
+      {{ SECCION6_TEMPLATES.fuenteTablaEtarioDefault }}
     </span>
   </p>
 
@@ -109,8 +109,8 @@
     [fotografias]="fotografiasVista"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX + prefijoGrupoSignal()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION6_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION6_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION6_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>

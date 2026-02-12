@@ -9,6 +9,13 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import {
+  SECCION9_WATCHED_FIELDS,
+  SECCION9_SECTION_ID,
+  SECCION9_TEMPLATES,
+  SECCION9_PLANTILLAS_DINAMICAS,
+  SECCION9_CONFIG
+} from './seccion9-constants';
 
 @Component({
   standalone: true,
@@ -25,32 +32,34 @@ import { TableNumberingService } from 'src/app/core/services/numbering/table-num
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion9FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.5';
+  @Input() override seccionId: string = SECCION9_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = true;
   
-  override readonly PHOTO_PREFIX = 'fotografiaEstructura';
+  // ✅ Hacer TEMPLATES accesible en template
+  readonly SECCION9_TEMPLATES = SECCION9_TEMPLATES;
+
+  override readonly PHOTO_PREFIX = SECCION9_CONFIG.photoPrefix;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION9_WATCHED_FIELDS;
 
   fotografiasSeccion9: FotoItem[] = [];
 
-  override watchedFields: string[] = [
-    'grupoAISD', 'textoViviendas', 'textoEstructura', 
-    'condicionOcupacionTabla', 'tiposMaterialesTabla'
-  ];
-
-  // ✅ SIGNALS PUROS
+  // ✅ SIGNAL PRINCIPAL: Lee todos los datos de la sección
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  readonly textoViviendasSignal: Signal<string> = computed(() => {
-    const data = this.formDataSignal();
-    return data['textoViviendas'] || '';
-  });
+  // ✅ AUTO-SYNC FIELDS (reemplazan onFieldChange)
+  readonly textoViviendas = this.createAutoSyncField('textoViviendas', '');
+  readonly textoEstructura = this.createAutoSyncField('textoEstructura', '');
+  readonly tituloCondicionOcupacion = this.createAutoSyncField('tituloCondicionOcupacion', '');
+  readonly fuenteCondicionOcupacion = this.createAutoSyncField('fuenteCondicionOcupacion', '');
+  readonly tituloTiposMateriales = this.createAutoSyncField('tituloTiposMateriales', '');
+  readonly fuenteTiposMateriales = this.createAutoSyncField('fuenteTiposMateriales', '');
 
-  readonly textoEstructuraSignal: Signal<string> = computed(() => {
-    const data = this.formDataSignal();
-    return data['textoEstructura'] || '';
+  // ✅ SIGNALS DERIVADOS: Lectura del estado
+  readonly grupoAISDSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
   });
 
   readonly condicionOcupacionSignal: Signal<any[]> = computed(() => {
@@ -79,6 +88,59 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ PLANTILLAS DINÁMICAS: Con sustitución de comunidad
+  readonly textoViviendasDinamico: Signal<string> = computed(() => {
+    const guardado = this.textoViviendas.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    const comunidad = this.grupoAISDSignal();
+    return SECCION9_PLANTILLAS_DINAMICAS.textoViviendasTemplate.replace('__COMUNIDAD__', comunidad);
+  });
+
+  readonly textoEstructuraDinamico: Signal<string> = computed(() => {
+    const guardado = this.textoEstructura.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    const comunidad = this.grupoAISDSignal();
+    return SECCION9_PLANTILLAS_DINAMICAS.textoEstructuraTemplate.replace('__COMUNIDAD__', comunidad);
+  });
+
+  readonly tituloCondicionOcupacionDinamico: Signal<string> = computed(() => {
+    const guardado = this.tituloCondicionOcupacion.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    const comunidad = this.grupoAISDSignal();
+    return SECCION9_TEMPLATES.tituloDefaultCondicionOcupacion.replace('{comunidad}', comunidad);
+  });
+
+  readonly tituloTiposMaterialesDinamico: Signal<string> = computed(() => {
+    const guardado = this.tituloTiposMateriales.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    const comunidad = this.grupoAISDSignal();
+    return SECCION9_TEMPLATES.tituloDefaultTiposMateriales.replace('{comunidad}', comunidad);
+  });
+
+  readonly fuenteCondicionOcupacionDinamico: Signal<string> = computed(() => {
+    const guardado = this.fuenteCondicionOcupacion.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    return SECCION9_TEMPLATES.fuenteDefaultCondicionOcupacion;
+  });
+
+  readonly fuenteTiposMaterialesDinamico: Signal<string> = computed(() => {
+    const guardado = this.fuenteTiposMateriales.value();
+    if (guardado && guardado.trim().length > 0) {
+      return guardado;
+    }
+    return SECCION9_TEMPLATES.fuenteDefaultTiposMateriales;
+  });
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -87,14 +149,14 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
 
-    // ✅ EFFECT: Auto-sync datos
+    // ✅ EFFECT: Auto-sync datos generales
     effect(() => {
       const data = this.formDataSignal();
       this.datos = { ...data };
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT: Monitorear fotos
+    // ✅ EFFECT: Monitorear fotos y actualizar
     effect(() => {
       this.photoFieldsHash();
       this.cargarFotografias();
@@ -120,52 +182,14 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     this.cdRef.markForCheck();
   }
 
-  override obtenerNombreComunidadActual(): string {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
-  }
-
-  obtenerTextoViviendas(): string {
-    const manual = this.datos['textoViviendas'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    // Retornar plantilla con placeholders dinámicos vacíos
-    return this.generarPlantillaTextoViviendas();
-  }
-
-  obtenerTextoEstructura(): string {
-    const manual = this.datos['textoEstructura'];
-    if (manual && manual.trim().length > 0) {
-      return manual;
-    }
-    // Retornar plantilla con placeholders dinámicos vacíos
-    return this.generarPlantillaTextoEstructura();
-  }
-
-  /**
-   * Genera la plantilla de texto para Viviendas con placeholders dinámicos
-   */
-  private generarPlantillaTextoViviendas(): string {
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron un total de ____ viviendas empadronadas. De estas, solamente ____ se encuentran ocupadas, representando un ____%. Cabe mencionar que, para poder describir el aspecto de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.`;
-  }
-
-  /**
-   * Genera la plantilla de texto para Estructura con placeholders dinámicos
-   */
-  private generarPlantillaTextoEstructura(): string {
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Según la información recabada de los Censos Nacionales 2017, dentro de la CC ${comunidad}, el material más empleado para la construcción de las paredes de las viviendas es el ____, pues representa el ____%. A ello le complementa el material de ____ (____%). Respecto a los techos, destacan principalmente las planchas de calamina, fibra de cemento o similares con un ____%. El porcentaje restante consiste en ____ (____%) y en tejas (____%). Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (____%). Por otra parte, el porcentaje restante (____%) consiste en cemento.`;
-  }
-
-  // ✅ TABLA 1: Condición de Ocupación
+  // ✅ CONFIGURACIÓN DE TABLA 1: Condición de Ocupación
   get condicionOcupacionConfig(): any {
     return {
       tablaKey: this.getTablaKeyCondicionOcupacion(),
       totalKey: 'categoria',
       campoTotal: 'casos',
       campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,  // ✅ Sin estructura inicial - el backend llenará datos
+      noInicializarDesdeEstructura: true,
       calcularPorcentajes: true
     };
   }
@@ -178,11 +202,12 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   onCondicionOcupacionTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyCondicionOcupacion();
     const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
+    // ✅ Actualizar datos locales - DynamicTable se encarga de persistencia
+    this.datos[tablaKey] = datos;
     this.cdRef.detectChanges();
   }
 
-  // ✅ TABLA 2: Tipos de Materiales
+  // ✅ CONFIGURACIÓN DE TABLA 2: Tipos de Materiales
   get tiposMaterialesConfig(): any {
     return {
       tablaKey: this.getTablaKeyTiposMateriales(),
@@ -202,7 +227,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   onTiposMaterialesTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyTiposMateriales();
     const datos = updatedData || this.datos[tablaKey] || [];
-    this.onFieldChange(tablaKey, datos, { refresh: true });
+    // ✅ Actualizar datos locales - DynamicTable se encarga de persistencia
+    this.datos[tablaKey] = datos;
     this.cdRef.detectChanges();
   }
 
@@ -213,85 +239,6 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
 
   obtenerNumeroCuadroTiposMateriales(): string {
     return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
-  }
-
-  // ✅ TÍTULOS Y FUENTES DE TABLAS
-  obtenerTituloCondicionOcupacion(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tituloKey = prefijo ? `tituloCondicionOcupacion${prefijo}` : 'tituloCondicionOcupacion';
-    const titulo = this.datos[tituloKey];
-    if (titulo && titulo.trim().length > 0) {
-      return titulo;
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Condición de ocupación de las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  onTituloCondicionOcupacionChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tituloKey = prefijo ? `tituloCondicionOcupacion${prefijo}` : 'tituloCondicionOcupacion';
-    this.onFieldChange(tituloKey, valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerFuenteCondicionOcupacion(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const fuenteKey = prefijo ? `fuenteCondicionOcupacion${prefijo}` : 'fuenteCondicionOcupacion';
-    const fuente = this.datos[fuenteKey];
-    if (fuente && fuente.trim().length > 0) {
-      return fuente;
-    }
-    return 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
-  }
-
-  onFuenteCondicionOcupacionChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const fuenteKey = prefijo ? `fuenteCondicionOcupacion${prefijo}` : 'fuenteCondicionOcupacion';
-    this.onFieldChange(fuenteKey, valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerTituloTiposMateriales(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tituloKey = prefijo ? `tituloTiposMateriales${prefijo}` : 'tituloTiposMateriales';
-    const titulo = this.datos[tituloKey];
-    if (titulo && titulo.trim().length > 0) {
-      return titulo;
-    }
-    const comunidad = this.obtenerNombreComunidadActual();
-    return `Tipos de materiales de las viviendas – CC ${comunidad} (2017)`;
-  }
-
-  onTituloTiposMaterialesChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const tituloKey = prefijo ? `tituloTiposMateriales${prefijo}` : 'tituloTiposMateriales';
-    this.onFieldChange(tituloKey, valor, { refresh: false });
-    this.cdRef.markForCheck();
-  }
-
-  obtenerFuenteTiposMateriales(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const fuenteKey = prefijo ? `fuenteTiposMateriales${prefijo}` : 'fuenteTiposMateriales';
-    const fuente = this.datos[fuenteKey];
-    if (fuente && fuente.trim().length > 0) {
-      return fuente;
-    }
-    return 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
-  }
-
-  onFuenteTiposMaterialesChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valor = input.value;
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const fuenteKey = prefijo ? `fuenteTiposMateriales${prefijo}` : 'fuenteTiposMateriales';
-    this.onFieldChange(fuenteKey, valor, { refresh: false });
-    this.cdRef.markForCheck();
   }
 
   trackByIndex(index: number): number {

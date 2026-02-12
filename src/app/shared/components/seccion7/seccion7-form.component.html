@@ -1,33 +1,33 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.3. Indicadores y distribución de la Población Económicamente Activa por rama de actividad, tipo de empleo, tasas e ingresos.</h4>
+    <h4 class="section-title">{{ SECCION7_TEMPLATES.TITULO_PRINCIPAL }}</h4>
     
     <!-- SECCIÓN a: PET -->
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">a. Población en edad de Trabajar (PET)</h4>
+      <h4 class="section-title">{{ SECCION7_TEMPLATES.SUBTITULO_PET }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }}</h4>
         
         <app-paragraph-editor
           [fieldId]="'parrafoSeccion7_pet_completo' + obtenerPrefijoGrupo()"
-          label="PET - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_PET_TEXTO_COMPLETO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoSeccion7PETCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_pet_completo' + obtenerPrefijoGrupo(), $event)">
+          [value]="parrafoSeccion7PetCompleto.value() || obtenerTextoSeccion7PETCompleto()"
+          (valueChange)="parrafoSeccion7PetCompleto.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_TITULO_TABLA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPET' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroTituloPET' + obtenerPrefijo(), $event)"
-            placeholder="Ej: PET según grupos de edad">
+            [ngModel]="cuadroTituloPET.value()"
+            (ngModelChange)="cuadroTituloPET.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PET">
         </div>
 
         <label class="label">Tabla PET - Editable</label>
@@ -43,69 +43,69 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_FUENTE_TABLA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePET' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroFuentePET' + obtenerPrefijo(), $event)"
-            placeholder="Ej: GEADES, 2024">
+            [ngModel]="cuadroFuentePET.value()"
+            (ngModelChange)="cuadroFuentePET.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_FUENTE_PET">
         </div>
       </div>
     </div>
 
     <!-- SECCIÓN b: PEA -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Población Económicamente Activa (PEA)</h4>
+      <h4 class="section-title">{{ SECCION7_TEMPLATES.SUBTITULO_PEA }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos - Detalle PEA</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }} - Detalle PEA</h4>
         
         <app-paragraph-editor
           [fieldId]="'textoDetalePEA' + obtenerPrefijoGrupo()"
-          label="Detalle PEA - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_DETALLE_PEA_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoDetalePEA()"
-          (valueChange)="onFieldChange('textoDetalePEA' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoDetalePEA.value() || obtenerTextoDetalePEA()"
+          (valueChange)="textoDetalePEA.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos - Definición PEA</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }} - Definición PEA</h4>
         
         <app-paragraph-editor
           [fieldId]="'textoDefinicionPEA' + obtenerPrefijoGrupo()"
-          label="Definición PEA - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_DEFINICION_PEA_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoDefinicionPEA()"
-          (valueChange)="onFieldChange('textoDefinicionPEA' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoDefinicionPEA.value() || obtenerTextoDefinicionPEA()"
+          (valueChange)="textoDefinicionPEA.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos - Análisis PEA</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }} - Análisis PEA</h4>
         
         <app-paragraph-editor
           [fieldId]="'textoAnalisisPEA' + obtenerPrefijoGrupo()"
-          label="Análisis PEA - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_ANALISIS_PEA_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoAnalisisPEA()"
-          (valueChange)="onFieldChange('textoAnalisisPEA' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoAnalisisPEA.value() || obtenerTextoAnalisisPEA()"
+          (valueChange)="textoAnalisisPEA.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla PEA</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_TITULO_TABLA_PEA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPEA' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroTituloPEA' + obtenerPrefijo(), $event)"
-            placeholder="Ej: Conformación de la PEA y No PEA, según sexo">
+            [ngModel]="cuadroTituloPEA.value()"
+            (ngModelChange)="cuadroTituloPEA.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA">
         </div>
 
         <label class="label">Tabla PEA - Editable</label>
@@ -121,79 +121,79 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla PEA</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_FUENTE_TABLA_PEA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePEA' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroFuentePEA' + obtenerPrefijo(), $event)"
-            placeholder="Ej: INEI 2018">
+            [ngModel]="cuadroFuentePEA.value()"
+            (ngModelChange)="cuadroFuentePEA.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_FUENTE_PEA">
         </div>
       </div>
     </div>
 
     <!-- SECCIÓN b.1: Situación del empleo -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.1. Situación del empleo (independiente o dependiente)</h4>
+      <h4 class="section-title">{{ SECCION7_TEMPLATES.SUBTITULO_SITUACION_EMPLEO }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }}</h4>
         
         <app-paragraph-editor
           [fieldId]="'parrafoSeccion7_situacion_empleo_completo' + obtenerPrefijoGrupo()"
-          label="Situación del Empleo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_SITUACION_EMPLEO_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoSeccion7SituacionEmpleoCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_situacion_empleo_completo' + obtenerPrefijoGrupo(), $event)">
+          [value]="parrafoSeccion7SituacionEmpleoCompleto.value() || obtenerTextoSeccion7SituacionEmpleoCompleto()"
+          (valueChange)="parrafoSeccion7SituacionEmpleoCompleto.update($event)">
         </app-paragraph-editor>
       </div>
     </div>
 
     <!-- SECCIÓN b.2: Ingresos -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.2. Ingresos de la población</h4>
+      <h4 class="section-title">{{ SECCION7_TEMPLATES.SUBTITULO_INGRESOS }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }}</h4>
         
         <app-paragraph-editor
           [fieldId]="'parrafoSeccion7_ingresos_completo' + obtenerPrefijoGrupo()"
-          label="Ingresos - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_INGRESOS_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoSeccion7IngresosCompleto()"
-          (valueChange)="onFieldChange('parrafoSeccion7_ingresos_completo' + obtenerPrefijoGrupo(), $event)">
+          [value]="parrafoSeccion7IngresosCompleto.value() || obtenerTextoSeccion7IngresosCompleto()"
+          (valueChange)="parrafoSeccion7IngresosCompleto.update($event)">
         </app-paragraph-editor>
       </div>
     </div>
 
     <!-- SECCIÓN b.3: Índice de desempleo y PEA Ocupada -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.3. Índice de desempleo</h4>
+      <h4 class="section-title">{{ SECCION7_TEMPLATES.SUBTITULO_INDICE_DESEMPLEO }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION7_TEMPLATES.LABEL_EDITAR_PARRAFOS }}</h4>
         
         <app-paragraph-editor
           [fieldId]="'textoIndiceDesempleo' + obtenerPrefijoGrupo()"
-          label="Índice de Desempleo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION7_TEMPLATES.LABEL_INDICE_DESEMPLEO_TEXTO"
+          [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
           [rows]="4"
-          [value]="obtenerTextoIndiceDesempleo()"
-          (valueChange)="onFieldChange('textoIndiceDesempleo' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoIndiceDesempleo.value() || obtenerTextoIndiceDesempleo()"
+          (valueChange)="textoIndiceDesempleo.update($event)">
         </app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
         <div class="form-group" style="margin-bottom: 15px;">
-          <label class="label">Título de la Tabla PEA Ocupada</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_TITULO_TABLA_PEA_OCUPADA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroTituloPEAOcupada' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroTituloPEAOcupada' + obtenerPrefijo(), $event)"
-            placeholder="Ej: Conformación de la PEA Ocupada y Desocupada, según sexo">
+            [ngModel]="cuadroTituloPEAOcupada.value()"
+            (ngModelChange)="cuadroTituloPEAOcupada.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA_OCUPADA">
         </div>
 
         <label class="label">Tabla PEA Ocupada - Editable</label>
@@ -209,46 +209,46 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 15px;">
-          <label class="label">Fuente de la Tabla PEA Ocupada</label>
+          <label class="label">{{ SECCION7_TEMPLATES.LABEL_FUENTE_TABLA_PEA_OCUPADA }}</label>
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['cuadroFuentePEAOcupada' + obtenerPrefijo()]"
-            (ngModelChange)="onFieldChange('cuadroFuentePEAOcupada' + obtenerPrefijo(), $event)"
-            placeholder="Ej: INEI 2018">
+            [ngModel]="cuadroFuentePEAOcupada.value()"
+            (ngModelChange)="cuadroFuentePEAOcupada.update($event)"
+            [placeholder]="SECCION7_TEMPLATES.PLACEHOLDER_FUENTE_PEA_OCUPADA">
         </div>
       </div>
     </div>
 
     <!-- Análisis de Ocupación -->
     <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Editar Párrafo - Análisis de Ocupación</label>
+      <label class="label">{{ SECCION7_TEMPLATES.LABEL_ANALISIS_OCUPACION_TEXTO }}</label>
       
       <app-paragraph-editor
         [fieldId]="'textoAnalisisOcupacion' + obtenerPrefijoGrupo()"
-        label="Análisis de Ocupación - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION7_TEMPLATES.LABEL_ANALISIS_OCUPACION_TEXTO"
+        [hint]="SECCION7_TEMPLATES.HINT_TEXTO_COMPLETO"
         [rows]="4"
-        [value]="obtenerTextoAnalisisOcupacion()"
-        (valueChange)="onFieldChange('textoAnalisisOcupacion' + obtenerPrefijoGrupo(), $event)">
+        [value]="textoAnalisisOcupacion.value() || obtenerTextoAnalisisOcupacion()"
+        (valueChange)="textoAnalisisOcupacion.update($event)">
       </app-paragraph-editor>
     </div>
 
     <!-- Fotografías -->
     <div class="form-field" style="margin-top: 30px;">
-      <label class="label">Fotografías de PEA</label>
+      <label class="label">{{ SECCION7_TEMPLATES.LABEL_FOTOGRAFIAS }}</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
         [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
+        [labelTitulo]="SECCION7_TEMPLATES.PLACEHOLDER_FOTO_TITULO"
+        [labelFuente]="SECCION7_TEMPLATES.PLACEHOLDER_FOTO_FUENTE"
         labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Población de la CC Ayroca"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="PEA"
-        fuenteDefault="GEADES, 2024"
+        [placeholderTitulo]="SECCION7_TEMPLATES.PLACEHOLDER_FOTO_TITULO"
+        [placeholderFuente]="SECCION7_TEMPLATES.PLACEHOLDER_FOTO_FUENTE"
+        [tituloDefault]="SECCION7_TEMPLATES.FOTO_TITULO_DEFAULT"
+        [fuenteDefault]="SECCION7_TEMPLATES.FOTO_FUENTE_DEFAULT"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>
