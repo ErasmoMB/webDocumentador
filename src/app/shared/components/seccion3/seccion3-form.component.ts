@@ -27,6 +27,9 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   @Input() override seccionId: string = '3.1.3';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION3_TEMPLATES = SECCION3_TEMPLATES;
+
   override readonly PHOTO_PREFIX = 'fotografiaSeccion3';
   override useReactiveSync: boolean = true;
 
@@ -36,13 +39,13 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   entrevistadosConfig: TableConfig = {
     tablaKey: 'entrevistados',
     totalKey: 'nombre',
-    estructuraInicial: [{ nombre: '', cargo: '', organizacion: '' }]
+    estructuraInicial: []
   };
 
   columnasEntrevistados: any[] = [
-    { field: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre completo' },
-    { field: 'cargo', label: 'Cargo', type: 'text', placeholder: 'Cargo o función' },
-    { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Organización' }
+    { field: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre completo', readonly: false },
+    { field: 'cargo', label: 'Cargo', type: 'text', placeholder: 'Cargo o función', readonly: false },
+    { field: 'organizacion', label: 'Organización', type: 'text', placeholder: 'Organización', readonly: false }
   ];
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -146,7 +149,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     }).join('');
   }
 
-  override onFieldChange(fieldId: string, value: any): void {
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
     let valorLimpio = '';
     if (value !== undefined && value !== null && value !== 'undefined') {
       valorLimpio = value;
@@ -224,13 +227,17 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     return this.entrevistadosSignal();
   }
 
-  onTablaUpdated(): void {
-    const entrevistados = this.entrevistadosSignal();
-    if (Array.isArray(entrevistados)) {
-      this.projectFacade.setTableData(this.seccionId, null, 'entrevistados', entrevistados);
-      this.formChangeService.persistFields(this.seccionId, 'form', { entrevistados });
-      this.cdRef.markForCheck();
-    }
+  onTablaUpdated(tabla: any[]): void {
+    const tablaKey = 'entrevistados';
+    
+    // PASO 1️⃣: CREAR NUEVA REFERENCIA con spread operator
+    this.datos[tablaKey] = [...tabla];
+    
+    // PASO 2️⃣: PERSISTIR sin refresh=true para evitar sobrescrituras
+    this.onFieldChange(tablaKey, this.datos[tablaKey], { refresh: false });
+    
+    // PASO 3️⃣: FORZAR CHANGE DETECTION explícitamente
+    this.cdRef.detectChanges();
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {

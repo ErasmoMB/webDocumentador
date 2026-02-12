@@ -13,6 +13,11 @@ export const SECCION3_WATCHED_FIELDS = [
   'parrafoSeccion3_fuentesSecundarias',
   'entrevistados',
   'fuentesSecundariasLista',
+  'cuadroTituloEntrevistados',
+  'cuadroFuenteEntrevistados',
+  'cantidadEntrevistas',
+  'fechaTrabajoCampo',
+  'consultora',
   // Fotos (10 máximo)
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion3${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion3${i + 1}Fuente`),
@@ -41,4 +46,35 @@ la zona de estudio, directivos de instituciones públicas y privadas ubicadas en
   
   fuentesSecundariasDefault: `Documentos técnicos, estudios previos, informes estadísticos,
 datos del Instituto Nacional de Estadística e Informática (INEI), entre otros.`,
+  
+  // ✅ Valores por defecto para Tabla de Entrevistados
+  cuadroTituloEntrevistadosDefault: 'Lista de Entrevistados',
+  cuadroFuenteEntrevistadosDefault: 'GEADES (2024)',
+  mensajeNoDatosRegistradosDefault: 'No hay datos registrados',
+  
+  // ✅ Valores por defecto para fallback de textos
+  metodologiaDefaultFallback: `Para la descripción del aspecto socioeconómico se ha utilizado una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que luego son contrastados y completados con la consulta de diversas fuentes de información oficiales actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale – MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre otros.`,
+  
+  fuentesPrimariasDefaultFallback: `Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de {{cantidadEntrevistas}} entrevistas en profundidad a informantes calificados y autoridades locales.`,
+  
+  fuentesSecundariasDefaultFallback: `En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:`,
+  
+  fuentesSecundariasVaciasMessage: 'No hay fuentes secundarias registradas.',
+  
+  // ✅ Valores por defecto para Fotografías
+  labelFotoTitulo: 'Título',
+  labelFotoFuente: 'Fuente',
+  labelFotoImagen: 'Imagen',
+  
+  // ✅ Placeholder para tabla de entrevistados
+  placeholderTituloTabla: 'Ej: Lista de Entrevistados',
+  
+  // ✅ Labels completos para Fotografías en Formulario
+  labelFotoTituloCompleto: 'Título de la fotografía',
+  labelFotoFuenteCompleto: 'Fuente de la fotografía',
+  labelFotoImagenCompleto: 'Fotografía - Imagen',
+  placeholderFotoTitulo: 'Ej: Fotografía de la sección 3',
+  placeholderFotoFuente: 'Ej: GEADES, 2024',
+  tituloFotoDefault: 'Sección 3',
+  fuenteFotoDefault: 'GEADES, 2024',
 };

@@ -51,26 +51,36 @@
     </div>
 
     <div class="form-field mt-lg">
+      <label class="label">Título de la Tabla <span class="required">*</span></label>
+      <input 
+        type="text" 
+        class="input" 
+        [placeholder]="SECCION3_TEMPLATES.placeholderTituloTabla"
+        [value]="formData['cuadroTituloEntrevistados'] || ''"
+        (input)="onFieldChange('cuadroTituloEntrevistados', $any($event.target).value)">
+    </div>
+
+    <div class="form-field mt-lg">
       <label class="label">Lista de Entrevistados</label>
       <app-dynamic-table
-        [datos]="formData"
+        [datos]="datos"
         [sectionId]="seccionId"
         [config]="entrevistadosConfig"
         [columns]="columnasEntrevistados"
         [tablaKey]="'entrevistados'"
         [totalKey]="'nombre'"
-        (tableUpdated)="onTablaUpdated()">
+        (tableUpdated)="onTablaUpdated($event)">
       </app-dynamic-table>
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Consultora / Fuente</label>
+      <label class="label">Fuente de la Tabla <span class="required">*</span></label>
       <input 
         type="text" 
         class="input" 
         placeholder="Ej: GEADES (2024)"
-        [value]="formData['consultora'] || ''"
-        (input)="onFieldChange('consultora', $any($event.target).value)">
+        [value]="formData['cuadroFuenteEntrevistados'] || ''"
+        (input)="onFieldChange('cuadroFuenteEntrevistados', $any($event.target).value)">
     </div>
   </div>
 
@@ -127,13 +137,13 @@
       [photoPrefix]="photoPrefix"
       [permitirMultiples]="true"
       [key]="key"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Fotografía de la sección 3"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Sección 3"
-      fuenteDefault="GEADES, 2024"
+      [labelTitulo]="SECCION3_TEMPLATES.labelFotoTituloCompleto"
+      [labelFuente]="SECCION3_TEMPLATES.labelFotoFuenteCompleto"
+      [labelImagen]="SECCION3_TEMPLATES.labelFotoImagenCompleto"
+      [placeholderTitulo]="SECCION3_TEMPLATES.placeholderFotoTitulo"
+      [placeholderFuente]="SECCION3_TEMPLATES.placeholderFotoFuente"
+      [tituloDefault]="SECCION3_TEMPLATES.tituloFotoDefault"
+      [fuenteDefault]="SECCION3_TEMPLATES.fuenteFotoDefault"
       [requerido]="false"
       (fotografiasChange)="onFotografiasChange($event)">
     </app-image-upload>

@@ -23,6 +23,9 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   @Input() override seccionId: string = '3.1.3';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION3_TEMPLATES = SECCION3_TEMPLATES;
+
   override readonly PHOTO_PREFIX = 'fotografiaSeccion3';
   override useReactiveSync: boolean = false;
 
@@ -122,7 +125,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     if (formData['parrafoSeccion3_metodologia']) {
       return formData['parrafoSeccion3_metodologia'];
     }
-    return 'Para la descripción del aspecto socioeconómico se ha utilizado una combinación de métodos y técnicas cualitativas de investigación social, entre ellas se ha seleccionado las técnicas de entrevistas semiestructuradas con autoridades locales y/o informantes calificados, así como de encuestas de carácter socioeconómico. Además de ello, se ha recurrido a la recopilación de documentos que luego son contrastados y completados con la consulta de diversas fuentes de información oficiales actualizadas respecto al área de influencia social tales como el Censo Nacional INEI (2017), Escale – MINEDU, la base de datos de la Oficina General de Estadística e Informática del Ministerio de Salud, entre otros.';
+    return SECCION3_TEMPLATES.metodologiaDefaultFallback;
   }
 
   obtenerTextoFuentesPrimarias(): string {
@@ -131,7 +134,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
       return formData['parrafoSeccion3_fuentes_primarias'];
     }
     const cantidadEntrevistas = formData['cantidadEntrevistas'] || '____';
-    return `Dentro de las fuentes primarias se consideran a las autoridades comunales y locales, así como pobladores que fueron entrevistados y proporcionaron información cualitativa y cuantitativa. Esta información de primera mano muestra datos fidedignos que proporcionan un alcance más cercano de la realidad en la que se desarrollan las poblaciones del área de influencia social. Para la obtención de información cualitativa, se realizaron un total de ${cantidadEntrevistas} entrevistas en profundidad a informantes calificados y autoridades locales.`;
+    return SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback.replace('{{cantidadEntrevistas}}', cantidadEntrevistas);
   }
 
   obtenerTextoFuentesSecundarias(): string {
@@ -139,7 +142,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     if (formData['parrafoSeccion3_fuentes_secundarias']) {
       return formData['parrafoSeccion3_fuentes_secundarias'];
     }
-    return 'En la elaboración de la LBS se utilizó información cuantitativa de fuentes secundarias provenientes de fuentes oficiales, entre las que se encuentran las siguientes:';
+    return SECCION3_TEMPLATES.fuentesSecundariasDefaultFallback;
   }
 
   obtenerListaFuentesSecundarias(): string[] {

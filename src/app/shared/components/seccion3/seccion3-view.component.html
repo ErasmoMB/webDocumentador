@@ -10,9 +10,10 @@
   <div class="text-justify" [innerHTML]="textoFuentesPrimariasFormateado()"></div>
 
   <!-- Tabla de Entrevistados -->
-  <div class="table-section mt-lg">
-    <h5>Lista de Entrevistados</h5>
-    <table class="table table-striped" *ngIf="obtenerTablaEntrevistados().length > 0">
+  <app-table-wrapper 
+    [title]="(formDataSignal()['cuadroTituloEntrevistados'] || SECCION3_TEMPLATES.cuadroTituloEntrevistadosDefault)" 
+    [sectionId]="'3.1.3'">
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Nombre</th>
@@ -21,15 +22,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let entrevistado of obtenerTablaEntrevistados()">
+        <tr *ngIf="entrevistadosSignal().length === 0">
+          <td colspan="3" class="text-muted text-center">{{ SECCION3_TEMPLATES.mensajeNoDatosRegistradosDefault }}</td>
+        </tr>
+        <tr *ngFor="let entrevistado of entrevistadosSignal()">
           <td>{{ entrevistado.nombre }}</td>
           <td>{{ entrevistado.cargo }}</td>
           <td>{{ entrevistado.organizacion }}</td>
         </tr>
       </tbody>
     </table>
-    <p *ngIf="obtenerTablaEntrevistados().length === 0" class="text-muted">No hay entrevistados registrados.</p>
-  </div>
+  </app-table-wrapper>
+  <p class="data-source">
+    Fuente: {{ formDataSignal()['cuadroFuenteEntrevistados'] || SECCION3_TEMPLATES.cuadroFuenteEntrevistadosDefault }}
+  </p>
 
   <!-- B. Fuentes Secundarias -->
   <h4>B. Fuentes Secundarias</h4>
@@ -40,7 +46,7 @@
     <ul *ngIf="obtenerListaFuentesSecundarias().length > 0">
       <li *ngFor="let fuente of obtenerListaFuentesSecundarias()">{{ fuente }}</li>
     </ul>
-    <p *ngIf="obtenerListaFuentesSecundarias().length === 0" class="text-muted">No hay fuentes secundarias registradas.</p>
+    <p *ngIf="obtenerListaFuentesSecundarias().length === 0" class="text-muted">{{ SECCION3_TEMPLATES.fuentesSecundariasVaciasMessage }}</p>
   </div>
 
   <!-- Fotografías -->
@@ -50,8 +56,8 @@
     [fotografias]="fotografiasSeccion3"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION3_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION3_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION3_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>

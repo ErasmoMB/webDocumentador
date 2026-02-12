@@ -48,6 +48,9 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
   @Input() override seccionId: string = SECCION1_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION1_TEMPLATES = SECCION1_TEMPLATES;
+
   override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
   override useReactiveSync: boolean = true;
   override watchedFields: string[] = SECCION1_WATCHED_FIELDS;
@@ -221,14 +224,14 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoParrafoPrincipal(): string {
-    if (this.datos?.parrafoSeccion1_principal) {
-      return this.datos.parrafoSeccion1_principal;
+    if (this.formDataSignal()?.['parrafoSeccion1_principal']) {
+      return this.formDataSignal()['parrafoSeccion1_principal'];
     }
     
-    const proyecto = this.datos?.projectName || '____';
-    const distrito = this.datos?.distritoSeleccionado || '____';
-    const provincia = this.datos?.provinciaSeleccionada || '____';
-    const departamento = this.datos?.departamentoSeleccionado || '____';
+    const proyecto = this.projectNameSignal() || '____';
+    const distrito = this.distritoSeleccionadoSignal() || '____';
+    const provincia = this.provinciaSeleccionadaSignal() || '____';
+    const departamento = this.departamentoSeleccionadoSignal() || '____';
     
     return `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ${proyecto}, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.\n\nEl proyecto ${proyecto} se encuentra ubicado en el distrito de ${distrito}, en la provincia de ${provincia}, en el departamento de ${departamento}, bajo la administración del Gobierno Regional de ${departamento}, en el sur del Perú.\n\nEste estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
   }

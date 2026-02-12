@@ -3,13 +3,13 @@
     <h4 class="section-title">Información del Proyecto</h4>
     
     <div class="form-field">
-      <label class="label">Nombre del Proyecto <span class="required">*</span></label>
+      <label class="label">{{ SECCION1_TEMPLATES.labelNombreProyecto }} <span class="required">*</span></label>
       <input 
         type="text" 
         class="input" 
-        placeholder="Ej: Proyecto Minero de Exploración"
-        [value]="projectNameSignal() === '____' ? '' : projectNameSignal()"
-        (input)="onFieldChange('projectName', $any($event.target).value)">
+        [placeholder]="SECCION1_TEMPLATES.placeholderNombreProyecto"
+        [ngModel]="projectNameSignal() === '____' ? '' : projectNameSignal()"
+        (ngModelChange)="onFieldChange('projectName', $event)">
     </div>
   </div>
 
@@ -17,7 +17,7 @@
     <h4 class="section-title">Cargar Datos de Centros Poblados</h4>
     
     <div class="form-field">
-      <label class="label">Subir UBIGEO de Centro Poblado <span class="required">*</span></label>
+      <label class="label">{{ SECCION1_TEMPLATES.labelSubirUBIGEO }} <span class="required">*</span></label>
       <div class="file-upload-wrapper">
         <input 
           type="file" 
@@ -32,43 +32,43 @@
           Seleccionar archivo
         </button>
         <span *ngIf="jsonFileNameSignal()" class="file-name">{{ jsonFileNameSignal() }}</span>
-        <span *ngIf="!jsonFileNameSignal()" class="file-name">Ningún archivo seleccionado</span>
+        <span *ngIf="!jsonFileNameSignal()" class="file-name">{{ SECCION1_TEMPLATES.mensajeArchivoNoSeleccionado }}</span>
       </div>
-      <small class="form-hint">Seleccione un archivo JSON con datos de centros poblados</small>
+      <small class="form-hint">{{ SECCION1_TEMPLATES.hintSeleccionarJSON }}</small>
     </div>
 
     <div class="form-field" *ngIf="centrosPobladosJSONSignal().length > 0">
-      <label class="label">Información Geográfica</label>
+      <label class="label">{{ SECCION1_TEMPLATES.labelInformacionGeografica }}</label>
       <div class="form-row">
         <div class="form-field">
-          <label class="label">Departamento <span class="required">*</span></label>
+          <label class="label">{{ SECCION1_TEMPLATES.labelDepartamento }} <span class="required">*</span></label>
           <input 
             type="text" 
             class="input" 
             [value]="departamentoSeleccionadoSignal()"
             (input)="onFieldChange('departamentoSeleccionado', $any($event.target).value)"
-            placeholder="Ingrese el departamento">
-          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+            [placeholder]="SECCION1_TEMPLATES.placeholderDepartamento">
+          <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
         <div class="form-field">
-          <label class="label">Provincia <span class="required">*</span></label>
+          <label class="label">{{ SECCION1_TEMPLATES.labelProvincia }} <span class="required">*</span></label>
           <input 
             type="text" 
             class="input" 
             [value]="provinciaSeleccionadaSignal()"
             (input)="onFieldChange('provinciaSeleccionada', $any($event.target).value)"
-            placeholder="Ingrese la provincia">
-          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+            [placeholder]="SECCION1_TEMPLATES.placeholderProvincia">
+          <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
         <div class="form-field">
-          <label class="label">Distrito <span class="required">*</span></label>
+          <label class="label">{{ SECCION1_TEMPLATES.labelDistrito }} <span class="required">*</span></label>
           <input 
             type="text" 
             class="input" 
             [value]="distritoSeleccionadoSignal()"
             (input)="onFieldChange('distritoSeleccionado', $any($event.target).value)"
-            placeholder="Ingrese el distrito">
-          <small class="form-hint">Se completa automáticamente desde el JSON, pero puede editarlo</small>
+            [placeholder]="SECCION1_TEMPLATES.placeholderDistrito">
+          <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
       </div>
     </div>
@@ -79,8 +79,8 @@
     
     <app-paragraph-editor
       fieldId="parrafoSeccion1_principal"
-      label="Párrafo Principal"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [label]="SECCION1_TEMPLATES.labelParrafoPrincipal"
+      [hint]="SECCION1_TEMPLATES.hintParrafoPrincipal"
       [rows]="8"
       [value]="parrafoPrincipalSignal()"
       (valueChange)="onFieldChange('parrafoSeccion1_principal', $event)">
@@ -88,8 +88,8 @@
 
     <app-paragraph-editor
       fieldId="parrafoSeccion1_4"
-      label="Introducción a Objetivos"
-      hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
+      [label]="SECCION1_TEMPLATES.labelIntroduccionObjetivos"
+      [hint]="SECCION1_TEMPLATES.hintIntroduccionObjetivos"
       [rows]="2"
       [value]="parrafoIntroduccionSignal()"
       (valueChange)="onFieldChange('parrafoSeccion1_4', $event)">
@@ -98,7 +98,7 @@
     <!-- Objetivos Dinámicos -->
     <div class="form-group-section mt-lg">
       <div class="dynamic-list-header">
-        <h4 class="section-title">Objetivos de la Línea Base Social</h4>
+        <h4 class="section-title">{{ SECCION1_TEMPLATES.labelObjetivos }}</h4>
         <button type="button" class="btn btn--add" (click)="agregarObjetivo()">
           ➕ Agregar
         </button>
@@ -106,7 +106,7 @@
       
       <div *ngFor="let objetivo of objetivosSignal(); let i = index; trackBy: trackByIndex" class="dynamic-list-item">
         <div class="dynamic-list-item-header">
-          <label class="label">Objetivo {{ i + 1 }}</label>
+          <label class="label">{{ SECCION1_TEMPLATES.labelObjetivoN }} {{ i + 1 }}</label>
           <button 
             type="button" 
             class="btn btn--remove" 
@@ -120,24 +120,24 @@
           [ngModel]="objetivo"
           (ngModelChange)="actualizarObjetivo(i, $event)"
           rows="3"
-          placeholder="Escriba el objetivo..."></textarea>
+          [placeholder]="SECCION1_TEMPLATES.placeholderObjetivo"></textarea>
       </div>
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Fotografías</label>
+      <label class="label">{{ SECCION1_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX"
         [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Fotografía de la sección 1"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Sección 1"
-        fuenteDefault="GEADES, 2024"
+        [labelTitulo]="SECCION1_TEMPLATES.labelFotoTituloCompleto"
+        [labelFuente]="SECCION1_TEMPLATES.labelFotoFuenteCompleto"
+        [labelImagen]="SECCION1_TEMPLATES.labelFotoImagenCompleto"
+        [placeholderTitulo]="SECCION1_TEMPLATES.placeholderFotoTitulo"
+        [placeholderFuente]="SECCION1_TEMPLATES.placeholderFotoFuente"
+        [tituloDefault]="SECCION1_TEMPLATES.tituloFotoDefault"
+        [fuenteDefault]="SECCION1_TEMPLATES.fuenteFotoDefault"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>

@@ -69,7 +69,7 @@ export class FormChangeService {
 
   persistFields(
     sectionId: string | undefined,
-    groupId: string,
+    groupId: string | null,
     updates: Record<string, any>,
     options?: {
       /** Actualiza FormularioService (fuente de verdad). */
@@ -98,8 +98,9 @@ export class FormChangeService {
 
     // 2. Actualizar FormStateService (reactivo) - sincronizado con paso 1
     if (opts.updateState) {
+      const resolvedGroupId = groupId || ''; // Usar cadena vacía si es null
       Object.keys(updates).forEach(fieldId => {
-        this.formState.updateField(resolvedSectionId, groupId, fieldId, updates[fieldId]);
+        this.formState.updateField(resolvedSectionId, resolvedGroupId, fieldId, updates[fieldId]);
       });
     }
 

@@ -32,6 +32,9 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   @Input() override seccionId: string = SECCION1_SECTION_ID;
   @Input() override modoFormulario: boolean = true;
 
+  // ✅ Hacer TEMPLATES accesible en el template
+  readonly SECCION1_TEMPLATES = SECCION1_TEMPLATES;
+
   override readonly PHOTO_PREFIX = 'fotografiaSeccion1';
   override useReactiveSync: boolean = true;
   override watchedFields: string[] = SECCION1_WATCHED_FIELDS;

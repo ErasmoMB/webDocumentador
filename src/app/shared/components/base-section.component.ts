@@ -1,4 +1,4 @@
-import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy, Injector, ProviderToken, Signal } from '@angular/core';
+import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Input, Directive, OnDestroy, Injector, ProviderToken, Signal, signal, effect } from '@angular/core';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { GroupDefinition, CCPPEntry } from 'src/app/core/state/project-state.model';
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
@@ -21,6 +21,7 @@ import { SectionReactiveSyncCoordinator } from '../utils/section-reactive-sync-c
 import { SectionPersistenceCoordinator } from '../utils/section-persistence-coordinator';
 import { SectionPhotoCoordinator } from '../utils/section-photo-coordinator';
 import { SectionTableCoordinator } from '../utils/section-table-coordinator';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Directive()
 export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck, OnDestroy {
@@ -792,5 +793,39 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     }
     return '____';
   }
+  /**
+   * PATTERN REACTIVO AUTOMÁTICO: Crea un campo con auto-sync
+   * - Signal para el valor
+   * - Auto-persist cuando cambia
+   * - Reutilizable en todas las secciones
+   */
+  protected createAutoSyncField<T>(fieldName: string, initialValue: T): {
+    value: Signal<T>,
+    update: (newValue: T) => void
+  } {
+    const formChangeService = this.resolve(FormChangeService);
+    const valueSignal = signal(initialValue);
+
+    // AUTO-PERSIST: Cada cambio en el signal persiste automáticamente
+    effect(() => {
+      const newValue = valueSignal();
+      if (newValue !== undefined && newValue !== null) {
+        formChangeService.persistFields(
+          this.seccionId,
+          null, // groupId: null para campos sin grupo específico
+          { [fieldName]: newValue },
+          { updateLegacy: true, updateState: true, notifySync: true, persist: true }
+        );
+        // Force change detection para vista
+        this.cdRef.markForCheck();
+      }
+    });
+
+    return {
+      value: valueSignal,
+      update: (newValue: T) => valueSignal.set(newValue)
+    };
+  }
+
 
 }

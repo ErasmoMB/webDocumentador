@@ -162,6 +162,119 @@ Si crear nueva sección con tablas dinámicas:
 
 ---
 
+## Error 2: Filas de Tabla Dinámicas Solo Aparecen Después del Segundo Click (Sección 3)
+
+**Síntoma:**
+- Haces clic en "Agregar Fila" en el formulario de Sección 3
+- **NADA pasa** - la fila no aparece
+- Haces clic nuevamente
+- **AHORA aparecen 2 filas** (la que debía aparecer en el primer click + la del segundo)
+- En la vista (lectura) las filas SÍ aparecen correctamente desde el primer click
+
+**Sección Afectada:**
+- ❌ Sección 3: **NO funcionaba correctamente** - Filas aparecían desde el segundo click
+
+**Causa Raíz - 2 Problemas:**
+
+1. **Template usaba signal en lugar de referencia mutable**
+   ```typescript
+   // ❌ INCORRECTO
+   [datos]="formData"  // formData es un signal computed()
+   
+   // ✅ CORRECTO
+   [datos]="datos"     // datos es la referencia mutable de BaseSectionComponent
+   ```
+
+2. **onFieldChange() estaba interfiriendo con detectChanges()**
+   ```typescript
+   // ❌ INCORRECTO
+   override onFieldChange(fieldId: string, value: any): void {
+     // ...
+     this.cdRef.detectChanges();  // Se ejecuta ANTES de onTablaUpdated()
+   }
+   
+   // ✅ CORRECTO
+   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+     // ...
+     this.cdRef.markForCheck();   // Solo marca, no forza detección
+   }
+   ```
+
+**Comparación Incorrecto vs Correcto:**
+
+### ❌ INCORRECTO (Sección 3 - Formulario):
+```typescript
+// Template
+<app-dynamic-table [datos]="formData" ...>  // ← Signal, no referencia mutable
+
+// Component
+override onFieldChange(fieldId: string, value: any): void {
+  this.projectFacade.setField(this.seccionId, null, fieldId, value);
+  this.formChangeService.persistFields(this.seccionId, 'form', { [fieldId]: value });
+  this.cdRef.detectChanges();  // ← Interfiere con onTablaUpdated
+}
+
+onTablaUpdated(tabla: any[]): void {
+  // ... pero el detectChanges anterior ya fue ejecutado
+}
+```
+
+**Problema:** 
+- `formData` es un signal computed, no se reactualiza con mutaciones a `this.datos`
+- `detectChanges()` en `onFieldChange` se ejecuta antes de `onTablaUpdated`
+- Angular OnPush requiere nueva referencia ANTES de detectar cambios
+
+### ✅ CORRECTO (Sección 3 - Formulario):
+```typescript
+// Template
+<app-dynamic-table [datos]="datos" ...>  // ← Referencia mutable
+
+// Component
+override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+  this.projectFacade.setField(this.seccionId, null, fieldId, value);
+  this.formChangeService.persistFields(this.seccionId, 'form', { [fieldId]: value });
+  this.cdRef.markForCheck();  // ← Solo marca, no forza
+}
+
+onTablaUpdated(tabla: any[]): void {
+  const tablaKey = 'entrevistados';
+  
+  // PASO 1️⃣: CREAR NUEVA REFERENCIA
+  this.datos[tablaKey] = [...tabla];
+  
+  // PASO 2️⃣: PERSISTIR sin refresh
+  this.onFieldChange(tablaKey, this.datos[tablaKey], { refresh: false });
+  
+  // PASO 3️⃣: FORZAR DETECCIÓN UNA SOLA VEZ
+  this.cdRef.detectChanges();
+}
+```
+
+**Por qué funciona:**
+- `[datos]="datos"` es referencia mutable que Angular OnPush MONITOREA
+- `markForCheck()` en `onFieldChange` no interfiere
+- `onTablaUpdated` controla TODA la lógica de detección
+- Primera referencia nueva = primer click muestra la fila ✅
+
+---
+
+## Solución Completa - Formularios con Tablas
+
+**Checklist al implementar tablas dinámicas en formulario:**
+
+```
+[ ] 1. Template: SIEMPRE usar [datos]="datos", NUNCA [datos]="formData" o signals
+[ ] 2. onFieldChange(): usar markForCheck() en lugar de detectChanges()
+[ ] 3. onTablaUpdated($event): aplicar patrón de 3 pasos completo
+       [ ] Paso 1: this.datos[key] = [...tabla]
+       [ ] Paso 2: this.onFieldChange(key, this.datos[key], { refresh: false })
+       [ ] Paso 3: this.cdRef.detectChanges() ← UNA SOLA VEZ
+[ ] 4. Test: Primer click → 1 fila, Segundo click → 2 filas, etc.
+```
+
+---
+
 **Estado Compilación:** ✅ SIN ERRORES  
 **Estado Testing:** ✅ Secciones 28-30 - Filas aparecen INMEDIATAMENTE  
+**Estado Testing:** ✅ Sección 3 - Filas aparecen INMEDIATAMENTE desde primer click  
 **Fecha Resolución:** 12 de febrero de 2026
