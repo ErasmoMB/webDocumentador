@@ -6,6 +6,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION12_PHOTO_PREFIX_SALUD, SECCION12_PHOTO_PREFIX_IE_AYROCA, SECCION12_PHOTO_PREFIX_IE_40270, SECCION12_PHOTO_PREFIX_RECREACION, SECCION12_PHOTO_PREFIX_DEPORTE } from './seccion12-constants';
 
 @Component({
   selector: 'app-seccion12-form',

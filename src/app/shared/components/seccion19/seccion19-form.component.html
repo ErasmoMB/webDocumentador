@@ -11,7 +11,7 @@
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="8"
         [value]="obtenerTextoOrganizacion()"
-        (valueChange)="onFieldChange(getFieldIdTextoOrganizacion(), $event)">
+        (valueChange)="onFieldChange('textoOrganizacionSocial', $event)">
       </app-paragraph-editor>
     </div>
 
@@ -33,7 +33,6 @@
           tablaKey: getTablaKeyAutoridades(),
           totalKey: 'organizacion',
           campoTotal: 'organizacion',
-          estructuraInicial: [{ organizacion: '', cargo: '', nombre: '' }],
           permiteAgregarFilas: true,
           permiteEliminarFilas: true
         }"

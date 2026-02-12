@@ -298,7 +298,7 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     const fieldId = this.getTituloAutoridadesField();
     const valor = input.value;
     this.datos[fieldId] = valor;
-    this.onFieldChange(fieldId, valor, { refresh: false });
+    this.onFieldChange('tituloAutoridades', valor, { refresh: false });
     // Forzar actualización en preview y otros componentes
     try {
       const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
@@ -330,7 +330,7 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     this.editingTitulo = false;
     // Persistir el valor al salir del input
     const valor = this.datos[fieldId];
-    this.onFieldChange(fieldId, valor, { refresh: false });
+    this.onFieldChange('tituloAutoridades', valor, { refresh: false });
   }
 
   onFuenteAutoridadesChange(event: Event): void {
@@ -338,7 +338,7 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     const fieldId = this.getFuenteAutoridadesField();
     const valor = input.value;
     this.datos[fieldId] = valor;
-    this.onFieldChange(fieldId, valor, { refresh: false });
+    this.onFieldChange('fuenteAutoridades', valor, { refresh: false });
     // Forzar actualización en preview y otros componentes
     try {
       const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');

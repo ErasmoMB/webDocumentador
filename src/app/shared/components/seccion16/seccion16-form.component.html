@@ -10,7 +10,7 @@
       hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
       [rows]="6"
       [value]="obtenerTextoAguaCompleto()"
-      (valueChange)="onFieldChange(getFieldIdAguaCompleto(), $event)">
+      (valueChange)="onFieldChange('parrafoSeccion16_agua_completo', $event)">
     </app-paragraph-editor>
 
     <app-paragraph-editor
@@ -19,7 +19,7 @@
       hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
       [rows]="6"
       [value]="obtenerTextoRecursosNaturalesCompleto()"
-      (valueChange)="onFieldChange(getFieldIdRecursosNaturalesCompleto(), $event)">
+      (valueChange)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $event);">
     </app-paragraph-editor>
   </div>
 

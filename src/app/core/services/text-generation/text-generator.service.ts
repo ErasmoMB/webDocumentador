@@ -3,7 +3,6 @@ import { TextGeneratorStrategy, TextGenerationContext } from './text-generator-s
 import { Seccion3TextGeneratorStrategy } from './seccion3-text-generator.strategy';
 import { Seccion6TextGeneratorStrategy } from './seccion6-text-generator.strategy';
 import { Seccion7TextGeneratorStrategy } from './seccion7-text-generator.strategy';
-import { Seccion8TextGeneratorStrategy } from './seccion8-text-generator.strategy';
 
 /**
  * Servicio centralizado para generación de texto usando Strategy Pattern
@@ -40,8 +39,7 @@ export class TextGeneratorService {
     const estrategias = [
       this.injector.get(Seccion3TextGeneratorStrategy),
       this.injector.get(Seccion6TextGeneratorStrategy),
-      this.injector.get(Seccion7TextGeneratorStrategy),
-      this.injector.get(Seccion8TextGeneratorStrategy)
+      this.injector.get(Seccion7TextGeneratorStrategy)
     ];
 
     estrategias.forEach(strategy => {

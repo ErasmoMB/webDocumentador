@@ -72,6 +72,13 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         public sanitizer: DomSanitizer
     ) {
         super(cdRef, injector);
+
+        // ✅ Punto 4: Effect para sincronización
+        effect(() => {
+            this.formDataSignal();  // Depende del signal
+            this.allSectionData();  // Depende del merge de datos
+            this.cdRef.markForCheck();  // ← CRÍTICO: fuerza re-render
+        });
     }
 
     protected override detectarCambios(): boolean {

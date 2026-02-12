@@ -5,9 +5,8 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
-import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
-import { Subscription } from 'rxjs';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION16_PHOTO_PREFIX_RESERVORIO, SECCION16_PHOTO_PREFIX_USO_SUELOS } from './seccion16-constants';
 
 @Component({
     standalone: true,
@@ -25,14 +24,11 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
   @Input() override modoFormulario: boolean = false;
 
   // Sección 16 tiene DOS grupos de fotos
-  readonly PHOTO_PREFIX_RESERVORIO = 'fotografiaReservorio';
-  readonly PHOTO_PREFIX_USO_SUELOS = 'fotografiaUsoSuelos';
+  readonly PHOTO_PREFIX_RESERVORIO = SECCION16_PHOTO_PREFIX_RESERVORIO;
+  readonly PHOTO_PREFIX_USO_SUELOS = SECCION16_PHOTO_PREFIX_USO_SUELOS;
 
   fotografiasReservorio: FotoItem[] = [];
   fotografiasUsoSuelos: FotoItem[] = [];
-
-  // Suscripción al stateAdapter para actualización en tiempo real
-  private stateSubscription?: Subscription;
 
   // ✅ HELPER PARA OBTENER PREFIJO
   private obtenerPrefijo(): string {
@@ -46,7 +42,7 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
     super.onFieldChange(campoConPrefijo, value, options);
   }
 
-  // ✅ PHOTO FIELDS HASH CON PREFIJOS
+  // ✅ SIGNAL PARA TODAS LAS FOTOS (ambos prefijos) CON PREFIJO DE GRUPO
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     let hash = '';
@@ -70,11 +66,25 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
+  // ✅ SIGNAL PARA DATOS DE SECCIÓN CON EFECTO AUTO-SYNC
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector
   ) {
     super(cdRef, injector);
+
+    // ✅ Effect para sincronizar datos locales con el estado
+    effect(() => {
+      const sectionData = this.formDataSignal();
+      this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+      // Cuando hay cambios, recargar fotos
+      this.cargarFotografias();
+      this.cdRef.markForCheck();
+    });
 
     effect(() => {
       this.photoFieldsHash();
@@ -85,45 +95,6 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
   protected override onInitCustom(): void {
     // Cargar ambos grupos de fotos manualmente
     this.cargarFotografias();
-
-    // Suscripción al stateAdapter para actualización en tiempo real (igual que el monolítico)
-    this.inicializarSuscripcionState();
-  }
-
-  /**
-   * Inicializa suscripción al stateAdapter para detectar cambios en tiempo real
-   */
-  private inicializarSuscripcionState(): void {
-    // Limpiar suscripción anterior si existe
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-      this.stateSubscription = undefined;
-    }
-
-    try {
-      const stateAdapter = this.injector.get(ReactiveStateAdapter, null);
-      if (!stateAdapter) return;
-
-      this.stateSubscription = stateAdapter.datos$.subscribe((nuevosDatos) => {
-        if (!nuevosDatos) return;
-        // Actualizar datos locales
-        this.datos = { ...this.datos, ...nuevosDatos };
-        // Recargar fotografías (tanto Reservorio como UsoSuelos)
-        this.cargarFotografias();
-        this.cdRef.detectChanges();
-      });
-    } catch {
-      // ReactiveStateAdapter no disponible
-    }
-  }
-
-  override ngOnDestroy(): void {
-    // Limpiar suscripción al stateAdapter
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-      this.stateSubscription = undefined;
-    }
-    super.ngOnDestroy();
   }
 
   protected override detectarCambios(): boolean {

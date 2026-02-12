@@ -13,7 +13,7 @@
           label="Aspectos culturales - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="textoAspectosCulturalesSignal()"
+          [value]="obtenerTextoAspectosCulturales()"
           (valueChange)="onFieldChange('textoAspectosCulturales', $event)">
         </app-paragraph-editor>
 
@@ -22,7 +22,7 @@
           label="Idioma - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="textoIdiomaSignal()"
+          [value]="obtenerTextoIdioma()"
           (valueChange)="onFieldChange('textoIdioma', $event)">
         </app-paragraph-editor>
       </div>
@@ -61,7 +61,7 @@
           label="Religión - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="parrafoReligionSignal()"
+          [value]="obtenerTextoReligion()"
           (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
         </app-paragraph-editor>
       </div>

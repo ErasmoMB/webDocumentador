@@ -8,6 +8,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { SECCION14_PHOTO_PREFIX, SECCION14_DEFAULT_TEXTS } from './seccion14-constants';
 
 @Component({
   selector: 'app-seccion14-form',
@@ -20,7 +21,7 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.A.1.10';
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaEducacionIndicadores';
+  override readonly PHOTO_PREFIX = SECCION14_PHOTO_PREFIX;
   override useReactiveSync: boolean = true;
 
   fotografiasSeccion14: FotoItem[] = [];
@@ -39,33 +40,49 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.selectSectionFields(this.seccionId, null)()
   );
 
-  // ✅ Signals dedicados para textos (usan prefijo para aislamiento AISD)
-  readonly textoIndicadoresEducacionIntroSignal: Signal<string> = computed(() => {
+  // ✅ MÉTODOS INLINE PARA TEXTOS (CAPA 3: Default + Personalización del usuario)
+  obtenerTextoIndicadoresEducacionIntro(): string {
     const prefijo = this.obtenerPrefijo();
-    const campo = 'parrafoSeccion14_indicadores_educacion_intro' + prefijo;
-    const data = this.formDataSignal();
-    const valor = data[campo];
-    return (valor && String(valor).trim().length > 0) ? String(valor) :
-      'La educación es un indicador fundamental para medir el desarrollo humano y social de una comunidad. A continuación, se presentan los principales indicadores educativos de la población de la comunidad campesina, basados en los datos censales disponibles.';
-  });
+    const campo = `parrafoSeccion14_indicadores_educacion_intro${prefijo}`;
+    
+    // CAPA 1: Personalización del usuario (máxima prioridad)
+    if (this.datos[campo] && String(this.datos[campo]).trim().length > 0) {
+      return String(this.datos[campo]);
+    }
+    
+    // CAPA 3: Default hardcodeado
+    return SECCION14_DEFAULT_TEXTS.textoIndicadoresEducacionIntro;
+  }
 
-  readonly textoNivelEducativoSignal: Signal<string> = computed(() => {
+  obtenerTextoNivelEducativo(): string {
     const prefijo = this.obtenerPrefijo();
-    const campo = 'textoNivelEducativo' + prefijo;
-    const data = this.formDataSignal();
-    const valor = data[campo];
-    return (valor && String(valor).trim().length > 0) ? String(valor) :
-      'El nivel educativo alcanzado por la población de 15 años a más refleja el acceso y la calidad de la educación en la comunidad. Los datos muestran que ____% de la población ha alcanzado educación primaria, ____% secundaria y ____% educación superior no universitaria.';
-  });
+    const campo = `textoNivelEducativo${prefijo}`;
+    
+    // CAPA 1: Personalización del usuario
+    if (this.datos[campo] && String(this.datos[campo]).trim().length > 0) {
+      return String(this.datos[campo]);
+    }
+    
+    // CAPA 3: Default
+    return SECCION14_DEFAULT_TEXTS.textoNivelEducativo
+      .replace('____% de la población ha alcanzado educación primaria', this.getPorcentajePrimaria() + '% de la población ha alcanzado educación primaria')
+      .replace('____% secundaria', this.getPorcentajeSecundaria() + '% secundaria')
+      .replace('____% educación superior no universitaria', this.getPorcentajeSuperiorNoUniversitaria() + '% educación superior no universitaria');
+  }
 
-  readonly textoTasaAnalfabetismoSignal: Signal<string> = computed(() => {
+  obtenerTextoTasaAnalfabetismo(): string {
     const prefijo = this.obtenerPrefijo();
-    const campo = 'textoTasaAnalfabetismo' + prefijo;
-    const data = this.formDataSignal();
-    const valor = data[campo];
-    return (valor && String(valor).trim().length > 0) ? String(valor) :
-      'La tasa de analfabetismo en la población de 15 años a más es de ____%, lo que representa ____ personas que no saben leer ni escribir. Este indicador es crucial para identificar necesidades educativas y planificar intervenciones.';
-  });
+    const campo = `textoTasaAnalfabetismo${prefijo}`;
+    
+    // CAPA 1: Personalización del usuario
+    if (this.datos[campo] && String(this.datos[campo]).trim().length > 0) {
+      return String(this.datos[campo]);
+    }
+    
+    // CAPA 3: Default con valores calculados
+    return SECCION14_DEFAULT_TEXTS.textoTasaAnalfabetismo
+      .replace('____%, lo que representa ____', this.getTasaAnalfabetismo() + '%, lo que representa ' + this.getCasosAnalfabetismo());
+  }
 
   readonly nivelEducativoTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
@@ -136,22 +153,6 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
       this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
       this.cdRef.markForCheck();
     });
-
-    // ✅ Effects para observar signals de texto (requerido para que paragraph-editor se actualice)
-    effect(() => {
-      this.textoIndicadoresEducacionIntroSignal();
-      this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
-
-    effect(() => {
-      this.textoNivelEducativoSignal();
-      this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
-
-    effect(() => {
-      this.textoTasaAnalfabetismoSignal();
-      this.cdRef.markForCheck();
-    }, { allowSignalWrites: true });
 
     effect(() => {
       this.photoFieldsHash();

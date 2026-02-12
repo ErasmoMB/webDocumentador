@@ -115,11 +115,12 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen`;
+      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen${prefijo}`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();

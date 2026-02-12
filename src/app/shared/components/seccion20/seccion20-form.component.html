@@ -11,7 +11,7 @@
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="8"
         [value]="textoSignal()"
-        (valueChange)="onFieldChange(getFieldIdTextoFestividades(), $event)">
+        (valueChange)="onFieldChange('textoFestividades', $event)">
       </app-paragraph-editor>
     </div>
 

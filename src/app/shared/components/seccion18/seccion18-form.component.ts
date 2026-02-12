@@ -7,6 +7,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION18_PHOTO_PREFIX, SECCION18_DEFAULT_TEXTS } from './seccion18-constants';
 
 @Component({
     standalone: true,
@@ -301,28 +302,25 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     // ✅ Handlers para cambios en título y fuente
+    // ✅ IMPORTANTE: Pasar campo SIN prefijo, el override onFieldChange() agrega prefijo automáticamente
 
     onTituloNbiCCChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getTituloNbiCCField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('tituloNbiCC', input.value);  // Sin prefijo, se agrega en override
     }
 
     onFuenteNbiCCChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getFuenteNbiCCField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('fuenteNbiCC', input.value);  // Sin prefijo, se agrega en override
     }
 
     onTituloNbiDistritoChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getTituloNbiDistritoField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('tituloNbiDistrito', input.value);  // Sin prefijo, se agrega en override
     }
 
     onFuenteNbiDistritoChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getFuenteNbiDistritoField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('fuenteNbiDistrito', input.value);  // Sin prefijo, se agrega en override
     }
 }

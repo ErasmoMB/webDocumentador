@@ -35,6 +35,11 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
   }
 
+  // ✅ SIGNAL REACTIVO PARA DATOS (Punto 1: formDataSignal)
+  readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+    this.projectFacade.selectSectionFields(this.seccionId, null)()
+  );
+
   // ✅ PHOTO FIELDS HASH CON PREFIJOS
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
@@ -66,10 +71,12 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
   ) {
     super(cdRef, injector);
 
+    // ✅ Punto 4: Effect para sincronización
     effect(() => {
+      this.formDataSignal();  // Depende del signal
       this.photoFieldsHash();
       this.cargarFotografias();
-      this.cdRef.markForCheck();
+      this.cdRef.markForCheck();  // ← CRÍTICO: fuerza re-render
     });
   }
 
@@ -101,16 +108,17 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoAguaCompleto(): string {
     const prefijo = this.obtenerPrefijo();
+    const datos = this.formDataSignal();  // ✅ Punto 2: Usa formDataSignal()
     const fieldIdConPrefijo = `parrafoSeccion16_agua_completo${prefijo}`;
-    const textoConPrefijo = (this.datos as any)[fieldIdConPrefijo];
-    const textoSinPrefijo = (this.datos as any)['parrafoSeccion16_agua_completo'];
+    const textoConPrefijo = datos[fieldIdConPrefijo];
+    const textoSinPrefijo = datos['parrafoSeccion16_agua_completo'];
     const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
 
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const ojosAgua1 = (this.datos as any).ojosAgua1 || 'Quinsa Rumi';
-    const ojosAgua2 = (this.datos as any).ojosAgua2 || 'Pallalli';
-    const rioAgricola = (this.datos as any).rioAgricola || 'Yuracyacu';
-    const quebradaAgricola = (this.datos as any).quebradaAgricola || 'Pucaccocha';
+    const ojosAgua1 = datos['ojosAgua1'] || 'Quinsa Rumi';
+    const ojosAgua2 = datos['ojosAgua2'] || 'Pallalli';
+    const rioAgricola = datos['rioAgricola'] || 'Yuracyacu';
+    const quebradaAgricola = datos['quebradaAgricola'] || 'Pucaccocha';
 
     const textoPorDefecto = `Las fuentes de agua en la CC ${grupoAISD} son diversas, dependiendo del uso que se les dé. Para el consumo humano, el agua se obtiene principalmente de los ojos de agua de ${ojosAgua1} y ${ojosAgua2}. En el caso del anexo ${grupoAISD}, esta agua es almacenada en un reservorio, desde donde se distribuye a las viviendas locales a través de una red básica de distribución. Aunque el abastecimiento cubre las necesidades esenciales de la población, existen desafíos relacionados con la calidad del agua y el mantenimiento de la infraestructura.
 
@@ -125,9 +133,10 @@ En cuanto al uso agrícola, el agua proviene del río ${rioAgricola} y la quebra
 
   obtenerTextoRecursosNaturalesCompleto(): string {
     const prefijo = this.obtenerPrefijo();
+    const datos = this.formDataSignal();  // ✅ Punto 2: Usa formDataSignal()
     const fieldIdConPrefijo = `parrafoSeccion16_recursos_naturales_completo${prefijo}`;
-    const textoConPrefijo = (this.datos as any)[fieldIdConPrefijo];
-    const textoSinPrefijo = (this.datos as any)['parrafoSeccion16_recursos_naturales_completo'];
+    const textoConPrefijo = datos[fieldIdConPrefijo];
+    const textoSinPrefijo = datos['parrafoSeccion16_recursos_naturales_completo'];
     const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
 
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -147,11 +156,12 @@ Además, según algunos comuneros, dentro del territorio de la comunidad existen
 
   obtenerTextoAguaConResaltado(): SafeHtml {
     const texto = this.obtenerTextoAguaCompleto();
+    const datos = this.formDataSignal();  // ✅ Punto 2: Usa formDataSignal()
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const ojosAgua1 = (this.datos as any).ojosAgua1 || 'Quinsa Rumi';
-    const ojosAgua2 = (this.datos as any).ojosAgua2 || 'Pallalli';
-    const rioAgricola = (this.datos as any).rioAgricola || 'Yuracyacu';
-    const quebradaAgricola = (this.datos as any).quebradaAgricola || 'Pucaccocha';
+    const ojosAgua1 = datos['ojosAgua1'] || 'Quinsa Rumi';
+    const ojosAgua2 = datos['ojosAgua2'] || 'Pallalli';
+    const rioAgricola = datos['rioAgricola'] || 'Yuracyacu';
+    const quebradaAgricola = datos['quebradaAgricola'] || 'Pucaccocha';
 
     let html = this.escapeHtml(texto);
 

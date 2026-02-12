@@ -26,7 +26,7 @@ import { TableNumberingService } from 'src/app/core/services/table-numbering.ser
 })
 export class Seccion9FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.A.1.5';
-  @Input() override modoFormulario: boolean = false;
+  @Input() override modoFormulario: boolean = true;
   
   override readonly PHOTO_PREFIX = 'fotografiaEstructura';
   override useReactiveSync: boolean = true;

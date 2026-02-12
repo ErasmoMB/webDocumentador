@@ -7,6 +7,7 @@ import { TableWrapperComponent } from '../table-wrapper/table-wrapper.component'
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION11_WATCHED_FIELDS, SECCION11_PHOTO_PREFIX_TRANSPORTE, SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES } from './seccion11-constants';
 
 @Component({
   selector: 'app-seccion11-view',

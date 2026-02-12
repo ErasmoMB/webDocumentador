@@ -35,9 +35,8 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
 
   festividadesConfig: TableConfig = {
     tablaKey: 'festividades',
-    totalKey: 'festividad',
-    campoTotal: 'festividad',
-    estructuraInicial: [{ festividad: '', fecha: '' }]
+    totalKey: 'festividad'
+    // ✅ NO incluir campoTotal porque festividad es texto, no número
   };
 
   private readonly regexCache = new Map<string, RegExp>();
@@ -208,7 +207,7 @@ En cuanto al potencial turístico, la CC ${grupoAISD} destaca no solo por sus fe
     const fieldId = this.getTituloFestividadesField();
     const valor = input.value;
     this.datos[fieldId] = valor;
-    this.onFieldChange(fieldId, valor, { refresh: false });
+    this.onFieldChange('tituloFestividades', valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
@@ -218,7 +217,7 @@ En cuanto al potencial turístico, la CC ${grupoAISD} destaca no solo por sus fe
     const fieldId = this.getFuenteFestividadesField();
     const valor = input.value;
     this.datos[fieldId] = valor;
-    this.onFieldChange(fieldId, valor, { refresh: false });
+    this.onFieldChange('fuenteFestividades', valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }

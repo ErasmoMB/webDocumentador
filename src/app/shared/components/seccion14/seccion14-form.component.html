@@ -10,7 +10,7 @@
         label="Introducción - Indicadores de Educación"
         hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
         [rows]="4"
-        [value]="textoIndicadoresEducacionIntroSignal()"
+        [value]="obtenerTextoIndicadoresEducacionIntro()"
         (valueChange)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $event)">
       </app-paragraph-editor>
     </div>
@@ -26,7 +26,7 @@
           label="Nivel Educativo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="textoNivelEducativoSignal()"
+          [value]="obtenerTextoNivelEducativo()"
           (valueChange)="onFieldChange('textoNivelEducativo', $event)">
         </app-paragraph-editor>
       </div>
@@ -93,7 +93,7 @@
           label="Tasa de Analfabetismo - Texto Completo"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="2"
-          [value]="textoTasaAnalfabetismoSignal()"
+          [value]="obtenerTextoTasaAnalfabetismo()"
           (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
         </app-paragraph-editor>
       </div>

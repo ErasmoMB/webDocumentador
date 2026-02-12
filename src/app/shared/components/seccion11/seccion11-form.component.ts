@@ -14,6 +14,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableWrapperComponent } from '../table-wrapper/table-wrapper.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
+import { SECCION11_WATCHED_FIELDS, SECCION11_PHOTO_PREFIX_TRANSPORTE, SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES } from './seccion11-constants';
 
 @Component({
     imports: [

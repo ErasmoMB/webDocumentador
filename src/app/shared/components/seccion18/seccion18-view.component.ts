@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed } from '@angular/core';
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -60,6 +60,14 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
     private tableNumbering: TableNumberingService
     ) {
         super(cdRef, injector);
+
+        // ✅ Punto 4: Effect para sincronización
+        effect(() => {
+            this.formDataSignal();  // Depende del signal
+            this.photoFieldsHash();  // Depende del hash de fotos
+            this.cdRef.markForCheck();  // ← CRÍTICO: fuerza re-render
+        });
+
         console.log('[Seccion18View] constructor seccionId=', this.seccionId);
     }
 

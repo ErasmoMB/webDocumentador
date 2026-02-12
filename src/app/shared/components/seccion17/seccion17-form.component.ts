@@ -7,6 +7,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
 import { TableConfig, TableColumn } from 'src/app/core/services/table-management.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION17_PHOTO_PREFIX, SECCION17_DEFAULT_TEXTS } from './seccion17-constants';
 
 @Component({
     standalone: true,
@@ -167,14 +168,12 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
 
     onTituloIDHChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getTituloIDHField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('tituloIDH', input.value);  // Sin prefijo, se agrega en override
     }
 
     onFuenteIDHChange(event: Event): void {
         const input = event.target as HTMLInputElement;
-        const fieldId = this.getFuenteIDHField();
-        this.onFieldChange(fieldId, input.value);
+        this.onFieldChange('fuenteIDH', input.value);  // Sin prefijo, se agrega en override
     }
 
     // === LÓGICA DE TABLA ===

@@ -10,6 +10,7 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
 import { TableConfig } from 'src/app/core/services/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { SECCION13_PHOTO_PREFIX } from './seccion13-constants';
 
 @Component({
   selector: 'app-seccion13-form',
