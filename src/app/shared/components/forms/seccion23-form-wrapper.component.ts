@@ -14,7 +14,10 @@ import { BaseSectionComponent } from '../base-section.component';
 export class Seccion23FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.2';
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(
+    cdRef: ChangeDetectorRef,
+    injector: Injector
+  ) {
     super(cdRef, injector);
   }
 

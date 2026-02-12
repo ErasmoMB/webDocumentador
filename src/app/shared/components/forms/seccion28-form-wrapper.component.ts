@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from '../../modules/core-shared.module';
@@ -14,20 +14,8 @@ import { BaseSectionComponent } from '../base-section.component';
 export class Seccion28FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.7';
 
-  @ViewChild(Seccion28FormComponent) seccion28FormComponent?: Seccion28FormComponent;
-
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
-  }
-
-  // Proxy to inner form component so external callers can request synchronization
-  public sincronizarTablaDesdeStore(tablaKeyBase: string): void {
-    try {
-      if (this.seccion28FormComponent && typeof this.seccion28FormComponent['sincronizarTablaDesdeStore'] === 'function') {
-        this.seccion28FormComponent.sincronizarTablaDesdeStore(tablaKeyBase);
-      }
-    } catch (e) {
-    }
   }
 
   protected override onInitCustom(): void { }

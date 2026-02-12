@@ -1,8 +1,8 @@
 📋 Guía de Migración de Secciones a MODO IDEAL (RESUMEN EJECUTIVO)
 
 Fecha: 11 de febrero de 2026  
-Última actualización: 11 de febrero de 2026  
-Estado: ✅ Secciones 14-18 COMPLETADAS
+Última actualización: 12 de febrero de 2026  
+Estado: ✅ Secciones 14-18, 21, 26-30 COMPLETADAS
 
 ---
 
@@ -31,6 +31,14 @@ obtenerTexto(): string {
 ---
 
 ### 2️⃣ SINCRONIZACIÓN VIEW ↔ FORM (4 PUNTOS OBLIGATORIOS)
+
+Ejemplo de un error de sincronizacion
+
+Por qué funcionaba mal antes:
+El template accedía directamente a datos['campo'] que era una propiedad estática actualizada por un effect. Esto causaba que los cambios en el formulario no se reflejaran inmediatamente en la vista.
+
+Solución:
+Ambos signals (form y view) ahora leen directamente del store mediante projectFacade.selectField(), asegurando que cualquier cambio en el formulario se refleje instantáneamente en la vista.
 
 Si la Vista NO se actualiza al editar en el Formulario, falta UNO de estos:
 
@@ -76,6 +84,52 @@ Si la Vista NO se actualiza al editar en el Formulario, falta UNO de estos:
   ```typescript
   this.onFieldChange('tituloGrupo1', value)     // → 'tituloGrupo1Grupo1' ❌
   ```
+
+---
+
+### 🔴 PROBLEMA CRÍTICO: Párrafos sin Prefijo (SECCIÓN 26 - LECCIÓN APRENDIDA)
+
+**Síntoma:** Editas un párrafo en el formulario pero la vista NO se actualiza.
+
+**Causa Raíz:** 
+El form guarda el párrafo **sin prefijo** (`textoIntroServiciosBasicosAISI`) pero el text signal lo busca **con prefijo** (`textoIntroServiciosBasicosAISIGrupo1`). Ambos componentes leen de claves diferentes → desincronización total.
+
+**Solución - PATRÓN OBLIGATORIO (Sección 26):**
+
+1. **Crear helpers públicos que retornan keys con prefijo:**
+   ```typescript
+   // En form component
+   getKeyTextoIntro(): string {
+     const prefijo = this.obtenerPrefijo();
+     return prefijo ? `textoIntroServiciosBasicosAISI${prefijo}` : 'textoIntroServiciosBasicosAISI';
+   }
+   
+   getKeyTextoServiciosAgua(): string {
+     const prefijo = this.obtenerPrefijo();
+     return prefijo ? `textoServiciosAguaAISI${prefijo}` : 'textoServiciosAguaAISI';
+   }
+   // Repetir para cada párrafo...
+   ```
+
+2. **Usar los helpers en el template:**
+   ```html
+   <!-- ❌ INCORRECTO -->
+   (valueChange)="onFieldChange('textoIntroServiciosBasicosAISI', $event)"
+   
+   <!-- ✅ CORRECTO -->
+   (valueChange)="onFieldChange(getKeyTextoIntro(), $event)"
+   ```
+
+3. **Resultado:** Ambos componentes ahora guardan/leen con prefijo:
+   ```
+   Form Component:   genera "textoIntroServiciosBasicosAISIGrupo1" + valor
+            ↓
+   Store: guardado con prefijo completo
+            ↓
+   View Component:   lee "textoIntroServiciosBasicosAISIGrupo1" desde store
+            ↓
+   ✅ Vista actualiza EN VIVO
+   ```
 
 ---
 
@@ -127,13 +181,19 @@ src/app/shared/components/forms/
 
 ## 📊 ESTADO ACTUAL
 
-| Sección                                   | Estado | Servicios        | Sincronización |
-|--------------------------------------------|--------|------------------|----------------|
-| 14 - Indicadores Educativos                | ✅     | ❌ Eliminados    | ✅ OK          |
-| 15 - Aspectos Culturales                   | ✅     | ❌ Eliminados    | ✅ OK          |
-| 16 - Infraestructura Productiva            | ✅     | ❌ Eliminados    | ✅ OK          |
-| 17 - Índice Desarrollo Humano              | ✅     | ❌ Eliminados    | ✅ OK          |
-| 18 - Necesidades Básicas Insatisfechas     | ✅     | ❌ Eliminados    | ✅ OK          |
+| Sección                                   | Estado | Servicios        | Sincronización | Patrón Prefijo |
+|--------------------------------------------|--------|------------------|----------------|----------------|
+| 14 - Indicadores Educativos                | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 15 - Aspectos Culturales                   | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 16 - Infraestructura Productiva            | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 17 - Índice Desarrollo Humano              | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 18 - Necesidades Básicas Insatisfechas     | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 21 - Área de Influencia Social Indirecta | ✅     | ❌ Eliminados    | ✅ OK          | ✅ OK          |
+| 26 - Servicios Básicos (REFERENCIA)        | ✅     | ❌ Eliminados    | ✅ OK          | ✅ MODELO (helpers públicos para prefijos) |
+| 27 - Infraestructura Transportes y Comunicaciones | ✅ | ❌ Eliminados | ✅ OK | ✅ APLICADO (5 text signals con helpers) |
+| 28 - Infraestructura Salud, Educación, Recreación, Deporte | ✅ | ❌ Eliminados | ✅ OK | ✅ APLICADO (7 text signals + 4 prefixed fields con helpers) |
+| 29 - Natalidad, Mortalidad, Morbilidad, Afiliación Salud | ✅ | ❌ Eliminados | ✅ OK | ✅ APLICADO (4 text signals + 3 table methods) |
+| 30 - Indicadores de Educación | ✅ | ❌ Eliminados | ✅ OK | ✅ APLICADO (4 text signals + 2 table methods) |
 
 ---
 
@@ -151,6 +211,7 @@ src/app/shared/components/forms/
 |---------------------------|------------------------------|------------------------------------------|
 | Vista no actualiza        | this.datos estático          | Usar formDataSignal = computed()         |
 | Cambios duplican prefijo  | Pasar campo CON prefijo      | Pasar campo BASE sin prefijo             |
+| Párrafos no sincronnizan  | onFieldChange() sin prefijo  | Crear getKeyXXX() helpers públicos para prefijos |
 | Métodos no sincronnizan   | No usan signal               | Todos los métodos: const data = this.formDataSignal() |
 | Template estático         | Usa propiedades              | Cambiar a: {{ obtenerMétodo() }}         |
 | Compilación falla         | Sintaxis bracket             | datos['campo'] en lugar de datos.campo   |
@@ -160,6 +221,7 @@ src/app/shared/components/forms/
 ## 📚 ARCHIVOS DE REFERENCIA
 
 - ✅ Sección 15 - Reactividad perfecta (modelo a seguir)
+- ✅ Sección 26 - **PATRÓN DE HELPERS CON PREFIJO** (para párrafos con múltiples prefijos)
 - ✅ Sección 4 - Form-wrapper minimalista (referencia)
 - ✅ PrefijoHelper - Aislamiento de datos
 - ✅ BaseSectionComponent - Base de todos los componentes
@@ -167,5 +229,6 @@ src/app/shared/components/forms/
 ---
 
 Compilación actual: ✅ SIN ERRORES  
-Todas las secciones: ✅ EN MODO IDEAL  
-Sincronización View-Form: ✅ FUNCIONANDO EN TIEMPO REAL
+Secciones completadas: ✅ 14-18, 21, 26-30  
+Sincronización View-Form: ✅ FUNCIONANDO EN TIEMPO REAL  
+Patrón Prefijos en Párrafos: ✅ DOCUMENTADO Y PROBADO (Secciones 26-28)

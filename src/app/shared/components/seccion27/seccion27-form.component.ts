@@ -25,6 +25,32 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  // ✅ Helpers públicos para obtener keys con prefijo (CRÍTICO para sync)
+  getKeyTextoTransporteCP1(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoTransporteCP1${prefijo}` : 'textoTransporteCP1';
+  }
+
+  getKeyTextoTransporteCP2(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoTransporteCP2${prefijo}` : 'textoTransporteCP2';
+  }
+
+  getKeyTextoTelecomunicacionesCP1(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoTelecomunicacionesCP1${prefijo}` : 'textoTelecomunicacionesCP1';
+  }
+
+  getKeyTextoTelecomunicacionesCP2(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoTelecomunicacionesCP2${prefijo}` : 'textoTelecomunicacionesCP2';
+  }
+
+  getKeyTextoTelecomunicacionesCP3(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoTelecomunicacionesCP3${prefijo}` : 'textoTelecomunicacionesCP3';
+  }
+
   // ✅ PHOTO_PREFIX Signals dinámicos
   readonly photoPrefixSignalTransporte: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
@@ -73,6 +99,60 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
            this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
+  // ✅ Text signals (MODO IDEAL - computed reactivos)
+  readonly textoTransporteCP1Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoTransporteCP1${prefijo}` : 'textoTransporteCP1';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoTransporteCP1();
+  });
+
+  readonly textoTransporteCP2Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoTransporteCP2${prefijo}` : 'textoTransporteCP2';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoTransporteCP2();
+  });
+
+  readonly textoTelecomunicacionesCP1Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoTelecomunicacionesCP1${prefijo}` : 'textoTelecomunicacionesCP1';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoTelecomunicacionesCP1();
+  });
+
+  readonly textoTelecomunicacionesCP2Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoTelecomunicacionesCP2${prefijo}` : 'textoTelecomunicacionesCP2';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoTelecomunicacionesCP2();
+  });
+
+  readonly textoTelecomunicacionesCP3Signal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoTelecomunicacionesCP3${prefijo}` : 'textoTelecomunicacionesCP3';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoTelecomunicacionesCP3();
+  });
+
+  readonly viewModel = computed(() => ({
+    textoTransporteCP1: this.textoTransporteCP1Signal(),
+    textoTransporteCP2: this.textoTransporteCP2Signal(),
+    textoTelecomunicacionesCP1: this.textoTelecomunicacionesCP1Signal(),
+    textoTelecomunicacionesCP2: this.textoTelecomunicacionesCP2Signal(),
+    textoTelecomunicacionesCP3: this.textoTelecomunicacionesCP3Signal(),
+    cuadroTituloTelecomunicaciones: this.cuadroTituloTelecomunicacionesSignal(),
+    cuadroFuenteTelecomunicaciones: this.cuadroFuenteTelecomunicacionesSignal(),
+    telecomunicaciones: this.telecomunicacionesSignal(),
+    fotosTransporte: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalTransporte(), this.imageFacade.getGroupPrefix(this.seccionId)),
+    fotosTelecomunicaciones: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones(), this.imageFacade.getGroupPrefix(this.seccionId))
+  }));
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector
@@ -86,6 +166,7 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
     });
 
     effect(() => {
+      this.viewModel();
       this.actualizarFotografiasFormMulti();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });

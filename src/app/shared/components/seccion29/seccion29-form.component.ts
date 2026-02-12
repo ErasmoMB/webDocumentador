@@ -117,46 +117,54 @@ export class Seccion29FormComponent extends BaseSectionComponent {
       this.datos = { ...this.datos, ...d };
       this.cdRef.markForCheck();
     });
+
+    // ✅ CRÍTICO: Escuchar cambios en signals de tabla y forzar detección de cambios
+    effect(() => {
+      this.natalidadTablaSignal();
+      this.morbilidadTablaSignal();
+      this.afiliacionTablaSignal();
+      this.cdRef.markForCheck();
+    });
   }
 
   // Helper methods to generate fallback paragraph texts
-  private getNatalidad2023(): number {
+  getNatalidad2023(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2023);
     return item?.natalidad || 0;
   }
 
-  private getNatalidad2024(): number {
+  getNatalidad2024(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2024);
     return item?.natalidad || 0;
   }
 
-  private getMortalidad2023(): number {
+  getMortalidad2023(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2023);
     return item?.mortalidad || 0;
   }
 
-  private getMortalidad2024(): number {
+  getMortalidad2024(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2024);
     return item?.mortalidad || 0;
   }
 
-  private generarTextoNatalidadCP1(): string {
+  generarTextoNatalidadCP1(): string {
     const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
     return `Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud ${centro} indican que, durante el año 2023, se registró un total de ${this.getNatalidad2023()} nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente ${this.getNatalidad2024()} nacimiento.`;
   }
 
-  private generarTextoNatalidadCP2(): string {
+  generarTextoNatalidadCP2(): string {
     return `Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de ${this.getMortalidad2023()} durante el año 2023. Sin embargo, para el año 2024, sí se registró ${this.getMortalidad2024()} defunción.`;
   }
 
-  private generarTextoMorbilidadCP(): string {
+  generarTextoMorbilidadCP(): string {
     const distrito = this.projectFacade.obtenerDatos()?.['distritoSeleccionado'] || 'Cahuacho';
     const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
     const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
     return `Entre los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca al Puesto de Salud ${this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho'}), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (${infecciones} casos) y la obesidad y otros de hiperalimentación (${obesidad} casos).`;
   }
 
-  private generarTextoAfiliacionSalud(): string {
+  generarTextoAfiliacionSalud(): string {
     const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
     const sis = this.afiliacionTablaSignal()
       .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
@@ -251,11 +259,52 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   }
 
   onTablaUpdated(tablaKey: string, tabla: any[]) {
-    // Normalizar guardar tabla simple
-    this.onFieldChange(tablaKey, tabla);
+    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    const tablaKeyBase = tablaKey.replace(/Grupo\d+$/, ''); // Remover sufijo de grupo para tener la clave base
+    
+    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
+    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
+    if (tablaKeyBase !== tablaKey) {
+      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
+    }
+    
+    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
   }
 
   override onFotografiasChange(fotografias: any[]) {
     super.onFotografiasChange(fotografias);
+  }
+
+  // ✅ Métodos para retornar datos de tabla formateados para binding
+  getNatalidadTablaKey(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
+  }
+
+  getMorbilidadTablaKey(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
+  }
+
+  getAfiliacionTablaKey(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+  }
+
+  getNatalidadTablaData(): Record<string, any[]> {
+    const key = this.getNatalidadTablaKey();
+    return { [key]: this.natalidadTablaSignal() };
+  }
+
+  getMorbilidadTablaData(): Record<string, any[]> {
+    const key = this.getMorbilidadTablaKey();
+    return { [key]: this.morbilidadTablaSignal() };
+  }
+
+  getAfiliacionTablaData(): Record<string, any[]> {
+    const key = this.getAfiliacionTablaKey();
+    return { [key]: this.afiliacionTablaSignal() };
   }
 }

@@ -48,18 +48,27 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly textoViviendaSignal = computed(() => {
-    const data = this.formDataSignal();
-    return data['textoViviendaAISI'] || '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+    if (manual && manual.trim().length > 0) return manual;
+    return this.generarTextoViviendaDefault();
   });
 
   readonly textoOcupacionSignal = computed(() => {
-    const data = this.formDataSignal();
-    return data['textoOcupacionViviendaAISI'] || '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+    if (manual && manual.trim().length > 0) return manual;
+    return this.generarTextoOcupacionDefault();
   });
 
   readonly textoEstructuraSignal = computed(() => {
-    const data = this.formDataSignal();
-    return data['textoEstructuraAISI'] || '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+    if (manual && manual.trim().length > 0) return manual;
+    return this.generarTextoEstructuraDefault();
   });
 
   readonly tiposViviendaSignal = computed(() => {
@@ -640,33 +649,49 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.onFieldChange('textoEstructuraAISI', valor);
   }
 
-  // --- Helpers for form defaults (copied from monolith) ---
-  obtenerTextoViviendaAISI(): string {
-    if (this.datos.textoViviendaAISI && this.datos.textoViviendaAISI !== '____') {
-      return this.datos.textoViviendaAISI;
-    }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+  // Métodos para generar textos por defecto
+  private generarTextoViviendaDefault(): string {
+    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const totalViviendas = this.getTotalViviendasEmpadronadas();
     return `Según los Censos Nacionales 2017, en el CP ${centroPoblado} se hallan un total de ${totalViviendas} viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.`;
   }
 
-  obtenerTextoOcupacionViviendaAISI(): string {
-    if (this.datos.textoOcupacionViviendaAISI && this.datos.textoOcupacionViviendaAISI !== '____') {
-      return this.datos.textoOcupacionViviendaAISI;
-    }
+  private generarTextoOcupacionDefault(): string {
     const viviendasOcupadas = this.getViviendasOcupadasPresentes();
     const porcentajeOcupadas = this.getPorcentajeOcupadasPresentes();
     return `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${viviendasOcupadas}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentajeOcupadas} del conjunto analizado.`;
   }
 
-  obtenerTextoEstructuraAISI(): string {
-    if (this.datos.textoEstructuraAISI && this.datos.textoEstructuraAISI !== '____') {
-      return this.datos.textoEstructuraAISI;
-    }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+  private generarTextoEstructuraDefault(): string {
+    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const porcentajePisosTierra = this.getPorcentajePisosTierra();
     const porcentajePisosCemento = this.getPorcentajePisosCemento();
     return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;
+  }
+
+  // --- Helpers for form defaults (se copia ahora de los métodos generadores above) ---
+  obtenerTextoViviendaAISI(): string {
+    const data = this.formDataSignal();
+    if (data['textoViviendaAISI'] && data['textoViviendaAISI'] !== '____') {
+      return data['textoViviendaAISI'];
+    }
+    return this.generarTextoViviendaDefault();
+  }
+
+  obtenerTextoOcupacionViviendaAISI(): string {
+    const data = this.formDataSignal();
+    if (data['textoOcupacionViviendaAISI'] && data['textoOcupacionViviendaAISI'] !== '____') {
+      return data['textoOcupacionViviendaAISI'];
+    }
+    return this.generarTextoOcupacionDefault();
+  }
+
+  obtenerTextoEstructuraAISI(): string {
+    const data = this.formDataSignal();
+    if (data['textoEstructuraAISI'] && data['textoEstructuraAISI'] !== '____') {
+      return data['textoEstructuraAISI'];
+    }
+    return this.generarTextoEstructuraDefault();
   }
 
   // Small helper used by the text defaults

@@ -259,11 +259,17 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoOcupacionDefault(): string {
-    return 'Texto por defecto — ocupación de vivienda.';
+    const viviendasOcupadas = this.totalCondicionSignal();
+    const porcentajeOcupadas = this.porcentajeOcupadasPresentesSignal();
+    return `Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de ${viviendasOcupadas}. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el ${porcentajeOcupadas} del conjunto analizado.`;
   }
 
   private generarTextoEstructuraDefault(): string {
-    return 'Texto por defecto — estructura.';
+    const data = this.formDataSignal() || {};
+    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const porcentajePisosTierra = this.porcentajePisosTierraSignal();
+    const porcentajePisosCemento = this.porcentajePisosCementoSignal();
+    return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;
   }
 
   private formatearPorcentaje(num: number): string {

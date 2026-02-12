@@ -72,6 +72,37 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  // ✅ Helpers para obtener keys con prefijo (CRÍTICO para sync)
+  getKeyTextoIntro(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoIntroServiciosBasicosAISI${prefijo}` : 'textoIntroServiciosBasicosAISI';
+  }
+
+  getKeyTextoServiciosAgua(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoServiciosAguaAISI${prefijo}` : 'textoServiciosAguaAISI';
+  }
+
+  getKeyTextoDesague(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoDesagueCP${prefijo}` : 'textoDesagueCP';
+  }
+
+  getKeyTextoDesechos(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoDesechosSolidosCP${prefijo}` : 'textoDesechosSolidosCP';
+  }
+
+  getKeyTextoElectricidad(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoElectricidadCP${prefijo}` : 'textoElectricidadCP';
+  }
+
+  getKeyTextoEnergiaCocinar(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `textoEnergiaCocinarCP${prefijo}` : 'textoEnergiaCocinarCP';
+  }
+
   // ✅ Tablas con noInicializarDesdeEstructura: true
   abastecimientoConfig: TableConfig = {
     tablaKey: 'abastecimientoAguaCpTabla',
@@ -191,49 +222,62 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
            this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
+  // ✅ Texto signals (MODO IDEAL - computed reactivos, no IIFE)
+  readonly textoIntroSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoIntroServiciosBasicosAISI${prefijo}` : 'textoIntroServiciosBasicosAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoIntroServiciosBasicosAISI();
+  });
+
+  readonly textoServiciosAguaSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoServiciosAguaAISI${prefijo}` : 'textoServiciosAguaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoServiciosAguaAISI();
+  });
+
+  readonly textoDesagueSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoDesagueCP${prefijo}` : 'textoDesagueCP';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoDesagueCP();
+  });
+
+  readonly textoDesechosSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoDesechosSolidosCP${prefijo}` : 'textoDesechosSolidosCP';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoDesechosSolidosCP();
+  });
+
+  readonly textoElectricidadSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoElectricidadCP${prefijo}` : `textoElectricidadCP`;
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoElectricidadCP();
+  });
+
+  readonly textoCocinarSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijo();
+    const campoKey = prefijo ? `textoEnergiaCocinarCP${prefijo}` : 'textoEnergiaCocinarCP';
+    const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
+    if (manual && manual.trim() !== '' && manual !== '____') return manual;
+    return this.obtenerTextoEnergiaCocinarCP();
+  });
+
   readonly viewModel = computed(() => ({
-    textoIntro: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoIntroServiciosBasicosAISI${prefijo}` : 'textoIntroServiciosBasicosAISI';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoIntroServiciosBasicosAISI();
-    })(),
-    textoServiciosAgua: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoServiciosAguaAISI${prefijo}` : 'textoServiciosAguaAISI';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoServiciosAguaAISI();
-    })(),
-    textoDesague: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoDesagueCP${prefijo}` : 'textoDesagueCP';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoDesagueCP();
-    })(),
-    textoDesechos: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoDesechosSolidosCP${prefijo}` : 'textoDesechosSolidosCP';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoDesechosSolidosCP();
-    })(),
-    textoElectricidad: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoElectricidadCP${prefijo}` : 'textoElectricidadCP';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoElectricidadCP();
-    })(),
-    textoCocinar: ((): string => {
-      const prefijo = this.obtenerPrefijo();
-      const campoKey = prefijo ? `textoEnergiaCocinarCP${prefijo}` : 'textoEnergiaCocinarCP';
-      const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-      if (manual && manual.trim() !== '' && manual !== '____') return manual;
-      return this.obtenerTextoEnergiaCocinarCP();
-    })(),
+    textoIntro: this.textoIntroSignal(),
+    textoServiciosAgua: this.textoServiciosAguaSignal(),
+    textoDesague: this.textoDesagueSignal(),
+    textoDesechos: this.textoDesechosSignal(),
+    textoElectricidad: this.textoElectricidadSignal(),
+    textoCocinar: this.textoCocinarSignal(),
     cuadroTituloAbastecimiento: this.cuadroTituloAbastecimientoSignal(),
     cuadroFuenteAbastecimiento: this.cuadroFuenteAbastecimientoSignal(),
     cuadroTituloSaneamiento: this.cuadroTituloSaneamientoSignal(),
@@ -303,15 +347,14 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void { }
 
-  // Paragraph generators (fallbacks)
-  obtenerTextoIntroServiciosBasicosAISI(): string {
+  // ✅ Private generators - these read from cache first, then formDataSignal  
+  private generarTextoIntroDefault(): string {
     const viviendas = this.getViviendasOcupadasPresentes();
     return `Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.\n\nEn 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (${viviendas}), tal como realiza el Censo Nacional 2017.`;
   }
 
-  obtenerTextoServiciosAguaAISI(): string {
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+  private generarTextoServiciosAguaDefault(): string {
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const tabla = this.abastecimientoSignal() || [];
     const cuadro = this.globalTableNumberSignalAbastecimiento();
     const tablaCon = TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
@@ -320,9 +363,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return `Respecto al servicio de agua para consumo humano en el CP ${centro}, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un ${dentro} de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (${fuera}) consta de red pública fuera de la vivienda, pero dentro de la edificación.`;
   }
 
-  obtenerTextoDesagueCP(): string {
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+  private generarTextoDesagueDefault(): string {
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const cuadro = this.globalTableNumberSignalSaneamiento();
     const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoSignal() || [], cuadro);
     const dentro = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('dentro'))?.porcentaje?.value || '____';
@@ -332,32 +374,24 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return `${p1}\n\n${p2}`;
   }
 
-  obtenerTextoDesechosSolidosCP(): string {
-    const data = this.formDataSignal();
-    const distrito = data?.['distritoSeleccionado'] || 'Cahuacho';
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+  private generarTextoDesechosDefault(): string {
+    const distrito = this.datos['distritoSeleccionado'] || this.formDataSignal()?.['distritoSeleccionado'] || 'Cahuacho';
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const p1 = `La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de ${distrito}, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.`;
     const p2 = `Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo. Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del CP ${centro} en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.`;
     return `${p1}\n\n${p2}`;
   }
 
-  obtenerTextoElectricidadCP(): string {
-    const si = (()=>{
-      const cuadro = this.globalTableNumberSignalCobertura();
-      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal()||[], cuadro);
-      return tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('si'))?.porcentaje?.value || '____';
-    })();
-    const no = (()=>{
-      const cuadro = this.globalTableNumberSignalCobertura();
-      const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal()||[], cuadro);
-      return tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('no'))?.porcentaje?.value || '____';
-    })();
+  private generarTextoElectricidadDefault(): string {
+    const cuadro = this.globalTableNumberSignalCobertura();
+    const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal()||[], cuadro);
+    const si = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('si'))?.porcentaje?.value || '____';
+    const no = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('no'))?.porcentaje?.value || '____';
     return `Se puede apreciar una amplia cobertura de alumbrado eléctrico en las viviendas del centro poblado en cuestión. Según los Censos Nacionales 2017, se cuenta con los siguientes datos: el ${si} de las viviendas cuenta con alumbrado eléctrico, mientras que el ${no} restante no tiene el referido servicio.`;
   }
 
-  obtenerTextoEnergiaCocinarCP(): string {
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+  private generarTextoEnergiaCocinarDefault(): string {
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
     const cuadro = this.globalTableNumberSignalCombustibles();
     const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.combustiblesSignal()||[], cuadro);
     const lena = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('leña'))?.porcentaje?.value || '____';
@@ -367,11 +401,37 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return `Según los Censos Nacionales 2017, de un total de ${this.getTotalCombustiblesCocinar()} hogares en el CP ${centro}, se obtiene que un ${lena} emplea la leña. En menor medida, se emplean otros combustibles como el gas (balón GLP) en un ${gas}, la bosta o estiércol en un ${bosta} y la electricidad con un ${electr}. Cabe mencionar que los hogares pueden emplear más de un tipo de combustible para la cocción de los alimentos.`;
   }
 
+  // ✅ Public getters - call generator once if no manual value
+  obtenerTextoIntroServiciosBasicosAISI(): string {
+    return this.generarTextoIntroDefault();
+  }
+
+  obtenerTextoServiciosAguaAISI(): string {
+    return this.generarTextoServiciosAguaDefault();
+  }
+
+  obtenerTextoDesagueCP(): string {
+    return this.generarTextoDesagueDefault();
+  }
+
+  obtenerTextoDesechosSolidosCP(): string {
+    return this.generarTextoDesechosDefault();
+  }
+
+  obtenerTextoElectricidadCP(): string {
+    return this.generarTextoElectricidadDefault();
+  }
+
+  obtenerTextoEnergiaCocinarCP(): string {
+    return this.generarTextoEnergiaCocinarDefault();
+  }
+
   private getViviendasOcupadasPresentes(): string {
-    if (!this.datos?.condicionOcupacionAISI || !Array.isArray(this.datos.condicionOcupacionAISI)) {
+    const data = this.formDataSignal();
+    if (!data?.['condicionOcupacionAISI'] || !Array.isArray(data['condicionOcupacionAISI'])) {
       return '____';
     }
-    const item = this.datos.condicionOcupacionAISI.find((item: any) => 
+    const item = data['condicionOcupacionAISI'].find((item: any) => 
       item.categoria?.toLowerCase().includes('ocupado') || item.categoria?.toLowerCase().includes('ocupada')
     );
     return item?.casos?.toString() || '____';

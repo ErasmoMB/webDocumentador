@@ -214,6 +214,23 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     return (fromField as any[]) || [];
   });
 
+  // Signal para título del cuadro de ubicación
+  readonly cuadroTituloSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tituloKey = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
+    const centroKey = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
+    const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
+    const centro = this.projectFacade.selectField(this.seccionId, null, centroKey)() || '____';
+    return titulo || `Ubicación referencial – Centro Poblado ${centro}`;
+  });
+
+  // Signal para fuente del cuadro de ubicación
+  readonly cuadroFuenteSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fuenteKey = prefijo ? `cuadroFuenteUbicacionCp${prefijo}` : 'cuadroFuenteUbicacionCp';
+    return this.projectFacade.selectField(this.seccionId, null, fuenteKey)() || 'GEADES (2024)';
+  });
+
   readonly viewModel = computed(() => ({
     fotos: this.fotosCacheSignal(),
     ubicacionCp: this.ubicacionCpSignal(),

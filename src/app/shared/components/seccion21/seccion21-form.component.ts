@@ -91,26 +91,21 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
-    // ✅ LEER TEXTO PERSONALIZADO del grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
+    // ✅ LEER TEXTO PERSONALIZADO O GENERAR AUTOMÁTICO
+    const fieldBase = 'parrafoSeccion21_aisi_intro_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     
-    // Si hay texto personalizado guárdalo y muéstralo
+    // Si hay texto personalizado, mostrarlo
     if (manual && manual.trim().length > 0) {
-      console.debug(`[AISI-DEBUG] ✅ PERSONALIZADO | seccion: ${this.seccionId} | prefijo: ${prefijo} | chars: ${manual.length}`);
       return manual;
     }
     
-    // ✅ GENERAR TEXTO AUTO para formulario (mismo que vista)
+    // Si no, generar automáticamente para el formulario
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-    if (!centro) return '';
+    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
     const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '';
     const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '';
-    const texto = `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente.`;
-    console.debug(`[AISI-DEBUG] 🔤 AUTO-GENERADO | seccion: ${this.seccionId} | prefijo: ${prefijo} | centro: ${centro}`);
-    return texto;
+    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente.`;
   });
 
   readonly centroPobladoAisiSignal: Signal<string> = computed(() => {
@@ -187,88 +182,63 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   // HANDLERS PARA ACTUALIZAR CAMPOS CON PREFIJO
   onLeyCreacionDistritoChange(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `leyCreacionDistrito${prefijo}` : 'leyCreacionDistrito';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('leyCreacionDistrito', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'leyCreacionDistrito': valor }); } catch (e) {}
   }
 
   onFechaCreacionDistritoChange(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `fechaCreacionDistrito${prefijo}` : 'fechaCreacionDistrito';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('fechaCreacionDistrito', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'fechaCreacionDistrito': valor }); } catch (e) {}
   }
 
   onDistritoAnteriorChange(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `distritoAnterior${prefijo}` : 'distritoAnterior';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('distritoAnterior', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'distritoAnterior': valor }); } catch (e) {}
   }
 
   onOrigenPobladores1Change(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `origenPobladores1${prefijo}` : 'origenPobladores1';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('origenPobladores1', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'origenPobladores1': valor }); } catch (e) {}
   }
 
   onOrigenPobladores2Change(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `origenPobladores2${prefijo}` : 'origenPobladores2';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('origenPobladores2', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'origenPobladores2': valor }); } catch (e) {}
   }
 
   onDepartamentoOrigenChange(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `departamentoOrigen${prefijo}` : 'departamentoOrigen';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('departamentoOrigen', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'departamentoOrigen': valor }); } catch (e) {}
   }
 
   onAnexosEjemploChange(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `anexosEjemplo${prefijo}` : 'anexosEjemplo';
-    this.projectFacade.setField(this.seccionId, null, fieldPref, valor);
-    this.onFieldChange(fieldPref, valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
+    this.onFieldChange('anexosEjemplo', valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { 'anexosEjemplo': valor }); } catch (e) {}
   }
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
-    // ✅ LEER TEXTO PERSONALIZADO del grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
+    // ✅ LEER TEXTO PERSONALIZADO O GENERAR AUTOMÁTICO
+    const fieldBase = 'parrafoSeccion21_centro_poblado_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     
-    // Si hay texto personalizado guárdalo y muéstralo
+    // Si hay texto personalizado, mostrarlo
     if (manual && manual.trim().length > 0) {
-      console.debug(`[AISI-DEBUG] ✅ PERSONALIZADO | seccion: ${this.seccionId} | prefijo: ${prefijo} | chars: ${manual.length}`);
       return manual;
     }
     
-    // ✅ GENERAR TEXTO AUTO para formulario (mismo que vista)
+    // Si no, generar automáticamente para el formulario
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-    if (!centro) return '';
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '';
-    const ley = PrefijoHelper.obtenerValorConPrefijo(data, 'leyCreacionDistrito', this.seccionId) || '';
-    const fecha = PrefijoHelper.obtenerValorConPrefijo(data, 'fechaCreacionDistrito', this.seccionId) || '';
-    const distrito = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoSeleccionado', this.seccionId) || '';
-    const distritoAnterior = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoAnterior', this.seccionId) || '';
-    const origen1 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores1', this.seccionId) || '';
-    const origen2 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores2', this.seccionId) || '';
-    const deptoOrigen = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoOrigen', this.seccionId) || '';
-    const anexos = PrefijoHelper.obtenerValorConPrefijo(data, 'anexosEjemplo', this.seccionId) || '';
-
+    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || 'Caravelí';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || 'Arequipa';
+    const ley = PrefijoHelper.obtenerValorConPrefijo(data, 'leyCreacionDistrito', this.seccionId) || '8004';
+    const fecha = PrefijoHelper.obtenerValorConPrefijo(data, 'fechaCreacionDistrito', this.seccionId) || '22 de febrero de 1935';
+    const distrito = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoSeleccionado', this.seccionId) || 'Cahuacho';
+    const distritoAnterior = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoAnterior', this.seccionId) || 'Caravelí';
+    const origen1 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores1', this.seccionId) || 'Caravelí';
+    const origen2 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores2', this.seccionId) || 'Parinacochas';
+    const deptoOrigen = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoOrigen', this.seccionId) || 'Ayacucho';
+    const anexos = PrefijoHelper.obtenerValorConPrefijo(data, 'anexosEjemplo', this.seccionId) || 'Ayroca o Sóndor';
     return `El CP ${centro} es la capital del distrito homónimo, perteneciente a la provincia de ${provincia}, en el departamento de ${departamento}. Su designación como capital distrital se oficializó mediante la Ley N°${ley}, promulgada el ${fecha}, fecha en que se creó el distrito de ${distrito}. Antes de ello, este asentamiento era un caserío del distrito de ${distritoAnterior}.`;
   });
 
@@ -320,7 +290,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     return {
       tablaKey: this.getTablaKeyUbicacionCp(),
       totalKey: 'localidad',
-      campoTotal: 'localidad',
+      // ✅ NO incluir campoTotal porque es texto, no número
       estructuraInicial: [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }]
     };
   }
@@ -338,20 +308,11 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTablaUpdated(): void {
-    const tablaKey = this.getTablaKeyUbicacionCp();
     const tabla = this.ubicacionCpSignal();
-    this.datos[tablaKey] = [...tabla];
-    this.onFieldChange('ubicacionCpTabla', this.datos[tablaKey], { refresh: false });
-
-    // Persistir tanto la clave con prefijo como la clave base
-    const tablaKeyBase = 'ubicacionCpTabla';
+    this.onFieldChange('ubicacionCpTabla', [...tabla], { refresh: false });
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla });
+      this.formChange.persistFields(this.seccionId, 'table', { 'ubicacionCpTabla': tabla });
     } catch (e) {}
-
-    // Forzar actualización de la vista
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
-
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }
@@ -441,37 +402,13 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   protected override actualizarValoresConPrefijo(): void { }
 
   actualizarParrafoAisi(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldIdPref = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
-
-    // Guardar versión con prefijo para aislamiento y versión base para compatibilidad
-    this.projectFacade.setField(this.seccionId, null, fieldIdPref, valor);
-    this.projectFacade.setField(this.seccionId, null, 'parrafoSeccion21_aisi_intro_completo', valor);
-
-    this.onFieldChange(fieldIdPref, valor);
     this.onFieldChange('parrafoSeccion21_aisi_intro_completo', valor);
-
-    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldIdPref]: valor, ['parrafoSeccion21_aisi_intro_completo']: valor }); } catch (e) {}
-
-    // Debug: indicar en consola qué se guardó (usar fragmento para no saturar)
-    try { console.debug(`[DEBUG Seccion21:guardarParrafoAISI] section: ${this.seccionId}, prefijo: ${prefijo}, keys: [${fieldIdPref}, parrafoSeccion21_aisi_intro_completo], valorFragment: "${(valor || '').substring(0,80)}"`); } catch (e) {}
+    try { this.formChange.persistFields(this.seccionId, 'text', { 'parrafoSeccion21_aisi_intro_completo': valor }); } catch (e) {}
   }
 
   actualizarParrafoCentro(valor: string): void {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldIdPref = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
-
-    // Guardar versión con prefijo para aislamiento y versión base para compatibilidad
-    this.projectFacade.setField(this.seccionId, null, fieldIdPref, valor);
-    this.projectFacade.setField(this.seccionId, null, 'parrafoSeccion21_centro_poblado_completo', valor);
-
-    this.onFieldChange(fieldIdPref, valor);
     this.onFieldChange('parrafoSeccion21_centro_poblado_completo', valor);
-
-    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldIdPref]: valor, ['parrafoSeccion21_centro_poblado_completo']: valor }); } catch (e) {}
-
-    // Debug: indicar en consola qué se guardó (usar fragmento para no saturar)
-    try { console.debug(`[DEBUG Seccion21:guardarParrafoCentro] section: ${this.seccionId}, prefijo: ${prefijo}, keys: [${fieldIdPref}, parrafoSeccion21_centro_poblado_completo], valorFragment: "${(valor || '').substring(0,80)}"`); } catch (e) {}
+    try { this.formChange.persistFields(this.seccionId, 'text', { 'parrafoSeccion21_centro_poblado_completo': valor }); } catch (e) {}
   }
 
   inicializarUbicacionCp(): void {

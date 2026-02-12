@@ -27,21 +27,21 @@
 
       <div class="form-field mt-lg">
         <label class="label">Título — Indicadores de natalidad y mortalidad</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloNatalidad" (change)="actualizarTexto('tituloNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: Indicadores de natalidad y mortalidad – CP {{ viewModel().centroPoblado }}">
+        <input type="text" class="form-control" [value]="viewModel().tituloNatalidad" (input)="actualizarTexto('tituloNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: Indicadores de natalidad y mortalidad – CP {{ viewModel().centroPoblado }}">
 
         <label class="label mt-sm">Tabla Indicadores de natalidad y mortalidad</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="getNatalidadTablaData()"
           [sectionId]="seccionId"
           [config]="natalidadConfig"
           [columns]="[ { field: 'anio', label: 'Año', type: 'text' }, { field: 'natalidad', label: 'Natalidad', type: 'number' }, { field: 'mortalidad', label: 'Mortalidad', type: 'number' } ]"
-          [tablaKey]="'natalidadMortalidadCpTabla'"
+          [tablaKey]="getNatalidadTablaKey()"
           [totalKey]="'anio'"
-          (tableUpdated)="onTablaUpdated('natalidadMortalidadCpTabla', $event)">
+          (tableUpdated)="onTablaUpdated(getNatalidadTablaKey(), $event)">
         </app-dynamic-table>
 
         <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteNatalidad" (change)="actualizarTexto('fuenteNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: GEADES (2024)">
+        <input type="text" class="form-control" [value]="viewModel().fuenteNatalidad" (input)="actualizarTexto('fuenteNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: GEADES (2024)">
       </div>
     </div>
 
@@ -62,21 +62,21 @@
 
       <div class="form-field mt-lg">
         <label class="label">Título — Casos por grupos de morbilidad</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloMorbilidad" (change)="actualizarTexto('tituloMorbilidad', $any($event.target).value)" placeholder="Ej: Casos por grupos de morbilidad – Distrito {{ viewModel().centroPoblado }} (2023)">
+        <input type="text" class="form-control" [value]="viewModel().tituloMorbilidad" (input)="actualizarTexto('tituloMorbilidad', $any($event.target).value)" placeholder="Ej: Casos por grupos de morbilidad – Distrito {{ viewModel().centroPoblado }} (2023)">
 
         <label class="label">Tabla Casos por grupos de morbilidad</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="getMorbilidadTablaData()"
           [sectionId]="seccionId"
           [config]="morbilidadConfig"
           [columns]="[ { field: 'grupo', label: 'Grupo de Morbilidad', type: 'text' }, { field: 'edad0_11', label: '0 – 11', type: 'number' }, { field: 'edad12_17', label: '12 – 17', type: 'number' }, { field: 'edad18_29', label: '18 – 29', type: 'number' }, { field: 'edad30_59', label: '30 – 59', type: 'number' }, { field: 'edad60_mas', label: '60 - >', type: 'number' }, { field: 'casos', label: 'Casos Totales', type: 'number' } ]"
-          [tablaKey]="'morbilidadCpTabla'"
+          [tablaKey]="getMorbilidadTablaKey()"
           [totalKey]="'grupo'"
-          (tableUpdated)="onTablaUpdated('morbilidadCpTabla', $event)">
+          (tableUpdated)="onTablaUpdated(getMorbilidadTablaKey(), $event)">
         </app-dynamic-table>
 
         <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteMorbilidad" (change)="actualizarTexto('fuenteMorbilidad', $any($event.target).value)" placeholder="Ej: REUNIS (2024)">
+        <input type="text" class="form-control" [value]="viewModel().fuenteMorbilidad" (input)="actualizarTexto('fuenteMorbilidad', $any($event.target).value)" placeholder="Ej: REUNIS (2024)">
       </div>
     </div>
 
@@ -97,23 +97,23 @@
 
       <div class="form-field mt-lg">
         <label class="label">Título — Población según tipo de seguro de salud afiliado</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloAfiliacion" (change)="actualizarTexto('tituloAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Población según tipo de seguro de salud afiliado – CP {{ viewModel().centroPoblado }} (2017)">
+        <input type="text" class="form-control" [value]="viewModel().tituloAfiliacion" (input)="actualizarTexto('tituloAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Población según tipo de seguro de salud afiliado – CP {{ viewModel().centroPoblado }} (2017)">
 
         <label class="label">Tabla Población según tipo de seguro de salud afiliado</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="getAfiliacionTablaData()"
           [sectionId]="seccionId"
           [config]="afiliacionConfig"
           [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]"
-          [tablaKey]="'afiliacionSaludTabla'"
+          [tablaKey]="getAfiliacionTablaKey()"
           [totalKey]="'categoria'"
           [showAddButton]="false"
           [showDeleteButton]="false"
-          (tableUpdated)="onTablaUpdated('afiliacionSaludTabla', $event)">
+          (tableUpdated)="onTablaUpdated(getAfiliacionTablaKey(), $event)">
         </app-dynamic-table>
 
         <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteAfiliacion" (change)="actualizarTexto('fuenteAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Censos Nacionales 2017">
+        <input type="text" class="form-control" [value]="viewModel().fuenteAfiliacion" (input)="actualizarTexto('fuenteAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Censos Nacionales 2017">
       </div>
     </div>
 

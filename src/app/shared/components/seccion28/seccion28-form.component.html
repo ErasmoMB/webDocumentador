@@ -22,14 +22,14 @@
         <label class="label">Título — Principales características del Puesto de Salud</label>
         <input type="text" class="input" 
           [value]="tituloPuestoSaludSignal()"
-          (input)="onFieldChange('puestoSaludTitulo' + obtenerPrefijoGrupo(), $any($event.target).value)"
+          (input)="onFieldChange('puestoSaludTitulo', $any($event.target).value)"
           placeholder="Ej: Principales características del Puesto de Salud">
       </div>
 
       <div class="form-field mt-sm">
         <label class="label">Tabla Principales características del Puesto de Salud</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="getPuestoSaludTablaData()"
           [sectionId]="seccionId"
           [config]="puestoSaludConfig"
           [columns]="columnasPuestoSalud"
@@ -45,7 +45,7 @@
         <label class="label">Fuente — Principales características del Puesto de Salud</label>
         <input type="text" class="input" 
           [value]="fuentePuestoSaludSignal()"
-          (input)="onFieldChange('puestoSaludFuente' + obtenerPrefijoGrupo(), $any($event.target).value)"
+          (input)="onFieldChange('puestoSaludFuente', $any($event.target).value)"
           placeholder="Ej: Ministerio de Salud (MINSA)">
       </div>
 
@@ -107,14 +107,14 @@
         <label class="label">Título — Infraestructura educativa</label>
         <input type="text" class="input" 
           [value]="tituloEducacionSignal()"
-          (input)="onFieldChange('educacionTitulo' + obtenerPrefijoGrupo(), $any($event.target).value)"
+          (input)="onFieldChange('educacionTitulo', $any($event.target).value)"
           placeholder="Ej: Infraestructura educativa – CP Cahuacho (2023)">
       </div>
 
       <div class="form-field mt-sm">
         <label class="label">Tabla Infraestructura educativa</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="getEducacionTablaData()"
           [sectionId]="seccionId"
           [config]="educacionConfig"
           [columns]="columnasEducacion"
@@ -128,7 +128,7 @@
         <label class="label">Fuente — Infraestructura educativa</label>
         <input type="text" class="input" 
           [value]="fuenteEducacionSignal()"
-          (input)="onFieldChange('educacionFuente' + obtenerPrefijoGrupo(), $any($event.target).value)"
+          (input)="onFieldChange('educacionFuente', $any($event.target).value)"
           placeholder="Ej: Censo Educativo 2023 – ESCALE (MINEDU)">
       </div> 
 

@@ -13,8 +13,8 @@
           label="Transporte - Párrafo 1"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="obtenerTextoTransporteCP1()"
-          (valueChange)="onFieldChange('textoTransporteCP1', $event)">
+          [value]="viewModel().textoTransporteCP1"
+          (valueChange)="onFieldChange(getKeyTextoTransporteCP1(), $event)">
         </app-paragraph-editor>
 
         <app-paragraph-editor
@@ -22,8 +22,8 @@
           label="Transporte - Párrafo 2"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="4"
-          [value]="obtenerTextoTransporteCP2()"
-          (valueChange)="onFieldChange('textoTransporteCP2', $event)">
+          [value]="viewModel().textoTransporteCP2"
+          (valueChange)="onFieldChange(getKeyTextoTransporteCP2(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -76,8 +76,8 @@
           label="Telecomunicaciones - Párrafo 1"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="obtenerTextoTelecomunicacionesCP1()"
-          (valueChange)="onFieldChange('textoTelecomunicacionesCP1', $event)">
+          [value]="viewModel().textoTelecomunicacionesCP1"
+          (valueChange)="onFieldChange(getKeyTextoTelecomunicacionesCP1(), $event)">
         </app-paragraph-editor>
 
         <app-paragraph-editor
@@ -85,8 +85,8 @@
           label="Telecomunicaciones - Párrafo 2"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="3"
-          [value]="obtenerTextoTelecomunicacionesCP2()"
-          (valueChange)="onFieldChange('textoTelecomunicacionesCP2', $event)">
+          [value]="viewModel().textoTelecomunicacionesCP2"
+          (valueChange)="onFieldChange(getKeyTextoTelecomunicacionesCP2(), $event)">
         </app-paragraph-editor>
 
         <app-paragraph-editor
@@ -94,8 +94,8 @@
           label="Telecomunicaciones - Párrafo 3"
           hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
           [rows]="5"
-          [value]="obtenerTextoTelecomunicacionesCP3()"
-          (valueChange)="onFieldChange('textoTelecomunicacionesCP3', $event)">
+          [value]="viewModel().textoTelecomunicacionesCP3"
+          (valueChange)="onFieldChange(getKeyTextoTelecomunicacionesCP3(), $event)">
         </app-paragraph-editor>
       </div>
 

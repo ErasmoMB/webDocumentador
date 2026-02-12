@@ -2,12 +2,10 @@
   <h5>B.1.8. Indicadores de salud</h5>
 
   <p class="mt-lg mb-sm"><strong>a. Natalidad y Mortalidad</strong></p>
-  <p class="text-justify" *ngIf="viewModel().textoNatalidadCP1 && viewModel().textoNatalidadCP1 !== '____'">{{ viewModel().textoNatalidadCP1 }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoNatalidadCP1 || viewModel().textoNatalidadCP1 === '____'">Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud <span [appDataSource]="'section'" [fieldName]="'textoNatalidadCP1'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span> indican que, durante el año 2023, se registró un total de <span [appDataSource]="'manual'">{{ getNatalidad2023() }}</span> nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente <span [appDataSource]="'manual'">{{ getNatalidad2024() }}</span> nacimiento.</p>
-  <p class="text-justify" *ngIf="viewModel().textoNatalidadCP2 && viewModel().textoNatalidadCP2 !== '____'">{{ viewModel().textoNatalidadCP2 }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoNatalidadCP2 || viewModel().textoNatalidadCP2 === '____'">Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de <span [appDataSource]="'manual'" [fieldName]="'textoNatalidadCP2'">{{ getMortalidad2023() }}</span> durante el año 2023. Sin embargo, para el año 2024, sí se registró <span [appDataSource]="'manual'">{{ getMortalidad2024() }}</span> defunción.</p>
+  <p class="text-justify">{{ obtenerTextoNatalidadCP1() }}</p>
+  <p class="text-justify">{{ obtenerTextoNatalidadCP2() }}</p>
 
-  <app-table-wrapper [title]="(viewModel().tituloNatalidad && viewModel().tituloNatalidad.trim().length>0) ? viewModel().tituloNatalidad : ('Indicadores de natalidad y mortalidad – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho'))" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloNatalidadSignal() && tituloNatalidadSignal().trim().length>0) ? tituloNatalidadSignal() : ('Indicadores de natalidad y mortalidad – CP ' + centroPobladoSignal())" sectionId="3.1.4.B.1.8">
     <app-generic-table
       [data]="getNatalidadMortalidadSinTotal()"
       [config]="{
@@ -22,13 +20,12 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ viewModel().fuenteNatalidad && viewModel().fuenteNatalidad.trim().length>0 ? viewModel().fuenteNatalidad : 'GEADES (2024)' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteNatalidadSignal() && fuenteNatalidadSignal().trim().length>0 ? fuenteNatalidadSignal() : 'GEADES (2024)' }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
-  <p class="text-justify" *ngIf="viewModel().textoMorbilidadCP && viewModel().textoMorbilidadCP !== '____'">{{ viewModel().textoMorbilidadCP }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoMorbilidadCP || viewModel().textoMorbilidadCP === '____'">Entre los grupos de morbilidad que se hallan a nivel distrital de <span [appDataSource]="'section'" [fieldName]="'textoMorbilidadCP'">{{ datos.distritoSeleccionado || 'Cahuacho' }}</span> (jurisdicción que abarca al Puesto de Salud <span [appDataSource]="'section'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores y la obesidad y otros de hiperalimentación. A continuación, se presenta el cuadro con el número de casos por grupo de morbilidad y bloque etario dentro del distrito, según el portal REUNIS del MINSA.</p>
+  <p class="text-justify">{{ obtenerTextoMorbilidadCP() }}</p>
 
-  <app-table-wrapper [title]="(viewModel().tituloMorbilidad && viewModel().tituloMorbilidad.trim().length>0) ? viewModel().tituloMorbilidad : ('Casos por grupos de morbilidad – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2023)')" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloMorbilidadSignal() && tituloMorbilidadSignal().trim().length>0) ? tituloMorbilidadSignal() : ('Casos por grupos de morbilidad – Distrito ' + distritoSeleccionadoSignal() + ' (2023)')" sectionId="3.1.4.B.1.8">
     <app-generic-table
       [data]="getMorbilidadSinTotal()"
       [config]="{
@@ -47,13 +44,12 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ viewModel().fuenteMorbilidad && viewModel().fuenteMorbilidad.trim().length>0 ? viewModel().fuenteMorbilidad : 'REUNIS (2024)' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteMorbilidadSignal() && fuenteMorbilidadSignal().trim().length>0 ? fuenteMorbilidadSignal() : 'REUNIS (2024)' }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
-  <p class="text-justify" *ngIf="viewModel().textoAfiliacionSalud && viewModel().textoAfiliacionSalud !== '____'">{{ viewModel().textoAfiliacionSalud }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoAfiliacionSalud || viewModel().textoAfiliacionSalud === '____'">En el CP <span [appDataSource]="'section'" [fieldName]="'textoAfiliacionSalud'">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS). En menor medida, se hallan las afiliaciones a ESSALUD y otros. Por último, cabe mencionar el porcentaje de la población que no cuenta con ningún tipo de seguro de salud.</p>
+  <p class="text-justify">{{ obtenerTextoAfiliacionSalud() }}</p>
 
-  <app-table-wrapper [title]="(viewModel().tituloAfiliacion && viewModel().tituloAfiliacion.trim().length>0) ? viewModel().tituloAfiliacion : ('Población según tipo de seguro de salud afiliado – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloAfiliacionSignal() && tituloAfiliacionSignal().trim().length>0) ? tituloAfiliacionSignal() : ('Población según tipo de seguro de salud afiliado – CP ' + centroPobladoSignal() + ' (2017)')" sectionId="3.1.4.B.1.8">
     <app-generic-table
       [data]="getAfiliacionSaludSinTotal()"
       [config]="{
@@ -68,7 +64,7 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ viewModel().fuenteAfiliacion && viewModel().fuenteAfiliacion.trim().length>0 ? viewModel().fuenteAfiliacion : 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteAfiliacionSignal() && fuenteAfiliacionSignal().trim().length>0 ? fuenteAfiliacionSignal() : 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas' }}</span></p>
 
   <app-image-upload
       [modoVista]="true"

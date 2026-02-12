@@ -6,9 +6,8 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
-import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
 
 @Component({
@@ -34,38 +33,30 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
-  // ✅ CORREGIDO - Leer texto con prefijo
+  // ✅ CORREGIDO - Generar texto INLINE sin servicios
   readonly textoDemografiaSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+    const fieldBase = 'textoDemografiaAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     if (manual && manual.trim().length > 0) return manual;
-    const data = this.formDataSignal() as any;
-    // ✅ Usar el valor con prefijo para el textGenerator
-    const dataConPrefijo = {
-      ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
-      poblacionSexoAISI: this.poblacionSexoSignal(),
-      poblacionEtarioAISI: this.poblacionEtarioSignal()
-    };
-    try { return this.textGenerator.generateDemografiaText(dataConPrefijo); } catch (e) { return ''; }
+    
+    // Generar automáticamente si no hay personalizado
+    const data = this.formDataSignal();
+    const cp = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
+    const poblacionTotal = this.poblacionSexoSignal().reduce((sum, row: any) => sum + (parseInt(row.casos) || 0), 0);
+    return `En cuanto a la demografía del CP ${cp}, la población total es de ${poblacionTotal} habitantes. La distribución por sexo refleja una composición equilibrada de la comunidad.`;
   });
 
-  // ✅ CORREGIDO - Leer texto con prefijo
+  // ✅ CORREGIDO - Generar texto INLINE sin servicios
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
+    const fieldBase = 'textoGrupoEtarioAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     if (manual && manual.trim().length > 0) return manual;
-    const data = this.formDataSignal() as any;
-    // ✅ Usar el valor con prefijo para el textGenerator
-    const dataConPrefijo = {
-      ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
-      poblacionSexoAISI: this.poblacionSexoSignal(),
-      poblacionEtarioAISI: this.poblacionEtarioSignal()
-    };
-    try { return this.textGenerator.generateGrupoEtarioText(dataConPrefijo); } catch (e) { return ''; }
+    
+    // Generar automáticamente si no hay personalizado
+    const data = this.formDataSignal();
+    const cp = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
+    const poblaciónTotal = this.poblacionEtarioSignal().reduce((sum, row: any) => sum + (parseInt(row.casos) || 0), 0);
+    return `Por grupo etario, el CP ${cp} presenta una población joven con predominio de edades entre menores de edad y adultos jóvenes. La población total por grupo etario es ${poblaciónTotal} habitantes.`;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -212,8 +203,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
-    private formChange: FormChangeService, 
-    private textGenerator: ISeccion22TextGeneratorService,
+    private formChange: FormChangeService,
     private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
@@ -416,7 +406,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
@@ -433,7 +423,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
@@ -450,7 +440,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
@@ -467,14 +457,14 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.formChange.persistFields(this.seccionId, 'text', { [fieldId]: valor });
     } catch (e) {}
 
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
     const prefix = this.photoPrefixSignal();
     this.onGrupoFotografiasChange(prefix, fotografias);
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 

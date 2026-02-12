@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, ViewChildren, QueryList, Signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, ViewChildren, QueryList, Signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
@@ -121,6 +121,17 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     return this.datos[campoKey] || this.datos['textoDeporteCP2'] || '';
   });
 
+  // ✅ Tabla Signals para detección de cambios reactiva en OnPush
+  readonly puestoSaludTablaSignal: Signal<any[]> = computed(() => {
+    const tablaKey = this.getTablaKeyPuestoSalud();
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
+
+  readonly educacionTablaSignal: Signal<any[]> = computed(() => {
+    const tablaKey = this.getTablaKeyEducacion();
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
+
   fotografiasSaludFormMulti: FotoItem[] = [];
   fotografiasEducacionFormMulti: FotoItem[] = [];
   fotografiasRecreacionFormMulti: FotoItem[] = [];
@@ -175,6 +186,13 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
     this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+
+    // ✅ CRÍTICO: Escuchar cambios en signals de tabla y forzar detección de cambios
+    effect(() => {
+      this.puestoSaludTablaSignal();
+      this.educacionTablaSignal();
+      this.cdRef.markForCheck();
+    });
   }
 
   protected override onInitCustom(): void {
@@ -342,7 +360,7 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     }
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Dentro de la capital distrital de ${distrito} se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local.`;
+    return `Dentro de la capital distrital de ${distrito} se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local. Este puesto de salud es el principal punto de referencia para los habitantes de ${centroPoblado}, ofreciendo servicios esenciales como consultas médicas, controles de salud y atención básica de emergencias. Aunque cuenta con limitaciones en cuanto a especialidades médicas y equipamiento, su presencia es fundamental para atender las necesidades de salud de la población, especialmente considerando la ausencia de otros centros de mayor capacidad en la zona.`;
   }
 
   obtenerTextoEducacionCP(): string {
@@ -428,6 +446,17 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
   getTablaKeyPuestoSalud(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     return prefijo ? `puestoSaludCpTabla${prefijo}` : 'puestoSaludCpTabla';
+  }
+
+  // ✅ Métodos para retornar datos de tabla formateados para binding
+  getPuestoSaludTablaData(): Record<string, any[]> {
+    const key = this.getTablaKeyPuestoSalud();
+    return { [key]: this.puestoSaludTablaSignal() };
+  }
+
+  getEducacionTablaData(): Record<string, any[]> {
+    const key = this.getTablaKeyEducacion();
+    return { [key]: this.educacionTablaSignal() };
   }
 
   // Eliminar filas Total al cargar datos

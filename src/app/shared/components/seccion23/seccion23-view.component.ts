@@ -157,28 +157,87 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     this.datos.centroPobladoAISI = centro || null;
   }
 
+  getPorcentajePET(): string {
+    const tabla = this.petGruposEdadSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const total = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('total'));
+    return total?.porcentaje || '';
+  }
+
+  getPorcentajeGrupoPET(grupo: string): string {
+    const tabla = this.petGruposEdadSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes(grupo.toLowerCase()));
+    return item?.porcentaje || '';
+  }
+
   getPorcentajePEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
+    const tabla = this.peaDistritoSexoSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentaje || '';
   }
 
   getPorcentajeNoPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
+    const tabla = this.peaDistritoSexoSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentaje || '';
   }
 
   getPorcentajeHombresPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
+    const tabla = this.peaDistritoSexoSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentajeHombres || '';
   }
 
   getPorcentajeMujeresNoPEA(): string {
-    if (!this.datos?.peaDistritoSexoTabla || !Array.isArray(this.datos.peaDistritoSexoTabla)) return '';
-    const item = this.datos.peaDistritoSexoTabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
+    const tabla = this.peaDistritoSexoSignal();
+    if (!tabla || !Array.isArray(tabla)) return '';
+    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
     return item?.porcentajeMujeres || '';
+  }
+
+  // Textos para template
+  obtenerTextoPETIntro(): string {
+    const data = this.formDataSignal();
+    return data['textoPETIntro_AISI'] || 'La población cumplida de 14 años de edad, se encuentra en edad de trabajar...';
+  }
+
+  obtenerTextoPET(): string {
+    const data = this.formDataSignal();
+    return data['textoPET_AISI'] || '';
+  }
+
+  obtenerTextoIndicadoresDistritales(): string {
+    const data = this.formDataSignal();
+    return data['textoIndicadoresDistritalesAISI'] || '';
+  }
+
+  obtenerTextoPEA(): string {
+    const data = this.formDataSignal();
+    return data['textoPEA_AISI'] || '';
+  }
+
+  obtenerCentroPoblado(): string {
+    const data = this.formDataSignal();
+    return data['centroPobladoAISI'] || 'Cahuacho';
+  }
+
+  obtenerDistrito(): string {
+    const data = this.formDataSignal();
+    return data['distritoSeleccionado'] || 'Cahuacho';
+  }
+
+  obtenerPoblacionDistrital(): string {
+    const data = this.formDataSignal();
+    return data['poblacionDistritalAISI'] || '';
+  }
+
+  obtenerPETDistrital(): string {
+    const data = this.formDataSignal();
+    return data['petDistritalAISI'] || '';
   }
 
   override ngOnDestroy(): void { super.ngOnDestroy(); }
@@ -195,27 +254,16 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     return TablePercentageHelper.calcularPorcentajesMultiples(this.peaOcupadaDesocupadaSignal(), '');
   }
 
-  // Keep the same helper names used by template for compatibility
-  getPoblacionDistritalFn(): string {
-    return this.datos.poblacionDistritalAISI || '____';
+
+  getIngresoPerCapita(): string {
+    const v = this.formDataSignal()?.['ingresoPerCapita'] ?? null;
+    if (v === null || v === undefined || v === '') return '____';
+    const num = typeof v === 'number' ? v : parseFloat(String(v)) || 0;
+    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  getPETDistrital(): string {
-    return this.datos?.petDistritalAISI || '';
-  }
-
-  getPorcentajePET(): string {
-    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '0,00 %';
-    const totalPET = this.datos.petGruposEdadAISI.reduce((sum: number, item: any) => sum + (typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0), 0);
-    const totalPoblacion = this.datos?.poblacionSexoAISI?.reduce((sum: number, item: any) => sum + (typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0), 0) || 0;
-    if (!totalPoblacion || totalPoblacion === 0) return '';
-    return ((totalPET / totalPoblacion) * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
-  }
-
-  getPorcentajeGrupoPET(categoria: string): string {
-    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '';
-    const item = this.datos.petGruposEdadAISI.find((item: any) => item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase()));
-    return item?.porcentaje || '';
+  getRankingIngreso(): string {
+    return this.formDataSignal()?.['rankingIngreso'] ?? '____';
   }
 
   getPorcentajeDesempleo(): string {
@@ -236,15 +284,14 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     return item?.porcentajeMujeres || '';
   }
 
-  getIngresoPerCapita(): string {
-    const v = this.datos?.['ingresoPerCapita'] ?? (this.formDataSignal() && this.formDataSignal()['ingresoPerCapita']) ?? null;
-    if (v === null || v === undefined || v === '') return '____';
-    const num = typeof v === 'number' ? v : parseFloat(String(v)) || 0;
-    return num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  getPoblacionDistritalFn(): string {
+    const data = this.formDataSignal();
+    return data?.['poblacionDistritalAISI'] || '____';
   }
 
-  getRankingIngreso(): string {
-    return this.datos?.['rankingIngreso'] ?? (this.formDataSignal() && this.formDataSignal()['rankingIngreso']) ?? '____';
+  getPETDistrital(): string {
+    const data = this.formDataSignal();
+    return data?.['petDistritalAISI'] || '';
   }
 }
 

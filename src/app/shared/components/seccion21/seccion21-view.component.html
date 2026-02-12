@@ -16,7 +16,7 @@
   <p class="table-title">Cuadro N° {{ globalTableNumberSignal() }}</p>
   
   <app-table-wrapper 
-    [title]="datos['cuadroTituloUbicacionCp'] || ('Ubicación referencial – Centro Poblado ' + (datos.centroPobladoAISI || datos.informacionReferencialAISI?.centro_poblado || '____'))" 
+    [title]="cuadroTituloSignal()" 
     [sectionId]="seccionId"
     [hideNumber]="true">
     <app-generic-table
@@ -37,7 +37,7 @@
     </app-generic-table>
   </app-table-wrapper>
 
-  <p class="source">FUENTE:<span appDataHighlight="manual">{{ datos['cuadroFuenteUbicacionCp'] || 'GEADES (2024)' }}</span></p>
+  <p class="source">FUENTE:<span appDataHighlight="manual">{{ cuadroFuenteSignal() }}</span></p>
 
   <app-image-upload
     [modoVista]="true"

@@ -38,6 +38,9 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly tituloAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloAfiliacionSalud')() ?? '');
   readonly fuenteAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteAfiliacionSalud')() ?? '');
 
+  readonly centroPobladoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() ?? 'Cahuacho');
+  readonly distritoSeleccionadoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() ?? 'Cahuacho');
+
   readonly natalidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
@@ -81,14 +84,9 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     const prefijo = this.obtenerPrefijoGrupo();
     this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
 
+    // ✅ Effect para sincronizar cambios en tiempo real
     effect(() => {
-      const d = this.formDataSignal();
-      this.datos = { ...this.datos, ...d };
-      // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
-      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(d, 'centroPobladoAISI', this.seccionId);
-      if (centroPrefijado) {
-        this.datos.centroPobladoAISI = centroPrefijado;
-      }
+      this.formDataSignal();
       this.cdRef.markForCheck();
     });
 
@@ -129,6 +127,68 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   getMortalidad2024(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2024);
     return item?.mortalidad || 0;
+  }
+
+  // ✅ Métodos de generación de texto (copiados del form)
+  obtenerTextoNatalidadCP1(): string {
+    const data = this.formDataSignal();
+    if (data['textoNatalidadCP1'] && data['textoNatalidadCP1'].trim().length > 0) {
+      return data['textoNatalidadCP1'];
+    }
+    return this.generarTextoNatalidadCP1();
+  }
+
+  obtenerTextoNatalidadCP2(): string {
+    const data = this.formDataSignal();
+    if (data['textoNatalidadCP2'] && data['textoNatalidadCP2'].trim().length > 0) {
+      return data['textoNatalidadCP2'];
+    }
+    return this.generarTextoNatalidadCP2();
+  }
+
+  obtenerTextoMorbilidadCP(): string {
+    const data = this.formDataSignal();
+    if (data['textoMorbilidadCP'] && data['textoMorbilidadCP'].trim().length > 0) {
+      return data['textoMorbilidadCP'];
+    }
+    return this.generarTextoMorbilidadCP();
+  }
+
+  obtenerTextoAfiliacionSalud(): string {
+    const data = this.formDataSignal();
+    if (data['textoAfiliacionSalud'] && data['textoAfiliacionSalud'].trim().length > 0) {
+      return data['textoAfiliacionSalud'];
+    }
+    return this.generarTextoAfiliacionSalud();
+  }
+
+  // ✅ Generadores de texto (copiados del form)
+  generarTextoNatalidadCP1(): string {
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    return `Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud ${centro} indican que, durante el año 2023, se registró un total de ${this.getNatalidad2023()} nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente ${this.getNatalidad2024()} nacimiento.`;
+  }
+
+  generarTextoNatalidadCP2(): string {
+    return `Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de ${this.getMortalidad2023()} durante el año 2023. Sin embargo, para el año 2024, sí se registró ${this.getMortalidad2024()} defunción.`;
+  }
+
+  generarTextoMorbilidadCP(): string {
+    const distrito = this.projectFacade.obtenerDatos()?.['distritoSeleccionado'] || 'Cahuacho';
+    const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
+    const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
+    return `Entre los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca al Puesto de Salud ${this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho'}), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (${infecciones} casos) y la obesidad y otros de hiperalimentación (${obesidad} casos).`;
+  }
+
+  generarTextoAfiliacionSalud(): string {
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const sis = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
+    const essalud = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('essalud'))?.porcentaje || '0,00 %';
+    const sinseguro = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sin seguro'))?.porcentaje || '0,00 %';
+
+    return `En el CP ${centro}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${sis} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${essalud} de la población. Por último, cabe mencionar que el ${sinseguro} de la población no cuenta con ningún tipo de seguro de salud.`;
   }
 
   getNatalidadMortalidadSinTotal(): any[] {

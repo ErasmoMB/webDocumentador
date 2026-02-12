@@ -188,6 +188,13 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });
+
+    // ✅ CRÍTICO: Escuchar cambios en signals de tabla y forzar detección de cambios
+    effect(() => {
+      this.nivelEducativoSignal();
+      this.tasaAnalfabetismoSignal();
+      this.cdRef.markForCheck();
+    });
   }
 
   protected override onInitCustom(): void {
@@ -273,16 +280,59 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onNivelEducativoTableUpdated(tabla: any[]): void {
-    this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', tabla);
-    this.formChange.persistFields(this.seccionId, 'table', { nivelEducativoTabla: tabla });
-    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    const tablaKey = this.getNivelEducativoTablaKey();
+    const tablaKeyBase = 'nivelEducativoTabla';
+    
+    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
+    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
+    if (tablaKeyBase !== tablaKey) {
+      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
+    }
+    
+    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
   }
 
   onTasaAnalfabetismoTableUpdated(tabla: any[]): void {
-    this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', tabla);
-    this.formChange.persistFields(this.seccionId, 'table', { tasaAnalfabetismoTabla: tabla });
-    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    const tablaKey = this.getTasaAnalfabetismoTablaKey();
+    const tablaKeyBase = 'tasaAnalfabetismoTabla';
+    
+    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
+    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
+    if (tablaKeyBase !== tablaKey) {
+      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
+    }
+    
+    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
   }
 
   trackByIndex(index: number): number { return index; }
+
+  // ✅ Métodos para retornar datos de tabla formateados para binding
+  getNivelEducativoTablaKey(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+  }
+
+  getTasaAnalfabetismoTablaKey(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
+  }
+
+  getNivelEducativoTablaData(): Record<string, any[]> {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+    return { [tablaKey]: this.nivelEducativoSignal() };
+  }
+
+  getTasaAnalfabetismoTablaData(): Record<string, any[]> {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
+    return { [tablaKey]: this.tasaAnalfabetismoSignal() };
+  }
 }
