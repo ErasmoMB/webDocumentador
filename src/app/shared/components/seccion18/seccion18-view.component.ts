@@ -5,10 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 
 @Component({
     standalone: true,

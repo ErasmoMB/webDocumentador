@@ -40,7 +40,7 @@
       <app-dynamic-table
         [datos]="datos"
         [config]="peaOcupacionesConfig"
-        [columns]="tableCfg.getColumnasPEAOcupaciones()"
+        [columns]="peaOcupacionesColumns"
         [sectionId]="seccionId"
         [tablaKey]="'peaOcupacionesTabla' + obtenerPrefijo()"
         [showAddButton]="true"
@@ -103,7 +103,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionPecuariaConfig"
-          [columns]="tableCfg.getColumnasPoblacionPecuaria()"
+          [columns]="poblacionPecuariaColumns"
           [sectionId]="seccionId"
           [tablaKey]="'poblacionPecuariaTabla' + obtenerPrefijo()"
           [showAddButton]="true"
@@ -173,7 +173,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="caracteristicasAgriculturaConfig"
-          [columns]="tableCfg.getColumnasCaracteristicasAgricultura()"
+          [columns]="caracteristicasAgriculturaColumns"
           [sectionId]="seccionId"
           [tablaKey]="'caracteristicasAgriculturaTabla' + obtenerPrefijo()"
           [showAddButton]="true"

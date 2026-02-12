@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 
 /**
  * ✅ SOLID - SRP: Responsabilidad única de determinar cuándo y cómo calcular

@@ -387,9 +387,3 @@ export interface Seccion7Data {
   fotografiasPEA?: any[];
   [key: string]: any;
 }
-
-// Export Seccion4Data from separate file
-export { Seccion4Data, CentroPoblado, TablaAISD1Row, TablaAISD2Row } from './entities/seccion4-data';
-
-// Export Seccion5Data from separate file
-export { Seccion5Data, Institucion } from './entities/seccion5-data';

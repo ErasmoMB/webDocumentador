@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ImageUploadComponent, FotoItem } from './image-upload.component';
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { ImageBackendService } from 'src/app/core/services/image-backend.service';
+import { ImageBackendService } from 'src/app/core/services/image/image-backend.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 describe('ImageUploadComponent (integration important flow)', () => {

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TableWrapperComponent } from './table-wrapper.component';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 describe('TableWrapperComponent (reactive)', () => {

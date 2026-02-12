@@ -3,7 +3,7 @@ import { FormStateService } from './form-state.service';
 import { FormPersistenceService } from './form-persistence.service';
 import { SectionSyncService } from './section-sync.service';
 
-import { FormularioService } from '../formulario.service';
+import { FormularioService } from '../formulario/formulario.service';
 import { ProjectStateFacade } from '../../state/project-state.facade';
 
 /**

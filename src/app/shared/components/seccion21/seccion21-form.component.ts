@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],

@@ -9,7 +9,7 @@ import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { LayoutComponent } from './core/components/layout/layout.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
-import { DataCleanupService } from './core/services/data-cleanup.service';
+import { DataCleanupService } from './core/services/utilities/data-cleanup.service';
 import { MockDataInitializerHandler } from './core/handlers/mock-data-initializer.handler';
 import { StateRehydrationService } from './core/persistence/state-rehydration.service';
 import { SECTION_PROVIDERS } from './core/dependency-injection.config';

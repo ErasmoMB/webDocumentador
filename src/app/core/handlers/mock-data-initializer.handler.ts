@@ -2,7 +2,7 @@ import { Injectable, Injector } from '@angular/core';
 import { MockDataService } from '../services/infrastructure/mock-data.service';
 import { ProjectStateFacade } from '../state/project-state.facade';
 import { StorageFacade } from '../services/infrastructure/storage-facade.service';
-import { FormularioService } from '../services/formulario.service';
+import { FormularioService } from '../services/formulario/formulario.service';
 
 /**
  * Handler para inicializar datos del mock al inicio de la aplicación

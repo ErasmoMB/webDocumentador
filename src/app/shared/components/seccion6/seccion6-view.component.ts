@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { FotoItem } from '../image-upload/image-upload.component';
-import { Seccion6TableConfigService } from 'src/app/core/services/domain/seccion6-table-config.service';
+import { SECCION6_COLUMNAS_POBLACION_SEXO, SECCION6_COLUMNAS_POBLACION_ETARIO, SECCION6_TABLA_POBLACION_SEXO_CONFIG, SECCION6_TABLA_POBLACION_ETARIO_CONFIG } from './seccion6-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { debugLog } from 'src/app/shared/utils/debug';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
@@ -31,8 +31,10 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     'grupoAISD'
   ];
 
-  poblacionSexoConfig!: TableConfig;
-  poblacionEtarioConfig!: TableConfig;
+  poblacionSexoConfig: TableConfig = SECCION6_TABLA_POBLACION_SEXO_CONFIG;
+  poblacionEtarioConfig: TableConfig = SECCION6_TABLA_POBLACION_ETARIO_CONFIG;
+  poblacionSexoColumns = SECCION6_COLUMNAS_POBLACION_SEXO;
+  poblacionEtarioColumns = SECCION6_COLUMNAS_POBLACION_ETARIO;
 
   readonly vistDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
@@ -90,12 +92,11 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    public tableCfg: Seccion6TableConfigService,
+    // Seccion6TableConfigService eliminado - configs ahora son constantes
     private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);
-    this.poblacionSexoConfig = this.tableCfg.getTablaPoblacionSexoConfig();
-    this.poblacionEtarioConfig = this.tableCfg.getTablaPoblacionEtarioConfig();
+    // Configs ya inicializadas como propiedades de clase
 
     effect(() => {
       const vistData = this.vistDataSignal();

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TableInitializationService } from './table-initialization.service';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 
 describe('TableInitializationService', () => {
   let service: TableInitializationService;

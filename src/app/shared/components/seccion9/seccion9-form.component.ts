@@ -8,7 +8,7 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 
 @Component({
   standalone: true,

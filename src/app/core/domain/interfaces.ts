@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { SectionData, CalculatedSectionData, PETData, PEAData, PEAOcupadaData, Seccion2Data, ComunidadCampesina, DistritoAISI, GrupoConfig, Seccion23Data, Seccion3Data, Entrevistado, Seccion10Data, Seccion6Data, Seccion7Data, Seccion8Data, Seccion9Data, Seccion26Data, Seccion12Data, Seccion25Data, Seccion28Data, Seccion29Data, Seccion24Data, Seccion22Data, Seccion30Data, Seccion4Data, Seccion5Data, Institucion } from './entities';
+import { SectionData, CalculatedSectionData, PETData, PEAData, PEAOcupadaData, Seccion2Data, ComunidadCampesina, DistritoAISI, GrupoConfig, Seccion23Data, Seccion3Data, Entrevistado, Seccion10Data, Seccion6Data, Seccion7Data, Seccion8Data, Seccion9Data, Seccion26Data, Seccion12Data, Seccion25Data, Seccion28Data, Seccion29Data, Seccion24Data, Seccion22Data, Seccion30Data } from './entities';
 import { Injectable } from '@angular/core';
 
 export abstract class ISectionDataService {
@@ -78,19 +78,6 @@ export abstract class ISeccion3TextGeneratorService {
   abstract generateFuentesPrimariasText(data: Seccion3Data): string;
   abstract generateFuentesSecundariasText(data: Seccion3Data): string;
   abstract generateEntrevistasText(data: Seccion3Data): string;
-}
-
-export abstract class ISeccion4DataService {
-  constructor() {}
-  abstract getSeccion4Data(): Observable<Seccion4Data>;
-  abstract updateSeccion4Data(updates: Partial<Seccion4Data>): Observable<Seccion4Data>;
-}
-
-export abstract class ISeccion4TextGeneratorService {
-  constructor() {}
-  abstract obtenerTextoIntroduccionAISD(datos: Seccion4Data, nombreComunidad: string): string;
-  abstract obtenerTextoComunidadCompleto(datos: Seccion4Data, nombreComunidad: string): string;
-  abstract obtenerTextoCaracterizacionIndicadores(datos: Seccion4Data, nombreComunidad: string): string;
 }
 
 export abstract class ISeccion10DataService {
@@ -270,26 +257,4 @@ export abstract class ISeccion30TextGeneratorService {
   constructor() {}
   abstract generateNivelEducativoText(data: Seccion30Data): string;
   abstract generateTasaAnalfabetismoText(data: Seccion30Data): string;
-}
-
-export abstract class ISeccion5DataService {
-  constructor() {}
-  abstract getSeccion5Data(): Observable<Seccion5Data>;
-  abstract updateSeccion5Data(updates: Partial<Seccion5Data>): Observable<Seccion5Data>;
-  abstract obtenerNombreComunidadActual(datos: Seccion5Data, seccionId: string): string;
-  abstract esTablaInstitucionesValida(datos: Seccion5Data, tablaKey: string): boolean;
-  abstract filtrarInstitucionesPorDisponibilidad(instituciones: Institucion[], disponibilidad: 'SI' | 'NO'): Institucion[];
-  abstract contarInstitucionesDisponibles(instituciones: Institucion[]): number;
-  abstract obtenerResumenInstituciones(instituciones: Institucion[]): {
-    total: number;
-    disponibles: number;
-    noDisponibles: number;
-  };
-}
-
-export abstract class ISeccion5TextGeneratorService {
-  constructor() {}
-  abstract obtenerTextoInstitucionalidad(datos: Seccion5Data, nombreComunidad: string): string;
-  abstract esParrafoValido(parrafo: string): boolean;
-  abstract formatearParrafo(texto: string): string;
 }

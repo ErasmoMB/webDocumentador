@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 
 @Component({
   selector: 'app-seccion14-view',

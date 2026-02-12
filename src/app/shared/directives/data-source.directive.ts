@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnInit, OnChanges, SimpleChanges, Renderer2, Injector, AfterViewInit, DoCheck } from '@angular/core';
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
-import { ConfigService } from 'src/app/core/services/config.service';
+import { ConfigService } from 'src/app/core/services/utilities/config.service';
 
 export type DataSourceType = 'manual' | 'section' | 'backend' | 'calculated';
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 import { PercentageAdjustmentService } from './percentage-adjustment.service';
 import { debugLog, debugWarn } from 'src/app/shared/utils/debug';
 

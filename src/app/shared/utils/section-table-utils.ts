@@ -1,7 +1,7 @@
 import { Injector } from '@angular/core';
-import { SectionTableRegistryService } from 'src/app/core/services/section-table-registry.service';
-import { TableHandlerFactoryService } from 'src/app/core/services/table-handler-factory.service';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { SectionTableRegistryService } from 'src/app/core/services/tables/section-table-registry.service';
+import { TableHandlerFactoryService } from 'src/app/core/services/tables/table-handler-factory.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from './prefijo-helper';
 
 export function getSectionKeyForRegistry(seccionId: string): string {

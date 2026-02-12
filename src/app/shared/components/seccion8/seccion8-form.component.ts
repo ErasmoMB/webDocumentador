@@ -6,8 +6,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { Seccion8TableConfigService } from '../../../core/services/domain/seccion8-table-config.service';
-import { Seccion8DataService } from '../../../core/services/domain/seccion8-data.service';
+import { SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG, SECCION8_COLUMNAS_PEA_OCUPACIONES, SECCION8_COLUMNAS_POBLACION_PECUARIA, SECCION8_COLUMNAS_CARACTERISTICAS_AGRICULTURA } from './seccion8-constants';
 
 @Component({
   standalone: true,
@@ -47,7 +46,14 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     'textoHabitosConsumo1', 'textoHabitosConsumo2'
   ];
 
-  private readonly regexCache = new Map<string, RegExp>();
+  // Configs y Columns para tablas
+  peaOcupacionesConfig = SECCION8_TABLA_PEA_OCUPACIONES_CONFIG;
+  poblacionPecuariaConfig = SECCION8_TABLA_POBLACION_PECUARIA_CONFIG;
+  caracteristicasAgriculturaConfig = SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG;
+  
+  peaOcupacionesColumns = SECCION8_COLUMNAS_PEA_OCUPACIONES;
+  poblacionPecuariaColumns = SECCION8_COLUMNAS_POBLACION_PECUARIA;
+  caracteristicasAgriculturaColumns = SECCION8_COLUMNAS_CARACTERISTICAS_AGRICULTURA;
   private peaOcupacionesCache: any[] = [];
   private peaOcupacionesCacheKey: string = '';
   private totalPEACache: string = '0';
@@ -95,9 +101,8 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer,
-    public tableCfg: Seccion8TableConfigService,
-    public dataService: Seccion8DataService
+    private sanitizer: DomSanitizer
+    // Seccion8TableConfigService eliminado - configs ahora son constantes
   ) {
     super(cdRef, injector);
 
@@ -114,18 +119,6 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
       this.cargarFotografias();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
-  }
-
-  get peaOcupacionesConfig() {
-    return this.tableCfg.getTablaPEAOcupacionesConfig();
-  }
-
-  get poblacionPecuariaConfig() {
-    return this.tableCfg.getTablaPoblacionPecuariaConfig();
-  }
-
-  get caracteristicasAgriculturaConfig() {
-    return this.tableCfg.getTablaCaracteristicasAgriculturaConfig();
   }
 
   onPEATableUpdated(updatedData?: any[]): void {

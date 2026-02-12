@@ -36,8 +36,8 @@ import {
 } from './section.selectors';
 import { sectionContentReducer, addImageToSection } from './section-content.reducer';
 import { generateInitialSections, regenerateSectionsForGroupType } from '../utils/section-generator.util';
-import { FormularioService } from '../services/formulario.service';
-import { GroupConfigService } from '../services/group-config.service';
+import { FormularioService } from '../services/formulario/formulario.service';
+import { GroupConfigService } from '../services/groups/group-config.service';
 import { Injector } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TableCalculationService } from './table-calculation.service';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 
 describe('TableCalculationService', () => {
   let service: TableCalculationService;

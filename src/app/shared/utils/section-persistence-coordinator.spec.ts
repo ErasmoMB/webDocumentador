@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
 import { SectionPersistenceCoordinator } from './section-persistence-coordinator';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FormularioService } from 'src/app/core/services/formulario/formulario.service';
 
 describe('SectionPersistenceCoordinator', () => {
   let coordinator: SectionPersistenceCoordinator;

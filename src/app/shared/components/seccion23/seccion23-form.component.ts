@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { takeUntil } from 'rxjs/operators';
-import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { PeaService } from 'src/app/core/services/domain/pea.service';
+import { GroupConfigService } from 'src/app/core/services/groups/group-config.service';
+import { PeaService } from 'src/app/core/infrastructure/services';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 
 @Component({
     imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent],

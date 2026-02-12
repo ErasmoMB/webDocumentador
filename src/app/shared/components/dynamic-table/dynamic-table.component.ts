@@ -2,9 +2,9 @@ import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnInit, OnCh
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { BackendDataMapperService } from 'src/app/core/services/backend-data-mapper.service';
+import { BackendDataMapperService } from 'src/app/core/services/backend/backend-data-mapper.service';
 import { TableMetadata } from 'src/app/core/models/table-metadata.model';
 import { PrefixManager } from 'src/app/shared/utils/prefix-manager';
 import { TableCalculationStrategyService } from 'src/app/core/services/tables/table-calculation-strategy.service';

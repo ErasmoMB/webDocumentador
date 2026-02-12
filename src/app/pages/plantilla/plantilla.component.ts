@@ -1,12 +1,12 @@
 import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { WordGeneratorService } from 'src/app/core/services/word-generator.facade.service';
-import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
+import { WordGeneratorService } from './word-generator.facade.service';
+import { TextNormalizationService } from 'src/app/core/services/utilities/text-normalization.service';
 import { LoggerService } from 'src/app/core/services/infrastructure/logger.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { FormularioDatos, CentroPobladoData, Entrevistado } from 'src/app/core/models/formulario.model';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FormularioService } from 'src/app/core/services/formulario/formulario.service';
 import { Seccion1FormComponent } from 'src/app/shared/components/seccion1/seccion1-form.component';
 import { Seccion1ViewComponent } from 'src/app/shared/components/seccion1/seccion1-view.component';
 import { Seccion2ViewComponent } from 'src/app/shared/components/seccion2/seccion2-view.component';

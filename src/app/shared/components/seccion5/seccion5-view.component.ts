@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
-import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
-import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX } from './seccion5-constants';
+import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX, SECCION5_COLUMNAS_INSTITUCIONES } from './seccion5-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
@@ -26,7 +25,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
   readonly institucionesSignal: Signal<any[]>;
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
-  readonly columnasInstituciones: any[] = [];
+  readonly columnasInstituciones: any[] = SECCION5_COLUMNAS_INSTITUCIONES;
   readonly institucionesConfig: any = {};
   
   fotografiasVista: FotoItem[] = [];
@@ -34,13 +33,12 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
 
   constructor(
     cdRef: ChangeDetectorRef,
-    injector: Injector,
-    public tableCfg: Seccion5TableConfigService
+    injector: Injector
   ) {
     super(cdRef, injector);
 
-    // Obtener configuración de tabla
-    this.columnasInstituciones = this.tableCfg.getColumnasInstituciones();
+    // Configuración de tabla desde constantes
+    this.columnasInstituciones = SECCION5_COLUMNAS_INSTITUCIONES;
     this.institucionesConfig = {};
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX, label: 'Institucionalidad' }

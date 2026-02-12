@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ChangeDetectorRef } from '@angular/core';
 import { SectionPhotoCoordinator, PhotoHost } from './section-photo-coordinator';
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
+import { PhotoNumberingService } from 'src/app/core/services/numbering/photo-numbering.service';
 import { FotoItem } from '../components/image-upload/image-upload.component';
 
 describe('SectionPhotoCoordinator', () => {

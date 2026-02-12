@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Observable } from 'rxjs';
 import { DataOrchestratorService } from 'src/app/core/services/orchestration/data-orchestrator.service';
-import { SectionDataLoaderService } from 'src/app/core/services/section-data-loader.service';
+import { SectionDataLoaderService } from 'src/app/core/services/utilities/section-data-loader.service';
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
 import { LoggerService } from 'src/app/core/services/infrastructure/logger.service';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';

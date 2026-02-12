@@ -7,7 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   selector: 'app-seccion23-view',

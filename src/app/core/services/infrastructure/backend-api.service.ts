@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { ConfigService } from '../config.service';
+import { ConfigService } from '../utilities/config.service';
 
 export interface BackendResponse<T> {
   success: boolean;

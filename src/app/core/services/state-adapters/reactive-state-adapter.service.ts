@@ -2,9 +2,9 @@ import { Injectable, Injector, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { FormularioDatos } from '../../models/formulario.model';
 import { Grupo } from '../../models/group-config.model';
-import { GroupConfigService } from '../group-config.service';
-import { FormularioService } from '../formulario.service';
-import { FormularioStoreService } from '../formulario-store.service';
+import { GroupConfigService } from '../groups/group-config.service';
+import { FormularioService } from '../formulario/formulario.service';
+import { FormularioStoreService } from '../formulario/formulario-store.service';
 import { SectionSyncService } from '../state/section-sync.service';
 
 /**

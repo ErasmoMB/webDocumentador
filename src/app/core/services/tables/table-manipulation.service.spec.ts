@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { TableManipulationService } from './table-manipulation.service';
 import { TableInitializationService } from './table-initialization.service';
 import { TableValidationService } from './table-validation.service';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 
 describe('TableManipulationService', () => {
   let service: TableManipulationService;

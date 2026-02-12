@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { GruposService } from 'src/app/core/services/domain/grupos.service';
+import { TextNormalizationService } from 'src/app/core/services/utilities/text-normalization.service';
+import { GruposService } from 'src/app/core/infrastructure/services';
 import { UIStoreService } from 'src/app/core/state/ui-store.contract';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { 

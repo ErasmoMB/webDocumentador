@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { CacheService } from '../services/infrastructure/cache.service';
-import { ConfigService } from '../services/config.service';
+import { ConfigService } from '../services/utilities/config.service';
 
 @Injectable()
 export class CacheInterceptor implements HttpInterceptor {

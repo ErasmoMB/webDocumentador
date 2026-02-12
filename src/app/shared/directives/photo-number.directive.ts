@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
-import { NumberingService } from 'src/app/core/services/numbering.service';
+import { NumberingService } from 'src/app/core/services/numbering/numbering.service';
 
 @Directive({
   selector: '[appPhotoNumber]',

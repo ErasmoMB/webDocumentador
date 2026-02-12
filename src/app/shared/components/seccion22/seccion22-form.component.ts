@@ -8,7 +8,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],

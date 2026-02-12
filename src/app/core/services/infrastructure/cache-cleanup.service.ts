@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { SectionDataLoaderService } from '../section-data-loader.service';
-import { AutoBackendDataLoaderService } from '../auto-backend-data-loader.service';
+import { SectionDataLoaderService } from '../utilities/section-data-loader.service';
+import { AutoBackendDataLoaderService } from '../backend/auto-backend-data-loader.service';
 import { CacheService } from './cache.service';
 
 /**

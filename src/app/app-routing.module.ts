@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
-import { NetworkAwarePreloadStrategy } from './core/services/network-aware-preload.strategy';
+import { NetworkAwarePreloadStrategy } from './core/services/utilities/network-aware-preload.strategy';
 
 const routes: Routes = [
   {

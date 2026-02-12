@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import type { FieldMapping } from './field-mapping.types';
 import { ProjectStateFacade } from '../../state/project-state.facade';
-import { UbigeoHelperService } from '../ubigeo-helper.service';
+import { UbigeoHelperService } from '../location/ubigeo-helper.service';
 
 /**
  * FieldRequestParamsResolverService - Resuelve parámetros de request para campos

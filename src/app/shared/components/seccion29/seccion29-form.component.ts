@@ -7,7 +7,7 @@ import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.c
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 
 @Component({
   selector: 'app-seccion29-form',

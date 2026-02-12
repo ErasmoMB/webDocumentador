@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { DataHighlightService } from '../../../core/services/data-highlight.service';
+import { DataHighlightService } from '../../directives/data-highlight.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { BaseSectionComponent } from '../base-section.component';

@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { CCPPEntry, GroupDefinition } from 'src/app/core/state/project-state.model';
-import { Seccion4TableConfigService } from 'src/app/core/services/domain/seccion4-table-config.service';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES } from './seccion4-constants';
+import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TABLA_AISD1_CONFIG, SECCION4_TABLA_AISD2_CONFIG, SECCION4_COLUMNAS_AISD1, SECCION4_COLUMNAS_AISD2 } from './seccion4-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -30,6 +29,12 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   override useReactiveSync: boolean = true;
   override watchedFields: string[] = SECCION4_WATCHED_FIELDS;
 
+  // Constantes de tablas para usar en template
+  readonly tablaAISD1Config = SECCION4_TABLA_AISD1_CONFIG;
+  readonly tablaAISD2Config = SECCION4_TABLA_AISD2_CONFIG;
+  readonly columnasAISD1 = SECCION4_COLUMNAS_AISD1;
+  readonly columnasAISD2 = SECCION4_COLUMNAS_AISD2;
+
   private autoLlenarTablasExecuted = false;
   private isProcessingPipeline = false;
 
@@ -42,7 +47,6 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    public tableCfg: Seccion4TableConfigService,
     private sanitizer: DomSanitizer
   ) {
     super(cdRef, injector);

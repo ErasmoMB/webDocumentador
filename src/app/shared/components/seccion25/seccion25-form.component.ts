@@ -7,9 +7,9 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({

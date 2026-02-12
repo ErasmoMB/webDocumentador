@@ -1,5 +1,5 @@
 import { Injector } from '@angular/core';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { createTableConfigFromRegistry, createTableHandlerFromFactory } from './section-table-utils';
 
 export class SectionTableCoordinator {

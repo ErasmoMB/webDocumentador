@@ -6,7 +6,7 @@ import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.com
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({

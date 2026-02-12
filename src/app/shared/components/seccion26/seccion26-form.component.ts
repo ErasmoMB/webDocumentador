@@ -6,9 +6,9 @@ import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.c
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({

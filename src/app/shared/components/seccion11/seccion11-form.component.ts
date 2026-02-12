@@ -2,10 +2,10 @@ import { Component, OnDestroy, Input, SimpleChanges, ChangeDetectionStrategy, In
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
 import { BaseSectionComponent } from '../base-section.component';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

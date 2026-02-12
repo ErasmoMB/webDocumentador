@@ -3,6 +3,9 @@
  * Usadas en form y view para evitar duplicación
  */
 
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableColumn } from 'src/app/shared/components/dynamic-table/dynamic-table.component';
+
 export const SECCION6_WATCHED_FIELDS: string[] = [
   'grupoAISD',
   'poblacionSexoAISD',
@@ -33,3 +36,87 @@ export const SECCION6_TABLE_FIELDS = {
 
 // Número máximo de fotos por grupo
 export const SECCION6_MAX_PHOTOS = 10;
+
+/**
+ * ✅ CONFIGURACIÓN DE TABLAS - SECCIÓN 6
+ */
+
+/**
+ * Configuración para tabla de población por sexo
+ */
+export const SECCION6_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
+  tablaKey: 'poblacionSexoAISD',
+  totalKey: 'sexo',
+  campoTotal: 'casos',
+  campoPorcentaje: 'porcentaje',
+  calcularPorcentajes: true,
+  camposParaCalcular: ['casos'],
+  noInicializarDesdeEstructura: true,
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
+};
+
+/**
+ * Columnas para tabla de población por sexo
+ */
+export const SECCION6_COLUMNAS_POBLACION_SEXO: TableColumn[] = [
+  {
+    field: 'sexo',
+    label: 'Sexo',
+    type: 'text' as const,
+    placeholder: 'Femenino, Masculino, etc.',
+    readonly: true
+  },
+  {
+    field: 'casos',
+    label: 'Casos',
+    type: 'number' as const,
+    dataType: 'number' as const
+  },
+  {
+    field: 'porcentaje',
+    label: 'Porcentaje',
+    type: 'text' as const,
+    readonly: true
+  }
+];
+
+/**
+ * Configuración para tabla de población por grupos etarios
+ */
+export const SECCION6_TABLA_POBLACION_ETARIO_CONFIG: TableConfig = {
+  tablaKey: 'poblacionEtarioAISD',
+  totalKey: 'categoria',
+  campoTotal: 'casos',
+  campoPorcentaje: 'porcentaje',
+  calcularPorcentajes: true,
+  camposParaCalcular: ['casos'],
+  noInicializarDesdeEstructura: true,
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
+};
+
+/**
+ * Columnas para tabla de población por grupos etarios
+ */
+export const SECCION6_COLUMNAS_POBLACION_ETARIO: TableColumn[] = [
+  {
+    field: 'categoria',
+    label: 'Categoría',
+    type: 'text' as const,
+    placeholder: 'Grupo de edad',
+    readonly: true
+  },
+  {
+    field: 'casos',
+    label: 'Casos',
+    type: 'number' as const,
+    dataType: 'number' as const
+  },
+  {
+    field: 'porcentaje',
+    label: 'Porcentaje',
+    type: 'text' as const,
+    readonly: true
+  }
+];

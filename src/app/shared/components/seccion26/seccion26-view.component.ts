@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({

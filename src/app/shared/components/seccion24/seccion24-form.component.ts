@@ -9,8 +9,8 @@ import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { TableConfig } from 'src/app/core/services/table-management.service';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule, DynamicTableComponent, ImageUploadComponent, ParagraphEditorComponent],

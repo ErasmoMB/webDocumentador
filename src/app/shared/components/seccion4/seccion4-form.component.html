@@ -39,8 +39,8 @@
     <label class="label" style="margin-top:10px">Ubicación referencial (Tabla A1)</label>
     <app-dynamic-table
       [datos]="datos"
-      [config]="tableCfg.getTablaAISD1Config()"
-      [columns]="tableCfg.getColumnasAISD1()"
+      [config]="tablaAISD1Config"
+      [columns]="columnasAISD1"
       [sectionId]="seccionId"
       [tablaKey]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
       [fieldName]="'tablaAISD1Datos' + obtenerPrefijoGrupo()"
@@ -55,8 +55,8 @@
     <label class="label" style="margin-top:10px">Población y viviendas (Tabla A2)</label>
     <app-dynamic-table
       [datos]="datos"
-      [config]="tableCfg.getTablaAISD2Config()"
-      [columns]="tableCfg.getColumnasAISD2()"
+      [config]="tablaAISD2Config"
+      [columns]="columnasAISD2"
       [sectionId]="seccionId"
       [tablaKey]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"
       [fieldName]="'tablaAISD2Datos' + obtenerPrefijoGrupo()"

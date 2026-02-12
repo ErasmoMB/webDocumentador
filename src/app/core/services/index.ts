@@ -3,31 +3,56 @@
  * Uso: import { DataService, ConfigService } from '@core/services';
  */
 
-// Servicios de infraestructura
+// ✅ Servicios de infraestructura (caché, API, logging)
 export * from './infrastructure';
 
-// Servicios de dominio
-export * from './domain';
+// ✅ Comandos y tipos
+export * from './commands';
 
-// Servicios de utilidad
-export * from './config.service';
-export * from './data.service';
-export * from './formulario.service';
-export * from './autocomplete.service';
-export * from './image-management.service';
-export * from './table-adapter.service';
-export * from './word-generator.facade.service';
+// ✅ Datos y normalización
+export * from './data';
 
-// ✅ NUEVOS: Servicios centralizados para tablas
-export * from './section-table-registry.service';
-export * from './table-handler-factory.service';
+// ✅ Transformadores de datos
+export * from './data-transformers';
 
-// ✅ NUEVO: Servicio de numeración global para cuadros y fotos
-export * from './global-numbering.service';
+// ✅ Mapeo de campos
+export * from './field-mapping';
 
-// ✅ NUEVO: Servicio para grupos AISI
-export * from './aisi-group.service';
+// ✅ Adaptadores de estado
+export * from './state-adapters';
 
-// Sub-módulos
+// ✅ Servicios de dominio - Backend
+export * from './backend';
+
+// ✅ Servicios de formulario
+export * from './formulario';
+
+// ✅ Servicios de imagen
+export * from './image';
+
+// ✅ Servicios de tablas
+export * from './tables';
+
+// ✅ Servicios de numeración
+export * from './numbering';
+
+// ✅ Servicios de navegación
+export * from './navigation';
+
+// ✅ Servicios de grupos
+export * from './groups';
+
+// ✅ Servicios de ubicación
+export * from './location';
+
+// ✅ Servicios de utilidad
+export * from './utilities';
+
+// ✅ Orquestación de datos
 export * from './orchestration';
+
+// ✅ Gestión de estado
 export * from './state';
+
+// ✅ Generación de documentos Word
+export * from './word-generator';

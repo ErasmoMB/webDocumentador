@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { ChangeDetectorRef, SimpleChange } from '@angular/core';
 import { DynamicTableComponent, TableColumn } from './dynamic-table.component';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { BackendDataMapperService } from 'src/app/core/services/backend-data-mapper.service';
+import { BackendDataMapperService } from 'src/app/core/services/backend/backend-data-mapper.service';
 import { TableConfigMetadata, TableMetadata } from 'src/app/core/models/table-metadata.model';
 
 describe('DynamicTableComponent', () => {

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({

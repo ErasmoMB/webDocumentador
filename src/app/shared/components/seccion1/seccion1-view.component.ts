@@ -12,8 +12,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
-import { GruposService } from 'src/app/core/services/domain/grupos.service';
+import { TextNormalizationService } from 'src/app/core/services/utilities/text-normalization.service';
+import { GruposService } from 'src/app/core/infrastructure/services';
 import { FotoItem } from '../image-upload/image-upload.component';
 import {
   SECCION1_WATCHED_FIELDS,

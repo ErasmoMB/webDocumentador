@@ -1,6 +1,6 @@
 import { Component, Input, ChangeDetectionStrategy, Injector, Signal, computed, ChangeDetectorRef } from '@angular/core';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';

@@ -6,8 +6,8 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 
 @Component({
   selector: 'app-seccion22-view',

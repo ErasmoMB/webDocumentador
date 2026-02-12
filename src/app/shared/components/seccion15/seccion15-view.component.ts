@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TablePercentageHelper } from '../../../shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 
 @Component({

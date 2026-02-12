@@ -1,8 +1,8 @@
 import { OnInit, OnChanges, SimpleChanges, DoCheck, ChangeDetectorRef, Directive, OnDestroy, Injector } from '@angular/core';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
-import { BackendDataMapperService } from 'src/app/core/services/backend-data-mapper.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
+import { BackendDataMapperService } from 'src/app/core/services/backend/backend-data-mapper.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { Subscription, of } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';

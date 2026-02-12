@@ -32,7 +32,7 @@ import {
 import { JSONExporterService } from './json-exporter.service';
 
 import { ProjectState, INITIAL_PROJECT_STATE } from '../state/project-state.model';
-import { TableNumberingService } from '../services/table-numbering.service';
+import { TableNumberingService } from '../services/numbering/table-numbering.service';
 
 // ============================================================================
 // TEST DATA FACTORIES

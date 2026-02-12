@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION16_PHOTO_PREFIX_RESERVORIO, SECCION16_PHOTO_PREFIX_USO_SUELOS } from './seccion16-constants';
 

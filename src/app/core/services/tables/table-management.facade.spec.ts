@@ -6,7 +6,7 @@ import { TableValidationService } from './table-validation.service';
 import { TableManipulationService } from './table-manipulation.service';
 import { TableQueryService } from './table-query.service';
 import { TableCalculationStrategyService } from './table-calculation-strategy.service';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 
 describe('TableManagementFacade', () => {
   let facade: TableManagementFacade;

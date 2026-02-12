@@ -1,6 +1,6 @@
 import { Component, Input, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TableNumberingService } from 'src/app/core/services/table-numbering.service';
+import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { debugLog } from 'src/app/shared/utils/debug';
 
 @Component({

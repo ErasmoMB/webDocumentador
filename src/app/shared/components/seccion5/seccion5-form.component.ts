@@ -4,8 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
-import { Seccion5TableConfigService } from 'src/app/core/services/domain/seccion5-table-config.service';
-import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX } from './seccion5-constants';
+import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX, SECCION5_TABLA_INSTITUCIONES_CONFIG, SECCION5_COLUMNAS_INSTITUCIONES } from './seccion5-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 
 @Component({
@@ -100,8 +99,7 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
 
   constructor(
     cdRef: ChangeDetectorRef,
-    injector: Injector,
-    public tableCfg: Seccion5TableConfigService
+    injector: Injector
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
@@ -139,13 +137,13 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     super.ngOnDestroy();
   }
 
-  // ✅ Configuración dinámica de tabla
+  // ✅ Configuración de tabla como constantes
   get institucionesConfig() {
-    return this.tableCfg.getTablaInstitucionesConfig();
+    return SECCION5_TABLA_INSTITUCIONES_CONFIG;
   }
 
   get columnasInstituciones() {
-    return this.tableCfg.getColumnasInstituciones();
+    return SECCION5_COLUMNAS_INSTITUCIONES;
   }
 
   // ✅ Sincronizar tabla cuando se actualiza (agregar/eliminar filas)

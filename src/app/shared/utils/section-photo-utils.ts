@@ -1,5 +1,5 @@
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
-import { PhotoNumberingService } from 'src/app/core/services/photo-numbering.service';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
+import { PhotoNumberingService } from 'src/app/core/services/numbering/photo-numbering.service';
 import { FotoItem } from '../components/image-upload/image-upload.component';
 import { PhotoGroupConfig } from './photo-group-config';
 

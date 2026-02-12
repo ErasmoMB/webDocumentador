@@ -1,12 +1,12 @@
 import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild, HostListener, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { WordGeneratorService } from 'src/app/core/services/word-generator.facade.service';
-import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
+import { WordGeneratorService } from './word-generator.facade.service';
+import { TextNormalizationService } from 'src/app/core/services/utilities/text-normalization.service';
 import { LoggerService } from 'src/app/core/services/infrastructure/logger.service';
 import { ResumenComponent } from './plantilla.component';
 import { FormularioDatos, CentroPobladoData } from 'src/app/core/models/formulario.model';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FormularioService } from 'src/app/core/services/formulario/formulario.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { FormularioDataTransformer } from 'src/app/core/services/data-transformers/formulario-data-transformer.service';
 import { StorageFacade } from 'src/app/core/services/infrastructure/storage-facade.service';

@@ -3,9 +3,9 @@ import {
   SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, ViewChildren, QueryList, ElementRef 
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PhotoNumberingService } from '../../../core/services/photo-numbering.service';
-import { ImageBackendService } from '../../../core/services/image-backend.service';
-import { ImageManagementFacade } from 'src/app/core/services/images/image-management.facade';
+import { PhotoNumberingService } from '../../../core/services/numbering/photo-numbering.service';
+import { ImageBackendService } from '../../../core/services/image/image-backend.service';
+import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { debugLog } from '../../utils/debug';

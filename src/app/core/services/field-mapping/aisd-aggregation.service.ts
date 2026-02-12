@@ -3,8 +3,8 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
 
-import { CentrosPobladosActivosService } from '../centros-poblados-activos.service';
-import { UbigeoHelperService } from '../ubigeo-helper.service';
+import { CentrosPobladosActivosService } from '../location/centros-poblados-activos.service';
+import { UbigeoHelperService } from '../location/ubigeo-helper.service';
 
 @Injectable({
   providedIn: 'root'

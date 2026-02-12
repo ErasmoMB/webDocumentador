@@ -1,22 +1,21 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ComponentRef, EnvironmentInjector, Inject, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef, Injector, effect, Signal, computed } from '@angular/core';
-import { SectionReferenceValidationService, SectionReferenceError } from 'src/app/core/services/section-reference-validation.service';
+import { SectionReferenceValidationService, SectionReferenceError } from 'src/app/core/services/navigation/section-reference-validation.service';
 import { FormStateService } from 'src/app/core/services/state/form-state.service';
 import { FormPersistenceService } from 'src/app/core/services/state/form-persistence.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
 import { ReactiveStateAdapter } from 'src/app/core/services/state-adapters/reactive-state-adapter.service';
-import { DataService } from 'src/app/core/services/data.service';
-import { ConfigService } from 'src/app/core/services/config.service';
-import { TextNormalizationService } from 'src/app/core/services/text-normalization.service';
+import { ConfigService } from 'src/app/core/services/utilities/config.service';
+import { TextNormalizationService } from 'src/app/core/services/utilities/text-normalization.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { FieldMappingFacade } from 'src/app/core/services/field-mapping/field-mapping.facade';
-import { ImageManagementService } from 'src/app/core/services/image-management.service';
-import { SectionNavigationService } from 'src/app/core/services/section-navigation.service';
-import { SectionFlowNavigationService } from 'src/app/core/services/section-flow-navigation.service';
+import { ImageManagementService } from 'src/app/core/services/image/image-management.service';
+import { SectionNavigationService } from 'src/app/core/services/navigation/section-navigation.service';
+import { SectionFlowNavigationService } from 'src/app/core/services/navigation/section-flow-navigation.service';
 import { MockDataService } from 'src/app/core/services/infrastructure/mock-data.service';
-import { FormularioMockService } from 'src/app/core/services/formulario-mock.service';
+import { FormularioMockService } from 'src/app/core/services/formulario/formulario-mock.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { StorageFacade } from 'src/app/core/services/infrastructure/storage-facade.service';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
@@ -191,7 +190,6 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private projectFacade: ProjectStateFacade,
     private formularioMock: FormularioMockService,
-    private dataService: DataService,
     private configService: ConfigService,
     private cdRef: ChangeDetectorRef,
     private textNormalization: TextNormalizationService,

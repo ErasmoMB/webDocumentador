@@ -1,6 +1,6 @@
 import { Injector } from '@angular/core';
 import { ProjectStateFacade } from 'src/app/core/state/project-state.facade';
-import { FormularioService } from 'src/app/core/services/formulario.service';
+import { FormularioService } from 'src/app/core/services/formulario/formulario.service';
 
 export interface PersistenceHost {
   seccionId: string;

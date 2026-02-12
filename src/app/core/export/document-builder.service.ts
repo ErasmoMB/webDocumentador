@@ -13,7 +13,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ProjectState } from '../state/project-state.model';
 import { Selectors, UIStoreService, GroupOption, FormField, GalleryImage } from '../state/ui-store.contract';
-import { TableNumberingService } from '../services/table-numbering.service';
+import { TableNumberingService } from '../services/numbering/table-numbering.service';
 import {
   ExportedDocument,
   ExportProjectInfo,

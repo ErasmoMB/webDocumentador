@@ -7,11 +7,11 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableConfig } from 'src/app/core/services/table-management.service';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/auto-backend-data-loader.service';
-import { GroupConfigService } from 'src/app/core/services/group-config.service';
-import { EducacionService } from 'src/app/core/services/domain/educacion.service';
-import { AISIGroupService } from 'src/app/core/services/aisi-group.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
+import { GroupConfigService } from 'src/app/core/services/groups/group-config.service';
+import { EducacionService } from 'src/app/core/infrastructure/services';
+import { AISIGroupService } from 'src/app/core/services/groups/aisi-group.service';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({

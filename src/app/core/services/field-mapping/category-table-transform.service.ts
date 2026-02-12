@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PercentageCalculatorService } from '../percentage-calculator.service';
+import { PercentageCalculatorService } from '../utilities/percentage-calculator.service';
 
 @Injectable({
   providedIn: 'root'

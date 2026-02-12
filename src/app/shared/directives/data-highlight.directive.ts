@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Input, OnInit } from '@angular/core';
-import { DataHighlightService } from 'src/app/core/services/data-highlight.service';
+import { DataHighlightService } from './data-highlight.service';
 
 /**
  * Directiva para resaltar datos automáticamente según su tipo

@@ -34,7 +34,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionSexoConfig"
-          [columns]="tableCfg.getColumnasPoblacionSexo()"
+          [columns]="poblacionSexoColumns"
           [sectionId]="seccionId"
           [tablaKey]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
           [fieldName]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
@@ -106,7 +106,7 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="poblacionEtarioConfig"
-          [columns]="tableCfg.getColumnasPoblacionEtario()"
+          [columns]="poblacionEtarioColumns"
           [sectionId]="seccionId"
           [tablaKey]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"
           [fieldName]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"

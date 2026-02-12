@@ -7,7 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
-import { GlobalNumberingService } from 'src/app/core/services/global-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   standalone: true,

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { TableConfig } from '../../../core/services/table-management.service';
+import { TableConfig } from '../../../core/services/tables/table-management.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS } from './seccion15-constants';

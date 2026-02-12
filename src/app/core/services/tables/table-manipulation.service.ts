@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TableConfig } from '../table-management.service';
+import { TableConfig } from './table-management.service';
 import { TableInitializationService } from './table-initialization.service';
 import { TableValidationService } from './table-validation.service';
 

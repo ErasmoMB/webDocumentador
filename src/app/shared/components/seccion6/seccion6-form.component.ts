@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
-import { Seccion6TableConfigService } from 'src/app/core/services/domain/seccion6-table-config.service';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { SECCION6_COLUMNAS_POBLACION_SEXO, SECCION6_COLUMNAS_POBLACION_ETARIO, SECCION6_TABLA_POBLACION_SEXO_CONFIG, SECCION6_TABLA_POBLACION_ETARIO_CONFIG } from './seccion6-constants';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { debugLog } from 'src/app/shared/utils/debug';
@@ -34,8 +34,13 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     'grupoAISD'
   ];
 
-  poblacionSexoConfig!: TableConfig;
-  poblacionEtarioConfig!: TableConfig;
+  poblacionSexoConfig: TableConfig = SECCION6_TABLA_POBLACION_SEXO_CONFIG;
+  poblacionEtarioConfig: TableConfig = SECCION6_TABLA_POBLACION_ETARIO_CONFIG;
+  
+  // ✅ Getters para columnas
+  get poblacionSexoColumns() { return SECCION6_COLUMNAS_POBLACION_SEXO; }
+  get poblacionEtarioColumns() { return SECCION6_COLUMNAS_POBLACION_ETARIO; }
+  
   override fotografiasFormMulti: FotoItem[] = [];
 
   // ✅ SIGNALS PUROS
@@ -139,15 +144,14 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    public tableCfg: Seccion6TableConfigService,
+    // Seccion6TableConfigService eliminado - configs ahora son constantes
     private tableFacade: TableManagementFacade
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
       { prefix: `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`, label: 'Demografía' }
     ];
-    this.poblacionSexoConfig = this.tableCfg.getTablaPoblacionSexoConfig();
-    this.poblacionEtarioConfig = this.tableCfg.getTablaPoblacionEtarioConfig();
+    // Configs ya inicializadas como propiedades de clase
     
     debugLog('[PORCENTAJES] 🔧 Seccion6FormComponent - Config creada:', {
       poblacionSexoConfig: this.poblacionSexoConfig,
@@ -187,7 +191,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
         debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla sexo...');
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
-          { ...this.poblacionSexoConfig, tablaKey: `poblacionSexoAISD${prefijo}` }
+          { ...SECCION6_TABLA_POBLACION_SEXO_CONFIG, tablaKey: `poblacionSexoAISD${prefijo}` }
         );
       }
 
@@ -195,7 +199,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
         debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla etario...');
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
-          { ...this.poblacionEtarioConfig, tablaKey: `poblacionEtarioAISD${prefijo}` }
+          { ...SECCION6_TABLA_POBLACION_ETARIO_CONFIG, tablaKey: `poblacionEtarioAISD${prefijo}` }
         );
       }
 

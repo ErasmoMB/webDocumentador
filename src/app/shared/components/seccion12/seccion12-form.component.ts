@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { SECCION12_PHOTO_PREFIX_SALUD, SECCION12_PHOTO_PREFIX_IE_AYROCA, SECCION12_PHOTO_PREFIX_IE_40270, SECCION12_PHOTO_PREFIX_RECREACION, SECCION12_PHOTO_PREFIX_DEPORTE } from './seccion12-constants';

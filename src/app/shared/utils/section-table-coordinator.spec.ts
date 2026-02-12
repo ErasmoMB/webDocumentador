@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
 import { SectionTableCoordinator } from './section-table-coordinator';
-import { TableConfig } from 'src/app/core/services/table-management.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 
 describe('SectionTableCoordinator', () => {
   let coordinator: SectionTableCoordinator;
