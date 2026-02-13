@@ -50,7 +50,32 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override obtenerNombreComunidadActual(): string {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Usar aisdGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_A')) {
+      const match = prefijo.match(/_A(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _A1 → índice 0, _A2 → índice 1
+        const grupos = this.aisdGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre;
+        }
+      }
+    }
+    
+    // Fallback: buscar en datos guardados
+    const grupoAISD = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')();
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, `grupoAISD${prefijo}`)() : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    return '____';
   }
 
   // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField)
@@ -257,5 +282,148 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyTecnologiaComunicaciones();
     const datos = updatedData || this.datos[tablaKey] || [];
     this.cdRef.markForCheck();
+  }
+
+  // ✅ MÉTODOS PARA MOSTRAR TEXTOS POR DEFECTO EN EL FORMULARIO (PATRÓN: FORMULARIO-VISTA SINCRONIZADO)
+  
+  obtenerTextoSeccion10ServiciosBasicosIntro(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['parrafoSeccion10_servicios_basicos_intro' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosBasicosIntro();
+  }
+
+  obtenerTextoServiciosAgua(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAgua' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosAgua();
+  }
+
+  obtenerTextoServiciosAguaDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosAguaDetalle' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosAguaDetalle();
+  }
+
+  obtenerTextoServiciosDesague(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesague' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosDesague();
+  }
+
+  obtenerTextoServiciosDesagueDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoServiciosDesagueDetalle' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoServiciosDesagueDetalle();
+  }
+
+  obtenerTextoDesechosSolidos(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos1' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoDesechosSolidos();
+  }
+
+  obtenerTextoDesechosSolidosDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoDesechosSolidos2' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoDesechosSolidosDetalle();
+  }
+
+  obtenerTextoElectricidad(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad1' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoElectricidad();
+  }
+
+  obtenerTextoElectricidadDetalle(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoElectricidad2' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoElectricidadDetalle();
+  }
+
+  obtenerTextoEnergiaCocinar(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manual = this.datos['textoEnergiaParaCocinar' + prefijo];
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+    return this.generarTextoEnergiaCocinar();
+  }
+
+  // ✅ GENERADORES DE TEXTO (PRIVADOS)
+  
+  private generarTextoServiciosBasicosIntro(): string {
+    return `En términos generales, la delimitación del ámbito de estudio de las áreas de influencia social se hace tomando en consideración a los agentes e instancias sociales, individuales y/o colectivas, públicas y/o privadas, que tengan derechos o propiedad sobre el espacio o los recursos respecto de los cuales el proyecto de exploración minera tiene incidencia.
+
+Asimismo, el área de influencia social de un proyecto tiene en consideración a los grupos de interés que puedan ser potencialmente afectadas por el desarrollo de dicho proyecto (según La Guía de Relaciones Comunitarias de la DGAAM del MINEM, se denomina "grupos de interés" a aquellos grupos humanos que son impactados por dicho proyecto).
+
+El criterio social para la delimitación de un área de influencia debe tener en cuenta la influencia que el Proyecto pudiera tener sobre el entorno social, que será o no ambientalmente impactado, considerando también la posibilidad de generar otro tipo de impactos, expectativas, intereses y/o demandas del entorno social.
+
+En base a estos criterios se han identificado las áreas de influencia social directa e indirecta:`;
+  }
+
+  private generarTextoServiciosAgua(): string {
+    const comunidad = this.obtenerNombreComunidadActual();
+    return `Según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron viviendas que presentan diferentes tipos de abastecimiento de agua. El ____% de las viviendas cuenta con abastecimiento de agua a través de red pública dentro de la vivienda, mientras que el ____% no cuenta con acceso a red pública de agua.`;
+  }
+
+  private generarTextoServiciosAguaDetalle(): string {
+    return `En la comunidad se han identificado diferentes medios para el abastecimiento de agua, considerando que en muchos casos el acceso al agua potable es limitado y requiere de soluciones innovadoras para satisfacer las necesidades básicas de la población.`;
+  }
+
+  private generarTextoServiciosDesague(): string {
+    const comunidad = this.obtenerNombreComunidadActual();
+    return `En cuanto a los servicios de desagüe, según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron viviendas que presentan diferentes tipos de saneamiento. El ____% de las viviendas cuenta con desagüe a través de red pública de desagüe, mientras que el ____% no cuenta con alcantarillado.`;
+  }
+
+  private generarTextoServiciosDesagueDetalle(): string {
+    return `Cabe mencionar que la falta de servicios de desagüe adecuados en la comunidad genera desafíos significativos para la salud pública y el ambiente, siendo necesarias intervenciones para mejorar las condiciones sanitarias y la calidad de vida de la población.`;
+  }
+
+  private generarTextoElectricidad(): string {
+    const comunidad = this.obtenerNombreComunidadActual();
+    return `Respecto a los servicios de electricidad, según la plataforma REDINFORMA del MIDIS, en los poblados que conforman la CC ${comunidad} se hallaron viviendas que presentan diferentes situaciones en cuanto al alumbrado eléctrico. El ____% de las viviendas cuenta con alumbrado eléctrico.`;
+  }
+
+  private generarTextoElectricidadDetalle(): string {
+    return `Cabe mencionar que, para poder describir el aspecto de estructura de las viviendas de esta comunidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas.`;
+  }
+
+  private generarTextoDesechosSolidos(): string {
+    return `En relación a la gestión de residuos sólidos, se observa que en la comunidad se realiza la disposición de residuos sólidos de manera inadecuada, lo que genera impactos ambientales negativos en el entorno.`;
+  }
+
+  private generarTextoDesechosSolidosDetalle(): string {
+    return `La falta de un sistema adecuado de recolección y disposición final de residuos sólidos contribuye a la contaminación del suelo, agua y aire, afectando la salud de la población y el ecosistema local.`;
+  }
+
+  private generarTextoEnergiaCocinar(): string {
+    return `Para la preparación de alimentos, la comunidad utiliza principalmente leña y gas, lo que representa un riesgo para la salud debido a la exposición prolongada al humo y la deforestación de áreas cercanas.`;
   }
 }

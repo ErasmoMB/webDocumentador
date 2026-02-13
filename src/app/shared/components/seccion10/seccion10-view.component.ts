@@ -144,7 +144,32 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   override obtenerNombreComunidadActual(): string {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Usar aisdGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_A')) {
+      const match = prefijo.match(/_A(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _A1 → índice 0, _A2 → índice 1
+        const grupos = this.aisdGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre;
+        }
+      }
+    }
+    
+    // Fallback: buscar en datos guardados
+    const grupoAISD = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')();
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, `grupoAISD${prefijo}`)() : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    return '____';
   }
 
   // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
