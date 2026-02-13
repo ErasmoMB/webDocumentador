@@ -50,8 +50,8 @@ export const SECCION9_PLANTILLAS_DINAMICAS = {
  */
 export const SECCION9_TEMPLATES = {
   // Títulos de secciones
-  seccionViviendas: 'Viviendas',
-  seccionEstructura: 'Estructura',
+  seccionViviendas: 'A.1.5. Viviendas',
+  seccionEstructura: 'a. Estructura',
   seccionFotografias: 'Fotografías',
   
   // Subtítulos

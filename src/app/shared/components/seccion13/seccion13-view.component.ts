@@ -179,16 +179,6 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  override obtenerNombreComunidadActual(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) {
-      const nombre = this.projectFacade.selectField(this.seccionId, null, 'nombreGrupo')();
-      return nombre || '____';
-    }
-    const grupoAISD = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')();
-    return grupoAISD || '____';
-  }
-
   obtenerTextoSeccion13NatalidadMortalidadCompleto(): string {
     const prefijo = this.obtenerPrefijo();
     const manual = this.projectFacade.selectField(this.seccionId, null, `parrafoSeccion13_natalidad_mortalidad_completo${prefijo}`)();

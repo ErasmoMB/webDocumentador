@@ -213,14 +213,6 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     return `afiliacionSaludTabla${this.obtenerPrefijo()}`;
   }
 
-  override obtenerNombreComunidadActual(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) {
-      return PrefijoHelper.obtenerValorConPrefijo(this.datos, 'nombreGrupo', this.seccionId) || '____';
-    }
-    return this.datos.grupoAISD || '____';
-  }
-
   obtenerTextoSeccion13NatalidadMortalidadCompleto(): string {
     if (this.datos.parrafoSeccion13_natalidad_mortalidad_completo) {
       return this.datos.parrafoSeccion13_natalidad_mortalidad_completo;
