@@ -91,8 +91,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   readonly textoMorbilidadSignal: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoSeccion13MorbilidadCompleto();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '____';
+    // ✅ REFACTOR (13/02/2026): Leer distrito de tabla S4 (dinámico)
+    const distrito = this.obtenerDistrito();
     let textoConResaltado = texto
       .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
       .replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)
@@ -179,6 +179,28 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  /**
+   * ✅ REFACTOR (13/02/2026): Lee el distrito DIRECTAMENTE de la tabla "Ubicación referencial" de Sección 4
+   * En lugar de usar ubicacionGlobal() que viene de Sección 1.
+   * Patrón igual a Sección 18.
+   */
+  obtenerDistrito(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const seccion4Id = '3.1.4.A.1'; // Sección 4 - Caracterización socioeconómica
+    const tablaKey = `tablaAISD1Datos${prefijo}`;
+    
+    // Lee tabla desde sección 4 (Ubicación referencial) - REACTIVO
+    const tabla = this.projectFacade.selectField(seccion4Id, null, tablaKey)() || [];
+    
+    // Retorna distrito del primer registro
+    if (Array.isArray(tabla) && tabla.length > 0 && tabla[0]?.distrito) {
+      return tabla[0].distrito;
+    }
+    
+    // Fallback: usar ubicacionGlobal como alternativa
+    return this.ubicacionGlobal().distrito || '____';
+  }
+
   obtenerTextoSeccion13NatalidadMortalidadCompleto(): string {
     const prefijo = this.obtenerPrefijo();
     const manual = this.projectFacade.selectField(this.seccionId, null, `parrafoSeccion13_natalidad_mortalidad_completo${prefijo}`)();
@@ -196,7 +218,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
       return manual;
     }
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
+    // ✅ REFACTOR (13/02/2026): Leer distrito de tabla S4 (dinámico)
+    const distrito = this.obtenerDistrito();
     return SECCION13_TEMPLATES.textoMorbilidadDefault
       .replace(/____/g, (match, offset, string) => {
         const before = string.substring(0, offset);
@@ -243,7 +266,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   obtenerTituloCuadroMorbilidad(): string {
     const prefijo = this.obtenerPrefijo();
     const titulo = this.projectFacade.selectField(this.seccionId, null, `cuadroTituloMorbilidad${prefijo}`)();
-    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
+    // ✅ REFACTOR (13/02/2026): Leer distrito de tabla S4 (dinámico)
+    const distrito = this.obtenerDistrito();
     return titulo || SECCION13_TEMPLATES.cuadroTituloMorbilidadDefault.replace(/____/g, distrito);
   }
 

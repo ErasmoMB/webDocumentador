@@ -194,6 +194,28 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
+  /**
+   * ✅ REFACTOR (13/02/2026): Lee el distrito DIRECTAMENTE de la tabla "Ubicación referencial" de Sección 4
+   * En lugar de usar ubicacionGlobal() que viene de Sección 1.
+   * Patrón igual a Sección 18.
+   */
+  obtenerDistrito(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const seccion4Id = '3.1.4.A.1'; // Sección 4 - Caracterización socioeconómica
+    const tablaKey = `tablaAISD1Datos${prefijo}`;
+    
+    // Lee tabla desde sección 4 (Ubicación referencial) - REACTIVO
+    const tabla = this.projectFacade.selectField(seccion4Id, null, tablaKey)() || [];
+    
+    // Retorna distrito del primer registro
+    if (Array.isArray(tabla) && tabla.length > 0 && tabla[0]?.distrito) {
+      return tabla[0].distrito;
+    }
+    
+    // Fallback: usar ubicacionGlobal como alternativa
+    return this.ubicacionGlobal().distrito || '____';
+  }
+
   // ✅ Sobrescribir onFieldChange para agregar prefijos automáticamente
   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
     const prefijo = this.obtenerPrefijo();
@@ -226,8 +248,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
       return this.datos.parrafoSeccion13_morbilidad_completo;
     }
     const grupoAISD = this.obtenerNombreComunidadActual();
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '____';
+    // ✅ REFACTOR (13/02/2026): Leer distrito de tabla S4 (dinámico)
+    const distrito = this.obtenerDistrito();
     return SECCION13_TEMPLATES.textoMorbilidadDefault
       .replace(/____/g, (match, offset, string) => {
         // Primera ocurrencia: grupoAISD, segunda: distrito, tercera: grupoAISD
@@ -268,8 +290,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTituloCuadroMorbilidad(): string {
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '____';
+    // ✅ REFACTOR (13/02/2026): Leer distrito de tabla S4 (dinámico)
+    const distrito = this.obtenerDistrito();
     return this.datos['cuadroTituloMorbilidad'] || 
       SECCION13_TEMPLATES.cuadroTituloMorbilidadDefault.replace(/____/g, distrito);
   }
