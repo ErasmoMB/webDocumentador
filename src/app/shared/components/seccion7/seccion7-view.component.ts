@@ -67,6 +67,28 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ SIGNAL: Extraer el DISTRITO de la tabla de Sección 4 (Ubicación referencial)
+  readonly distritoDesdeSeccion4Signal: Signal<string> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    // Leer la tabla de ubicación de Sección 4 con el mismo prefijo
+    const seccion4Id = '3.1.4.A.1'; // Sección 4
+    const tablaKey = `tablaAISD1Datos${prefijo}`;
+    
+    // Obtener datos de Sección 4
+    const seccion4Data = this.projectFacade.selectSectionFields(seccion4Id, null)();
+    const tabla = seccion4Data[tablaKey] || seccion4Data['tablaAISD1Datos'];
+    
+    // Obtener el primer registro y extraer el distrito
+    if (tabla && Array.isArray(tabla) && tabla.length > 0) {
+      const primerRegistro = tabla[0];
+      if (primerRegistro && primerRegistro.distrito && primerRegistro.distrito.trim() !== '') {
+        return primerRegistro.distrito;
+      }
+    }
+    
+    return '____'; // Fallback si no encuentra el distrito
+  });
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -168,7 +190,19 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     return this.fotografiasVista;
   }
 
-  // ✅ MÉTODOS DE TEXTO (generan SafeHtml)
+  // ✅ MÉTODOS PARA TÍTULOS DINÁMICOS CON DISTRITO
+  
+  obtenerTituloCuadro3_8(): string {
+    const titulo = this.datos.cuadroTituloPEA || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA;
+    const distrito = this.distritoDesdeSeccion4Signal();
+    return `${titulo} – Distrito ${distrito} (2017)`;
+  }
+
+  obtenerTituloCuadro3_9(): string {
+    const titulo = this.datos.cuadroTituloPEAOcupada || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA_OCUPADA;
+    const distrito = this.distritoDesdeSeccion4Signal();
+    return `${titulo} – Distrito ${distrito} (2017)`;
+  }
   
   obtenerTextoSeccion7PETCompletoConResaltado(): SafeHtml {
     const viewData = this.viewDataSignal();

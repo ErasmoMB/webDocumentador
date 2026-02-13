@@ -62,7 +62,7 @@
 <p class="section-subtitle"><strong>{{ SECCION7_TEMPLATES.SUBTITULO_PEA }}</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoDefinicionPEAConResaltado()"></p>
 
-<app-table-wrapper [title]="(datos.cuadroTituloPEA || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA) + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" [sectionId]="seccionId">
+<app-table-wrapper [title]="obtenerTituloCuadro3_8()" [sectionId]="seccionId">
 <table class="table-container">
     <thead>
         <tr>
@@ -159,7 +159,7 @@
 <p class="section-subtitle"><strong>{{ SECCION7_TEMPLATES.SUBTITULO_INDICE_DESEMPLEO }}</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoIndiceDesempleoConResaltado()"></p>
 
-<app-table-wrapper [title]="(datos.cuadroTituloPEAOcupada || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA_OCUPADA) + ' – Distrito ' + (datos.distritoSeleccionado || 'Cahuacho') + ' (2017)'" [sectionId]="seccionId">
+<app-table-wrapper [title]="obtenerTituloCuadro3_9()" [sectionId]="seccionId">
 <table class="table-container">
     <thead>
         <tr>

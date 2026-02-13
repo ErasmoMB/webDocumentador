@@ -10,7 +10,7 @@
         [label]="SECCION8_TEMPLATES.labelActividadesEconomicas"
         [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
         [rows]="3"
-        [value]="textoActividadesEconomicas.value()"
+        [value]="obtenerTextoActividadesEconomicas()"
         (valueChange)="textoActividadesEconomicas.update($event)">
       </app-paragraph-editor>
 
@@ -19,7 +19,7 @@
         [label]="SECCION8_TEMPLATES.labelFuentesActividadesEconomicas"
         [hint]="SECCION8_TEMPLATES.hintIntroduccionFuentes"
         [rows]="2"
-        [value]="textoFuentesActividadesEconomicas.value()"
+        [value]="obtenerTextoFuentesActividadesEconomicas()"
         (valueChange)="textoFuentesActividadesEconomicas.update($event)"
         style="margin-top: 15px;">
       </app-paragraph-editor>
@@ -67,7 +67,7 @@
         [label]="SECCION8_TEMPLATES.labelAnalisisCuadro310"
         [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
         [rows]="3"
-        [value]="textoAnalisisCuadro310.value()"
+        [value]="obtenerTextoAnalisisCuadro310()"
         (valueChange)="textoAnalisisCuadro310.update($event)">
       </app-paragraph-editor>
     </div>
@@ -83,7 +83,7 @@
           [label]="SECCION8_TEMPLATES.labelGanaderiaCompleto"
           [hint]="SECCION8_TEMPLATES.hintParrafoGanaderia"
           [rows]="8"
-          [value]="parrafoSeccion8_ganaderia_completo.value()"
+          [value]="obtenerTextoSeccion8GanaderiaCompleto()"
           (valueChange)="parrafoSeccion8_ganaderia_completo.update($event)">
         </app-paragraph-editor>
       </div>
@@ -153,7 +153,7 @@
           [label]="SECCION8_TEMPLATES.labelAgriculturaCompleto"
           [hint]="SECCION8_TEMPLATES.hintParrafoAgricultura"
           [rows]="6"
-          [value]="parrafoSeccion8_agricultura_completo.value()"
+          [value]="obtenerTextoSeccion8AgriculturaCompleto()"
           (valueChange)="parrafoSeccion8_agricultura_completo.update($event)">
         </app-paragraph-editor>
       </div>
@@ -223,7 +223,7 @@
           [label]="SECCION8_TEMPLATES.labelMercadoComercializacion1"
           [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="textoMercadoComercializacion1.value()"
+          [value]="obtenerTextoMercadoComercializacion1()"
           (valueChange)="textoMercadoComercializacion1.update($event)">
         </app-paragraph-editor>
         
@@ -232,7 +232,7 @@
           [label]="SECCION8_TEMPLATES.labelMercadoComercializacion2"
           [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="textoMercadoComercializacion2.value()"
+          [value]="obtenerTextoMercadoComercializacion2()"
           (valueChange)="textoMercadoComercializacion2.update($event)"
           style="margin-top: 15px;">
         </app-paragraph-editor>
@@ -269,7 +269,7 @@
           [label]="SECCION8_TEMPLATES.labelHabitosConsumo1"
           [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="3"
-          [value]="textoHabitosConsumo1.value()"
+          [value]="obtenerTextoHabitosConsumo1()"
           (valueChange)="textoHabitosConsumo1.update($event)">
         </app-paragraph-editor>
         
@@ -278,7 +278,7 @@
           [label]="SECCION8_TEMPLATES.labelHabitosConsumo2"
           [hint]="SECCION8_TEMPLATES.hintTextoCompleto"
           [rows]="4"
-          [value]="textoHabitosConsumo2.value()"
+          [value]="obtenerTextoHabitosConsumo2()"
           (valueChange)="textoHabitosConsumo2.update($event)"
           style="margin-top: 15px;">
         </app-paragraph-editor>

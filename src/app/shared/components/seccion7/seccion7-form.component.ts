@@ -677,7 +677,14 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   obtenerTextoDetalePEA(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const manualKey = `textoDetalePEA${prefijo}`;
-    return this.datos[manualKey] || this.datos['textoDetalePEA'] || '____';
+    const texto = this.datos[manualKey] || this.datos['textoDetalePEA'];
+    
+    // ✅ Generar texto por defecto si está vacío (igual que en la vista)
+    if (!texto || texto.trim() === '') {
+      return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social. En este apartado, se presenta la caracterización de la PEA del distrito, empleando información oficial del INEI.`;
+    }
+    
+    return texto;
   }
 
   obtenerTextoDefinicionPEA(): string {
@@ -689,13 +696,27 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   obtenerTextoAnalisisPEA(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const manualKey = `textoAnalisisPEA${prefijo}`;
-    return this.datos[manualKey] || this.datos['textoAnalisisPEA'] || '____';
+    const texto = this.datos[manualKey] || this.datos['textoAnalisisPEA'];
+    
+    // ✅ Generar texto por defecto si está vacío (igual que en la vista)
+    if (!texto || texto.trim() === '') {
+      return `Del cuadro precedente, se aprecia que la PEA representa un porcentaje importante de la población en edad de trabajar. Asimismo, se evidencia una distribución diferenciada entre hombres y mujeres en su participación económica.`;
+    }
+    
+    return texto;
   }
 
   obtenerTextoIndiceDesempleo(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const manualKey = `textoIndiceDesempleo${prefijo}`;
-    return this.datos[manualKey] || this.datos['textoIndiceDesempleo'] || '____';
+    const texto = this.datos[manualKey] || this.datos['textoIndiceDesempleo'];
+    
+    // ✅ Generar texto por defecto si está vacío (igual que en la vista)
+    if (!texto || texto.trim() === '') {
+      return `El índice de desempleo es un indicador clave para evaluar la salud económica de la jurisdicción. Refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en búsqueda activa de empleo sin haberlo logrado obtener.`;
+    }
+    
+    return texto;
   }
 
   obtenerTextoAnalisisOcupacion(): string {
@@ -707,13 +728,27 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   obtenerTextoSeccion7SituacionEmpleoCompleto(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const manualKey = `parrafoSeccion7_situacion_empleo_completo${prefijo}`;
-    return this.datos[manualKey] || this.datos['parrafoSeccion7_situacion_empleo_completo'] || '____';
+    const texto = this.datos[manualKey] || this.datos['parrafoSeccion7_situacion_empleo_completo'];
+    
+    // ✅ Generar texto por defecto si está vacío (igual que en la vista)
+    if (!texto || texto.trim() === '') {
+      return `La situación del empleo refleja la estructura económica de la localidad. Permite diferenciar entre aquellos que trabajan de manera independiente, en actividades autónomas, y quienes se encuentran en empleos dependientes bajo relación laboral establecida.`;
+    }
+    
+    return texto;
   }
 
   obtenerTextoSeccion7IngresosCompleto(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     const manualKey = `parrafoSeccion7_ingresos_completo${prefijo}`;
-    return this.datos[manualKey] || this.datos['parrafoSeccion7_ingresos_completo'] || '____';
+    const texto = this.datos[manualKey] || this.datos['parrafoSeccion7_ingresos_completo'];
+    
+    // ✅ Generar texto por defecto si está vacío (igual que en la vista)
+    if (!texto || texto.trim() === '') {
+      return `Los ingresos de la población provienen principalmente de las actividades económicas locales. Sin embargo, debido a dependencia de estos sectores y fluctuaciones del mercado, los ingresos no siempre resultan estables ni regulares, generando vulnerabilidad económica en las familias.`;
+    }
+    
+    return texto;
   }
 
   // ============ MÉTODOS DE PORCENTAJES ============
