@@ -51,8 +51,8 @@ export const SECCION18_TEMPLATES = {
   labelTituloNbiDistrito: 'Título - Tabla NBI Distrito',
   labelFuenteNbiCC: 'Fuente - Tabla NBI CC',
   labelFuenteNbiDistrito: 'Fuente - Tabla NBI Distrito',
-  labelTableNbiCC: 'Tabla NBI CC Ayroca',
-  labelTableNbiDistrito: 'Tabla NBI Distrito Cahuacho',
+  labelTableNbiCC: 'Tabla NBI CC {COMUNIDAD}',
+  labelTableNbiDistrito: 'Tabla NBI Distrito {DISTRITO}',
   labelFotografias: 'Fotografías de NBI',
   labelFotoTitulo: 'Título de la fotografía',
   labelFotoFuente: 'Fuente de la fotografía',
@@ -62,10 +62,10 @@ export const SECCION18_TEMPLATES = {
   hintTextoNBI: 'Edite el texto completo. Use Enter para crear nuevos párrafos.',
   hintTextoCompleto: 'Edite el texto completo. Use Enter para crear nuevos párrafos.',
 
-  // === PLACEHOLDERS ===
+  // === PLACEHOLDERS CON ____ PARA REEMPLAZO DINÁMICO (patrón como sección 13) ===
   placeholderTextoNBI: 'Texto de NBI...',
-  placeholderTituloNbiCC: 'Necesidades Básicas Insatisfechas (NBI) según población – CC Ayroca (2017)',
-  placeholderTituloNbiDistrito: 'Tipos de NBI existentes – Distrito Cahuacho (2017)',
+  placeholderTituloNbiCC: 'Necesidades Básicas Insatisfechas (NBI) según población – CC ____ (2017)',
+  placeholderTituloNbiDistrito: 'Tipos de NBI existentes – Distrito ____ (2017)',
   placeholderFuenteNbiCC: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas',
   placeholderFuenteNbiDistrito: 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017',
   placeholderFotoTitulo: 'Ej: NBI del distrito',

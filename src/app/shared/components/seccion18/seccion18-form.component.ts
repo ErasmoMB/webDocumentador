@@ -138,21 +138,6 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         this.cdRef.detectChanges();
     }
 
-    getTablaKeyNbiCC(): string {
-        const prefijo = this.obtenerPrefijo();
-        return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
-    }
-
-    getTablaKeyNbiDistrito(): string {
-        const prefijo = this.obtenerPrefijo();
-        return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
-    }
-
-    obtenerDistrito(): string {
-        // ✅ REFACTOR: Usar ubicacionGlobal
-        return this.ubicacionGlobal().distrito || 'Cahuacho';
-    }
-
     getFieldIdTextoNBI(): string {
         const prefijo = this.obtenerPrefijo();
         return prefijo ? `textoNecesidadesBasicasInsatisfechas${prefijo}` : 'textoNecesidadesBasicasInsatisfechas';
@@ -167,8 +152,8 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     private generarTextoDefault(): string {
-        const grupoAISD = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || 'Ayroca';
-        const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || 'Cahuacho';
+        const grupoAISD = this.obtenerNombreComunidadActual();
+        const distrito = this.obtenerDistrito();
         const totalCC = this.getTotalCC();
         const totalDist = this.getTotalDistrito();
         const porcentajeHacinamientoCC = this.getPorcentajeHacinamientoCC();
@@ -181,6 +166,72 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
             porcentajeHacinamientoCC, porcentajeSinServiciosCC,
             porcentajeSinServiciosDist, porcentajeHacinamientoDist
         );
+    }
+
+    getTablaKeyNbiCC(): string {
+        const prefijo = this.obtenerPrefijo();
+        return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
+    }
+
+    getTablaKeyNbiDistrito(): string {
+        const prefijo = this.obtenerPrefijo();
+        return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
+    }
+
+    /**
+     * ✅ PATRÓN: Obtener distrito dinámicamente desde tabla de sección 4
+     * Lee la tabla "Ubicación referencial" (tablaAISD1Datos) de sección 4
+     * y retorna el distrito del primer registro
+     */
+    obtenerDistrito(): string {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const seccion4Id = '3.1.4.A.1'; // Sección 4 - Caracterización socioeconómica
+        const tablaKey = `tablaAISD1Datos${prefijo}`;
+        
+        // Leer tabla desde sección 4 (Ubicación referencial)
+        const tabla = this.projectFacade.selectField(seccion4Id, null, tablaKey)() || [];
+        
+        // Retornar distrito del primer registro, o fallback a ubicacionGlobal
+        if (Array.isArray(tabla) && tabla.length > 0 && tabla[0]?.distrito) {
+            return tabla[0].distrito;
+        }
+        
+        // Fallback: usar ubicacionGlobal como alternativa
+        return this.ubicacionGlobal().distrito || 'Cahuacho';
+    }
+
+    /**
+     * ✅ PATRÓN: Reemplazar dinámicamente {COMUNIDAD} con el nombre real
+     */
+    obtenerTituloNbiCC(): string {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const titulo = this.projectFacade.selectField(this.seccionId, null, `tituloNbiCC${prefijo}`)();
+        const comunidad = this.obtenerNombreComunidadActual();
+        return titulo || SECCION18_TEMPLATES.placeholderTituloNbiCC.replace(/____/g, comunidad);
+    }
+
+    obtenerFuenteNbiCC(): string {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, `fuenteNbiCC${prefijo}`)();
+        return fuente || SECCION18_TEMPLATES.placeholderFuenteNbiCC;
+    }
+
+    /**
+     * ✅ PATRÓN (como sección 13): Reemplazar dinámicamente ____ con el nombre real del distrito
+     * Lee desde tabla de sección 4 (Ubicación referencial)
+     */
+    obtenerTituloNbiDistrito(): string {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const titulo = this.projectFacade.selectField(this.seccionId, null, `tituloNbiDistrito${prefijo}`)();
+        const distrito = this.obtenerDistrito();
+        return titulo || SECCION18_TEMPLATES.placeholderTituloNbiDistrito.replace(/____/g, distrito);
+    }
+
+    obtenerFuenteNbiDistrito(): string {
+        const fieldId = this.getFuenteNbiDistritoField();
+        const fuente = (this.datos as any)[fieldId];
+        if (fuente && String(fuente).trim() !== '') return fuente;
+        return SECCION18_TEMPLATES.placeholderFuenteNbiDistrito;
     }
 
     private getTotalCC(): string {
@@ -269,36 +320,6 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     getFuenteNbiDistritoField(): string {
         const prefijo = this.obtenerPrefijoGrupo();
         return prefijo ? `fuenteNbiDistrito${prefijo}` : 'fuenteNbiDistrito';
-    }
-
-    obtenerTituloNbiCC(): string {
-        const fieldId = this.getTituloNbiCCField();
-        const titulo = (this.datos as any)[fieldId];
-        if (titulo && String(titulo).trim() !== '') return titulo;
-        const grupoAISD = (this.datos as any).grupoAISD || 'Ayroca';
-        return `Necesidades Básicas Insatisfechas (NBI) según población – CC ${grupoAISD} (2017)`;
-    }
-
-    obtenerFuenteNbiCC(): string {
-        const fieldId = this.getFuenteNbiCCField();
-        const fuente = (this.datos as any)[fieldId];
-        if (fuente && String(fuente).trim() !== '') return fuente;
-        return 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
-    }
-
-    obtenerTituloNbiDistrito(): string {
-        const fieldId = this.getTituloNbiDistritoField();
-        const titulo = (this.datos as any)[fieldId];
-        if (titulo && String(titulo).trim() !== '') return titulo;
-        const distrito = (this.datos as any).distritoSeleccionado || 'Cahuacho';
-        return `Tipos de NBI existentes – Distrito ${distrito} (2017)`;
-    }
-
-    obtenerFuenteNbiDistrito(): string {
-        const fieldId = this.getFuenteNbiDistritoField();
-        const fuente = (this.datos as any)[fieldId];
-        if (fuente && String(fuente).trim() !== '') return fuente;
-        return 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017';
     }
 
     // ✅ Handlers para cambios en título y fuente

@@ -21,7 +21,7 @@
       class="form-control"
       [(ngModel)]="datos[getTituloNbiCCField()]"
       (change)="onTituloNbiCCChange($event)"
-      [placeholder]="SECCION18_TEMPLATES.placeholderTituloNbiCC">
+      [placeholder]="obtenerTituloNbiCC()">
   </div>
 
   <div class="form-field mt-lg">
@@ -60,7 +60,7 @@
       class="form-control"
       [(ngModel)]="datos[getTituloNbiDistritoField()]"
       (change)="onTituloNbiDistritoChange($event)"
-      [placeholder]="SECCION18_TEMPLATES.placeholderTituloNbiDistrito">
+      [placeholder]="obtenerTituloNbiDistrito()">
   </div>
 
   <div class="form-field mt-lg">
