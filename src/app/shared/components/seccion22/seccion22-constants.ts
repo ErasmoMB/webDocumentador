@@ -70,13 +70,10 @@ export const SECCION22_TEMPLATES = {
   placeholderTituloPoblacionEtario: 'Ej: Población por grupo etario – CP Cahuacho (2017)',
   placeholderFuentePoblacionEtario: 'Ej: Censos Nacionales 2017',
   
-  // ✅ VALORES POR DEFECTO (FALLBACK)
-  textodeafrafiaDemografiaDefault: 'En cuanto a la demografía, la población se distribuye de forma equilibrada. La composición por sexo refleja una estructura típica de comunidades andinas.',
-  textoGrupoEtarioDefault: 'Por grupo etario, se observa una población joven con predominio en los rangos de menores de edad y adultos jóvenes, característica de áreas con baja cobertura de servicios de salud.',
+  // ✅ TEMPLATES FIJOS CON PLACEHOLDERS (reemplazar "CP ____" con el nombre real)
+  textoDemografiaTemplate: 'Respecto a la población del CP {COMUNIDAD}, tomando en cuenta los Censos Nacionales ____, existen ____ habitantes que viven permanentemente en la localidad. De este conjunto, el ____ % son mujeres, por lo que se aprecia una leve mayoría de dicho grupo frente a sus pares masculinos (____ %).',
   
-  // ✅ TEMPLATES PARA AUTO-GENERACIÓN (con placeholders {{...}})
-  textoDemografiaTemplate: 'En cuanto a la demografía del CP {{cp}}, la población total es de {{poblacion}} habitantes. La distribución por sexo refleja una composición equilibrada de la comunidad.',
-  textoGrupoEtarioTemplate: 'Por grupo etario, el CP {{cp}} presenta una población joven con predominio de edades entre menores de edad y adultos jóvenes. La población total por grupo etario es {{poblacion}} habitantes.',
+  textoGrupoEtarioTemplate: 'En una clasificación por grupos etarios se puede observar que esta población se encuentra mayoritariamente en la categoría de ____ años, representando el ____ % del conjunto total. En segundo lugar, cerca del primer bloque se halla la categoría de ____ años (____ %). En cuanto al bloque etario minoritario, hay una igualdad entre aquellos que van de ____ años y los de ____ años a más, pues ambos grupos representan el ____ % cada uno.',
   
   // ✅ TÍTULOS Y FUENTES DEFAULT
   tituloPoblacionSexoDefault: 'Población por sexo',

@@ -37,30 +37,25 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
-  // ✅ CORREGIDO - Generar texto INLINE sin servicios
+  // ✅ CORREGIDO - Usar template fijo con reemplazo de CP
   readonly textoDemografiaSignal: Signal<string> = computed(() => {
     const fieldBase = 'textoDemografiaAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     if (manual && manual.trim().length > 0) return manual;
     
-    // Generar automáticamente si no hay personalizado
-    const data = this.formDataSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const poblacionTotal = this.poblacionSexoSignal().reduce((sum, row: any) => sum + (parseInt(row.casos) || 0), 0);
-    return `En cuanto a la demografía del CP ${cp}, la población total es de ${poblacionTotal} habitantes. La distribución por sexo refleja una composición equilibrada de la comunidad.`;
+    // ✅ Usar template fijo y reemplazar {COMUNIDAD} con el nombre actual
+    const cp = this.obtenerNombreCentroPobladoActual();
+    return SECCION22_TEMPLATES.textoDemografiaTemplate.replace(/{COMUNIDAD}/g, cp);
   });
 
-  // ✅ CORREGIDO - Generar texto INLINE sin servicios
+  // ✅ CORREGIDO - Usar template fijo con reemplazo (sin reemplazo de CP porque el template no lo tiene)
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
     const fieldBase = 'textoGrupoEtarioAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
     if (manual && manual.trim().length > 0) return manual;
     
-    // Generar automáticamente si no hay personalizado
-    const data = this.formDataSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const poblaciónTotal = this.poblacionEtarioSignal().reduce((sum, row: any) => sum + (parseInt(row.casos) || 0), 0);
-    return `Por grupo etario, el CP ${cp} presenta una población joven con predominio de edades entre menores de edad y adultos jóvenes. La población total por grupo etario es ${poblaciónTotal} habitantes.`;
+    // ✅ Usar template fijo - no contiene {COMUNIDAD}, solo placeholders ____
+    return SECCION22_TEMPLATES.textoGrupoEtarioTemplate;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -117,7 +112,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   // Full title includes CP name and year when not already provided
   readonly fullTituloPoblacionSexoSignal: Signal<string> = computed(() => {
     const base = this.tituloPoblacionSexoSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
+    // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
+    const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -140,7 +136,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly fullTituloPoblacionEtarioSignal: Signal<string> = computed(() => {
     const base = this.tituloPoblacionEtarioSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
+    // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
+    const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;

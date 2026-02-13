@@ -426,6 +426,59 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     return '____';
   }
 
+  /**
+   * ✅ NUEVO: Obtiene el nombre del centro poblado AISI actual usando aisiGroups signal.
+   * Ej: si seccionId = '3.1.4.B.1.1_B1', devuelve el nombre del grupo AISI[0]
+   * 
+   * Este método aplica el patrón de nombres dinámicos para secciones AISI:
+   * 1️⃣ Primero consulta aisiGroups() signal por el prefijo (_B1, _B2, etc.)
+   * 2️⃣ Fallback a datos guardados (centroPobladoAISI, centroPobladoAISI_B1)
+   * 3️⃣ Fallback a centros poblados del arreglo
+   * 4️⃣ Placeholder '____' como último recurso
+   */
+  obtenerNombreCentroPobladoActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ PASO 1: Usar aisiGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_B')) {
+      const match = prefijo.match(/_B(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _B1 → índice 0, _B2 → índice 1
+        const grupos = this.aisiGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre; // ✅ RETORNA EL NOMBRE CORRECTO
+        }
+      }
+    }
+    
+    // ✅ PASO 2: Fallback a datos guardados
+    const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    if (centroPobladoAISI && centroPobladoAISI.trim() !== '') {
+      return centroPobladoAISI;
+    }
+    
+    const centroPobladoConSufijo = prefijo ? this.datos[`centroPobladoAISI${prefijo}`] : null;
+    if (centroPobladoConSufijo && centroPobladoConSufijo.trim() !== '') {
+      return centroPobladoConSufijo;
+    }
+    
+    // ✅ PASO 3: Fallback a centros poblados
+    if (this.datos.centrosPobladosAISI && Array.isArray(this.datos.centrosPobladosAISI) && this.datos.centrosPobladosAISI.length > 0) {
+      const primerCentro = this.datos.centrosPobladosAISI[0];
+      if (primerCentro && primerCentro.nombre && primerCentro.nombre.trim() !== '') {
+        return primerCentro.nombre;
+      }
+    }
+    
+    // ✅ PASO 3B: Fallback a valor base sin prefijo
+    const centroPobladoBase = this.datos.centroPobladoAISI;
+    if (centroPobladoBase && centroPobladoBase.trim() !== '') {
+      return centroPobladoBase;
+    }
+    
+    return '____'; // Placeholder como último recurso
+  }
+
   // ============================================================================
   // ✅ MÉTODOS DE CONVENIENCIA PARA GRUPOS AISI (usando AISIGroupService)
   // ============================================================================

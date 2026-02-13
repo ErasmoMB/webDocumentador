@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
-import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
@@ -35,38 +34,27 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
-  // ✅ CORREGIDO - Leer texto con prefijo
+  // ✅ CORREGIDO - Usar template fijo con reemplazo de CP
   readonly textoDemografiaSignal: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldKey = prefijo ? `textoDemografiaAISI${prefijo}` : 'textoDemografiaAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
-    const data = this.formDataSignal() as any;
-    // ✅ Usar el valor con prefijo para el textGenerator
-    const dataConPrefijo = {
-      ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
-      poblacionSexoAISI: this.poblacionSexoSignal(),
-      poblacionEtarioAISI: this.poblacionEtarioSignal()
-    };
-    return this.textGenerator.generateDemografiaText(dataConPrefijo);
+    
+    // ✅ Usar template fijo y reemplazar {COMUNIDAD} con el nombre actual
+    const cp = this.obtenerNombreCentroPobladoActual();
+    return SECCION22_TEMPLATES.textoDemografiaTemplate.replace(/{COMUNIDAD}/g, cp);
   });
 
-  // ✅ CORREGIDO - Leer texto con prefijo
+  // ✅ CORREGIDO - Usar template fijo (sin reemplazo porque el template no contiene {COMUNIDAD})
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
-    const data = this.formDataSignal() as any;
-    // ✅ Usar el valor con prefijo para el textGenerator
-    const dataConPrefijo = {
-      ...data,
-      centroPobladoAISI: PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || data.centroPobladoAISI,
-      poblacionSexoAISI: this.poblacionSexoSignal(),
-      poblacionEtarioAISI: this.poblacionEtarioSignal()
-    };
-    return this.textGenerator.generateGrupoEtarioText(dataConPrefijo);
+    
+    // ✅ Usar template fijo - no contiene {COMUNIDAD}, solo placeholders ____
+    return SECCION22_TEMPLATES.textoGrupoEtarioTemplate;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -217,7 +205,8 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionSexoSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
+    // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
+    const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
@@ -246,12 +235,13 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     if (cuadro && String(cuadro).trim().length > 0) return cuadro;
 
     const base = this.tituloPoblacionEtarioSignal();
-    const cp = PrefijoHelper.obtenerValorConPrefijo(this.formDataSignal(), 'centroPobladoAISI', this.seccionId) || '____';
+    // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
+    const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
     return `${base} – CP ${cp} (${year})`;
-  });
+  })
 
   // ✅ CORREGIDO - Leer fuente con prefijo
   readonly fuentePoblacionEtarioSignal: Signal<string> = computed(() => {
@@ -282,7 +272,6 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
-    private textGenerator: ISeccion22TextGeneratorService,
     private globalNumbering: GlobalNumberingService,
     private tableNumbering: TableNumberingService
   ) {
