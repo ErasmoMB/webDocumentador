@@ -249,10 +249,24 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   }
 
   override obtenerNombreComunidadActual(): string {
-    const datos = this.sectionDataSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(datos, 'grupoAISD', this.seccionId);
+    const prefijo = this.obtenerPrefijoGrupo();
     
+    // ✅ NUEVO: Usar aisdGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_A')) {
+      const match = prefijo.match(/_A(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _A1 → índice 0, _A2 → índice 1
+        const grupos = this.aisdGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre;
+        }
+      }
+    }
+    
+    const datos = this.sectionDataSignal();
+    
+    // Fallback: buscar en datos guardados
+    const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(datos, 'grupoAISD', this.seccionId);
     if (grupoAISD && grupoAISD.trim() !== '') {
       return grupoAISD;
     }
