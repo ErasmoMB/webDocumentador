@@ -15,15 +15,15 @@ export const SECCION2_WATCHED_FIELDS = [
   'aisdComponente2',
   'geoInfo',
   // Fotos (10 máximo)
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion2${i + 1}Titulo`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion2${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion2${i + 1}Imagen`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia2${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia2${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia2${i + 1}Imagen`),
 ];
 
 export const SECCION2_CONFIG = {
   sectionId: '3.1.2',
   title: 'Delimitación de las áreas de influencia social',
-  photoPrefix: 'fotografiaSeccion2',
+  photoPrefix: 'fotografia2',
   maxPhotos: 10,
 };
 

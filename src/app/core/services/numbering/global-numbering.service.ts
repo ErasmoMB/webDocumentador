@@ -196,14 +196,23 @@ export class GlobalNumberingService {
   
   /**
    * Genera el prefijo de fotos para una sección
+   * 
+   * Sistema unificado:
+   * - Secciones fijas: fotografia1, fotografia2, fotografia3
+   * - AISD: fotografiaA
+   * - AISI: fotografiaB1, fotografiaB2, fotografiaB3
    */
-  private getPhotoPrefix(sectionId: string, prefijoGrupo: string): string {
+  getPhotoPrefix(sectionId: string, prefijoGrupo: string): string {
     if (prefijoGrupo) {
-      return `fotografia${prefijoGrupo}`;
+      // AISI: fotografiaB1, fotografiaB2, fotografiaB3
+      // Elimina el underscore y usa el patrón fotografia{prefijo}
+      const cleanPrefix = prefijoGrupo.replace('_', '');
+      return `fotografia${cleanPrefix}`;
     }
-    if (sectionId.startsWith('3.1.1')) return 'fotografia';
-    if (sectionId.startsWith('3.1.2')) return 'fotografia';
-    if (sectionId.startsWith('3.1.3')) return 'fotografia';
+    if (sectionId.startsWith('3.1.1')) return 'fotografia1';
+    if (sectionId.startsWith('3.1.2')) return 'fotografia2';
+    if (sectionId.startsWith('3.1.3')) return 'fotografia3';
+    if (sectionId.startsWith('3.1.4.A')) return 'fotografiaA';
     return 'fotografia';
   }
   
@@ -223,20 +232,20 @@ export class GlobalNumberingService {
     
     console.log(`[DEBUG-PHOTO-OFFSET] sectionId=${sectionId}, groupNum=${currentGroupNum}, sectionNum=${currentSectionNum}`);
     
-    // 1. Secciones fijas (1-3) - fotos base (sin prefijo de grupo)
-    totalImages += this.countImagesInSection('3.1.1', 'fotografia');
-    totalImages += this.countImagesInSection('3.1.2', 'fotografia');
-    totalImages += this.countImagesInSection('3.1.3', 'fotografia');
+    // 1. Secciones fijas (1-3) - fotos unificadas con prefijos fotografia1, 2, 3
+    totalImages += this.countImagesInSection('3.1.1', 'fotografia1');
+    totalImages += this.countImagesInSection('3.1.2', 'fotografia2');
+    totalImages += this.countImagesInSection('3.1.3', 'fotografia3');
     console.log(`[DEBUG-PHOTO-OFFSET] Secciones fijas: ${totalImages}`);
     
-    // 2. Grupos AISD - solo sección base (3.1.4.A, 3.1.4.A.1, 3.1.4.A.2, etc.)
+    // 2. Grupos AISD - sección base (3.1.4.A) con prefijo fotografiaA
     const aisdGroups = this.getAISDGroups();
     console.log(`[DEBUG-PHOTO-OFFSET] Grupos AISD: ${aisdGroups.length}`);
     for (const group of aisdGroups) {
       const groupNum = this.extractGroupNumber(group.id);
-      // Sección base del grupo AISD
-      const sectionBaseId = groupNum > 1 ? `3.1.4.A.${groupNum}` : '3.1.4.A';
-      const prefix = this.getPhotoPrefix(sectionBaseId, '');
+      // Para AISD, la sección base usa prefijo fotografiaA
+      const prefix = 'fotografiaA';
+      const sectionBaseId = '3.1.4.A'; // Sección base de AISD
       const count = this.countImagesInSection(sectionBaseId, prefix);
       totalImages += count;
       console.log(`[DEBUG-PHOTO-OFFSET] AISD ${groupNum} (${sectionBaseId}): +${count}`);
@@ -321,8 +330,11 @@ export class GlobalNumberingService {
   getGlobalPhotoNumber(sectionId: string, prefijoGrupo: string, photoIndex: number): string {
     const fotosAnteriores = this.calculatePhotoOffset(sectionId, prefijoGrupo);
     
-    // Verificar si hay una imagen real en esta posición
-    const key = `${prefijoGrupo ? 'fotografia' + prefijoGrupo : 'fotografia'}${photoIndex + 1}Imagen`;
+    // Generar clave correcta basada en el prefijo unificado
+    // Si prefijoGrupo es '_B1', el prefijo de foto es 'fotografiaB1'
+    const fotoPrefix = this.getPhotoPrefix(sectionId, prefijoGrupo);
+    const key = `${fotoPrefix}${photoIndex + 1}Imagen`;
+    
     const datos = this.projectFacade.obtenerDatos();
     const imagen = datos[key];
     const hayImagen = imagen && imagen !== 'null' && imagen.trim() !== '' && (imagen.startsWith('data:image') || imagen.length > 100);
@@ -333,6 +345,7 @@ export class GlobalNumberingService {
     console.log(`[DEBUG-PHOTO] ==========`);
     console.log(`[DEBUG-PHOTO] sectionId: ${sectionId}`);
     console.log(`[DEBUG-PHOTO] prefijoGrupo: ${prefijoGrupo}`);
+    console.log(`[DEBUG-PHOTO] fotoPrefix: ${fotoPrefix}`);
     console.log(`[DEBUG-PHOTO] fotoIndex (0-basado): ${photoIndex}`);
     console.log(`[DEBUG-PHOTO] clave de imagen: ${key}`);
     console.log(`[DEBUG-PHOTO] ¿HAY IMAGEN?: ${hayImagen ? 'SÍ ✅' : 'NO ❌'}`);

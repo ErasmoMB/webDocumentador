@@ -19,15 +19,15 @@ export const SECCION3_WATCHED_FIELDS = [
   'fechaTrabajoCampo',
   'consultora',
   // Fotos (10 máximo)
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion3${i + 1}Titulo`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion3${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion3${i + 1}Imagen`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia3${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia3${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia3${i + 1}Imagen`),
 ];
 
 export const SECCION3_CONFIG = {
   sectionId: '3.1.3',
   title: 'Características Sociodemográficas',
-  photoPrefix: 'fotografiaSeccion3',
+  photoPrefix: 'fotografia3',
   maxPhotos: 10,
 };
 

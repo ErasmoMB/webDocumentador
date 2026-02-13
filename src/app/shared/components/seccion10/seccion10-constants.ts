@@ -9,11 +9,11 @@ export const SECCION10_DEFAULT_SUBSECTION = '3.1.4.A.1.6';
 export const SECCION10_CONFIG = {
   sectionId: SECCION10_SECTION_ID,
   title: 'Servicios básicos: Electricidad, energía y/o combustible, tecnología y comunicaciones',
-  photoPrefix: 'fotografiaSeccion10',
+  photoPrefix: 'fotografia10',
   maxPhotos: 10
 } as const;
 
-export const SECCION10_PHOTO_PREFIX = 'fotografiaSeccion10';
+export const SECCION10_PHOTO_PREFIX = 'fotografia10';
 
 // ✅ Todos los campos persistentes
 export const SECCION10_WATCHED_FIELDS: string[] = [
@@ -47,9 +47,9 @@ export const SECCION10_WATCHED_FIELDS: string[] = [
   'energiaCocinarTabla',
   'tecnologiaComunicacionesTabla',
   // Fotos (10 máximo)
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion10${i + 1}Titulo`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion10${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion10${i + 1}Imagen`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia10${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia10${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia10${i + 1}Imagen`),
 ];
 
 /**

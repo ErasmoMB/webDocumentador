@@ -20,9 +20,9 @@ export const SECCION1_WATCHED_FIELDS: string[] = [
   'jsonCompleto',
   'comunidadesCampesinas',
   // Fotos (10 máximo)
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Titulo`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion1${i + 1}Imagen`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia1${i + 1}Imagen`),
 ];
 
 export const SECCION1_SECTION_ID = '3.1.1';
@@ -31,7 +31,7 @@ export const SECCION1_DEFAULT_SUBSECTION = '3.1.1';
 export const SECCION1_CONFIG = {
   sectionId: '3.1.1',
   title: 'Ubicación del Proyecto',
-  photoPrefix: 'fotografiaSeccion1',
+  photoPrefix: 'fotografia1',
   maxPhotos: 10,
 };
 
