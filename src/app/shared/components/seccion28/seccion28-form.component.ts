@@ -5,14 +5,12 @@ import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.c
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
-import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { BaseSectionComponent } from '../base-section.component';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
 import { GroupConfigService } from 'src/app/core/services/groups/group-config.service';
 import { EducacionService } from 'src/app/core/infrastructure/services';
 import { AISIGroupService } from 'src/app/core/services/groups/aisi-group.service';
-import { takeUntil } from 'rxjs/operators';
 import { SECCION28_TEMPLATES } from './seccion28-constants';
 
 @Component({
@@ -22,7 +20,7 @@ import { SECCION28_TEMPLATES } from './seccion28-constants';
   templateUrl: './seccion28-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Seccion28FormComponent extends AutoLoadSectionComponent implements OnDestroy {
+export class Seccion28FormComponent extends BaseSectionComponent implements OnDestroy {
   // NOTE: renamed to avoid overriding BaseSectionComponent 'tables' coordinator
   @ViewChildren(DynamicTableComponent) dynamicTables?: QueryList<DynamicTableComponent>;
   @Input() override seccionId: string = '3.1.4.B.1.7';
@@ -180,12 +178,11 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    protected override tableFacade: TableManagementFacade,
+    protected tableFacade: TableManagementFacade,
     private groupConfig: GroupConfigService,
-    private educacionService: EducacionService,
-    autoLoader: AutoBackendDataLoaderService
+    private educacionService: EducacionService
   ) {
-    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    super(cdRef, injector);
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
@@ -410,8 +407,8 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     const codigos = this.groupConfig.getAISICCPPActivos();
     if (!codigos || codigos.length === 0) return;
 
+    // ✅ Subscription única sin takeUntil (solo se ejecuta una vez desde cargarEducacionDelBackend)
     this.educacionService.obtenerEducacionPorCodigos(codigos)
-      .pipe(takeUntil(this.destroy$))
       .subscribe(
       (response: any) => {
         if (response.success && response.data && Array.isArray(response.data)) {

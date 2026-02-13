@@ -39,12 +39,17 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   );
 
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
+    // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
+    this.aisdGroups();
+    const nombres = this.comunidadesNombres();
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
   readonly textoAISIFormateado: Signal<SafeHtml> = computed(() => {
+    // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
+    this.aisiGroups();
     const texto = this.obtenerTextoSeccion2AISICompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
@@ -75,9 +80,12 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   ) {
     super(cdRef, injector);
     
+    // ✅ CRÍTICO: Effect para sincronización de AISD/AISI CON textos formateados
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
+      this.textoAISDFormateado();
+      this.textoAISIFormateado();
       this.cdRef.markForCheck();
     });
 
@@ -147,7 +155,7 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
     const distrito = geoInfo.DIST || '____';
     const departamento = geoInfo.DPTO || '____';
     const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
@@ -171,7 +179,7 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
       .map(g => g.nombre?.trim())
       .filter(nombre => nombre && nombre !== '' && nombre !== 'Distrito');
 
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
 

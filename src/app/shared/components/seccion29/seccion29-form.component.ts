@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Injector, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Signal, computed, effect } from '@angular/core';
@@ -17,7 +17,7 @@ import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS, SEC
   standalone: true,
   imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, DynamicTableComponent, ImageUploadComponent]
 })
-export class Seccion29FormComponent extends BaseSectionComponent {
+export class Seccion29FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = SECCION29_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
   

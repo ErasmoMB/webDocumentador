@@ -394,10 +394,8 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       
       if (tablaVacia || tieneCapitalActual) {
         console.debug(`[AISI-DEBUG] 🔄 DETECTADO CAMBIO EN CCPPs | prefijo: ${prefijo} | ccppIds: ${ccppIdsActuales.substring(0, 50)}... | re-autollar: ${tablaVacia || tieneCapitalActual}`);
-        // Re-autollar después de un pequeño delay para asegurar que los datos estén sincronizados
-        setTimeout(() => {
-          this.autoPoblarTablaUbicacionCp(this.getCentroPobladoAISI() || '', prefijo);
-        }, 100);
+        // Auto-poblar tabla de ubicación sin delay - ya estamos en un effect() reactivo
+        this.autoPoblarTablaUbicacionCp(this.getCentroPobladoAISI() || '', prefijo);
       }
     });
   }

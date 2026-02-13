@@ -137,11 +137,9 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
         }
       };
     });
-
     effect(() => {
       const sectionData = this.formDataSignal();
-      const legacyData = this.projectFacade.obtenerDatos();
-      this.datos = { ...legacyData, ...sectionData };
+      this.datos = { ...sectionData };
       this.cdRef.markForCheck();
     });
 
@@ -160,9 +158,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       
       if (tieneDatosCompletos && this.modoFormulario === false) {
         this.autoLlenarTablasExecuted = true;
-        setTimeout(() => {
-          this.autoLlenarTablas();
-        }, 0);
+        this.autoLlenarTablas();
       }
     }, { allowSignalWrites: true });
   }

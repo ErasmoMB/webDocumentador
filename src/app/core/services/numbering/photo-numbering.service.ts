@@ -283,7 +283,7 @@ export class PhotoNumberingService {
           }
         }
 
-        globalIndex += photoIndexInSection;
+        globalIndex += photoIndexInSection + 1;
         break;
       }
     }

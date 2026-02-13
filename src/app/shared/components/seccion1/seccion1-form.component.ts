@@ -175,6 +175,22 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     if (distritoValue) {
       this.distritoSeleccionado.update(distritoValue);
     }
+
+    // ✅ CRÍTICO: Recuperar datos del JSON cargado (centros poblados, nombre archivo)
+    const centrosPobladosValue = this.projectFacade.selectField(this.seccionId, null, 'centrosPobladosJSON')();
+    if (centrosPobladosValue && Array.isArray(centrosPobladosValue)) {
+      this.centrosPobladosJSON.update(centrosPobladosValue);
+    }
+
+    const jsonFileNameValue = this.projectFacade.selectField(this.seccionId, null, 'jsonFileName')() || '';
+    if (jsonFileNameValue) {
+      this.jsonFileName.update(jsonFileNameValue);
+    }
+
+    const geoInfoValue = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')();
+    if (geoInfoValue) {
+      this.geoInfoField.update(geoInfoValue);
+    }
     
     // ✅ Usar métodos getter como fallback para párrafos
     const parrafoPrincipalValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')() || this.obtenerTextoParrafoPrincipal();

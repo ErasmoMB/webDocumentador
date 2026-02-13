@@ -1,19 +1,17 @@
 import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { takeUntil } from 'rxjs/operators';
 import { GroupConfigService } from 'src/app/core/services/groups/group-config.service';
 import { PeaService } from 'src/app/core/infrastructure/services';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, SECCION23_TABLE_CONFIGS, SECCION23_SECTION_ID } from './seccion23-constants';
 
@@ -24,7 +22,7 @@ import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, 
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true
 })
-export class Seccion23FormComponent extends AutoLoadSectionComponent implements OnDestroy {
+export class Seccion23FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = SECCION23_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
@@ -121,13 +119,12 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    protected override tableFacade: TableManagementFacade,
-    protected override autoLoader: AutoBackendDataLoaderService,
+    protected tableFacade: TableManagementFacade,
     private groupConfig: GroupConfigService,
     private peaService: PeaService,
     private tableNumbering: TableNumberingService
   ) {
-    super(cdRef, autoLoader, injector, undefined, tableFacade);
+    super(cdRef, injector);
     // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
     const prefijo = this.obtenerPrefijoGrupo();
     this.PHOTO_PREFIX = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
@@ -308,8 +305,8 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  protected override getSectionKey(): string { return 'seccion23_aisi'; }
-  protected override getLoadParameters(): string[] | null { return this.groupConfig.getAISICCPPActivos(); }
+  protected getSectionKey(): string { return 'seccion23_aisi'; }
+  protected getLoadParameters(): string[] | null { return this.groupConfig.getAISICCPPActivos(); }
 
   // Handlers
   onPetGruposEdadUpdated(eventOrTabla: any): void {
@@ -501,8 +498,8 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
     const ubigeos = this.groupConfig.getAISICCPPActivos();
     if (!ubigeos || ubigeos.length === 0) return;
 
+    // ✅ Subscription única sin needsof takeUntil (solo se ejecuta una vez desde onInitCustom)
     this.peaService.obtenerPorCodigos(ubigeos)
-      .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
         if (!response || !response.success) return;
 

@@ -57,6 +57,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   );
 
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
+    // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
+    this.aisdGroups();
+    this.comunidadesNombres();
     const grupos = this.aisdGroups();
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
@@ -64,6 +67,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   });
 
   readonly textoAISIFormateado: Signal<SafeHtml> = computed(() => {
+    // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
+    this.aisiGroups();
+    this.distritosNombres();
     const grupos = this.aisiGroups();
     const texto = this.obtenerTextoSeccion2AISICompleto();
     const html = this.formatearParrafo(texto);
@@ -99,10 +105,14 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     // ✅ Inicializar campos desde store
     this.inicializarCamposDesdeStore();
     
-    // ✅ Effect para sincronización básica
+    // ✅ CRÍTICO: Effect para sincronización de nombres de AISD/AISI con textos formateados
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
+      this.comunidadesNombres();
+      this.distritosNombres();
+      this.textoAISDFormateado();
+      this.textoAISIFormateado();
       this.allPopulatedCenters();
       this.cdRef.markForCheck();
     });
@@ -122,8 +132,8 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const parrafoAISIValor = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')() || this.obtenerTextoSeccion2AISIParaEdicion();
     this.parrafoAISI.update(parrafoAISIValor);
     
-    // Geo info
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')();
+    // Geo info - LEER DE SECCIÓN 1 (3.1.1)
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')();
     if (geoInfo) this.geoInfoField.update(geoInfo);
     
     // Componentes AISD
@@ -164,23 +174,19 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       return;
     }
     
-    const jsonCompleto = this.projectFacade.obtenerDatos()['jsonCompleto'] || {};
+    // ✅ Usar allPopulatedCenters Signal en lugar de obtenerDatos()
+    const allCentros = this.allPopulatedCenters();
     const centrosDetalles: any[] = [];
     
     centrosPobladosSeleccionados.forEach((codigo: any) => {
-      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
-        const grupoData = jsonCompleto[grupoKey];
-        if (Array.isArray(grupoData)) {
-          const centro = grupoData.find((c: any) => {
-            const codigoCentro = String(c.CODIGO || '').trim();
-            const codigoBuscado = String(codigo).trim();
-            return codigoCentro === codigoBuscado;
-          });
-          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
-            centrosDetalles.push(centro);
-          }
-        }
+      const centro = allCentros.find((c: any) => {
+        const codigoCentro = String(c.id || c.codigo || '').trim();
+        const codigoBuscado = String(codigo).trim();
+        return codigoCentro === codigoBuscado;
       });
+      if (centro && !centrosDetalles.find(c => c.id === centro.id)) {
+        centrosDetalles.push(centro);
+      }
     });
     
     if (centrosDetalles.length > 0) {
@@ -516,7 +522,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
     const distrito = geoInfo.DIST || '____';
@@ -571,7 +577,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
     const distrito = geoInfo.DIST || '____';
     const departamento = geoInfo.DPTO || '____';
     const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
@@ -595,7 +601,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       .map(g => g.nombre?.trim())
       .filter(nombre => nombre && nombre !== '' && nombre !== 'Distrito');
 
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
+    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
     const provincia = geoInfo.PROV || '____';
     const departamento = geoInfo.DPTO || '____';
 

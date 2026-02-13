@@ -66,6 +66,7 @@
           class="input" 
           [placeholder]="SECCION2_TEMPLATES.placeholderAISDNombre"
           [ngModel]="comunidad.nombre"
+          (ngModelChange)="actualizarNombreComunidad(comunidad.id, $event)"
           (blur)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)"
           (keyup.enter)="actualizarNombreComunidad(comunidad.id, nombreInput.value || comunidad.nombre)">
         <small class="form-hint">{{ SECCION2_TEMPLATES.hintAISDNombre }}</small>
@@ -147,6 +148,7 @@
           class="input" 
           [placeholder]="SECCION2_TEMPLATES.placeholderAISINombre"
           [ngModel]="distrito.nombre"
+          (ngModelChange)="actualizarNombreDistrito(distrito.id, $event)"
           (blur)="actualizarNombreDistrito(distrito.id, nombreDistritoInput.value || distrito.nombre)"
           (keyup.enter)="actualizarNombreDistrito(distrito.id, nombreDistritoInput.value || distrito.nombre)">
         <small class="form-hint">{{ SECCION2_TEMPLATES.hintAISINombre }}</small>

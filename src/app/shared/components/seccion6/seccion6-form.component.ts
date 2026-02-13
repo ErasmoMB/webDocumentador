@@ -236,23 +236,19 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       return;
     }
     
-    const jsonCompleto = this.projectFacade.obtenerDatos()['jsonCompleto'] || {};
+    // ✅ Usar allPopulatedCenters Signal en lugar de obtenerDatos()
+    const allCentros = this.allPopulatedCenters();
     const centrosDetalles: any[] = [];
     
     centrosPobladosSeleccionados.forEach((codigo: any) => {
-      Object.keys(jsonCompleto).forEach((grupoKey: string) => {
-        const grupoData = jsonCompleto[grupoKey];
-        if (Array.isArray(grupoData)) {
-          const centro = grupoData.find((c: any) => {
-            const codigoCentro = String(c.CODIGO || '').trim();
-            const codigoBuscado = String(codigo).trim();
-            return codigoCentro === codigoBuscado;
-          });
-          if (centro && !centrosDetalles.find(c => c.CODIGO === centro.CODIGO)) {
-            centrosDetalles.push(centro);
-          }
-        }
+      const centro = allCentros.find((c: any) => {
+        const codigoCentro = String(c.id || c.codigo || '').trim();
+        const codigoBuscado = String(codigo).trim();
+        return codigoCentro === codigoBuscado;
       });
+      if (centro && !centrosDetalles.find(c => c.id === centro.id)) {
+        centrosDetalles.push(centro);
+      }
     });
     
     if (centrosDetalles.length > 0) {

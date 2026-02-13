@@ -92,7 +92,7 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
     // ✅ Effect para sincronizar datos locales con el estado
     effect(() => {
       const sectionData = this.formDataSignal();
-      this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+      this.datos = { ...sectionData };
       // Cuando hay cambios, recargar fotos
       this.cargarFotografias();
       this.cdRef.markForCheck();

@@ -159,7 +159,7 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
 
     effect(() => {
       const sectionData = this.formDataSignal();
-      this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
+      this.datos = { ...sectionData };
       this.cdRef.markForCheck();
     });
 
