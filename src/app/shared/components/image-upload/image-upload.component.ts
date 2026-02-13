@@ -3,7 +3,7 @@ import {
   SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, ViewChildren, QueryList, ElementRef 
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PhotoNumberingService } from '../../../core/services/numbering/photo-numbering.service';
+import { GlobalNumberingService } from '../../../core/services/numbering/global-numbering.service';
 import { ImageBackendService } from '../../../core/services/image/image-backend.service';
 import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
@@ -72,7 +72,7 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   constructor(
     private cdRef: ChangeDetectorRef,
-    private photoNumberingService: PhotoNumberingService,
+    private globalNumbering: GlobalNumberingService,
     private imageBackendService: ImageBackendService,
     private imageFacade: ImageManagementFacade,
     private projectFacade: ProjectStateFacade,
@@ -508,15 +508,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
   private calculateGlobalPhotoNumber(index: number): string {
     try {
-      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      // photoIndex 0-basado (igual que GlobalNumberingService espera)
-      // La fórmula en GlobalNumberingService es: fotosAnteriores + photoIndex + 1
-      const photoIndex = index; // NO sumar +1 aquí
-      const numero = this.photoNumberingService.getGlobalPhotoNumber(
+      const prefijoGrupo = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      const photoIndex = index; // 0-basado
+      const numero = this.globalNumbering.getGlobalPhotoNumber(
         this.sectionId,
-        photoIndex,
-        this.photoPrefix,
-        groupPrefix
+        prefijoGrupo,
+        photoIndex
       );
       if (numero) return numero;
     } catch (e) {
