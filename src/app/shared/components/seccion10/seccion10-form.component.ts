@@ -8,7 +8,6 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { 
   SECCION10_WATCHED_FIELDS, 
@@ -150,7 +149,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumberingService: TableNumberingService,
     private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
