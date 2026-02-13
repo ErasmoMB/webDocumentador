@@ -213,29 +213,10 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
             return tituloPersonalizado;
         }
         
-        // ✅ FALLBACK: Generar título dinámico si no hay personalizado
-        let nombreComunidad = '____';
-        
-        // Obtener nombre de comunidad según prefijo (A.1, A.2, etc.)
-        if (prefijo && prefijo.includes('.1')) {
-            const match = prefijo.match(/A\.(\d+)/);
-            if (match) {
-                const grupoIdx = parseInt(match[1], 10) - 1;
-                const comunidades = data['comunidadesCampesinas'] || [];
-                if (comunidades[grupoIdx]) {
-                    nombreComunidad = comunidades[grupoIdx].nombre || '____';
-                }
-            }
-        }
+        // ✅ REFACTOR: Usar obtenerNombreComunidadActual() para obtener el nombre del grupo
+        const nombreComunidad = this.obtenerNombreComunidadActual();
         
         if (!prefijo) {
-            nombreComunidad = data['distritoSeleccionado'] || '____';
-            return SECCION17_DEFAULT_TEXTS.tituloIDHDefault(nombreComunidad);
-        }
-        
-        // Generar número de cuadro dinámico basado en el prefijo
-        const grupoMatch = prefijo.match(/[AB]\.(\d+)/);
-        if (!grupoMatch) {
             return SECCION17_DEFAULT_TEXTS.tituloIDHDefault(nombreComunidad);
         }
         

@@ -150,6 +150,46 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         return this.ubicacionGlobal().distrito || 'Cahuacho';
     }
 
+    obtenerTituloIDH(): string {
+        const prefijo = this.obtenerPrefijo();
+        
+        // ✅ PRIMERO: Intentar leer el título personalizado guardado
+        const fieldId = prefijo ? `tituloIDH${prefijo}` : 'tituloIDH';
+        const tituloPersonalizado = this.projectFacade.selectField(this.seccionId, null, fieldId)();
+        
+        if (tituloPersonalizado && tituloPersonalizado.trim() !== '') {
+            return tituloPersonalizado;
+        }
+        
+        // ✅ FALLBACK: Generar título dinámico usando obtenerNombreComunidadActual
+        const nombreComunidad = this.obtenerNombreComunidadActual();
+        return `Componentes del Índice de Desarrollo Humano – CC ${nombreComunidad} (2019)`;
+    }
+
+    /**
+     * ✅ PATRÓN: Obtener texto con fallback a default
+     * Devuelve el texto guardado o el texto por defecto si está vacío
+     * Usado en template para mostrar placeholder visible en formulario
+     */
+    obtenerTextoIDH(): string {
+        const texto = this.textoINDH.value();
+        
+        // Si hay texto personalizado y no está vacío, devolverlo
+        if (texto && texto !== '____' && String(texto).trim() !== '') {
+            return texto;
+        }
+        
+        // FALLBACK: Devolver texto por defecto igual a vista
+        const distrito = this.obtenerDistrito();
+        const idh = this.getIDH();
+        const rankIdh = this.getRankIDH();
+        
+        const idhValor = (idh !== '____' && idh !== '0.000' && idh !== '0,000') ? idh : '____';
+        const rankValor = (rankIdh !== '____' && rankIdh !== '0') ? rankIdh : '____';
+        
+        return SECCION17_DEFAULT_TEXTS.textoIDHDefault(distrito, idhValor, rankValor);
+    }
+
     obtenerTextoIDHCompleto(): string {
         const textoPersonalizado = this.textoINDH.value();
         const distrito = this.obtenerDistrito();

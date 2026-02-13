@@ -8,7 +8,7 @@
       [label]="SECCION17_TEMPLATES.labelTextoIDH"
       [hint]="SECCION17_TEMPLATES.hintTextoIDH"
       [rows]="6"
-      [value]="textoINDH.value()"
+      [value]="obtenerTextoIDH()"
       (valueChange)="textoINDH.update($event)">
     </app-paragraph-editor>
   </div>
@@ -19,9 +19,9 @@
     <input
       type="text"
       class="form-control"
-      [ngModel]="tituloIDH.value()"
+      [ngModel]="obtenerTituloIDH()"
       (ngModelChange)="tituloIDH.update($event)"
-      [placeholder]="SECCION17_TEMPLATES.placeholderTitulo">
+      [placeholder]="SECCION17_TEMPLATES.placeholderTitulo.replace('{COMUNIDAD}', obtenerNombreComunidadActual())">
   </div>
 
   <!-- Tabla IDH con estructura agrupada -->

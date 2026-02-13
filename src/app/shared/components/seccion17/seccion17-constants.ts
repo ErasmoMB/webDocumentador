@@ -48,9 +48,9 @@ export const SECCION17_TEMPLATES = {
 
   // === PLACEHOLDERS ===
   placeholderTextoIDH: 'Texto del IDH...',
-  placeholderTitulo: 'Componentes del IDH – Distrito ____',
+  placeholderTitulo: 'Componentes del IDH – {COMUNIDAD}',
   placeholderFuente: 'PNUD, 2019',
-  placeholderFotoTitulo: 'Ej: IDH del distrito',
+  placeholderFotoTitulo: 'Ej: IDH de {COMUNIDAD}',
   placeholderFotoFuente: 'Ej: PNUD, 2019',
 
   // === LABELS DE TABLA ===
