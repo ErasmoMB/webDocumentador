@@ -40,20 +40,26 @@ function now(): number {
 }
 
 /**
- * Genera el siguiente ID de grupo basado en el padre
+ * Genera el siguiente ID de grupo basado en el padre y tipo
+ * AISD → prefijos A (A.1, A.2, A.3...)
+ * AISI → prefijos B (B.1, B.2, B.3...)
  */
 function generateGroupId(
-  groups: readonly GroupDefinition[], 
-  parentId: string | null
+  groups: readonly GroupDefinition[],
+  parentId: string | null,
+  tipo: 'AISD' | 'AISI'
 ): string {
+  // Determinar prefijo base según tipo
+  const basePrefix = tipo === 'AISD' ? 'A' : 'B';
+  
   if (parentId === null) {
-    // Grupo raíz: A, B, C...
+    // Grupo raíz: A.1, A.2... o B.1, B.2...
     const rootGroups = groups.filter(g => g.parentId === null);
-    const letter = String.fromCharCode(65 + rootGroups.length); // A=65
-    return letter;
+    const nextNum = rootGroups.length + 1;
+    return `${basePrefix}.${nextNum}`;
   }
   
-  // Subgrupo: A.1, A.2, etc.
+  // Subgrupo: A.1.1, A.1.2... o B.1.1, B.1.2...
   const siblings = groups.filter(g => g.parentId === parentId);
   const nextNum = siblings.length + 1;
   return `${parentId}.${nextNum}`;
@@ -61,14 +67,19 @@ function generateGroupId(
 
 /**
  * Re-numera todos los grupos manteniendo la jerarquía
+ * AISD → prefijos A (A.1, A.2, A.3...)
+ * AISI → prefijos B (B.1, B.2, B.3...)
  */
-function renumberGroups(groups: readonly GroupDefinition[]): GroupDefinition[] {
+function renumberGroups(groups: readonly GroupDefinition[], tipo: 'AISD' | 'AISI'): GroupDefinition[] {
   const result: GroupDefinition[] = [];
+  
+  // Determinar prefijo base según tipo
+  const basePrefix = tipo === 'AISD' ? 'A' : 'B';
   
   // Primero, grupos raíz
   const rootGroups = groups.filter(g => g.parentId === null);
   rootGroups.forEach((group, index) => {
-    const newId = String.fromCharCode(65 + index);
+    const newId = `${basePrefix}.${index + 1}`;
     result.push({
       ...group,
       id: newId,
@@ -93,7 +104,7 @@ function renumberGroups(groups: readonly GroupDefinition[]): GroupDefinition[] {
   
   // Procesar hijos de cada grupo raíz
   rootGroups.forEach((group, index) => {
-    const newId = String.fromCharCode(65 + index);
+    const newId = `${basePrefix}.${index + 1}`;
     processChildren(group.id, newId);
   });
   
@@ -215,7 +226,7 @@ function handleAddGroup(
   const { tipo, nombre, parentId, ccppIds } = command.payload;
   
   const groups = tipo === 'AISD' ? state.aisd : state.aisi;
-  const newId = generateGroupId(groups, parentId);
+  const newId = generateGroupId(groups, parentId, tipo);
   
   // Calcular orden
   const siblings = groups.filter(g => g.parentId === parentId);
@@ -266,7 +277,7 @@ function handleRemoveGroup(
   }
 
   const filteredGroups = groups.filter(g => !idsToRemove.includes(g.id));
-  const renumberedGroups = renumberGroups(filteredGroups);
+  const renumberedGroups = renumberGroups(filteredGroups, tipo);
 
   return {
     ...state,
@@ -339,7 +350,7 @@ function handleReorderGroups(
   }
 
   // Re-numerar
-  const renumbered = renumberGroups(reordered);
+  const renumbered = renumberGroups(reordered, tipo);
 
   return {
     ...state,

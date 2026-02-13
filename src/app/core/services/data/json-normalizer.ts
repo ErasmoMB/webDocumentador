@@ -48,6 +48,8 @@ export interface NormalizedCCPP {
   readonly nombre: string;
   readonly categoria: string;
   readonly poblacion: number;
+  readonly viviendas_empadronadas?: number;
+  readonly viviendas_ocupadas?: number;
   readonly dpto: string;
   readonly prov: string;
   readonly dist: string;
@@ -380,6 +382,8 @@ export function normalizedToCCPPModel(normalized: readonly NormalizedCCPP[]): CC
     nombre: n.nombre,
     categoria: n.categoria,
     poblacion: n.poblacion,
+    viviendas_empadronadas: n.viviendas_empadronadas ?? 0,
+    viviendas_ocupadas: n.viviendas_ocupadas ?? 0,
     dpto: n.dpto,
     prov: n.prov,
     dist: n.dist,

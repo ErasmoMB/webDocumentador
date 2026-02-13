@@ -5,6 +5,8 @@ export interface CCPP {
   nombre: string;
   categoria: string;
   poblacion: number;
+  viviendas_empadronadas: number;
+  viviendas_ocupadas: number;
   dpto: string;
   prov: string;
   dist: string;

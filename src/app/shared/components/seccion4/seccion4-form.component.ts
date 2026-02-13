@@ -46,9 +46,6 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   readonly tablaAISD2Signal: Signal<any[]>;
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
-  
-  // ✅ NUEVO: Signal para ubicación global (desde metadata)
-  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -108,8 +105,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       const tablaAISD2Array = Array.isArray(tablaAISD2) ? tablaAISD2 : [];
       const totales = {
         poblacion: tablaAISD2Array.map(f => Number(f['poblacion']) || 0).reduce((a, b) => a + b, 0),
-        empadronadas: tablaAISD2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
-        ocupadas: tablaAISD2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
+        viviendasEmpadronadas: tablaAISD2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
+        viviendasOcupadas: tablaAISD2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
       };
       
       return {
@@ -140,9 +137,11 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
         }
       };
     });
+
     effect(() => {
       const sectionData = this.formDataSignal();
-      this.datos = { ...sectionData };
+      const legacyData = this.projectFacade.obtenerDatos();
+      this.datos = { ...legacyData, ...sectionData };
       this.cdRef.markForCheck();
     });
 
@@ -150,6 +149,22 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       this.photoFieldsHash();
       this.cargarFotografias();
       this.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+
+    // ✅ Effect para esperar a que grupos AISD y centros poblados estén disponibles
+    effect(() => {
+      const gruposAISD = this.aisdGroups();
+      const centrosPoblados = this.allPopulatedCenters();
+      
+      // Solo ejecutar si hay grupos AISD y centros poblados cargados
+      if (gruposAISD && gruposAISD.length > 0 && centrosPoblados && centrosPoblados.length > 0) {
+        if (!this.autoLlenarTablasExecuted) {
+          this.autoLlenarTablasExecuted = true;
+          setTimeout(() => {
+            this.autoLlenarTablas();
+          }, 100);
+        }
+      }
     }, { allowSignalWrites: true });
 
     effect(() => {
@@ -161,7 +176,9 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       
       if (tieneDatosCompletos && this.modoFormulario === false) {
         this.autoLlenarTablasExecuted = true;
-        this.autoLlenarTablas();
+        setTimeout(() => {
+          this.autoLlenarTablas();
+        }, 0);
       }
     }, { allowSignalWrites: true });
   }
@@ -187,100 +204,187 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     }
   }
 
+  /**
+   * Verifica si una fila de tabla tiene datos válidos (no solo valores vacíos)
+   */
+  private filaTieneDatosValidos(fila: any): boolean {
+    if (!fila || typeof fila !== 'object') return false;
+    
+    // Verificar si al menos el campo 'punto' tiene contenido
+    const punto = fila.punto;
+    if (punto && punto !== '' && punto !== '____') {
+      return true;
+    }
+    
+    // Verificar si algún campo de datos tiene contenido
+    const camposConDatos = ['poblacion', 'viviendasEmpadronadas', 'viviendasOcupadas'];
+    return camposConDatos.some(campo => {
+      const valor = fila[campo];
+      return valor !== undefined && valor !== '' && valor !== null && valor !== '____';
+    });
+  }
+
+  /**
+   * Verifica si una tabla tiene datos válidos (no solo filas vacías)
+   */
+  private tablaTieneDatosValidos(tabla: any[]): boolean {
+    if (!Array.isArray(tabla) || tabla.length === 0) return false;
+    return tabla.some(fila => this.filaTieneDatosValidos(fila));
+  }
+
+  /**
+   * Formatea un número con espacios de miles
+   * @param valor - Valor numérico o string a formatear
+   * @returns String con espacios de miles (ej: 660619 → "660 619")
+   */
+  private formatMiles(valor: number | string | undefined | null): string {
+    if (valor === undefined || valor === null || valor === '') return '';
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '';
+    return num.toLocaleString('es-PE');
+  }
+
+  /**
+   * Formatea las coordenadas en el formato requerido
+   * @param este - Coordenada Este
+   * @param norte - Coordenada Norte
+   * @returns String formateado con zona UTM
+   */
+  private formatCoordenadas(este: number | string | undefined | null, norte: number | string | undefined | null): string {
+    const zonaUTM = '18L'; // Zona UTM para Perú
+    const esteFormateado = this.formatMiles(este);
+    const norteFormateado = this.formatMiles(norte);
+    return `${zonaUTM}\nE:  ${esteFormateado} m\nN:  ${norteFormateado} m`;
+  }
+
+  /**
+   * Formatea la altitud con su unidad
+   * @param altitud - Valor de altitud
+   * @returns String formateado (ej: 3599 → "3 599 msnm")
+   */
+  private formatAltitud(altitud: number | string | undefined | null): string {
+    const altitudFormateada = this.formatMiles(altitud);
+    return altitudFormateada ? `${altitudFormateada} msnm` : '';
+  }
+
   private autoLlenarTablas(): void {
     const prefijo = this.obtenerPrefijoGrupo();
     const dataKeyA1 = `tablaAISD1Datos${prefijo}`;
     const dataKeyA2 = `tablaAISD2Datos${prefijo}`;
     
-    if (!prefijo || !prefijo.startsWith('_A')) return;
+    console.group('🔍 [SECCION4] autoLlenarTablas');
+    console.log(`seccionId: ${this.seccionId}`);
+    console.log(`prefijo extraído: "${prefijo}"`);
+    
+    if (!prefijo || !prefijo.startsWith('_A')) {
+      console.log('⚠️ Prefijo no válido (no empieza con _A)');
+      console.groupEnd();
+      return;
+    }
     
     const gruposAISD = this.aisdGroups();
     const centrosPoblados = this.allPopulatedCenters();
     
+    console.log(`Total grupos AISD: ${gruposAISD.length}`);
+    console.log(`Total centros poblados: ${centrosPoblados.length}`);
+    
     const match = prefijo.match(/_A(\d+)/);
     const index = match ? parseInt(match[1]) - 1 : -1;
+    console.log(`Índice del grupo: ${index}`);
+    
     const grupoActual = index >= 0 && index < gruposAISD.length ? gruposAISD[index] : null;
+    console.log(`Grupo actual:`, grupoActual);
     
-    // Tabla A1
-    const tablaA1Actual = this.datos[dataKeyA1] || [];
+    if (!grupoActual) {
+      console.log('⚠️ No se encontró el grupo actual');
+      console.groupEnd();
+      return;
+    }
+    
+    console.log(`Grupo ID: ${grupoActual.id}`);
+    console.log(`Grupo nombre: "${grupoActual.nombre}"`);
+    console.log(`Grupo ccppIds: [${grupoActual.ccppIds.length}] ${grupoActual.ccppIds.join(', ')}`);
+    
+    // Filtrar los centros poblados del grupo actual
+    const centrosDelGrupo = grupoActual && grupoActual.ccppIds && grupoActual.ccppIds.length > 0
+      ? centrosPoblados.filter(cp => grupoActual.ccppIds.includes(String(cp.codigo)))
+      : [];
+    
+    console.log(`Centros poblados en grupo: ${centrosDelGrupo.length}`);
+    
+    // === TABLA A1: Llenar con la CAPITAL o el de mayor población ===
+    const tablaA1Actual = this.projectFacade.selectField(this.seccionId, null, dataKeyA1)();
     const estaVaciaA1 = !tablaA1Actual || tablaA1Actual.length === 0;
-    const estaInvalidaA1 = tablaA1Actual.length === 1 && (!tablaA1Actual[0].localidad || tablaA1Actual[0].localidad === '____');
+    const tieneDatosValidosA1 = this.tablaTieneDatosValidos(tablaA1Actual);
     
-    if (estaVaciaA1 || estaInvalidaA1) {
-      const tablaA1Mock = this.datos['tablaAISD1Datos'];
-      if (tablaA1Mock && tablaA1Mock.length > 0 && tablaA1Mock[0].localidad && tablaA1Mock[0].localidad !== '____') {
-        this.datos[dataKeyA1] = tablaA1Mock;
-        this.projectFacade.setField(this.seccionId, null, dataKeyA1, tablaA1Mock);
-      } else {
-        const tablaA2Actual = this.datos[dataKeyA2] || this.datos['tablaAISD2Datos'] || [];
-        let filaCapital = tablaA2Actual.find((f: any) => f.poblacion && parseInt(f.poblacion) > 0);
-        if (!filaCapital && tablaA2Actual.length > 0) filaCapital = tablaA2Actual[0];
-        
-        if (filaCapital) {
-          const capital = filaCapital.punto || filaCapital.nombre || '____';
-          const filaA1 = [{
-            localidad: capital,
-            coordenadas: this.datos.coordenadasAISD || this.datos['tablaAISD1Coordenadas'] || '____',
-            altitud: this.datos.altitudAISD || this.datos['tablaAISD1Altitud'] || '____',
-            distrito: this.datos.distritoSeleccionado || this.datos['tablaAISD1Fila1Distrito'] || '____',
-            provincia: this.datos.provinciaSeleccionada || this.datos['tablaAISD1Fila1Provincia'] || '____',
-            departamento: filaCapital?.departamento || this.datos.departamentoSeleccionado || this.datos['tablaAISD1Fila1Departamento'] || '____'
-          }];
-          this.datos[dataKeyA1] = filaA1;
-          this.projectFacade.setField(this.seccionId, null, dataKeyA1, filaA1);
-        }
+    console.log(`Tabla A1 actual:`, tablaA1Actual);
+    console.log(`¿Esta vacia A1?: ${estaVaciaA1}, ¿Tiene datos validos A1?: ${tieneDatosValidosA1}`);
+    
+    if (!estaVaciaA1 && !tieneDatosValidosA1) {
+      // La tabla tiene filas pero ninguna con datos válidos, buscar capital
+      let capital = centrosDelGrupo.find(cp => {
+        const cat = (cp.categoria || '').toLowerCase();
+        return cat.includes('capital');
+      });
+      
+      // Si no hay capital, usar el de mayor población
+      if (!capital && centrosDelGrupo.length > 0) {
+        capital = centrosDelGrupo.reduce((max, cp) => {
+          const pobMax = max?.poblacion ?? 0;
+          const pobActual = cp.poblacion ?? 0;
+          return pobActual > pobMax ? cp : max;
+        }, centrosDelGrupo[0]);
       }
-    }
-
-    // Tabla A2
-    let codigosComunidad: string[] = [];
-    if (grupoActual && grupoActual.ccppIds && grupoActual.ccppIds.length > 0) {
-      codigosComunidad = grupoActual.ccppIds as string[];
+      
+      if (capital) {
+        console.log(`Capital encontrado: ${capital.nombre}`);
+        const filaA1 = [{
+          localidad: capital.nombre || '____',
+          coordenadas: this.formatCoordenadas(capital.este, capital.norte),
+          altitud: this.formatAltitud(capital.altitud),
+          distrito: capital.dist || '____',
+          provincia: capital.prov || '____',
+          departamento: capital.dpto || '____'
+        }];
+        this.projectFacade.setField(this.seccionId, null, dataKeyA1, filaA1);
+      } else {
+        console.log('⚠️ No se encontró capital ni centro poblado');
+      }
+    } else if (tieneDatosValidosA1) {
+      console.log('✅ La tabla A1 ya tiene datos válidos');
     } else {
-      codigosComunidad = [];
-    }
-    
-    const tablaA2Actual = this.datos[dataKeyA2] || [];
-    const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
-    
-    if (estaVaciaA2) {
-      if (codigosComunidad.length > 0 && centrosPoblados.length > 0) {
-        const filas = codigosComunidad.map(codigo => {
-          const ccpp = centrosPoblados.find(c => c.id === codigo || c.codigo === codigo);
-          return {
-            punto: ccpp?.nombre || codigo,
-            codigo: codigo,
-            poblacion: ccpp?.poblacion?.toString() || '0',
-            viviendasEmpadronadas: '0',
-            viviendasOcupadas: '0'
-          };
-        });
-        if (filas.length > 0) {
-          this.datos[dataKeyA2] = filas;
-          this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
-        }
-      } else {
-        const tablaA2Mock = this.datos['tablaAISD2Datos'];
-        if (tablaA2Mock && tablaA2Mock.length > 0) {
-          this.datos[dataKeyA2] = tablaA2Mock;
-          this.projectFacade.setField(this.seccionId, null, dataKeyA2, tablaA2Mock);
-        } else {
-          const puntosPoblacionMock = this.datos['puntosPoblacion'];
-          if (puntosPoblacionMock && puntosPoblacionMock.length > 0) {
-            const filas = puntosPoblacionMock.map((cp: any) => ({
-              punto: cp.nombre || cp.punto || '____',
-              codigo: (cp.codigo || '').toString(),
-              poblacion: (cp.poblacion || '0').toString(),
-              viviendasEmpadronadas: (cp.viviendasEmpadronadas || '0').toString(),
-              viviendasOcupadas: (cp.viviendasOcupadas || '0').toString()
-            }));
-            this.datos[dataKeyA2] = filas;
-            this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
-          }
-        }
-      }
+      console.log('⚠️ La tabla A1 está vacía');
     }
 
+    // === TABLA A2: Llenar con todos los centros poblados del grupo ===
+    const tablaA2Actual = this.projectFacade.selectField(this.seccionId, null, dataKeyA2)();
+    const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
+    const tieneDatosValidosA2 = this.tablaTieneDatosValidos(tablaA2Actual);
+    
+    console.log(`Tabla A2 actual:`, tablaA2Actual);
+    console.log(`¿Esta vacia A2?: ${estaVaciaA2}, ¿Tiene datos validos A2?: ${tieneDatosValidosA2}`);
+    
+    if ((estaVaciaA2 || !tieneDatosValidosA2) && centrosDelGrupo.length > 0) {
+      console.log(`Llenando tabla A2 con ${centrosDelGrupo.length} centros poblados`);
+      const filas = centrosDelGrupo.map(cp => ({
+        punto: cp.nombre || '____',
+        codigo: String(cp.codigo) || '____',
+        poblacion: String(cp.poblacion ?? ''),
+        viviendasEmpadronadas: String(cp.viviendas_empadronadas ?? ''),
+        viviendasOcupadas: String(cp.viviendas_ocupadas ?? '')
+      }));
+      
+      console.log(`Guardando datos en campo: ${dataKeyA2}`);
+      console.log(`Datos a guardar:`, filas);
+      this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
+      console.log(`✅ Datos guardados correctamente`);
+    } else if (tieneDatosValidosA2) {
+      console.log('✅ La tabla A2 ya tiene datos válidos');
+    } else if (centrosDelGrupo.length === 0) {
+      console.log('⚠️ No hay centros poblados en el grupo');
+    }
+
+    console.groupEnd();
     this.actualizarDatos();
     this.cdRef.markForCheck();
   }
@@ -296,15 +400,13 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     if (!tablaA1Actual || tablaA1Actual.length === 0) {
       const nombreComunidad = this.obtenerNombreComunidadActual();
       const capital = nombreComunidad;
-      // ✅ REFACTOR: Usar ubicacionGlobal
-      const ubicacion = this.ubicacionGlobal();
       tablaA1Actual = [{
         localidad: capital,
         coordenadas: this.datos['coordenadasAISD'] || '____',
         altitud: this.datos['altitudAISD'] || '____',
-        distrito: ubicacion.distrito || '____',
-        provincia: ubicacion.provincia || '____',
-        departamento: ubicacion.departamento || '____'
+        distrito: this.datos['distritoSeleccionado'] || '____',
+        provincia: this.datos['provinciaSeleccionada'] || '____',
+        departamento: this.datos['departamentoSeleccionado'] || '____'
       }];
     }
     
@@ -324,15 +426,15 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     const tablaA2Array = Array.isArray(tablaA2Actual) ? tablaA2Actual : [];
     const totals = {
       poblacion: tablaA2Array.map(f => Number(f['poblacion']) || 0).reduce((a, b) => a + b, 0),
-      empadronadas: tablaA2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
-      ocupadas: tablaA2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
+      viviendasEmpadronadas: tablaA2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
+      viviendasOcupadas: tablaA2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
     };
     
     // ✅ Guardar totales directamente sin onFieldChange
     const totalesPayload: Record<string, any> = {};
     totalesPayload[`tablaAISD2TotalPoblacion${prefijo}`] = totals.poblacion;
-    totalesPayload[`tablaAISD2TotalViviendasEmpadronadas${prefijo}`] = totals.empadronadas;
-    totalesPayload[`tablaAISD2TotalViviendasOcupadas${prefijo}`] = totals.ocupadas;
+    totalesPayload[`tablaAISD2TotalViviendasEmpadronadas${prefijo}`] = totals.viviendasEmpadronadas;
+    totalesPayload[`tablaAISD2TotalViviendasOcupadas${prefijo}`] = totals.viviendasOcupadas;
     this.projectFacade.setFields(this.seccionId, null, totalesPayload);
     
     this.actualizarDatos();
@@ -378,16 +480,18 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_comunidad_completo');
     
-    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de datos
-    const ubicacion = this.ubicacionGlobal();
-    const distrito = ubicacion.distrito || '____';
-    const provincia = ubicacion.provincia || '____';
-    const departamento = ubicacion.departamento || '____';
+    const distrito = datos['distritoSeleccionado'] || '____';
+    const provincia = datos['provinciaSeleccionada'] || '____';
     const aisd1 = datos['aisdComponente1'] || '____';
     const aisd2 = datos['aisdComponente2'] || '____';
-    const grupoAISI = datos['grupoAISI'] || ubicacion.distrito || '____';
+    const departamento = datos['departamentoSeleccionado'] || '____';
+    const grupoAISI = datos['grupoAISI'] || datos['distritoSeleccionado'] || '____';
     
-    const textoPorDefecto = `La CC ${nombreComunidad} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${nombreComunidad}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${nombreComunidad}.\n\nEn cuanto al nombre "${nombreComunidad}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${nombreComunidad} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
+    const textoPorDefecto = `La CC ${nombreComunidad} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de Puyusca y de Pausa, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${nombreComunidad}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ellos se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${nombreComunidad}.
+
+En cuanto al nombre "${nombreComunidad}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad sehalla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.
+
+Asimismo, la CC ${nombreComunidad} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado
@@ -415,4 +519,3 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     return textoPorDefecto;
   }
 }
-

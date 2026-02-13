@@ -67,11 +67,11 @@ export const SECCION4_COLUMNAS_AISD1 = [
 ];
 
 export const SECCION4_COLUMNAS_AISD2 = [
-  { field: 'punto', label: 'Punto', type: 'text' as const, placeholder: 'Punto' },
+  { field: 'punto', label: 'Punto de Población (INEI)', type: 'text' as const, placeholder: 'Punto de Población' },
   { field: 'codigo', label: 'Código', type: 'text' as const, placeholder: 'Código' },
   { field: 'poblacion', label: 'Población', type: 'text' as const, placeholder: '0' },
-  { field: 'viviendasEmpadronadas', label: 'Viviendas Empadronadas', type: 'text' as const, placeholder: '0' },
-  { field: 'viviendasOcupadas', label: 'Viviendas Ocupadas', type: 'text' as const, placeholder: '0' }
+  { field: 'viviendasEmpadronadas', label: 'Viviendas empadronadas', type: 'text' as const, placeholder: '0' },
+  { field: 'viviendasOcupadas', label: 'Viviendas ocupadas', type: 'text' as const, placeholder: '0' }
 ];
 
 /**
@@ -103,8 +103,8 @@ export const SECCION4_TEMPLATES = {
   placeholderFuente: 'Ej: GEADES (2024)',
 
   // Labels de tablas en vistas
-  labelTablaUbicacionReferencial: 'Ubicación referencial (Tabla A1)',
-  labelTablaPoblacionViviendas: 'Población y viviendas (Tabla A2)',
+  labelTablaUbicacionReferencial: 'Ubicación referencial',
+  labelTablaPoblacionViviendas: 'Población y viviendas',
 
   // Fotografías
   labelFotografiasUbicacion: 'Fotografías - Ubicación Referencial',
@@ -124,9 +124,8 @@ export const SECCION4_TEMPLATES = {
   // Encabezados de tabla AISD2
   headerPunto: 'Punto de Población (INEI)',
   headerCodigo: 'Código',
+  headerCategoria: 'Categoría',
   headerPoblacion: 'Población',
-  headerViviendasEmpadronadas: 'Viviendas empadronadas',
-  headerViviendasOcupadas: 'Viviendas ocupadas',
   headerTotal: 'Total',
 
   // Fuentes por defecto
@@ -140,9 +139,9 @@ export const SECCION4_TEMPLATES = {
   // Textos por defecto para párrafos
   introduccionAISDDefault: `Se ha determinado como Área de Influencia Social Directa (AISD) a la CC {{nombreComunidad}}. Esta delimitación se justifica en los criterios de propiedad de terreno superficial, además de la posible ocurrencia de impactos directos como la contratación de mano de obra local, adquisición de bienes y servicios, así como logística. En los siguientes apartados se desarrolla la caracterización socioeconómica y cultural de la comunidad delimitada como parte del AISD.`,
 
-  descripcionComunidadDefault: `La CC {{nombreComunidad}} se encuentra ubicada predominantemente dentro del distrito de {{distrito}}, provincia de {{provincia}}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de Puyusca y de Pausa, del departamento de {{departamento}}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo {{nombreComunidad}}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo {{nombreComunidad}}.
+  descripcionComunidadDefault: `La CC {{nombreComunidad}} se encuentra ubicada predominantemente dentro del distrito de {{distrito}}, provincia de {{provincia}}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de Puyusca y de Pausa, del departamento de {{departamento}}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo {{nombreComunidad}}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo {{nombreComunidad}}.
 
-En cuanto al nombre "{{nombreComunidad}}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP {{grupoAISI}} y al oeste del anexo Nauquipa.
+En cuanto al nombre "{{nombreComunidad}}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad sehalla al este de la CC Sondor, al norte del CP {{grupoAISI}} y al oeste del anexo Nauquipa.
 
 Asimismo, la CC {{nombreComunidad}} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`,
 

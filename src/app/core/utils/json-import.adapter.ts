@@ -141,6 +141,8 @@ function normalizeCCPP(raw: CentroPobladoData): NormalizedCCPP {
     nombre: raw.CCPP ?? '',
     categoria: raw.CATEGORIA ?? '',
     poblacion: raw.POBLACION ?? 0,
+    viviendas_empadronadas: raw.VIVIENDAS_EMPADRONADAS ?? 0,
+    viviendas_ocupadas: raw.VIVIENDAS_OCUPADAS ?? 0,
     dpto: raw.DPTO ?? '',
     prov: raw.PROV ?? '',
     dist: raw.DIST ?? '',

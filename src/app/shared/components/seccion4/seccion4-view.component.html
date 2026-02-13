@@ -55,17 +55,17 @@
       [data]="viewModel().tables.tablaAISD2"
       [config]="{
         columns: [
-          { key: 'punto', header: SECCION4_TEMPLATES.headerPunto, align: 'left' },
-          { key: 'codigo', header: SECCION4_TEMPLATES.headerCodigo, align: 'left' },
-          { key: 'poblacion', header: SECCION4_TEMPLATES.headerPoblacion, align: 'right' },
-          { key: 'viviendasEmpadronadas', header: SECCION4_TEMPLATES.headerViviendasEmpadronadas, align: 'right' },
-          { key: 'viviendasOcupadas', header: SECCION4_TEMPLATES.headerViviendasOcupadas, align: 'right' }
+          { key: 'punto', header: 'Punto de Población (INEI)', align: 'left' },
+          { key: 'codigo', header: 'Código', align: 'left' },
+          { key: 'poblacion', header: 'Población', align: 'right' },
+          { key: 'viviendasEmpadronadas', header: 'Viviendas empadronadas', align: 'right' },
+          { key: 'viviendasOcupadas', header: 'Viviendas ocupadas', align: 'right' }
         ],
         totalRow: {
-          punto: SECCION4_TEMPLATES.headerTotal,
-          poblacion: viewModel().calculations.totalesAISD2.poblacion,
-          viviendasEmpadronadas: viewModel().calculations.totalesAISD2.empadronadas,
-          viviendasOcupadas: viewModel().calculations.totalesAISD2.ocupadas
+          punto: 'Total',
+          poblacion: viewModel().calculations.totalesAISD2?.poblacion ?? 0,
+          viviendasEmpadronadas: viewModel().calculations.totalesAISD2?.viviendasEmpadronadas ?? 0,
+          viviendasOcupadas: viewModel().calculations.totalesAISD2?.viviendasOcupadas ?? 0
         },
         showFooter: true,
         striped: true,

@@ -109,7 +109,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     // ✅ Inicializar campos desde store
     this.inicializarCamposDesdeStore();
     
-    // ✅ CRÍTICO: Effect para sincronización de nombres de AISD/AISI con textos formateados
+    // ✅ Effect para sincronización de nombres de AISD/AISI con textos formateados
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
@@ -121,6 +121,36 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       this.allPopulatedCenters();
       this.cdRef.markForCheck();
     });
+    
+    // ✅ Effect de depuración: mostrar grupos AISD y AISI
+    effect(() => {
+      const gruposAISD = this.aisdGroups();
+      const gruposAISI = this.aisiGroups();
+      const centros = this.allPopulatedCenters();
+      
+      console.group('🔍 [SECCION2] Estado Inicial');
+      
+      // Grupos AISD
+      console.log(`📍 AISD (${gruposAISD.length} grupos):`);
+      gruposAISD.forEach((g, i) => {
+        console.log(`  Grupo A.${i+1}: "${g.nombre}"`);
+        console.log(`    ID: ${g.id}`);
+        console.log(`    ccppIds [${g.ccppIds.length}]: ${g.ccppIds.join(', ')}`);
+        console.log(`    Centros poblados en grupo: ${g.ccppIds.length}`);
+      });
+      
+      // Grupos AISI
+      console.log(`📍 AISI (${gruposAISI.length} grupos):`);
+      gruposAISI.forEach((g, i) => {
+        console.log(`  Grupo B.${i+1}: "${g.nombre}"`);
+        console.log(`    ID: ${g.id}`);
+        console.log(`    ccppIds [${g.ccppIds.length}]: ${g.ccppIds.join(', ')}`);
+        console.log(`    Centros poblados en grupo: ${g.ccppIds.length}`);
+      });
+      
+      console.log(`📍 Total centros poblados cargados: ${centros.length}`);
+      console.groupEnd();
+    }, { allowSignalWrites: true });
   }
 
   /**
@@ -157,10 +187,51 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   /**
-   * Log interno para mostrar grupo en consola
+   * ✅ Log interno para mostrar grupo en consola
    */
-  private logGrupoParaConsola(tipo: 'AISD' | 'AISI', numeroGrupo: number, grupo: GroupDefinition): void {
-    // Log method - empty
+  private logGrupoParaConsola(tipo: 'AISD' | 'AISI', accion: string, grupo?: GroupDefinition): void {
+    console.group(`🔍 [SECCION2] ${tipo} - ${accion}`);
+    
+    if (tipo === 'AISD') {
+      const grupos = this.aisdGroups();
+      console.log(`📊 Total grupos AISD: ${grupos.length}`);
+      grupos.forEach((g, idx) => {
+        console.log(`\n📌 Grupo ${idx + 1}:`);
+        console.log(`   ID: ${g.id}`);
+        console.log(`   Nombre: "${g.nombre}"`);
+        console.log(`   ccppIds: [${g.ccppIds.length}] ${g.ccppIds.join(', ')}`);
+        
+        // Mostrar detalles de cada centro poblado
+        const todosCCPP = this.allPopulatedCenters();
+        const ccppDelGrupo = todosCCPP.filter(cp => g.ccppIds.includes(String(cp.codigo)));
+        console.log(`   Centros poblados en grupo: ${ccppDelGrupo.length}`);
+        ccppDelGrupo.forEach(cp => {
+          console.log(`     - ${cp.nombre} (${cp.codigo}) - POB: ${cp.poblacion}`);
+        });
+      });
+    } else {
+      const grupos = this.aisiGroups();
+      console.log(`📊 Total grupos AISI: ${grupos.length}`);
+      grupos.forEach((g, idx) => {
+        console.log(`\n📌 Grupo ${idx + 1}:`);
+        console.log(`   ID: ${g.id}`);
+        console.log(`   Nombre: "${g.nombre}"`);
+        console.log(`   ccppIds: [${g.ccppIds.length}] ${g.ccppIds.join(', ')}`);
+      });
+    }
+    
+    console.groupEnd();
+  }
+
+  /**
+   * Log cuando se selecciona/deselecciona un centro poblado
+   */
+  private logCentroPoblado(ccppId: string, accion: 'AGREGAR' | 'REMOVER', grupoId: string): void {
+    const todosCCPP = this.allPopulatedCenters();
+    const cp = todosCCPP.find(c => String(c.codigo) === ccppId);
+    console.log(`\n🏠 [CCPP] ${accion}: ${cp?.nombre || ccppId} (${ccppId})`);
+    console.log(`   Grupo: ${grupoId}`);
+    console.log(`   Población: ${cp?.poblacion || 'N/A'}`);
   }
 
   protected override onInitCustom(): void {
@@ -178,16 +249,20 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   agregarComunidadCampesina(): void {
     const nombre = `Comunidad Campesina ${this.aisdGroups().length + 1}`;
     this.projectFacade.addGroup('AISD', nombre, null);
+    this.logGrupoParaConsola('AISD', 'NUEVA COMUNIDAD CREADA');
     this.cdRef.markForCheck();
   }
 
   eliminarComunidadCampesina(id: string): void {
     this.projectFacade.removeGroup('AISD', id, true);
+    this.logGrupoParaConsola('AISD', 'COMUNIDAD ELIMINADA');
     this.cdRef.markForCheck();
   }
 
   actualizarNombreComunidad(id: string, nombre: string): void {
+    console.log(`✏️ [AISD] Renombrando grupo ${id} a: "${nombre}"`);
     this.projectFacade.renameGroup('AISD', id, nombre);
+    this.logGrupoParaConsola('AISD', 'NOMBRE ACTUALIZADO');
     this.cdRef.markForCheck();
   }
 
@@ -213,6 +288,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
     
+    this.logCentroPoblado(ccppId, 'AGREGAR', communityId);
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
     this.cdRef.markForCheck();
@@ -224,6 +300,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
     });
     
+    this.logCentroPoblado(ccppId, 'REMOVER', communityId);
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
     this.cdRef.markForCheck();
@@ -299,6 +376,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const grupo = this.aisdGroups().find(g => g.id === id);
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
     
+    console.log(`\n✅ [AISD] SELECCIONAR TODOS: Grupo "${grupo?.nombre || id}"`);
+    console.log(`   Total centros poblados a agregar: ${codigos.length}`);
+    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: codigos }
@@ -306,6 +386,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
+    this.logGrupoParaConsola('AISD', 'SELECCIONAR TODOS');
     this.cdRef.markForCheck();
   }
 
@@ -315,8 +396,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       payload: { tipo: 'AISD', groupId: id, ccppIds: [] }
     });
     
+    console.log(`\n❌ [AISD] DESELECCIONAR TODOS: Grupo ${id}`);
+    
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
+    this.logGrupoParaConsola('AISD', 'DESELECCIONAR TODOS');
     this.cdRef.markForCheck();
   }
 

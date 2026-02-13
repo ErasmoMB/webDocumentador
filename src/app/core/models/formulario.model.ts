@@ -20,6 +20,8 @@ export interface CentroPobladoData {
   CCPP?: string;
   CATEGORIA?: string;
   POBLACION?: number;
+  VIVIENDAS_EMPADRONADAS?: number;
+  VIVIENDAS_OCUPADAS?: number;
   DPTO?: string;
   PROV?: string;
   DIST?: string;
