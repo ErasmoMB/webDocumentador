@@ -45,17 +45,48 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     return Array.isArray(value) ? value : [];
   });
 
+  // ✅ SEÑALES PARA PLACEHOLDERS DE FUENTES PRIMARIAS
+  readonly cantidadEntrevistasSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'cantidadEntrevistas')() || '____';
+  });
+
+  readonly fechaTrabajoCampoSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'fechaTrabajoCampo')() || '____';
+  });
+
+  readonly parrafoFuentesPrimariasSignal: Signal<string> = computed(() => {
+    return this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion3_fuentes_primarias')() || '';
+  });
+
+  // ✅ COMPUTED PARA TEXTO DERIVADO - INCLUYE DEPENDENCIA DEL PARRAFO PERSONALIZADO
+  readonly textoFuentesPrimariasCompleto: Signal<SafeHtml> = computed(() => {
+    // Escuchar el parrafo personalizado primero
+    const parrafoPersonalizado = this.parrafoFuentesPrimariasSignal();
+    
+    if (parrafoPersonalizado) {
+      // Si hay personalizado, procesar placeholders y formatear
+      const cantidad = this.cantidadEntrevistasSignal();
+      const fecha = this.fechaTrabajoCampoSignal();
+      const textoConPlaceholders = this.generarTextoFuentesPrimarias(parrafoPersonalizado, cantidad, fecha);
+      const html = this.formatearParrafo(textoConPlaceholders);
+      return this.sanitizer.bypassSecurityTrustHtml(html);
+    }
+    
+    // Si no hay personalizado, usar template con placeholders
+    const cantidad = this.cantidadEntrevistasSignal();
+    const fecha = this.fechaTrabajoCampoSignal();
+    const textoGenerado = this.generarTextoFuentesPrimarias(null, cantidad, fecha);
+    const html = this.formatearParrafo(textoGenerado);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
   readonly textoMetodologiaFormateado: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoMetodologia();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
-  readonly textoFuentesPrimariasFormateado: Signal<SafeHtml> = computed(() => {
-    const texto = this.obtenerTextoFuentesPrimarias();
-    const html = this.formatearParrafo(texto);
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  });
+  // ✅ Eliminado: textoFuentesPrimariasFormateado anterior (reemplazado por textoFuentesPrimariasCompleto)
 
   readonly textoFuentesSecundariasFormateado: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoFuentesSecundarias();
@@ -87,6 +118,15 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     injector: Injector
   ) {
     super(cdRef, injector);
+
+    // ✅ EFFECT CON TODAS LAS DEPENDENCIAS
+    effect(() => {
+      this.cantidadEntrevistasSignal();
+      this.fechaTrabajoCampoSignal();
+      this.parrafoFuentesPrimariasSignal();
+      this.textoFuentesPrimariasCompleto();
+      this.cdRef.markForCheck();
+    });
 
     effect(() => {
       this.photoFieldsHash();
@@ -133,8 +173,26 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     if (formData['parrafoSeccion3_fuentes_primarias']) {
       return formData['parrafoSeccion3_fuentes_primarias'];
     }
-    const cantidadEntrevistas = formData['cantidadEntrevistas'] || '____';
-    return SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback.replace('{{cantidadEntrevistas}}', cantidadEntrevistas);
+    // ✅ Usar computed signals
+    const cantidad = this.cantidadEntrevistasSignal();
+    const fecha = this.fechaTrabajoCampoSignal();
+    return this.generarTextoFuentesPrimarias(null, cantidad, fecha);
+  }
+
+  // ✅ FUNCIÓN GENERADORA CON replaceAll - SOPORTA PARRAFO PERSONALIZADO
+  generarTextoFuentesPrimarias(parrafoPersonalizado: string | null, cantidad: string, fecha: string): string {
+    let TEMPLATE: string;
+    
+    if (parrafoPersonalizado) {
+      // Usar el texto personalizado del usuario
+      TEMPLATE = parrafoPersonalizado;
+    } else {
+      // Usar el template por defecto
+      TEMPLATE = SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback;
+    }
+    
+    return TEMPLATE.replaceAll('{{cantidadEntrevistas}}', cantidad)
+                   .replace(/{{fechaTrabajoCampo}}/g, fecha);
   }
 
   obtenerTextoFuentesSecundarias(): string {

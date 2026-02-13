@@ -248,11 +248,21 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoFuentesPrimarias(): string {
-    if (this.parrafoFuentesPrimarias.value()) {
-      return this.parrafoFuentesPrimarias.value();
-    }
+    const parrafoPersonalizado = this.parrafoFuentesPrimarias.value();
     const cantidad = this.cantidadEntrevistas.value() || '____';
-    return SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback.replace('{{cantidadEntrevistas}}', cantidad);
+    const fecha = this.fechaTrabajoCampo.value() || '____';
+    
+    if (parrafoPersonalizado) {
+      // Procesar placeholders en el texto personalizado
+      return parrafoPersonalizado
+        .replaceAll('{{cantidadEntrevistas}}', cantidad)
+        .replace(/{{fechaTrabajoCampo}}/g, fecha);
+    }
+    
+    // Usar template con ambos placeholders
+    return SECCION3_TEMPLATES.fuentesPrimariasDefaultFallback
+      .replaceAll('{{cantidadEntrevistas}}', cantidad)
+      .replace(/{{fechaTrabajoCampo}}/g, fecha);
   }
 
   obtenerTextoFuentesSecundarias(): string {

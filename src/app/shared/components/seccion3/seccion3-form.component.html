@@ -103,12 +103,12 @@
     <div class="form-group-section mt-lg">
       <h4 class="section-title">{{ SECCION3_TEMPLATES.labelFuentesSecundarias }}</h4>
     
-      <div class="form-field fuente-item" *ngFor="let fuente of fuentesSecundariasLista.value(); let i = index; trackBy: trackByFuente">
+      <div class="form-field fuente-item" *ngFor="let fuente of fuentesSecundariasLista.value(); let i = index; trackBy: trackByIndex">
         <input 
           type="text" 
           class="input" 
           [ngModel]="fuente"
-          (ngModelChange)="actualizarFuenteSecundaria(i, $event)"
+          (input)="actualizarFuenteSecundaria(i, $any($event.target).value)"
           (keyup.enter)="$any($event.target).blur()">
         <button 
           type="button" 
