@@ -65,17 +65,13 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
   }
 
-  override obtenerNombreComunidadActual(): string {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
-  }
-
   // ✅ SIGNALS PUROS - Datos del store
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
   readonly grupoAISDSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '';
+    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
   });
 
   // ✅ REFACTOR: Usar ubicacionGlobal
@@ -267,6 +263,42 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   onTelecomunicacionesTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyTelecomunicaciones();
     this.cdRef.markForCheck();
+  }
+
+  // ✅ MÉTODOS PARA OBTENER TEXTOS CON VALORES POR DEFECTO (PATRON SINCRONIZADO VISTA-FORMULARIO)
+  obtenerTextoSeccion11TransporteCompleto(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manualKey = `parrafoSeccion11_transporte_completo${prefijo}`;
+    const texto = this.datos[manualKey] || this.datos['parrafoSeccion11_transporte_completo'];
+
+    // ✅ TEXTO POR DEFECTO - SINCRONIZADO CON VISTA
+    if (!texto || texto.trim() === '') {
+      const nombreComunidad = this.obtenerNombreComunidadActual();
+      const ubicacion = this.ubicacionGlobal();
+      const provincia = ubicacion.provincia || '____';
+      const distrito = ubicacion.distrito || '____';
+      const costoMin = this.datos['costoTransporteMinimo'] || '____';
+      const costoMax = this.datos['costoTransporteMaximo'] || '____';
+
+      return `En la CC ${nombreComunidad}, la infraestructura de transporte es limitada. Dentro de la comunidad solo se encuentran trochas carrozables que permiten llegar al anexo ${nombreComunidad}. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro de la comunidad también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al anexo o centro administrativo comunal.\n\nPor otro lado, no existen empresas de transporte formalmente establecidas dentro de la comunidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de ${provincia}, a la cual parte cerca de las 10:30 am desde la capital distrital de ${distrito}. El costo por este servicio varía entre S/. ${costoMin} y S/. ${costoMax} por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los comuneros para desplazarse a ciudades más grandes.`;
+    }
+
+    return texto;
+  }
+
+  obtenerTextoSeccion11TelecomunicacionesCompleto(): string {
+    const prefijo = this.obtenerPrefijo();
+    const manualKey = `parrafoSeccion11_telecomunicaciones_completo${prefijo}`;
+    const texto = this.datos[manualKey] || this.datos['parrafoSeccion11_telecomunicaciones_completo'];
+
+    // ✅ TEXTO POR DEFECTO - SINCRONIZADO CON VISTA
+    if (!texto || texto.trim() === '') {
+      const nombreComunidad = this.obtenerNombreComunidadActual();
+
+      return `En la CC ${nombreComunidad}, la infraestructura en telecomunicaciones presenta algunas limitaciones, aunque existen servicios disponibles para la población. En cuanto a radiodifusión, no es posible captar señal de emisoras provinciales o nacionales. Respecto a la señal de televisión, la comunidad cuenta con acceso a América TV (canal 4) a través de señal abierta, gracias a una antena de la municipalidad que retransmite este canal, lo que garantiza una opción de entretenimiento y noticias. Adicionalmente, algunas familias tienen contratado el servicio de DIRECTV, el cual brinda acceso a televisión satelital.\n\nEn lo que respecta a la telefonía móvil, la cobertura es restringida y solo las operadoras de Movistar y Entel logran captar señal en la comunidad, lo cual limita las opciones de comunicación para los habitantes. Por otro lado, el acceso a internet depende únicamente de Movistar, ya que los comuneros solo pueden conectarse a través de los datos móviles proporcionados por esta empresa. Además, cabe mencionar que, si bien existe acceso a internet, la calidad y estabilidad de la conexión pueden ser deficientes, especialmente en las zonas más alejadas dentro de la comunidad.`;
+    }
+
+    return texto;
   }
 
   // ✅ MÉTODO PARA TRACKBY EN LOOPS

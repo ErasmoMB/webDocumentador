@@ -13,7 +13,7 @@
           [label]="SECCION11_TEMPLATES.labelTransporteParagrafo"
           [hint]="SECCION11_TEMPLATES.hintTransporte"
           [rows]="6"
-          [value]="parrafoTransporte.value()"
+          [value]="obtenerTextoSeccion11TransporteCompleto()"
           (valueChange)="parrafoTransporte.update($any($event))">
         </app-paragraph-editor>
       </div>
@@ -66,7 +66,7 @@
           [label]="SECCION11_TEMPLATES.labelTelecomunicacionesParagrafo"
           [hint]="SECCION11_TEMPLATES.hintTelecomunicaciones"
           [rows]="6"
-          [value]="parrafoTelecomunicaciones.value()"
+          [value]="obtenerTextoSeccion11TelecomunicacionesCompleto()"
           (valueChange)="parrafoTelecomunicaciones.update($any($event))">
         </app-paragraph-editor>
       </div>
