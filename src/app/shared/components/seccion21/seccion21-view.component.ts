@@ -130,30 +130,39 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_aisi_intro_completo')();
     if (manual && manual.trim().length > 0) return manual;
+    
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '';
-    const texto = `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente. Además de ello, es la localidad de donde se obtendrán bienes y servicios complementarios de forma esporádica, así como que se interactuará con sus respectivas autoridades políticas.`;
-    return texto;
+    const centro = this.obtenerNombreCentroPobladoActual();
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    
+    return SECCION21_TEMPLATES.parrafoAISITemplate
+      .replace(/{CENTRO}/g, centro)
+      .replace(/{PROVINCIA}/g, provincia)
+      .replace(/{DEPARTAMENTO}/g, departamento);
   });
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_centro_poblado_completo')();
     if (manual && manual.trim().length > 0) return manual;
+    
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || 'Caravelí';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || 'Arequipa';
-    const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '8004';
-    const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaCreacionDistrito')() || '22 de febrero de 1935';
-    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || 'Cahuacho';
-    const distritoAnterior = this.projectFacade.selectField(this.seccionId, null, 'distritoAnterior')() || 'Caravelí';
-    const origen1 = this.projectFacade.selectField(this.seccionId, null, 'origenPobladores1')() || 'Caravelí';
-    const origen2 = this.projectFacade.selectField(this.seccionId, null, 'origenPobladores2')() || 'Parinacochas';
-    const deptoOrigen = this.projectFacade.selectField(this.seccionId, null, 'departamentoOrigen')() || 'Ayacucho';
-    const anexos = this.projectFacade.selectField(this.seccionId, null, 'anexosEjemplo')() || 'Ayroca o Sóndor';
-    return `El CP ${centro} es la capital del distrito homónimo, perteneciente a la provincia de ${provincia}, en el departamento de ${departamento}. Su designación como capital distrital se oficializó mediante la Ley N°${ley}, promulgada el ${fecha}, fecha en que se creó el distrito de ${distrito}. Antes de ello, este asentamiento era un caserío del distrito de ${distritoAnterior}, marcando un importante cambio en su desarrollo administrativo y social.\n\nLos primeros poblado ${centro} provenían principalmente de ${origen1} y la provincia de ${origen2}, en ${deptoOrigen}. Entre las familias pioneras destacan apellidos como Espinoza, Miralles, De la Cruz y Aguayo, quienes sentaron las bases de la localidad actual. El nombre "${centro}" proviene del término quechua Ccahuayhuachu, que se traduce como "mírame desde aquí", reflejando posiblemente su ubicación estratégica o una percepción cultural del entorno.\n\nA diferencia de algunos anexos del distrito, como ${anexos}, que son centros administrativos de sus respectivas comunidades campesinas, el centro poblado ${centro} no se encuentra dentro de los límites de ninguna comunidad campesina. Esto le otorga una característica particular dentro del contexto rural, marcando su identidad como un núcleo urbano-administrativo independiente en el distrito.`;
+    const centro = this.obtenerNombreCentroPobladoActual();
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '____';
+    const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaCreacionDistrito')() || '____';
+    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
+    const distritoAnterior = this.projectFacade.selectField(this.seccionId, null, 'distritoAnterior')() || '____';
+    
+    return SECCION21_TEMPLATES.parrafoCentroTemplate
+      .replace(/{CENTRO}/g, centro)
+      .replace(/{PROVINCIA}/g, provincia)
+      .replace(/{DEPARTAMENTO}/g, departamento)
+      .replace(/{LEY}/g, ley)
+      .replace(/{FECHA}/g, fecha)
+      .replace(/{DISTRITO}/g, distrito)
+      .replace(/{DISTRITOANTERIOR}/g, distritoAnterior);
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {

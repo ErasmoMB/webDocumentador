@@ -115,6 +115,12 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
     const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
+    
+    // ✅ NUEVO: Reemplazar "CP ____" con el nombre real del centro poblado
+    if (base.includes('CP ____')) {
+      return base.replace('CP ____', `CP ${cp}`);
+    }
+    
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
     return `${base} – CP ${cp} (${year})`;
@@ -139,6 +145,12 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
     const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
+    
+    // ✅ NUEVO: Reemplazar "CP ____" con el nombre real del centro poblado
+    if (base.includes('CP ____')) {
+      return base.replace('CP ____', `CP ${cp}`);
+    }
+    
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
     return `${base} – CP ${cp} (${year})`;
@@ -301,9 +313,10 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
 
     // ✅ Inicializar Títulos y Fuentes de cuadros CON PREFIJO (patrón Sección 21)
+    // ✅ CORREGIDO: NO guardar "CP ____" - dejar que los signals hagan el reemplazo dinámico
     const tituloSexoField = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
     if (!this.datos[tituloSexoField]) {
-      const valorTitulo = `Población por sexo – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
+      const valorTitulo = 'Población por sexo';
       this.datos[tituloSexoField] = valorTitulo;
       this.datos['cuadroTituloPoblacionSexo'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloSexoField, valorTitulo, { refresh: false });
@@ -319,7 +332,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
     const tituloEtarioField = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
     if (!this.datos[tituloEtarioField]) {
-      const valorTitulo = `Población por grupo etario – CP ${PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId) || '____'} (2017)`;
+      const valorTitulo = 'Población por grupo etario';
       this.datos[tituloEtarioField] = valorTitulo;
       this.datos['cuadroTituloPoblacionEtario'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloEtarioField, valorTitulo, { refresh: false });

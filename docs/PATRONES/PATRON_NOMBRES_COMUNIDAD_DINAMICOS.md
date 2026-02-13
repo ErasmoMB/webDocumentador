@@ -252,7 +252,71 @@ Sección 6 - Formulario:
 
 ---
 
-## 🚀 Aplicación en Nuevas Secciones
+## � **Mismo Patrón para AISI (Área de Influencia Social Indirecta)**
+
+El patrón es **idéntico** para AISI. Solo cambian estos detalles técnicos:
+
+| Aspecto | AISD | AISI |
+|--------|------|------|
+| **Métodos** | `obtenerNombreComunidadActual()` | `obtenerNombreCentroPobladoActual()` |
+| **Signal** | `aisdGroups()` | `aisiGroups()` |
+| **Prefijo** | `_A1`, `_A2`, etc. | `_B1`, `_B2`, etc. |
+| **Regex** | `/\_A(\d+)/` | `/\_B(\d+)/` |
+| **Ejemplo** | Secciones 5, 6, 7 | Secciones 21, 22, 23 |
+
+### Aplicación AISI - Paso a Paso
+
+**Paso 1: Constants con placeholders**
+```typescript
+export const SECCION23_TEMPLATES = {
+  indiceDesempleoTemplate: `El índice de desempleo del distrito de {DISTRITO}, que abarca al CP {CENTROPOBLADO}...`,
+  peaCompleteTemplate: `La PEA del distrito de {DISTRITO}, jurisdicción que abarca a su capital distrital, el CP {CENTROPOBLADO}...`
+};
+```
+
+**Paso 2: Signal computed con `.replace()`**
+```typescript
+readonly textoIndiceDesempleoSignal: Signal<string> = computed(() => {
+  const manual = this.projectFacade.selectField(this.seccionId, null, 'textoIndiceDesempleo_AISI')();
+  if (manual && manual.trim().length > 0) return manual;
+  
+  const distrito = this.obtenerNombreDistritoActual();
+  const cp = this.obtenerNombreCentroPobladoActual();
+  
+  return SECCION23_TEMPLATES.indiceDesempleoTemplate
+    .replace(/{DISTRITO}/g, distrito)
+    .replace(/{CENTROPOBLADO}/g, cp);
+});
+```
+
+**Paso 3: Usar en HTML (Form Y View)**
+```html
+<p class="text-justify">{{ textoIndiceDesempleoSignal() }}</p>
+```
+
+### Métodos AISI Disponibles en BaseSectionComponent
+
+```typescript
+// Para centro poblado AISI
+obtenerNombreCentroPobladoActual(): string {
+  const prefijo = this.obtenerPrefijoGrupo();
+  if (prefijo && prefijo.startsWith('_B')) {
+    const index = parseInt(prefijo.match(/_B(\d+)/)[1]) - 1;
+    return this.aisiGroups()[index]?.nombre || '____';
+  }
+  return '____';
+}
+
+// Para distrito AISI (si necesitas)
+obtenerNombreDistritoActual(): string {
+  // Mismo patrón, lee el mismo .nombre del grupo o datos guardados
+  return nombreDelDistrito || '____';
+}
+```
+
+---
+
+## �🚀 Aplicación en Nuevas Secciones
 
 Checklist para integrar este patrón:
 
@@ -308,10 +372,14 @@ Checklist para integrar este patrón:
 R: El patrón escala automáticamente. El regex `_A(\d+)` captura cualquier número.
 
 **P: ¿Puedo usar esto en otras secciones (AISI)?**
-R: Sí, pero necesitarías variables como `aisiGroups()`. El patrón es idéntico.
+R: **Sí, completamente.** Es el mismo patrón, solo cambian:
+   - `aisdGroups()` → `aisiGroups()`
+   - Prefijo `_A` → `_B`
+   - Métodos: `obtenerNombreComunidadActual()` → `obtenerNombreCentroPobladoActual()`
+   - Ver sección "Mismo Patrón para AISI" arriba.
 
 **P: ¿El nombre se actualiza en tiempo real?**
-R: Sí, porque `aisdGroups()` es un signal reactivo. Cualquier cambio en grupos dispara re-renders.
+R: Sí, porque `aisdGroups()` e `aisiGroups()` son signals reactivos. Cualquier cambio en grupos dispara re-renders.
 
 **P: ¿Debo eliminar la lógica antigua?**
 R: Sí, si ya no se usa. Mantener código muerto genera confusión.

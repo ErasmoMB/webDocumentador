@@ -95,30 +95,30 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       return manual;
     }
     
-    // Si no, generar automáticamente para el formulario
+    // Si no, generar automáticamente usando template y valores dinámicos
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '';
-    return `En cuanto al área de influencia social indirecta (AISI), se ha determinado que esta se encuentra conformada por el CP ${centro}, capital distrital de la jurisdicción homónima, en la provincia de ${provincia}, en el departamento de ${departamento}. Esta delimitación se debe a que esta localidad es el centro político de la jurisdicción donde se ubica el Proyecto, así como al hecho de que mantiene una interrelación continua con el área delimitada como AISD y que ha sido caracterizada previamente.`;
+    const centro = this.obtenerNombreCentroPobladoActual();
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    
+    return SECCION21_TEMPLATES.parrafoAISITemplate
+      .replace(/{CENTRO}/g, centro)
+      .replace(/{PROVINCIA}/g, provincia)
+      .replace(/{DEPARTAMENTO}/g, departamento);
   });
 
   readonly centroPobladoAisiSignal: Signal<string> = computed(() => {
-    return this.getCentroPobladoAISI() || '____';
+    return this.obtenerNombreCentroPobladoActual();
   });
 
   readonly labelFotografiasSignal: Signal<string> = computed(() => {
-    return `Fotografías de ${this.getCentroPobladoAISI() || '____'}`;
+    return `Fotografías de ${this.obtenerNombreCentroPobladoActual()}`;
   });
 
   readonly tituloDefaultFotoSignal: Signal<string> = computed(() => {
-    return `Centro Poblado ${this.getCentroPobladoAISI() || '____'}`;
+    return `Centro Poblado ${this.obtenerNombreCentroPobladoActual()}`;
   });
 
-  getCentroPobladoAISI(): string {
-    const data = this.formDataSignal();
-    return PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-  }
 
   // ✅ SEÑALES PARA CAMPOS CON PREFIJO (AISLAMIENT O COMPLETO)
   readonly leyCreacionDistritoSignal: Signal<string> = computed(() => {
@@ -221,21 +221,25 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       return manual;
     }
     
-    // Si no, generar automáticamente para el formulario
+    // Si no, generar automáticamente usando template y valores dinámicos
     const data = this.formDataSignal();
-    const centro = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || 'Cahuacho';
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || 'Caravelí';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || 'Arequipa';
-    const ley = PrefijoHelper.obtenerValorConPrefijo(data, 'leyCreacionDistrito', this.seccionId) || '8004';
-    const fecha = PrefijoHelper.obtenerValorConPrefijo(data, 'fechaCreacionDistrito', this.seccionId) || '22 de febrero de 1935';
-    const distrito = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoSeleccionado', this.seccionId) || 'Cahuacho';
-    const distritoAnterior = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoAnterior', this.seccionId) || 'Caravelí';
-    const origen1 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores1', this.seccionId) || 'Caravelí';
-    const origen2 = PrefijoHelper.obtenerValorConPrefijo(data, 'origenPobladores2', this.seccionId) || 'Parinacochas';
-    const deptoOrigen = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoOrigen', this.seccionId) || 'Ayacucho';
-    const anexos = PrefijoHelper.obtenerValorConPrefijo(data, 'anexosEjemplo', this.seccionId) || 'Ayroca o Sóndor';
-    return `El CP ${centro} es la capital del distrito homónimo, perteneciente a la provincia de ${provincia}, en el departamento de ${departamento}. Su designación como capital distrital se oficializó mediante la Ley N°${ley}, promulgada el ${fecha}, fecha en que se creó el distrito de ${distrito}. Antes de ello, este asentamiento era un caserío del distrito de ${distritoAnterior}.`;
-  });
+    const centro = this.obtenerNombreCentroPobladoActual();
+    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
+    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const ley = PrefijoHelper.obtenerValorConPrefijo(data, 'leyCreacionDistrito', this.seccionId) || '____';
+    const fecha = PrefijoHelper.obtenerValorConPrefijo(data, 'fechaCreacionDistrito', this.seccionId) || '____';
+    const distrito = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoSeleccionado', this.seccionId) || '____';
+    const distritoAnterior = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoAnterior', this.seccionId) || '____';
+    
+    return SECCION21_TEMPLATES.parrafoCentroTemplate
+      .replace(/{CENTRO}/g, centro)
+      .replace(/{PROVINCIA}/g, provincia)
+      .replace(/{DEPARTAMENTO}/g, departamento)
+      .replace(/{LEY}/g, ley)
+      .replace(/{FECHA}/g, fecha)
+      .replace(/{DISTRITO}/g, distrito)
+      .replace(/{DISTRITOANTERIOR}/g, distritoAnterior);
+  })
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
@@ -350,7 +354,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
     // Inicializar Título y Fuente de tabla
     const tituloField = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
-    const valorTitulo = `Ubicación referencial – Centro Poblado ${this.getCentroPobladoAISI() || '____'}`;
+    const valorTitulo = `Ubicación referencial – Centro Poblado ${this.obtenerNombreCentroPobladoActual()}`;
     if (!this.datos[tituloField] || this.datos[tituloField] !== valorTitulo) {
       this.datos[tituloField] = valorTitulo;
       this.datos['cuadroTituloUbicacionCp'] = valorTitulo; // Para compatibilidad
@@ -385,7 +389,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       if (tablaVacia || tieneCapitalActual) {
 
         // Auto-poblar tabla de ubicación sin delay - ya estamos en un effect() reactivo
-        this.autoPoblarTablaUbicacionCp(this.getCentroPobladoAISI() || '', prefijo);
+        this.autoPoblarTablaUbicacionCp(this.obtenerNombreCentroPobladoActual(), prefijo);
       }
     });
   }

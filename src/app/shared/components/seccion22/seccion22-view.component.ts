@@ -202,12 +202,20 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const cuadroKey = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
     const cuadro = this.projectFacade.selectField(this.seccionId, null, cuadroKey)();
-    if (cuadro && String(cuadro).trim().length > 0) return cuadro;
-
-    const base = this.tituloPoblacionSexoSignal();
+    
     // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
     const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
+    
+    if (cuadro && String(cuadro).trim().length > 0) {
+      // ✅ NUEVO: Si el cuadro tiene "CP ____", reemplazar con el nombre real
+      if (String(cuadro).includes('CP ____')) {
+        return String(cuadro).replace('CP ____', `CP ${cp}`);
+      }
+      return cuadro;
+    }
+
+    const base = this.tituloPoblacionSexoSignal();
     if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
     return `${base} – CP ${cp} (${year})`;
@@ -232,12 +240,20 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const cuadroKey = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
     const cuadro = this.projectFacade.selectField(this.seccionId, null, cuadroKey)();
-    if (cuadro && String(cuadro).trim().length > 0) return cuadro;
-
-    const base = this.tituloPoblacionEtarioSignal();
+    
     // ✅ CORREGIDO: Usar aisiGroups() signal a través de obtenerNombreCentroPobladoActual()
     const cp = this.obtenerNombreCentroPobladoActual();
     const year = '2017';
+    
+    if (cuadro && String(cuadro).trim().length > 0) {
+      // ✅ NUEVO: Si el cuadro tiene "CP ____", reemplazar con el nombre real
+      if (String(cuadro).includes('CP ____')) {
+        return String(cuadro).replace('CP ____', `CP ${cp}`);
+      }
+      return cuadro;
+    }
+
+    const base = this.tituloPoblacionEtarioSignal();
     if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
     if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
     return `${base} – CP ${cp} (${year})`;
