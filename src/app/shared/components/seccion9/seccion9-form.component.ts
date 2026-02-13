@@ -9,6 +9,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import {
   SECCION9_WATCHED_FIELDS,
   SECCION9_SECTION_ID,
@@ -91,6 +92,15 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     
     // 4️⃣ Último recurso
     return '____';
+  });
+
+  // ✅ NUMERACIÓN GLOBAL - Tablas (dos tablas: condicionOcupacion, tiposMateriales)
+  readonly globalTableNumberSignalCondicionOcupacion: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  readonly globalTableNumberSignalTiposMateriales: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
   });
 
   readonly condicionOcupacionSignal: Signal<any[]> = computed(() => {
@@ -176,7 +186,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumberingService: TableNumberingService
+    private tableNumberingService: TableNumberingService,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -263,13 +274,13 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     this.cdRef.detectChanges();
   }
 
-  // ✅ NÚMEROS DE CUADROS DINÁMICOS
+  // ✅ NÚMEROS DE CUADROS DINÁMICOS (ahora usando GlobalNumberingService)
   obtenerNumeroCuadroCondicionOcupacion(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
   }
 
   obtenerNumeroCuadroTiposMateriales(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
   }
 
   trackByIndex(index: number): number {

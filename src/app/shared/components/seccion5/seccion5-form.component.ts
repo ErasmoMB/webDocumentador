@@ -6,6 +6,8 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { SECCION5_WATCHED_FIELDS, SECCION5_PHOTO_PREFIX, SECCION5_TABLA_INSTITUCIONES_CONFIG, SECCION5_COLUMNAS_INSTITUCIONES, SECCION5_TEMPLATES, SECCION5_CONFIG } from './seccion5-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { DomSanitizer } from '@angular/platform-browser';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
     standalone: true,
@@ -92,6 +94,20 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     return hash;
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tabla
+  readonly globalTableNumberSignal: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  // ✅ NUMERACIÓN GLOBAL - Fotos
+  readonly photoNumbersSignal: Signal<string[]> = computed(() => {
+    const prefix = this.photoPrefixSignal();
+    const fotos = this.fotografiasCache || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+
   readonly viewModel: Signal<any> = computed(() => {
     return {
       formulario: this.formularioDataSignal(),
@@ -102,7 +118,9 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
 
   constructor(
     cdRef: ChangeDetectorRef,
-    injector: Injector
+    injector: Injector,
+    private sanitizer: DomSanitizer,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [

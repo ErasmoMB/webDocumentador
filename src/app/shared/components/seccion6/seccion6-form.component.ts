@@ -9,6 +9,8 @@ import { TableManagementFacade } from 'src/app/core/services/tables/table-manage
 import { FotoItem } from '../image-upload/image-upload.component';
 import { debugLog } from 'src/app/shared/utils/debug';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { DomSanitizer } from '@angular/platform-browser';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   standalone: true,
@@ -141,11 +143,30 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     return hash;
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tablas (dos tablas: sexo y etario)
+  readonly globalTableNumberSignalSexo: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  readonly globalTableNumberSignalEtario: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+  });
+  
+  // ✅ NUMERACIÓN GLOBAL - Fotos
+  readonly photoNumbersSignal: Signal<string[]> = computed(() => {
+    const prefix = `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`;
+    const fotos = this.fotografiasCache || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    // Seccion6TableConfigService eliminado - configs ahora son constantes
-    private tableFacade: TableManagementFacade
+    private sanitizer: DomSanitizer,
+    private tableFacade: TableManagementFacade,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [

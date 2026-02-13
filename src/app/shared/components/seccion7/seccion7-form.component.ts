@@ -7,6 +7,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { TableColumn } from '../dynamic-table/dynamic-table.component';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import {
   SECCION7_WATCHED_FIELDS,
   SECCION7_SECTION_ID,
@@ -107,6 +108,28 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tablas (tres tablas: PET, PEA, PEA Ocupada)
+  readonly globalTableNumberSignalPET: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  readonly globalTableNumberSignalPEA: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+  });
+  
+  readonly globalTableNumberSignalPEAOcupada: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+  });
+  
+  // ✅ NUMERACIÓN GLOBAL - Fotos
+  readonly photoNumbersSignal: Signal<string[]> = computed(() => {
+    const prefix = `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`;
+    const fotos = this.fotografiasSeccion7 || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+
   // ✅ COLUMNAS DE TABLAS (INTEGRADO - SIN SERVICIOS EXTERNOS)
   readonly columnasTableaPET: TableColumn[] = [
     { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Grupo de edad', readonly: true },
@@ -137,7 +160,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 

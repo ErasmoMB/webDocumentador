@@ -6,6 +6,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { 
   SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, 
   SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, 
@@ -118,14 +119,52 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tablas (tres tablas: PEA_Ocupaciones, Pecuaria, Agricultura)
+  readonly globalTableNumberSignalPEA: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  readonly globalTableNumberSignalPecuaria: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+  });
+  
+  readonly globalTableNumberSignalAgricultura: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+  });
+  
+  // ✅ NUMERACIÓN GLOBAL - Fotos (3 grupos)
+  readonly photoNumbersGanaderiaSignal: Signal<string[]> = computed(() => {
+    const prefix = `${this.PHOTO_PREFIX_GANADERIA}${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`;
+    const fotos = this.fotografiasGanaderiaCache || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+  
+  readonly photoNumbersAgriculturaSignal: Signal<string[]> = computed(() => {
+    const prefix = `${this.PHOTO_PREFIX_AGRICULTURA}${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`;
+    const fotos = this.fotografiasAgriculturaCache || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+  
+  readonly photoNumbersComercioSignal: Signal<string[]> = computed(() => {
+    const prefix = `${this.PHOTO_PREFIX_COMERCIO}${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`;
+    const fotos = this.fotografiasComercioCache || [];
+    return fotos.map((_, index) => 
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+    );
+  });
+
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
-    // Seccion8TableConfigService eliminado - configs ahora son constantes
+    private sanitizer: DomSanitizer,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 

@@ -10,6 +10,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TABLA_AISD1_CONFIG, SECCION4_TABLA_AISD2_CONFIG, SECCION4_COLUMNAS_AISD1, SECCION4_COLUMNAS_AISD2, SECCION4_TEMPLATES, SECCION4_CONFIG } from './seccion4-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   standalone: true,
@@ -46,11 +47,19 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   readonly tablaAISD2Signal: Signal<any[]>;
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
+  
+  // ✅ NUMERACIÓN GLOBAL - Tablas
+  readonly globalTableNumberSignalAISD1: Signal<string>;
+  readonly globalTableNumberSignalAISD2: Signal<string>;
+  
+  // ✅ NUMERACIÓN GLOBAL - Fotos
+  readonly photoNumbersSignal: Signal<string[]>;
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -92,6 +101,24 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
         }
       }
       return hash;
+    });
+
+    // ✅ NUMERACIÓN GLOBAL - Tablas AISD
+    this.globalTableNumberSignalAISD1 = computed(() => {
+      return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+    });
+
+    this.globalTableNumberSignalAISD2 = computed(() => {
+      return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+    });
+
+    // ✅ NUMERACIÓN GLOBAL - Fotos
+    this.photoNumbersSignal = computed(() => {
+      const prefix = `${this.PHOTO_PREFIX_UBICACION}${this.obtenerPrefijoGrupo()}`;
+      const fotos = this.fotografiasCache || [];
+      return fotos.map((_, index) => 
+        this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+      );
     });
 
     this.viewModel = computed(() => {

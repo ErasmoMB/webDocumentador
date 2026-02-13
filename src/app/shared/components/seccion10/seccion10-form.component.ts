@@ -9,6 +9,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -121,6 +122,27 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tablas (cinco tablas: agua, saneamiento, electrica, energia, comunicaciones)
+  readonly globalTableNumberSignalAgua: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
+  });
+  
+  readonly globalTableNumberSignalSaneamiento: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
+  });
+  
+  readonly globalTableNumberSignalElectrica: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+  });
+  
+  readonly globalTableNumberSignalEnergia: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 3);
+  });
+  
+  readonly globalTableNumberSignalComunicaciones: Signal<string> = computed(() => {
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 4);
+  });
+
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
@@ -128,7 +150,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumberingService: TableNumberingService
+    private tableNumberingService: TableNumberingService,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 

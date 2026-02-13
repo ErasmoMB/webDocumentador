@@ -6,6 +6,7 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -104,7 +105,8 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumberingService: TableNumberingService
+    private tableNumberingService: TableNumberingService,
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -489,17 +491,17 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return conElectricidad?.porcentaje?.value || conElectricidad?.porcentaje || '____';
   }
 
-  // ✅ NÚMEROS DE CUADRO CON PREFIJO
+  // ✅ NÚMEROS DE CUADRO CON PREFIJO (ahora usando GlobalNumberingService)
   obtenerNumeroCuadroAbastecimientoAgua(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
   }
 
   obtenerNumeroCuadroTiposSaneamiento(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
   }
 
   obtenerNumeroCuadroCoberturaElectrica(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 2);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
   }
 
   // ✅ TÍTULOS Y FUENTES CON PREFIJO
@@ -613,13 +615,13 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return this.sanitizer.bypassSecurityTrustHtml(texto);
   }
 
-  // ✅ NÚMEROS DE CUADROS USANDO SERVICIO DE NUMERACIÓN
+  // ✅ NÚMEROS DE CUADROS USANDO SERVICIO DE NUMERACIÓN (ahora usando GlobalNumberingService)
   private obtenerNumeroCuadroEnergiaCocinar(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 3);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 3);
   }
 
   private obtenerNumeroCuadroTecnologiaComunicaciones(): string {
-    return this.tableNumberingService.getGlobalTableNumber(this.seccionId, 4);
+    return this.globalNumbering.getGlobalTableNumber(this.seccionId, 4);
   }
 
   private obtenerTextoEnergiaCocinarDetalle(): string {
