@@ -42,10 +42,10 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
-    // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
-    this.aisdGroups();
+    const aisd = this.aisdGroups();
     const nombres = this.comunidadesNombres();
-    this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: ubicación global (departamento, distrito)
+    const ubicacion = this.ubicacionGlobal();
+    
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
@@ -86,11 +86,16 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
     
     // ✅ CRÍTICO: Effect para sincronización de AISD/AISI CON textos formateados
     effect(() => {
-      this.aisdGroups();
-      this.aisiGroups();
-      this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: cambios en ubicación deben triggerear la actualización
-      this.textoAISDFormateado();
-      this.textoAISIFormateado();
+      const aisd = this.aisdGroups();
+      const aisi = this.aisiGroups();
+      const ubicacion = this.ubicacionGlobal();
+      const textoAisd = this.textoAISDFormateado();
+      const textoAisi = this.textoAISIFormateado();
+      
+      // DEBUG: Verificar datos de ubicación
+      console.log('[Seccion2View] Effect - ubicacion:', ubicacion);
+      console.log('[Seccion2View] Effect - textoAisd contiene departamento:', textoAisd?.toString().includes('departamento') || 'no');
+      
       this.cdRef.markForCheck();
     });
 
@@ -138,8 +143,9 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
       : highlightClass;
 
     // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    // IMPORTANTE: Usar replaceAll para reemplazar TODAS las ocurrencias de {{comunidades}}
     const textoBase = SECCION2_TEMPLATES.textoAISDTemplate
-      .replace('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
+      .replaceAll('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
       .replace(/{{distrito}}/g, `<span class="${highlightClass}">${distrito}</span>`)
       .replace(/{{componente1}}/g, `<span class="${manualClass}">${componente1}</span>`)
       .replace(/{{componente2}}/g, `<span class="${manualClass}">${componente2}</span>`)
@@ -156,9 +162,8 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   }
 
   obtenerTextoSeccion2AISDCompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ PROBLEMA: Si hay texto manual guardado, lo retornaba sin regenerar
+    // Solución: Siempre regenerar el texto para que refleje los nombres actuales
     const comunidades = this.obtenerTextoComunidades();
     const ubicacion = this.ubicacionGlobal();
     const distrito = ubicacion.distrito || '____';
@@ -176,9 +181,8 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   }
 
   obtenerTextoSeccion2AISICompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ Si hay texto manual guardado, lo ignoramos y siempre regeneramos
+    // para que refleje los nombres actuales de los distritos
     const gruposAISI = this.aisiGroups();
     const distritosNombres = gruposAISI
       .map(g => g.nombre?.trim())

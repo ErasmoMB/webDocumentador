@@ -186,11 +186,13 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
       if (distritos.length > 0 && !currentDpto) {
         // Auto-seleccionar el primero
         const primero = distritos[0];
+        console.log('[Seccion1] Auto-seleccionando distrito:', primero);
         this.departamentoSeleccionado.update(primero.dpto);
         this.provinciaSeleccionada.update(primero.prov);
         this.distritoSeleccionado.update(primero.dist);
         
         // ✅ Guardar en METADATA GLOBAL (para que todas las secciones lean)
+        console.log('[Seccion1] autoSelectDistrictEffect - dispatching setUbicacionGlobal:', primero);
         this.projectFacade.setUbicacionGlobal(primero.dpto, primero.prov, primero.dist);
         
         // Actualizar párrafo principal con los datos seleccionados
@@ -228,6 +230,7 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   protected override onInitCustom(): void {
     // ✅ Load initial values from state or use defaults
     const projectNameValue = this.projectFacade.selectField(this.seccionId, null, 'projectName')() || '';
+    console.log('[Seccion1] onInitCustom - projectNameValue:', projectNameValue);
     if (projectNameValue) {
       this.projectName.update(projectNameValue);
     }
@@ -248,10 +251,10 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
       this.distritoSeleccionado.update(distritoValue);
     }
 
-    // ✅ CRÍTICO: Si tenemos valores completos, despachar setUbicacionGlobal para sincronizar con otras secciones
-    if (departamentoValue && provinciaValue && distritoValue) {
-      this.projectFacade.setUbicacionGlobal(departamentoValue, provinciaValue, distritoValue);
-    }
+     // ✅ CRÍTICO: SIEMPRE despachar setUbicacionGlobal para sincronizar con otras secciones
+     // Si hay valores, se usan; si no, el effect de auto-select los seleccionará
+     console.log('[Seccion1] onInitCustom - dispatching setUbicacionGlobal:', { departamentoValue, provinciaValue, distritoValue });
+     this.projectFacade.setUbicacionGlobal(departamentoValue, provinciaValue, distritoValue);
 
     // ✅ CRÍTICO: Recuperar datos del JSON cargado (centros poblados, nombre archivo)
     const centrosPobladosValue = this.projectFacade.selectField(this.seccionId, null, 'centrosPobladosJSON')();
@@ -517,9 +520,14 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
         const { data, geoInfo, fileName, comunidadesCampesinas, jsonCompleto } = this.procesarJSONLegacy(jsonContent, file.name, result);
         
         // ✅ NUEVA ARQUITECTURA: Persistir usando signals reactivos
+        console.log('[Seccion1] onJSONFileSelected - geoInfo:', geoInfo);
         this.departamentoSeleccionado.update(geoInfo.DPTO || '');
         this.provinciaSeleccionada.update(geoInfo.PROV || '');
         this.distritoSeleccionado.update(geoInfo.DIST || '');
+        
+        // ✅ CRÍTICO: Despachar setUbicacionGlobal inmediatamente
+        console.log('[Seccion1] onJSONFileSelected - dispatching setUbicacionGlobal:', geoInfo);
+        this.projectFacade.setUbicacionGlobal(geoInfo.DPTO || '', geoInfo.PROV || '', geoInfo.DIST || '');
         this.centrosPobladosJSON.update(data);
         this.jsonCompleto.update(jsonCompleto);
         this.geoInfoField.update(geoInfo);

@@ -106,6 +106,9 @@ export class ProjectStateFacade {
   readonly selectedProvincia: Signal<string> = this.store.select(Selectors.getSelectedProvincia);
   readonly selectedDistrito: Signal<string> = this.store.select(Selectors.getSelectedDistrito);
   readonly ubicacionGlobal: Signal<UbicacionInfo> = this.store.select(Selectors.getUbicacionGlobal);
+  
+  // ✅ NUEVO: Nombre del proyecto global para todas las secciones (S1 → Todas)
+  readonly projectNameGlobal: Signal<string> = this.store.select(Selectors.getProjectName);
 
   readonly projectName$: Observable<string> = toObservable(this.projectName);
   readonly consultora$: Observable<string> = toObservable(this.consultora);

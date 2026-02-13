@@ -127,15 +127,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
    * ✅ Inicializa campos desde el store o usa valores por defecto
    */
   private inicializarCamposDesdeStore(): void {
-    // Párrafos: usar fallback si no hay dato guardado
-    const parrafoIntro = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_introduccion')() || this.obtenerTextoSeccion2Introduccion();
-    this.parrafoIntroduccion.update(parrafoIntro);
-    
-    const parrafoAISDValor = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')() || this.obtenerTextoSeccion2AISDParaEdicion();
-    this.parrafoAISD.update(parrafoAISDValor);
-    
-    const parrafoAISIValor = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')() || this.obtenerTextoSeccion2AISIParaEdicion();
-    this.parrafoAISI.update(parrafoAISIValor);
+    // Párrafos: siempre regenerar para que refleje los nombres actuales
+    // (el texto manual guardado puede estar desactualizado)
+    this.parrafoIntroduccion.update(this.obtenerTextoSeccion2Introduccion());
+    this.parrafoAISD.update(this.obtenerTextoSeccion2AISDParaEdicion());
+    this.parrafoAISI.update(this.obtenerTextoSeccion2AISIParaEdicion());
     
     // Geo info - LEER DE SECCIÓN 1 (3.1.1)
     const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')();
@@ -420,9 +416,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoSeccion2AISDParaEdicion(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ Siempre regenerar para que refleje los nombres actuales
     const comunidades = this.obtenerTextoComunidades();
     // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
     const ubicacion = this.projectFacade.ubicacionGlobal();
@@ -442,9 +436,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoSeccion2AISIParaEdicion(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ Siempre regenerar para que refleje los nombres actuales
     // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
     const ubicacion = this.projectFacade.ubicacionGlobal();
     const provincia = ubicacion.provincia || '____';
@@ -479,8 +471,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       : highlightClass;
 
     // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
+    // IMPORTANTE: Usar replaceAll para reemplazar TODAS las ocurrencias de {{comunidades}}
     const textoBase = SECCION2_TEMPLATES.textoAISDTemplate
-      .replace('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
+      .replaceAll('{{comunidades}}', `<span class="${comunidadesClass}">${comunidades}</span>`)
       .replace(/{{distrito}}/g, `<span class="${highlightClass}">${distrito}</span>`)
       .replace(/{{componente1}}/g, `<span class="${manualClass}">${componente1}</span>`)
       .replace(/{{componente2}}/g, `<span class="${manualClass}">${componente2}</span>`)
@@ -497,9 +490,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoSeccion2AISDCompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ Siempre regenerar para que refleje los nombres actuales
     const comunidades = this.obtenerTextoComunidades();
     // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
     const ubicacion = this.projectFacade.ubicacionGlobal();
@@ -518,9 +509,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoSeccion2AISICompleto(): string {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
-    if (manual && manual.trim().length > 0) return manual;
-
+    // ✅ Siempre regenerar para que refleje los nombres actuales
     const gruposAISI = this.aisiGroups();
     const distritosNombres = gruposAISI
       .map(g => g.nombre?.trim())
