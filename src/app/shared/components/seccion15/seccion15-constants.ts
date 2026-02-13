@@ -13,6 +13,11 @@
 export const SECCION15_SECTION_ID = '3.1.4.A.1.11';
 export const SECCION15_PHOTO_PREFIX = 'fotografiaIglesia';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION15_PHOTO_PREFIXES = {
+  base: 'fotografiaIglesia'
+};
+
 export const SECCION15_WATCHED_FIELDS = [
   // Párrafos principales
   'textoAspectosCulturales',

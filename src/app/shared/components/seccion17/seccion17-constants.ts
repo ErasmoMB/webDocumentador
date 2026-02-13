@@ -26,6 +26,11 @@ export const SECCION17_WATCHED_FIELDS = [
 
 export const SECCION17_PHOTO_PREFIX = 'fotografiaIDH';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION17_PHOTO_PREFIXES = {
+  base: 'fotografiaIDH'
+};
+
 export const SECCION17_CONFIG = {
   sections: '3.1.4.A.1.13',
   title: 'Índice de Desarrollo Humano (IDH)',

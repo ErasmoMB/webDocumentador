@@ -82,6 +82,12 @@ export const SECCION14_TEMPLATES = {
 
 // ===== LEGACY (EXPORTS PARA COMPATIBILIDAD) =====
 export const SECCION14_PHOTO_PREFIX = SECCION14_CONFIG.photoPrefix;
+
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION14_PHOTO_PREFIXES = {
+  base: SECCION14_CONFIG.photoPrefix
+};
+
 export const SECCION14_DEFAULT_TEXTS = {
   textoIndicadoresEducacionIntro: SECCION14_TEMPLATES.textoIntroDefault,
   textoNivelEducativo: SECCION14_TEMPLATES.textoNivelEducativoDefault,

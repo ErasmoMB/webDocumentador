@@ -16,6 +16,12 @@ export const SECCION11_CONFIG = {
 export const SECCION11_PHOTO_PREFIX_TRANSPORTE = 'fotografiaTransporte';
 export const SECCION11_PHOTO_PREFIX_TELECOMUNICACIONES = 'fotografiaTelecomunicaciones';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION11_PHOTO_PREFIXES = {
+  transporte: 'fotografiaTransporte',
+  telecomunicaciones: 'fotografiaTelecomunicaciones'
+};
+
 // ✅ Todos los campos persistentes
 export const SECCION11_WATCHED_FIELDS: string[] = [
   'grupoAISD',

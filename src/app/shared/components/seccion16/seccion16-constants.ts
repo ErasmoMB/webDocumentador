@@ -47,6 +47,12 @@ export const SECCION16_CONFIG = {
 export const SECCION16_PHOTO_PREFIX_RESERVORIO = 'fotografiaReservorio';
 export const SECCION16_PHOTO_PREFIX_USO_SUELOS = 'fotografiaUsoSuelos';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION16_PHOTO_PREFIXES = {
+  reservorio: 'fotografiaReservorio',
+  usoSuelos: 'fotografiaUsoSuelos'
+};
+
 // ============================================================================
 // 4️⃣ TEMPLATES - TODOS LOS TEXTOS CENTRALIZADOS
 // ============================================================================

@@ -36,6 +36,11 @@ export const SECCION22_WATCHED_FIELDS = [
 
 export const SECCION22_PHOTO_PREFIX = 'fotografiaSeccion22';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION22_PHOTO_PREFIXES = {
+  base: 'fotografiaSeccion22'
+};
+
 export const SECCION22_CONFIG = {
   sectionId: SECCION22_SECTION_ID,
   title: 'Aspectos demográficos',

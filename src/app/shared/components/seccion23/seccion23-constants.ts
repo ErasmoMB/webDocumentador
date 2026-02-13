@@ -10,6 +10,11 @@ export const SECCION23_SECTION_ID = '3.1.4.B.1.2';
 
 export const SECCION23_PHOTO_PREFIX = 'fotografiaPEA';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION23_PHOTO_PREFIXES = {
+  base: 'fotografiaPEA'
+};
+
 export const SECCION23_WATCHED_FIELDS = [
   'grupoAISD', 'distritoSeleccionado',
   'poblacionDistritalAISI', 'petDistritalAISI',

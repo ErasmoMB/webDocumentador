@@ -84,3 +84,8 @@ En cuanto al potencial turístico, la CC {{nombreComunidad}} destaca no solo por
   tituloFotoDefault: 'Festividad',
   fuenteFotoDefault: 'GEADES, 2024',
 };
+
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION20_PHOTO_PREFIXES = {
+  base: SECCION20_CONFIG.photoPrefix
+};

@@ -84,3 +84,8 @@ export const SECCION19_CONSTANTS = {
   FUENTE_DEFAULT: SECCION19_TEMPLATES.fuenteAutoridadesDefault,
   TABLA_CONFIG_INICIAL: [{ organizacion: '', cargo: '', nombre: '' }],
 };
+
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION19_PHOTO_PREFIXES = {
+  base: SECCION19_CONFIG.photoPrefix
+};

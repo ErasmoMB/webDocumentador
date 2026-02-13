@@ -31,6 +31,11 @@ export const SECCION13_SECTION_ID = '3.1.4.A.1.9';
 export const SECCION13_DEFAULT_SUBSECTION = '3.1.4.A.1.9';
 export const SECCION13_PHOTO_PREFIX = 'fotografiaSaludIndicadores';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION13_PHOTO_PREFIXES = {
+  base: 'fotografiaSaludIndicadores'
+};
+
 // ============================================================================
 // TEMPLATES - TODOS LOS TEXTOS CENTRALIZADOS
 // ============================================================================

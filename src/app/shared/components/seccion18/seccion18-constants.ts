@@ -32,6 +32,11 @@ export const SECCION18_WATCHED_FIELDS = [
 
 export const SECCION18_PHOTO_PREFIX = 'fotografiaNBI';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION18_PHOTO_PREFIXES = {
+  base: 'fotografiaNBI'
+};
+
 export const SECCION18_CONFIG = {
   sectionId: '3.1.4.A.1.14',
   title: 'Índice de necesidades básicas insatisfechas distrital',

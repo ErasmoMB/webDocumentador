@@ -15,6 +15,11 @@ export const SECCION10_CONFIG = {
 
 export const SECCION10_PHOTO_PREFIX = 'fotografia10';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION10_PHOTO_PREFIXES = {
+  base: 'fotografia10'
+};
+
 // ✅ Todos los campos persistentes
 export const SECCION10_WATCHED_FIELDS: string[] = [
   'grupoAISD',

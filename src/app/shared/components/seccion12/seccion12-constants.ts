@@ -42,6 +42,15 @@ export const SECCION12_PHOTO_PREFIX_IE_40270 = 'fotografiaIE40270';
 export const SECCION12_PHOTO_PREFIX_RECREACION = 'fotografiaRecreacion';
 export const SECCION12_PHOTO_PREFIX_DEPORTE = 'fotografiaDeporte';
 
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION12_PHOTO_PREFIXES = {
+  salud: 'fotografiaSalud',
+  ieAyroca: 'fotografiaIEAyroca',
+  ie40270: 'fotografiaIE40270',
+  recreacion: 'fotografiaRecreacion',
+  deporte: 'fotografiaDeporte'
+};
+
 export const SECCION12_SECTION_ID = '3.1.12';
 export const SECCION12_DEFAULT_SUBSECTION = '3.1.12';
 

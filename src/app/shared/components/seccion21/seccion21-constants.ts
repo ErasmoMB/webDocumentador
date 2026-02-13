@@ -120,3 +120,8 @@ export const SECCION21_TEMPLATES = {
 };
 
 export const SECCION21_PHOTO_PREFIX = 'fotografia';
+
+// ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema
+export const SECCION21_PHOTO_PREFIXES = {
+  base: 'fotografia'
+};
