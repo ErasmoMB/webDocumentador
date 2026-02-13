@@ -32,10 +32,10 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
     }
 
-    // ✅ SIGNALS REACTIVAS CON createAutoSyncField
-    readonly textoINDH = this.createAutoSyncField('textoIndiceDesarrolloHumano', '');
-    readonly tituloIDH = this.createAutoSyncField('tituloIDH', '');
-    readonly fuenteIDH = this.createAutoSyncField('fuenteIDH', '');
+    // ✅ SIGNALS REACTIVAS CON createAutoSyncField (CON PREFIJO DE GRUPO)
+    readonly textoINDH = this.createAutoSyncField(`textoIndiceDesarrolloHumano${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly tituloIDH = this.createAutoSyncField(`tituloIDH${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly fuenteIDH = this.createAutoSyncField(`fuenteIDH${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
     // Signal para fotos reactivas
     readonly fotografiasSignal: Signal<FotoItem[]> = computed(() => {

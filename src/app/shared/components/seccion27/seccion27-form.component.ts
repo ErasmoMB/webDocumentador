@@ -75,16 +75,16 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  // ✅ Campos Auto-Sync Signal (NUEVA ARQUITECTURA)
+  // ✅ Campos Auto-Sync Signal (CON PREFIJO DE GRUPO)
   readonly textoTransporteCP1 = this.createAutoSyncField(this.getKeyTransporteCP1(), '');
   readonly textoTransporteCP2 = this.createAutoSyncField(this.getKeyTransporteCP2(), '');
   readonly textoTelecomunicacionesCP1 = this.createAutoSyncField(this.getKeyTelecomunicacionesCP1(), '');
   readonly textoTelecomunicacionesCP2 = this.createAutoSyncField(this.getKeyTelecomunicacionesCP2(), '');
   readonly textoTelecomunicacionesCP3 = this.createAutoSyncField(this.getKeyTelecomunicacionesCP3(), '');
-  readonly costoTransporteMinimo = this.createAutoSyncField('costoTransporteMinimo', '');
-  readonly costoTransporteMaximo = this.createAutoSyncField('costoTransporteMaximo', '');
-  readonly cuadroTituloTelecomunicaciones = this.createAutoSyncField('cuadroTituloTelecomunicaciones', '');
-  readonly cuadroFuenteTelecomunicaciones = this.createAutoSyncField('cuadroFuenteTelecomunicaciones', '');
+  readonly costoTransporteMinimo = this.createAutoSyncField(`costoTransporteMinimo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly costoTransporteMaximo = this.createAutoSyncField(`costoTransporteMaximo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloTelecomunicaciones = this.createAutoSyncField(`cuadroTituloTelecomunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuenteTelecomunicaciones = this.createAutoSyncField(`cuadroFuenteTelecomunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // ✅ Telecomunicaciones sin estructura inicial
   telecomunicacionesConfig: TableConfig = {

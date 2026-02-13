@@ -32,12 +32,12 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
     }
 
-    // ✅ SIGNALS REACTIVAS CON createAutoSyncField
-    readonly textoNBI = this.createAutoSyncField('textoNecesidadesBasicasInsatisfechas', '');
-    readonly tituloNbiCC = this.createAutoSyncField('tituloNbiCC', '');
-    readonly fuenteNbiCC = this.createAutoSyncField('fuenteNbiCC', '');
-    readonly tituloNbiDistrito = this.createAutoSyncField('tituloNbiDistrito', '');
-    readonly fuenteNbiDistrito = this.createAutoSyncField('fuenteNbiDistrito', '');
+    // ✅ SIGNALS REACTIVAS CON createAutoSyncField (CON PREFIJO DE GRUPO)
+    readonly textoNBI = this.createAutoSyncField(`textoNecesidadesBasicasInsatisfechas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly tituloNbiCC = this.createAutoSyncField(`tituloNbiCC${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly fuenteNbiCC = this.createAutoSyncField(`fuenteNbiCC${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly tituloNbiDistrito = this.createAutoSyncField(`tituloNbiDistrito${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+    readonly fuenteNbiDistrito = this.createAutoSyncField(`fuenteNbiDistrito${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
     // Signal para fotos reactivas
     readonly fotografiasSignal: Signal<FotoItem[]> = computed(() => {
