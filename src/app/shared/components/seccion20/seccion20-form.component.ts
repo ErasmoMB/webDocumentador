@@ -17,7 +17,7 @@ import { SECCION20_TEMPLATES } from './seccion20.constants';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion20FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '';
+  @Input() override seccionId: string = '3.1.4.A.1.16';
   @Input() override modoFormulario: boolean = false;
 
   // ✅ Exportar TEMPLATES para el HTML

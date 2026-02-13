@@ -13,7 +13,7 @@ import { SECCION9_CONFIG } from '../seccion9/seccion9-constants';
     styles: [`:host { display: block; width: 100%; }`]
 })
 export class Seccion9FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = SECCION9_CONFIG.sectionId;
+  @Input() override seccionId: string = '';
 
   constructor(
     cdRef: ChangeDetectorRef,

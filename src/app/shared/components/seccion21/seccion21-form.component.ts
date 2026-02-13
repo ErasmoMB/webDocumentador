@@ -17,7 +17,7 @@ import { SECCION21_TEMPLATES } from './seccion21-constants';
   standalone: true
 })
 export class Seccion21FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.B';
+  @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
 
   // ✅ EXPORTAR CONSTANTES PARA EL TEMPLATE

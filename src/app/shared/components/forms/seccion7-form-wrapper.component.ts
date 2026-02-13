@@ -12,7 +12,7 @@ import { BaseSectionComponent } from '../base-section.component';
     styles: [`:host { display: block; width: 100%; }`]
 })
 export class Seccion7FormWrapperComponent extends BaseSectionComponent implements OnInit, OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.3';
+  @Input() override seccionId: string = '';
 
   constructor(
     cdRef: ChangeDetectorRef,
