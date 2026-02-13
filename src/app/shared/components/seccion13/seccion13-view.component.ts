@@ -7,7 +7,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION13_TEMPLATES } from './seccion13-constants';
 
 @Component({
@@ -137,7 +137,7 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumbering: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -366,7 +366,7 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
 
   getAfiliacionSaludConPorcentajes(): any[] {
     const tabla = this.afiliacionSaludTablaSignal();
-    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    const cuadroNumero = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadroNumero);
   }
 

@@ -9,7 +9,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION13_PHOTO_PREFIX, SECCION13_TEMPLATES } from './seccion13-constants';
 
 @Component({
@@ -144,7 +144,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private tableNumbering: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -388,7 +388,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   getAfiliacionSaludConPorcentajes(): any[] {
     const tabla = this.afiliacionSaludTablaSignal();
-    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   }
 
@@ -455,7 +455,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   onAfiliacionSaludTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyAfiliacionSalud();
     const datosRaw = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
-    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 2);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
     const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosRaw, cuadro);
     this.datos[tablaKey] = datosConPorcentajes;
     const formChange = this.injector.get(FormChangeService);

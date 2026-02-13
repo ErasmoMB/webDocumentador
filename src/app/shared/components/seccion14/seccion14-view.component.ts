@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION14_TEMPLATES } from './seccion14-constants';
 
 @Component({
@@ -93,7 +93,7 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private tableNumbering: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 
@@ -182,7 +182,7 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
     const tabla = this.tasaAnalfabetismoTablaSignal();
     if (!tabla || tabla.length === 0) return [];
     // Usar calculadora específica para analfabetismo que agrega fila 'Total' en la columna 'indicador'
-    const cuadroNumero = this.tableNumbering.getGlobalTableNumber(this.seccionId, 1);
+    const cuadroNumero = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
     return TablePercentageHelper.calcularPorcentajesAnalfabetismo(tabla, cuadroNumero);
   }
 

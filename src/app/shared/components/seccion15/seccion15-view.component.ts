@@ -6,7 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TablePercentageHelper } from '../../../shared/utils/table-percentage-helper';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION15_SECTION_ID, SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS, SECCION15_TEMPLATES, SECCION15_WATCHED_FIELDS } from './seccion15-constants';
 
@@ -68,13 +68,13 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly lenguasMaternasConPorcentajes: Signal<any[]> = computed(() => {
     const tabla = this.lenguasMaternasSignal();
-    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 0);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
   readonly religionesConPorcentajes: Signal<any[]> = computed(() => {
     const tabla = this.religionesSignal();
-    const cuadro = this.tableNumberingService.getGlobalTableNumber(this.seccionId, 1);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
     return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
   });
 
@@ -116,7 +116,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     public sanitizer: DomSanitizer,
-    private tableNumberingService: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
 

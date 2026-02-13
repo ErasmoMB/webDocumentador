@@ -6,7 +6,6 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { SECCION22_TEMPLATES } from './seccion22-constants';
 
 @Component({
@@ -288,8 +287,7 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
-    private globalNumbering: GlobalNumberingService,
-    private tableNumbering: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
     

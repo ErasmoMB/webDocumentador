@@ -12,7 +12,7 @@ import { GroupConfigService } from 'src/app/core/services/groups/group-config.se
 import { PeaService } from 'src/app/core/infrastructure/services';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
-import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, SECCION23_TABLE_CONFIGS, SECCION23_SECTION_ID } from './seccion23-constants';
 
 @Component({
@@ -125,7 +125,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     protected tableFacade: TableManagementFacade,
     private groupConfig: GroupConfigService,
     private peaService: PeaService,
-    private tableNumbering: TableNumberingService
+    private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
     // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
@@ -316,7 +316,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
     if (!Array.isArray(tabla)) return;
 
-    const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
+    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
     const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
     const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
 
