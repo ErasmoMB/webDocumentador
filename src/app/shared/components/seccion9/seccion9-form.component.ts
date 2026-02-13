@@ -59,7 +59,38 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
 
   // ✅ SIGNALS DERIVADOS: Lectura del estado
   readonly grupoAISDSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '____';
+    // 1️⃣ Intentar obtener desde campo grupoAISD guardado en la sección
+    const guardado = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')();
+    if (guardado && guardado.trim() !== '') {
+      return guardado;
+    }
+    
+    // 2️⃣ Intentar desde AIISD groups (para secciones con prefijo como _A1, _A2)
+    if (this.aisdGroups) {
+      const grupos = this.aisdGroups();
+      const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      if (prefijo && prefijo.startsWith('_A')) {
+        const match = prefijo.match(/_A(\d+)/);
+        if (match) {
+          const index = parseInt(match[1]) - 1;
+          if (grupos && grupos[index]?.nombre) {
+            return grupos[index].nombre;
+          }
+        }
+      }
+    }
+    
+    // 3️⃣ Fallback: Intentar obtener desde comunidades campesinas (Sección 1)
+    const comunidadesCampesinas = this.projectFacade.selectField('3.1.1', null, 'comunidadesCampesinas')();
+    if (comunidadesCampesinas && Array.isArray(comunidadesCampesinas) && comunidadesCampesinas.length > 0) {
+      const primerCC = comunidadesCampesinas[0];
+      if (primerCC?.nombre?.trim()) {
+        return primerCC.nombre;
+      }
+    }
+    
+    // 4️⃣ Último recurso
+    return '____';
   });
 
   readonly condicionOcupacionSignal: Signal<any[]> = computed(() => {

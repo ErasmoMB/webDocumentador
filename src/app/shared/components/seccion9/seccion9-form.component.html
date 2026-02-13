@@ -11,7 +11,7 @@
         [label]="SECCION9_TEMPLATES.labelTextoViviendas"
         [hint]="SECCION9_TEMPLATES.hintTextoViviendas"
         [rows]="4"
-        [value]="textoViviendas.value()"
+        [value]="textoViviendas.value() || textoViviendasDinamico()"
         (valueChange)="textoViviendas.update($event)">
       </app-paragraph-editor>
     </div>
@@ -21,9 +21,9 @@
       <input 
         type="text"
         class="form-control"
-        [ngModel]="tituloCondicionOcupacion.value()"
+        [ngModel]="tituloCondicionOcupacion.value() || tituloCondicionOcupacionDinamico()"
         (ngModelChange)="tituloCondicionOcupacion.update($event)"
-        [placeholder]="SECCION9_TEMPLATES.placeholderTituloCondicionOcupacion">
+        [placeholder]="tituloCondicionOcupacionDinamico()">
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
@@ -49,9 +49,9 @@
       <input 
         type="text"
         class="form-control"
-        [ngModel]="fuenteCondicionOcupacion.value()"
+        [ngModel]="fuenteCondicionOcupacion.value() || fuenteCondicionOcupacionDinamico()"
         (ngModelChange)="fuenteCondicionOcupacion.update($event)"
-        [placeholder]="SECCION9_TEMPLATES.placeholderFuenteCondicionOcupacion">
+        [placeholder]="fuenteCondicionOcupacionDinamico()">
     </div>
 
     <!-- Sección Estructura -->
@@ -63,7 +63,7 @@
         [label]="SECCION9_TEMPLATES.labelTextoEstructura"
         [hint]="SECCION9_TEMPLATES.hintTextoEstructura"
         [rows]="4"
-        [value]="textoEstructura.value()"
+        [value]="textoEstructura.value() || textoEstructuraDinamico()"
         (valueChange)="textoEstructura.update($event)">
       </app-paragraph-editor>
     </div>
@@ -73,9 +73,9 @@
       <input 
         type="text"
         class="form-control"
-        [ngModel]="tituloTiposMateriales.value()"
+        [ngModel]="tituloTiposMateriales.value() || tituloTiposMaterialesDinamico()"
         (ngModelChange)="tituloTiposMateriales.update($event)"
-        [placeholder]="SECCION9_TEMPLATES.placeholderTituloTiposMateriales">
+        [placeholder]="tituloTiposMaterialesDinamico()">
     </div>
 
     <div class="form-group-section" style="margin-top: 15px;">
@@ -102,9 +102,9 @@
       <input 
         type="text"
         class="form-control"
-        [ngModel]="fuenteTiposMateriales.value()"
+        [ngModel]="fuenteTiposMateriales.value() || fuenteTiposMaterialesDinamico()"
         (ngModelChange)="fuenteTiposMateriales.update($event)"
-        [placeholder]="SECCION9_TEMPLATES.placeholderFuenteTiposMateriales">
+        [placeholder]="fuenteTiposMaterialesDinamico()">
     </div>
 
     <!-- Sección Fotografías -->
