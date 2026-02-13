@@ -40,6 +40,14 @@ export const SECCION29_CONFIG = {
   maxPhotos: 10,
 };
 
+// ✅ Nuevos prefijos de fotos específicos por tema (MEJORA APLICADA)
+export const SECCION29_PHOTO_PREFIXES = {
+  centroPoblado: 'fotografiaCahuacho',
+  natalidad: 'fotografiaNatalidadAISI',
+  morbilidad: 'fotografiaMorbilidadAISI',
+  afiliacion: 'fotografiaAfiliacionSaludAISI'
+};
+
 export const SECCION29_TEMPLATES = {
   // ============ TÍTULOS PRINCIPALES ============
   tituloSeccion: 'B.1.8. Indicadores de salud',
@@ -121,6 +129,4 @@ export const SECCION29_DEFAULT_TEXTS = {
     `En el CP ${centroPoblado}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${sis} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${essalud} de la población. Por último, cabe mencionar que el ${sinseguro} de la población no cuenta con ningún tipo de seguro de salud.`,
 };
 
-export const SECCION29_PHOTO_PREFIXES = [
-  'fotografiaCahuacho'
-];
+

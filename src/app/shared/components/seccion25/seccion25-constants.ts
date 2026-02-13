@@ -5,6 +5,13 @@
 
 export const SECCION25_PHOTO_PREFIX = 'fotografiaCahuacho';
 
+// ✅ Nuevos prefijos de fotos específicos por tema (MEJORA APLICADA)
+export const SECCION25_PHOTO_PREFIXES = {
+  centroPoblado: 'fotografiaCahuacho',
+  vivienda: 'fotografiaViviendaAISI',
+  estructura: 'fotografiaEstructuraAISI'
+};
+
 export const SECCION25_WATCHED_FIELDS = [
   'centroPobladoAISI',
   'tiposViviendaAISI',

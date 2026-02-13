@@ -157,5 +157,10 @@ export const SECCION30_TABLE_CONFIG = {
 
 /**
  * 5️⃣ PREFIJOS DE FOTOGRAFÍAS (DINÁMICOS)
+ * ✅ MEJORA APLICADA: Prefijos específicos por tema para mejor aislamiento
  */
-export const SECCION30_PHOTO_PREFIXES = ['fotografiaCahuacho'];
+export const SECCION30_PHOTO_PREFIXES = {
+  centroPoblado: 'fotografiaCahuacho',
+  educacion: 'fotografiaEducacionAISI',
+  analfabetismo: 'fotografiaAnalfabetismoAISI'
+};
