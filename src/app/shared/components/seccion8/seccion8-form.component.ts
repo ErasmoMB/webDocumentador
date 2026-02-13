@@ -52,22 +52,22 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   fotografiasAgriculturaCache: FotoItem[] = [];
   fotografiasComercioCache: FotoItem[] = [];
 
-  // ✅ CAMPOS EDITABLES CON createAutoSyncField
-  readonly textoActividadesEconomicas = this.createAutoSyncField('textoActividadesEconomicas', '');
-  readonly textoFuentesActividadesEconomicas = this.createAutoSyncField('textoFuentesActividadesEconomicas', '');
-  readonly textoAnalisisCuadro310 = this.createAutoSyncField('textoAnalisisCuadro310', '');
-  readonly cuadroTituloPEA = this.createAutoSyncField('cuadroTituloPEA', '');
-  readonly cuadroFuentePEA = this.createAutoSyncField('cuadroFuentePEA', '');
-  readonly parrafoSeccion8_ganaderia_completo = this.createAutoSyncField('parrafoSeccion8_ganaderia_completo', '');
-  readonly cuadroTituloPoblacionPecuaria = this.createAutoSyncField('cuadroTituloPoblacionPecuaria', '');
-  readonly cuadroFuentePoblacionPecuaria = this.createAutoSyncField('cuadroFuentePoblacionPecuaria', '');
-  readonly parrafoSeccion8_agricultura_completo = this.createAutoSyncField('parrafoSeccion8_agricultura_completo', '');
-  readonly cuadroTituloCaracteristicasAgricultura = this.createAutoSyncField('cuadroTituloCaracteristicasAgricultura', '');
-  readonly cuadroFuenteCaracteristicasAgricultura = this.createAutoSyncField('cuadroFuenteCaracteristicasAgricultura', '');
-  readonly textoMercadoComercializacion1 = this.createAutoSyncField('textoMercadoComercializacion1', '');
-  readonly textoMercadoComercializacion2 = this.createAutoSyncField('textoMercadoComercializacion2', '');
-  readonly textoHabitosConsumo1 = this.createAutoSyncField('textoHabitosConsumo1', '');
-  readonly textoHabitosConsumo2 = this.createAutoSyncField('textoHabitosConsumo2', '');
+  // ✅ CAMPOS EDITABLES CON createAutoSyncField (CON PREFIJO DE GRUPO)
+  readonly textoActividadesEconomicas = this.createAutoSyncField(`textoActividadesEconomicas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoFuentesActividadesEconomicas = this.createAutoSyncField(`textoFuentesActividadesEconomicas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoAnalisisCuadro310 = this.createAutoSyncField(`textoAnalisisCuadro310${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloPEA = this.createAutoSyncField(`cuadroTituloPEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuentePEA = this.createAutoSyncField(`cuadroFuentePEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly parrafoSeccion8_ganaderia_completo = this.createAutoSyncField(`parrafoSeccion8_ganaderia_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloPoblacionPecuaria = this.createAutoSyncField(`cuadroTituloPoblacionPecuaria${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuentePoblacionPecuaria = this.createAutoSyncField(`cuadroFuentePoblacionPecuaria${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly parrafoSeccion8_agricultura_completo = this.createAutoSyncField(`parrafoSeccion8_agricultura_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloCaracteristicasAgricultura = this.createAutoSyncField(`cuadroTituloCaracteristicasAgricultura${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuenteCaracteristicasAgricultura = this.createAutoSyncField(`cuadroFuenteCaracteristicasAgricultura${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoMercadoComercializacion1 = this.createAutoSyncField(`textoMercadoComercializacion1${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoMercadoComercializacion2 = this.createAutoSyncField(`textoMercadoComercializacion2${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoHabitosConsumo1 = this.createAutoSyncField(`textoHabitosConsumo1${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoHabitosConsumo2 = this.createAutoSyncField(`textoHabitosConsumo2${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // Configs y Columns para tablas
   peaOcupacionesConfig = SECCION8_TABLA_PEA_OCUPACIONES_CONFIG;

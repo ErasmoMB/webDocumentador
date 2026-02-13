@@ -78,31 +78,31 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return '____';
   }
 
-  // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField)
-  readonly parrafoIntroduccion = this.createAutoSyncField('parrafoSeccion10_servicios_basicos_intro', '');
-  readonly textoServiciosAgua = this.createAutoSyncField('textoServiciosAgua', '');
-  readonly textoServiciosAguaDetalle = this.createAutoSyncField('textoServiciosAguaDetalle', '');
-  readonly textoServiciosDesague = this.createAutoSyncField('textoServiciosDesague', '');
-  readonly textoServiciosDesagueDetalle = this.createAutoSyncField('textoServiciosDesagueDetalle', '');
-  readonly textoDesechosSolidos1 = this.createAutoSyncField('textoDesechosSolidos1', '');
-  readonly textoDesechosSolidos2 = this.createAutoSyncField('textoDesechosSolidos2', '');
-  readonly textoDesechosSolidos3 = this.createAutoSyncField('textoDesechosSolidos3', '');
-  readonly textoElectricidad1 = this.createAutoSyncField('textoElectricidad1', '');
-  readonly textoElectricidad2 = this.createAutoSyncField('textoElectricidad2', '');
-  readonly textoEnergiaParaCocinar = this.createAutoSyncField('textoEnergiaParaCocinar', '');
-  readonly textoTecnologiaComunicaciones = this.createAutoSyncField('textoTecnologiaComunicaciones', '');
+  // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField) - CON PREFIJO DE GRUPO
+  readonly parrafoIntroduccion = this.createAutoSyncField(`parrafoSeccion10_servicios_basicos_intro${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoServiciosAgua = this.createAutoSyncField(`textoServiciosAgua${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoServiciosAguaDetalle = this.createAutoSyncField(`textoServiciosAguaDetalle${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoServiciosDesague = this.createAutoSyncField(`textoServiciosDesague${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoServiciosDesagueDetalle = this.createAutoSyncField(`textoServiciosDesagueDetalle${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoDesechosSolidos1 = this.createAutoSyncField(`textoDesechosSolidos1${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoDesechosSolidos2 = this.createAutoSyncField(`textoDesechosSolidos2${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoDesechosSolidos3 = this.createAutoSyncField(`textoDesechosSolidos3${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoElectricidad1 = this.createAutoSyncField(`textoElectricidad1${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoElectricidad2 = this.createAutoSyncField(`textoElectricidad2${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoEnergiaParaCocinar = this.createAutoSyncField(`textoEnergiaParaCocinar${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoTecnologiaComunicaciones = this.createAutoSyncField(`textoTecnologiaComunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
   
-  readonly tituloAbastecimientoAgua = this.createAutoSyncField('tituloAbastecimientoAgua', '');
-  readonly tituloTiposSaneamiento = this.createAutoSyncField('tituloTiposSaneamiento', '');
-  readonly tituloCoberturaElectrica = this.createAutoSyncField('tituloCoberturaElectrica', '');
-  readonly tituloEnergiaCocinar = this.createAutoSyncField('tituloEnergiaCocinar', '');
-  readonly tituloTecnologiaComunicaciones = this.createAutoSyncField('tituloTecnologiaComunicaciones', '');
+  readonly tituloAbastecimientoAgua = this.createAutoSyncField(`tituloAbastecimientoAgua${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloTiposSaneamiento = this.createAutoSyncField(`tituloTiposSaneamiento${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloCoberturaElectrica = this.createAutoSyncField(`tituloCoberturaElectrica${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloEnergiaCocinar = this.createAutoSyncField(`tituloEnergiaCocinar${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloTecnologiaComunicaciones = this.createAutoSyncField(`tituloTecnologiaComunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
   
-  readonly fuenteAbastecimientoAgua = this.createAutoSyncField('fuenteAbastecimientoAgua', '');
-  readonly fuenteTiposSaneamiento = this.createAutoSyncField('fuenteTiposSaneamiento', '');
-  readonly fuenteCoberturaElectrica = this.createAutoSyncField('fuenteCoberturaElectrica', '');
-  readonly fuenteEnergiaCocinar = this.createAutoSyncField('fuenteEnergiaCocinar', '');
-  readonly fuenteTecnologiaComunicaciones = this.createAutoSyncField('fuenteTecnologiaComunicaciones', '');
+  readonly fuenteAbastecimientoAgua = this.createAutoSyncField(`fuenteAbastecimientoAgua${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteTiposSaneamiento = this.createAutoSyncField(`fuenteTiposSaneamiento${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteCoberturaElectrica = this.createAutoSyncField(`fuenteCoberturaElectrica${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteEnergiaCocinar = this.createAutoSyncField(`fuenteEnergiaCocinar${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteTecnologiaComunicaciones = this.createAutoSyncField(`fuenteTecnologiaComunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // ✅ SIGNALS PUROS - Datos del store
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {

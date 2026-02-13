@@ -8,6 +8,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { TableMockMergeService } from 'src/app/core/services/tables/table-mock-merge.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
+import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION30_TEMPLATES, SECCION30_TABLE_CONFIG, SECCION30_CONFIG, SECCION30_WATCHED_FIELDS } from './seccion30-constants';
 
 @Component({
@@ -58,23 +59,29 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  // ✅ PÁRRAFO INTRO con fallback
+  // ✅ PÁRRAFO INTRO con fallback y prefijo de grupo
   readonly parrafoSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion30_indicadores_educacion_intro')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const campo = `parrafoSeccion30_indicadores_educacion_intro${prefijo}`;
+    const manual = this.projectFacade.selectField(this.seccionId, null, campo)();
     return manual && manual.trim().length > 0 ? manual : this.PARRAFO_INTRO_DEFAULT;
   });
 
-  // ✅ TEXTO NIVEL EDUCATIVO con fallback
+  // ✅ TEXTO NIVEL EDUCATIVO con fallback y prefijo de grupo
   readonly textoNivelEducativoSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoNivelEducativo')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const campo = `textoNivelEducativo${prefijo}`;
+    const manual = this.projectFacade.selectField(this.seccionId, null, campo)();
     const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
     if (manual && manual.trim().length > 0) return manual;
     return SECCION30_TEMPLATES.textoNivelEducativoDefault(cp);
   });
 
-  // ✅ TEXTO TASA ANALFABETISMO con fallback  
+  // ✅ TEXTO TASA ANALFABETISMO con fallback y prefijo de grupo
   readonly textoTasaAnalfabetismoSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoTasaAnalfabetismo')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const campo = `textoTasaAnalfabetismo${prefijo}`;
+    const manual = this.projectFacade.selectField(this.seccionId, null, campo)();
     const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
     if (manual && manual.trim().length > 0) return manual;
     return SECCION30_TEMPLATES.textoTasaAnalfabetismoDefault(cp);

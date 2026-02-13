@@ -52,13 +52,13 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   fotografiasTransporteCache: FotoItem[] = [];
   fotografiasTelecomunicacionesCache: FotoItem[] = [];
 
-  // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField)
-  readonly parrafoTransporte = this.createAutoSyncField('parrafoSeccion11_transporte_completo', '');
-  readonly parrafoTelecomunicaciones = this.createAutoSyncField('parrafoSeccion11_telecomunicaciones_completo', '');
-  readonly costoTransporteMinimo = this.createAutoSyncField('costoTransporteMinimo', '');
-  readonly costoTransporteMaximo = this.createAutoSyncField('costoTransporteMaximo', '');
-  readonly tituloTelecomunicaciones = this.createAutoSyncField('tituloTelecomunicaciones', '');
-  readonly fuenteTelecomunicaciones = this.createAutoSyncField('fuenteTelecomunicaciones', '');
+  // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField) - CON PREFIJO DE GRUPO
+  readonly parrafoTransporte = this.createAutoSyncField(`parrafoSeccion11_transporte_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly parrafoTelecomunicaciones = this.createAutoSyncField(`parrafoSeccion11_telecomunicaciones_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly costoTransporteMinimo = this.createAutoSyncField(`costoTransporteMinimo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly costoTransporteMaximo = this.createAutoSyncField(`costoTransporteMaximo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloTelecomunicaciones = this.createAutoSyncField(`tituloTelecomunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteTelecomunicaciones = this.createAutoSyncField(`fuenteTelecomunicaciones${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // ✅ HELPER PARA OBTENER PREFIJO DE GRUPO
   private obtenerPrefijo(): string {

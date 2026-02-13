@@ -45,22 +45,22 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   // ✅ SIGNALS REACTIVOS CON AUTO-PERSIST - Campos editables de títulos y fuentes
-  readonly cuadroTituloPET = this.createAutoSyncField('cuadroTituloPET', '');
-  readonly cuadroFuentePET = this.createAutoSyncField('cuadroFuentePET', '');
-  readonly cuadroTituloPEA = this.createAutoSyncField('cuadroTituloPEA', '');
-  readonly cuadroFuentePEA = this.createAutoSyncField('cuadroFuentePEA', '');
-  readonly cuadroTituloPEAOcupada = this.createAutoSyncField('cuadroTituloPEAOcupada', '');
-  readonly cuadroFuentePEAOcupada = this.createAutoSyncField('cuadroFuentePEAOcupada', '');
+  readonly cuadroTituloPET = this.createAutoSyncField(`cuadroTituloPET${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuentePET = this.createAutoSyncField(`cuadroFuentePET${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloPEA = this.createAutoSyncField(`cuadroTituloPEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuentePEA = this.createAutoSyncField(`cuadroFuentePEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroTituloPEAOcupada = this.createAutoSyncField(`cuadroTituloPEAOcupada${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly cuadroFuentePEAOcupada = this.createAutoSyncField(`cuadroFuentePEAOcupada${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
   
   // ✅ SIGNALS REACTIVOS CON AUTO-PERSIST - Párrafos y textos editable
-  readonly parrafoSeccion7PetCompleto = this.createAutoSyncField('parrafoSeccion7_pet_completo', '');
-  readonly textoDetalePEA = this.createAutoSyncField('textoDetalePEA', '');
-  readonly textoDefinicionPEA = this.createAutoSyncField('textoDefinicionPEA', '');
-  readonly textoAnalisisPEA = this.createAutoSyncField('textoAnalisisPEA', '');
-  readonly parrafoSeccion7SituacionEmpleoCompleto = this.createAutoSyncField('parrafoSeccion7_situacion_empleo_completo', '');
-  readonly parrafoSeccion7IngresosCompleto = this.createAutoSyncField('parrafoSeccion7_ingresos_completo', '');
-  readonly textoIndiceDesempleo = this.createAutoSyncField('textoIndiceDesempleo', '');
-  readonly textoAnalisisOcupacion = this.createAutoSyncField('textoAnalisisOcupacion', '');
+  readonly parrafoSeccion7PetCompleto = this.createAutoSyncField(`parrafoSeccion7_pet_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoDetalePEA = this.createAutoSyncField(`textoDetalePEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoDefinicionPEA = this.createAutoSyncField(`textoDefinicionPEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoAnalisisPEA = this.createAutoSyncField(`textoAnalisisPEA${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly parrafoSeccion7SituacionEmpleoCompleto = this.createAutoSyncField(`parrafoSeccion7_situacion_empleo_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly parrafoSeccion7IngresosCompleto = this.createAutoSyncField(`parrafoSeccion7_ingresos_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoIndiceDesempleo = this.createAutoSyncField(`textoIndiceDesempleo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoAnalisisOcupacion = this.createAutoSyncField(`textoAnalisisOcupacion${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   fotografiasSeccion7: FotoItem[] = [];
 

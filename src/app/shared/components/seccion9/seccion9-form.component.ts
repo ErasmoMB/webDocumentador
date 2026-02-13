@@ -49,13 +49,13 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  // ✅ AUTO-SYNC FIELDS (reemplazan onFieldChange)
-  readonly textoViviendas = this.createAutoSyncField('textoViviendas', '');
-  readonly textoEstructura = this.createAutoSyncField('textoEstructura', '');
-  readonly tituloCondicionOcupacion = this.createAutoSyncField('tituloCondicionOcupacion', '');
-  readonly fuenteCondicionOcupacion = this.createAutoSyncField('fuenteCondicionOcupacion', '');
-  readonly tituloTiposMateriales = this.createAutoSyncField('tituloTiposMateriales', '');
-  readonly fuenteTiposMateriales = this.createAutoSyncField('fuenteTiposMateriales', '');
+  // ✅ AUTO-SYNC FIELDS (reemplazan onFieldChange) - CON PREFIJO DE GRUPO
+  readonly textoViviendas = this.createAutoSyncField(`textoViviendas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly textoEstructura = this.createAutoSyncField(`textoEstructura${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloCondicionOcupacion = this.createAutoSyncField(`tituloCondicionOcupacion${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteCondicionOcupacion = this.createAutoSyncField(`fuenteCondicionOcupacion${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly tituloTiposMateriales = this.createAutoSyncField(`tituloTiposMateriales${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
+  readonly fuenteTiposMateriales = this.createAutoSyncField(`fuenteTiposMateriales${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // ✅ SIGNALS DERIVADOS: Lectura del estado
   readonly grupoAISDSignal: Signal<string> = computed(() => {
