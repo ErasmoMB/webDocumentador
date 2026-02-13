@@ -114,6 +114,9 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false  // ❌ DESACTIVADO: Causa ocultamiento de filas
   }));
 
+  // ✅ REFACTOR: Usar ubicacionGlobal
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   // ✅ COLUMNAS PARA TABLAS - Patrón MODO IDEAL
   readonly columnasNatalidadMortalidad = [
     { field: 'anio', label: 'Año', type: 'text' as const, placeholder: '2023' },
@@ -231,7 +234,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
       return this.datos.parrafoSeccion13_morbilidad_completo;
     }
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const distrito = this.datos.distritoSeleccionado || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '____';
     return SECCION13_TEMPLATES.textoMorbilidadDefault
       .replace(/____/g, (match, offset, string) => {
         // Primera ocurrencia: grupoAISD, segunda: distrito, tercera: grupoAISD
@@ -272,7 +276,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTituloCuadroMorbilidad(): string {
-    const distrito = this.datos.distritoSeleccionado || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '____';
     return this.datos['cuadroTituloMorbilidad'] || 
       SECCION13_TEMPLATES.cuadroTituloMorbilidadDefault.replace(/____/g, distrito);
   }

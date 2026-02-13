@@ -157,7 +157,11 @@ function transformLegacyDataToState(
     detalleProyecto: data.detalleProyecto || '',
     createdAt: data.createdAt || timestamp,
     updatedAt: timestamp,
-    version: data.version || '1.0.0'
+    version: data.version || '1.0.0',
+    // ✅ NUEVO: Ubicación global
+    departamentoSeleccionado: data.departamentoSeleccionado || '',
+    provinciaSeleccionada: data.provinciaSeleccionada || '',
+    distritoSeleccionado: data.distritoSeleccionado || ''
   };
 
   // Extraer ubicación

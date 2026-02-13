@@ -108,6 +108,9 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     fotografias: this.fotografiasSignal()
   }));
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
 
@@ -146,7 +149,8 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   }
 
   generarTextoMorbilidadCP(): string {
-    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || SECCION29_TEMPLATES.distritoDefault;
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || SECCION29_TEMPLATES.distritoDefault;
     const centroPoblado = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
     const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
     const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;

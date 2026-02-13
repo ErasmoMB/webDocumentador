@@ -19,6 +19,7 @@ import {
   SetProjectNameCommand,
   SetConsultoraCommand,
   SetDetalleProyectoCommand,
+  SetUbicacionGlobalCommand,
   UpdateMetadataCommand
 } from '../commands.model';
 
@@ -128,6 +129,18 @@ export function metadataReducer(
     
     case 'metadata/setDetalleProyecto':
       return handleSetDetalleProyecto(state, command);
+    
+    // ✅ NUEVO: Guardar ubicación global
+    case 'metadata/setUbicacionGlobal': {
+      const ubCmd = command as SetUbicacionGlobalCommand;
+      return {
+        ...state,
+        departamentoSeleccionado: ubCmd.payload.departamento,
+        provinciaSeleccionada: ubCmd.payload.provincia,
+        distritoSeleccionado: ubCmd.payload.distrito,
+        updatedAt: now()
+      };
+    }
     
     case 'metadata/update':
       return handleUpdateMetadata(state, command);

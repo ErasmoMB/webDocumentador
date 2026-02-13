@@ -80,7 +80,6 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
-      console.debug(`[SECCION23-VIEW] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
     
@@ -91,21 +90,18 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Signal para número global de tabla (primera tabla: petGruposEdadAISI)
     this.globalTableNumberSignal = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-      console.debug(`[SECCION23-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
     // ✅ Signal para número global de tabla (segunda tabla: peaDistritoSexoTabla)
     this.globalTableNumberSignal2 = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
-      console.debug(`[SECCION23-VIEW] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
     // ✅ Signal para número global de tabla (tercera tabla: peaOcupadaDesocupadaTabla)
     this.globalTableNumberSignal3 = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
-      console.debug(`[SECCION23-VIEW] globalTableNumberSignal3: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
@@ -113,16 +109,12 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     this.globalPhotoNumbersSignal = computed(() => {
       const prefix = this.photoPrefixSignal();
       const fotos = this.fotosCacheSignal();
-      console.log(`[SECCION23-VIEW] 📷 Calculando fotos para ${this.seccionId}`);
-      console.log(`[SECCION23-VIEW]   prefix: ${prefix}, fotos.length: ${fotos.length}`);
       
       const photoNumbers = fotos.map((_, index) => {
         const globalNum = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
-        console.log(`[SECCION23-VIEW]   foto ${index}: ${globalNum}`);
         return globalNum;
       });
       
-      console.log(`[SECCION23-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
 

@@ -51,6 +51,9 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
     });
 
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
     // photoFieldsHash con prefijo para reactividad de fotos
     readonly photoFieldsHash: Signal<string> = computed(() => {
         let hash = '';
@@ -143,6 +146,11 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     getTablaKeyNbiDistrito(): string {
         const prefijo = this.obtenerPrefijo();
         return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
+    }
+
+    obtenerDistrito(): string {
+        // ✅ REFACTOR: Usar ubicacionGlobal
+        return this.ubicacionGlobal().distrito || 'Cahuacho';
     }
 
     getFieldIdTextoNBI(): string {

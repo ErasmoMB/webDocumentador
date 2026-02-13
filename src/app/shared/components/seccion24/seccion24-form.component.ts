@@ -195,18 +195,17 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onActividadesEconomicasChange(tabla: any[]): void {
-    console.info('[Seccion24] onActividadesEconomicasChange payload len:', Array.isArray(tabla) ? tabla.length : typeof tabla);
     // Persist primarily as TABLE and mirror to legacy field for compatibility
-    try { this.projectFacade.setTableData(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { console.error('[Seccion24] setTableData error', e); }
+    try { this.projectFacade.setTableData(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { }
     try {
       const payload: any = { actividadesEconomicasAISI: tabla };
       const prefijo = this.obtenerPrefijoGrupo();
       if (prefijo) payload[`actividadesEconomicasAISI${prefijo}`] = tabla;
       this.formChange.persistFields(this.seccionId, 'table', payload);
-    } catch (e) { console.error('[Seccion24] formChange.persistFields error', e); }
+    } catch (e) { }
     // Mirror to legacy field so components reading fields see the update immediately
-    try { const prefijo = this.obtenerPrefijoGrupo(); if (prefijo) this.projectFacade.setField(this.seccionId, null, `actividadesEconomicasAISI${prefijo}`, tabla); } catch (e) { console.error('[Seccion24] setField error', e); }
-    try { this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { console.error('[Seccion24] setField error', e); }
+    try { const prefijo = this.obtenerPrefijoGrupo(); if (prefijo) this.projectFacade.setField(this.seccionId, null, `actividadesEconomicasAISI${prefijo}`, tabla); } catch (e) { }
+    try { this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { }
     // Notify section about the change (updates this.datos and triggers persistence)
     this.onFieldChange('actividadesEconomicasAISI', tabla);
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}

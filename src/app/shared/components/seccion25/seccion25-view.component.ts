@@ -181,7 +181,6 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
-      console.debug(`[SECCION25-VIEW] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
     
@@ -191,21 +190,19 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Signal para número global de tabla (primera tabla: tiposViviendaAISI)
     this.globalTableNumberSignal = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-      console.debug(`[SECCION25-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
     // ✅ Signal para número global de tabla (segunda tabla: condicionOcupacionAISI)
     this.globalTableNumberSignal2 = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
-      console.debug(`[SECCION25-VIEW] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
+
       return globalNum;
     });
     
     // ✅ Signal para número global de tabla (tercera tabla: materialesViviendaAISI)
     this.globalTableNumberSignal3 = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
-      console.debug(`[SECCION25-VIEW] globalTableNumberSignal3: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
@@ -216,7 +213,6 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
       const photoNumbers = fotos.map((_, index) => {
         return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
       });
-      console.debug(`[SECCION25-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
 

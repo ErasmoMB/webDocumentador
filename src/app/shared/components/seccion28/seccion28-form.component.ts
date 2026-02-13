@@ -175,6 +175,9 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true  // ✅ Datos del backend
   };
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -357,7 +360,8 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoSaludCP && this.datos.textoSaludCP !== '____') {
       return this.datos.textoSaludCP;
     }
-    const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
     return SECCION28_TEMPLATES.textoSaludDefault
       .replace(/____/g, distrito)

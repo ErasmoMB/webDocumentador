@@ -206,18 +206,10 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 4: Log automático del grupo AISD de esta sección
+    // ✅ EFFECT 4: Monitoreo de grupos AISD removido
     effect(() => {
       const gruposAISD = this.aisdGroupsSignal();
-      
-      // Log solo si hay grupos cargados
-      if (gruposAISD.length > 0) {
-        console.log('%c=== INFORMACIÓN DE GRUPO AISD - SECCIÓN 6 ===', 'color: #1f2937; background: #f3f4f6; font-weight: bold; padding: 4px 8px; border-radius: 3px');
-        
-        gruposAISD.forEach((grupo, index) => {
-          this.logGrupoAISDParaConsola(index + 1, grupo);
-        });
-      }
+      this.cdRef.markForCheck();
     });
   }
 
@@ -225,38 +217,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
    * Log interno para mostrar información del grupo AISD en consola
    */
   private logGrupoAISDParaConsola(numeroGrupo: number, grupo: any): void {
-    console.log(`%c🏘️ GRUPO AISD: A.${numeroGrupo} - ${grupo.nombre || 'Sin nombre'}`, 'color: #2563eb; font-weight: bold; font-size: 13px');
-    console.log(`%cCentros Poblados (CCPP):`, 'color: #7c3aed; font-weight: bold');
-    
-    const centrosPobladosSeleccionados = grupo.ccppIds || [];
-    console.log(`[DEBUG] centrosPobladosSeleccionados (${centrosPobladosSeleccionados.length}):`, centrosPobladosSeleccionados);
-    
-    if (centrosPobladosSeleccionados.length === 0) {
-      console.log('  (Sin centros poblados asignados)');
-      return;
-    }
-    
-    // ✅ Usar allPopulatedCenters Signal en lugar de obtenerDatos()
-    const allCentros = this.allPopulatedCenters();
-    const centrosDetalles: any[] = [];
-    
-    centrosPobladosSeleccionados.forEach((codigo: any) => {
-      const centro = allCentros.find((c: any) => {
-        const codigoCentro = String(c.id || c.codigo || '').trim();
-        const codigoBuscado = String(codigo).trim();
-        return codigoCentro === codigoBuscado;
-      });
-      if (centro && !centrosDetalles.find(c => c.id === centro.id)) {
-        centrosDetalles.push(centro);
-      }
-    });
-    
-    if (centrosDetalles.length > 0) {
-      centrosDetalles.forEach((cp: any, index: number) => {
-        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
-        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
-      });
-    }
+    // Method body removed
   }
 
   protected override onInitCustom(): void {

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, Signal, computed, effect, SimpleChanges } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, Signal, computed, effect, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseSectionComponent } from '../base-section.component';
@@ -124,6 +124,39 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   readonly geoInfoField = this.createAutoSyncField<Record<string, any>>('geoInfo', {} as Record<string, any>);
   readonly jsonFileName = this.createAutoSyncField<string>('jsonFileName', '');
   readonly comunidadesCampesinas = this.createAutoSyncField<any[]>('comunidadesCampesinas', [] as any[]);
+  readonly districtosGuardados = this.createAutoSyncField<Array<{ dpto: string; prov: string; dist: string }>>('districtosGuardados', []);
+
+  // ✅ MULTI-DISTRITO SUPPORT (NUEVA ARQUITECTURA)
+  // Almacena todos los distritos extraídos del JSON
+  private readonly districtosDisponibles = signal<Array<{ dpto: string; prov: string; dist: string }>>([]);
+
+  // Opciones de combos cascada
+  readonly dptoOptions = computed(() => {
+    const distritos = this.districtosDisponibles();
+    const dptos = new Set(distritos.map(d => d.dpto));
+    return Array.from(dptos).sort();
+  });
+
+  readonly provOptions = computed(() => {
+    const distritos = this.districtosDisponibles();
+    const dpto = this.departamentoSeleccionado.value();
+    if (!dpto) return [];
+    const provs = distritos
+      .filter(d => d.dpto === dpto)
+      .map(d => d.prov);
+    return Array.from(new Set(provs)).sort();
+  });
+
+  readonly distOptions = computed(() => {
+    const distritos = this.districtosDisponibles();
+    const dpto = this.departamentoSeleccionado.value();
+    const prov = this.provinciaSeleccionada.value();
+    if (!dpto || !prov) return [];
+    const dists = distritos
+      .filter(d => d.dpto === dpto && d.prov === prov)
+      .map(d => d.dist);
+    return Array.from(new Set(dists)).sort();
+  });
 
   // ✅ EFFECT para reactividad automática
   private readonly syncEffect = effect(
@@ -140,6 +173,44 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
         this.centrosPobladosJSONSignal()
       ];
       this.cdRef.markForCheck();
+    },
+    { allowSignalWrites: true }
+  );
+
+  // ✅ EFFECT: Auto-seleccionar primer distrito y actualizar párrafo
+  private readonly autoSelectDistrictEffect = effect(
+    () => {
+      const distritos = this.districtosDisponibles();
+      const currentDpto = this.departamentoSeleccionado.value();
+      
+      if (distritos.length > 0 && !currentDpto) {
+        // Auto-seleccionar el primero
+        const primero = distritos[0];
+        this.departamentoSeleccionado.update(primero.dpto);
+        this.provinciaSeleccionada.update(primero.prov);
+        this.distritoSeleccionado.update(primero.dist);
+        
+        // ✅ Guardar en METADATA GLOBAL (para que todas las secciones lean)
+        this.projectFacade.setUbicacionGlobal(primero.dpto, primero.prov, primero.dist);
+        
+        // Actualizar párrafo principal con los datos seleccionados
+        this.actualizarParrafoPrincipal();
+      }
+    },
+    { allowSignalWrites: true }
+  );
+
+  // ✅ EFFECT: Actualizar párrafo cuando cambia ubicación
+  private readonly updateParagraphEffect = effect(
+    () => {
+      const dpto = this.departamentoSeleccionado.value();
+      const prov = this.provinciaSeleccionada.value();
+      const dist = this.distritoSeleccionado.value();
+      
+      // Trigger cuando cualquiera cambia
+      if (dpto && prov && dist) {
+        this.actualizarParrafoPrincipal();
+      }
     },
     { allowSignalWrites: true }
   );
@@ -162,18 +233,24 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     }
     
     const departamentoValue = this.projectFacade.selectField(this.seccionId, null, 'departamentoSeleccionado')() || '';
+    const provinciaValue = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || '';
+    const distritoValue = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '';
+    
     if (departamentoValue) {
       this.departamentoSeleccionado.update(departamentoValue);
     }
     
-    const provinciaValue = this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || '';
     if (provinciaValue) {
       this.provinciaSeleccionada.update(provinciaValue);
     }
     
-    const distritoValue = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '';
     if (distritoValue) {
       this.distritoSeleccionado.update(distritoValue);
+    }
+
+    // ✅ CRÍTICO: Si tenemos valores completos, despachar setUbicacionGlobal para sincronizar con otras secciones
+    if (departamentoValue && provinciaValue && distritoValue) {
+      this.projectFacade.setUbicacionGlobal(departamentoValue, provinciaValue, distritoValue);
     }
 
     // ✅ CRÍTICO: Recuperar datos del JSON cargado (centros poblados, nombre archivo)
@@ -190,6 +267,19 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     const geoInfoValue = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')();
     if (geoInfoValue) {
       this.geoInfoField.update(geoInfoValue);
+    }
+    
+    // ✅ CRÍTICO: Restaurar districtosDisponibles si existe jsonCompleto guardado
+    const jsonCompletoValue = this.projectFacade.selectField(this.seccionId, null, 'jsonCompleto')();
+    if (jsonCompletoValue && Object.keys(jsonCompletoValue).length > 0) {
+      this.parseDistrictsFromJSON(jsonCompletoValue);
+    } else {
+      // Fallback: restaurar desde districtosGuardados
+      const districtosGuardadosValue = this.projectFacade.selectField(this.seccionId, null, 'districtosGuardados')();
+      if (districtosGuardadosValue && Array.isArray(districtosGuardadosValue) && districtosGuardadosValue.length > 0) {
+        this.districtosDisponibles.set(districtosGuardadosValue);
+        this.districtosGuardados.update(districtosGuardadosValue);
+      }
     }
     
     // ✅ Usar métodos getter como fallback para párrafos
@@ -375,70 +465,51 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onJSONFileSelected(event: any) {
-    console.log('🎯 [Seccion1] onJSONFileSelected llamado');
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     
     if (!file) {
-      console.warn('⚠️ [Seccion1] No se seleccionó ningún archivo');
       return;
     }
-
-    console.log('📁 [Seccion1] Archivo seleccionado:', file.name, file.size, 'bytes');
 
     const reader = new FileReader();
     reader.onload = (e: any) => {
       try {
-        console.log('📖 [Seccion1] Leyendo contenido del archivo...');
         const jsonContent = JSON.parse(e.target.result);
-        console.log('✅ [Seccion1] JSON parseado correctamente');
         
         // ===== FASE 1: ProjectState como fuente PRIMARIA =====
         // Validar estructura JSON antes de procesar
         const validation = validateJSONStructure(jsonContent);
         if (!validation.valid) {
-          console.warn('[Seccion1] JSON validation failed:', validation.error);
           alert(validation.error || 'Error al procesar el archivo JSON. Verifique el formato.');
           return;
         }
 
-        console.log('🔧 [Seccion1] Creando batch command...');
+        // ✅ NUEVO: Parsear distritos para combos cascada
+        this.parseDistrictsFromJSON(jsonContent);
+
         // Crear BatchCommand para ProjectState
         const { batch, result } = createJSONProcessingBatch(jsonContent, {
           fileName: file.name,
           transactionId: `json_upload_${Date.now()}`
         });
 
-        console.log('🔍 [Seccion1] Batch creado:', batch ? 'SÍ' : 'NO');
         if (batch) {
-          console.log('📤 [Seccion1] Despachando batch con', batch.payload.commands.length, 'comandos');
-          const groupCommands = batch.payload.commands.filter(c => c.type === 'groupConfig/addGroup');
-          console.log('📤 [Seccion1] Comandos de grupos:', groupCommands.length);
-          groupCommands.forEach((c: any, i: number) => {
-            console.log(`   ${i + 1}. ${c.payload.tipo}: "${c.payload.nombre}" (${c.payload.ccppIds?.length || 0} centros)`);
-          });
           
-          this.store.dispatch(batch);
-          console.log('✅ [Seccion1] Batch despachado al store');
+          // ✅ CRÍTICO: DESPACHAR batch al estado para crear grupos AISD/AISI
+          // Este batch contiene los comandos para:
+          // - Registrar CCPPs en el estado
+          // - Crear grupos AISD (desde KEYs del JSON)
+          // - Crear grupos AISI (desde DISTintos únicos)
+          this.projectFacade.dispatch(batch);
           
-          // ✅ Verificar que los grupos se crearon
-          try {
-            const gruposAISD = this.projectFacade.aisdGroups();
-            const gruposAISI = this.projectFacade.aisiGroups();
-            console.log('✅ [Seccion1] Después del dispatch - Grupos AISD:', gruposAISD.length, gruposAISD.map(g => g.nombre));
-            console.log('✅ [Seccion1] Después del dispatch - Grupos AISI:', gruposAISI.length, gruposAISI.map(g => g.nombre));
-          } catch (error) {
-            console.error('❌ [Seccion1] Error al leer grupos después del dispatch:', error);
-          }
-          
-          // ✅ CRÍTICO: Inicializar árbol de secciones después de cargar JSON
+          // ✅ Inicializar árbol de secciones después de cargar JSON
           // Esto genera las secciones dinámicas a.1, a.2, b.1, b.2 etc.
           this.projectFacade.initializeSectionsTree();
           
           const stats = getJSONStats(result);
-          console.log(`[Seccion1] JSON procesado via ProjectState: ${stats.totalCCPP} CCPP, ${stats.totalGroups} grupos (Formato ${stats.format})`);
         } else {
-          console.warn('⚠️ [Seccion1] No se pudo crear el batch command');
+          // No se pudo crear batch
         }
 
         // ===== FALLBACK: Legacy para compatibilidad temporal =====
@@ -462,7 +533,6 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
         this.cdRef.detectChanges();
         
       } catch (error) {
-        console.error('[Seccion1] Error processing JSON:', error);
         alert('Error al procesar el archivo JSON. Verifique el formato.');
       }
     };
@@ -582,6 +652,112 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     };
   }
 
+  /**
+   * ✅ NUEVO: Parsea el JSON cargado y extrae distritos únicos
+   * Prepara las opciones para los combos cascada
+   */
+  private parseDistrictsFromJSON(jsonContent: any): void {
+    const districtMap = new Map<string, { dpto: string; prov: string; dist: string }>();
+
+    // Recorrer todas las keys del JSON
+    for (const key in jsonContent) {
+      const items = jsonContent[key];
+      if (!Array.isArray(items)) continue;
+
+      // Extraer distritos únicos
+      items.forEach((item: any) => {
+        if (item.DPTO && item.PROV && item.DIST) {
+          const districtKey = `${item.DPTO}|${item.PROV}|${item.DIST}`;
+          if (!districtMap.has(districtKey)) {
+            districtMap.set(districtKey, {
+              dpto: item.DPTO,
+              prov: item.PROV,
+              dist: item.DIST
+            });
+          }
+        }
+      });
+    }
+
+    // Actualizar signal de distritos disponibles
+    const distritos = Array.from(districtMap.values()).sort((a, b) => a.dist.localeCompare(b.dist));
+
+    this.districtosDisponibles.set(distritos);
+    // ✅ También guardar en autoSyncField para persistencia
+    this.districtosGuardados.update(distritos);
+  }
+
+  /**
+   * ✅ NUEVO: Actualiza automáticamente el párrafo principal
+   * cuando cambian departamento, provincia o distrito
+   */
+  private actualizarParrafoPrincipal(): void {
+    const proyecto = this.projectName.value() || '____';
+    const distrito = this.distritoSeleccionado.value() || '____';
+    const provincia = this.provinciaSeleccionada.value() || '____';
+    const departamento = this.departamentoSeleccionado.value() || '____';
+
+    // Template original con placeholders
+    const textoOriginal = `Este componente realiza una caracterización de los aspectos socioeconómicos, culturales y antropológicos del área de influencia social del proyecto ____, como un patrón de referencia inicial en base a la cual se pueda medir los impactos sobre la población del entorno directo del Proyecto.
+
+El proyecto ____ se encuentra ubicado en el distrito de ____, en la provincia de ____, en el departamento de ____, bajo la administración del Gobierno Regional de ____, en el sur del Perú.
+
+Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacional de Evaluación de Impacto Ambiental, los Términos de Referencia comunes para actividades de exploración minera y la Guía de Relaciones Comunitarias del Ministerio de Energía y Minas (MINEM).`;
+
+    let resultado = textoOriginal;
+
+    // Reemplazar placeholders en orden
+    resultado = resultado.replace(/proyecto ____(?=[,.])/g, `proyecto ${proyecto}`);
+    resultado = resultado.replace(/del proyecto ____/g, `del proyecto ${proyecto}`);
+    resultado = resultado.replace(/El proyecto ____/g, `El proyecto ${proyecto}`);
+
+    resultado = resultado.replace(/en el distrito de ____/g, `en el distrito de ${distrito}`);
+    resultado = resultado.replace(/en la provincia de ____/g, `en la provincia de ${provincia}`);
+    resultado = resultado.replace(/en el departamento de ____/g, `en el departamento de ${departamento}`);
+    resultado = resultado.replace(/Gobierno Regional de ____/g, `Gobierno Regional de ${departamento}`);
+
+    // Actualizar el signal del párrafo
+    this.parrafoPrincipal.update(resultado);
+  }
+
+  /**
+   * ✅ NUEVO: Handler para cuando cambia el departamento en el combo
+   */
+  onDptoChange(): void {
+    // Reset provincia y distrito
+    this.provinciaSeleccionada.update('');
+    this.distritoSeleccionado.update('');
+    this.cdRef.markForCheck();
+  }
+
+  /**
+   * ✅ NUEVO: Handler para cuando cambia la provincia en el combo
+   */
+  onProvChange(): void {
+    // Reset distrito
+    this.distritoSeleccionado.update('');
+    this.cdRef.markForCheck();
+  }
+
+  /**
+   * ✅ NUEVO: Handler para cuando cambia el distrito en el combo
+   * Actualiza automáticamente el párrafo principal
+   * Y guarda en METADATA GLOBAL (para todas las secciones)
+   */
+  onDistritoChange(): void {
+    const dpto = this.departamentoSeleccionado.value();
+    const prov = this.provinciaSeleccionada.value();
+    const dist = this.distritoSeleccionado.value();
+
+    // ✅ GUARDAR EN METADATA GLOBAL (para que todas las secciones lean)
+    if (dpto && prov && dist) {
+      this.projectFacade.setUbicacionGlobal(dpto, prov, dist);
+    }
+
+    this.actualizarParrafoPrincipal();
+    this.cdRef.markForCheck();
+  }
+
   selectJSONFile() {
     const fileInput = document.getElementById('jsonFileInput') as HTMLInputElement;
     if (fileInput) {
@@ -625,7 +801,6 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     
     if (batch) {
       this.store.dispatch(batch);
-      console.log('[Seccion1] Datos de prueba cargados via ProjectState');
     }
     
     // ✅ NUEVA ARQUITECTURA: Usar signals reactivos

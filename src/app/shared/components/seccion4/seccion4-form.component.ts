@@ -46,6 +46,9 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   readonly tablaAISD2Signal: Signal<any[]>;
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
+  
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -293,13 +296,15 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     if (!tablaA1Actual || tablaA1Actual.length === 0) {
       const nombreComunidad = this.obtenerNombreComunidadActual();
       const capital = nombreComunidad;
+      // ✅ REFACTOR: Usar ubicacionGlobal
+      const ubicacion = this.ubicacionGlobal();
       tablaA1Actual = [{
         localidad: capital,
         coordenadas: this.datos['coordenadasAISD'] || '____',
         altitud: this.datos['altitudAISD'] || '____',
-        distrito: this.datos['distritoSeleccionado'] || '____',
-        provincia: this.datos['provinciaSeleccionada'] || '____',
-        departamento: this.datos['departamentoSeleccionado'] || '____'
+        distrito: ubicacion.distrito || '____',
+        provincia: ubicacion.provincia || '____',
+        departamento: ubicacion.departamento || '____'
       }];
     }
     
@@ -373,12 +378,14 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_comunidad_completo');
     
-    const distrito = datos['distritoSeleccionado'] || '____';
-    const provincia = datos['provinciaSeleccionada'] || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de datos
+    const ubicacion = this.ubicacionGlobal();
+    const distrito = ubicacion.distrito || '____';
+    const provincia = ubicacion.provincia || '____';
+    const departamento = ubicacion.departamento || '____';
     const aisd1 = datos['aisdComponente1'] || '____';
     const aisd2 = datos['aisdComponente2'] || '____';
-    const departamento = datos['departamentoSeleccionado'] || '____';
-    const grupoAISI = datos['grupoAISI'] || datos['distritoSeleccionado'] || '____';
+    const grupoAISI = datos['grupoAISI'] || ubicacion.distrito || '____';
     
     const textoPorDefecto = `La CC ${nombreComunidad} se encuentra ubicada predominantemente dentro del distrito de ${distrito}, provincia de ${provincia}; no obstante, sus límites comunales abarcan pequeñas áreas de los distritos de ${aisd1} y de ${aisd2}, del departamento de ${departamento}. Esta comunidad se caracteriza por su historia y tradiciones que se mantienen vivas a lo largo de los años. Se encuentra compuesta por el anexo ${nombreComunidad}, el cual es el centro administrativo comunal, además de los sectores agropecuarios de Yuracranra, Tastanic y Faldahuasi. Ello se pudo validar durante el trabajo de campo, así como mediante la Base de Datos de Pueblos Indígenas u Originarios (BDPI). Sin embargo, en la actualidad, estos sectores agropecuarios no cuentan con población permanente y la mayor parte de los comuneros se concentran en el anexo ${nombreComunidad}.\n\nEn cuanto al nombre "${nombreComunidad}", según los entrevistados, este proviene de una hierba que se empleaba para elaborar moldes artesanales para queso; no obstante, ya no se viene utilizando en el presente y es una práctica que ha ido reduciéndose paulatinamente. Por otro lado, cabe mencionar que la comunidad se halla al este de la CC Sondor, al norte del CP ${grupoAISI} y al oeste del anexo Nauquipa.\n\nAsimismo, la CC ${nombreComunidad} es reconocida por el Ministerio de Cultura como parte de los pueblos indígenas u originarios, específicamente como parte del pueblo quechua. Esta identidad es un pilar fundamental de la comunidad, influyendo en sus prácticas agrícolas, celebraciones y organización social. La oficialización de la comunidad por parte del Estado peruano se remonta al 24 de agosto de 1987, cuando fue reconocida mediante RD N°495 – 87 – MAG – DR – VIII – A. Este reconocimiento formalizó la existencia y los derechos de la comunidad, fortaleciendo su posición y legitimidad dentro del marco legal peruano. Posteriormente, las tierras de la comunidad fueron tituladas el 28 de marzo de 1996, conforme consta en la Ficha 90000300, según la BDPI. Esta titulación ha sido crucial para la protección y manejo de sus recursos naturales, permitiendo a la comunidad planificar y desarrollar proyectos que beneficien a todos sus comuneros. La administración de estas tierras ha sido un factor clave en la preservación de su cultura y en el desarrollo sostenible de la comunidad.`;
     

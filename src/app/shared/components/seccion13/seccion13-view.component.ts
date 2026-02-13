@@ -76,6 +76,9 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
+  // ✅ REFACTOR: Usar ubicacionGlobal
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   readonly textoNatalidadMortalidadSignal: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoSeccion13NatalidadMortalidadCompleto();
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -88,7 +91,8 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   readonly textoMorbilidadSignal: Signal<SafeHtml> = computed(() => {
     const texto = this.obtenerTextoSeccion13MorbilidadCompleto();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '____';
     let textoConResaltado = texto
       .replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`)
       .replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`)

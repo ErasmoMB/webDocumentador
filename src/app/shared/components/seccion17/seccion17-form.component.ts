@@ -49,6 +49,9 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
     });
 
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
     // Configuración de tabla IDH como Signal
     readonly indiceDesarrolloHumanoConfigSignal: Signal<TableConfig> = computed(() => ({
         tablaKey: this.getTablaKeyIDH(),
@@ -143,7 +146,8 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     }
 
     obtenerDistrito(): string {
-        return this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || 'Cahuacho';
+        // ✅ REFACTOR: Usar ubicacionGlobal
+        return this.ubicacionGlobal().distrito || 'Cahuacho';
     }
 
     obtenerTextoIDHCompleto(): string {

@@ -299,6 +299,9 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     fotosCocinar: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), this.imageFacade.getGroupPrefix(this.seccionId))
   }));
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
     super(cdRef, injector);
 
@@ -493,7 +496,6 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   private handleTableFieldChange(tablaKey: string, index: number, field: string, value: any) {
     const tabla = this.datos[tablaKey] || [];
     if (!Array.isArray(tabla) || index < 0 || index >= tabla.length) {
-      console.warn('[Seccion26] handleTableFieldChange - index out of range or tabla invalid', index, tabla.length, 'tablaKey:', tablaKey);
       return;
     }
 
@@ -532,7 +534,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     this.datos[tablaKey] = [...tabla];
 
     // Ensure ProjectState is updated
-    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { console.warn('[Seccion26] setTableData error', e); }
+    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { }
 
     try {
       const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
@@ -546,7 +548,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
         try { const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper; ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
       }
-    } catch (e) { console.warn('[Seccion26] formChange persistFields error', e); }
+    } catch (e) { }
 
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -566,10 +568,10 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
         const payload = { [tablaKey]: this.datos[tablaKey], ...textPayload };
         formChange.persistFields(this.seccionId, 'table', payload, { notifySync: true });
 
-        try { this.projectFacade.setField(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { console.warn('[Seccion26] setField error', e); }
+        try { this.projectFacade.setField(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { }
         try { const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper; ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
       }
-    } catch (e) { console.warn('[Seccion26] formChange persistFields error', e); }
+    } catch (e) { }
     this.actualizarDatos();
     this.cdRef.detectChanges();
   }

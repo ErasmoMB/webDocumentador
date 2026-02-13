@@ -56,10 +56,14 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     this.aisiGroups().map(g => g.nombre)
   );
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
     // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
     this.aisdGroups();
     this.comunidadesNombres();
+    this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: ubicación global (departamento, distrito)
     const grupos = this.aisdGroups();
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
@@ -109,6 +113,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
+      this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: cambios en ubicación deben triggerear la actualización
       this.comunidadesNombres();
       this.distritosNombres();
       this.textoAISDFormateado();
@@ -159,42 +164,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
    * Log interno para mostrar grupo en consola
    */
   private logGrupoParaConsola(tipo: 'AISD' | 'AISI', numeroGrupo: number, grupo: GroupDefinition): void {
-    const icono = tipo === 'AISD' ? '🏘️' : '🗺️';
-    const color = tipo === 'AISD' ? '#2563eb' : '#dc2626';
-    const prefijo = tipo === 'AISD' ? 'A' : 'B';
-    
-    console.log(`%c${icono} GRUPO ${tipo}: ${prefijo}.${numeroGrupo} - ${grupo.nombre || 'Sin nombre'}`, `color: ${color}; font-weight: bold; font-size: 13px`);
-    console.log(`%cCentros Poblados (CCPP):`, `color: ${color === '#2563eb' ? '#7c3aed' : '#b91c1c'}; font-weight: bold`);
-    
-    const centrosPobladosSeleccionados = grupo.ccppIds || [];
-    console.log(`[DEBUG] centrosPobladosSeleccionados (${centrosPobladosSeleccionados.length}):`, centrosPobladosSeleccionados);
-    
-    if (centrosPobladosSeleccionados.length === 0) {
-      console.log('  (Sin centros poblados asignados)');
-      return;
-    }
-    
-    // ✅ Usar allPopulatedCenters Signal en lugar de obtenerDatos()
-    const allCentros = this.allPopulatedCenters();
-    const centrosDetalles: any[] = [];
-    
-    centrosPobladosSeleccionados.forEach((codigo: any) => {
-      const centro = allCentros.find((c: any) => {
-        const codigoCentro = String(c.id || c.codigo || '').trim();
-        const codigoBuscado = String(codigo).trim();
-        return codigoCentro === codigoBuscado;
-      });
-      if (centro && !centrosDetalles.find(c => c.id === centro.id)) {
-        centrosDetalles.push(centro);
-      }
-    });
-    
-    if (centrosDetalles.length > 0) {
-      centrosDetalles.forEach((cp: any, index: number) => {
-        const nombre = cp.CCPP || cp.nombre || `CCPP ${index + 1}`;
-        console.log(`  ${index + 1}. ${nombre} (Código: ${cp.CODIGO})`);
-      });
-    }
+    // Log method - empty
   }
 
   protected override onInitCustom(): void {
@@ -212,13 +182,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   agregarComunidadCampesina(): void {
     const nombre = `Comunidad Campesina ${this.aisdGroups().length + 1}`;
     this.projectFacade.addGroup('AISD', nombre, null);
-    console.log(`✅ Comunidad AISD: ${nombre}`);
     this.cdRef.markForCheck();
   }
 
   eliminarComunidadCampesina(id: string): void {
     this.projectFacade.removeGroup('AISD', id, true);
-    console.log(`❌ Comunidad AISD eliminada: ${id}`);
     this.cdRef.markForCheck();
   }
 
@@ -230,13 +198,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   agregarDistritoAISI(): void {
     const nombre = `Distrito ${this.aisiGroups().length + 1}`;
     this.projectFacade.addGroup('AISI', nombre, null);
-    console.log(`✅ Distrito AISI: ${nombre}`);
     this.cdRef.markForCheck();
   }
 
   eliminarDistritoAISI(id: string): void {
     this.projectFacade.removeGroup('AISI', id, true);
-    console.log(`❌ Distrito AISI eliminado: ${id}`);
     this.cdRef.markForCheck();
   }
 
@@ -246,8 +212,6 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   addCCPPToComunidad(communityId: string, ccppId: string): void {
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/addCCPPToGroup | tipo: AISD | groupId: ${communityId} | ccppId: ${ccppId}`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
@@ -255,14 +219,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
-    
-    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   removeCCPPFromComunidad(communityId: string, ccppId: string): void {
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/removeCCPPFromGroup | tipo: AISD | groupId: ${communityId} | ccppId: ${ccppId}`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISD', groupId: communityId, ccppId }
@@ -270,14 +230,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
-    
-    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   addCCPPToDistrito(districtId: string, ccppId: string): void {
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/addCCPPToGroup | tipo: AISI | groupId: ${districtId} | ccppId: ${ccppId}`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/addCCPPToGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
@@ -285,14 +241,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de distritosAISI después del dispatch
     this.persistirDistritosAISI();
-    
-    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
   removeCCPPFromDistrito(districtId: string, ccppId: string): void {
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch groupConfig/removeCCPPFromGroup | tipo: AISI | groupId: ${districtId} | ccppId: ${ccppId}`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/removeCCPPFromGroup',
       payload: { tipo: 'AISI', groupId: districtId, ccppId }
@@ -300,8 +252,6 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de distritosAISI después del dispatch
     this.persistirDistritosAISI();
-    
-    console.debug(`[SECCION2-DEBUG] ✅ dispatch completado`);
     this.cdRef.markForCheck();
   }
 
@@ -328,8 +278,6 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     if (!codigoNormalizado) return;
 
     const existe = grupo.ccppIds.includes(codigoNormalizado);
-    console.debug(`[SECCION2-DEBUG] 🔄 toggleCentroPobladoDistrito | id: ${id} | codigo: ${codigoNormalizado} | existe: ${existe}`);
-    
     if (existe) {
       this.removeCCPPFromDistrito(id, codigoNormalizado);
     } else {
@@ -353,11 +301,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
 
   seleccionarTodosCentrosPobladosComunidad(id: string): void {
     const grupo = this.aisdGroups().find(g => g.id === id);
-    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
-    
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (seleccionar todos) | AISD A.${numeroGrupo} | ccppIds: ${codigos.length}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
@@ -366,18 +310,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
-    
-    console.log(`✅ Seleccionados ${codigos.length} centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
   deseleccionarTodosCentrosPobladosComunidad(id: string): void {
-    const grupo = this.aisdGroups().find(g => g.id === id);
-    const numeroGrupo = grupo ? (this.aisdGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
-    
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (deseleccionar todos) | AISD A.${numeroGrupo} | ccppIds: []`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISD', groupId: id, ccppIds: [] }
@@ -385,18 +321,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de comunidadesCampesinas después del dispatch
     this.persistirComunidadesCampesinas();
-    
-    console.log(`❌ Deseleccionados todos los centros poblados en AISD A.${numeroGrupo} - ${nombreGrupo}`);
     this.cdRef.markForCheck();
   }
 
   seleccionarTodosCentrosPobladosDistrito(id: string): void {
-    const grupo = this.aisiGroups().find(g => g.id === id);
-    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
     const codigos = this.allPopulatedCenters().map(c => String(c.codigo));
-    
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (seleccionar todos) | AISI B.${numeroGrupo} | ccppIds: ${codigos.length}`);
     
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
@@ -405,17 +334,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de distritosAISI después del dispatch
     this.persistirDistritosAISI();
-    
     this.cdRef.markForCheck();
   }
 
   deseleccionarTodosCentrosPobladosDistrito(id: string): void {
-    const grupo = this.aisiGroups().find(g => g.id === id);
-    const numeroGrupo = grupo ? (this.aisiGroups().indexOf(grupo) + 1) : '?';
-    const nombreGrupo = grupo?.nombre || '?';
-    
-    console.debug(`[SECCION2-DEBUG] 📤 dispatch setGroupCCPP (deseleccionar todos) | AISI B.${numeroGrupo} | ccppIds: []`);
-    
     this.projectFacade.dispatch({
       type: 'groupConfig/setGroupCCPP',
       payload: { tipo: 'AISI', groupId: id, ccppIds: [] }
@@ -423,7 +345,6 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     
     // ✅ FORZAR persistencia de distritosAISI después del dispatch
     this.persistirDistritosAISI();
-    
     this.cdRef.markForCheck();
   }
 
@@ -503,9 +424,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const geoInfo = this.projectFacade.selectField(this.seccionId, null, 'geoInfo')() || {};
-    const distrito = geoInfo.DIST || '____';
-    const departamento = geoInfo.DPTO || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
+    const ubicacion = this.projectFacade.ubicacionGlobal();
+    const distrito = ubicacion.distrito || '____';
+    const departamento = ubicacion.departamento || '____';
+    const provincia = ubicacion.provincia || '____';
     const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
     const componente2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')() || '____';
 
@@ -522,10 +445,11 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
     if (manual && manual.trim().length > 0) return manual;
 
-    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
-    const provincia = geoInfo.PROV || '____';
-    const departamento = geoInfo.DPTO || '____';
-    const distrito = geoInfo.DIST || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
+    const ubicacion = this.projectFacade.ubicacionGlobal();
+    const provincia = ubicacion.provincia || '____';
+    const departamento = ubicacion.departamento || '____';
+    const distrito = ubicacion.distrito || '____';
 
     // ✅ USAR TEMPLATE EN LUGAR DE HARDCODING
     return SECCION2_TEMPLATES.textoAISITemplate
@@ -577,9 +501,10 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
-    const distrito = geoInfo.DIST || '____';
-    const departamento = geoInfo.DPTO || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
+    const ubicacion = this.projectFacade.ubicacionGlobal();
+    const distrito = ubicacion.distrito || '____';
+    const departamento = ubicacion.departamento || '____';
     const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
     const componente2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')() || '____';
 
@@ -686,15 +611,13 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
       centrosPobladosSeleccionados: g.ccppIds || []
     }));
     
-    console.debug(`[SECCION2-DEBUG] 💾 persistirDistritosAISI | grupos: ${gruposAISI.length}`);
-    console.debug(`[SECCION2-DEBUG]   B.1: ${gruposAISI[0]?.nombre} | CCPPs: ${gruposAISI[0]?.ccppIds?.length || 0}`);
-    console.debug(`[SECCION2-DEBUG]   B.2: ${gruposAISI[1]?.nombre} | CCPPs: ${gruposAISI[1]?.ccppIds?.length || 0}`);
+
     
     this.formChangeService.persistFields('3.1.2', 'form', {
       distritosAISI: distritosParaPersistir
     });
     
-    console.debug(`[SECCION2-DEBUG] ✅ distritosAISI persistido`);
+
   }
 
   /**
@@ -708,12 +631,12 @@ El nivel de organización comunitaria es significativo, con presencia de autorid
       centrosPobladosSeleccionados: g.ccppIds || []
     }));
     
-    console.debug(`[SECCION2-DEBUG] 💾 persistirComunidadesCampesinas | grupos: ${gruposAISD.length}`);
+
     
     this.formChangeService.persistFields('3.1.2', 'form', {
       comunidadesCampesinas: comunidadesParaPersistir
     });
     
-    console.debug(`[SECCION2-DEBUG] ✅ comunidadesCampesinas persistido`);
+
   }
 }

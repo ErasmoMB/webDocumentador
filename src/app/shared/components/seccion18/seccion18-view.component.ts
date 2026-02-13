@@ -55,6 +55,9 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
         return hash;
     });
 
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
     constructor(
         cdRef: ChangeDetectorRef,
         injector: Injector,
@@ -69,8 +72,6 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
             this.photoFieldsHash();  // Depende del hash de fotos
             this.cdRef.markForCheck();  // ← CRÍTICO: fuerza re-render
         });
-
-        console.log('[Seccion18View] constructor seccionId=', this.seccionId);
     }
 
     protected override detectarCambios(): boolean {

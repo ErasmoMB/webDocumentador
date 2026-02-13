@@ -99,6 +99,22 @@ export const Selectors = {
     lastSaved: state._internal.lastSaved
   }),
 
+  // ✅ NUEVO: Selectores globales para ubicación (S1 → Todas las secciones)
+  getSelectedDepartamento: (state: ProjectState): string => 
+    state.metadata.departamentoSeleccionado || '',
+  
+  getSelectedProvincia: (state: ProjectState): string => 
+    state.metadata.provinciaSeleccionada || '',
+  
+  getSelectedDistrito: (state: ProjectState): string => 
+    state.metadata.distritoSeleccionado || '',
+
+  getUbicacionGlobal: (state: ProjectState): UbicacionInfo => ({
+    departamento: state.metadata.departamentoSeleccionado || '',
+    provincia: state.metadata.provinciaSeleccionada || '',
+    distrito: state.metadata.distritoSeleccionado || ''
+  }),
+
   getProjectName: (state: ProjectState): string => state.metadata.projectName,
   getConsultora: (state: ProjectState): string => state.metadata.consultora,
   isDirty: (state: ProjectState): boolean => state._internal.isDirty,
@@ -384,6 +400,16 @@ export const Commands = {
   setDetalleProyecto: (detalleProyecto: string): MetadataCommand => ({
     type: 'metadata/setDetalleProyecto',
     payload: { detalleProyecto }
+  }),
+
+  // ✅ NUEVO: Comandos para guardar ubicación global (S1 → Todas las secciones)
+  setUbicacionGlobal: (
+    departamento: string,
+    provincia: string,
+    distrito: string
+  ): MetadataCommand => ({
+    type: 'metadata/setUbicacionGlobal',
+    payload: { departamento, provincia, distrito }
   }),
 
   updateMetadata: (updates: Partial<ProjectMetadata>): MetadataCommand => ({

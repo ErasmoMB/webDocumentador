@@ -40,20 +40,16 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   ) {
     super(cdRef, injector);
     
-    console.debug('[SECCION21-FORM] Constructor iniciado');
-    
     // Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
-      console.debug(`[SECCION21-FORM] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
     
     // Signal para número global de tabla
     this.globalTableNumberSignal = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-      console.debug(`[SECCION21-FORM] globalTableNumberSignal: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
@@ -65,15 +61,10 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
         // NO agregar prefijo "3." porque getGlobalPhotoNumber ya lo incluye
         return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
       });
-      console.debug(`[SECCION21-FORM] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
 
-    // Effect para logging
-    effect(() => {
-      console.debug(`[PHOTO-PREFIX-SIGNAL-FORM] ${this.photoPrefixSignal()}`);
-      console.debug(`[NUMERACION-GLOBAL-FORM] Tabla: ${this.globalTableNumberSignal()}`);
-    });
+
 
     effect(() => {
       const data = this.formDataSignal();
@@ -249,20 +240,16 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
     const prefix = this.photoPrefixSignal();
-    console.debug(`[FOTOS-FORM-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
     
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       
-      console.debug(`[FOTOS-FORM-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
-      
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
-    console.debug(`[FOTOS-FORM-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
   });
 
@@ -277,6 +264,9 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     }
     return hash;
   });
+
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   readonly ubicacionCpSignal: Signal<any[]> = computed(() => {
     const tablaKey = this.getTablaKeyUbicacionCp();
@@ -393,7 +383,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       const tablaVacia = !tablaActual || !Array.isArray(tablaActual) || tablaActual.length === 0 || !tablaActual[0]?.localidad;
       
       if (tablaVacia || tieneCapitalActual) {
-        console.debug(`[AISI-DEBUG] 🔄 DETECTADO CAMBIO EN CCPPs | prefijo: ${prefijo} | ccppIds: ${ccppIdsActuales.substring(0, 50)}... | re-autollar: ${tablaVacia || tieneCapitalActual}`);
+
         // Auto-poblar tabla de ubicación sin delay - ya estamos en un effect() reactivo
         this.autoPoblarTablaUbicacionCp(this.getCentroPobladoAISI() || '', prefijo);
       }
@@ -489,14 +479,14 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   private autoPoblarTablaUbicacionCp(nombreCentroPoblado: string, prefijo: string): void {
     const tablaKeyPref = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
     
-    console.debug(`[AISI-DEBUG] 🔍 AUTO-POBLAR TABLA | seccion: ${this.seccionId} | prefijo: ${prefijo}`);
+
     
     // ✅ NUEVA LÓGICA: Obtener CCPPs del grupo AISI actual
     const ccppsDelGrupo = this.obtenerCCPPsDelGrupoAISI();
-    console.debug(`[AISI-DEBUG] 📋 CCPPs del grupo: ${ccppsDelGrupo.length}`);
+
     
     if (ccppsDelGrupo.length === 0) {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - no hay CCPPs en el grupo`);
+
       return;
     }
     
@@ -508,18 +498,18 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     // Si no hay capital en el grupo, usar el de mayor población del grupo
     let ccppSeleccionado = capitalDelGrupo;
     if (!ccppSeleccionado) {
-      console.debug(`[AISI-DEBUG] ℹ️ No se encontró capital en el grupo, buscando el de mayor población...`);
+
       ccppSeleccionado = ccppsDelGrupo.reduce((max, cc) => 
         (cc.poblacion > (max?.poblacion || 0)) ? cc : max
       , ccppsDelGrupo[0]);
     }
     
     if (!ccppSeleccionado) {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - no se pudo seleccionar CCPP`);
+
       return;
     }
     
-    console.debug(`[AISI-DEBUG] ✅ CCPP SELECCIONADO: ${ccppSeleccionado.nombre} | categoria: ${ccppSeleccionado.categoria} | poblacion: ${ccppSeleccionado.poblacion}`);
+
     
     // ✅ VERIFICAR SI LA TABLA YA TIENE EL CCPP CORRECTO
     const tablaActual = this.projectFacade.selectField(this.seccionId, null, tablaKeyPref)();
@@ -527,13 +517,13 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     
     // Si la tabla ya tiene el CCPP correcto del grupo, no re-autollar
     if (ccppActualTabla === ccppSeleccionado.nombre) {
-      console.debug(`[AISI-DEBUG] ⏭️ SKIP - tabla ya tiene el CCPP correcto: ${ccppActualTabla}`);
+
       return;
     }
     
     // Si la tabla tiene datos old de otro CCPP, re-autollar
     if (ccppActualTabla && ccppActualTabla !== ccppSeleccionado.nombre) {
-      console.debug(`[AISI-DEBUG] 🔄 ACTUALIZANDO - tabla tiene: ${ccppActualTabla} → grupo necesita: ${ccppSeleccionado.nombre}`);
+
     }
     
     // Crear fila con datos del centro poblado
@@ -546,7 +536,7 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       departamento: ccppSeleccionado.dpto || ''
     }];
     
-    console.debug(`[AISI-DEBUG] ✅ AUTO-POBLAR TABLA | ccpp: ${ccppSeleccionado.nombre} | coordenadas: ${tabla[0].coordenadas} | altitud: ${tabla[0].altitud}`);
+
     
     // Guardar en tabla prefijada (aislamiento)
     this.projectFacade.setField(this.seccionId, null, tablaKeyPref, tabla);

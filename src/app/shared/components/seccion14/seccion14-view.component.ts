@@ -39,7 +39,6 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
     const campo = 'parrafoSeccion14_indicadores_educacion_intro' + prefijo;
     const data = this.formDataSignal();
     const valor = data[campo];
-    console.log('[Seccion14][view] textoIndicadoresEducacionIntroSignal:', { prefijo, campo, valor });
     return (valor && String(valor).trim().length > 0) ? String(valor) :
       'La educación es un indicador fundamental para medir el desarrollo humano y social de una comunidad. A continuación, se presentan los principales indicadores educativos de la población de la comunidad campesina, basados en los datos censales disponibles.';
   });
@@ -49,7 +48,6 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
     const campo = 'textoNivelEducativo' + prefijo;
     const data = this.formDataSignal();
     const valor = data[campo];
-    console.log('[Seccion14][view] textoNivelEducativoSignal:', { prefijo, campo, valor });
     return (valor && String(valor).trim().length > 0) ? String(valor) :
       'El nivel educativo alcanzado por la población de 15 años a más refleja el acceso y la calidad de la educación en la comunidad. Los datos muestran que ____% de la población ha alcanzado educación primaria, ____% secundaria y ____% educación superior no universitaria.';
   });
@@ -59,7 +57,6 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
     const campo = 'textoTasaAnalfabetismo' + prefijo;
     const data = this.formDataSignal();
     const valor = data[campo];
-    console.log('[Seccion14][view] textoTasaAnalfabetismoSignal:', { prefijo, campo, valor });
     return (valor && String(valor).trim().length > 0) ? String(valor) :
       'La tasa de analfabetismo en la población de 15 años a más es de ____%, lo que representa ____ personas que no saben leer ni escribir. Este indicador es crucial para identificar necesidades educativas y planificar intervenciones.';
   });
@@ -103,12 +100,6 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       const sectionData = this.formDataSignal();
       const prefijo = this.obtenerPrefijo();
-      console.log('[Seccion14][view] sectionData changed', {
-        prefijo,
-        sectionKeys: Object.keys(sectionData || {}).slice(0,10),
-        tienePrefijoNivel: 'nivelEducativoTabla' + prefijo in (sectionData || {}),
-        nivelTablaLength: (sectionData && sectionData['nivelEducativoTabla'] && (sectionData['nivelEducativoTabla'] as any).length) || 'n/a'
-      });
       this.datos = { ...this.projectFacade.obtenerDatos(), ...sectionData };
       this.cdRef.markForCheck();
     });
@@ -129,16 +120,14 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
 
-    // Efectos de escucha específicos para tablas (logs de debugging)
+    // Efectos de escucha específicos para tablas
     effect(() => {
       const tabla = this.nivelEducativoTablaSignal();
-      console.log('[Seccion14][view] nivelEducativoTablaSignal changed:', tabla ? tabla.length : 0, tabla);
       this.cdRef.markForCheck();
     });
 
     effect(() => {
       const tabla = this.tasaAnalfabetismoTablaSignal();
-      console.log('[Seccion14][view] tasaAnalfabetismoTablaSignal changed:', tabla ? tabla.length : 0, tabla);
       this.cdRef.markForCheck();
     });
 

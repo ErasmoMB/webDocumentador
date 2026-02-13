@@ -66,20 +66,16 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
     const prefix = this.photoPrefixSignal();
-    console.debug(`[FOTOS-FORM-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
     
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       
-      console.debug(`[FOTOS-FORM-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
-      
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
-    console.debug(`[FOTOS-FORM-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
   });
 
@@ -212,27 +208,22 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   ) {
     super(cdRef, injector);
     
-    console.debug('[SECCION22-FORM] Constructor iniciado');
-    
     // ✅ Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
-      console.debug(`[SECCION22-FORM] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
     
     // ✅ Signal para número global de tabla (primera tabla: poblacionSexoAISI)
     this.globalTableNumberSignal = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-      console.debug(`[SECCION22-FORM] globalTableNumberSignal: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
     // ✅ Signal para número global de tabla (segunda tabla: poblacionEtarioAISI)
     this.globalTableNumberSignal2 = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
-      console.debug(`[SECCION22-FORM] globalTableNumberSignal2: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
@@ -243,15 +234,10 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       const photoNumbers = fotos.map((_, index) => {
         return this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
       });
-      console.debug(`[SECCION22-FORM] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
 
-    // Effect para logging
-    effect(() => {
-      console.debug(`[PHOTO-PREFIX-SIGNAL-FORM] ${this.photoPrefixSignal()}`);
-      console.debug(`[NUMERACION-GLOBAL-FORM] Tabla: ${this.globalTableNumberSignal()}`);
-    });
+
 
     effect(() => {
       const data = this.formDataSignal();
@@ -285,13 +271,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
         cc.poblacion > (max?.poblacion || 0) ? cc : max
       , ccppsDelGrupo[0]);
       const ccppSeleccionado = capital || mayorPoblacion;
-      
-      console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
-      console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
-      console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
-      console.log(`🔢 NÚMERO GLOBAL DE TABLA: ${this.globalTableNumberSignal()}`);
     }
-    
+
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';

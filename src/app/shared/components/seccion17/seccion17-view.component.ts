@@ -71,6 +71,9 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         return this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix);
     });
 
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
     constructor(
         cdRef: ChangeDetectorRef,
         injector: Injector,
@@ -108,7 +111,8 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
     }
 
     obtenerDistrito(): string {
-        return (this.allSectionData() as any).distritoSeleccionado || 'Cahuacho';
+        // ✅ REFACTOR: Usar ubicacionGlobal
+        return this.ubicacionGlobal().distrito || 'Cahuacho';
     }
 
     obtenerTextoIDHCompleto(): string {
@@ -116,7 +120,8 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         const data = this.allSectionData();
         const textoPersonalizado = data[fieldId] || data['textoIndiceDesarrolloHumano'];
 
-        const distrito = data['distritoSeleccionado'] || 'Cahuacho';
+        // ✅ REFACTOR: Usar ubicacionGlobal
+        const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
         const idh = this.getIDH();
         const rankIdh = this.getRankIDH();
 
@@ -142,8 +147,8 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
 
     obtenerTextoIDHConResaltado(): SafeHtml {
         const texto = this.obtenerTextoIDHCompleto();
-        const data = this.allSectionData();
-        const distrito = data['distritoSeleccionado'] || 'Cahuacho';
+        // ✅ REFACTOR: Usar ubicacionGlobal
+        const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
         const idh = this.getIDH();
         const rankIdh = this.getRankIDH();
 

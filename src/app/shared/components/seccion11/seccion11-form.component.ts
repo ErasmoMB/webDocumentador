@@ -78,13 +78,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '';
   });
 
-  readonly provinciaSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || '____';
-  });
-
-  readonly distritoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
-  });
+  // ✅ REFACTOR: Usar ubicacionGlobal
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   readonly telecomunicacionesTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);

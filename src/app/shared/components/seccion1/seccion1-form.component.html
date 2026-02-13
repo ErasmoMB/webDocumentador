@@ -40,34 +40,42 @@
     <div class="form-field" *ngIf="centrosPobladosJSONSignal().length > 0">
       <label class="label">{{ SECCION1_TEMPLATES.labelInformacionGeografica }}</label>
       <div class="form-row">
+        <!-- COMBO DEPARTAMENTO -->
         <div class="form-field">
           <label class="label">{{ SECCION1_TEMPLATES.labelDepartamento }} <span class="required">*</span></label>
-          <input 
-            type="text" 
-            class="input" 
+          <select 
+            class="input"
             [ngModel]="departamentoSeleccionado.value()"
-            (ngModelChange)="departamentoSeleccionado.update($event)"
-            [placeholder]="SECCION1_TEMPLATES.placeholderDepartamento">
+            (ngModelChange)="departamentoSeleccionado.update($event); onDptoChange()">
+            <option value="" disabled>-- Selecciona --</option>
+            <option *ngFor="let dpto of dptoOptions()" [value]="dpto">{{ dpto }}</option>
+          </select>
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
+        <!-- COMBO PROVINCIA (CASCADA) -->
         <div class="form-field">
           <label class="label">{{ SECCION1_TEMPLATES.labelProvincia }} <span class="required">*</span></label>
-          <input 
-            type="text" 
-            class="input" 
+          <select 
+            class="input"
             [ngModel]="provinciaSeleccionada.value()"
-            (ngModelChange)="provinciaSeleccionada.update($event)"
-            [placeholder]="SECCION1_TEMPLATES.placeholderProvincia">
+            (ngModelChange)="provinciaSeleccionada.update($event); onProvChange()"
+            [disabled]="!departamentoSeleccionado.value()">
+            <option value="" disabled>-- Selecciona --</option>
+            <option *ngFor="let prov of provOptions()" [value]="prov">{{ prov }}</option>
+          </select>
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
+        <!-- COMBO DISTRITO (CASCADA) -->
         <div class="form-field">
           <label class="label">{{ SECCION1_TEMPLATES.labelDistrito }} <span class="required">*</span></label>
-          <input 
-            type="text" 
-            class="input" 
+          <select 
+            class="input"
             [ngModel]="distritoSeleccionado.value()"
-            (ngModelChange)="distritoSeleccionado.update($event)"
-            [placeholder]="SECCION1_TEMPLATES.placeholderDistrito">
+            (ngModelChange)="distritoSeleccionado.update($event); onDistritoChange()"
+            [disabled]="!provinciaSeleccionada.value()">
+            <option value="" disabled>-- Selecciona --</option>
+            <option *ngFor="let dist of distOptions()" [value]="dist">{{ dist }}</option>
+          </select>
           <small class="form-hint">{{ SECCION1_TEMPLATES.hintGeoAutomatica }}</small>
         </div>
       </div>

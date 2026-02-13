@@ -41,13 +41,10 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   ) {
     super(cdRef, injector);
     
-    console.debug('[SECCION21-VIEW] Constructor iniciado');
-    
     // Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
-      console.debug(`[SECCION21-VIEW] photoPrefixSignal: ${prefix}`);
       return prefix;
     });
     
@@ -55,7 +52,6 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     this.globalTableNumberSignal = computed(() => {
       // La tabla de ubicación es la primera (índice 0)
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-      console.debug(`[SECCION21-VIEW] globalTableNumberSignal: Cuadro N° ${globalNum}`);
       return globalNum;
     });
     
@@ -63,31 +59,18 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     this.globalPhotoNumbersSignal = computed(() => {
       const prefix = this.photoPrefixSignal();
       const fotos = this.fotosCacheSignal();
-      console.log(`[SECCION21-VIEW] 📷 Calculando fotos para ${this.seccionId}`);
-      console.log(`[SECCION21-VIEW]   prefix: ${prefix}, fotos.length: ${fotos.length}`);
       
       const photoNumbers = fotos.map((_, index) => {
         // photoIndex 0-basado (la primera foto del grupo es 0)
         // La fórmula en GlobalNumberingService es: offset + photoIndex + 1
         const globalNum = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
-        console.log(`[SECCION21-VIEW]   foto ${index}: ${globalNum}`);
         return globalNum;
       });
       
-      console.log(`[SECCION21-VIEW] globalPhotoNumbersSignal: ${photoNumbers.join(', ')}`);
       return photoNumbers;
     });
     
-    // Effect para logs de fotos (ya no necesario, removemos)
-    // effect(() => {
-    //   const prefix = this.photoPrefixSignal();
-    //   const fotos = this.fotosCacheSignal();
-    //   console.log(`[DEBUG-FOTOS] ===> sectionId: ${this.seccionId}, prefix: ${prefix}, fotos: ${fotos.length}`);
-    //   fotos.forEach((foto, index) => {
-    //     const num = this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index);
-    //     console.log(`[DEBUG-FOTOS] Foto ${index}: ${num}`);
-    //   });
-    // });
+
     
     // Effect para loguear el grupo AISI actual
     effect(() => {
@@ -107,11 +90,6 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
           cc.poblacion > (max?.poblacion || 0) ? cc : max
         , ccppsDelGrupo[0]);
         const ccppSeleccionado = capital || mayorPoblacion;
-        
-        console.log(`🗺️ GRUPO AISI: ${grupoId} - ${grupo.nombre || 'Sin nombre'}`);
-        console.log(`Centros Poblados (${ccppIds.length}):`, ccppIds);
-        console.log(`📍 CCPP SELECCIONADO: ${ccppSeleccionado?.nombre || 'N/A'} | categoria: ${ccppSeleccionado?.categoria || 'N/A'} | poblacion: ${ccppSeleccionado?.poblacion || 0}`);
-        console.log(`🔢 NÚMERO GLOBAL DE TABLA: ${this.globalTableNumberSignal()}`);
       }
     });
 
@@ -181,20 +159,16 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
     const prefix = this.photoPrefixSignal();
-    console.debug(`[FOTOS-VIEW-DEBUG] fotosCacheSignal | seccionId: ${this.seccionId} | prefix: ${prefix}`);
     
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
       
-      console.debug(`[FOTOS-VIEW-DEBUG]   i=${i} | campo: ${prefix}${i}Imagen | valor: ${imagen ? 'SÍ' : 'NO'}`);
-      
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
-    console.debug(`[FOTOS-VIEW-DEBUG] FINAL | fotos.length: ${fotos.length}`);
     return fotos;
   });
 
@@ -214,7 +188,6 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
     const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    console.debug(`[UBICACION-CP] computed signal triggered for seccionId=${this.seccionId} with key=${tablaKey}, data length=${fromField?.length}`);
     return (fromField as any[]) || [];
   });
 
@@ -264,7 +237,5 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void { }
 
-  override ngOnDestroy(): void {
-    console.debug('[SECCION21-VIEW] ngOnDestroy');
-  }
+  override ngOnDestroy(): void {}
 }

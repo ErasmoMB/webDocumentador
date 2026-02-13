@@ -27,6 +27,12 @@ export interface ProjectMetadata {
   readonly createdAt: number;
   readonly updatedAt: number;
   readonly version: string;
+  
+  // ✅ NUEVO: Ubicación global (seleccionada en S1)
+  // Estos datos se replican a TODAS las secciones
+  readonly departamentoSeleccionado: string;
+  readonly provinciaSeleccionada: string;
+  readonly distritoSeleccionado: string;
 }
 
 export const INITIAL_PROJECT_METADATA: ProjectMetadata = {
@@ -36,7 +42,12 @@ export const INITIAL_PROJECT_METADATA: ProjectMetadata = {
   detalleProyecto: '',
   createdAt: 0,
   updatedAt: 0,
-  version: '1.0.0'
+  version: '1.0.0',
+  
+  // ✅ NUEVO: Ubicación vacía
+  departamentoSeleccionado: '',
+  provinciaSeleccionada: '',
+  distritoSeleccionado: ''
 };
 
 // ============================================================================

@@ -134,6 +134,9 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
     return this.obtenerTextoTelecomunicacionesCP3();
   });
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector
@@ -202,7 +205,6 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
       const fuente = this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteTelecomunicaciones')() || '';
       this.cuadroFuenteTelecomunicaciones.update(fuente);
     } catch (e) {
-      console.error('Error sincronizando campos:', e);
     }
   }
 
@@ -247,7 +249,8 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoTransporteCP2(): string {
     const data = this.formDataSignal();
     const ciudadOrigen = data?.['ciudadOrigenComercio'] || '____';
-    const distrito = data?.['distritoSeleccionado'] || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de data.distritoSeleccionado
+    const distrito = this.ubicacionGlobal().distrito || '____';
     const costoMin = this.costoTransporteMinimo.value() || '____';
     const costoMax = this.costoTransporteMaximo.value() || '____';
     

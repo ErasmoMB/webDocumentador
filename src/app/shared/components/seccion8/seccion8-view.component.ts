@@ -129,6 +129,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     return hash;
   });
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -277,7 +280,8 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const provincia = formData['provinciaSeleccionada'] || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de formData
+    const provincia = this.ubicacionGlobal().provincia || '____';
     
     return `En la CC ${grupoAISD}, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.\n\nLa alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de ${provincia} para la venta; también se elabora yogurt, aunque en menor medida.\n\nA pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.`;
   }

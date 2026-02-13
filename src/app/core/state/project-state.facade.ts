@@ -101,6 +101,12 @@ export class ProjectStateFacade {
   readonly consultora: Signal<string> = this.store.select(Selectors.getConsultora);
   readonly isDirty: Signal<boolean> = this.store.select(Selectors.isDirty);
 
+  // ✅ NUEVO: Ubicación global para todas las secciones (S1 → Todas)
+  readonly selectedDepartamento: Signal<string> = this.store.select(Selectors.getSelectedDepartamento);
+  readonly selectedProvincia: Signal<string> = this.store.select(Selectors.getSelectedProvincia);
+  readonly selectedDistrito: Signal<string> = this.store.select(Selectors.getSelectedDistrito);
+  readonly ubicacionGlobal: Signal<UbicacionInfo> = this.store.select(Selectors.getUbicacionGlobal);
+
   readonly projectName$: Observable<string> = toObservable(this.projectName);
   readonly consultora$: Observable<string> = toObservable(this.consultora);
   readonly isDirty$: Observable<boolean> = toObservable(this.isDirty);
@@ -178,11 +184,6 @@ export class ProjectStateFacade {
   }
 
   dispatch(command: ProjectStateCommand): void {
-    // Log de depuración para todos los dispatch
-    if (command.type.startsWith('groupConfig/')) {
-      console.log(`[FACADE-DISPATCH] 📥 ${command.type}`, (command as any).payload);
-    }
-    
     // ✅ Interceptar comandos de grupos para sincronizar con GroupConfigService
     if (command.type.startsWith('groupConfig/')) {
       this.syncGroupConfigCommand(command);
@@ -202,18 +203,14 @@ export class ProjectStateFacade {
       const payload = (command as any).payload;
       const { tipo, groupId, ccppIds } = payload;
       
-      console.log(`[FACADE-SYNC] 🔄 Sincronizando ${tipo} | grupo: ${groupId} | CCPPs: ${ccppIds.length}`);
-      
       // Extraer índice del grupo del ID (B.1 -> índice 0)
       const match = groupId.match(/\.(\d+)$/);
       const indice = match ? parseInt(match[1]) - 1 : 0;
       
       if (tipo === 'AISI') {
         groupConfig.setAISICCPPActivos(ccppIds, indice);
-        console.log(`[FACADE-SYNC] ✅ setAISICCPPActivos(${indice}) = ${ccppIds.length} CCPPs`);
       } else if (tipo === 'AISD') {
         groupConfig.setAISDCCPPActivos(ccppIds, indice);
-        console.log(`[FACADE-SYNC] ✅ setAISDCCPPActivos(${indice}) = ${ccppIds.length} CCPPs`);
       }
     }
   }
@@ -230,6 +227,12 @@ export class ProjectStateFacade {
   setDetalleProyecto(detalle: string): void {
     this.dispatch(Commands.setDetalleProyecto(detalle));
   }
+
+  // ✅ NUEVO: Guardar ubicación global que se replica a todas las secciones
+  setUbicacionGlobal(departamento: string, provincia: string, distrito: string): void {
+    this.dispatch(Commands.setUbicacionGlobal(departamento, provincia, distrito));
+  }
+
   addGroup(tipo: 'AISD' | 'AISI', nombre: string, parentId: string | null = null): void {
     this.dispatch(Commands.addGroup(tipo, nombre, parentId));
     // Regenerar secciones del tipo correspondiente
@@ -496,7 +499,6 @@ export class ProjectStateFacade {
     const projectState = this.store.getSnapshot();
     const newSectionsState = regenerateSectionsForGroupType(currentState, projectState, 'AISI');
     this._sectionsContent.set(newSectionsState);
-    console.log('[AISI] Secciones regeneradas. Total:', newSectionsState.sectionOrder.filter(s => s.startsWith('3.1.4.B')).length);
   }
 
   /**
@@ -508,7 +510,6 @@ export class ProjectStateFacade {
     const projectState = this.store.getSnapshot();
     const newSectionsState = regenerateSectionsForGroupType(currentState, projectState, 'AISD');
     this._sectionsContent.set(newSectionsState);
-    console.log('[AISD] Secciones regeneradas. Total:', newSectionsState.sectionOrder.filter(s => s.startsWith('3.1.4.A')).length);
   }
   setActiveSectionContent(sectionId: string): void {
     const command: SectionContentCommand = {

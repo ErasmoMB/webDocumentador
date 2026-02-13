@@ -59,6 +59,9 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     return `${this.PHOTO_PREFIX_DEPORTE}${this.obtenerPrefijo()}`;
   });
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   // ✅ OPTIMIZACIÓN: Una sola señal computada que obtiene TODOS los datos CON PREFIJO
   readonly allSectionData: Signal<Record<string, any>> = computed(() => {
     const prefijo = this.obtenerPrefijo();
@@ -641,7 +644,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
    */
   private ensureMinimumAlumnosRows(): void {
     // TODO: Si se necesita inicializar tablas, hacerlo SOLO en onInitCustom(), no en effects
-    console.warn('[Seccion12] ensureMinimumAlumnosRows está desactivado para evitar bucles');
     return;
   }
 
@@ -807,7 +809,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       const tablaActualizada = [...tablaActual];
       tablaActualizada[index] = fila;
       
-      console.log(`[Seccion12] Alumno Ayroca[${index}].${field} = ${value}`);
       this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
       this.cdRef.markForCheck();
     }
@@ -817,7 +818,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const tablaActual = this.tablaAlumnosIEAyrocaSignal() || [];
     // Esta tabla usa UNA sola fila. Si ya existe una fila, no agregar más.
     if (tablaActual.length > 0) {
-      console.warn('[Seccion12] agregarAlumnoAyroca: la tabla ya contiene una fila. No se agregarán más filas.');
       return;
     }
 
@@ -837,7 +837,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     };
     
     const tablaActualizada = [nuevoAlumno];
-    console.log('[Seccion12] agregarAlumnoAyroca: fila única creada');
     this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
@@ -855,7 +854,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       const tablaActualizada = [...tablaActual];
       tablaActualizada[index] = fila;
       
-      console.log(`[Seccion12] Alumno 40270[${index}].${field} = ${value}`);
       this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
       this.cdRef.markForCheck();
     }
@@ -865,7 +863,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const tablaActual = this.tablaAlumnosIE40270Signal() || [];
     // Esta tabla usa UNA sola fila. Si ya existe una fila, no agregar más.
     if (tablaActual.length > 0) {
-      console.warn('[Seccion12] agregarAlumno40270: la tabla ya contiene una fila. No se agregarán más filas.');
       return;
     }
 
@@ -891,7 +888,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     };
     
     const tablaActualizada = [nuevoAlumno];
-    console.log('[Seccion12] agregarAlumno40270: fila única creada');
     this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }

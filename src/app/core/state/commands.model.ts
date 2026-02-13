@@ -33,6 +33,16 @@ export interface SetDetalleProyectoCommand {
   readonly payload: { detalleProyecto: string };
 }
 
+// ✅ NUEVO: Comando para guardar ubicación global
+export interface SetUbicacionGlobalCommand {
+  readonly type: 'metadata/setUbicacionGlobal';
+  readonly payload: {
+    departamento: string;
+    provincia: string;
+    distrito: string;
+  };
+}
+
 export interface UpdateMetadataCommand {
   readonly type: 'metadata/update';
   readonly payload: Partial<Pick<ProjectMetadata, 'projectName' | 'consultora' | 'detalleProyecto'>>;
@@ -42,6 +52,7 @@ export type MetadataCommand =
   | SetProjectNameCommand 
   | SetConsultoraCommand 
   | SetDetalleProyectoCommand
+  | SetUbicacionGlobalCommand
   | UpdateMetadataCommand;
 
 // ============================================================================

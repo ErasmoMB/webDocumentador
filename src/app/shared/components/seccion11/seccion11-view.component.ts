@@ -64,13 +64,8 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || '';
   });
 
-  readonly provinciaSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'provinciaSeleccionada')() || '____';
-  });
-
-  readonly distritoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
-  });
+  // ✅ REFACTOR: Usar ubicacionGlobal
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   readonly costoMinSignal: Signal<string> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
@@ -112,8 +107,7 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
       const data = this.formDataSignal();
       this.datos = { ...data };  // ✅ CRÍTICO: Sincronizar this.datos con formDataSignal
       this.grupoAISDSignal();
-      this.provinciaSignal();
-      this.distritoSignal();
+      this.ubicacionGlobal();
       this.costoMinSignal();
       this.costoMaxSignal();
       this.telecomunicacionesTablaSignal();
@@ -162,8 +156,10 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
     }
 
     const grupoAISD = this.grupoAISDSignal();
-    const provincia = this.provinciaSignal();
-    const distrito = this.distritoSignal();
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const ubicacion = this.ubicacionGlobal();
+    const provincia = ubicacion.provincia || '____';
+    const distrito = ubicacion.distrito || '____';
     const costoMin = this.costoMinSignal();
     const costoMax = this.costoMaxSignal();
 

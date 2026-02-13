@@ -108,6 +108,9 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   readonly viewModel: Signal<any> = computed(() => ({
     ...this.formDataSignal(),
     petGruposEdad: this.petGruposEdadSignal(),
@@ -217,8 +220,9 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
         const fuenteField = t.fuenteField;
         if (tituloField && !this.datos[tituloField]) {
           let valorTitulo = '';
-          const centroPoblado = this.datos.centroPobladoAISI || this.datos.distritoSeleccionado || '_____';
-          const distrito = this.datos.distritoSeleccionado || '_____';
+          // ✅ REFACTOR: Usar ubicacionGlobal en lugar de this.datos.distritoSeleccionado
+          const centroPoblado = this.datos.centroPobladoAISI || this.ubicacionGlobal().distrito || '_____';
+          const distrito = this.ubicacionGlobal().distrito || '_____';
           
           // ✅ Usar constantes para títulos
           if (tituloField.includes('PET')) {
@@ -247,7 +251,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       }
     } catch (e) {
       // no bloquear inicio por errores en inicialización
-      console.warn('[S23] error inicializando tablas:', e);
     }
 
     // Inicializar párrafos si no existen para que los editores muestren contenido por defecto
@@ -291,7 +294,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
         }
       }
     } catch (e) {
-      console.warn('[S23] Error inicializando párrafos:', e);
+      // Error en inicialización
     }
   }
 
@@ -311,7 +314,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   // Handlers
   onPetGruposEdadUpdated(eventOrTabla: any): void {
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
-    console.debug('[S23][FORM] onPetGruposEdadUpdated', { tablaLength: Array.isArray(tabla) ? tabla.length : 0, sample: Array.isArray(tabla) ? tabla.slice(0,2) : tabla });
     if (!Array.isArray(tabla)) return;
 
     const cuadro = this.tableNumbering.getGlobalTableNumber(this.seccionId, 0);
@@ -335,7 +337,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       }
       this.projectFacade.setField(this.seccionId, null, keyBase, tablaSinTotal);
     } catch (e) {
-      console.warn('[S23] Error al setField en onPetGruposEdadUpdated', e);
     }
 
     // Persistir ambas claves en un solo call para consistencia
@@ -350,7 +351,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   onPeaDistritoUpdated(eventOrTabla: any): void {
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
-    console.debug('[S23][FORM] onPeaDistritoUpdated', { tablaLength: Array.isArray(tabla) ? tabla.length : 0, sample: Array.isArray(tabla) ? tabla.slice(0,2) : tabla });
     if (!Array.isArray(tabla)) return;
 
     const tablaNormalizada = this.normalizarTabla(tabla);
@@ -362,7 +362,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       if (keyPref) this.projectFacade.setField(this.seccionId, null, keyPref, tablaNormalizada);
       this.projectFacade.setField(this.seccionId, null, keyBase, tablaNormalizada);
     } catch (e) {
-      console.warn('[S23] Error al setField en onPeaDistritoUpdated', e);
     }
 
     const payload: Record<string, any> = { [keyBase]: tablaNormalizada };
@@ -375,7 +374,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   onPeaOcupadaDesocupadaUpdated(eventOrTabla: any): void {
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
-    console.debug('[S23][FORM] onPeaOcupadaDesocupadaUpdated', { tablaLength: Array.isArray(tabla) ? tabla.length : 0, sample: Array.isArray(tabla) ? tabla.slice(0,2) : tabla });
     if (!Array.isArray(tabla)) return;
 
     const tablaNormalizada = this.normalizarTabla(tabla);
@@ -387,7 +385,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       if (keyPref) this.projectFacade.setField(this.seccionId, null, keyPref, tablaNormalizada);
       this.projectFacade.setField(this.seccionId, null, keyBase, tablaNormalizada);
     } catch (e) {
-      console.warn('[S23] Error al setField en onPeaOcupadaDesocupadaUpdated', e);
     }
 
     const payload: Record<string, any> = { [keyBase]: tablaNormalizada };
@@ -410,13 +407,11 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     try {
       this.tableFacade.actualizarFila(this.datos, configWithKey, index, field, value, false);
     } catch (e) {
-      console.warn('[S23] Error actualizando fila PET en onPetGruposEdadFieldChange', e);
     }
 
     const tabla = this.datos[tablaKeyToUse] ?? [];
     if (!Array.isArray(tabla)) return;
     if ((keyPref && tablaKeyToUse === keyPref) || !this.datos[this.petGruposEdadConfig.tablaKey]) {
-      console.log('[S23] onPetGruposEdadFieldChange updated pref tabla', { tablaKeyToUse, index, field, value });
     }
 
     this.onPetGruposEdadUpdated(tabla);
@@ -434,7 +429,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       // Permitir ejecución automática de cálculos (autoCalcular = true)
       this.tableFacade.actualizarFila(this.datos, configWithKey, index, field, value, true);
     } catch (e) {
-      console.warn('[S23] Error actualizando fila PEA distrito en onPEADistritoSexoFieldChange', e);
     }
 
     const tabla = this.datos[tablaKeyToUse] ?? [];
@@ -443,7 +437,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     // Forzar cálculo por sexo inmediatamente para asegurar que 'casos' y porcentajes se actualizan
     try {
       this.tableFacade.calcularPorcentajesPorSexo(this.datos, { ...this.peaDistritoSexoConfig, tablaKey: tablaKeyToUse });
-    } catch (e) { console.warn('[S23] Error calculando porcentajes por sexo', e); }
+    } catch (e) { }
 
     this.onPeaDistritoUpdated(tabla);
   }
@@ -458,11 +452,9 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     try {
       this.tableFacade.actualizarFila(this.datos, configWithKey, index, field, value, false);
     } catch (e) {
-      console.warn('[S23] Error actualizando fila PEA ocupada/desocupada en onPEAOcupadaDesocupadaFieldChange', e);
     }
 
     const tabla = this.datos[tablaKeyToUse] ?? [];
-    console.log('[S23] onPEAOcupadaDesocupadaFieldChange updated', { tablaKeyToUse, tablaLength: tabla.length, index, field, value });
     this.onPeaOcupadaDesocupadaUpdated(tabla);
   }
   onPEAOcupadaDesocupadaTableUpdated(): void { this.onPeaOcupadaDesocupadaUpdated(this.datos[this.peaOcupadaDesocupadaConfig.tablaKey] || []); }
@@ -522,7 +514,6 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
         this.cdRef.detectChanges();
       }, (error: any) => {
-        console.error('[S23] Error cargando datos PEA:', error);
       });
   }
 
@@ -627,7 +618,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   // Text generators used in template
   obtenerTextoIndicadoresDistritalesAISI(): string {
     if (this.datos.textoIndicadoresDistritalesAISI && this.datos.textoIndicadoresDistritalesAISI !== '____') return this.datos.textoIndicadoresDistritalesAISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const poblacionDistrital = this.getPoblacionDistritalFn();
     const petDistrital = this.getPETDistrital();
     return SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables
@@ -707,7 +699,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   }
   obtenerTextoPEA_AISI(): string {
     if (this.datos.textoPEA_AISI && this.datos.textoPEA_AISI !== '____') return this.datos.textoPEA_AISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const centroPoblado = this.datos.centroPobladoAISI || '_____';
     return SECCION23_TEMPLATES.peaCompleteTemplateWithVariables
       .replace('{{distrito}}', distrito)
@@ -730,7 +723,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoAnalisisPEA_AISI(): string {
     if (this.datos.textoAnalisisPEA_AISI && this.datos.textoAnalisisPEA_AISI !== '____') return this.datos.textoAnalisisPEA_AISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const porcentajePEA = this.getPorcentajePEA();
     const porcentajeNoPEA = this.getPorcentajeNoPEA();
     const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
@@ -765,13 +759,13 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
         }
       }
     } catch (e) {
-      console.warn('[S23] Error inicializando párrafos dependientes de tablas:', e);
     }
   }
 
   obtenerTextoEmpleoAISI(): string {
     if (this.datos.textoEmpleoAISI && this.datos.textoEmpleoAISI !== '____') return this.datos.textoEmpleoAISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
   }
 
@@ -782,7 +776,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoIngresosAISI(): string {
     if (this.datos.textoIngresosAISI && this.datos.textoIngresosAISI !== '____') return this.datos.textoIngresosAISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const centroPoblado = this.datos.centroPobladoAISI || '_____';
     const ingresoPerCapita = this.getIngresoPerCapita();
     const rankingIngreso = this.getRankingIngreso();
@@ -795,7 +790,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoIndiceDesempleoAISI(): string {
     if (this.datos.textoIndiceDesempleoAISI && this.datos.textoIndiceDesempleoAISI !== '____') return this.datos.textoIndiceDesempleoAISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const centroPoblado = this.datos.centroPobladoAISI || '_____';
     return SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables
       .replace('{{distrito}}', distrito)
@@ -831,7 +827,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   // Alias expected by some templates
   obtenerTextoPEAAISI(): string {
     if (this.datos.textoPEAAISI && this.datos.textoPEAAISI !== '____') return this.datos.textoPEAAISI;
-    const distrito = this.datos.distritoSeleccionado || '_____';
+    // ✅ REFACTOR: Usar ubicacionGlobal
+    const distrito = this.ubicacionGlobal().distrito || '_____';
     const porcentajeDesempleo = this.getPorcentajeDesempleo();
     const porcentajeHombres = this.getPorcentajeHombresOcupados();
     const porcentajeMujeres = this.getPorcentajeMujeresOcupadas();

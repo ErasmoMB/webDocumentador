@@ -38,10 +38,14 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
     this.aisdGroups().map(g => g.nombre)
   );
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   readonly textoAISDFormateado: Signal<SafeHtml> = computed(() => {
     // ✅ CRÍTICO: Leer explícitamente signals para registrar dependencias
     this.aisdGroups();
     const nombres = this.comunidadesNombres();
+    this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: ubicación global (departamento, distrito)
     const texto = this.obtenerTextoSeccion2AISDCompleto();
     const html = this.formatearParrafo(texto);
     return this.sanitizer.bypassSecurityTrustHtml(html);
@@ -84,6 +88,7 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
     effect(() => {
       this.aisdGroups();
       this.aisiGroups();
+      this.ubicacionGlobal(); // ✅ DEPENDENCIA CRÍTICA: cambios en ubicación deben triggerear la actualización
       this.textoAISDFormateado();
       this.textoAISIFormateado();
       this.cdRef.markForCheck();
@@ -155,9 +160,9 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
     if (manual && manual.trim().length > 0) return manual;
 
     const comunidades = this.obtenerTextoComunidades();
-    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
-    const distrito = geoInfo.DIST || '____';
-    const departamento = geoInfo.DPTO || '____';
+    const ubicacion = this.ubicacionGlobal();
+    const distrito = ubicacion.distrito || '____';
+    const departamento = ubicacion.departamento || '____';
     const componente1 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente1')() || '____';
     const componente2 = this.projectFacade.selectField(this.seccionId, null, 'aisdComponente2')() || '____';
 
@@ -179,9 +184,10 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
       .map(g => g.nombre?.trim())
       .filter(nombre => nombre && nombre !== '' && nombre !== 'Distrito');
 
-    const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')() || {};
-    const provincia = geoInfo.PROV || '____';
-    const departamento = geoInfo.DPTO || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de geoInfo
+    const ubicacion = this.ubicacionGlobal();
+    const provincia = ubicacion.provincia || '____';
+    const departamento = ubicacion.departamento || '____';
 
     const highlightClass = this.dataHighlightService.getInheritedClass();
     const manualClass = this.dataHighlightService.getManualClass();

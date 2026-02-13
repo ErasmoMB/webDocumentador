@@ -35,6 +35,9 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
   readonly tablaAISD2Signal: Signal<any[]>;
   readonly photoFieldsHash: Signal<string>;
   readonly viewModel: Signal<any>;
+  
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -186,12 +189,14 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
   obtenerTextoComunidadCompleto(datos: any, nombreComunidad: string): string {
     const textoPersonalizado = this.obtenerCampoConPrefijo(datos, 'parrafoSeccion4_comunidad_completo');
     
-    const distrito = datos['distritoSeleccionado'] || '____';
-    const provincia = datos['provinciaSeleccionada'] || '____';
+    // ✅ REFACTOR: Usar ubicacionGlobal en lugar de datos
+    const ubicacion = this.ubicacionGlobal();
+    const distrito = ubicacion.distrito || '____';
+    const provincia = ubicacion.provincia || '____';
+    const departamento = ubicacion.departamento || '____';
     const aisd1 = datos['aisdComponente1'] || '____';
     const aisd2 = datos['aisdComponente2'] || '____';
-    const departamento = datos['departamentoSeleccionado'] || '____';
-    const grupoAISI = datos['grupoAISI'] || datos['distritoSeleccionado'] || '____';
+    const grupoAISI = datos['grupoAISI'] || ubicacion.distrito || '____';
     
     const textoPorDefecto = SECCION4_TEMPLATES.descripcionComunidadDefault
       .replace(/{{nombreComunidad}}/g, nombreComunidad || '____')

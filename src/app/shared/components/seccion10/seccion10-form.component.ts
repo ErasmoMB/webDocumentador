@@ -96,6 +96,9 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
+  // ✅ NUEVO: Signal para ubicación global (desde metadata)
+  readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,

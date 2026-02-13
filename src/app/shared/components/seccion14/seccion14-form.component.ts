@@ -207,7 +207,6 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = `nivelEducativoTabla${prefijo}`;
     // Priorizar los datos emitidos por el dynamic-table para evitar race conditions
     const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
-    console.log('[Seccion14][form] onNivelEducativoTableUpdated - incoming', { updatedDataLength: updatedData?.length ?? 0 });
     this.datos[tablaKey] = datos;
 
     const formChange = this.injector.get(FormChangeService);
@@ -215,7 +214,6 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
 
     // Leer inmediatamente desde el store para validar que el cambio quedó
     const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
-    console.log('[Seccion14][form] after persist - tablaPersistida length:', (tablaPersistida && tablaPersistida.length) || 0);
 
     // Alineado con Sección 13: actualizar this.datos con la tabla persistida para evitar inconsistencias
     this.datos[tablaKey] = tablaPersistida;
@@ -228,14 +226,12 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
     // Priorizar los datos emitidos por el dynamic-table para evitar race conditions
     const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
-    console.log('[Seccion14][form] onTasaAnalfabetismoTableUpdated - incoming', { updatedDataLength: updatedData?.length ?? 0 });
     this.datos[tablaKey] = datos;
 
     const formChange = this.injector.get(FormChangeService);
     formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
 
     const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
-    console.log('[Seccion14][form] after persist - tablaPersistida length:', (tablaPersistida && tablaPersistida.length) || 0);
 
     // Alineado con Sección 13: actualizar this.datos con la tabla persistida para evitar inconsistencias
     this.datos[tablaKey] = tablaPersistida;
