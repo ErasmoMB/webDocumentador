@@ -5,6 +5,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
+import { SECCION28_TEMPLATES } from './seccion28-constants';
 
 @Component({
   standalone: true,
@@ -14,6 +15,9 @@ import { AutoLoadSectionComponent } from '../auto-load-section.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion28ViewComponent extends AutoLoadSectionComponent implements OnDestroy {
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION28_TEMPLATES = SECCION28_TEMPLATES;
+
   // ✅ MODO IDEAL: Signal reactivo de datos de formulario
   readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
     this.projectFacade.selectSectionFields(this.seccionId, null)()
@@ -68,7 +72,9 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     }
     const distrito = data['distritoSeleccionado'] || 'Cahuacho';
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `Dentro de la capital distrital de ${distrito} se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local. Este puesto de salud es el principal punto de referencia para los habitantes de ${centroPoblado}, ofreciendo servicios esenciales como consultas médicas, controles de salud y atención básica de emergencias. Aunque cuenta con limitaciones en cuanto a especialidades médicas y equipamiento, su presencia es fundamental para atender las necesidades de salud de la población, especialmente considerando la ausencia de otros centros de mayor capacidad en la zona.`;
+    return SECCION28_TEMPLATES.textoSaludDefault
+      .replace(/____/g, distrito)
+      .replace(/____/g, centroPoblado);
   }
 
   obtenerTextoEducacionCP(): string {
@@ -79,7 +85,10 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
     const nombreIE = data['nombreIEMayorEstudiantes'] || 'IE Virgen de Copacabana';
     const cantidadEstudiantes = data['cantidadEstudiantesIEMayor'] || '28';
-    return `Dentro del CP ${centroPoblado} se hallan instituciones educativas que cubren todos los niveles de educación básica regular. La institución con mayor cantidad de estudiantes es ${nombreIE} con ${cantidadEstudiantes} estudiantes.`;
+    return SECCION28_TEMPLATES.textoEducacionDefault
+      .replace(/____/g, centroPoblado)
+      .replace(/____/g, nombreIE)
+      .replace(/____/g, cantidadEstudiantes);
   }
 
   obtenerTextoRecreacionCP1(): string {
@@ -88,7 +97,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
       return data['textoRecreacionCP1'];
     }
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `Dentro del CP ${centroPoblado} se cuenta con espacios destinados a la recreación de la población. Entre ellos destacan las plazas, las cuales funcionan como principales áreas de encuentro para la interacción y socialización, especialmente durante festividades y eventos culturales.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP1Default.replace(/____/g, centroPoblado);
   }
 
   obtenerTextoRecreacionCP2(): string {
@@ -96,8 +105,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoRecreacionCP2'] && data['textoRecreacionCP2'] !== '____') {
       return data['textoRecreacionCP2'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `Otra infraestructura recreativa relevante es la plaza de toros, que se halla en la zona este del centro poblado, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales y celebraciones taurinas. Este espacio funciona como un centro de actividad importante para las festividades taurinas y celebraciones especiales, atrayendo tanto a residentes como a visitantes y promoviendo las tradiciones locales.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP2Default;
   }
 
   obtenerTextoRecreacionCP3(): string {
@@ -105,8 +113,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoRecreacionCP3'] && data['textoRecreacionCP3'] !== '____') {
       return data['textoRecreacionCP3'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP3Default;
   }
 
   obtenerTextoDeporteCP1(): string {
@@ -115,7 +122,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
       return data['textoDeporteCP1'];
     }
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `En el CP ${centroPoblado}, la infraestructura deportiva consiste en instalaciones básicas para la práctica de actividades físicas y recreativas. Se destaca la losa deportiva ubicada detrás de la municipalidad, la cual es utilizada para diversos deportes colectivos como fútbol y vóley, y sirve como un espacio frecuente para eventos locales y recreación de niños y jóvenes.`;
+    return SECCION28_TEMPLATES.textoDeporteCP1Default.replace(/____/g, centroPoblado);
   }
 
   obtenerTextoDeporteCP2(): string {
@@ -124,7 +131,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
       return data['textoDeporteCP2'];
     }
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
-    return `Asimismo, cabe mencionar que en ${centroPoblado} se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.`;
+    return SECCION28_TEMPLATES.textoDeporteCP2Default.replace(/____/g, centroPoblado);
   }
 
   getEducacionCpConPorcentajes(): any[] {

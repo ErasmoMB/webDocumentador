@@ -1,5 +1,5 @@
 <div class="form-group-section">
-  <h5>A.1.14. Índice de necesidades básicas insatisfechas distrital</h5>
+  <h5>{{ SECCION18_TEMPLATES.sectionTitle }}</h5>
   <div [innerHTML]="getTextoNBIConResaltado()"></div>
 
   <app-table-wrapper [title]="getTituloNbiCC()" sectionId="3.1.4.A.1.14">
@@ -7,9 +7,9 @@
       [data]="getNbiCCAyrocaConPorcentajes()"
       [config]="{
         columns: [
-          { key: 'categoria', header: 'Categoría', align: 'left' },
-          { key: 'casos', header: 'Casos', align: 'right' },
-          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+          { key: 'categoria', header: SECCION18_TEMPLATES.tableHeader.categoria, align: 'left' },
+          { key: 'casos', header: SECCION18_TEMPLATES.tableHeader.casos, align: 'right' },
+          { key: 'porcentaje', header: SECCION18_TEMPLATES.tableHeader.porcentaje, align: 'right' }
         ],
         showFooter: false,
         striped: true,
@@ -17,16 +17,16 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE: {{ getFuenteNbiCC() }}</p>
+  <p class="source">{{ SECCION18_TEMPLATES.sourceLabel }} {{ getFuenteNbiCC() }}</p>
 
   <app-table-wrapper [title]="getTituloNbiDistrito()" sectionId="3.1.4.A.1.14">
     <app-generic-table
       [data]="getNbiDistritoCahuachoConPorcentajes()"
       [config]="{
         columns: [
-          { key: 'categoria', header: 'Categoría', align: 'left' },
-          { key: 'casos', header: 'Casos', align: 'right' },
-          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+          { key: 'categoria', header: SECCION18_TEMPLATES.tableHeader.categoria, align: 'left' },
+          { key: 'casos', header: SECCION18_TEMPLATES.tableHeader.casos, align: 'right' },
+          { key: 'porcentaje', header: SECCION18_TEMPLATES.tableHeader.porcentaje, align: 'right' }
         ],
         showFooter: false,
         striped: true,
@@ -34,7 +34,7 @@
       }">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE: {{ getFuenteNbiDistrito() }}</p>
+  <p class="source">{{ SECCION18_TEMPLATES.sourceLabel }} {{ getFuenteNbiDistrito() }}</p>
 
   <app-image-upload
       [modoVista]="true"
@@ -42,8 +42,8 @@
       [fotografias]="getFotografiasVista()"
       [sectionId]="seccionId"
       [photoPrefix]="photoPrefixSignal()"
-      [labelTitulo]="'Título'"
-      [labelFuente]="'Fuente'"
-      [labelImagen]="'Imagen'">
+      [labelTitulo]="SECCION18_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION18_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION18_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>

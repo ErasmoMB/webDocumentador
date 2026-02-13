@@ -1,70 +1,39 @@
 <div>
-  <h5>B.1.8. Indicadores de salud</h5>
+  <h5>{{ SECCION29_TEMPLATES.tituloSeccion }}</h5>
 
-  <p class="mt-lg mb-sm"><strong>a. Natalidad y Mortalidad</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION29_TEMPLATES.tituloSubseccionA }}</strong></p>
   <p class="text-justify">{{ obtenerTextoNatalidadCP1() }}</p>
   <p class="text-justify">{{ obtenerTextoNatalidadCP2() }}</p>
 
-  <app-table-wrapper [title]="(tituloNatalidadSignal() && tituloNatalidadSignal().trim().length>0) ? tituloNatalidadSignal() : ('Indicadores de natalidad y mortalidad – CP ' + centroPobladoSignal())" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloNatalidadSignal() && tituloNatalidadSignal().trim().length>0) ? tituloNatalidadSignal() : (SECCION29_TEMPLATES.placeholderTituloNatalidad.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
     <app-generic-table
       [data]="getNatalidadMortalidadSinTotal()"
-      [config]="{
-        columns: [
-          { key: 'anio', header: 'Año', align: 'left' },
-          { key: 'natalidad', header: 'Natalidad', align: 'right' },
-          { key: 'mortalidad', header: 'Mortalidad', align: 'right' }
-        ],
-        showFooter: false,
-        striped: true,
-        hover: true
-      }">
+      [config]="natalidadTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteNatalidadSignal() && fuenteNatalidadSignal().trim().length>0 ? fuenteNatalidadSignal() : 'GEADES (2024)' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteNatalidadSignal() && fuenteNatalidadSignal().trim().length>0 ? fuenteNatalidadSignal() : SECCION29_TEMPLATES.placeholderFuenteNatalidad }}</span></p>
 
-  <p class="mt-lg mb-sm"><strong>b. Morbilidad</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION29_TEMPLATES.tituloSubseccionB }}</strong></p>
   <p class="text-justify">{{ obtenerTextoMorbilidadCP() }}</p>
 
-  <app-table-wrapper [title]="(tituloMorbilidadSignal() && tituloMorbilidadSignal().trim().length>0) ? tituloMorbilidadSignal() : ('Casos por grupos de morbilidad – Distrito ' + distritoSeleccionadoSignal() + ' (2023)')" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloMorbilidadSignal() && tituloMorbilidadSignal().trim().length>0) ? tituloMorbilidadSignal() : (SECCION29_TEMPLATES.placeholderTituloMorbilidad.replace('_____', distritoSeleccionadoSignal()))" [sectionId]="seccionId">
     <app-generic-table
       [data]="getMorbilidadSinTotal()"
-      [config]="{
-        columns: [
-          { key: 'grupo', header: 'Grupo de Morbilidad', align: 'left' },
-          { key: 'edad0_11', header: '0 – 11', align: 'right' },
-          { key: 'edad12_17', header: '12 – 17', align: 'right' },
-          { key: 'edad18_29', header: '18 – 29', align: 'right' },
-          { key: 'edad30_59', header: '30 – 59', align: 'right' },
-          { key: 'edad60_mas', header: '60 - >', align: 'right' },
-          { key: 'casos', header: 'Casos Totales', align: 'right' }
-        ],
-        showFooter: false,
-        striped: true,
-        hover: true
-      }">
+      [config]="morbilidadTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteMorbilidadSignal() && fuenteMorbilidadSignal().trim().length>0 ? fuenteMorbilidadSignal() : 'REUNIS (2024)' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteMorbilidadSignal() && fuenteMorbilidadSignal().trim().length>0 ? fuenteMorbilidadSignal() : SECCION29_TEMPLATES.placeholderFuenteMorbilidad }}</span></p>
 
-  <p class="mt-lg mb-sm"><strong>c. Población afiliada a Seguros de Salud</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION29_TEMPLATES.tituloSubseccionC }}</strong></p>
   <p class="text-justify">{{ obtenerTextoAfiliacionSalud() }}</p>
 
-  <app-table-wrapper [title]="(tituloAfiliacionSignal() && tituloAfiliacionSignal().trim().length>0) ? tituloAfiliacionSignal() : ('Población según tipo de seguro de salud afiliado – CP ' + centroPobladoSignal() + ' (2017)')" sectionId="3.1.4.B.1.8">
+  <app-table-wrapper [title]="(tituloAfiliacionSignal() && tituloAfiliacionSignal().trim().length>0) ? tituloAfiliacionSignal() : (SECCION29_TEMPLATES.placeholderTituloAfiliacion.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
     <app-generic-table
       [data]="getAfiliacionSaludSinTotal()"
-      [config]="{
-        columns: [
-          { key: 'categoria', header: 'Categoría', align: 'left' },
-          { key: 'casos', header: 'Casos', align: 'right' },
-          { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
-        ],
-        showFooter: false,
-        striped: true,
-        hover: true
-      }">
+      [config]="afiliacionTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteAfiliacionSignal() && fuenteAfiliacionSignal().trim().length>0 ? fuenteAfiliacionSignal() : 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas' }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteAfiliacionSignal() && fuenteAfiliacionSignal().trim().length>0 ? fuenteAfiliacionSignal() : SECCION29_TEMPLATES.placeholderFuenteAfiliacion }}</span></p>
 
   <app-image-upload
       [modoVista]="true"
@@ -72,8 +41,8 @@
       [fotografias]="getFotografiasVista()"
       [sectionId]="seccionId"
       [photoPrefix]="PHOTO_PREFIX"
-      [labelTitulo]="'Título'"
-      [labelFuente]="'Fuente'"
-      [labelImagen]="'Imagen'">
+      [labelTitulo]="SECCION29_TEMPLATES.labelTituloNatalidad"
+      [labelFuente]="SECCION29_TEMPLATES.labelFuenteNatalidad"
+      [labelImagen]="SECCION29_TEMPLATES.labelTabdlaNatalidad">
   </app-image-upload>
 </div>

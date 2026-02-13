@@ -1,13 +1,13 @@
 <div class="form-group-section">
-  <h4 class="section-title">A.1.12. Uso de los suelos y de los recursos naturales</h4>
+  <h4 class="section-title">{{ SECCION16_TEMPLATES.tituloSeccion }}</h4>
 
   <div class="form-group-section mt-lg">
     <h4 class="section-title">Editar Párrafos</h4>
 
     <app-paragraph-editor
       [fieldId]="getFieldIdAguaCompleto()"
-      label="Agua - Texto Completo"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [label]="SECCION16_TEMPLATES.labelAguaCompleto"
+      [hint]="SECCION16_TEMPLATES.hintAguaCompleto"
       [rows]="6"
       [value]="obtenerTextoAguaCompleto()"
       (valueChange)="onFieldChange('parrafoSeccion16_agua_completo', $event)">
@@ -15,8 +15,8 @@
 
     <app-paragraph-editor
       [fieldId]="getFieldIdRecursosNaturalesCompleto()"
-      label="Recursos Naturales - Texto Completo"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [label]="SECCION16_TEMPLATES.labelRecursosNaturalesCompleto"
+      [hint]="SECCION16_TEMPLATES.hintRecursosNaturalesCompleto"
       [rows]="6"
       [value]="obtenerTextoRecursosNaturalesCompleto()"
       (valueChange)="onFieldChange('parrafoSeccion16_recursos_naturales_completo', $event);">
@@ -24,38 +24,38 @@
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Fotografías de Reservorio</label>
+    <label class="label">{{ SECCION16_TEMPLATES.labelFotografiasReservorio }}</label>
     <app-image-upload
       [fotografias]="fotografiasReservorio"
       [sectionId]="seccionId"
       [photoPrefix]="PHOTO_PREFIX_RESERVORIO"
       [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Reservorio del anexo Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Reservorio del anexo Ayroca"
-      fuenteDefault="GEADES, 2024"
+      [labelTitulo]="SECCION16_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION16_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION16_TEMPLATES.labelFotoImagen"
+      [placeholderTitulo]="SECCION16_TEMPLATES.placeholderFotoTituloReservorio"
+      [placeholderFuente]="SECCION16_TEMPLATES.placeholderFotoFuente"
+      [tituloDefault]="SECCION16_TEMPLATES.tituloFotoDefaultReservorio"
+      [fuenteDefault]="SECCION16_TEMPLATES.fuenteFotoDefault"
       [requerido]="false"
       (fotografiasChange)="onFotografiasReservorioChange($event)">
     </app-image-upload>
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Fotografías de Uso de Suelos</label>
+    <label class="label">{{ SECCION16_TEMPLATES.labelFotografiasUsoSuelos }}</label>
     <app-image-upload
       [fotografias]="fotografiasUsoSuelos"
       [sectionId]="seccionId"
       [photoPrefix]="PHOTO_PREFIX_USO_SUELOS"
       [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: Uso de los suelos en el anexo Ayroca"
-      placeholderFuente="Ej: GEADES, 2024"
-      tituloDefault="Uso de los suelos en el anexo Ayroca"
-      fuenteDefault="GEADES, 2024"
+      [labelTitulo]="SECCION16_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION16_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION16_TEMPLATES.labelFotoImagen"
+      [placeholderTitulo]="SECCION16_TEMPLATES.placeholderFotoTituloUsoSuelos"
+      [placeholderFuente]="SECCION16_TEMPLATES.placeholderFotoFuente"
+      [tituloDefault]="SECCION16_TEMPLATES.tituloFotoDefaultUsoSuelos"
+      [fuenteDefault]="SECCION16_TEMPLATES.fuenteFotoDefault"
       [requerido]="false"
       (fotografiasChange)="onFotografiasUsoSuelosChange($event)">
     </app-image-upload>

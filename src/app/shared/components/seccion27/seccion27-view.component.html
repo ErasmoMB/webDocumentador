@@ -1,6 +1,6 @@
-<h5>B.1.6. Infraestructura para transportes y comunicaciones</h5>
+<h5>{{ SECCION27_TEMPLATES.tituloSeccion }}</h5>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Transporte</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION27_TEMPLATES.tituloSubseccionTransporte }}</strong></p>
 
 <p class="text-justify" *ngIf="textoTransporteCP1Signal() && textoTransporteCP1Signal() !== '____'">{{ textoTransporteCP1Signal() }}</p>
 <p class="text-justify" *ngIf="!textoTransporteCP1Signal() || textoTransporteCP1Signal() === '____'">En el CP {{ centroPobladoSignal() || 'Cahuacho' }}, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.</p>
@@ -13,12 +13,12 @@
     [fotografias]="getFotosTransporteSignal()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalTransporte()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION27_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION27_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION27_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Telecomunicaciones</strong></p>
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION27_TEMPLATES.tituloSubseccionTelecomunicaciones }}</strong></p>
 
 <p class="text-justify" *ngIf="textoTelecomunicacionesCP1Signal() && textoTelecomunicacionesCP1Signal() !== '____'">{{ textoTelecomunicacionesCP1Signal() }}</p>
 <p class="text-justify" *ngIf="!textoTelecomunicacionesCP1Signal() || textoTelecomunicacionesCP1Signal() === '____'">En el CP {{ centroPobladoSignal() || 'Cahuacho' }}, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.</p>
@@ -27,13 +27,13 @@
 <p class="text-justify" *ngIf="textoTelecomunicacionesCP3Signal() && textoTelecomunicacionesCP3Signal() !== '____'">{{ textoTelecomunicacionesCP3Signal() }}</p>
 <p class="text-justify" *ngIf="!textoTelecomunicacionesCP3Signal() || textoTelecomunicacionesCP3Signal() === '____'">Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en {{ centroPobladoSignal() || 'Cahuacho' }} optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.</p>
 
-<app-table-wrapper [title]="cuadroTituloTelecomunicacionesSignal() || ('Servicios de telecomunicaciones – CP ' + (centroPobladoSignal() || 'Cahuacho'))" [sectionId]="seccionId">
+<app-table-wrapper [title]="cuadroTituloTelecomunicacionesSignal() || (SECCION27_TEMPLATES.labelTablaTelecomunicaciones + ' – CP ' + (centroPobladoSignal() || 'Cahuacho'))" [sectionId]="seccionId">
   <app-generic-table
     [data]="telecomunicacionesSignal()"
     [config]="{
       columns: [
-        { key: 'medio', header: 'Medio de comunicación', align: 'left' },
-        { key: 'descripcion', header: 'Descripción', align: 'left' }
+        { key: 'medio', header: SECCION27_TEMPLATES.columnaMedioComunicacion, align: 'left' },
+        { key: 'descripcion', header: SECCION27_TEMPLATES.columnaDescripcion, align: 'left' }
       ],
       showFooter: false,
       striped: true,
@@ -41,7 +41,7 @@
     }">
   </app-generic-table>
 </app-table-wrapper>
-<p class="source">FUENTE: {{ cuadroFuenteTelecomunicacionesSignal() || 'GEADES (2024)' }}</p>
+<p class="source">FUENTE: {{ cuadroFuenteTelecomunicacionesSignal() || SECCION27_TEMPLATES.fuenteFotoDefault }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -49,7 +49,7 @@
     [fotografias]="getFotosTelecomunicacionesSignal()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalTelecomunicaciones()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION27_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION27_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION27_TEMPLATES.labelFotoImagen">
 </app-image-upload>

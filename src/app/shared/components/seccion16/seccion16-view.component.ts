@@ -6,6 +6,12 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { 
+  SECCION16_PHOTO_PREFIX_RESERVORIO, 
+  SECCION16_PHOTO_PREFIX_USO_SUELOS,
+  SECCION16_SECTION_ID,
+  SECCION16_TEMPLATES 
+} from './seccion16-constants';
 
 @Component({
     standalone: true,
@@ -19,11 +25,14 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion16ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.12';
+  @Input() override seccionId: string = SECCION16_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
-  readonly PHOTO_PREFIX_RESERVORIO = 'fotografiaReservorio';
-  readonly PHOTO_PREFIX_USO_SUELOS = 'fotografiaUsoSuelos';
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION16_TEMPLATES = SECCION16_TEMPLATES;
+  
+  readonly PHOTO_PREFIX_RESERVORIO = SECCION16_PHOTO_PREFIX_RESERVORIO;
+  readonly PHOTO_PREFIX_USO_SUELOS = SECCION16_PHOTO_PREFIX_USO_SUELOS;
   override useReactiveSync: boolean = true;
 
   fotografiasReservorio: FotoItem[] = [];
@@ -108,21 +117,26 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
 
   obtenerTextoAguaCompleto(): string {
     const prefijo = this.obtenerPrefijo();
-    const datos = this.formDataSignal();  // ✅ Punto 2: Usa formDataSignal()
+    const datos = this.formDataSignal();
     const fieldIdConPrefijo = `parrafoSeccion16_agua_completo${prefijo}`;
     const textoConPrefijo = datos[fieldIdConPrefijo];
     const textoSinPrefijo = datos['parrafoSeccion16_agua_completo'];
     const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
 
+    // Obtener valores dinámicos (con fallback a constantes)
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const ojosAgua1 = datos['ojosAgua1'] || 'Quinsa Rumi';
-    const ojosAgua2 = datos['ojosAgua2'] || 'Pallalli';
-    const rioAgricola = datos['rioAgricola'] || 'Yuracyacu';
-    const quebradaAgricola = datos['quebradaAgricola'] || 'Pucaccocha';
+    const ojosAgua1 = datos['ojosAgua1'] || SECCION16_TEMPLATES.ojosAgua1Default;
+    const ojosAgua2 = datos['ojosAgua2'] || SECCION16_TEMPLATES.ojosAgua2Default;
+    const rioAgricola = datos['rioAgricola'] || SECCION16_TEMPLATES.rioAgricolaDefault;
+    const quebradaAgricola = datos['quebradaAgricola'] || SECCION16_TEMPLATES.quebradaAgricolaDefault;
 
-    const textoPorDefecto = `Las fuentes de agua en la CC ${grupoAISD} son diversas, dependiendo del uso que se les dé. Para el consumo humano, el agua se obtiene principalmente de los ojos de agua de ${ojosAgua1} y ${ojosAgua2}. En el caso del anexo ${grupoAISD}, esta agua es almacenada en un reservorio, desde donde se distribuye a las viviendas locales a través de una red básica de distribución. Aunque el abastecimiento cubre las necesidades esenciales de la población, existen desafíos relacionados con la calidad del agua y el mantenimiento de la infraestructura.
-
-En cuanto al uso agrícola, el agua proviene del río ${rioAgricola} y la quebrada ${quebradaAgricola}, que sirven como una fuente importante de riego. Finalmente, para el uso ganadero, la comunidad se abastece de las diferentes quebradas que se hallan dentro del área de la CC ${grupoAISD}, las cuales proporcionan agua para el sustento del ganado local, principalmente vacunos y ovinos.`;
+    // Usar template de constantes con sustitución dinámica
+    const textoPorDefecto = SECCION16_TEMPLATES.textoPorDefectoAguaCompleto
+      .replace(/{{grupoAISD}}/g, grupoAISD)
+      .replace(/{{ojosAgua1}}/g, ojosAgua1)
+      .replace(/{{ojosAgua2}}/g, ojosAgua2)
+      .replace(/{{rioAgricola}}/g, rioAgricola)
+      .replace(/{{quebradaAgricola}}/g, quebradaAgricola);
 
     if (textoPersonalizado && textoPersonalizado !== '____' && String(textoPersonalizado).trim() !== '') {
       return textoPersonalizado;
@@ -133,7 +147,7 @@ En cuanto al uso agrícola, el agua proviene del río ${rioAgricola} y la quebra
 
   obtenerTextoRecursosNaturalesCompleto(): string {
     const prefijo = this.obtenerPrefijo();
-    const datos = this.formDataSignal();  // ✅ Punto 2: Usa formDataSignal()
+    const datos = this.formDataSignal();
     const fieldIdConPrefijo = `parrafoSeccion16_recursos_naturales_completo${prefijo}`;
     const textoConPrefijo = datos[fieldIdConPrefijo];
     const textoSinPrefijo = datos['parrafoSeccion16_recursos_naturales_completo'];
@@ -141,11 +155,9 @@ En cuanto al uso agrícola, el agua proviene del río ${rioAgricola} y la quebra
 
     const grupoAISD = this.obtenerNombreComunidadActual();
 
-    const textoPorDefecto = `En la CC ${grupoAISD}, la tenencia de la tierra es comunal, lo que significa que la comunidad en su conjunto es la propietaria de los terrenos superficiales. Los comuneros no son propietarios individuales de la tierra, sino que la comunidad les cede los terrenos en calidad de posesión para que puedan vivir y trabajar en ellos. Este sistema de tenencia comunal busca asegurar el acceso equitativo a los recursos entre los miembros de la comunidad, aunque limita la posibilidad de transacciones privadas de terrenos.
-
-En cuanto a los usos del suelo, la mayor parte del territorio está destinado a las actividades agrícolas y ganaderas, las cuales son el principal sustento económico de la población. La tierra es aprovechada para el cultivo de papa, haba y cebada, y para el pastoreo de vacunos y ovinos. Entre los recursos naturales que se aprovechan destacan la queñua, eucalipto, lloque y tola, que son utilizados como leña para la cocción de alimentos o en la construcción.
-
-Además, según algunos comuneros, dentro del territorio de la comunidad existen diversas hierbas medicinales con efectos positivos para la salud. Entre ellas destacan la huamanripa, llantén, muña y salvia. Estas son utilizadas en un primer nivel de atención antes de acudir al establecimiento de salud local.`;
+    // Usar template de constantes con sustitución dinámica
+    const textoPorDefecto = SECCION16_TEMPLATES.textoPorDefectoRecursosNaturalesCompleto
+      .replace(/{{grupoAISD}}/g, grupoAISD);
 
     if (textoPersonalizado && textoPersonalizado !== '____' && String(textoPersonalizado).trim() !== '') {
       return textoPersonalizado;

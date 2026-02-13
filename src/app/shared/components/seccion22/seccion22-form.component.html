@@ -1,32 +1,32 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.1. Aspectos demográficos</h4>
+    <h4 class="section-title">{{ SECCION22_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-field mt-md">
-      <label class="label">Texto Demografía</label>
-      <textarea [value]="viewModel().textoDemografia" (change)="actualizarTextoDemografia($any($event.target).value)" rows="4" class="form-control" placeholder="Editar texto de demografía"></textarea>
+      <label class="label">{{ SECCION22_TEMPLATES.labelTextoDemografia }}</label>
+      <textarea [value]="viewModel().textoDemografia" (change)="actualizarTextoDemografia($any($event.target).value)" rows="4" class="form-control" [placeholder]="SECCION22_TEMPLATES.placeholderTextoDemografia"></textarea>
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Texto Grupo Etario</label>
-      <textarea [value]="viewModel().textoGrupoEtario" (change)="actualizarTextoGrupoEtario($any($event.target).value)" rows="4" class="form-control" placeholder="Editar texto de grupo etario"></textarea>
+      <label class="label">{{ SECCION22_TEMPLATES.labelTextoGrupoEtario }}</label>
+      <textarea [value]="viewModel().textoGrupoEtario" (change)="actualizarTextoGrupoEtario($any($event.target).value)" rows="4" class="form-control" [placeholder]="SECCION22_TEMPLATES.placeholderTextoGrupoEtario"></textarea>
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Título — Población según sexo</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionSexoSignal()]" (ngModelChange)="onTituloCuadroPoblacionSexoChange($event)" placeholder="Ej: Población por sexo – CP Cahuacho (2017)">
+      <label class="label">{{ SECCION22_TEMPLATES.labelTituloPoblacionSexo }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionSexoSignal()]" (ngModelChange)="onTituloCuadroPoblacionSexoChange($event)" [placeholder]="SECCION22_TEMPLATES.placeholderTituloPoblacionSexo">
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Población por Sexo</label>
+      <label class="label">{{ SECCION22_TEMPLATES.labelPoblacionSexo }}</label>
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
         [config]="{ tablaKey: tablaKeyPoblacionSexoSignal(), totalKey: 'sexo', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }"
         [columns]="[
-          { field: 'sexo', label: 'Sexo', type: 'text', readonly: true },
-          { field: 'casos', label: 'Casos', type: 'number' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+          { field: 'sexo', label: SECCION22_TEMPLATES.columnaSexo, type: 'text', readonly: true },
+          { field: 'casos', label: SECCION22_TEMPLATES.columnaCasos, type: 'number' },
+          { field: 'porcentaje', label: SECCION22_TEMPLATES.columnaPorcentaje, type: 'text', readonly: true }
         ]"
         [tablaKey]="tablaKeyPoblacionSexoSignal()"
         [showAddButton]="false"
@@ -36,25 +36,25 @@
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Fuente — Población por Sexo</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionSexoSignal()]" (ngModelChange)="onFuenteCuadroPoblacionSexoChange($event)" placeholder="Ej: Censos Nacionales 2017">
+      <label class="label">{{ SECCION22_TEMPLATES.labelFuentePoblacionSexo }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionSexoSignal()]" (ngModelChange)="onFuenteCuadroPoblacionSexoChange($event)" [placeholder]="SECCION22_TEMPLATES.placeholderFuentePoblacionSexo">
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Título — Población según grupo etario</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionEtarioSignal()]" (ngModelChange)="onTituloCuadroPoblacionEtarioChange($event)" placeholder="Ej: Población por grupo etario – CP Cahuacho (2017)">
+      <label class="label">{{ SECCION22_TEMPLATES.labelTituloPoblacionEtario }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[tituloKeyPoblacionEtarioSignal()]" (ngModelChange)="onTituloCuadroPoblacionEtarioChange($event)" [placeholder]="SECCION22_TEMPLATES.placeholderTituloPoblacionEtario">
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Población por Grupo Etario</label>
+      <label class="label">{{ SECCION22_TEMPLATES.labelPoblacionEtario }}</label>
       <app-dynamic-table 
         [datos]="datos" 
         [sectionId]="seccionId"
         [config]="{ tablaKey: tablaKeyPoblacionEtarioSignal(), totalKey: 'categoria', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }" 
         [columns]="[
-          { field: 'categoria', label: 'Categoría', type: 'text', readonly: true },
-          { field: 'casos', label: 'Casos', type: 'number' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
+          { field: 'categoria', label: SECCION22_TEMPLATES.columnaCategoria, type: 'text', readonly: true },
+          { field: 'casos', label: SECCION22_TEMPLATES.columnaCasos, type: 'number' },
+          { field: 'porcentaje', label: SECCION22_TEMPLATES.columnaPorcentaje, type: 'text', readonly: true }
         ]"
         [tablaKey]="tablaKeyPoblacionEtarioSignal()"
         [showAddButton]="false"
@@ -64,12 +64,12 @@
     </div>
 
     <div class="form-field mt-md">
-      <label class="label">Fuente — Población por Grupo Etario</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionEtarioSignal()]" (ngModelChange)="onFuenteCuadroPoblacionEtarioChange($event)" placeholder="Ej: Censos Nacionales 2017">
+      <label class="label">{{ SECCION22_TEMPLATES.labelFuentePoblacionEtario }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[fuenteKeyPoblacionEtarioSignal()]" (ngModelChange)="onFuenteCuadroPoblacionEtarioChange($event)" [placeholder]="SECCION22_TEMPLATES.placeholderFuentePoblacionEtario">
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Fotografías</label>
+      <label class="label">{{ SECCION22_TEMPLATES.labelFotografias }}</label>
       <app-image-upload [fotografias]="viewModel().fotos" [sectionId]="seccionId" [photoPrefix]="photoPrefixSignal()" [mostrarTitulo]="true" [mostrarFuente]="true" (fotografiasChange)="onFotografiasChange($event)"></app-image-upload>
     </div>
   </div>

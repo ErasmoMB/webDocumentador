@@ -6,6 +6,7 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TableWrapperComponent } from '../table-wrapper/table-wrapper.component';
+import { SECCION17_TEMPLATES, SECCION17_DEFAULT_TEXTS } from './seccion17-constants';
 
 @Component({
     standalone: true,
@@ -20,6 +21,10 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
 
     override readonly PHOTO_PREFIX = 'fotografiaIDH';
     override useReactiveSync: boolean = true;
+
+    // ✅ EXPORTAR CONSTANTES AL TEMPLATE
+    readonly SECCION17_TEMPLATES = SECCION17_TEMPLATES;
+    readonly SECCION17_DEFAULT_TEXTS = SECCION17_DEFAULT_TEXTS;
 
     private readonly regexCache = new Map<string, RegExp>();
 
@@ -118,7 +123,7 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         const idhValor = (idh !== '____' && idh !== '0.000' && idh !== '0,000') ? idh : '____';
         const rankValor = (rankIdh !== '____' && rankIdh !== '0') ? rankIdh : '____';
 
-        const textoPorDefecto = `El Índice de Desarrollo Humano (IDH) mide el logro medio de un país (en nuestro país se mide también a niveles departamentales, provinciales y distritales) tratándose de un índice compuesto. El IDH contiene tres variables: la esperanza de vida al nacer, el logro educacional (alfabetización de adultos y la tasa bruta de matriculación primaria, secundaria y terciaria combinada) y el PIB real per cápita (PPA en dólares). El ingreso se considera en el IDH en representación de un nivel decente de vida y en reemplazo de todas las opciones humanas que no se reflejan en las otras dos dimensiones.\n\nSegún el informe del PNUD para el año 2019, el Índice de Desarrollo Humano del distrito de ${distrito} es de ${idhValor}. Es así que ocupa el puesto N°${rankValor} en el país, siendo una de las divisiones políticas de nivel subnacional con uno de los IDH más bajos.`;
+        const textoPorDefecto = SECCION17_DEFAULT_TEXTS.textoIDHDefault(distrito, idhValor, rankValor);
 
         if (textoPersonalizado && textoPersonalizado !== '____' && String(textoPersonalizado).trim() !== '') {
             let textoFinal = textoPersonalizado;
@@ -220,13 +225,13 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         
         if (!prefijo) {
             nombreComunidad = data['distritoSeleccionado'] || '____';
-            return `Componentes del Índice de Desarrollo Humano – ${nombreComunidad} (2019)`;
+            return SECCION17_DEFAULT_TEXTS.tituloIDHDefault(nombreComunidad);
         }
         
         // Generar número de cuadro dinámico basado en el prefijo
         const grupoMatch = prefijo.match(/[AB]\.(\d+)/);
         if (!grupoMatch) {
-            return `Componentes del Índice de Desarrollo Humano – ${nombreComunidad} (2019)`;
+            return SECCION17_DEFAULT_TEXTS.tituloIDHDefault(nombreComunidad);
         }
         
         return `Componentes del Índice de Desarrollo Humano – CC ${nombreComunidad} (2019)`;
@@ -237,7 +242,7 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         const prefijo = this.obtenerPrefijoGrupo();
         const fuenteField = prefijo ? `fuenteIDH${prefijo}` : 'fuenteIDH';
         const fuente = data[fuenteField] || data['fuenteIDH'] || '';
-        return fuente && fuente.trim() !== '' ? fuente : 'PNUD Informe 2019';
+        return fuente && fuente.trim() !== '' ? fuente : SECCION17_TEMPLATES.fuenteIDHDefault;
     }
 
     // === UTILIDADES ===

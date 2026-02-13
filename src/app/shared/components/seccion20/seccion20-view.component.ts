@@ -7,6 +7,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION20_TEMPLATES } from './seccion20.constants';
 
 @Component({
   selector: 'app-seccion20-view',
@@ -19,13 +20,15 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION20_TEMPLATES = SECCION20_TEMPLATES;
   override readonly PHOTO_PREFIX = 'fotografiaFestividades';
 
   festividadesConfig: TableConfig = {
     tablaKey: 'festividades',
     totalKey: 'festividad',
     campoTotal: 'festividad',
-    estructuraInicial: [{ festividad: '', fecha: '' }]
+    estructuraInicial: SECCION20_TEMPLATES.tablaEstructuraInicial
   };
 
   private readonly regexCache = new Map<string, RegExp>();
@@ -41,13 +44,17 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
     const fieldId = this.getTituloFestividadesField();
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldId)();
     const nombre = this.obtenerNombreComunidadActual();
-    return manual && String(manual).trim() !== '' ? manual : `Festividades principales – CC ${nombre}`;
+    if (manual && String(manual).trim() !== '') return manual;
+    // ✅ Usar template centralizado
+    return SECCION20_TEMPLATES.tituloDefault.replace('{{nombreComunidad}}', nombre);
   });
 
   readonly fuenteSignal = computed(() => {
     const fieldId = this.getFuenteFestividadesField();
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldId)();
-    return manual && String(manual).trim() !== '' ? manual : 'GEADES (2024)';
+    if (manual && String(manual).trim() !== '') return manual;
+    // ✅ Usar template centralizado
+    return SECCION20_TEMPLATES.fuenteDefault;
   });
 
   readonly tablaSignal: Signal<any[]> = computed(() => {
@@ -98,9 +105,12 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
     const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const sitioArqueologico = this.datos.sitioArqueologico || 'Incahuasi';
+    const sitioArqueologico = this.datos.sitioArqueologico || SECCION20_TEMPLATES.sitioArqueologicoDefault;
     
-    const textoPorDefecto = `En la CC ${grupoAISD}, las festividades son momentos de gran importancia cultural y social que refuerzan los lazos comunitarios y mantienen vivas las tradiciones locales. Entre las celebraciones más destacadas se encuentran los carnavales, que tienen lugar en el mes de febrero. Esta festividad está marcada por el entusiasmo de la población, quienes participan en juegos con agua y desfiles.`;
+    // ✅ Usar template centralizado de constantes
+    const textoPorDefecto = SECCION20_TEMPLATES.textoFestividadesDefault
+      .replace(/{{nombreComunidad}}/g, grupoAISD)
+      .replace(/{{sitioArqueologico}}/g, sitioArqueologico);
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado.replace(/CC\s*___/g, `CC ${grupoAISD}`).replace(/CC\s*____/g, `CC ${grupoAISD}`);
@@ -112,14 +122,15 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
   obtenerTextoFestividadesConResaltado(): SafeHtml {
     const texto = this.obtenerTextoFestividades();
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const sitioArqueologico = this.datos.sitioArqueologico || 'Incahuasi';
+    // ✅ Usar template centralizado
+    const sitioArqueologico = this.datos.sitioArqueologico || SECCION20_TEMPLATES.sitioArqueologicoDefault;
     
     let html = this.escapeHtml(texto);
     
     if (grupoAISD !== '____') {
       html = html.replace(this.obtenerRegExp(this.escapeRegex(grupoAISD)), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
     }
-    if (sitioArqueologico !== 'Incahuasi') {
+    if (sitioArqueologico !== SECCION20_TEMPLATES.sitioArqueologicoDefault) {
       html = html.replace(this.obtenerRegExp(this.escapeRegex(sitioArqueologico)), `<span class="data-manual">${this.escapeHtml(sitioArqueologico)}</span>`);
     }
     

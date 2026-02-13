@@ -8,6 +8,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION19_TEMPLATES } from './seccion19.constants';
 
 @Component({
     imports: [
@@ -27,6 +28,9 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   
   override readonly PHOTO_PREFIX = 'fotografiaOrganizacionSocial';
   override useReactiveSync: boolean = true;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION19_TEMPLATES = SECCION19_TEMPLATES;
 
   override fotografiasFormMulti: FotoItem[] = [];
 
@@ -53,7 +57,7 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly comunerosCalificadosSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'comunerosCalificados')() || '65';
+    return this.projectFacade.selectField(this.seccionId, null, 'comunerosCalificados')() || SECCION19_TEMPLATES.comunerosCalificadosDefault;
   });
 
   readonly textoOrganizacionSignal: Signal<string> = computed(() => {
@@ -247,11 +251,16 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     if (textoPersonalizado && textoPersonalizado !== '____' && String(textoPersonalizado).trim() !== '') {
       return textoPersonalizado;
     }
-    return this.generarTextoOrganizacionDefault(this.datos.grupoAISD || '____', this.datos.comunerosCalificados || '65');
+    return this.generarTextoOrganizacionDefault(
+      this.datos.grupoAISD || SECCION19_TEMPLATES.grupoAISDDefault,
+      this.datos.comunerosCalificados || SECCION19_TEMPLATES.comunerosCalificadosDefault
+    );
   }
 
   private generarTextoOrganizacionDefault(grupoAISD: string, comunerosCalificados: string): string {
-    return `La organización social más importante y con mayor poder es la CC ${grupoAISD}. Esta comunidad cuenta con una estructura organizativa que incluye una junta directiva, encargada de la gestión y representación legal de la comunidad. Por otra parte, la toma de decisiones clave se realiza en la asamblea general, en la cual participan y votan todos los comuneros activos que están debidamente inscritos en el padrón comunal. Esta asamblea es el máximo órgano de deliberación, donde se discuten temas de interés comunitario, como el uso de la tierra, los proyectos de desarrollo y la organización de actividades económicas y sociales.\n\nAl momento del trabajo de campo, según los entrevistados, se cuenta con ${comunerosCalificados} comuneros calificados dentro de la CC ${grupoAISD}. Estos se encuentran inscritos en el padrón, el cual es actualizado cada dos años antes de cada elección para una nueva junta directiva. Asimismo, cabe mencionar que esta última puede reelegirse por un período adicional, con la posibilidad de que una misma junta pueda gestionar por cuatro años como máximo.\n\nRespecto al rol de la mujer, es posible que estas puedan ser inscritas como comuneras calificadas dentro del padrón comunal. No obstante, solo se permite la inscripción si estas mujeres son viudas o madres solteras. De lo contrario, es el varón quien asume la responsabilidad. Por otra parte, dentro de la estructura interna de la comunidad campesina se cuenta con instancias especializadas como la JASS, la Asociación de Vicuñas y la Junta de Usuarios de Riego. Cada una de ellas cuenta con funciones específicas y sus representantes también son electos democráticamente.\n\nTambién se hallan autoridades locales como el teniente gobernador, quien es el representante del gobierno central a nivel local. El teniente gobernador tiene la función de coordinar y mediar entre las instituciones del Estado y la comunidad, así como de velar por el orden público. Asimismo, el agente municipal es responsable de la supervisión y cumplimiento de las normativas municipales, así como de brindar apoyo en la organización de actividades locales.`;
+    return SECCION19_TEMPLATES.parrafoOrganizacionDefault
+      .replace(/____/g, grupoAISD)
+      .replace(/____/g, comunerosCalificados);
   }
 
   // ✅ CRUD: Tabla de autoridades actualizada
@@ -281,15 +290,15 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     const fieldId = this.getTituloAutoridadesField();
     const titulo = (this.datos as any)[fieldId];
     if (titulo && String(titulo).trim() !== '') return titulo;
-    const grupoAISD = (this.datos as any).grupoAISD || '____';
-    return `Autoridades y líderes sociales – CC ${grupoAISD}`;
+    const grupoAISD = (this.datos as any).grupoAISD || SECCION19_TEMPLATES.grupoAISDDefault;
+    return SECCION19_TEMPLATES.tituloAutoridadesDefault.replace(/____/g, grupoAISD);
   }
 
   obtenerFuenteAutoridades(): string {
     const fieldId = this.getFuenteAutoridadesField();
     const fuente = (this.datos as any)[fieldId];
     if (fuente && String(fuente).trim() !== '') return fuente;
-    return 'GEADES (2024)';
+    return SECCION19_TEMPLATES.fuenteAutoridadesDefault;
   }
 
   // ✅ Handlers para cambios en título y fuente con persistencia

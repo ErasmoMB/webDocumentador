@@ -1,6 +1,6 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.9. Indicadores de educación</h4>
+    <h4 class="section-title">{{ SECCION30_TEMPLATES.sectionTitle }}</h4>
     
     <!-- SECCIÓN: EDITAR PÁRRAFOS -->
     <div class="form-group-section mt-lg">
@@ -8,9 +8,9 @@
       
       <app-paragraph-editor
         fieldId="parrafoSeccion30_indicadores_educacion_intro"
-        label="Introducción - Indicadores de Educación"
-        hint="Edite el texto completo. Deje vacío para usar el texto por defecto."
-        [rows]="5"
+        [label]="SECCION30_TEMPLATES.labelIntroduccion"
+        [hint]="SECCION30_TEMPLATES.hintIntroduccion"
+        [rows]="SECCION30_TEMPLATES.rowsIntroduccion"
         [value]="viewModel().parrafo"
         (valueChange)="actualizarParrafo($event)">
       </app-paragraph-editor>
@@ -18,34 +18,30 @@
 
     <!-- SECCIÓN A: NIVEL EDUCATIVO -->
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">a. Nivel Educativo de la población</h4>
+      <h4 class="section-title">{{ SECCION30_TEMPLATES.subseccionA }}</h4>
 
       <app-paragraph-editor
         fieldId="textoNivelEducativo"
-        label="Texto descriptivo - Nivel Educativo"
-        hint="Edite el texto. Deje vacío para usar el texto por defecto con datos del centro poblado."
-        [rows]="3"
+        [label]="SECCION30_TEMPLATES.labelTextoNivelEducativo"
+        [hint]="SECCION30_TEMPLATES.hintTextoNivelEducativo"
+        [rows]="SECCION30_TEMPLATES.rowsTextoNivelEducativo"
         [value]="viewModel().textoNivelEducativo"
         (valueChange)="actualizarTextoNivelEducativo($event)">
       </app-paragraph-editor>
 
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION30_TEMPLATES.labelTituloNivelEducativo }}</label>
         <input type="text" class="form-control" 
           [value]="viewModel().tituloNivelEducativo" 
           (input)="actualizarTituloNivelEducativo($any($event.target).value)" 
-          placeholder="Ej: Población de 15 años a más según nivel educativo alcanzado – CP {{ viewModel().centroPoblado }} (2017)">
+          [placeholder]="SECCION30_TEMPLATES.placeholderTituloNivelEducativo">
 
-        <label class="label mt-md">Tabla Población según nivel educativo</label>
+        <label class="label mt-md">{{ SECCION30_TEMPLATES.labelTablatNivelEducativo }}</label>
         <app-dynamic-table
           [datos]="getNivelEducativoTablaData()"
           [sectionId]="seccionId"
           [config]="nivelEducativoDynamicConfig"
-          [columns]="[
-            { field: 'nivel', label: 'Categoría', type: 'text', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
-          ]"
+          [columns]="nivelEducativoColumnasSignal()"
           [tablaKey]="getNivelEducativoTablaKey()"
           [totalKey]="'nivel'"
           [showAddButton]="false"
@@ -53,44 +49,40 @@
           (tableUpdated)="onNivelEducativoTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-md">Fuente</label>
+        <label class="label mt-md">{{ SECCION30_TEMPLATES.labelFuenteNivelEducativo }}</label>
         <input type="text" class="form-control" 
           [value]="viewModel().fuenteNivelEducativo" 
           (input)="actualizarFuenteNivelEducativo($any($event.target).value)" 
-          placeholder="Ej: Censos Nacionales 2017">
+          [placeholder]="SECCION30_TEMPLATES.placeholderFuenteNivelEducativo">
       </div>
     </div>
 
     <!-- SECCIÓN B: TASA DE ANALFABETISMO -->
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Tasa de analfabetismo</h4>
+      <h4 class="section-title">{{ SECCION30_TEMPLATES.subseccionB }}</h4>
 
       <app-paragraph-editor
         fieldId="textoTasaAnalfabetismo"
-        label="Texto descriptivo - Tasa de Analfabetismo"
-        hint="Edite el texto. Deje vacío para usar el texto por defecto con datos del centro poblado."
-        [rows]="3"
+        [label]="SECCION30_TEMPLATES.labelTextoTasaAnalfabetismo"
+        [hint]="SECCION30_TEMPLATES.hintTextoTasaAnalfabetismo"
+        [rows]="SECCION30_TEMPLATES.rowsTextoTasaAnalfabetismo"
         [value]="viewModel().textoTasaAnalfabetismo"
         (valueChange)="actualizarTextoTasaAnalfabetismo($event)">
       </app-paragraph-editor>
 
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION30_TEMPLATES.labelTituloTasaAnalfabetismo }}</label>
         <input type="text" class="form-control" 
           [value]="viewModel().tituloTasaAnalfabetismo" 
           (input)="actualizarTituloTasaAnalfabetismo($any($event.target).value)" 
-          placeholder="Ej: Tasa de analfabetismo en población de 15 años a más – CP {{ viewModel().centroPoblado }} (2017)">
+          [placeholder]="SECCION30_TEMPLATES.placeholderTituloTasaAnalfabetismo">
 
-        <label class="label mt-md">Tabla Tasa de analfabetismo</label>
+        <label class="label mt-md">{{ SECCION30_TEMPLATES.labelTablatTasaAnalfabetismo }}</label>
         <app-dynamic-table
           [datos]="getTasaAnalfabetismoTablaData()"
           [sectionId]="seccionId"
           [config]="tasaAnalfabetismoDynamicConfig"
-          [columns]="[
-            { field: 'indicador', label: 'Indicador', type: 'text', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
-          ]"
+          [columns]="tasaAnalfabetismoColumnasSignal()"
           [tablaKey]="getTasaAnalfabetismoTablaKey()"
           [totalKey]="'indicador'"
           [showAddButton]="false"
@@ -98,17 +90,17 @@
           (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-md">Fuente</label>
+        <label class="label mt-md">{{ SECCION30_TEMPLATES.labelFuenteTasaAnalfabetismo }}</label>
         <input type="text" class="form-control" 
           [value]="viewModel().fuenteTasaAnalfabetismo" 
           (input)="actualizarFuenteTasaAnalfabetismo($any($event.target).value)" 
-          placeholder="Ej: Censos Nacionales 2017">
+          [placeholder]="SECCION30_TEMPLATES.placeholderFuenteTasaAnalfabetismo">
       </div>
     </div>
 
     <!-- SECCIÓN: FOTOGRAFÍAS -->
     <div class="form-field mt-xl">
-      <label class="label">Fotografías de Indicadores de educación</label>
+      <label class="label">{{ SECCION30_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
         [fotografias]="viewModel().fotos"
         [sectionId]="seccionId"
@@ -116,13 +108,13 @@
         [permitirMultiples]="true"
         [mostrarTitulo]="true"
         [mostrarFuente]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Indicadores de educación"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Indicadores de educación"
-        fuenteDefault="GEADES, 2024"
+        [labelTitulo]="SECCION30_TEMPLATES.labelTituloFoto"
+        [labelFuente]="SECCION30_TEMPLATES.labelFuenteFoto"
+        [labelImagen]="SECCION30_TEMPLATES.labelImagenFoto"
+        [placeholderTitulo]="SECCION30_TEMPLATES.placeholderTituloFoto"
+        [placeholderFuente]="SECCION30_TEMPLATES.placeholderFuenteFoto"
+        [tituloDefault]="SECCION30_TEMPLATES.tituloFotoDefault"
+        [fuenteDefault]="SECCION30_TEMPLATES.fuenteFotoDefault"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>

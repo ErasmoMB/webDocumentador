@@ -1,16 +1,17 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.8. Indicadores de salud</h4>
+    <h4 class="section-title">{{ SECCION29_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">a. Natalidad y Mortalidad</h4>
+      <h4 class="section-title">{{ SECCION29_TEMPLATES.tituloSubseccionA }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION29_TEMPLATES.labelParrafosNatalidad }}</h4>
 
         <app-paragraph-editor
           fieldId="textoNatalidadCP1"
-          label="Natalidad - Párrafo 1"
+          [label]="SECCION29_TEMPLATES.labelNatalidadParrafo1"
+          [hint]="SECCION29_TEMPLATES.hintNatalidadParrafo1"
           [rows]="3"
           [value]="viewModel().textoNatalidadCP1"
           (valueChange)="actualizarTexto('textoNatalidadCP1', $event)">
@@ -18,7 +19,8 @@
 
         <app-paragraph-editor
           fieldId="textoNatalidadCP2"
-          label="Natalidad - Párrafo 2"
+          [label]="SECCION29_TEMPLATES.labelNatalidadParrafo2"
+          [hint]="SECCION29_TEMPLATES.hintNatalidadParrafo2"
           [rows]="3"
           [value]="viewModel().textoNatalidadCP2"
           (valueChange)="actualizarTexto('textoNatalidadCP2', $event)">
@@ -26,34 +28,35 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título — Indicadores de natalidad y mortalidad</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloNatalidad" (input)="actualizarTexto('tituloNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: Indicadores de natalidad y mortalidad – CP {{ viewModel().centroPoblado }}">
+        <label class="label">{{ SECCION29_TEMPLATES.labelTituloNatalidad }}</label>
+        <input type="text" class="form-control" [value]="viewModel().tituloNatalidad" (input)="actualizarTexto('tituloNatalidadMortalidad', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderTituloNatalidad">
 
-        <label class="label mt-sm">Tabla Indicadores de natalidad y mortalidad</label>
+        <label class="label mt-sm">{{ SECCION29_TEMPLATES.labelTabdlaNatalidad }}</label>
         <app-dynamic-table
           [datos]="getNatalidadTablaData()"
           [sectionId]="seccionId"
           [config]="natalidadConfig"
-          [columns]="[ { field: 'anio', label: 'Año', type: 'text' }, { field: 'natalidad', label: 'Natalidad', type: 'number' }, { field: 'mortalidad', label: 'Mortalidad', type: 'number' } ]"
+          [columns]="natalidadColumns"
           [tablaKey]="getNatalidadTablaKey()"
           [totalKey]="'anio'"
           (tableUpdated)="onTablaUpdated(getNatalidadTablaKey(), $event)">
         </app-dynamic-table>
 
-        <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteNatalidad" (input)="actualizarTexto('fuenteNatalidadMortalidad', $any($event.target).value)" placeholder="Ej: GEADES (2024)">
+        <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteNatalidad }}</label>
+        <input type="text" class="form-control" [value]="viewModel().fuenteNatalidad" (input)="actualizarTexto('fuenteNatalidadMortalidad', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderFuenteNatalidad">
       </div>
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Morbilidad</h4>
+      <h4 class="section-title">{{ SECCION29_TEMPLATES.tituloSubseccionB }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION29_TEMPLATES.labelParrafosNatalidad }}</h4>
 
         <app-paragraph-editor
           fieldId="textoMorbilidadCP"
-          label="Morbilidad - Texto Completo"
+          [label]="SECCION29_TEMPLATES.labelMorbilidadParrafo"
+          [hint]="SECCION29_TEMPLATES.hintMorbilidadParrafo"
           [rows]="4"
           [value]="viewModel().textoMorbilidadCP"
           (valueChange)="actualizarTexto('textoMorbilidadCP', $event)">
@@ -61,34 +64,35 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título — Casos por grupos de morbilidad</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloMorbilidad" (input)="actualizarTexto('tituloMorbilidad', $any($event.target).value)" placeholder="Ej: Casos por grupos de morbilidad – Distrito {{ viewModel().centroPoblado }} (2023)">
+        <label class="label">{{ SECCION29_TEMPLATES.labelTituloMorbilidad }}</label>
+        <input type="text" class="form-control" [value]="viewModel().tituloMorbilidad" (input)="actualizarTexto('tituloMorbilidad', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderTituloMorbilidad">
 
-        <label class="label">Tabla Casos por grupos de morbilidad</label>
+        <label class="label">{{ SECCION29_TEMPLATES.labelTablaMorbilidad }}</label>
         <app-dynamic-table
           [datos]="getMorbilidadTablaData()"
           [sectionId]="seccionId"
           [config]="morbilidadConfig"
-          [columns]="[ { field: 'grupo', label: 'Grupo de Morbilidad', type: 'text' }, { field: 'edad0_11', label: '0 – 11', type: 'number' }, { field: 'edad12_17', label: '12 – 17', type: 'number' }, { field: 'edad18_29', label: '18 – 29', type: 'number' }, { field: 'edad30_59', label: '30 – 59', type: 'number' }, { field: 'edad60_mas', label: '60 - >', type: 'number' }, { field: 'casos', label: 'Casos Totales', type: 'number' } ]"
+          [columns]="morbilidadColumns"
           [tablaKey]="getMorbilidadTablaKey()"
           [totalKey]="'grupo'"
           (tableUpdated)="onTablaUpdated(getMorbilidadTablaKey(), $event)">
         </app-dynamic-table>
 
-        <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteMorbilidad" (input)="actualizarTexto('fuenteMorbilidad', $any($event.target).value)" placeholder="Ej: REUNIS (2024)">
+        <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteMorbilidad }}</label>
+        <input type="text" class="form-control" [value]="viewModel().fuenteMorbilidad" (input)="actualizarTexto('fuenteMorbilidad', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderFuenteMorbilidad">
       </div>
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">c. Población afiliada a Seguros de Salud</h4>
+      <h4 class="section-title">{{ SECCION29_TEMPLATES.tituloSubseccionC }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION29_TEMPLATES.labelParrafosNatalidad }}</h4>
 
         <app-paragraph-editor
           fieldId="textoAfiliacionSalud"
-          label="Población afiliada a Seguros de Salud - Texto Completo"
+          [label]="SECCION29_TEMPLATES.labelAfiliacionParrafo"
+          [hint]="SECCION29_TEMPLATES.hintAfiliacionParrafo"
           [rows]="3"
           [value]="viewModel().textoAfiliacionSalud"
           (valueChange)="actualizarTexto('textoAfiliacionSalud', $event)">
@@ -96,15 +100,15 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título — Población según tipo de seguro de salud afiliado</label>
-        <input type="text" class="form-control" [value]="viewModel().tituloAfiliacion" (input)="actualizarTexto('tituloAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Población según tipo de seguro de salud afiliado – CP {{ viewModel().centroPoblado }} (2017)">
+        <label class="label">{{ SECCION29_TEMPLATES.labelTituloAfiliacion }}</label>
+        <input type="text" class="form-control" [value]="viewModel().tituloAfiliacion" (input)="actualizarTexto('tituloAfiliacionSalud', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderTituloAfiliacion">
 
-        <label class="label">Tabla Población según tipo de seguro de salud afiliado</label>
+        <label class="label">{{ SECCION29_TEMPLATES.labelTablaAfiliacion }}</label>
         <app-dynamic-table
           [datos]="getAfiliacionTablaData()"
           [sectionId]="seccionId"
           [config]="afiliacionConfig"
-          [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]"
+          [columns]="afiliacionColumns"
           [tablaKey]="getAfiliacionTablaKey()"
           [totalKey]="'categoria'"
           [showAddButton]="false"
@@ -112,13 +116,13 @@
           (tableUpdated)="onTablaUpdated(getAfiliacionTablaKey(), $event)">
         </app-dynamic-table>
 
-        <label class="label mt-md">Fuente</label>
-        <input type="text" class="form-control" [value]="viewModel().fuenteAfiliacion" (input)="actualizarTexto('fuenteAfiliacionSalud', $any($event.target).value)" placeholder="Ej: Censos Nacionales 2017">
+        <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteAfiliacion }}</label>
+        <input type="text" class="form-control" [value]="viewModel().fuenteAfiliacion" (input)="actualizarTexto('fuenteAfiliacionSalud', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderFuenteAfiliacion">
       </div>
     </div>
 
     <div class="form-field mt-xl">
-      <label class="label">Fotografías de Indicadores de salud</label>
+      <label class="label">{{ SECCION29_TEMPLATES.tituloSeccion }}</label>
       <app-image-upload
         [fotografias]="fotografiasFormMulti"
         [sectionId]="seccionId"

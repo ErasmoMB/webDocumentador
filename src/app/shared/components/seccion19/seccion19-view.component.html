@@ -1,5 +1,5 @@
 <div class="seccion-vista-content">
-  <h5>A.1.15. Organización social y liderazgo</h5>
+  <h5>{{ SECCION19_TEMPLATES.tituloSeccion }}</h5>
   
   <!-- ✅ LECTURA REACTIVA DESDE SIGNAL (sin resaltado) -->
   <p class="text-justify" [innerHTML]="textoOrganizacionPlano"></p>
@@ -12,9 +12,9 @@
       [data]="getAutoridades()"
       [config]="{
         columns: [
-          { key: 'organizacion', header: 'Organización', align: 'left' },
-          { key: 'cargo', header: 'Cargo', align: 'left' },
-          { key: 'nombre', header: 'Nombres y Apellidos', align: 'left' }
+          { key: 'organizacion', header: SECCION19_TEMPLATES.labelColumnaOrganizacion, align: 'left' },
+          { key: 'cargo', header: SECCION19_TEMPLATES.labelColumnaCargo, align: 'left' },
+          { key: 'nombre', header: SECCION19_TEMPLATES.labelColumnaPersona, align: 'left' }
         ],
         showFooter: false,
         striped: true,

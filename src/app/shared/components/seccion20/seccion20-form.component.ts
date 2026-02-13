@@ -7,6 +7,7 @@ import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { SECCION20_TEMPLATES } from './seccion20.constants';
 
 @Component({
   selector: 'app-seccion20-form',
@@ -19,6 +20,8 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION20_TEMPLATES = SECCION20_TEMPLATES;
   override readonly PHOTO_PREFIX = 'fotografiaFestividades';
 
   // ✅ HELPER PARA OBTENER PREFIJO
@@ -35,7 +38,8 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
 
   festividadesConfig: TableConfig = {
     tablaKey: 'festividades',
-    totalKey: 'festividad'
+    totalKey: 'festividad',
+    estructuraInicial: SECCION20_TEMPLATES.tablaEstructuraInicial
     // ✅ NO incluir campoTotal porque festividad es texto, no número
   };
 
@@ -84,7 +88,7 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
-  // Helpers (copiados de la implementación previa para mantener el mismo texto por defecto)
+  // ✅ Obtener texto con template y reemplazos dinámicos
   obtenerTextoFestividades(): string {
     const fieldId = this.getFieldIdTextoFestividades();
     const textoConPrefijo = this.datos[fieldId];
@@ -92,17 +96,12 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
     const textoPersonalizado = textoConPrefijo || textoSinPrefijo;
     
     const grupoAISD = this.obtenerNombreComunidadActual();
-    const sitioArqueologico = this.datos.sitioArqueologico || 'Incahuasi';
+    const sitioArqueologico = this.datos.sitioArqueologico || SECCION20_TEMPLATES.sitioArqueologicoDefault;
     
-    const textoPorDefecto = `En la CC ${grupoAISD}, las festividades son momentos de gran importancia cultural y social que refuerzan los lazos comunitarios y mantienen vivas las tradiciones locales. Entre las celebraciones más destacadas se encuentran los carnavales, que tienen lugar en el mes de febrero. Esta festividad está marcada por el entusiasmo de la población, quienes participan en juegos con agua y desfiles.
-
-Otra celebración significativa es la dedicada a la Virgen de Chapi, que se lleva a cabo cada 1° de mayo. En esta fecha, los devotos organizan misas solemnes, procesiones en honor a la Virgen y actividades sociales que congregan a familias locales y visitantes. Del 3 al 5 de mayo, se celebra la Fiesta de las Cruces, en la que se realizan ceremonias religiosas, procesiones y actividades tradicionales, como la tauromaquia, acompañadas por grupos musicales que animan el ambiente.
-
-En junio, el calendario festivo incluye dos importantes celebraciones: la festividad de San Vicente Ferrer (que es la fiesta patronal principal de la comunidad), que se realiza del 21 al 23 de junio, y el aniversario de la comunidad, celebrado el 24 de junio con actos protocolares, actividades culturales y sociales. Ambas fechas están caracterizadas por su componente religioso, con misas y procesiones, además de eventos que integran a toda la comunidad.
-
-Una festividad de gran relevancia ambiental y cultural es el Chaku, o esquila de vicuñas, una actividad tradicional vinculada al aprovechamiento sostenible de esta especie emblemática de los Andes. Aunque las fechas de esta celebración suelen variar, se tiene la propuesta de realizarla cada 15 de noviembre, coincidiendo con el Día de la Vicuña. Durante el Chaku, además de la esquila, se realizan actividades culturales, ceremonias andinas y eventos de integración comunitaria.
-
-En cuanto al potencial turístico, la CC ${grupoAISD} destaca no solo por sus festividades tradicionales, sino también por las ruinas arqueológicas de ${sitioArqueologico}, un sitio de valor histórico y cultural. Este lugar, que guarda vestigios del pasado incaico, representa una oportunidad para atraer visitantes interesados en la historia, la arqueología y el turismo vivencial. La promoción de este recurso puede complementar las festividades y posicionar a la comunidad como un destino atractivo para el turismo sostenible, generando beneficios económicos y culturales para sus habitantes.`;
+    // ✅ Usar template centralizado de constantes
+    const textoPorDefecto = SECCION20_TEMPLATES.textoFestividadesDefault
+      .replace(/{{nombreComunidad}}/g, grupoAISD)
+      .replace(/{{sitioArqueologico}}/g, sitioArqueologico);
     
     if (textoPersonalizado && textoPersonalizado !== '____' && textoPersonalizado.trim() !== '') {
       return textoPersonalizado
@@ -148,14 +147,16 @@ En cuanto al potencial turístico, la CC ${grupoAISD} destaca no solo por sus fe
     // Inicializar Título y Fuente de tabla si no existen
     const tituloField = this.getTituloFestividadesField();
     if (!this.datos[tituloField]) {
-      const valorTitulo = `Festividades principales – CC ${this.obtenerNombreComunidadActual()}`;
+      // ✅ Usar template centralizado
+      const valorTitulo = SECCION20_TEMPLATES.tituloDefault.replace('{{nombreComunidad}}', this.obtenerNombreComunidadActual());
       this.datos[tituloField] = valorTitulo;
       this.onFieldChange(tituloField, valorTitulo, { refresh: false });
     }
 
     const fuenteField = this.getFuenteFestividadesField();
     if (!this.datos[fuenteField]) {
-      const valorFuente = 'GEADES (2024)';
+      // ✅ Usar template centralizado
+      const valorFuente = SECCION20_TEMPLATES.fuenteDefault;
       this.datos[fuenteField] = valorFuente;
       this.onFieldChange(fuenteField, valorFuente, { refresh: false });
     }

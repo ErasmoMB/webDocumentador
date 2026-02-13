@@ -8,6 +8,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS, SECCION29_WATCHED_FIELDS } from './seccion29-constants';
 
 @Component({
   selector: 'app-seccion29-form',
@@ -17,11 +18,14 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
   imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, DynamicTableComponent, ImageUploadComponent]
 })
 export class Seccion29FormComponent extends BaseSectionComponent {
-  @Input() override seccionId: string = '3.1.4.B.1.8';
+  @Input() override seccionId: string = SECCION29_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
-  // Photo prefix used by SectionPhotoCoordinator and ImageUpload flow
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION29_TEMPLATES = SECCION29_TEMPLATES;
   override readonly PHOTO_PREFIX: string;
+  override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION29_WATCHED_FIELDS;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -128,6 +132,40 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   }
 
   // Helper methods to generate fallback paragraph texts
+  generarTextoNatalidadCP1(): string {
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const natalidad2023 = this.getNatalidad2023();
+    const natalidad2024 = this.getNatalidad2024();
+    return SECCION29_DEFAULT_TEXTS.natalidadCP1(centro, natalidad2023, natalidad2024);
+  }
+
+  generarTextoNatalidadCP2(): string {
+    const mortalidad2023 = this.getMortalidad2023();
+    const mortalidad2024 = this.getMortalidad2024();
+    return SECCION29_DEFAULT_TEXTS.natalidadCP2(mortalidad2023, mortalidad2024);
+  }
+
+  generarTextoMorbilidadCP(): string {
+    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || SECCION29_TEMPLATES.distritoDefault;
+    const centroPoblado = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
+    const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
+    return SECCION29_DEFAULT_TEXTS.morbilidadCP(distrito, centroPoblado, infecciones, obesidad);
+  }
+
+  generarTextoAfiliacionSalud(): string {
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const sis = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
+    const essalud = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('essalud'))?.porcentaje || '0,00 %';
+    const sinseguro = this.afiliacionTablaSignal()
+      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sin seguro'))?.porcentaje || '0,00 %';
+
+    return SECCION29_DEFAULT_TEXTS.afiliacionSalud(centro, sis, essalud, sinseguro);
+  }
+
+  // ✅ Métodos auxiliares para extraer datos de tablas
   getNatalidad2023(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2023);
     return item?.natalidad || 0;
@@ -146,34 +184,6 @@ export class Seccion29FormComponent extends BaseSectionComponent {
   getMortalidad2024(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2024);
     return item?.mortalidad || 0;
-  }
-
-  generarTextoNatalidadCP1(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    return `Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud ${centro} indican que, durante el año 2023, se registró un total de ${this.getNatalidad2023()} nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente ${this.getNatalidad2024()} nacimiento.`;
-  }
-
-  generarTextoNatalidadCP2(): string {
-    return `Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de ${this.getMortalidad2023()} durante el año 2023. Sin embargo, para el año 2024, sí se registró ${this.getMortalidad2024()} defunción.`;
-  }
-
-  generarTextoMorbilidadCP(): string {
-    const distrito = this.projectFacade.obtenerDatos()?.['distritoSeleccionado'] || 'Cahuacho';
-    const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
-    const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
-    return `Entre los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca al Puesto de Salud ${this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho'}), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (${infecciones} casos) y la obesidad y otros de hiperalimentación (${obesidad} casos).`;
-  }
-
-  generarTextoAfiliacionSalud(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    const sis = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
-    const essalud = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('essalud'))?.porcentaje || '0,00 %';
-    const sinseguro = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sin seguro'))?.porcentaje || '0,00 %';
-
-    return `En el CP ${centro}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${sis} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${essalud} de la población. Por último, cabe mencionar que el ${sinseguro} de la población no cuenta con ningún tipo de seguro de salud.`;
   }
 
   protected override onInitCustom(): void {
@@ -253,6 +263,29 @@ export class Seccion29FormComponent extends BaseSectionComponent {
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true
   };
+
+  // ✅ Columnas para tables (evita problemas con caracteres especiales en templates)
+  readonly natalidadColumns: any[] = [
+    { field: 'anio', label: SECCION29_TEMPLATES.columnAñoLabel, type: 'text' as const },
+    { field: 'natalidad', label: SECCION29_TEMPLATES.columnNatalidadLabel, type: 'number' as const },
+    { field: 'mortalidad', label: SECCION29_TEMPLATES.columnMortalidadLabel, type: 'number' as const }
+  ];
+
+  readonly morbilidadColumns: any[] = [
+    { field: 'grupo', label: SECCION29_TEMPLATES.columnGrupoMorbilidadLabel, type: 'text' as const },
+    { field: 'edad0_11', label: SECCION29_TEMPLATES.columnEdad0_11Label, type: 'number' as const },
+    { field: 'edad12_17', label: SECCION29_TEMPLATES.columnEdad12_17Label, type: 'number' as const },
+    { field: 'edad18_29', label: SECCION29_TEMPLATES.columnEdad18_29Label, type: 'number' as const },
+    { field: 'edad30_59', label: SECCION29_TEMPLATES.columnEdad30_59Label, type: 'number' as const },
+    { field: 'edad60_mas', label: SECCION29_TEMPLATES.columnEdad60_masLabel, type: 'number' as const },
+    { field: 'casos', label: SECCION29_TEMPLATES.columnCasosTotalesLabel, type: 'number' as const }
+  ];
+
+  readonly afiliacionColumns: any[] = [
+    { field: 'categoria', label: SECCION29_TEMPLATES.columnCategoriaAfiliacionLabel, type: 'text' as const },
+    { field: 'casos', label: SECCION29_TEMPLATES.columnPoblacionLabel, type: 'number' as const },
+    { field: 'porcentaje', label: SECCION29_TEMPLATES.columnPorcentajeLabel, type: 'text' as const, readonly: true }
+  ];
 
   actualizarTexto(field: string, valor: string) {
     this.onFieldChange(field, valor);

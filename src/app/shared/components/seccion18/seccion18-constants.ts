@@ -1,8 +1,106 @@
-// ============================================================================
-// SECCION 18: NECESIDADES BÁSICAS INSATISFECHAS (NBI)
-// ============================================================================
+/**
+ * ✅ SECCION 18: NECESIDADES BÁSICAS INSATISFECHAS (NBI)
+ * Constantes centralizadas para Seccion 18 - Índice de NBI Distrital
+ * - Campos observados para persistencia
+ * - Configuración de seccion
+ * - Todos los textos centralizados
+ */
+
+export const SECCION18_WATCHED_FIELDS = [
+  'textoNecesidadesBasicasInsatisfechas',
+  'tituloNbiCC',
+  'fuenteNbiCC',
+  'tituloNbiDistrito',
+  'fuenteNbiDistrito',
+  'nbiCCAyrocaTabla',
+  'nbiDistritoCahuachoTabla',
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaNBI${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaNBI${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaNBI${i + 1}Imagen`),
+  // Variantes con prefijo de grupo AISD (A.1, A.2, etc.)
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `textoNecesidadesBasicasInsatisfechesA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `tituloNbiCCA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `fuenteNbiCCA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `tituloNbiDistritoA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `fuenteNbiDistritoA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `nbiCCAyrocaTablaA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `nbiDistritoCahuachoTablaA.${g + 1}`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `fotografiaNBIA.${g + 1}${i + 1}Titulo`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `fotografiaNBIA.${g + 1}${i + 1}Fuente`)).flat(),
+  ...Array.from({ length: 5 }, (_, g) => Array.from({ length: 10 }, (_, i) => `fotografiaNBIA.${g + 1}${i + 1}Imagen`)).flat(),
+];
 
 export const SECCION18_PHOTO_PREFIX = 'fotografiaNBI';
+
+export const SECCION18_CONFIG = {
+  sectionId: '3.1.4.A.1.14',
+  title: 'Índice de necesidades básicas insatisfechas distrital',
+  photoPrefix: 'fotografiaNBI',
+  maxPhotos: 10,
+};
+
+export const SECCION18_TEMPLATES = {
+  // === TÍTULOS Y SUBTÍTULOS ===
+  sectionTitle: 'A.1.14. Índice de necesidades básicas insatisfechas distrital',
+  editParrafosTitle: 'Editar Párrafos',
+  
+  // === LABELS DE FORMULARIO ===
+  labelTextoNBI: 'Necesidades Básicas Insatisfechas - Texto Completo',
+  labelTextoCompleto: 'Necesidades Básicas Insatisfechas - Texto Completo',
+  labelTituloNbiCC: 'Título - Tabla NBI CC',
+  labelTituloNbiDistrito: 'Título - Tabla NBI Distrito',
+  labelFuenteNbiCC: 'Fuente - Tabla NBI CC',
+  labelFuenteNbiDistrito: 'Fuente - Tabla NBI Distrito',
+  labelTableNbiCC: 'Tabla NBI CC Ayroca',
+  labelTableNbiDistrito: 'Tabla NBI Distrito Cahuacho',
+  labelFotografias: 'Fotografías de NBI',
+  labelFotoTitulo: 'Título de la fotografía',
+  labelFotoFuente: 'Fuente de la fotografía',
+  labelFotoImagen: 'Fotografía',
+
+  // === HINTS Y AYUDAS ===
+  hintTextoNBI: 'Edite el texto completo. Use Enter para crear nuevos párrafos.',
+  hintTextoCompleto: 'Edite el texto completo. Use Enter para crear nuevos párrafos.',
+
+  // === PLACEHOLDERS ===
+  placeholderTextoNBI: 'Texto de NBI...',
+  placeholderTituloNbiCC: 'Necesidades Básicas Insatisfechas (NBI) según población – CC Ayroca (2017)',
+  placeholderTituloNbiDistrito: 'Tipos de NBI existentes – Distrito Cahuacho (2017)',
+  placeholderFuenteNbiCC: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas',
+  placeholderFuenteNbiDistrito: 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017',
+  placeholderFotoTitulo: 'Ej: NBI del distrito',
+  placeholderFotoFuente: 'Ej: Censo 2017',
+
+  // === LABELS DE TABLA ===
+  tableHeader: {
+    categoria: 'Categoría',
+    casos: 'Casos',
+    porcentaje: 'Porcentaje',
+  },
+  tableRow: {
+    categoriaCC: 'Viviendas con hacinamiento',
+    categoriaDistrito: 'Viviendas sin servicios higiénicos',
+  },
+  tableColumnCategoria: 'Categoría',
+  tableColumnCasos: 'Casos',
+  tableColumnPorcentaje: 'Porcentaje',
+  tableReadonlyCategoria: 'Viviendas con hacinamiento',
+  tableReadonlyCategoria2: 'Viviendas sin servicios higiénicos',
+
+  // === ETIQUETA DE FUENTE (para vista) ===
+  sourceLabel: 'FUENTE:',
+
+  // === VALORES POR DEFECTO PARA FOTOS ===
+  tituloFotoDefault: 'Necesidades Básicas Insatisfechas',
+  fuenteFotoDefault: 'Censo 2017',
+
+  // === MENSAJES VACIOS ===
+  mensajeSinDatos: '____',
+
+  // === FUENTES Y REFERENCIAS ===
+  fuenteNbiCCDefault: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas',
+  fuenteNbiDistritoDefault: 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017',
+};
 
 export const SECCION18_DEFAULT_TEXTS = {
   /**
@@ -38,10 +136,7 @@ export const SECCION18_DEFAULT_TEXTS = {
     return `${texto1}\n\n${texto2}`;
   },
 
-  // Default titles y sources
+  // ✅ TÍTULOS DINÁMICOS GENERADOS
   tituloNbiCCDefault: (grupo: string) => `Necesidades Básicas Insatisfechas (NBI) según población – CC ${grupo} (2017)`,
-  fuenteNbiCCDefault: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas',
-  
   tituloNbiDistritoDefault: (distrito: string) => `Tipos de NBI existentes – Distrito ${distrito} (2017)`,
-  fuenteNbiDistritoDefault: 'Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017'
 };

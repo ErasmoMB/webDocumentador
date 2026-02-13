@@ -1,6 +1,6 @@
-<h5>A.1.12. Uso de los suelos y de los recursos naturales</h5>
+<h5>{{ SECCION16_TEMPLATES.tituloSeccion }}</h5>
 
-<h5>a. Fuentes y usos del agua</h5>
+<h5>{{ SECCION16_TEMPLATES.subtituloAgua }}</h5>
 <div [innerHTML]="obtenerTextoAguaConResaltado()"></div>
 
 <app-image-upload
@@ -9,12 +9,12 @@
     [fotografias]="getFotografiasReservorioVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_RESERVORIO"
-    labelTitulo="Título"
-    labelFuente="Fuente"
-    labelImagen="Imagen">
+    [labelTitulo]="SECCION16_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION16_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION16_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<h5>b. Tenencia de la tierra, usos del suelo y de los recursos naturales</h5>
+<h5>{{ SECCION16_TEMPLATES.subtituloTenencia }}</h5>
 <div [innerHTML]="obtenerTextoRecursosNaturalesConResaltado()"></div>
 
 <app-image-upload
@@ -23,7 +23,7 @@
     [fotografias]="getFotografiasUsoSuelosVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX_USO_SUELOS"
-    labelTitulo="Título"
-    labelFuente="Fuente"
-    labelImagen="Imagen">
+    [labelTitulo]="SECCION16_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION16_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION16_TEMPLATES.labelFotoImagen">
 </app-image-upload>

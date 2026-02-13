@@ -8,6 +8,7 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { SECCION23_TEMPLATES, SECCION23_WATCHED_FIELDS, SECCION23_SECTION_ID } from './seccion23-constants';
 
 @Component({
   selector: 'app-seccion23-view',
@@ -17,18 +18,14 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
   standalone: true
 })
 export class Seccion23ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.B.1.2';
+  @Input() override seccionId: string = SECCION23_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Exportar TEMPLATES para usar en HTML
+  readonly SECCION23_TEMPLATES = SECCION23_TEMPLATES;
+
   // Campos observados para sincronización reactiva (se expande con prefijos automáticamente)
-  override watchedFields: string[] = [
-    'grupoAISD', 'distritoSeleccionado', 'poblacionDistritalAISI', 'petDistritalAISI',
-    'petGruposEdadAISI', 'petGruposEdadTitulo', 'petGruposEdadFuente',
-    'peaDistritoSexoTabla', 'peaDistritoSexoTitulo', 'peaDistritoSexoFuente',
-    'peaOcupadaDesocupadaTabla', 'peaOcupadaDesocupadaTitulo', 'peaOcupadaDesocupadaFuente',
-    'textoPET_AISI', 'textoPETIntro_AISI', 'textoAnalisisPEA_AISI', 'textoPEAAISI',
-    'textoEmpleoAISI', 'textoEmpleoDependiente_AISI', 'textoIndiceDesempleoAISI'
-  ];
+  override watchedFields: string[] = SECCION23_WATCHED_FIELDS;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   readonly photoPrefixSignal: Signal<string>;

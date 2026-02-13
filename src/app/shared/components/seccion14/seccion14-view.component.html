@@ -1,7 +1,7 @@
-<h5>A.1.10. Indicadores de educación</h5>
+<h5>{{ SECCION14_TEMPLATES.tituloSeccion }}</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion14IndicadoresEducacionIntroConResaltado()"></div>
 
-<p class="mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
+<p class="mb-sm"><strong>{{ SECCION14_TEMPLATES.subtituloNivelEducativo }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoNivelEducativoConResaltado()"></div>
 
 <app-table-wrapper [title]="obtenerTituloCuadroNivelEducativo() + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
@@ -9,9 +9,9 @@
   [data]="getNivelEducativoConPorcentajes()"
   [config]="{
     columns: [
-      { key: 'categoria', header: 'Categoría', align: 'left' },
-      { key: 'casos', header: 'Casos', align: 'right' },
-      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      { key: 'categoria', header: SECCION14_TEMPLATES.columnaCategoriaLabel, align: 'left' },
+      { key: 'casos', header: SECCION14_TEMPLATES.columnaCasosLabel, align: 'right' },
+      { key: 'porcentaje', header: SECCION14_TEMPLATES.columnaPorcentajeLabel, align: 'right' }
     ],
     showFooter: false,
     striped: true,
@@ -19,7 +19,9 @@
   }">
 </app-generic-table>
 </app-table-wrapper>
-<p class="source">Fuente:<span *ngIf="obtenerFuenteCuadroNivelEducativo() && obtenerFuenteCuadroNivelEducativo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroNivelEducativo() }}</span><span *ngIf="!obtenerFuenteCuadroNivelEducativo() || obtenerFuenteCuadroNivelEducativo() === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
+<p class="source">
+  {{ SECCION14_TEMPLATES.labelFuenteNivelEducativo }}:<span *ngIf="obtenerFuenteCuadroNivelEducativo() && obtenerFuenteCuadroNivelEducativo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroNivelEducativo() }}</span><span *ngIf="!obtenerFuenteCuadroNivelEducativo() || obtenerFuenteCuadroNivelEducativo() === '____'" appDataHighlight="manual">{{ SECCION14_TEMPLATES.fuenteNivelEducativoDefault }}</span>
+</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -27,12 +29,12 @@
     [fotografias]="getFotografiasEducacionIndicadoresVista()"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION14_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION14_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION14_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
+<p class="mt-lg mb-sm"><strong>{{ SECCION14_TEMPLATES.subtituloTasaAnalfabetismo }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoTasaAnalfabetismoConResaltado()"></div>
 
 <app-table-wrapper [title]="obtenerTituloCuadroTasaAnalfabetismo() + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
@@ -40,9 +42,9 @@
   [data]="getTasaAnalfabetismoConPorcentajes()"
   [config]="{
     columns: [
-      { key: 'indicador', header: 'Indicador', align: 'left' },
-      { key: 'casos', header: 'Casos', align: 'right' },
-      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      { key: 'indicador', header: SECCION14_TEMPLATES.columnaIndicadorLabel, align: 'left' },
+      { key: 'casos', header: SECCION14_TEMPLATES.columnaCasosLabel, align: 'right' },
+      { key: 'porcentaje', header: SECCION14_TEMPLATES.columnaPorcentajeLabel, align: 'right' }
     ],
     showFooter: false,
     striped: true,
@@ -50,4 +52,6 @@
   }">
 </app-generic-table>
 </app-table-wrapper>
-<p class="source">Fuente:<span *ngIf="obtenerFuenteCuadroTasaAnalfabetismo() && obtenerFuenteCuadroTasaAnalfabetismo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroTasaAnalfabetismo() }}</span><span *ngIf="!obtenerFuenteCuadroTasaAnalfabetismo() || obtenerFuenteCuadroTasaAnalfabetismo() === '____'" appDataHighlight="manual">Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p> 
+<p class="source">
+  {{ SECCION14_TEMPLATES.labelFuenteTasaAnalfabetismo }}:<span *ngIf="obtenerFuenteCuadroTasaAnalfabetismo() && obtenerFuenteCuadroTasaAnalfabetismo() !== '____'" appDataHighlight="manual">{{ obtenerFuenteCuadroTasaAnalfabetismo() }}</span><span *ngIf="!obtenerFuenteCuadroTasaAnalfabetismo() || obtenerFuenteCuadroTasaAnalfabetismo() === '____'" appDataHighlight="manual">{{ SECCION14_TEMPLATES.fuenteTasaAnalfabetismoDefault }}</span>
+</p> 

@@ -5,6 +5,7 @@ import { GenericTableComponent } from '../generic-table/generic-table.component'
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS } from './seccion29-constants';
 
 @Component({
   selector: 'app-seccion29-view',
@@ -14,11 +15,11 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
   imports: [CommonModule, CoreSharedModule, GenericTableComponent, ImageUploadComponent]
 })
 export class Seccion29ViewComponent extends BaseSectionComponent {
-  @Input() override seccionId: string = '3.1.4.B.1.8';
+  @Input() override seccionId: string = SECCION29_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
-  // Photo prefix used by SectionPhotoCoordinator and to load images into `fotografiasCache`
-  // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION29_TEMPLATES = SECCION29_TEMPLATES;
   override readonly PHOTO_PREFIX: string;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -38,8 +39,8 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly tituloAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloAfiliacionSalud')() ?? '');
   readonly fuenteAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteAfiliacionSalud')() ?? '');
 
-  readonly centroPobladoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() ?? 'Cahuacho');
-  readonly distritoSeleccionadoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() ?? 'Cahuacho');
+  readonly centroPobladoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() ?? SECCION29_TEMPLATES.centroPobladoDefault);
+  readonly distritoSeleccionadoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() ?? SECCION29_TEMPLATES.distritoDefault);
 
   readonly natalidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -111,6 +112,44 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void { }
 
+  // ✅ Configuraciones de tablas (evita problemas con caracteres especiales en templates)
+  readonly natalidadTableConfig: any = {
+    columns: [
+      { key: 'anio', header: SECCION29_TEMPLATES.columnAñoLabel, align: 'left' as const },
+      { key: 'natalidad', header: SECCION29_TEMPLATES.columnNatalidadLabel, align: 'right' as const },
+      { key: 'mortalidad', header: SECCION29_TEMPLATES.columnMortalidadLabel, align: 'right' as const }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  };
+
+  readonly morbilidadTableConfig: any = {
+    columns: [
+      { key: 'grupo', header: SECCION29_TEMPLATES.columnGrupoMorbilidadLabel, align: 'left' as const },
+      { key: 'edad0_11', header: SECCION29_TEMPLATES.columnEdad0_11Label, align: 'right' as const },
+      { key: 'edad12_17', header: SECCION29_TEMPLATES.columnEdad12_17Label, align: 'right' as const },
+      { key: 'edad18_29', header: SECCION29_TEMPLATES.columnEdad18_29Label, align: 'right' as const },
+      { key: 'edad30_59', header: SECCION29_TEMPLATES.columnEdad30_59Label, align: 'right' as const },
+      { key: 'edad60_mas', header: SECCION29_TEMPLATES.columnEdad60_masLabel, align: 'right' as const },
+      { key: 'casos', header: SECCION29_TEMPLATES.columnCasosTotalesLabel, align: 'right' as const }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  };
+
+  readonly afiliacionTableConfig: any = {
+    columns: [
+      { key: 'categoria', header: SECCION29_TEMPLATES.columnCategoriaAfiliacionLabel, align: 'left' as const },
+      { key: 'casos', header: SECCION29_TEMPLATES.columnPoblacionLabel, align: 'right' as const },
+      { key: 'porcentaje', header: SECCION29_TEMPLATES.columnPorcentajeLabel, align: 'right' as const }
+    ],
+    showFooter: false,
+    striped: true,
+    hover: true
+  };
+
   // Helper methods ported from monolith for template
   getNatalidad2023(): number {
     const item = (this.natalidadTablaSignal() || []).find((item: any) => item.anio === 2023);
@@ -162,25 +201,30 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     return this.generarTextoAfiliacionSalud();
   }
 
-  // ✅ Generadores de texto (copiados del form)
+  // ✅ Generadores de texto usando SECCION29_DEFAULT_TEXTS y constantes
   generarTextoNatalidadCP1(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    return `Este ítem proporciona una visión crucial de la dinámica demográfica, reflejando las tendencias de crecimiento poblacional. Los datos obtenidos del trabajo de campo del Puesto de Salud ${centro} indican que, durante el año 2023, se registró un total de ${this.getNatalidad2023()} nacimientos. Para el año 2024 (hasta el 14 de noviembre), se registró únicamente ${this.getNatalidad2024()} nacimiento.`;
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const natalidad2023 = this.getNatalidad2023();
+    const natalidad2024 = this.getNatalidad2024();
+    return SECCION29_DEFAULT_TEXTS.natalidadCP1(centro, natalidad2023, natalidad2024);
   }
 
   generarTextoNatalidadCP2(): string {
-    return `Respecto a la mortalidad, se puede observar que el número de defunciones en la localidad fue de ${this.getMortalidad2023()} durante el año 2023. Sin embargo, para el año 2024, sí se registró ${this.getMortalidad2024()} defunción.`;
+    const mortalidad2023 = this.getMortalidad2023();
+    const mortalidad2024 = this.getMortalidad2024();
+    return SECCION29_DEFAULT_TEXTS.natalidadCP2(mortalidad2023, mortalidad2024);
   }
 
   generarTextoMorbilidadCP(): string {
-    const distrito = this.projectFacade.obtenerDatos()?.['distritoSeleccionado'] || 'Cahuacho';
+    const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || SECCION29_TEMPLATES.distritoDefault;
+    const centroPoblado = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
     const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
     const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
-    return `Entre los grupos de morbilidad que se hallan a nivel distrital de ${distrito} (jurisdicción que abarca al Puesto de Salud ${this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho'}), para el año 2023, los más frecuentes fueron las infecciones agudas de las vías respiratorias superiores (${infecciones} casos) y la obesidad y otros de hiperalimentación (${obesidad} casos).`;
+    return SECCION29_DEFAULT_TEXTS.morbilidadCP(distrito, centroPoblado, infecciones, obesidad);
   }
 
   generarTextoAfiliacionSalud(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
     const sis = this.afiliacionTablaSignal()
       .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
     const essalud = this.afiliacionTablaSignal()
@@ -188,7 +232,7 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     const sinseguro = this.afiliacionTablaSignal()
       .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sin seguro'))?.porcentaje || '0,00 %';
 
-    return `En el CP ${centro}, la mayor parte de los habitantes se encuentra afiliada a algún tipo de seguro de salud. Es así que el grupo mayoritario corresponde al Seguro Integral de Salud (SIS), el cual representa el ${sis} de la población. En menor medida, se halla la afiliación a ESSALUD, que representa el ${essalud} de la población. Por último, cabe mencionar que el ${sinseguro} de la población no cuenta con ningún tipo de seguro de salud.`;
+    return SECCION29_DEFAULT_TEXTS.afiliacionSalud(centro, sis, essalud, sinseguro);
   }
 
   getNatalidadMortalidadSinTotal(): any[] {

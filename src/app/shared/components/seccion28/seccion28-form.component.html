@@ -1,17 +1,17 @@
 <div *ngIf="modoFormulario" class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h4>
+    <h4 class="section-title">{{ SECCION28_TEMPLATES.tituloSeccion }}</h4>
     
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">a. Infraestructura en salud</h4>
+      <h4 class="section-title">{{ SECCION28_TEMPLATES.tituloSalud }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION28_TEMPLATES.editarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoSaludCP"
-          label="Infraestructura en Salud - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoSaludCP"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="4"
           [value]="obtenerTextoSaludCP()"
           (valueChange)="onFieldChange('textoSaludCP', $event)">
@@ -19,15 +19,15 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título — Principales características del Puesto de Salud</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelTituloPuestoSalud }}</label>
         <input type="text" class="input" 
           [value]="tituloPuestoSaludSignal()"
           (input)="onFieldChange('puestoSaludTitulo', $any($event.target).value)"
-          placeholder="Ej: Principales características del Puesto de Salud">
+          [placeholder]="SECCION28_TEMPLATES.placeholderTituloPuestoSalud">
       </div>
 
       <div class="form-field mt-sm">
-        <label class="label">Tabla Principales características del Puesto de Salud</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelTablaPuestoSalud }}</label>
         <app-dynamic-table
           [datos]="getPuestoSaludTablaData()"
           [sectionId]="seccionId"
@@ -42,27 +42,27 @@
       </div>
 
       <div class="form-field mt-sm">
-        <label class="label">Fuente — Principales características del Puesto de Salud</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFuentePuestoSalud }}</label>
         <input type="text" class="input" 
           [value]="fuentePuestoSaludSignal()"
           (input)="onFieldChange('puestoSaludFuente', $any($event.target).value)"
-          placeholder="Ej: Ministerio de Salud (MINSA)">
+          [placeholder]="SECCION28_TEMPLATES.placeholderFuentePuestoSalud">
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Infraestructura en salud</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFotografiasSalud }}</label>
         <app-image-upload
           [fotografias]="fotografiasSaludFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalSalud()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Puesto de Salud"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Puesto de Salud"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION28_TEMPLATES.placeholderFotoSalud"
+          [placeholderFuente]="SECCION28_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION28_TEMPLATES.tituloFotoSaludDefault"
+          [fuenteDefault]="SECCION28_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasSaludChange($event)">
         </app-image-upload>
@@ -70,15 +70,15 @@
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Infraestructura en educación</h4>
+      <h4 class="section-title">{{ SECCION28_TEMPLATES.tituloEducacion }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION28_TEMPLATES.editarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoEducacionCP"
-          label="Infraestructura en Educación - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoEducacionCP"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="4"
           [value]="obtenerTextoEducacionCP()"
           (valueChange)="onFieldChange('textoEducacionCP', $event)">
@@ -87,32 +87,32 @@
 
       <div class="form-row mt-lg">
         <div class="form-field">
-          <label class="label">Nombre de la IE con mayor cantidad de estudiantes</label>
+          <label class="label">{{ SECCION28_TEMPLATES.labelNombreIEMayor }}</label>
           <input type="text" class="input" 
             [value]="datos['nombreIEMayorEstudiantes'] || ''"
             (input)="onFieldChange('nombreIEMayorEstudiantes', $any($event.target).value)"
-            placeholder="Ej: IE Virgen de Copacabana">
+            [placeholder]="SECCION28_TEMPLATES.placeholderNombreIE">
         </div>
 
         <div class="form-field">
-          <label class="label">Cantidad de estudiantes de la IE con mayor cantidad</label>
+          <label class="label">{{ SECCION28_TEMPLATES.labelCantidadEstudiantesIEMayor }}</label>
           <input type="number" class="input" 
             [value]="datos['cantidadEstudiantesIEMayor'] || ''"
             (input)="onFieldChange('cantidadEstudiantesIEMayor', $any($event.target).value)"
-            placeholder="Ej: 28">
+            [placeholder]="SECCION28_TEMPLATES.placeholderCantidadEstudiantes">
         </div>
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título — Infraestructura educativa</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelTituloEducacion }}</label>
         <input type="text" class="input" 
           [value]="tituloEducacionSignal()"
           (input)="onFieldChange('educacionTitulo', $any($event.target).value)"
-          placeholder="Ej: Infraestructura educativa – CP Cahuacho (2023)">
+          [placeholder]="SECCION28_TEMPLATES.placeholderTituloEducacion">
       </div>
 
       <div class="form-field mt-sm">
-        <label class="label">Tabla Infraestructura educativa</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelTablaEducacion }}</label>
         <app-dynamic-table
           [datos]="getEducacionTablaData()"
           [sectionId]="seccionId"
@@ -125,27 +125,27 @@
       </div>
 
       <div class="form-field mt-sm">
-        <label class="label">Fuente — Infraestructura educativa</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFuenteEducacion }}</label>
         <input type="text" class="input" 
           [value]="fuenteEducacionSignal()"
           (input)="onFieldChange('educacionFuente', $any($event.target).value)"
-          placeholder="Ej: Censo Educativo 2023 – ESCALE (MINEDU)">
+          [placeholder]="SECCION28_TEMPLATES.placeholderFuenteEducacion">
       </div> 
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Infraestructura en educación</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFotografiasEducacion }}</label>
         <app-image-upload
           [fotografias]="fotografiasEducacionFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalEducacion()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Infraestructura educativa"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Infraestructura educativa"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION28_TEMPLATES.placeholderFotoEducacion"
+          [placeholderFuente]="SECCION28_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION28_TEMPLATES.tituloFotoEducacionDefault"
+          [fuenteDefault]="SECCION28_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasEducacionChange($event)">
         </app-image-upload>
@@ -153,15 +153,15 @@
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">c. Infraestructura en recreación</h4>
+      <h4 class="section-title">{{ SECCION28_TEMPLATES.tituloRecreacion }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION28_TEMPLATES.editarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoRecreacionCP1"
-          label="Infraestructura en Recreación - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoRecreacionCP1"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="3"
           [value]="obtenerTextoRecreacionCP1()"
           (valueChange)="onFieldChange('textoRecreacionCP1', $event)">
@@ -169,8 +169,8 @@
 
         <app-paragraph-editor
           fieldId="textoRecreacionCP2"
-          label="Infraestructura en Recreación - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoRecreacionCP2"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="3"
           [value]="obtenerTextoRecreacionCP2()"
           (valueChange)="onFieldChange('textoRecreacionCP2', $event)">
@@ -178,8 +178,8 @@
 
         <app-paragraph-editor
           fieldId="textoRecreacionCP3"
-          label="Infraestructura en Recreación - Párrafo 3"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoRecreacionCP3"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="3"
           [value]="obtenerTextoRecreacionCP3()"
           (valueChange)="onFieldChange('textoRecreacionCP3', $event)">
@@ -187,34 +187,34 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Infraestructura en recreación</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFotografiasRecreacion }}</label>
         <app-image-upload
           [fotografias]="fotografiasRecreacionFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalRecreacion()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Plaza de toros"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Plaza de toros"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION28_TEMPLATES.placeholderFotoRecreacion"
+          [placeholderFuente]="SECCION28_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION28_TEMPLATES.placeholderFotoRecreacion"
+          [fuenteDefault]="SECCION28_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasRecreacionChange($event)">
         </app-image-upload>
       </div>
 
       <div class="form-group-section mt-xl">
-      <h4 class="section-title">d. Infraestructura en deporte</h4>
+      <h4 class="section-title">{{ SECCION28_TEMPLATES.tituloDeporte }}</h4>
       
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION28_TEMPLATES.editarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoDeporteCP1"
-          label="Infraestructura en Deporte - Párrafo 1"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoDeporteCP1"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="3"
           [value]="obtenerTextoDeporteCP1()"
           (valueChange)="onFieldChange('textoDeporteCP1', $event)">
@@ -222,8 +222,8 @@
 
         <app-paragraph-editor
           fieldId="textoDeporteCP2"
-          label="Infraestructura en Deporte - Párrafo 2"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION28_TEMPLATES.labelTextoDeporteCP2"
+          [hint]="SECCION28_TEMPLATES.hintParrafos"
           [rows]="4"
           [value]="obtenerTextoDeporteCP2()"
           (valueChange)="onFieldChange('textoDeporteCP2', $event)">
@@ -231,19 +231,19 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Infraestructura en deporte</label>
+        <label class="label">{{ SECCION28_TEMPLATES.labelFotografiasDeporte }}</label>
         <app-image-upload
           [fotografias]="fotografiasDeporteFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalDeporte()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Losa deportiva"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Losa deportiva"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION28_TEMPLATES.placeholderFotoRecreacion"
+          [placeholderFuente]="SECCION28_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION28_TEMPLATES.placeholderFotoRecreacion"
+          [fuenteDefault]="SECCION28_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasDeporteChange($event)">
         </app-image-upload>

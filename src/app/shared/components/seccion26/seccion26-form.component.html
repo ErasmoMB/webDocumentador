@@ -1,13 +1,13 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h4>
+    <h4 class="section-title">{{ SECCION26_TEMPLATES.tituloSeccion }}</h4>
     
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.labelEditarParrafos }}</h4>
       
       <app-paragraph-editor
         fieldId="textoIntroServiciosBasicosAISI"
-        label="Servicios Básicos - Introducción - Texto Completo"
+        [label]="SECCION26_TEMPLATES.labelParrafoIntro"
         [rows]="4"
         [value]="viewModel().textoIntro"
         (valueChange)="onFieldChange(getKeyTextoIntro(), $event)">
@@ -16,16 +16,16 @@
 
     <!-- a. Servicios de agua -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">a. Servicios de agua</h4>
-      <app-paragraph-editor fieldId="textoServiciosAguaAISI" [rows]="4" [value]="viewModel().textoServiciosAgua" (valueChange)="onFieldChange(getKeyTextoServiciosAgua(), $event)"></app-paragraph-editor>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.titulSeccionA }}</h4>
+      <app-paragraph-editor fieldId="textoServiciosAguaAISI" [label]="SECCION26_TEMPLATES.labelParrafoServicios" [rows]="4" [value]="viewModel().textoServiciosAgua" (valueChange)="onFieldChange(getKeyTextoServiciosAgua(), $event)"></app-paragraph-editor>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroTituloAbastecimiento" (change)="onFieldChange('cuadroTituloAbastecimiento', $any($event.target).value)" placeholder="Título del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroTitulo }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloAbastecimiento" (change)="onFieldChange('cuadroTituloAbastecimiento', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroTitulo" />
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Tabla Tipos de abastecimiento de agua en las viviendas</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelTablaAbastecimiento }}</label>
         <app-dynamic-table 
           [datos]="datos" 
           [sectionId]="seccionId" 
@@ -41,26 +41,26 @@
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Fuente del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroFuenteAbastecimiento" (change)="onFieldChange('cuadroFuenteAbastecimiento', $any($event.target).value)" placeholder="Fuente del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroFuente }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteAbastecimiento" (change)="onFieldChange('cuadroFuenteAbastecimiento', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroFuente" />
       </div>
     </div>
 
     <!-- b. Servicios básicos de desagüe -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Servicios básicos de desagüe</h4>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.titulSeccionB }}</h4>
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        <app-paragraph-editor fieldId="textoDesagueCP" label="Servicios básicos de desagüe - Texto Completo" [rows]="6" [value]="viewModel().textoDesague" (valueChange)="onFieldChange(getKeyTextoDesague(), $event)"></app-paragraph-editor>
+        <h4 class="section-title">{{ SECCION26_TEMPLATES.labelEditarParrafos }}</h4>
+        <app-paragraph-editor fieldId="textoDesagueCP" [label]="SECCION26_TEMPLATES.labelParrafoDesague" [rows]="6" [value]="viewModel().textoDesague" (valueChange)="onFieldChange(getKeyTextoDesague(), $event)"></app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroTituloSaneamiento" (change)="onFieldChange('cuadroTituloSaneamiento', $any($event.target).value)" placeholder="Título del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroTitulo }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloSaneamiento" (change)="onFieldChange('cuadroTituloSaneamiento', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroTitulo" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Tipos de saneamiento en las viviendas</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelTablaSaneamiento }}</label>
         <app-dynamic-table 
           [datos]="datos" 
           [sectionId]="seccionId" 
@@ -76,24 +76,24 @@
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Fuente del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroFuenteSaneamiento" (change)="onFieldChange('cuadroFuenteSaneamiento', $any($event.target).value)" placeholder="Fuente del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroFuente }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteSaneamiento" (change)="onFieldChange('cuadroFuenteSaneamiento', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroFuente" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Desechos Sólidos</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelFotosDesechos }}</label>
         <app-image-upload 
           [fotografias]="fotografiasDesechosFormMulti" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalDesechos()" 
           [permitirMultiples]="true" 
-          labelTitulo="Título de la fotografía" 
-          labelFuente="Fuente de la fotografía" 
-          labelImagen="Fotografía - Imagen" 
-          placeholderTitulo="Ej: Contenedores de residuos sólidos" 
-          placeholderFuente="Ej: GEADES, 2024" 
-          tituloDefault="Contenedores de residuos sólidos" 
-          fuenteDefault="GEADES, 2024" 
+          [labelTitulo]="SECCION26_TEMPLATES.labelFotoTitulo" 
+          [labelFuente]="SECCION26_TEMPLATES.labelFotoFuente" 
+          [labelImagen]="SECCION26_TEMPLATES.labelFotoImagen" 
+          [placeholderTitulo]="SECCION26_TEMPLATES.placeholderFotoTituloDesechos" 
+          [placeholderFuente]="SECCION26_TEMPLATES.placeholderFotoFuente" 
+          [tituloDefault]="SECCION26_TEMPLATES.tituloFotoDesechosDefault" 
+          [fuenteDefault]="SECCION26_TEMPLATES.fuenteFotoDefault" 
           [requerido]="false" 
           (fotografiasChange)="onFotografiasDesechosChange($event)">
         </app-image-upload>
@@ -102,28 +102,28 @@
 
     <!-- c. Gestión y destino de los desechos sólidos -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">c. Gestión y destino de los desechos sólidos</h4>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.titulSeccionC }}</h4>
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        <app-paragraph-editor fieldId="textoDesechosSolidosCP" label="Gestión y Destino de Desechos Sólidos - Texto Completo" [rows]="6" [value]="viewModel().textoDesechos" (valueChange)="onFieldChange(getKeyTextoDesechos(), $event)"></app-paragraph-editor>
+        <h4 class="section-title">{{ SECCION26_TEMPLATES.labelEditarParrafos }}</h4>
+        <app-paragraph-editor fieldId="textoDesechosSolidosCP" [label]="SECCION26_TEMPLATES.labelParrafoDesechos" [rows]="6" [value]="viewModel().textoDesechos" (valueChange)="onFieldChange(getKeyTextoDesechos(), $event)"></app-paragraph-editor>
       </div>
     </div>
 
     <!-- d. Electricidad -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">d. Electricidad</h4>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.titulSeccionD }}</h4>
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        <app-paragraph-editor fieldId="textoElectricidadCP" label="Electricidad - Texto Completo" [rows]="4" [value]="viewModel().textoElectricidad" (valueChange)="onFieldChange(getKeyTextoElectricidad(), $event)"></app-paragraph-editor>
+        <h4 class="section-title">{{ SECCION26_TEMPLATES.labelEditarParrafos }}</h4>
+        <app-paragraph-editor fieldId="textoElectricidadCP" [label]="SECCION26_TEMPLATES.labelParrafoElectricidad" [rows]="4" [value]="viewModel().textoElectricidad" (valueChange)="onFieldChange(getKeyTextoElectricidad(), $event)"></app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroTituloCobertura" (change)="onFieldChange('cuadroTituloCobertura', $any($event.target).value)" placeholder="Título del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroTitulo }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloCobertura" (change)="onFieldChange('cuadroTituloCobertura', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroTitulo" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Cobertura de alumbrado eléctrico en las viviendas</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelTablaCobertura }}</label>
         <app-dynamic-table 
           [datos]="datos" 
           [sectionId]="seccionId" 
@@ -139,24 +139,24 @@
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Fuente del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroFuenteCobertura" (change)="onFieldChange('cuadroFuenteCobertura', $any($event.target).value)" placeholder="Fuente del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroFuente }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteCobertura" (change)="onFieldChange('cuadroFuenteCobertura', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroFuente" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Electricidad</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelFotosElectricidad }}</label>
         <app-image-upload 
           [fotografias]="fotografiasElectricidadFormMulti" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalElectricidad()" 
           [permitirMultiples]="true" 
-          labelTitulo="Título de la fotografía" 
-          labelFuente="Fuente de la fotografía" 
-          labelImagen="Fotografía - Imagen" 
-          placeholderTitulo="Ej: Infraestructura eléctrica" 
-          placeholderFuente="Ej: GEADES, 2024" 
-          tituloDefault="Infraestructura eléctrica" 
-          fuenteDefault="GEADES, 2024" 
+          [labelTitulo]="SECCION26_TEMPLATES.labelFotoTitulo" 
+          [labelFuente]="SECCION26_TEMPLATES.labelFotoFuente" 
+          [labelImagen]="SECCION26_TEMPLATES.labelFotoImagen" 
+          [placeholderTitulo]="SECCION26_TEMPLATES.placeholderFotoTituloElectricidad" 
+          [placeholderFuente]="SECCION26_TEMPLATES.placeholderFotoFuente" 
+          [tituloDefault]="SECCION26_TEMPLATES.tituloFotoElectricidadDefault" 
+          [fuenteDefault]="SECCION26_TEMPLATES.fuenteFotoDefault" 
           [requerido]="false" 
           (fotografiasChange)="onFotografiasElectricidadChange($event)">
         </app-image-upload>
@@ -165,19 +165,19 @@
 
     <!-- e. Energía para cocinar -->
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">e. Energía para cocinar</h4>
+      <h4 class="section-title">{{ SECCION26_TEMPLATES.titulSeccionE }}</h4>
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
-        <app-paragraph-editor fieldId="textoEnergiaCocinarCP" label="Energía para Cocinar - Texto Completo" [rows]="4" [value]="viewModel().textoCocinar" (valueChange)="onFieldChange(getKeyTextoEnergiaCocinar(), $event)"></app-paragraph-editor>
+        <h4 class="section-title">{{ SECCION26_TEMPLATES.labelEditarParrafos }}</h4>
+        <app-paragraph-editor fieldId="textoEnergiaCocinarCP" [label]="SECCION26_TEMPLATES.labelParrafoCocinar" [rows]="4" [value]="viewModel().textoCocinar" (valueChange)="onFieldChange(getKeyTextoEnergiaCocinar(), $event)"></app-paragraph-editor>
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroTituloCombustibles" (change)="onFieldChange('cuadroTituloCombustibles', $any($event.target).value)" placeholder="Título del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroTitulo }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroTituloCombustibles" (change)="onFieldChange('cuadroTituloCombustibles', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroTitulo" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Tabla Combustibles para cocción en los hogares</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelTablaCombustibles }}</label>
         <app-dynamic-table 
           [datos]="datos" 
           [sectionId]="seccionId" 
@@ -193,24 +193,24 @@
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
-        <label class="label">Fuente del cuadro</label>
-        <input type="text" class="input" [value]="viewModel().cuadroFuenteCombustibles" (change)="onFieldChange('cuadroFuenteCombustibles', $any($event.target).value)" placeholder="Fuente del cuadro" />
+        <label class="label">{{ SECCION26_TEMPLATES.labelCuadroFuente }}</label>
+        <input type="text" class="input" [value]="viewModel().cuadroFuenteCombustibles" (change)="onFieldChange('cuadroFuenteCombustibles', $any($event.target).value)" [placeholder]="SECCION26_TEMPLATES.placeholderCuadroFuente" />
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Energía para Cocinar</label>
+        <label class="label">{{ SECCION26_TEMPLATES.labelFotosCocinar }}</label>
         <app-image-upload 
           [fotografias]="fotografiasCocinarFormMulti" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalCocinar()" 
           [permitirMultiples]="true" 
-          labelTitulo="Título de la fotografía" 
-          labelFuente="Fuente de la fotografía" 
-          labelImagen="Fotografía - Imagen" 
-          placeholderTitulo="Ej: Energía para cocinar" 
-          placeholderFuente="Ej: GEADES, 2024" 
-          tituloDefault="Energía para cocinar" 
-          fuenteDefault="GEADES, 2024" 
+          [labelTitulo]="SECCION26_TEMPLATES.labelFotoTitulo" 
+          [labelFuente]="SECCION26_TEMPLATES.labelFotoFuente" 
+          [labelImagen]="SECCION26_TEMPLATES.labelFotoImagen" 
+          [placeholderTitulo]="SECCION26_TEMPLATES.placeholderFotoTituloCocinar" 
+          [placeholderFuente]="SECCION26_TEMPLATES.placeholderFotoFuente" 
+          [tituloDefault]="SECCION26_TEMPLATES.tituloFotoCocinarDefault" 
+          [fuenteDefault]="SECCION26_TEMPLATES.fuenteFotoDefault" 
           [requerido]="false" 
           (fotografiasChange)="onFotografiasCocinarChange($event)">
         </app-image-upload>

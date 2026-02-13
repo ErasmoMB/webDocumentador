@@ -1,17 +1,17 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.2. Indicadores y distribución de la Población Económicamente Activa</h4>
+    <h4 class="section-title">{{ SECCION23_TEMPLATES.sectionTitle }}</h4>
     
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">a. Población en edad de trabajar (PET)</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionPET }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoPETIntro_AISI"
-          label="PET - Párrafo introductorio"
-          hint="Párrafo introductorio. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelPETIntro"
+          [hint]="SECCION23_TEMPLATES.hintPETIntro"
           [rows]="3"
           [value]="$any(this).obtenerTextoPETIntro_AISI()"
           (valueChange)="onFieldChange('textoPETIntro_AISI', $event)">
@@ -19,8 +19,8 @@
 
         <app-paragraph-editor
           fieldId="textoPET_AISI"
-          label="PET - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelPETCompleto"
+          [hint]="SECCION23_TEMPLATES.hintPETCompleto"
           [rows]="4"
           [value]="$any(this).obtenerTextoPET_AISI()"
           (valueChange)="onFieldChange('textoPET_AISI', $event)">
@@ -29,7 +29,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['petGruposEdadTitulo'] || ''" (input)="onFieldChange('petGruposEdadTitulo', $any($event.target).value)" placeholder="Ej: PET según grupos de edad – CP Cahuacho (2017)">
+        <input type="text" class="input" [value]="datos['petGruposEdadTitulo'] || ''" (input)="onFieldChange('petGruposEdadTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -39,9 +39,9 @@
           [sectionId]="seccionId"
           [config]="petGruposEdadConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: 14 a 29 años', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+            { field: 'categoria', label: SECCION23_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCategoria, readonly: true },
+            { field: 'casos', label: SECCION23_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos },
+            { field: 'porcentaje', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true }
           ]"
           [tablaKey]="'petGruposEdadAISI'"
           [totalKey]="'categoria'"
@@ -53,18 +53,18 @@
 
 
         <div class="form-field" style="margin-top: 10px;">
-          <label class="label">Fuente</label>
-          <input type="text" class="input" [value]="datos['petGruposEdadFuente'] || ''" (input)="onFieldChange('petGruposEdadFuente', $any($event.target).value)" placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.">
+          <label class="label">{{ SECCION23_TEMPLATES.labelPETFuente }}</label>
+          <input type="text" class="input" [value]="datos['petGruposEdadFuente'] || ''" (input)="onFieldChange('petGruposEdadFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETFuente">
         </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoIndicadoresDistritalesAISI"
-          label="Indicadores Distritales - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelIndicadoresDistritalesAnalisisSecundario"
+          [hint]="SECCION23_TEMPLATES.hintIndicadoresDistritales"
           [rows]="4"
           [value]="obtenerTextoIndicadoresDistritalesAISI()"
           (valueChange)="onFieldChange('textoIndicadoresDistritalesAISI', $event)">
@@ -73,15 +73,15 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Población Económicamente Activa (PEA)</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionPEA }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoPEA_AISI"
-          label="PEA - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelPeaTextCompletoSecundario"
+          [hint]="SECCION23_TEMPLATES.hintPeaAnalisis"
           [rows]="4"
           [value]="obtenerTextoPEA_AISI()"
           (valueChange)="onFieldChange('textoPEA_AISI', $event)">
@@ -90,7 +90,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['peaDistritoSexoTitulo'] || ''" (input)="onFieldChange('peaDistritoSexoTitulo', $any($event.target).value)" placeholder="Ej: Conformación de la PEA y No PEA, según sexo – Distrito Cahuacho (2017)">
+        <input type="text" class="input" [value]="datos['peaDistritoSexoTitulo'] || ''" (input)="onFieldChange('peaDistritoSexoTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -100,13 +100,13 @@
           [sectionId]="seccionId"
           [config]="peaDistritoSexoConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA', readonly: true },
-            { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
-            { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
-            { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
-            { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: true },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+            { field: 'categoria', label: SECCION23_TEMPLATES.tableColumnCategorias, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPEA, readonly: true },
+            { field: 'hombres', label: SECCION23_TEMPLATES.tableColumnHombres, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos },
+            { field: 'porcentajeHombres', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true },
+            { field: 'mujeres', label: SECCION23_TEMPLATES.tableColumnMujeres, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos },
+            { field: 'porcentajeMujeres', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true },
+            { field: 'casos', label: SECCION23_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos, readonly: true },
+            { field: 'porcentaje', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true }
           ]"
           [tablaKey]="'peaDistritoSexoTabla'"
           [totalKey]="'categoria'"
@@ -118,18 +118,18 @@
 
 
         <div class="form-field" style="margin-top: 10px;">
-          <label class="label">Fuente</label>
-          <input type="text" class="input" [value]="datos['peaDistritoSexoFuente'] || ''" (input)="onFieldChange('peaDistritoSexoFuente', $any($event.target).value)" placeholder="Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018">
+          <label class="label">{{ SECCION23_TEMPLATES.labelPeaDistritoSexoFuente }}</label>
+          <input type="text" class="input" [value]="datos['peaDistritoSexoFuente'] || ''" (input)="onFieldChange('peaDistritoSexoFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoFuente">
         </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoAnalisisPEA_AISI"
-          label="Análisis PEA - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelAnalisisPEASecundario"
+          [hint]="SECCION23_TEMPLATES.hintPeaAnalisis"
           [rows]="4"
           [value]="obtenerTextoAnalisisPEA_AISI()"
           (valueChange)="onFieldChange('textoAnalisisPEA_AISI', $event)">
@@ -138,15 +138,15 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.1. Situación del empleo (dependiente o independiente)</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEmpleoSituacion }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoEmpleoAISI"
-          label="Situación del empleo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelEmpleoSituacionCompletoSecundario"
+          [hint]="SECCION23_TEMPLATES.hintEmpleoSituacion"
           [rows]="6"
           [value]="obtenerTextoEmpleoAISI()"
           (valueChange)="onFieldChange('textoEmpleoAISI', $event)">
@@ -154,8 +154,8 @@
 
         <app-paragraph-editor
           fieldId="textoEmpleoDependiente_AISI"
-          label="Empleo dependiente - Texto"
-          hint="Texto sobre empleo dependiente. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelEmpleoDependienteTextoSecundario"
+          [hint]="SECCION23_TEMPLATES.hintEmpleoDependiente"
           [rows]="4"
           [value]="obtenerTextoEmpleoDependiente_AISI()"
           (valueChange)="onFieldChange('textoEmpleoDependiente_AISI', $event)">
@@ -164,15 +164,15 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.2. Ingresos de la población</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionIngresos }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoIngresosAISI"
-          label="Ingresos de la población - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelIngresosCompletoSecundario"
+          [hint]="SECCION23_TEMPLATES.hintIngresos"
           [rows]="8"
           [value]="obtenerTextoIngresosAISI()"
           (valueChange)="onFieldChange('textoIngresosAISI', $event)">
@@ -181,15 +181,15 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b.3. Índice de Desempleo</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionIndiceDesempleo }}</h4>
       
       <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoIndiceDesempleoAISI"
-          label="Índice de Desempleo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelIndiceDesempleoCompletoSecundario"
+          [hint]="SECCION23_TEMPLATES.hintIndiceDesempleo"
           [rows]="4"
           [value]="obtenerTextoIndiceDesempleoAISI()"
           (valueChange)="onFieldChange('textoIndiceDesempleoAISI', $event)">
@@ -198,7 +198,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaTitulo'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaTitulo', $any($event.target).value)" placeholder="Ej: Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito Cahuacho (2017)">
+        <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaTitulo'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -208,13 +208,13 @@
           [sectionId]="seccionId"
           [config]="peaOcupadaDesocupadaConfig"
           [columns]="[
-            { field: 'categoria', label: 'Categorías', type: 'text', placeholder: 'Ej: PEA Ocupada', readonly: true },
-            { field: 'hombres', label: 'Hombres', type: 'number', placeholder: '0' },
-            { field: 'porcentajeHombres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
-            { field: 'mujeres', label: 'Mujeres', type: 'number', placeholder: '0' },
-            { field: 'porcentajeMujeres', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0', readonly: true },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+            { field: 'categoria', label: SECCION23_TEMPLATES.tableColumnCategorias, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPEAOcupada, readonly: true },
+            { field: 'hombres', label: SECCION23_TEMPLATES.tableColumnHombres, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos },
+            { field: 'porcentajeHombres', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true },
+            { field: 'mujeres', label: SECCION23_TEMPLATES.tableColumnMujeres, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos },
+            { field: 'porcentajeMujeres', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true },
+            { field: 'casos', label: SECCION23_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderCasos, readonly: true },
+            { field: 'porcentaje', label: SECCION23_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION23_TEMPLATES.tableInputPlaceholderPorcentaje, readonly: true }
           ]"
           [tablaKey]="'peaOcupadaDesocupadaTabla'"
           [totalKey]="'categoria'"
@@ -226,18 +226,18 @@
 
 
         <div class="form-field" style="margin-top: 10px;">
-          <label class="label">Fuente</label>
-          <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaFuente'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaFuente', $any($event.target).value)" placeholder="Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018">
+          <label class="label">{{ SECCION23_TEMPLATES.labelPeaOcupadaDesocupadaFuente }}</label>
+          <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaFuente'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaFuente">
         </div>
       </div>
 
       <div class="form-group-section" style="margin-top: 20px;">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
           fieldId="textoPEAAISI"
-          label="Análisis PEA Ocupada y Desocupada - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION23_TEMPLATES.labelPeaOcupadaDesocupadaAnalisisSecundario"
+          [hint]="SECCION23_TEMPLATES.hintPeaOcupadaDesocupada"
           [rows]="4"
           [value]="obtenerTextoPEAAISI()"
           (valueChange)="onFieldChange('textoPEAAISI', $event)">
@@ -246,7 +246,7 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">Fotografías adicionales</h4>
+      <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionFotografias }}</h4>
 
       <div style="margin-top: 15px;">
         <app-image-upload

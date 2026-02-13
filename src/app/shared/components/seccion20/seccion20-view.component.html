@@ -1,5 +1,5 @@
 <div class="seccion-vista-content">
-  <h5>A.1.16. Festividades, Costumbres y Turismo</h5>
+  <h5>{{ SECCION20_TEMPLATES.tituloSeccion }}</h5>
 
   <div [innerHTML]="textoSignal()"></div>
 
@@ -8,8 +8,8 @@
       [data]="tablaSignal()"
       [config]="{
         columns: [
-          { key: 'festividad', header: 'Festividad', align: 'left' },
-          { key: 'fecha', header: 'Fecha', align: 'left' }
+          { key: 'festividad', header: SECCION20_TEMPLATES.columnFestividad, align: 'left' },
+          { key: 'fecha', header: SECCION20_TEMPLATES.columnFecha, align: 'left' }
         ],
         showFooter: false,
         striped: true,
@@ -26,8 +26,8 @@
     [fotografias]="fotosSignal()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignal()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION20_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION20_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION20_TEMPLATES.labelFotoImagen">
   </app-image-upload>
 </div>

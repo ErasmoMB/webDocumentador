@@ -1,52 +1,58 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.10. Indicadores de educación</h4>
+    <!-- TITLE -->
+    <h4 class="section-title">{{ SECCION14_TEMPLATES.tituloSeccion }}</h4>
 
+    <!-- SECTION: INTRODUCCIÓN -->
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION14_TEMPLATES.subtituloIntro }}</h4>
 
       <app-paragraph-editor
         [fieldId]="'parrafoSeccion14_indicadores_educacion_intro' + obtenerPrefijo()"
-        label="Introducción - Indicadores de Educación"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION14_TEMPLATES.labelIntro"
+        [hint]="SECCION14_TEMPLATES.hintIntro"
         [rows]="4"
         [value]="obtenerTextoIndicadoresEducacionIntro()"
         (valueChange)="onFieldChange('parrafoSeccion14_indicadores_educacion_intro', $event)">
       </app-paragraph-editor>
     </div>
 
+    <!-- SECTION A: NIVEL EDUCATIVO -->
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">a. Nivel Educativo de la población</h4>
+      <h4 class="section-title">{{ SECCION14_TEMPLATES.subtituloNivelEducativo }}</h4>
 
+      <!-- Párrafos -->
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION14_TEMPLATES.subtituloIntro }}</h4>
 
         <app-paragraph-editor
           [fieldId]="'textoNivelEducativo' + obtenerPrefijo()"
-          label="Nivel Educativo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION14_TEMPLATES.labelNivelEducativo"
+          [hint]="SECCION14_TEMPLATES.hintNivelEducativo"
           [rows]="3"
           [value]="obtenerTextoNivelEducativo()"
           (valueChange)="onFieldChange('textoNivelEducativo', $event)">
         </app-paragraph-editor>
       </div>
 
+      <!-- Título del cuadro -->
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION14_TEMPLATES.labelTituloNivelEducativo }}</label>
         <input type="text" class="form-control"
-          [value]="datos['cuadroTituloNivelEducativo' + obtenerPrefijo()] || ('Población de 15 años a más según nivel educativo alcanzado – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          [value]="datos['cuadroTituloNivelEducativo' + obtenerPrefijo()] || (SECCION14_TEMPLATES.tituloNivelEducativoDefault + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
           (change)="onFieldChange('cuadroTituloNivelEducativo', $any($event.target).value, { refresh: true })" />
       </div>
 
+      <!-- Tabla -->
       <div class="form-field mt-lg">
-        <label class="label">Tabla Nivel Educativo</label>
+        <label class="label">{{ SECCION14_TEMPLATES.labelTablaNivelEducativo }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="nivelEducativoConfigSignal()"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Primaria' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: SECCION14_TEMPLATES.columnaCategoriaLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderCategoria },
+            { field: 'casos', label: SECCION14_TEMPLATES.columnaCasosLabel, type: 'number', placeholder: SECCION14_TEMPLATES.placeholderCasos },
+            { field: 'porcentaje', label: SECCION14_TEMPLATES.columnaPorcentajeLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderPorcentaje, readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="'nivelEducativoTabla' + obtenerPrefijo()"
@@ -55,65 +61,70 @@
           (tableUpdated)="onNivelEducativoTableUpdated($event)">
         </app-dynamic-table>
         <p class="source" style="margin-top:8px;">
-          <label class="label">Fuente</label>
+          <label class="label">{{ SECCION14_TEMPLATES.labelFuenteNivelEducativo }}</label>
           <input type="text" class="form-control"
-            [value]="datos['cuadroFuenteNivelEducativo' + obtenerPrefijo()] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            [value]="datos['cuadroFuenteNivelEducativo' + obtenerPrefijo()] || SECCION14_TEMPLATES.fuenteNivelEducativoDefault"
             (change)="onFieldChange('cuadroFuenteNivelEducativo', $any($event.target).value, { refresh: true })" />
         </p>
       </div>
 
+      <!-- Fotografías -->
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Indicadores de Educación</label>
+        <label class="label">{{ SECCION14_TEMPLATES.labelFotoNivelEducativo }}</label>
         <app-image-upload
           [fotografias]="fotografiasFormMulti"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX + obtenerPrefijo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Indicadores de educación"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Indicadores de educación"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION14_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION14_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION14_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION14_TEMPLATES.placeholderFotoTitulo"
+          [placeholderFuente]="SECCION14_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION14_TEMPLATES.tituloFotoDefault"
+          [fuenteDefault]="SECCION14_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>
       </div>
     </div>
 
+    <!-- SECTION B: TASA DE ANALFABETISMO -->
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Tasa de analfabetismo</h4>
+      <h4 class="section-title">{{ SECCION14_TEMPLATES.subtituloTasaAnalfabetismo }}</h4>
 
+      <!-- Párrafos -->
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION14_TEMPLATES.subtituloIntro }}</h4>
 
         <app-paragraph-editor
           [fieldId]="'textoTasaAnalfabetismo' + obtenerPrefijo()"
-          label="Tasa de Analfabetismo - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION14_TEMPLATES.labelTasaAnalfabetismo"
+          [hint]="SECCION14_TEMPLATES.hintTasaAnalfabetismo"
           [rows]="2"
           [value]="obtenerTextoTasaAnalfabetismo()"
           (valueChange)="onFieldChange('textoTasaAnalfabetismo', $event)">
         </app-paragraph-editor>
       </div>
 
+      <!-- Título del cuadro -->
       <div class="form-field mt-lg">
-        <label class="label">Título del cuadro</label>
+        <label class="label">{{ SECCION14_TEMPLATES.labelTituloTasaAnalfabetismo }}</label>
         <input type="text" class="form-control"
-          [value]="datos['cuadroTituloTasaAnalfabetismo' + obtenerPrefijo()] || ('Tasa de analfabetismo en población de 15 años a más – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
+          [value]="datos['cuadroTituloTasaAnalfabetismo' + obtenerPrefijo()] || (SECCION14_TEMPLATES.tituloTasaAnalfabetismoDefault + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)')"
           (change)="onFieldChange('cuadroTituloTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
       </div>
 
+      <!-- Tabla -->
       <div class="form-field mt-lg">
-        <label class="label">Tabla Tasa de Analfabetismo</label>
+        <label class="label">{{ SECCION14_TEMPLATES.labelTablaTasaAnalfabetismo }}</label>
         <app-dynamic-table
           [datos]="datos"
           [config]="tasaAnalfabetismoConfigSignal()"
           [columns]="[
-            { field: 'indicador', label: 'Indicador', type: 'text', placeholder: 'Ej: Sabe leer y escribir' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'indicador', label: SECCION14_TEMPLATES.columnaIndicadorLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderIndicador },
+            { field: 'casos', label: SECCION14_TEMPLATES.columnaCasosLabel, type: 'number', placeholder: SECCION14_TEMPLATES.placeholderCasos },
+            { field: 'porcentaje', label: SECCION14_TEMPLATES.columnaPorcentajeLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderPorcentaje, readonly: true }
           ]"
           [sectionId]="seccionId"
           [tablaKey]="'tasaAnalfabetismoTabla' + obtenerPrefijo()"
@@ -122,9 +133,9 @@
           (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
         </app-dynamic-table>
         <p class="source" style="margin-top:8px;">
-          <label class="label">Fuente</label>
+          <label class="label">{{ SECCION14_TEMPLATES.labelFuenteTasaAnalfabetismo }}</label>
           <input type="text" class="form-control"
-            [value]="datos['cuadroFuenteTasaAnalfabetismo' + obtenerPrefijo()] || 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas'"
+            [value]="datos['cuadroFuenteTasaAnalfabetismo' + obtenerPrefijo()] || SECCION14_TEMPLATES.fuenteTasaAnalfabetismoDefault"
             (change)="onFieldChange('cuadroFuenteTasaAnalfabetismo', $any($event.target).value, { refresh: true })" />
         </p>
       </div> 

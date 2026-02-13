@@ -1,45 +1,29 @@
 @let vm = viewModel();
 <div>
-  <h5>B.1.9. Indicadores de educación</h5>
+  <h5>{{ SECCION30_TEMPLATES.sectionTitle }}</h5>
   <p class="text-justify" [innerHTML]="vm.parrafo"></p>
 
-  <p class="mt-lg mb-sm"><strong>a. Nivel Educativo de la población</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION30_TEMPLATES.subseccionA }}</strong></p>
   <p class="text-justify" [innerHTML]="vm.textoNivelEducativo"></p>
 
   <app-table-wrapper [title]="vm.tituloNivelEducativo" [sectionId]="seccionId">
     <app-generic-table
       [data]="vm.nivelEducativo"
-      [config]="{
-        columns: [
-          { key: 'nivel', header: 'Categoría', width: '50%' },
-          { key: 'casos', header: 'Casos', width: '25%', align: 'center' },
-          { key: 'porcentaje', header: 'Porcentaje', width: '25%', align: 'center' }
-        ],
-        showHeader: true,
-        showFooter: false
-      }">
+      [config]="tableConfigNivelEducativo()">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE: {{ vm.fuenteNivelEducativo }}</p>
+  <p class="source">{{ SECCION30_TEMPLATES.lblFuente }}{{ vm.fuenteNivelEducativo }}</p>
 
-  <p class="mt-lg mb-sm"><strong>b. Tasa de analfabetismo</strong></p>
+  <p class="mt-lg mb-sm"><strong>{{ SECCION30_TEMPLATES.subseccionB }}</strong></p>
   <p class="text-justify" [innerHTML]="vm.textoTasaAnalfabetismo"></p>
 
   <app-table-wrapper [title]="vm.tituloTasaAnalfabetismo" [sectionId]="seccionId">
     <app-generic-table
       [data]="vm.tasaAnalfabetismo"
-      [config]="{
-        columns: [
-          { key: 'indicador', header: 'Indicador', width: '50%' },
-          { key: 'casos', header: 'Casos', width: '25%', align: 'center' },
-          { key: 'porcentaje', header: 'Porcentaje', width: '25%', align: 'center' }
-        ],
-        showHeader: true,
-        showFooter: false
-      }">
+      [config]="tableConfigTasaAnalfabetismo()">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE: {{ vm.fuenteTasaAnalfabetismo }}</p>
+  <p class="source">{{ SECCION30_TEMPLATES.lblFuente }}{{ vm.fuenteTasaAnalfabetismo }}</p>
 
   <app-image-upload
     [modoVista]="true"
@@ -47,8 +31,8 @@
     [fotografias]="vm.fotos"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION30_TEMPLATES.labelTituloFoto"
+    [labelFuente]="SECCION30_TEMPLATES.labelFuenteFoto"
+    [labelImagen]="SECCION30_TEMPLATES.labelImagenFoto">
   </app-image-upload>
 </div>

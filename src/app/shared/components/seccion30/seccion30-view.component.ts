@@ -5,6 +5,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION30_TEMPLATES, SECCION30_CONFIG, SECCION30_WATCHED_FIELDS } from './seccion30-constants';
 
 @Component({
   selector: 'app-seccion30-view',
@@ -14,19 +15,23 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
   imports: [CommonModule, FormsModule, CoreSharedModule]
 })
 export class Seccion30ViewComponent extends BaseSectionComponent {
-  @Input() override seccionId: string = '3.1.4.B.1.9';
+  @Input() override seccionId: string = SECCION30_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ EXPORTAR CONSTANTS PARA USAR EN TEMPLATE
+  readonly SECCION30_TEMPLATES = SECCION30_TEMPLATES;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION30_WATCHED_FIELDS;
 
-  // Textos por defecto
-  readonly PARRAFO_INTRO_DEFAULT = 'La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.';
-  readonly TITULO_NIVEL_EDUCATIVO_DEFAULT = 'Población de 15 años a más según nivel educativo alcanzado';
-  readonly FUENTE_NIVEL_EDUCATIVO_DEFAULT = 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
-  readonly TITULO_TASA_ANALFABETISMO_DEFAULT = 'Tasa de analfabetismo en población de 15 años a más';
-  readonly FUENTE_TASA_ANALFABETISMO_DEFAULT = 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
+  // ✅ TEXTOS POR DEFECTO - Ahora desde CONSTANTS
+  readonly PARRAFO_INTRO_DEFAULT = SECCION30_TEMPLATES.parrafoIntroDefault;
+  readonly TITULO_NIVEL_EDUCATIVO_DEFAULT = SECCION30_TEMPLATES.tituloNivelEducativoDefault;
+  readonly FUENTE_NIVEL_EDUCATIVO_DEFAULT = SECCION30_TEMPLATES.fuenteNivelEducativoDefault;
+  readonly TITULO_TASA_ANALFABETISMO_DEFAULT = SECCION30_TEMPLATES.tituloTasaAnalfabetismoDefault;
+  readonly FUENTE_TASA_ANALFABETISMO_DEFAULT = SECCION30_TEMPLATES.fuenteTasaAnalfabetismoDefault;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -43,14 +48,14 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoNivelEducativo')();
     const cp = this.centroPobladoSignal();
     if (manual && manual.trim().length > 0) return manual;
-    return `En el CP ${cp}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria. A continuación se presentan los datos de nivel educativo según el censo nacional.`;
+    return SECCION30_TEMPLATES.textoNivelEducativoDefault(cp);
   });
 
   readonly textoTasaAnalfabetismoSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoTasaAnalfabetismo')();
     const cp = this.centroPobladoSignal();
     if (manual && manual.trim().length > 0) return manual;
-    return `En el CP ${cp}, tomando en cuenta a la población de 15 años a más, se presentan los datos de tasa de analfabetismo según el censo nacional.`;
+    return SECCION30_TEMPLATES.textoTasaAnalfabetismoDefault(cp);
   });
 
   readonly tituloNivelEducativoSignal: Signal<string> = computed(() => {
@@ -74,6 +79,27 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'fuenteTasaAnalfabetismo')();
     return manual && manual.trim().length > 0 ? manual : this.FUENTE_TASA_ANALFABETISMO_DEFAULT;
   });
+
+  // ✅ CONFIGURACIONES DE TABLAS - Signals para evitar errores de template
+  readonly tableConfigNivelEducativo: Signal<any> = computed(() => ({
+    columns: [
+      { key: 'nivel', header: SECCION30_TEMPLATES.lblCategoría, width: '50%' },
+      { key: 'casos', header: SECCION30_TEMPLATES.lblCasos, width: '25%', align: 'center' },
+      { key: 'porcentaje', header: SECCION30_TEMPLATES.lblPorcentaje, width: '25%', align: 'center' }
+    ],
+    showHeader: true,
+    showFooter: false
+  }));
+
+  readonly tableConfigTasaAnalfabetismo: Signal<any> = computed(() => ({
+    columns: [
+      { key: 'indicador', header: SECCION30_TEMPLATES.lblIndicador, width: '50%' },
+      { key: 'casos', header: SECCION30_TEMPLATES.lblCasos, width: '25%', align: 'center' },
+      { key: 'porcentaje', header: SECCION30_TEMPLATES.lblPorcentaje, width: '25%', align: 'center' }
+    ],
+    showHeader: true,
+    showFooter: false
+  }));
 
   readonly nivelEducativoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();

@@ -1,16 +1,18 @@
 <div *ngIf="!modoFormulario">
-<h5>B.1.7. Infraestructura en salud, educación, recreativa y deportiva</h5>
+<h5>{{ SECCION28_TEMPLATES.tituloSeccion }}</h5>
 
-<p class="mt-lg mb-sm"><strong>a. Infraestructura en salud</strong></p>
+<p class="mt-lg mb-sm"><strong>{{ SECCION28_TEMPLATES.tituloSalud }}</strong></p>
 <p class="text-justify">{{ obtenerTextoSaludCP() }}</p>
 
-<app-table-wrapper [title]="(formDataSignal()['puestoSaludTitulo'] || ('Principales características del Puesto de Salud ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho')))" sectionId="3.1.4.B.1.7">
+<app-table-wrapper 
+  [title]="(formDataSignal()['puestoSaludTitulo'] || (SECCION28_TEMPLATES.tituloViewDefault + ' — ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho')))" 
+  sectionId="3.1.4.B.1.7">
   <app-generic-table
     [data]="puestoSaludCpTablaVista"
     [config]="{
       columns: [
-        { key: 'categoria', header: 'Categoría', align: 'left' },
-        { key: 'descripcion', header: 'Descripción', align: 'left' }
+        { key: 'categoria', header: SECCION28_TEMPLATES.columnaPuestoSaludCategoria, align: 'left' },
+        { key: 'descripcion', header: SECCION28_TEMPLATES.columnaPuestoSaludDescripcion, align: 'left' }
       ],
       showFooter: false,
       striped: true,
@@ -18,7 +20,7 @@
     }">
   </app-generic-table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ formDataSignal()['puestoSaludFuente'] || 'GEADES (2024)' }}</span></p>
+<p class="source">{{ SECCION28_TEMPLATES.labelFuentePuestoSalud }}:<span [appDataSource]="'manual'"> {{ formDataSignal()['puestoSaludFuente'] || SECCION28_TEMPLATES.fuenteViewDefault }}</span></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -26,15 +28,17 @@
     [fotografias]="getFotografiasSaludVista()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalSalud()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p class="mt-lg mb-sm"><strong>b. Infraestructura en educación</strong></p>
+<p class="mt-lg mb-sm"><strong>{{ SECCION28_TEMPLATES.tituloEducacion }}</strong></p>
 <p class="text-justify">{{ obtenerTextoEducacionCP() }}</p>
 
-<app-table-wrapper [title]="(formDataSignal()['educacionTitulo'] || ('Infraestructura educativa – CP ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho') + ' (2023)'))" sectionId="3.1.4.B.1.7">
+<app-table-wrapper 
+  [title]="(formDataSignal()['educacionTitulo'] || (SECCION28_TEMPLATES.tituloEducacionViewDefault + ' – CP ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho') + ' (2023)'))" 
+  sectionId="3.1.4.B.1.7">
   <app-generic-table
     [data]="getEducacionCpConPorcentajes()"
     [config]="{
@@ -51,7 +55,7 @@
     }">
   </app-generic-table>
 </app-table-wrapper>
-<p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ formDataSignal()['educacionFuente'] || 'Censo Educativo 2023 – ESCALE (MINEDU)' }}</span></p> 
+<p class="source">{{ SECCION28_TEMPLATES.labelFuenteEducacion }}:<span [appDataSource]="'manual'"> {{ formDataSignal()['educacionFuente'] || SECCION28_TEMPLATES.fuenteEducacionViewDefault }}</span></p> 
 
 <app-image-upload
     [modoVista]="true"
@@ -59,12 +63,12 @@
     [fotografias]="getFotografiasEducacionVista()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalEducacion()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p class="mt-lg mb-sm"><strong>c. Infraestructura en recreación</strong></p>
+<p class="mt-lg mb-sm"><strong>{{ SECCION28_TEMPLATES.tituloRecreacion }}</strong></p>
 <p class="text-justify">{{ obtenerTextoRecreacionCP1() }}</p>
 <p class="text-justify">{{ obtenerTextoRecreacionCP2() }}</p>
 <p class="text-justify">{{ obtenerTextoRecreacionCP3() }}</p>
@@ -75,12 +79,12 @@
     [fotografias]="getFotografiasRecreacionVista()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalRecreacion()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 
-<p class="mt-lg mb-sm"><strong>d. Infraestructura en deporte</strong></p>
+<p class="mt-lg mb-sm"><strong>{{ SECCION28_TEMPLATES.tituloDeporte }}</strong></p>
 <p class="text-justify">{{ obtenerTextoDeporteCP1() }}</p>
 <p class="text-justify">{{ obtenerTextoDeporteCP2() }}</p>
 
@@ -90,8 +94,8 @@
     [fotografias]="getFotografiasDeporteVista()"
     [sectionId]="seccionId"
     [photoPrefix]="photoPrefixSignalDeporte()"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION28_TEMPLATES.labelFotoTitulo"
+    [labelFuente]="SECCION28_TEMPLATES.labelFotoFuente"
+    [labelImagen]="SECCION28_TEMPLATES.labelFotoImagen">
 </app-image-upload>
 </div>

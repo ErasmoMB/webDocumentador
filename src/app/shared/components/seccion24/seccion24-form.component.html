@@ -1,12 +1,12 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.3. Actividades económicas de la población</h4>
+    <h4 class="section-title">{{ SECCION24_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION24_TEMPLATES.tituloEditarParrafos }}</h4>
       <app-paragraph-editor
         fieldId="textoIntroActividadesEconomicasAISI"
-        label="Actividades Económicas - Introducción - Párrafo 1"
+        [label]="SECCION24_TEMPLATES.labelIntroParrafo1"
         [rows]="4"
         [value]="viewModel().textos.intro"
         (valueChange)="actualizarTexto('textoIntroActividadesEconomicasAISI', $event)">
@@ -14,7 +14,7 @@
 
       <app-paragraph-editor
         fieldId="textoIntroActividadesEconomicasAISI_parte2"
-        label="Actividades Económicas - Introducción - Párrafo 2"
+        [label]="SECCION24_TEMPLATES.labelIntroParrafo2"
         [rows]="4"
         [value]="viewModel().textos.introLong"
         (valueChange)="actualizarIntroLong($event)">
@@ -23,34 +23,34 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <div class="form-field">
-        <label class="label">Título del cuadro</label>
-        <input type="text" class="input" [(ngModel)]="datos['cuadroTituloActividadesEconomicasAISI']" (ngModelChange)="onFieldChange('cuadroTituloActividadesEconomicasAISI', $event)" placeholder="PEA Ocupada según actividad económica – CP Cahuacho (2017)" />
+        <label class="label">{{ SECCION24_TEMPLATES.labelCuadroTitulo }}</label>
+        <input type="text" class="input" [(ngModel)]="datos['cuadroTituloActividadesEconomicasAISI']" (ngModelChange)="onFieldChange('cuadroTituloActividadesEconomicasAISI', $event)" [placeholder]="SECCION24_TEMPLATES.placeholderCuadroTitulo" />
       </div>
-      <label class="label">PEA Ocupada según actividad económica – CP {{ viewModel().centroPoblado || 'Cahuacho' }} (2017)</label>
+      <label class="label">{{ SECCION24_TEMPLATES.labelCuadroPrincipal.replace('{centroPoblado}', viewModel().centroPoblado || SECCION24_TEMPLATES.centroPobladoDefault) }}</label>
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
         [config]="{ tablaKey: tablaKeyActividadesSignal(), totalKey: 'actividad', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, noInicializarDesdeEstructura: true }"
         [columns]="[
-          { field: 'actividad', label: 'Actividad Económica', type: 'text', placeholder: 'Ej: Agricultura, ganadería, silvicultura y pesca' },
-          { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-          { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+          { field: 'actividad', label: SECCION24_TEMPLATES.labelActividadEconomica, type: 'text', placeholder: SECCION24_TEMPLATES.placeholderActividad },
+          { field: 'casos', label: SECCION24_TEMPLATES.labelCasos, type: 'number', placeholder: SECCION24_TEMPLATES.placeholderCasos },
+          { field: 'porcentaje', label: SECCION24_TEMPLATES.labelPorcentaje, type: 'text', placeholder: SECCION24_TEMPLATES.placeholderPorcentaje, readonly: true }
         ]"
         [tablaKey]="tablaKeyActividadesSignal()"
         (tableUpdated)="onActividadesEconomicasChange($event)">
       </app-dynamic-table>
 
       <div class="form-field" style="margin-top: 12px;">
-        <label class="label">Fuente (Cifras)</label>
-        <input type="text" class="input" [value]="viewModel().textos.fuente" (input)="actualizarFuente($any($event.target).value)" placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda..." />
+        <label class="label">{{ SECCION24_TEMPLATES.labelFuente }}</label>
+        <input type="text" class="input" [value]="viewModel().textos.fuente" (input)="actualizarFuente($any($event.target).value)" [placeholder]="SECCION24_TEMPLATES.placeholderFuente" />
       </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 20px;">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION24_TEMPLATES.tituloEditarParrafos }}</h4>
       <app-paragraph-editor
         fieldId="textoActividadesEconomicasAISI"
-        label="Actividades Económicas - Análisis - Texto Completo"
+        [label]="SECCION24_TEMPLATES.labelAnalisisTextoCompleto"
         [rows]="4"
         [value]="viewModel().textos.analisis"
         (valueChange)="actualizarTexto('textoActividadesEconomicasAISI', $event)">
@@ -58,36 +58,36 @@
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
-      <label class="label">Fotografías de Actividades Económicas</label>
+      <label class="label">{{ SECCION24_TEMPLATES.labelFotosActividades }}</label>
       <app-image-upload
           [fotografias]="fotosActividadesSignal()"
           [sectionId]="seccionId"
           [photoPrefix]="'fotografiaActividadesEconomicas' + obtenerPrefijoGrupo()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
+          [labelTitulo]="SECCION24_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION24_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION24_TEMPLATES.labelFotoImagen"
           (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaActividadesEconomicas')">
         </app-image-upload>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">a. Mercado y comercialización de productos</h4>
+      <h4 class="section-title">{{ SECCION24_TEMPLATES.tituloMercado }}</h4>
       <app-paragraph-editor
         fieldId="textoMercadoProductos"
-        label="Mercado y comercialización - Texto Completo"
+        [label]="SECCION24_TEMPLATES.labelMercadoTextoCompleto"
         [rows]="6"
         [value]="viewModel().textos.mercado"
         (valueChange)="actualizarTexto('textoMercadoProductos', $event)">
       </app-paragraph-editor>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Ciudad de origen del comercio</label>
-        <input type="text" class="input" [value]="viewModel().ciudadOrigenComercio" (input)="actualizarCiudadOrigenComercio($any($event.target).value)" placeholder="Ej: Caravelí">
+        <label class="label">{{ SECCION24_TEMPLATES.labelCiudadOrigen }}</label>
+        <input type="text" class="input" [value]="viewModel().ciudadOrigenComercio" (input)="actualizarCiudadOrigenComercio($any($event.target).value)" [placeholder]="SECCION24_TEMPLATES.placeholderCiudadOrigen">
       </div>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Mercado</label>
+        <label class="label">{{ SECCION24_TEMPLATES.labelFotosMercado }}</label>
         <app-image-upload
           [fotografias]="fotosMercadoSignal()"
           [sectionId]="seccionId"
@@ -99,17 +99,17 @@
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">b. Hábitos de consumo</h4>
+      <h4 class="section-title">{{ SECCION24_TEMPLATES.tituloHabitos }}</h4>
       <app-paragraph-editor
         fieldId="textoHabitosConsumo"
-        label="Hábitos de consumo - Texto Completo"
+        [label]="SECCION24_TEMPLATES.labelHabitosTextoCompleto"
         [rows]="8"
         [value]="viewModel().textos.habitos"
         (valueChange)="actualizarTexto('textoHabitosConsumo', $event)">
       </app-paragraph-editor>
 
       <div class="form-field" style="margin-top: 20px;">
-        <label class="label">Fotografías de Hábitos de Consumo</label>
+        <label class="label">{{ SECCION24_TEMPLATES.labelFotosHabitos }}</label>
         <app-image-upload
           [fotografias]="fotosCacheSignal()"
           [sectionId]="seccionId"

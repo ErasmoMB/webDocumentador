@@ -1,45 +1,38 @@
 <div class="form-group-section">
-  <h4 class="section-title">A.1.13. Índice de Desarrollo Humano (IDH)</h4>
+  <h4 class="section-title">{{ SECCION17_TEMPLATES.sectionTitle }}</h4>
 
   <!-- Párrafo IDH -->
   <div class="form-group-section mt-lg">
     <app-paragraph-editor
       [fieldId]="getFieldIdTextoIDH()"
-      label="Índice de Desarrollo Humano - Texto Completo"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+      [label]="SECCION17_TEMPLATES.labelTextoIDH"
+      [hint]="SECCION17_TEMPLATES.hintTextoIDH"
       [rows]="6"
-      [value]="obtenerTextoIDHCompleto()"
-      (valueChange)="onFieldChange('textoIndiceDesarrolloHumano', $event)">
+      [value]="textoINDH.value()"
+      (valueChange)="textoINDH.update($event)">
     </app-paragraph-editor>
   </div>
 
   <!-- Título editable -->
   <div class="form-group-section mt-lg">
-    <label class="label">Título</label>
+    <label class="label">{{ SECCION17_TEMPLATES.labelTitulo }}</label>
     <input
       type="text"
       class="form-control"
-      [(ngModel)]="datos[getTituloIDHField()]"
-      (change)="onTituloIDHChange($event)"
-      placeholder="Componentes del IDH – Distrito ____">
+      [ngModel]="tituloIDH.value()"
+      (ngModelChange)="tituloIDH.update($event)"
+      [placeholder]="SECCION17_TEMPLATES.placeholderTitulo">
   </div>
 
   <!-- Tabla IDH con estructura agrupada -->
   <app-table-wrapper [title]="''" [sectionId]="seccionId" [hideNumber]="true">
     <app-dynamic-table
-      [datos]="datos"
+      [datos]="projectFacade.selectSectionFields(seccionId, null)()"
       [config]="indiceDesarrolloHumanoConfigSignal()"
       [columns]="columnasIDH"
       [sectionId]="seccionId"
       [tablaKey]="getTablaKeyIDH()"
-      [groupHeaders]="[
-        { label: 'Población', colspan: 2 },
-        { label: 'Índice de Desarrollo Humano', colspan: 2 },
-        { label: 'Esperanza de vida al nacer', colspan: 2 },
-        { label: 'Con Educación secundaria completa (Población 18 años)', colspan: 2 },
-        { label: 'Años de educación (Población 25 y más)', colspan: 2 },
-        { label: 'Ingreso familiar per cápita', colspan: 2 }
-      ]"
+      [groupHeaders]="SECCION17_TEMPLATES.tableGroupHeaders"
       [showAddButton]="false"
       [showDeleteButton]="false"
       (tableUpdated)="onTablaActualizada($event)">
@@ -48,30 +41,30 @@
 
   <!-- Fuente editable -->
   <div class="form-group-section mt-lg">
-    <label class="label">Fuente</label>
+    <label class="label">{{ SECCION17_TEMPLATES.labelFuente }}</label>
     <input
       type="text"
       class="form-control"
-      [(ngModel)]="datos[getFuenteIDHField()]"
-      (change)="onFuenteIDHChange($event)"
-      placeholder="PNUD, 2019">
+      [ngModel]="fuenteIDH.value()"
+      (ngModelChange)="fuenteIDH.update($event)"
+      [placeholder]="SECCION17_TEMPLATES.placeholderFuente">
   </div>
 
   <!-- Fotos -->
   <div class="form-field mt-lg">
-    <label class="label">Fotografías del IDH</label>
+    <label class="label">{{ SECCION17_TEMPLATES.labelFotografias }}</label>
     <app-image-upload
       [fotografias]="fotografiasSignal()"
       [sectionId]="seccionId"
       [photoPrefix]="photoPrefixSignal()"
       [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
+      [labelTitulo]="SECCION17_TEMPLATES.labelTitulo"
+      [labelFuente]="SECCION17_TEMPLATES.labelFuente"
       labelImagen="Fotografía - Imagen"
-      placeholderTitulo="Ej: IDH del distrito"
-      placeholderFuente="Ej: PNUD, 2019"
-      tituloDefault="Índice de Desarrollo Humano"
-      fuenteDefault="PNUD, 2019"
+      [placeholderTitulo]="SECCION17_TEMPLATES.placeholderFotoTitulo"
+      [placeholderFuente]="SECCION17_TEMPLATES.placeholderFotoFuente"
+      [tituloDefault]="SECCION17_TEMPLATES.tituloFotoDefault"
+      [fuenteDefault]="SECCION17_TEMPLATES.fuenteFotoDefault"
       [requerido]="false"
       (fotografiasChange)="onFotografiasChange($event)">
     </app-image-upload>

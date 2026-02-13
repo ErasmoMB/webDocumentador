@@ -6,6 +6,7 @@ import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION27_TEMPLATES } from './seccion27-constants';
 
 @Component({
   standalone: true,
@@ -18,6 +19,9 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.6';
 
   override useReactiveSync: boolean = true;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION27_TEMPLATES = SECCION27_TEMPLATES;
 
   // ✅ Helper para obtener prefijo de grupo
   private obtenerPrefijo(): string {

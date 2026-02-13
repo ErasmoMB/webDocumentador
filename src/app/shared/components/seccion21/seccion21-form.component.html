@@ -1,13 +1,13 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B. Caracterización socioeconómica del Área de Influencia Social Indirecta (AISI)</h4>
+    <h4 class="section-title">{{ SECCION21_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION21_TEMPLATES.labelEditarParrafos }}</h4>
       <app-paragraph-editor
         fieldId="parrafoSeccion21_aisi_intro_completo"
-        label="AISI - Introducción - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION21_TEMPLATES.labelParrafoAISI"
+        [hint]="SECCION21_TEMPLATES.hintParrafoAISI"
         [rows]="4"
         [value]="parrafoAisiSignal()"
         (valueChange)="actualizarParrafoAisi($event)">
@@ -15,14 +15,14 @@
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">B.1. Centro Poblado {{ centroPobladoAisiSignal() }}</h4>
+      <h4 class="section-title">{{ SECCION21_TEMPLATES.tituloSubseccion }} {{ centroPobladoAisiSignal() }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION21_TEMPLATES.labelEditarParrafos }}</h4>
         <app-paragraph-editor
           fieldId="parrafoSeccion21_centro_poblado_completo"
-          label="Centro Poblado - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION21_TEMPLATES.labelParrafoCentro"
+          [hint]="SECCION21_TEMPLATES.hintParrafoCentro"
           [rows]="6"
           [value]="parrafoCentroSignal()"
           (valueChange)="actualizarParrafoCentro($event)">
@@ -30,71 +30,71 @@
       </div>
 
       <div class="form-group-section mt-xl">
-        <h4 class="section-title">Datos para Generar Párrafos del Centro Poblado</h4>
+        <h4 class="section-title">{{ SECCION21_TEMPLATES.labelDatosParrafos }}</h4>
         <div class="form-field mt-md">
-          <label class="label">Ley N° de Creación del Distrito</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelLeyCreacion }}</label>
           <input type="text" class="form-control"
             [value]="leyCreacionDistritoSignal()"
             (input)="onLeyCreacionDistritoChange($any($event.target).value)"
-            placeholder="Ej: 8004">
+            [placeholder]="SECCION21_TEMPLATES.placeholderLey">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Fecha de Creación del Distrito</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelFechaCreacion }}</label>
           <input type="text" class="form-control"
             [value]="fechaCreacionDistritoSignal()"
             (input)="onFechaCreacionDistritoChange($any($event.target).value)"
-            placeholder="Ej: 22 de febrero de 1935">
+            [placeholder]="SECCION21_TEMPLATES.placeholderFecha">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Distrito Anterior</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelDistritoAnterior }}</label>
           <input type="text" class="form-control"
             [value]="distritoAnteriorSignal()"
             (input)="onDistritoAnteriorChange($any($event.target).value)"
-            placeholder="Ej: Caravelí">
+            [placeholder]="SECCION21_TEMPLATES.placeholderDistrito">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Origen de Pobladores (Lugar/Provincia)</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelOrigenPobladores1 }}</label>
           <input type="text" class="form-control"
             [value]="origenPobladores1Signal()"
             (input)="onOrigenPobladores1Change($any($event.target).value)"
-            placeholder="Ej: Caravelí">
+            [placeholder]="SECCION21_TEMPLATES.placeholderOrigen1">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Origen de Pobladores (Provincia)</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelOrigenPobladores2 }}</label>
           <input type="text" class="form-control"
             [value]="origenPobladores2Signal()"
             (input)="onOrigenPobladores2Change($any($event.target).value)"
-            placeholder="Ej: Parinacochas">
+            [placeholder]="SECCION21_TEMPLATES.placeholderOrigen2">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Departamento de Origen</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelDepartamentoOrigen }}</label>
           <input type="text" class="form-control"
             [value]="departamentoOrigenSignal()"
             (input)="onDepartamentoOrigenChange($any($event.target).value)"
-            placeholder="Ej: Arequipa">
+            [placeholder]="SECCION21_TEMPLATES.placeholderDepartamento">
         </div>
 
         <div class="form-field mt-sm">
-          <label class="label">Anexos Ejemplo</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelAnexosEjemplo }}</label>
           <input type="text" class="form-control"
             [value]="anexosEjemploSignal()"
             (input)="onAnexosEjemploChange($any($event.target).value)"
-            placeholder="Ej: Llacsahuanca, Salome">
+            [placeholder]="SECCION21_TEMPLATES.placeholderAnexos">
         </div>
       </div>
 
       <div class="form-field mt-lg">
         <div class="form-group" style="margin-bottom: 12px;">
-          <label class="label">Título del Cuadro</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelTituloUbicacion }}</label>
           <input type="text" class="form-control"
             [value]="cuadroTituloUbicacionCpSignal()"
             (input)="onTituloUbicacionChange($any($event.target).value)"
-            placeholder="Ubicación referencial – Centro Poblado {{ centroPobladoAisiSignal() }}">
+            [placeholder]="SECCION21_TEMPLATES.placeholderTituloUbicacion + ' {{ centroPobladoAisiSignal() }}'">
         </div>
 
         <app-dynamic-table
@@ -109,28 +109,28 @@
         </app-dynamic-table>
 
         <div class="form-group" style="margin-top: 12px;">
-          <label class="label">Fuente del Cuadro</label>
+          <label class="label">{{ SECCION21_TEMPLATES.labelFuenteUbicacion }}</label>
           <input type="text" class="form-control"
             [value]="cuadroFuenteUbicacionCpSignal()"
             (input)="onFuenteUbicacionChange($any($event.target).value)"
-            placeholder="Ej: GEADES (2024)">
+            [placeholder]="SECCION21_TEMPLATES.placeholderFuenteUbicacion">
         </div>
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">{{ labelFotografiasSignal() }}</label>
+        <label class="label">{{ SECCION21_TEMPLATES.labelFotografias }} {{ centroPobladoAisiSignal() }}</label>
         <app-image-upload
           [fotografias]="fotosCacheSignal()"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignal()"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: {{ tituloDefaultFotoSignal() }}"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="{{ tituloDefaultFotoSignal() }}"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION21_TEMPLATES.labelTituloFoto"
+          [labelFuente]="SECCION21_TEMPLATES.labelFuenteFoto"
+          [labelImagen]="SECCION21_TEMPLATES.labelImagenFoto"
+          [placeholderTitulo]="SECCION21_TEMPLATES.placeholderTituloFoto + ': ' + tituloDefaultFotoSignal()"
+          [placeholderFuente]="SECCION21_TEMPLATES.placeholderFuenteFoto"
+          [tituloDefault]="tituloDefaultFotoSignal()"
+          [fuenteDefault]="SECCION21_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>

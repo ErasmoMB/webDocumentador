@@ -8,7 +8,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
-import { SECCION14_PHOTO_PREFIX, SECCION14_DEFAULT_TEXTS } from './seccion14-constants';
+import { SECCION14_PHOTO_PREFIX, SECCION14_DEFAULT_TEXTS, SECCION14_TEMPLATES, SECCION14_WATCHED_FIELDS } from './seccion14-constants';
 
 @Component({
   selector: 'app-seccion14-form',
@@ -21,20 +21,15 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.A.1.10';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ EXPORTAR TEMPLATES PARA EL HTML
+  readonly SECCION14_TEMPLATES = SECCION14_TEMPLATES;
+
   override readonly PHOTO_PREFIX = SECCION14_PHOTO_PREFIX;
   override useReactiveSync: boolean = true;
 
   fotografiasSeccion14: FotoItem[] = [];
 
-  override watchedFields: string[] = [
-    'parrafoSeccion14_indicadores_educacion_intro',
-    'textoNivelEducativo',
-    'textoTasaAnalfabetismo',
-    'cuadroTituloNivelEducativo',
-    'cuadroFuenteNivelEducativo',
-    'cuadroTituloTasaAnalfabetismo',
-    'cuadroFuenteTasaAnalfabetismo'
-  ];
+  override watchedFields: string[] = SECCION14_WATCHED_FIELDS;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
     this.projectFacade.selectSectionFields(this.seccionId, null)()

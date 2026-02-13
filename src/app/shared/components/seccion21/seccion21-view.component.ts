@@ -8,6 +8,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION21_TEMPLATES } from './seccion21-constants';
 
 @Component({
   selector: 'app-seccion21-view',
@@ -18,6 +19,9 @@ import { TableNumberingService } from 'src/app/core/services/numbering/table-num
 })
 export class Seccion21ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B';
+
+  // ✅ EXPORTAR CONSTANTES PARA EL TEMPLATE
+  readonly SECCION21_TEMPLATES = SECCION21_TEMPLATES;
 
   override useReactiveSync: boolean = true;
 

@@ -9,6 +9,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { SECCION22_TEMPLATES } from './seccion22-constants';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -20,6 +21,9 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 export class Seccion22FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.1';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ EXPORTAR TEMPLATES PARA EL HTML
+  readonly SECCION22_TEMPLATES = SECCION22_TEMPLATES;
 
   // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
@@ -329,7 +333,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
     const fuenteSexoField = prefijo ? `cuadroFuentePoblacionSexo${prefijo}` : 'cuadroFuentePoblacionSexo';
     if (!this.datos[fuenteSexoField]) {
-      const valorFuente = 'Censos Nacionales 2017';
+      const valorFuente = SECCION22_TEMPLATES.fuentePoblacionSexoDefault;
       this.datos[fuenteSexoField] = valorFuente;
       this.datos['cuadroFuentePoblacionSexo'] = valorFuente; // Para compatibilidad
       this.onFieldChange(fuenteSexoField, valorFuente, { refresh: false });
@@ -345,7 +349,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
     const fuenteEtarioField = prefijo ? `cuadroFuentePoblacionEtario${prefijo}` : 'cuadroFuentePoblacionEtario';
     if (!this.datos[fuenteEtarioField]) {
-      const valorFuente = 'Censos Nacionales 2017';
+      const valorFuente = SECCION22_TEMPLATES.fuentePoblacionEtarioDefault;
       this.datos[fuenteEtarioField] = valorFuente;
       this.datos['cuadroFuentePoblacionEtario'] = valorFuente; // Para compatibilidad
       this.onFieldChange(fuenteEtarioField, valorFuente, { refresh: false });

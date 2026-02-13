@@ -8,6 +8,7 @@ import { GenericTableComponent } from '../generic-table/generic-table.component'
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { SECCION25_TEMPLATES } from './seccion25-constants';
 
 @Component({
   standalone: true,
@@ -18,6 +19,9 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 })
 export class Seccion25ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.4';
+
+  // ✅ EXPORTAR TEMPLATES para el HTML
+  readonly SECCION25_TEMPLATES = SECCION25_TEMPLATES;
 
   // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;

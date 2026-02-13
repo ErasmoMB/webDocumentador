@@ -1,50 +1,50 @@
 <div *ngIf="!modoFormulario" class="seccion-vista-content">
-  <h5>B.1.5. Servicios básicos: Agua y desagüe; electricidad, energía y/o combustible; y disposición de residuos sólidos</h5>
+  <h5>{{ SECCION26_TEMPLATES.tituloSeccion }}</h5>
 
   <div *ngIf="viewModel().textoIntro && viewModel().textoIntro !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoIntro)"></div>
   <div *ngIf="!viewModel().textoIntro || viewModel().textoIntro === '____'">
-    <p class="text-justify">Los servicios básicos nos indican el nivel de desarrollo de una comunidad y un saneamiento deficiente va asociado a la transmisión de enfermedades como el cólera, la diarrea, la disentería, la hepatitis A, la fiebre tifoidea y la poliomielitis, y agrava el retraso del crecimiento.</p>
-    <p class="text-justify">En 2010, la Asamblea General de las Naciones Unidas reconoció que el acceso al agua potable salubre y limpia, y al saneamiento es un derecho humano y pidió que se realizaran esfuerzos internacionales para ayudar a los países a proporcionar agua potable e instalaciones de saneamiento salubres, limpias, accesibles y asequibles. Los servicios básicos serán descritos a continuación tomando como referencia al total de viviendas ocupadas presentes (<span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'viviendas'">{{ viewModel().centroPoblado }}</span>), tal como realiza el Censo Nacional 2017.</p>
+    <p class="text-justify">{{ SECCION26_TEMPLATES.textoIntroP1Default }}</p>
+    <p class="text-justify">{{ SECCION26_TEMPLATES.textoIntroP2Default.replace('{{viviendas}}', '____') }}</p>
   </div>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Servicios de agua</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionA }}</strong></p>
   <div *ngIf="viewModel().textoServiciosAgua && viewModel().textoServiciosAgua !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoServiciosAgua)"></div>
   <p class="text-justify" *ngIf="!viewModel().textoServiciosAgua || viewModel().textoServiciosAgua === '____'">Respecto al servicio de agua para consumo humano en el CP <span [appDataSource]="'centroPobladoAISI' | dataSource" [fieldName]="'textoServiciosAguaAISI'">{{ viewModel().centroPoblado }}</span>, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un <span [appDataSource]="'section'" class="cell-percentage">{{ porcentajeAguaDentroSignal() }}</span> de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (<span [appDataSource]="'section'" class="cell-percentage">{{ porcentajeAguaFueraSignal() }}</span>) consta de red pública fuera de la vivienda, pero dentro de la edificación.</p>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloAbastecimiento || ('Tipos de abastecimiento de agua en las viviendas – CP ' + (viewModel().centroPoblado || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="viewModel().cuadroTituloAbastecimiento || (SECCION26_TEMPLATES.cuadroTituloAbastecimientoDefault.replace('CP ____', 'CP ' + (viewModel().centroPoblado || 'Cahuacho')))" [sectionId]="seccionId">
     <app-generic-table [data]="viewModel().abastecimiento" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteAbastecimiento && viewModel().cuadroFuenteAbastecimiento !== '____'"> {{ viewModel().cuadroFuenteAbastecimiento }}</span><span *ngIf="!viewModel().cuadroFuenteAbastecimiento || viewModel().cuadroFuenteAbastecimiento === '____'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteAbastecimiento && viewModel().cuadroFuenteAbastecimiento !== '____'"> {{ viewModel().cuadroFuenteAbastecimiento }}</span><span *ngIf="!viewModel().cuadroFuenteAbastecimiento || viewModel().cuadroFuenteAbastecimiento === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Servicios básicos de desagüe</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionB }}</strong></p>
   <div *ngIf="viewModel().textoDesague && viewModel().textoDesague !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoDesague)"></div>
-  <app-table-wrapper [title]="viewModel().cuadroTituloSaneamiento || ('Tipos de saneamiento en las viviendas – CP ' + (viewModel().centroPoblado || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="viewModel().cuadroTituloSaneamiento || (SECCION26_TEMPLATES.cuadroTituloSaneamientoDefault.replace('CP ____', 'CP ' + (viewModel().centroPoblado || 'Cahuacho')))" [sectionId]="seccionId">
     <app-generic-table [data]="viewModel().saneamiento" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteSaneamiento && viewModel().cuadroFuenteSaneamiento !== '____'"> {{ viewModel().cuadroFuenteSaneamiento }}</span><span *ngIf="!viewModel().cuadroFuenteSaneamiento || viewModel().cuadroFuenteSaneamiento === '____'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteSaneamiento && viewModel().cuadroFuenteSaneamiento !== '____'"> {{ viewModel().cuadroFuenteSaneamiento }}</span><span *ngIf="!viewModel().cuadroFuenteSaneamiento || viewModel().cuadroFuenteSaneamiento === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
   <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosDesechos" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_DESECHOS"></app-image-upload>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>c. Gestión y destino de los desechos sólidos</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionC }}</strong></p>
   <div *ngIf="viewModel().textoDesechos && viewModel().textoDesechos !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoDesechos)"></div>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>d. Electricidad</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionD }}</strong></p>
   <div *ngIf="viewModel().textoElectricidad && viewModel().textoElectricidad !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoElectricidad)"></div>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloCobertura || ('Cobertura de alumbrado eléctrico en las viviendas – CP ' + (viewModel().centroPoblado || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="viewModel().cuadroTituloCobertura || (SECCION26_TEMPLATES.cuadroTituloCoberturaDefault.replace('CP ____', 'CP ' + (viewModel().centroPoblado || 'Cahuacho')))" [sectionId]="seccionId">
     <app-generic-table [data]="viewModel().cobertura" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCobertura && viewModel().cuadroFuenteCobertura !== '____'"> {{ viewModel().cuadroFuenteCobertura }}</span><span *ngIf="!viewModel().cuadroFuenteCobertura || viewModel().cuadroFuenteCobertura === '____'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCobertura && viewModel().cuadroFuenteCobertura !== '____'"> {{ viewModel().cuadroFuenteCobertura }}</span><span *ngIf="!viewModel().cuadroFuenteCobertura || viewModel().cuadroFuenteCobertura === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
   <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosElectricidad" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"></app-image-upload>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionE }}</strong></p>
   <div *ngIf="viewModel().textoCocinar && viewModel().textoCocinar !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoCocinar)"></div>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloCombustibles || ('Combustibles para cocción en los hogares – CP ' + (viewModel().centroPoblado || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="viewModel().cuadroTituloCombustibles || (SECCION26_TEMPLATES.cuadroTituloCombustiblesDefault.replace('CP ____', 'CP ' + (viewModel().centroPoblado || 'Cahuacho')))" [sectionId]="seccionId">
     <app-generic-table [data]="viewModel().combustibles" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCombustibles && viewModel().cuadroFuenteCombustibles !== '____'"> {{ viewModel().cuadroFuenteCombustibles }}</span><span *ngIf="!viewModel().cuadroFuenteCombustibles || viewModel().cuadroFuenteCombustibles === '____'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.</span></p>
+  <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCombustibles && viewModel().cuadroFuenteCombustibles !== '____'"> {{ viewModel().cuadroFuenteCombustibles }}</span><span *ngIf="!viewModel().cuadroFuenteCombustibles || viewModel().cuadroFuenteCombustibles === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
   <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosCocinar" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_COCINAR"></app-image-upload>
 </div>

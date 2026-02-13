@@ -11,6 +11,7 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { SECCION25_TEMPLATES, SECCION25_WATCHED_FIELDS } from './seccion25-constants';
 
 @Component({
   standalone: true,
@@ -37,10 +38,21 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   fotografiasSeccion25: FotoItem[] = [];
 
-  override watchedFields: string[] = [
-    'centroPobladoAISI', 'tiposViviendaAISI', 'condicionOcupacionAISI', 'materialesViviendaAISI', 'textoViviendaAISI', 'textoOcupacionViviendaAISI', 'textoEstructuraAISI',
-    'cuadroTituloTiposVivienda', 'cuadroFuenteTiposVivienda', 'cuadroTituloCondicionOcupacion', 'cuadroFuenteCondicionOcupacion', 'cuadroTituloMaterialesVivienda', 'cuadroFuenteMaterialesVivienda'
-  ];
+  override watchedFields: string[] = SECCION25_WATCHED_FIELDS;
+
+  // ✅ EXPORTAR TEMPLATES para el HTML
+  readonly SECCION25_TEMPLATES = SECCION25_TEMPLATES;
+
+  // ✅ CAMPOS AUTO-SYNC (NUEVA ARQUITECTURA)
+  readonly textoVivienda = this.createAutoSyncField('textoViviendaAISI', '');
+  readonly textoOcupacion = this.createAutoSyncField('textoOcupacionViviendaAISI', '');
+  readonly textoEstructura = this.createAutoSyncField('textoEstructuraAISI', '');
+  readonly cuadroTituloTiposVivienda = this.createAutoSyncField('cuadroTituloTiposVivienda', '');
+  readonly cuadroFuenteTiposVivienda = this.createAutoSyncField('cuadroFuenteTiposVivienda', '');
+  readonly cuadroTituloCondicionOcupacion = this.createAutoSyncField('cuadroTituloCondicionOcupacion', '');
+  readonly cuadroFuenteCondicionOcupacion = this.createAutoSyncField('cuadroFuenteCondicionOcupacion', '');
+  readonly cuadroTituloMaterialesVivienda = this.createAutoSyncField('cuadroTituloMaterialesVivienda', '');
+  readonly cuadroFuenteMaterialesVivienda = this.createAutoSyncField('cuadroFuenteMaterialesVivienda', '');
 
   // SIGNALS
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -143,21 +155,21 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   // viewModel
   readonly viewModel = computed(() => ({
-    textoVivienda: this.textoViviendaSignal(),
-    textoOcupacion: this.textoOcupacionSignal(),
-    textoEstructura: this.textoEstructuraSignal(),
+    textoVivienda: this.textoVivienda.value() || this.generarTextoViviendaDefault(),
+    textoOcupacion: this.textoOcupacion.value() || this.generarTextoOcupacionDefault(),
+    textoEstructura: this.textoEstructura.value() || this.generarTextoEstructuraDefault(),
     tiposVivienda: this.tiposViviendaSignal(),
     condicionOcupacion: this.condicionOcupacionSignal(),
     materiales: this.materialesViviendaSignal(),
     fotos: this.fotosSignal(),
 
     // Mirror cuadro titulo/fuente fields for use in template without reading datos directly
-    cuadroTituloTiposVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloTiposVivienda')() ?? '',
-    cuadroFuenteTiposVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteTiposVivienda')() ?? '',
-    cuadroTituloCondicionOcupacion: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloCondicionOcupacion')() ?? '',
-    cuadroFuenteCondicionOcupacion: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteCondicionOcupacion')() ?? '',
-    cuadroTituloMaterialesVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloMaterialesVivienda')() ?? '',
-    cuadroFuenteMaterialesVivienda: this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteMaterialesVivienda')() ?? ''
+    cuadroTituloTiposVivienda: this.cuadroTituloTiposVivienda.value() ?? '',
+    cuadroFuenteTiposVivienda: this.cuadroFuenteTiposVivienda.value() ?? '',
+    cuadroTituloCondicionOcupacion: this.cuadroTituloCondicionOcupacion.value() ?? '',
+    cuadroFuenteCondicionOcupacion: this.cuadroFuenteCondicionOcupacion.value() ?? '',
+    cuadroTituloMaterialesVivienda: this.cuadroTituloMaterialesVivienda.value() ?? '',
+    cuadroFuenteMaterialesVivienda: this.cuadroFuenteMaterialesVivienda.value() ?? ''
   }));
 
   constructor(
@@ -241,7 +253,6 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     this.datos[campoConPrefijo] = centroPobladoAISI;
     this.datos['centroPobladoAISI'] = centroPobladoAISI;
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
-    this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
     
     this.cargarFotografias();
@@ -260,24 +271,24 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       const fuenteMatKey = prefijo ? `cuadroFuenteMaterialesVivienda${prefijo}` : 'cuadroFuenteMaterialesVivienda';
       
       if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos[tituloTiposKey] === undefined || datos[tituloTiposKey] === '' || datos[tituloTiposKey] === '____')) {
-        this.onFieldChange(tituloTiposKey, 'Tipos de Vivienda');
+        this.cuadroTituloTiposVivienda.update(SECCION25_TEMPLATES.tituloTiposViviendaDefault);
       }
       if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos[fuenteTiposKey] === undefined || datos[fuenteTiposKey] === '' || datos[fuenteTiposKey] === '____')) {
-        this.onFieldChange(fuenteTiposKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+        this.cuadroFuenteTiposVivienda.update(SECCION25_TEMPLATES.fuenteDefault);
       }
 
       if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos[tituloCondKey] === undefined || datos[tituloCondKey] === '' || datos[tituloCondKey] === '____')) {
-        this.onFieldChange(tituloCondKey, 'Condición de Ocupación');
+        this.cuadroTituloCondicionOcupacion.update(SECCION25_TEMPLATES.tituloCondicionOcupacionDefault);
       }
       if (Array.isArray(datos[this.getTablaKeyCondicionOcupacion()]) && (datos[fuenteCondKey] === undefined || datos[fuenteCondKey] === '' || datos[fuenteCondKey] === '____')) {
-        this.onFieldChange(fuenteCondKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+        this.cuadroFuenteCondicionOcupacion.update(SECCION25_TEMPLATES.fuenteDefault);
       }
 
       if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos[tituloMatKey] === undefined || datos[tituloMatKey] === '' || datos[tituloMatKey] === '____')) {
-        this.onFieldChange(tituloMatKey, 'Tipos de materiales de la vivienda');
+        this.cuadroTituloMaterialesVivienda.update(SECCION25_TEMPLATES.tituloMaterialesViviendaDefault);
       }
       if (Array.isArray(datos[this.getTablaKeyMaterialesVivienda()]) && (datos[fuenteMatKey] === undefined || datos[fuenteMatKey] === '' || datos[fuenteMatKey] === '____')) {
-        this.onFieldChange(fuenteMatKey, 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.');
+        this.cuadroFuenteMaterialesVivienda.update(SECCION25_TEMPLATES.fuenteDefault);
       }
 
       // ✅ CORREGIDO - Usar campos con prefijo para párrafos
@@ -287,17 +298,17 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       
       const textoViviendaField = this.projectFacade.selectField(this.seccionId, null, textoViviendaKey)();
       if (textoViviendaField === undefined || textoViviendaField === null || textoViviendaField === '') {
-        this.onFieldChange(textoViviendaKey, this.obtenerTextoViviendaAISI());
+        this.textoVivienda.update(this.obtenerTextoViviendaAISI());
       }
 
       const textoOcupacionField = this.projectFacade.selectField(this.seccionId, null, textoOcupacionKey)();
       if (textoOcupacionField === undefined || textoOcupacionField === null || textoOcupacionField === '') {
-        this.onFieldChange(textoOcupacionKey, this.obtenerTextoOcupacionViviendaAISI());
+        this.textoOcupacion.update(this.obtenerTextoOcupacionViviendaAISI());
       }
 
       const textoEstructuraField = this.projectFacade.selectField(this.seccionId, null, textoEstructuraKey)();
       if (textoEstructuraField === undefined || textoEstructuraField === null || textoEstructuraField === '') {
-        this.onFieldChange(textoEstructuraKey, this.obtenerTextoEstructuraAISI());
+        this.textoEstructura.update(this.obtenerTextoEstructuraAISI());
       }
 
       // NOTE: Tablas se llenan con datos del backend (no hay estructura inicial)
@@ -634,19 +645,6 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     // Also update the BaseSection cache used by other uploads
     this.fotografiasFormMulti = [...(fotografias || [])];
     this.cdRef.markForCheck();
-  }
-
-  // Text updates (backward compatible handlers are still available)
-  actualizarTextoVivienda(valor: string): void {
-    this.onFieldChange('textoViviendaAISI', valor);
-  }
-
-  actualizarTextoOcupacion(valor: string): void {
-    this.onFieldChange('textoOcupacionViviendaAISI', valor);
-  }
-
-  actualizarTextoEstructura(valor: string): void {
-    this.onFieldChange('textoEstructuraAISI', valor);
   }
 
   // Métodos para generar textos por defecto

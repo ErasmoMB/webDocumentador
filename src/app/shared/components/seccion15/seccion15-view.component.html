@@ -1,7 +1,7 @@
-<h5>A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h5>
+<h5>{{ SECCION15_TEMPLATES.sectionTitle }}</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoAspectosCulturales()"></div>
 
-<h5>a. Idioma</h5>
+<h5>{{ SECCION15_TEMPLATES.subsectionIdioma }}</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoIdioma()"></div>
 
 <app-table-wrapper [title]="lenguasMaternasTitulo()" [sectionId]="seccionId">
@@ -9,9 +9,9 @@
   [data]="lenguasMaternasConPorcentajes()"
   [config]="{
     columns: [
-      { key: 'categoria', header: 'Categoría', align: 'left' },
-      { key: 'casos', header: 'Casos', align: 'right' },
-      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      { key: 'categoria', header: SECCION15_TEMPLATES.tableColumnCategoria, align: 'left' },
+      { key: 'casos', header: SECCION15_TEMPLATES.tableColumnCasos, align: 'right' },
+      { key: 'porcentaje', header: SECCION15_TEMPLATES.tableColumnPorcentaje, align: 'right' }
     ],
     showFooter: false,
     striped: true,
@@ -21,7 +21,7 @@
 </app-table-wrapper>
 <p class="source">Fuente: <span>{{ lenguasMaternasFuente() }}</span></p>
 
-<h5>b. Religión</h5>
+<h5>{{ SECCION15_TEMPLATES.subsectionReligion }}</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoReligion()"></div>
 
 <app-table-wrapper [title]="religionesTitulo()" [sectionId]="seccionId">
@@ -29,9 +29,9 @@
   [data]="religionesConPorcentajes()"
   [config]="{
     columns: [
-      { key: 'categoria', header: 'Categoría', align: 'left' },
-      { key: 'casos', header: 'Casos', align: 'right' },
-      { key: 'porcentaje', header: 'Porcentaje', align: 'right' }
+      { key: 'categoria', header: SECCION15_TEMPLATES.tableColumnCategoria, align: 'left' },
+      { key: 'casos', header: SECCION15_TEMPLATES.tableColumnCasos, align: 'right' },
+      { key: 'porcentaje', header: SECCION15_TEMPLATES.tableColumnPorcentaje, align: 'right' }
     ],
     showFooter: false,
     striped: true,
@@ -47,7 +47,7 @@
     [fotografias]="fotografiasIglesia"
     [sectionId]="seccionId"
     [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="'Título'"
-    [labelFuente]="'Fuente'"
-    [labelImagen]="'Imagen'">
+    [labelTitulo]="SECCION15_TEMPLATES.labelTitulo"
+    [labelFuente]="SECCION15_TEMPLATES.labelFuente"
+    [labelImagen]="SECCION15_TEMPLATES.labelImagen">
 </app-image-upload>

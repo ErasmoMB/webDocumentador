@@ -1,17 +1,17 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.11. Aspectos culturales (lenguas, dialectos, lugares)</h4>
+    <h4 class="section-title">{{ SECCION15_TEMPLATES.sectionTitle }}</h4>
 
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">a. Idioma</h4>
+      <h4 class="section-title">{{ SECCION15_TEMPLATES.subsectionIdioma }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION15_TEMPLATES.titleEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="textoAspectosCulturales"
-          label="Aspectos culturales - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION15_TEMPLATES.labelTextoAspectosCulturales"
+          [hint]="SECCION15_TEMPLATES.hintTextoAspectosCulturales"
           [rows]="3"
           [value]="obtenerTextoAspectosCulturales()"
           (valueChange)="onFieldChange('textoAspectosCulturales', $event)">
@@ -19,8 +19,8 @@
 
         <app-paragraph-editor
           fieldId="textoIdioma"
-          label="Idioma - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION15_TEMPLATES.labelTextoIdioma"
+          [hint]="SECCION15_TEMPLATES.hintTextoIdioma"
           [rows]="3"
           [value]="obtenerTextoIdioma()"
           (valueChange)="onFieldChange('textoIdioma', $event)">
@@ -28,38 +28,38 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título de la Tabla Lenguas Maternas</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasTitulo')()" (input)="onInputChange('lenguasMaternasTitulo', $event)" placeholder="Lenguas maternas en población de 3 años a más">
+        <label class="label">{{ SECCION15_TEMPLATES.labelLenguasMaternasTitulo }}</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasTitulo')()" (input)="onInputChange('lenguasMaternasTitulo', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderLenguasMaternasTitulo">
 
-        <label class="label mt-lg">Tabla Lenguas Maternas</label>
+        <label class="label mt-lg">{{ SECCION15_TEMPLATES.labelLenguasMaternasTitulo }}</label>
         <app-dynamic-table
           [datos]="projectFacade.obtenerDatos()"
           [sectionId]="seccionId"
           [config]="lenguasMaternasConfigSignal()"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Castellano' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: SECCION15_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCategoria1 },
+            { field: 'casos', label: SECCION15_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCasos },
+            { field: 'porcentaje', label: SECCION15_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderPorcentaje, readonly: true }
           ]"
           [totalKey]="'categoria'"
           (tableUpdated)="onLenguasMaternasTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-sm">Fuente de la Tabla Lenguas Maternas</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasFuente')()" (input)="onInputChange('lenguasMaternasFuente', $event)" placeholder="Plataforma Nacional de Datos Georreferenciados – Geo Perú">
+        <label class="label mt-sm">{{ SECCION15_TEMPLATES.labelLenguasMaternasFuente }}</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'lenguasMaternasFuente')()" (input)="onInputChange('lenguasMaternasFuente', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderLenguasMaternasFuente">
       </div>
     </div>
 
     <div class="form-group-section mt-xl">
-      <h4 class="section-title">b. Religión</h4>
+      <h4 class="section-title">{{ SECCION15_TEMPLATES.subsectionReligion }}</h4>
 
       <div class="form-group-section mt-md">
-        <h4 class="section-title">Editar Párrafos</h4>
+        <h4 class="section-title">{{ SECCION15_TEMPLATES.titleEditarParrafos }}</h4>
 
         <app-paragraph-editor
           fieldId="parrafoSeccion15_religion_completo"
-          label="Religión - Texto Completo"
-          hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+          [label]="SECCION15_TEMPLATES.labelTextoReligion"
+          [hint]="SECCION15_TEMPLATES.hintTextoReligion"
           [rows]="4"
           [value]="obtenerTextoReligion()"
           (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
@@ -67,41 +67,41 @@
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Título de la Tabla Religiones</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesTitulo')()" (input)="onInputChange('religionesTitulo', $event)" placeholder="Religión">
+        <label class="label">{{ SECCION15_TEMPLATES.labelReligionesTitulo }}</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesTitulo')()" (input)="onInputChange('religionesTitulo', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderReligionesTitulo">
 
-        <label class="label mt-lg">Tabla Religiones</label>
+        <label class="label mt-lg">{{ SECCION15_TEMPLATES.labelReligionesTitulo }}</label>
         <app-dynamic-table
           [datos]="projectFacade.obtenerDatos()"
           [sectionId]="seccionId"
           [config]="religionesConfigSignal()"
           [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Católica' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
+            { field: 'categoria', label: SECCION15_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCategoria2 },
+            { field: 'casos', label: SECCION15_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCasos },
+            { field: 'porcentaje', label: SECCION15_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderPorcentaje, readonly: true }
           ]"
           [totalKey]="'categoria'"
           (tableUpdated)="onReligionesTableUpdated($event)">
         </app-dynamic-table>
 
-        <label class="label mt-sm">Fuente de la Tabla Religiones</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesFuente')()" (input)="onInputChange('religionesFuente', $event)" placeholder="Plataforma Nacional de Datos Georreferenciados – Geo Perú">
+        <label class="label mt-sm">{{ SECCION15_TEMPLATES.labelReligionesFuente }}</label>
+        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesFuente')()" (input)="onInputChange('religionesFuente', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderReligionesFuente">
       </div>
 
       <div class="form-field mt-lg">
-        <label class="label">Fotografías de Iglesia</label>
+        <label class="label">{{ SECCION15_TEMPLATES.labelFotografias }}</label>
         <app-image-upload
           [fotografias]="fotografiasIglesia"
           [sectionId]="seccionId"
           [photoPrefix]="PHOTO_PREFIX"
           [permitirMultiples]="true"
-          labelTitulo="Título de la fotografía"
-          labelFuente="Fuente de la fotografía"
-          labelImagen="Fotografía - Imagen"
-          placeholderTitulo="Ej: Iglesia Matriz del anexo Ayroca"
-          placeholderFuente="Ej: GEADES, 2024"
-          tituloDefault="Iglesia Matriz del anexo Ayroca"
-          fuenteDefault="GEADES, 2024"
+          [labelTitulo]="SECCION15_TEMPLATES.labelFotoTitulo"
+          [labelFuente]="SECCION15_TEMPLATES.labelFotoFuente"
+          [labelImagen]="SECCION15_TEMPLATES.labelFotoImagen"
+          [placeholderTitulo]="SECCION15_TEMPLATES.placeholderFotoTitulo"
+          [placeholderFuente]="SECCION15_TEMPLATES.placeholderFotoFuente"
+          [tituloDefault]="SECCION15_TEMPLATES.tituloFotoDefault"
+          [fuenteDefault]="SECCION15_TEMPLATES.fuenteFotoDefault"
           [requerido]="false"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>

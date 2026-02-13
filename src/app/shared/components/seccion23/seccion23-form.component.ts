@@ -15,6 +15,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { AutoBackendDataLoaderService } from 'src/app/core/services/backend/auto-backend-data-loader.service';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, SECCION23_TABLE_CONFIGS, SECCION23_SECTION_ID } from './seccion23-constants';
 
 @Component({
     imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent],
@@ -24,18 +25,14 @@ import { TableNumberingService } from 'src/app/core/services/numbering/table-num
     standalone: true
 })
 export class Seccion23FormComponent extends AutoLoadSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.B.1.2';
+  @Input() override seccionId: string = SECCION23_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ Exportar TEMPLATES para usar en HTML
+  readonly SECCION23_TEMPLATES = SECCION23_TEMPLATES;
+
   // Campos observados para sincronización reactiva (se expande con prefijos automáticamente)
-  override watchedFields: string[] = [
-    'grupoAISD', 'distritoSeleccionado',
-    'petGruposEdadAISI', 'petGruposEdadTitulo', 'petGruposEdadFuente',
-    'peaDistritoSexoTabla', 'peaDistritoSexoTitulo', 'peaDistritoSexoFuente',
-    'peaOcupadaDesocupadaTabla', 'peaOcupadaDesocupadaTitulo', 'peaOcupadaDesocupadaFuente',
-    'textoPET_AISI', 'textoPETIntro_AISI', 'textoAnalisisPEA_AISI', 'textoPEAAISI',
-    'textoEmpleoAISI', 'textoEmpleoDependiente_AISI', 'textoIndiceDesempleoAISI'
-  ];
+  override watchedFields: string[] = SECCION23_WATCHED_FIELDS;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
@@ -222,12 +219,31 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
         const tituloField = t.tituloField;
         const fuenteField = t.fuenteField;
         if (tituloField && !this.datos[tituloField]) {
-          const valorTitulo = `${(tituloField.includes('PET') ? 'PET según grupos de edad – CP ' : tituloField.includes('peaOcupada') ? 'Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito ' : 'Conformación de la PEA y No PEA, según sexo – Distrito ')}${this.datos.centroPobladoAISI || this.datos.distritoSeleccionado || 'Cahuacho'} (2017)`;
+          let valorTitulo = '';
+          const centroPoblado = this.datos.centroPobladoAISI || this.datos.distritoSeleccionado || '_____';
+          const distrito = this.datos.distritoSeleccionado || '_____';
+          
+          // ✅ Usar constantes para títulos
+          if (tituloField.includes('PET')) {
+            valorTitulo = SECCION23_TEMPLATES.defaultPETTableTitle.replace('{{centroPoblado}}', centroPoblado);
+          } else if (tituloField.includes('peaOcupada')) {
+            valorTitulo = SECCION23_TEMPLATES.defaultPeaOcupadaDesocupadaTableTitle.replace('{{distrito}}', distrito);
+          } else {
+            valorTitulo = SECCION23_TEMPLATES.defaultPeaDistritoSexoTableTitle.replace('{{distrito}}', distrito);
+          }
+          
           this.datos[tituloField] = valorTitulo;
           this.onFieldChange(tituloField, valorTitulo, { refresh: false });
         }
         if (fuenteField && !this.datos[fuenteField]) {
-          const valorFuente = 'Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018';
+          // ✅ Usar constantes para fuentes
+          let valorFuente = SECCION23_TEMPLATES.defaultPeaDistritoSexoFuente;
+          if (fuenteField.includes('PET')) {
+            valorFuente = SECCION23_TEMPLATES.defaultPETFuente;
+          } else if (fuenteField.includes('peaOcupada')) {
+            valorFuente = SECCION23_TEMPLATES.defaultPeaOcupadaDesocupadaFuente;
+          }
+          
           this.datos[fuenteField] = valorFuente;
           this.onFieldChange(fuenteField, valorFuente, { refresh: false });
         }
@@ -614,24 +630,31 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   // Text generators used in template
   obtenerTextoIndicadoresDistritalesAISI(): string {
     if (this.datos.textoIndicadoresDistritalesAISI && this.datos.textoIndicadoresDistritalesAISI !== '____') return this.datos.textoIndicadoresDistritalesAISI;
-    const distrito = this.datos.distritoSeleccionado || '';
+    const distrito = this.datos.distritoSeleccionado || '_____';
     const poblacionDistrital = this.getPoblacionDistritalFn();
     const petDistrital = this.getPETDistrital();
-    return `No obstante, los indicadores de la Población Económicamente Activa (PEA), tanto de su cantidad total como por subgrupos (Ocupada y Desocupada), se describen a nivel distrital siguiendo la información oficial de la publicación "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI. Para ello es importante tomar en cuenta que la población distrital de ${distrito}, jurisdicción donde se ubica el AISD en cuestión, es de ${poblacionDistrital} personas, y que la PET (de 14 años a más) al mismo nivel está conformada por ${petDistrital} personas.`;
+    return SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{poblacionDistrital}}', poblacionDistrital)
+      .replace('{{petDistrital}}', petDistrital);
   }
 
   obtenerTextoPET_AISI(): string {
     if (this.datos.textoPET_AISI && this.datos.textoPET_AISI !== '____') return this.datos.textoPET_AISI;
-    const centroPoblado = this.datos.centroPobladoAISI || '';
+    const centroPoblado = this.datos.centroPobladoAISI || '_____';
     const porcentajePET = this.getPorcentajePET();
     const porcentaje4564 = this.getPorcentajeGrupoPET('45 a 64');
     const porcentaje65 = this.getPorcentajeGrupoPET('65');
-    return `La población en edad de trabajar (PET) en el CP ${centroPoblado} representa un ${porcentajePET} de la población total y está soportada en su mayoría por el grupo etario de 45 a 64 años, puesto que son el ${porcentaje4564} de la PET. El bloque de edad con menor cantidad de miembros es el de 65 años a más, puesto que representa solamente el ${porcentaje65} de la PET.`;
+    return SECCION23_TEMPLATES.petCompleteTemplateWithVariables
+      .replace('{{centroPoblado}}', centroPoblado)
+      .replace('{{porcentajePET}}', porcentajePET)
+      .replace('{{porcentaje4564}}', porcentaje4564)
+      .replace('{{porcentaje65}}', porcentaje65);
   }
 
   obtenerTextoPETIntro_AISI(): string {
     if (this.datos.textoPETIntro_AISI && this.datos.textoPETIntro_AISI !== '____') return this.datos.textoPETIntro_AISI;
-    return 'La población cumplida de 14 años de edad, se encuentra en edad de trabajar, en concordancia con el Convenio 138 de la Organización Internacional del Trabajo (OIT), aprobado por Resolución Legislativa Nº27453 de fecha 22 de mayo del 2001 y ratificado por DS Nº038-2001-RE, publicado el 31 de mayo de 2001.';
+    return SECCION23_TEMPLATES.petIntroDefault;
   }
 
   getPorcentajePEA(): string {
@@ -687,9 +710,11 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   }
   obtenerTextoPEA_AISI(): string {
     if (this.datos.textoPEA_AISI && this.datos.textoPEA_AISI !== '____') return this.datos.textoPEA_AISI;
-    const distrito = this.datos.distritoSeleccionado || '';
-    const centroPoblado = this.datos.centroPobladoAISI || '';
-    return `La Población Económicamente Activa (PEA) constituye un indicador fundamental para comprender la dinámica económica y social de cualquier jurisdicción al nivel que se requiera. En este apartado, se presenta una descripción de la PEA del distrito de ${distrito}, jurisdicción que abarca a su capital distrital, el CP ${centroPoblado}. Para ello, se emplea la fuente "Resultados Definitivos de la Población Económicamente Activa 2017" del INEI, con el cual se puede visualizar las características demográficas de la población en capacidad de trabajar en el distrito en cuestión.`;
+    const distrito = this.datos.distritoSeleccionado || '_____';
+    const centroPoblado = this.datos.centroPobladoAISI || '_____';
+    return SECCION23_TEMPLATES.peaCompleteTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{centroPoblado}}', centroPoblado);
   }
 
   getPorcentajePET(): string {
@@ -708,12 +733,17 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
 
   obtenerTextoAnalisisPEA_AISI(): string {
     if (this.datos.textoAnalisisPEA_AISI && this.datos.textoAnalisisPEA_AISI !== '____') return this.datos.textoAnalisisPEA_AISI;
-    const distrito = this.datos.distritoSeleccionado || '';
+    const distrito = this.datos.distritoSeleccionado || '_____';
     const porcentajePEA = this.getPorcentajePEA();
     const porcentajeNoPEA = this.getPorcentajeNoPEA();
     const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
     const porcentajeMujeresNoPEA = this.getPorcentajeMujeresNoPEA();
-    return `Del cuadro precedente, se aprecia que la PEA del distrito de ${distrito} representa un ${porcentajePEA} del total de la PET de la jurisdicción, mientras que la No PEA abarca el ${porcentajeNoPEA} restante. Asimismo, se visualiza que los hombres se hallan predominantemente dentro de la PEA, pues el ${porcentajeHombresPEA} se halla en esta categoría. Por otro lado, la mayor parte de las mujeres se hallan en el indicador de No PEA con un ${porcentajeMujeresNoPEA}.`;
+    return SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{porcentajePEA}}', porcentajePEA)
+      .replace('{{porcentajeNoPEA}}', porcentajeNoPEA)
+      .replace('{{porcentajeHombresPEA}}', porcentajeHombresPEA)
+      .replace('{{porcentajeMujeresNoPEA}}', porcentajeMujeresNoPEA);
   }
 
   // Inicializa textos que dependen de los porcentajes calculados en las tablas
@@ -744,29 +774,35 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
 
   obtenerTextoEmpleoAISI(): string {
     if (this.datos.textoEmpleoAISI && this.datos.textoEmpleoAISI !== '____') return this.datos.textoEmpleoAISI;
-    const distrito = this.datos.distritoSeleccionado || '';
-    return `La mayor parte de la población de la capital distrital de ${distrito} se dedica a actividades agropecuarias, siendo la agricultura y la ganadería las principales fuentes de empleo independiente. En el sector agrícola, los cultivos predominantes son la papa, cebada, habas, trigo y oca, productos que abastecen tanto el consumo local como el comercio en menor medida. Asimismo, la ganadería juega un papel importante, con la crianza de vacunos y ovinos como las principales actividades ganaderas de la zona. Aunque en menor proporción, algunos pobladores también se dedican al comercio, complementando así su ingreso económico.`;
+    const distrito = this.datos.distritoSeleccionado || '_____';
+    return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
   }
 
   obtenerTextoEmpleoDependiente_AISI(): string {
     if (this.datos.textoEmpleoDependiente_AISI && this.datos.textoEmpleoDependiente_AISI !== '____') return this.datos.textoEmpleoDependiente_AISI;
-    return `En cuanto al empleo dependiente, este sector es reducido y está conformado principalmente por trabajadores de la municipalidad distrital, quienes cumplen funciones administrativas y operativas; el personal de las instituciones educativas que ofrecen servicios de enseñanza en la localidad; y los empleados del puesto de salud que brindan atención básica a los habitantes. Este tipo de empleo proporciona estabilidad a un pequeño grupo de la población, pero no es la fuente principal de ingresos entre los habitantes. En general, el empleo independiente predomina como el principal medio de subsistencia para la mayoría de los pobladores.`;
+    return SECCION23_TEMPLATES.empleoDependienteDefault;
   }
 
   obtenerTextoIngresosAISI(): string {
     if (this.datos.textoIngresosAISI && this.datos.textoIngresosAISI !== '____') return this.datos.textoIngresosAISI;
-    const distrito = this.datos.distritoSeleccionado || '';
-    const centroPoblado = this.datos.centroPobladoAISI || '';
+    const distrito = this.datos.distritoSeleccionado || '_____';
+    const centroPoblado = this.datos.centroPobladoAISI || '_____';
     const ingresoPerCapita = this.getIngresoPerCapita();
     const rankingIngreso = this.getRankingIngreso();
-    return `Los ingresos de la población en la capital distrital de ${distrito} están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. ... S/. ${ingresoPerCapita} mensuales, ocupando el puesto N°${rankingIngreso} en el ranking de dicha variable.`;
+    return SECCION23_TEMPLATES.ingresosTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{centroPoblado}}', centroPoblado)
+      .replace('{{ingresoPerCapita}}', ingresoPerCapita)
+      .replace('{{rankingIngreso}}', rankingIngreso);
   }
 
   obtenerTextoIndiceDesempleoAISI(): string {
     if (this.datos.textoIndiceDesempleoAISI && this.datos.textoIndiceDesempleoAISI !== '____') return this.datos.textoIndiceDesempleoAISI;
-    const distrito = this.datos.distritoSeleccionado || '';
-    const centroPoblado = this.datos.centroPobladoAISI || '';
-    return `El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de ${distrito}, el cual abarca al CP ${centroPoblado} (capital distrital).`;
+    const distrito = this.datos.distritoSeleccionado || '_____';
+    const centroPoblado = this.datos.centroPobladoAISI || '_____';
+    return SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{centroPoblado}}', centroPoblado);
   }
 
   // Compatibility helpers for template (PEA Ocupada/Desocupada totals)
@@ -798,11 +834,15 @@ export class Seccion23FormComponent extends AutoLoadSectionComponent implements 
   // Alias expected by some templates
   obtenerTextoPEAAISI(): string {
     if (this.datos.textoPEAAISI && this.datos.textoPEAAISI !== '____') return this.datos.textoPEAAISI;
-    const distrito = this.datos.distritoSeleccionado || '';
+    const distrito = this.datos.distritoSeleccionado || '_____';
     const porcentajeDesempleo = this.getPorcentajeDesempleo();
     const porcentajeHombres = this.getPorcentajeHombresOcupados();
     const porcentajeMujeres = this.getPorcentajeMujeresOcupadas();
-    return `Del cuadro precedente, se halla que en el distrito de ${distrito} la PEA Desocupada representa un ${porcentajeDesempleo} del total de la PEA. En adición a ello, se aprecia que tanto hombres como mujeres se encuentran predominantemente en el indicador de PEA Ocupada, con porcentajes de ${porcentajeHombres} y ${porcentajeMujeres}, respectivamente.`;
+    return SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables
+      .replace('{{distrito}}', distrito)
+      .replace('{{porcentajeDesempleo}}', porcentajeDesempleo)
+      .replace('{{porcentajeHombres}}', porcentajeHombres)
+      .replace('{{porcentajeMujeres}}', porcentajeMujeres);
   }
 
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {

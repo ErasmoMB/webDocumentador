@@ -1,14 +1,14 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">A.1.16. Festividades, Costumbres y Turismo</h4>
+    <h4 class="section-title">{{ SECCION20_TEMPLATES.tituloSeccion }}</h4>
 
     <div class="form-group-section mt-lg">
-      <h4 class="section-title">Editar Párrafos</h4>
+      <h4 class="section-title">{{ SECCION20_TEMPLATES.labelEditarParrafos }}</h4>
 
       <app-paragraph-editor
         [fieldId]="getFieldIdTextoFestividades()"
-        label="Festividades, Costumbres y Turismo - Texto Completo"
-        hint="Edite el texto completo. Use Enter para crear nuevos párrafos. Deje vacío para usar el texto por defecto."
+        [label]="SECCION20_TEMPLATES.labelTextoCompleto"
+        [hint]="SECCION20_TEMPLATES.hintTextoCompleto"
         [rows]="8"
         [value]="textoSignal()"
         (valueChange)="onFieldChange('textoFestividades', $event)">
@@ -16,19 +16,19 @@
     </div>
 
     <div class="form-field mt-xl">
-      <label class="label">Título - Tabla Festividades</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[getTituloFestividadesField()]" (change)="onTituloFestividadesChange($event)" placeholder="Festividades principales – CC {{ obtenerNombreComunidadActual() }}">
+      <label class="label">{{ SECCION20_TEMPLATES.labelTituloTabla }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[getTituloFestividadesField()]" (change)="onTituloFestividadesChange($event)" [placeholder]="SECCION20_TEMPLATES.placeholderTituloTabla">
     </div>
 
     <div class="form-field mt-xl">
-      <label class="label">Tabla Festividades</label>
+      <label class="label">{{ SECCION20_TEMPLATES.labelTablaFestividades }}</label>
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
         [config]="festividadesConfig"
         [columns]="[
-          { field: 'festividad', label: 'Festividad', type: 'text', placeholder: 'Carnavales' },
-          { field: 'fecha', label: 'Fecha', type: 'text', placeholder: 'Febrero' }
+          { field: 'festividad', label: SECCION20_TEMPLATES.columnFestividad, type: 'text', placeholder: SECCION20_TEMPLATES.placeholderFestividad },
+          { field: 'fecha', label: SECCION20_TEMPLATES.columnFecha, type: 'text', placeholder: SECCION20_TEMPLATES.placeholderFecha }
         ]"
         [tablaKey]="getTablaKeyFestividades()"
         [totalKey]="'festividad'"
@@ -37,24 +37,24 @@
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Fuente - Tabla Festividades</label>
-      <input type="text" class="form-control" [(ngModel)]="datos[getFuenteFestividadesField()]" (change)="onFuenteFestividadesChange($event)" placeholder="GEADES (2024)">
+      <label class="label">{{ SECCION20_TEMPLATES.labelFuenteTabla }}</label>
+      <input type="text" class="form-control" [(ngModel)]="datos[getFuenteFestividadesField()]" (change)="onFuenteFestividadesChange($event)" [placeholder]="SECCION20_TEMPLATES.placeholderFuenteTabla">
     </div>
 
     <div class="form-field mt-lg">
-      <label class="label">Fotografías de Festividades</label>
+      <label class="label">{{ SECCION20_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
         [fotografias]="fotosSignal()"
         [sectionId]="seccionId"
         [photoPrefix]="photoPrefixSignal()"
         [permitirMultiples]="true"
-        labelTitulo="Título de la fotografía"
-        labelFuente="Fuente de la fotografía"
-        labelImagen="Fotografía - Imagen"
-        placeholderTitulo="Ej: Festividades"
-        placeholderFuente="Ej: GEADES, 2024"
-        tituloDefault="Festividades"
-        fuenteDefault="GEADES, 2024"
+        [labelTitulo]="SECCION20_TEMPLATES.labelFotoTitulo"
+        [labelFuente]="SECCION20_TEMPLATES.labelFotoFuente"
+        [labelImagen]="SECCION20_TEMPLATES.labelFotoImagen"
+        [placeholderTitulo]="SECCION20_TEMPLATES.labelFotoTitulo"
+        [placeholderFuente]="SECCION20_TEMPLATES.labelFotoFuente"
+        [tituloDefault]="SECCION20_TEMPLATES.tituloFotoDefault"
+        [fuenteDefault]="SECCION20_TEMPLATES.fuenteFotoDefault"
         [requerido]="false"
         (fotografiasChange)="onFotografiasChange($event)">
       </app-image-upload>

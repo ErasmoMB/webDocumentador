@@ -10,6 +10,7 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION26_TEMPLATES } from './seccion26-constants';
 
 @Component({
   standalone: true,
@@ -21,6 +22,9 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 export class Seccion26FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Exportar TEMPLATES para el template
+  readonly SECCION26_TEMPLATES = SECCION26_TEMPLATES;
 
   // ✅ Inyección de GlobalNumberingService
   private globalNumberingService = inject(GlobalNumberingService);

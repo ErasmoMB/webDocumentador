@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION14_TEMPLATES } from './seccion14-constants';
 
 @Component({
   selector: 'app-seccion14-view',
@@ -19,6 +20,9 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.A.1.10';
   @Input() override modoFormulario: boolean = false;  
   // NOTE: Use AISD-style section id for table-numbering fixedSections
+
+  // ✅ EXPORTAR TEMPLATES PARA EL HTML
+  readonly SECCION14_TEMPLATES = SECCION14_TEMPLATES;
 
   override readonly PHOTO_PREFIX = 'fotografiaEducacionIndicadores';
   override useReactiveSync: boolean = true;

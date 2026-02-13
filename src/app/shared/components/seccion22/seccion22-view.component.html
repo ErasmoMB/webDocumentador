@@ -1,8 +1,8 @@
 <div *ngIf="!modoFormulario" class="seccion-vista-content">
-  <h5>B.1.1. Aspectos demográficos</h5>
+  <h5>{{ SECCION22_TEMPLATES.tituloSeccion }}</h5>
 
   <div *ngIf="viewModel() as vm">
-    <p style="margin-top: 6px; margin-bottom: 6px;"><strong>a. Población según sexo</strong></p>
+    <p style="margin-top: 6px; margin-bottom: 6px;"><strong>{{ SECCION22_TEMPLATES.subtituloA }}</strong></p>
     <p class="text-justify" [innerHTML]="vm.texts.demografiaText"></p>
 
     <!-- Número de cuadro con numeración global -->
@@ -13,7 +13,7 @@
     </app-table-wrapper>
     <p class="source">FUENTE: {{ vm.fuentePoblacionSexo }}</p>
 
-    <p style="margin-top: 10px; margin-bottom: 6px;"><strong>b. Población según grupo etario</strong></p>
+    <p style="margin-top: 10px; margin-bottom: 6px;"><strong>{{ SECCION22_TEMPLATES.subtituloB }}</strong></p>
     <p class="text-justify" [innerHTML]="vm.texts.grupoEtarioText"></p>
 
     <!-- Número de cuadro con numeración global (segunda tabla) -->

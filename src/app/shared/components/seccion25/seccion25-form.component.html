@@ -1,33 +1,33 @@
 <div class="seccion-formulario-content">
   <div class="form-group-section">
-    <h4 class="section-title">B.1.4. Vivienda</h4>
+    <h4 class="section-title">{{ SECCION25_TEMPLATES.tituloSeccion }}</h4>
 
-    <label class="label">Texto — Vivienda</label>
+    <label class="label">{{ SECCION25_TEMPLATES.labelTextoVivienda }}</label>
     <app-paragraph-editor
       fieldId="textoViviendaAISI"
-      [value]="viewModel().textoVivienda"
-      (valueChange)="onFieldChange('textoViviendaAISI', $event)">
+      [value]="textoVivienda.value()"
+      (valueChange)="textoVivienda.update($event)">
     </app-paragraph-editor>
 
     <div class="form-group" style="margin-bottom: 15px;">
-      <label class="label">Título de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoCuadroTitulo }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroTituloTiposVivienda"
-        (change)="onFieldChange(obtenerPrefijoGrupo() ? 'cuadroTituloTiposVivienda' + obtenerPrefijoGrupo() : 'cuadroTituloTiposVivienda', $any($event.target).value)"
-        placeholder="Ej: Tipos de Vivienda">
+        [value]="cuadroTituloTiposVivienda.value()"
+        (change)="cuadroTituloTiposVivienda.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderTituloTiposVivienda">
     </div>
 
-    <label class="label">Tipos de Vivienda</label>
+    <label class="label">{{ SECCION25_TEMPLATES.columnCategoria }} / {{ SECCION25_TEMPLATES.columnCasos }}</label>
     <app-dynamic-table
       [datos]="datos"
       [sectionId]="seccionId"
       [config]="tiposViviendaConfig"
       [columns]="[
-        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Casa independiente' },
-        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+        { field: 'categoria', label: SECCION25_TEMPLATES.columnCategoria, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderCategoriaVivienda },
+        { field: 'casos', label: SECCION25_TEMPLATES.columnCasos, type: 'number', placeholder: SECCION25_TEMPLATES.placeholderCasos },
+        { field: 'porcentaje', label: SECCION25_TEMPLATES.columnPorcentaje, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderPorcentaje, readonly: true }
       ]"
       [tablaKey]="'tiposViviendaAISI'"
       [totalKey]="'categoria'"
@@ -35,50 +35,46 @@
       (tableUpdated)="onTiposViviendaTableUpdated()">
     </app-dynamic-table>
 
-
-
     <div class="form-group" style="margin-top: 15px;">
-      <label class="label">Fuente de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoFuente }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroFuenteTiposVivienda"
-        (change)="onFieldChange('cuadroFuenteTiposVivienda', $any($event.target).value)"
-        placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.">
+        [value]="cuadroFuenteTiposVivienda.value()"
+        (change)="cuadroFuenteTiposVivienda.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderFuenteTiposVivienda">
     </div>
 
     <!-- Texto — Ocupación (ahora después del cuadro) -->
-    <label class="label">Texto — Ocupación de vivienda</label>
+    <label class="label">{{ SECCION25_TEMPLATES.labelTextoOcupacion }}</label>
     <app-paragraph-editor
       fieldId="textoOcupacionViviendaAISI"
-      [value]="viewModel().textoOcupacion"
-      (valueChange)="onFieldChange('textoOcupacionViviendaAISI', $event)">
+      [value]="textoOcupacion.value()"
+      (valueChange)="textoOcupacion.update($event)">
     </app-paragraph-editor>
 
-
-
     <!-- Tablas -->
-    <h5 class="mt-md">Cuadros</h5>
+    <h5 class="mt-md">{{ SECCION25_TEMPLATES.labelCuadros }}</h5>
 
     <div class="form-group" style="margin-bottom: 15px;">
-      <label class="label">Título de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoCuadroTitulo }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroTituloCondicionOcupacion"
-        (change)="onFieldChange('cuadroTituloCondicionOcupacion', $any($event.target).value)"
-        placeholder="Ej: Condición de Ocupación">
+        [value]="cuadroTituloCondicionOcupacion.value()"
+        (change)="cuadroTituloCondicionOcupacion.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderTituloCondicionOcupacion">
     </div>
 
-    <label class="label">Condición de Ocupación</label>
+    <label class="label">{{ SECCION25_TEMPLATES.columnCategoria }} / {{ SECCION25_TEMPLATES.columnCasos }}</label>
     <app-dynamic-table
       [datos]="datos"
       [sectionId]="seccionId"
       [config]="condicionOcupacionConfig"
       [columns]="[
-        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Ocupada, con personas presentes' },
-        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+        { field: 'categoria', label: SECCION25_TEMPLATES.columnCategoria, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderCategoriaOcupacion },
+        { field: 'casos', label: SECCION25_TEMPLATES.columnCasos, type: 'number', placeholder: SECCION25_TEMPLATES.placeholderCasos },
+        { field: 'porcentaje', label: SECCION25_TEMPLATES.columnPorcentaje, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderPorcentaje, readonly: true }
       ]"
       [tablaKey]="'condicionOcupacionAISI'"
       [totalKey]="'categoria'"
@@ -89,43 +85,44 @@
     </app-dynamic-table>
 
     <div class="form-group" style="margin-top: 15px;">
-      <label class="label">Fuente de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoFuente }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroFuenteCondicionOcupacion"
-        (change)="onFieldChange('cuadroFuenteCondicionOcupacion', $any($event.target).value)"
-        placeholder="Ej: Censos Nacionales 2017">
+        [value]="cuadroFuenteCondicionOcupacion.value()"
+        (change)="cuadroFuenteCondicionOcupacion.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderFuenteCondicionOcupacion">
     </div>
 
-    <h4 class="section-title">a. Estructura</h4>
+    <h4 class="section-title">{{ SECCION25_TEMPLATES.labelEstructura }}</h4>
 
+    <label class="label">{{ SECCION25_TEMPLATES.labelTextoEstructura }}</label>
     <app-paragraph-editor
       fieldId="textoEstructuraAISI"
-      [value]="viewModel().textoEstructura"
-      (valueChange)="onFieldChange('textoEstructuraAISI', $event)">
+      [value]="textoEstructura.value()"
+      (valueChange)="textoEstructura.update($event)">
     </app-paragraph-editor>
 
     <div class="form-group" style="margin-bottom: 15px;">
-      <label class="label">Título de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoCuadroTitulo }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroTituloMaterialesVivienda"
-        (change)="onFieldChange('cuadroTituloMaterialesVivienda', $any($event.target).value)"
-        placeholder="Ej: Tipos de materiales de la vivienda">
+        [value]="cuadroTituloMaterialesVivienda.value()"
+        (change)="cuadroTituloMaterialesVivienda.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderTituloMaterialesVivienda">
     </div>
 
-    <label class="label">Tipos de materiales de la vivienda</label>
+    <label class="label">{{ SECCION25_TEMPLATES.columnCategoria }} / {{ SECCION25_TEMPLATES.columnTipoMaterial }}</label>
     <app-dynamic-table
       [datos]="datos"
       [sectionId]="seccionId"
       [config]="materialesViviendaConfig"
       [columns]="[
-        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
-        { field: 'tipoMaterial', label: 'Tipo de material', type: 'text', placeholder: 'Ej: Adobe' },
-        { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0,00 %', readonly: true }
+        { field: 'categoria', label: SECCION25_TEMPLATES.columnCategoria, type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
+        { field: 'tipoMaterial', label: SECCION25_TEMPLATES.columnTipoMaterial, type: 'text', placeholder: 'Ej: Adobe' },
+        { field: 'casos', label: SECCION25_TEMPLATES.columnCasos, type: 'number', placeholder: SECCION25_TEMPLATES.placeholderCasos },
+        { field: 'porcentaje', label: SECCION25_TEMPLATES.columnPorcentaje, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderPorcentaje, readonly: true }
       ]"
       [tablaKey]="'materialesViviendaAISI'"
       [totalKey]="'categoria'"
@@ -133,19 +130,15 @@
       (tableUpdated)="onMaterialesViviendaTableUpdated()">
     </app-dynamic-table>
 
-
-
     <div class="form-group" style="margin-top: 15px;">
-      <label class="label">Fuente de la Tabla</label>
+      <label class="label">{{ SECCION25_TEMPLATES.labelTextoFuente }}</label>
       <input 
         type="text" 
         class="form-control"
-        [value]="viewModel().cuadroFuenteMaterialesVivienda"
-        (change)="onFieldChange('cuadroFuenteMaterialesVivienda', $any($event.target).value)"
-        placeholder="Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.">
+        [value]="cuadroFuenteMaterialesVivienda.value()"
+        (change)="cuadroFuenteMaterialesVivienda.update($any($event.target).value)"
+        [placeholder]="SECCION25_TEMPLATES.placeholderFuenteMaterialesVivienda">
     </div>
-
-
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">Fotografías</label>

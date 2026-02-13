@@ -7,7 +7,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from '../../../core/services/tables/table-management.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
-import { SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS } from './seccion15-constants';
+import { SECCION15_SECTION_ID, SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS, SECCION15_TEMPLATES, SECCION15_WATCHED_FIELDS } from './seccion15-constants';
 
 @Component({
     standalone: true,
@@ -21,11 +21,16 @@ import { SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS } from './seccion15-con
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion15FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.11';
+  @Input() override seccionId: string = SECCION15_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Exportar TEMPLATES e importar constantes
+  readonly SECCION15_TEMPLATES = SECCION15_TEMPLATES;
+  readonly SECCION15_DEFAULT_TEXTS = SECCION15_DEFAULT_TEXTS;
 
   override readonly PHOTO_PREFIX = SECCION15_PHOTO_PREFIX;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION15_WATCHED_FIELDS;
 
   fotografiasIglesia: FotoItem[] = [];
 

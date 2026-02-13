@@ -21,12 +21,59 @@ export const SECCION25_WATCHED_FIELDS = [
   'cuadroFuenteMaterialesVivienda'
 ];
 
-export const SECCION25_DEFAULT_TEXTS = {
-  textoViviendaAISI: 'La caracterización de las viviendas es fundamental para entender el nivel de vida y las condiciones de habitabilidad de la población. En el Centro Poblado ____, se presentan diferentes tipos de vivienda con características específicas en cuanto a sus materiales de construcción.',
+export const SECCION25_TEMPLATES = {
+  // Textos principales por defecto
+  tituloSeccion: 'B.1.4. Vivienda',
   
-  textoOcupacionViviendaAISI: 'La condición de ocupación de las viviendas refleja aspectos importantes sobre la densidad poblacional y la utilización del espacio habitacional. Según los datos disponibles, se observa que la mayoría de las viviendas se encuentran ocupadas.',
+  // Párrafos por defecto (fallback)
+  textoViviendaDefault: 'La caracterización de las viviendas es fundamental para entender el nivel de vida y las condiciones de habitabilidad de la población. En el Centro Poblado ____, se presentan diferentes tipos de vivienda con características específicas en cuanto a sus materiales de construcción.',
   
-  textoEstructuraAISI: 'La estructura física de las viviendas está determinada por los materiales utilizados en su construcción. Los muros, techos y pisos son componentes clave que definen la calidad y durabilidad de las viviendas.'
+  textoOcupacionDefault: 'La condición de ocupación de las viviendas refleja aspectos importantes sobre la densidad poblacional y la utilización del espacio habitacional. Según los datos disponibles, se observa que la mayoría de las viviendas se encuentran ocupadas.',
+  
+  textoEstructuraDefault: 'La estructura física de las viviendas está determinada por los materiales utilizados en su construcción. Los muros, techos y pisos son componentes clave que definen la calidad y durabilidad de las viviendas.',
+  
+  // Labels de formulario
+  labelTextoVivienda: 'Texto — Vivienda',
+  labelTextoCuadroTitulo: 'Título de la Tabla',
+  labelTextoFuente: 'Fuente de la Tabla',
+  labelTextoOcupacion: 'Texto — Ocupación de vivienda',
+  labelTextoEstructura: 'Texto — Estructura',
+  
+  // Placeholders
+  placeholderTituloTiposVivienda: 'Ej: Tipos de Vivienda',
+  placeholderFuenteTiposVivienda: 'Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
+  placeholderTituloCondicionOcupacion: 'Ej: Condición de Ocupación',
+  placeholderFuenteCondicionOcupacion: 'Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
+  placeholderTituloMaterialesVivienda: 'Ej: Tipos de materiales de la vivienda',
+  placeholderFuenteMaterialesVivienda: 'Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
+  
+  // Columnas tabla
+  columnCategoria: 'Categoría',
+  columnCasos: 'Casos',
+  columnPorcentaje: 'Porcentaje',
+  columnTipoMaterial: 'Tipo de material',
+  
+  // Placeholders para tabla
+  placeholderCategoriaVivienda: 'Ej: Casa independiente',
+  placeholderCasos: '0',
+  placeholderPorcentaje: '0,00 %',
+  placeholderCategoriaOcupacion: 'Ej: Ocupada, con personas presentes',
+  
+  // Títulos predeterminados para tablas
+  tituloTiposViviendaDefault: 'Tipos de Vivienda',
+  tituloCondicionOcupacionDefault: 'Condición de Ocupación',
+  tituloMaterialesViviendaDefault: 'Tipos de materiales de la vivienda',
+  
+  // Fuentes predeterminadas
+  fuenteDefault: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
+  
+  // Textos auxiliares
+  labelCuadros: 'Cuadros',
+  labelEstructura: 'a. Estructura',
+  textoEstructuraFormato: 'Estructura',
+  
+  // Valores calculados (para vista)
+  porcentajeOcupadasPresentes: '{porcentaje}', // Placeholder para sustitución dinámica
 };
 
 export const SECCION25_TABLE_CONFIGS = {

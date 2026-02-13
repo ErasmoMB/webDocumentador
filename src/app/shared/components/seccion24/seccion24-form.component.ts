@@ -11,6 +11,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { SECCION24_TEMPLATES, SECCION24_DEFAULT_TEXTS } from './seccion24-constants';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule, DynamicTableComponent, ImageUploadComponent, ParagraphEditorComponent],
@@ -22,6 +23,9 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 export class Seccion24FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.3';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION24_TEMPLATES = SECCION24_TEMPLATES;
 
   // ✅ PHOTO_PREFIX como Signal
   readonly photoPrefixSignal: Signal<string>;
@@ -268,42 +272,52 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoIntroDefault(): string {
-    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    return `Las actividades económicas de la población son un reflejo de los patrones de producción, consumo y empleo en una localidad o jurisdicción determinada. En este ítem, se describirá la estructura y la diversidad de las actividades económicas en la capital distrital de ${cp}, que forma parte del AISI.`;
+    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    return SECCION24_DEFAULT_TEXTS.textoIntroActividadesEconomicasAISI.replace(/____/g, cp);
   }
 
   private generarTextoAnalisisDefault(): string {
-    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     const actividades = this.actividadesEconomicasSignal() || [];
     const agricultura = actividades.find((a: any) => a.actividad && String(a.actividad).toLowerCase().includes('agricultura'));
     const administracion = actividades.find((a: any) => a.actividad && String(a.actividad).toLowerCase().includes('administración'));
     const porcentajeAgricultura = agricultura?.porcentaje && String(agricultura.porcentaje).trim().length > 0 ? agricultura.porcentaje : '____';
     const porcentajeAdministracion = administracion?.porcentaje && String(administracion.porcentaje).trim().length > 0 ? administracion.porcentaje : '____';
 
-    return `Del cuadro anterior, se aprecia que la actividad económica más frecuente dentro del CP ${cp} es el grupo "Agricultura, ganadería, silvicultura y pesca" con un ${porcentajeAgricultura}. Esto se condice con las entrevistas aplicadas en campo, pues los informantes y autoridades declararon que la mayoría de la población se dedica principalmente a la agricultura y a la ganadería. La segunda actividad más frecuente dentro de esta localidad es la de "Administración pública y defensa; planes de seguridad social de afiliación obligatoria" con ${porcentajeAdministracion}.`;
+    return SECCION24_DEFAULT_TEXTS.textoActividadesEconomicasAISI
+      .replace(/____/g, cp)
+      .replace(/____/g, porcentajeAgricultura)
+      .replace(/____/g, porcentajeAdministracion);
   }
 
   private generarTextoMercadoDefault(): string {
-    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || this.projectFacade.selectField(this.seccionId, null, 'ciudadOrigenComercio')() || 'Caravelí';
+    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || this.projectFacade.selectField(this.seccionId, null, 'ciudadOrigenComercio')() || SECCION24_DEFAULT_TEXTS.ciudadOrigenDefault;
 
-    return `El CP ${cp} no cuenta con un mercado formal que centralice las actividades comerciales de la localidad. El comercio en este lugar es incipiente y se lleva a cabo principalmente a través de pequeñas bodegas. Estas bodegas atienden la demanda cotidiana en la localidad, pero la oferta sigue siendo limitada y gran parte de los productos llega desde ${ciudadOrigen}. Además, la comercialización de productos en ${cp} se complementa con la presencia de comerciantes mayoristas que viajan hacia la localidad para comprar y vender productos. La mayoría de estos comerciantes provienen de la ciudad de ${ciudadOrigen}, desde donde abastecen las bodegas locales con mercancías diversas. Este sistema de intermediación permite que los pobladores de ${cp} accedan a una variedad más amplia de productos, aunque la oferta sigue siendo limitada en comparación con las zonas urbanas más grandes. La falta de un mercado formal y de una infraestructura de comercio mayor limita el desarrollo del intercambio comercial en la localidad, pero el dinamismo de las pequeñas bodegas y la llegada de comerciantes externos contribuyen a mantener un flujo de productos que satisface las necesidades básicas de la población.`;
+    return SECCION24_DEFAULT_TEXTS.textoMercadoProductos
+      .replace(/____/g, cp)
+      .replace(/____/g, ciudadOrigen)
+      .replace(/____/g, cp)
+      .replace(/____/g, ciudadOrigen)
+      .replace(/____/g, cp);
   }
 
   private generarTextoHabitosDefault(): string {
-    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
-    const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || this.projectFacade.selectField(this.seccionId, null, 'ciudadOrigenComercio')() || 'Caravelí';
+    const cp = (this.formDataSignal() as any)?.centroPoblado || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || this.projectFacade.selectField(this.seccionId, null, 'ciudadOrigenComercio')() || SECCION24_DEFAULT_TEXTS.ciudadOrigenDefault;
 
-    return `En la capital distrital de ${cp}, los hábitos de consumo están basados principalmente en alimentos tradicionales y accesibles dentro de la comunidad. Los productos más consumidos incluyen tubérculos (como papa y oca) y verduras, los cuales son esenciales en la dieta diaria de los hogares. Estos productos se adquieren tanto a través de la producción local, como es el caso de la papa y la oca, como de compras a pequeños comerciantes que llegan a la capital distrital desde ${ciudadOrigen}. La papa, por ser uno de los cultivos más abundantes en la zona, tiene un rol fundamental en la alimentación, acompañando la mayoría de las comidas junto a otros carbohidratos. En cuanto al consumo de proteínas, los habitantes del pueblo suelen recurrir a la carne de animales menores como las gallinas y los cuyes, así como de vacuno, los cuales son criados en sus propias viviendas. Estas carnes son un complemento importante en la dieta y una fuente de nutrientes esenciales, especialmente en eventos familiares o festividades. Si bien se consumen otros tipos de carne en menor proporción, como ovino, estas son generalmente reservadas para ocasiones especiales.`;
+    return SECCION24_DEFAULT_TEXTS.textoHabitosConsumo
+      .replace(/____/g, cp)
+      .replace(/____/g, ciudadOrigen);
   }
 
   private generarFuenteDefault(): string {
-    return 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.';
+    return SECCION24_DEFAULT_TEXTS.fuenteActividadesEconomicasAISI;
   }
 
   private generarTextoIntroLongDefault(): string {
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || 'Cahuacho';
-    return `A partir de fuentes oficiales, se exploran las principales fuentes de ingresos y los sectores productivos más relevantes dentro del CP ${cp} (capital distrital). En esta ocasión, se recurre a los datos provistos por los Censos Nacionales 2017.`;
+    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    return SECCION24_DEFAULT_TEXTS.textoIntroActividadesEconomicasAISILong.replace(/____/g, cp);
   }
 
   actualizarFuente(valor: string): void {

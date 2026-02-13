@@ -13,6 +13,7 @@ import { GroupConfigService } from 'src/app/core/services/groups/group-config.se
 import { EducacionService } from 'src/app/core/infrastructure/services';
 import { AISIGroupService } from 'src/app/core/services/groups/aisi-group.service';
 import { takeUntil } from 'rxjs/operators';
+import { SECCION28_TEMPLATES } from './seccion28-constants';
 
 @Component({
   standalone: true,
@@ -26,6 +27,9 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
   @ViewChildren(DynamicTableComponent) dynamicTables?: QueryList<DynamicTableComponent>;
   @Input() override seccionId: string = '3.1.4.B.1.7';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Exportar TEMPLATES para el HTML
+  readonly SECCION28_TEMPLATES = SECCION28_TEMPLATES;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
@@ -299,23 +303,21 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
       return this.datos.textoRecreacionCP1;
     }
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Dentro del CP ${centroPoblado} se cuenta con espacios destinados a la recreación de la población. Entre ellos destacan las plazas, las cuales funcionan como principales áreas de encuentro para la interacción y socialización, especialmente durante festividades y eventos culturales.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP1Default.replace(/____/g, centroPoblado);
   }
 
   obtenerTextoRecreacionCP2(): string {
     if (this.datos.textoRecreacionCP2 && this.datos.textoRecreacionCP2 !== '____') {
       return this.datos.textoRecreacionCP2;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Otra infraestructura recreativa relevante es la plaza de toros, que se halla en la zona este del centro poblado, y es un punto de gran relevancia cultural; en especial, durante las festividades patronales y celebraciones taurinas. Este espacio funciona como un centro de actividad importante para las festividades taurinas y celebraciones especiales, atrayendo tanto a residentes como a visitantes y promoviendo las tradiciones locales.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP2Default;
   }
 
   obtenerTextoRecreacionCP3(): string {
     if (this.datos.textoRecreacionCP3 && this.datos.textoRecreacionCP3 !== '____') {
       return this.datos.textoRecreacionCP3;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Adicionalmente, cabe mencionar el mirador ubicado en el cerro Pilluni, el cual ofrece vistas panorámicas de la capital distrital y los paisajes circundantes. Este lugar es un punto de interés tanto para los residentes como para los visitantes, permitiendo disfrutar de la belleza natural y de actividades recreativas al aire libre, fortaleciendo la identidad comunitaria.`;
+    return SECCION28_TEMPLATES.textoRecreacionCP3Default;
   }
 
   obtenerTextoDeporteCP1(): string {
@@ -323,7 +325,7 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
       return this.datos.textoDeporteCP1;
     }
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `En el CP ${centroPoblado}, la infraestructura deportiva consiste en instalaciones básicas para la práctica de actividades físicas y recreativas. Se destaca la losa deportiva ubicada detrás de la municipalidad, la cual es utilizada para diversos deportes colectivos como fútbol y vóley, y sirve como un espacio frecuente para eventos locales y recreación de niños y jóvenes.`;
+    return SECCION28_TEMPLATES.textoDeporteCP1Default.replace(/____/g, centroPoblado);
   }
 
   obtenerTextoDeporteCP2(): string {
@@ -331,7 +333,7 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
       return this.datos.textoDeporteCP2;
     }
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Asimismo, cabe mencionar que en ${centroPoblado} se cuenta con un "estadio", caracterizado por un campo extenso con pasto y tierra, utilizado principalmente para fútbol y otros deportes al aire libre. Este campo no cuenta con infraestructura adicional como cerco perimetral o gradas, lo que limita su capacidad para eventos formales de gran envergadura. A pesar de ello, el campo es utilizado para actividades recreativas y eventos locales, funcionando como un punto de encuentro comunitario en fechas especiales.`;
+    return SECCION28_TEMPLATES.textoDeporteCP2Default.replace(/____/g, centroPoblado);
   }
 
   onFotografiasSaludChange(fotografias: FotoItem[]) {
@@ -360,7 +362,9 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     }
     const distrito = this.datos.distritoSeleccionado || 'Cahuacho';
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
-    return `Dentro de la capital distrital de ${distrito} se encuentra un único establecimiento de salud de categoría I-2, que brinda atención primaria a la población local. Este puesto de salud es el principal punto de referencia para los habitantes de ${centroPoblado}, ofreciendo servicios esenciales como consultas médicas, controles de salud y atención básica de emergencias. Aunque cuenta con limitaciones en cuanto a especialidades médicas y equipamiento, su presencia es fundamental para atender las necesidades de salud de la población, especialmente considerando la ausencia de otros centros de mayor capacidad en la zona.`;
+    return SECCION28_TEMPLATES.textoSaludDefault
+      .replace(/____/g, distrito)
+      .replace(/____/g, centroPoblado);
   }
 
   obtenerTextoEducacionCP(): string {
@@ -370,7 +374,10 @@ export class Seccion28FormComponent extends AutoLoadSectionComponent implements 
     const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
     const nombreIE = this.datos.nombreIEMayorEstudiantes || 'IE Virgen de Copacabana';
     const cantidadEstudiantes = this.datos.cantidadEstudiantesIEMayor || '28';
-    return `Dentro del CP ${centroPoblado} se hallan instituciones educativas que cubren todos los niveles de educación básica regular. La institución con mayor cantidad de estudiantes es ${nombreIE} con ${cantidadEstudiantes} estudiantes.`;
+    return SECCION28_TEMPLATES.textoEducacionDefault
+      .replace(/____/g, centroPoblado)
+      .replace(/____/g, nombreIE)
+      .replace(/____/g, cantidadEstudiantes);
   }
 
   private cargarEducacion(): void {

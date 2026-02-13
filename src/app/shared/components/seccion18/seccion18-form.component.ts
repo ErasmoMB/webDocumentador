@@ -7,7 +7,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION18_PHOTO_PREFIX, SECCION18_DEFAULT_TEXTS } from './seccion18-constants';
+import { SECCION18_PHOTO_PREFIX, SECCION18_DEFAULT_TEXTS, SECCION18_TEMPLATES } from './seccion18-constants';
 
 @Component({
     standalone: true,
@@ -23,17 +23,21 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     override readonly PHOTO_PREFIX = 'fotografiaNBI';
     override useReactiveSync: boolean = true;
 
+    // ✅ EXPORTAR CONSTANTES AL TEMPLATE
+    readonly SECCION18_TEMPLATES = SECCION18_TEMPLATES;
+    readonly SECCION18_DEFAULT_TEXTS = SECCION18_DEFAULT_TEXTS;
+
     // ✅ HELPER PARA OBTENER PREFIJO
     private obtenerPrefijo(): string {
         return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
     }
 
-    // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO
-    override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
-        const prefijo = this.obtenerPrefijo();
-        const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
-        super.onFieldChange(campoConPrefijo, value, options);
-    }
+    // ✅ SIGNALS REACTIVAS CON createAutoSyncField
+    readonly textoNBI = this.createAutoSyncField('textoNecesidadesBasicasInsatisfechas', '');
+    readonly tituloNbiCC = this.createAutoSyncField('tituloNbiCC', '');
+    readonly fuenteNbiCC = this.createAutoSyncField('fuenteNbiCC', '');
+    readonly tituloNbiDistrito = this.createAutoSyncField('tituloNbiDistrito', '');
+    readonly fuenteNbiDistrito = this.createAutoSyncField('fuenteNbiDistrito', '');
 
     // Signal para fotos reactivas
     readonly fotografiasSignal: Signal<FotoItem[]> = computed(() => {
@@ -61,77 +65,69 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         return hash;
     });
 
-    readonly nbiCCAyrocaConfigSignal: Signal<TableConfig> = computed(() => {
-        const prefijo = this.obtenerPrefijo();
-        const tablaKey = prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
-        return {
-            tablaKey: tablaKey,
-            totalKey: 'categoria',
-            campoTotal: 'casos',
-            campoPorcentaje: 'porcentaje',
-            calcularPorcentajes: true,
-            camposParaCalcular: ['casos'],
-            noInicializarDesdeEstructura: true,
-            permiteAgregarFilas: false,
-            permiteEliminarFilas: false
-        };
-    });
+    readonly nbiCCAyrocaConfigSignal: Signal<TableConfig> = computed(() => ({
+        tablaKey: this.getTablaKeyNbiCC(),
+        totalKey: 'categoria',
+        campoTotal: 'casos',
+        campoPorcentaje: 'porcentaje',
+        calcularPorcentajes: true,
+        camposParaCalcular: ['casos'],
+        noInicializarDesdeEstructura: true,
+        permiteAgregarFilas: false,
+        permiteEliminarFilas: false
+    }));
 
-    readonly nbiDistritoCahuachoConfigSignal: Signal<TableConfig> = computed(() => {
-        const prefijo = this.obtenerPrefijo();
-        const tablaKey = prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
-        return {
-            tablaKey: tablaKey,
-            totalKey: 'categoria',
-            campoTotal: 'casos',
-            campoPorcentaje: 'porcentaje',
-            calcularPorcentajes: true,
-            camposParaCalcular: ['casos'],
-            noInicializarDesdeEstructura: true,
-            permiteAgregarFilas: false,
-            permiteEliminarFilas: false
-        };
-    });
+    readonly nbiDistritoCahuachoConfigSignal: Signal<TableConfig> = computed(() => ({
+        tablaKey: this.getTablaKeyNbiDistrito(),
+        totalKey: 'categoria',
+        campoTotal: 'casos',
+        campoPorcentaje: 'porcentaje',
+        calcularPorcentajes: true,
+        camposParaCalcular: ['casos'],
+        noInicializarDesdeEstructura: true,
+        permiteAgregarFilas: false,
+        permiteEliminarFilas: false
+    }));
 
     constructor(cdRef: ChangeDetectorRef, injector: Injector) {
         super(cdRef, injector);
-        console.log('[Seccion18Form] constructor seccionId=', this.seccionId);
+        this.inicializarCamposDesdeStore();
     }
 
-    protected override onInitCustom(): void {
-        // ✅ Inicializar campos de título si no existen
-        const tituloNbiCCField = this.getTituloNbiCCField();
-        if (!this.datos[tituloNbiCCField]) {
-            this.datos[tituloNbiCCField] = this.obtenerTituloNbiCC();
-        }
-        
-        const tituloNbiDistritoField = this.getTituloNbiDistritoField();
-        if (!this.datos[tituloNbiDistritoField]) {
-            this.datos[tituloNbiDistritoField] = this.obtenerTituloNbiDistrito();
-        }
-        
-        const fuenteNbiCCField = this.getFuenteNbiCCField();
-        if (!this.datos[fuenteNbiCCField]) {
-            this.datos[fuenteNbiCCField] = this.obtenerFuenteNbiCC();
-        }
-        
-        const fuenteNbiDistritoField = this.getFuenteNbiDistritoField();
-        if (!this.datos[fuenteNbiDistritoField]) {
-            this.datos[fuenteNbiDistritoField] = this.obtenerFuenteNbiDistrito();
-        }
+    /**
+     * ✅ Inicializar campos desde store con fallback
+     */
+    private inicializarCamposDesdeStore(): void {
+        const prefijo = this.obtenerPrefijo();
+        const campoTexto = prefijo ? `textoNecesidadesBasicasInsatisfechas${prefijo}` : 'textoNecesidadesBasicasInsatisfechas';
+        const campoTituloCC = prefijo ? `tituloNbiCC${prefijo}` : 'tituloNbiCC';
+        const campoFuenteCC = prefijo ? `fuenteNbiCC${prefijo}` : 'fuenteNbiCC';
+        const campoTituloDist = prefijo ? `tituloNbiDistrito${prefijo}` : 'tituloNbiDistrito';
+        const campoFuenteDist = prefijo ? `fuenteNbiDistrito${prefijo}` : 'fuenteNbiDistrito';
+
+        const textoGuardado = this.projectFacade.selectField(this.seccionId, null, campoTexto)();
+        if (textoGuardado) this.textoNBI.update(textoGuardado);
+
+        const tituloGuardado = this.projectFacade.selectField(this.seccionId, null, campoTituloCC)();
+        if (tituloGuardado) this.tituloNbiCC.update(tituloGuardado);
+
+        const fuenteGuardada = this.projectFacade.selectField(this.seccionId, null, campoFuenteCC)();
+        if (fuenteGuardada) this.fuenteNbiCC.update(fuenteGuardada);
+
+        const tituloDistGuardado = this.projectFacade.selectField(this.seccionId, null, campoTituloDist)();
+        if (tituloDistGuardado) this.tituloNbiDistrito.update(tituloDistGuardado);
+
+        const fuenteDistGuardada = this.projectFacade.selectField(this.seccionId, null, campoFuenteDist)();
+        if (fuenteDistGuardada) this.fuenteNbiDistrito.update(fuenteDistGuardada);
     }
 
     protected override detectarCambios(): boolean {
         return false;
     }
 
-    protected override actualizarValoresConPrefijo(): void {
-        const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
-        this.datos.grupoAISD = grupoAISD || null;
-    }
+    protected override actualizarValoresConPrefijo(): void { }
 
-    protected override actualizarDatosCustom(): void {
-    }
+    protected override actualizarDatosCustom(): void { }
 
     override onFotografiasChange(fotografias: FotoItem[]): void {
         const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
@@ -140,23 +136,22 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     getTablaKeyNbiCC(): string {
-        const prefijo = this.obtenerPrefijoGrupo();
+        const prefijo = this.obtenerPrefijo();
         return prefijo ? `nbiCCAyrocaTabla${prefijo}` : 'nbiCCAyrocaTabla';
     }
 
     getTablaKeyNbiDistrito(): string {
-        const prefijo = this.obtenerPrefijoGrupo();
+        const prefijo = this.obtenerPrefijo();
         return prefijo ? `nbiDistritoCahuachoTabla${prefijo}` : 'nbiDistritoCahuachoTabla';
     }
 
     getFieldIdTextoNBI(): string {
-        const prefijo = this.obtenerPrefijoGrupo();
+        const prefijo = this.obtenerPrefijo();
         return prefijo ? `textoNecesidadesBasicasInsatisfechas${prefijo}` : 'textoNecesidadesBasicasInsatisfechas';
     }
 
     obtenerTextoCompleto(): string {
-        const fieldId = this.getFieldIdTextoNBI();
-        const textoPersonalizado = (this.datos as any)[fieldId] || (this.datos as any)['textoNecesidadesBasicasInsatisfechas'];
+        const textoPersonalizado = this.textoNBI.value();
         if (textoPersonalizado && textoPersonalizado !== '____' && String(textoPersonalizado).trim() !== '') {
             return textoPersonalizado;
         }
@@ -164,8 +159,8 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     private generarTextoDefault(): string {
-        const grupoAISD = (this.datos as any).grupoAISD || 'Ayroca';
-        const distrito = (this.datos as any).distritoSeleccionado || 'Cahuacho';
+        const grupoAISD = this.projectFacade.selectField(this.seccionId, null, 'grupoAISD')() || 'Ayroca';
+        const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || 'Cahuacho';
         const totalCC = this.getTotalCC();
         const totalDist = this.getTotalDistrito();
         const porcentajeHacinamientoCC = this.getPorcentajeHacinamientoCC();
@@ -173,21 +168,16 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         const porcentajeSinServiciosDist = this.getPorcentajeSinServiciosDistrito();
         const porcentajeHacinamientoDist = this.getPorcentajeHacinamientoDistrito();
 
-        const formatoPorcentaje = (valor: string): string => {
-            if (!valor || valor === '____' || valor.trim() === '') return '';
-            return ` (${valor}%)`;
-        };
-
-        const texto1 = `En primer lugar, cabe mencionar que en la CC ${grupoAISD} sehalla un total de ${totalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosCC)}.`;
-
-        const texto2 = `Por otro lado, a nivel distrital de ${distrito}, de un total de ${totalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
-
-        return `${texto1}\n\n${texto2}`;
+        return SECCION18_DEFAULT_TEXTS.textoNBIDefault(
+            grupoAISD, distrito, totalCC, totalDist, 
+            porcentajeHacinamientoCC, porcentajeSinServiciosCC,
+            porcentajeSinServiciosDist, porcentajeHacinamientoDist
+        );
     }
 
     private getTotalCC(): string {
         const tablaKey = this.getTablaKeyNbiCC();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const total = tabla.reduce((sum: number, item: any) => {
             const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
@@ -198,7 +188,7 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     private getTotalDistrito(): string {
         const tablaKey = this.getTablaKeyNbiDistrito();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const total = tabla.reduce((sum: number, item: any) => {
             const casos = typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0;
@@ -209,7 +199,7 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     private getPorcentajeHacinamientoCC(): string {
         const tablaKey = this.getTablaKeyNbiCC();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const item = tabla.find((i: any) => i.categoria && i.categoria.toLowerCase().includes('hacinamiento'));
         return item?.porcentaje || '____';
@@ -217,7 +207,7 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     private getPorcentajeSinServiciosCC(): string {
         const tablaKey = this.getTablaKeyNbiCC();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const item = tabla.find((i: any) => i.categoria && i.categoria.toLowerCase().includes('sin servicios'));
         return item?.porcentaje || '____';
@@ -225,7 +215,7 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     private getPorcentajeSinServiciosDistrito(): string {
         const tablaKey = this.getTablaKeyNbiDistrito();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const item = tabla.find((i: any) => i.categoria && i.categoria.toLowerCase().includes('sin servicios'));
         return item?.porcentaje || '____';
@@ -233,7 +223,7 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     private getPorcentajeHacinamientoDistrito(): string {
         const tablaKey = this.getTablaKeyNbiDistrito();
-        const tabla = (this.datos as any)[tablaKey] || [];
+        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
         if (!tabla || !Array.isArray(tabla)) return '____';
         const item = tabla.find((i: any) => i.categoria && i.categoria.toLowerCase().includes('hacinamiento'));
         return item?.porcentaje || '____';
@@ -241,12 +231,14 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     onNbiCCTableUpdated(tablaData: any[]): void {
         const tablaKey = this.getTablaKeyNbiCC();
-        this.onFieldChange(tablaKey, tablaData);
+        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        this.cdRef.markForCheck();
     }
 
     onNbiDistritoTableUpdated(tablaData: any[]): void {
         const tablaKey = this.getTablaKeyNbiDistrito();
-        this.onFieldChange(tablaKey, tablaData);
+        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        this.cdRef.markForCheck();
     }
 
     // ✅ Métodos para obtener campos de título y fuente (como en seccion17)
@@ -322,5 +314,9 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     onFuenteNbiDistritoChange(event: Event): void {
         const input = event.target as HTMLInputElement;
         this.onFieldChange('fuenteNbiDistrito', input.value);  // Sin prefijo, se agrega en override
+    }
+
+    override ngOnDestroy(): void {
+        super.ngOnDestroy();
     }
 }

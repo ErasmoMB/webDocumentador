@@ -1,5 +1,5 @@
 <div class="form-group-section">
-  <h4 class="section-title">A.1.13. Índice de Desarrollo Humano (IDH)</h4>
+  <h4 class="section-title">{{ SECCION17_TEMPLATES.sectionTitle }}</h4>
 
   <!-- Párrafo con Resaltado -->
   <div class="form-group-section mt-lg" [innerHTML]="obtenerTextoIDHConResaltado()"></div>
@@ -10,63 +10,63 @@
       <table class="table table--view table--idh" style="width:100%">
         <thead>
           <tr>
-            <th colspan="2">Población</th>
-            <th colspan="2">Índice de Desarrollo Humano</th>
-            <th colspan="2">Esperanza de vida al nacer</th>
-            <th colspan="2">Con Educación secundaria completa (Población 18 años)</th>
-            <th colspan="2">Años de educación (Población 25 y más)</th>
-            <th colspan="2">Ingreso familiar per cápita</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[0].label }}</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[1].label }}</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[2].label }}</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[3].label }}</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[4].label }}</th>
+            <th colspan="2">{{ SECCION17_TEMPLATES.tableGroupHeaders[5].label }}</th>
           </tr>
           <tr>
-            <th>Habitantes</th>
-            <th>Rank</th>
-            <th>IDH</th>
-            <th>Rank</th>
-            <th>Años</th>
-            <th>Rank</th>
-            <th>Porcentaje</th>
-            <th>Rank</th>
-            <th>Años</th>
-            <th>Rank</th>
-            <th>N.S. mes</th>
-            <th>Rank</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.poblacion }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankIdh1 }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.idh }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankEsperanza }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.esperanzaVida }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankEducacion1 }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.educacion }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankEducacion2 }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.anosEducacion }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankAnios }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.ingreso }}</th>
+            <th>{{ SECCION17_TEMPLATES.tableHeaders.rankIngreso }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of getIndiceDesarrolloHumanoTabla()">
-            <td style="text-align:right">{{ item.poblacion || '____' }}</td>
-            <td style="text-align:center">{{ item.rankIdh1 || '____' }}</td>
-            <td style="text-align:right">{{ item.idh || '____' }}</td>
-            <td style="text-align:center">{{ item.rankEsperanza || '____' }}</td>
-            <td style="text-align:right">{{ item.esperanzaVida || '____' }}</td>
-            <td style="text-align:center">{{ item.rankEducacion1 || '____' }}</td>
-            <td style="text-align:right">{{ item.educacion || '____' }}</td>
-            <td style="text-align:center">{{ item.rankEducacion2 || '____' }}</td>
-            <td style="text-align:right">{{ item.anosEducacion || '____' }}</td>
-            <td style="text-align:center">{{ item.rankAnios || '____' }}</td>
-            <td style="text-align:right">{{ item.ingreso || '____' }}</td>
-            <td style="text-align:center">{{ item.rankIngreso || '____' }}</td>
+            <td style="text-align:right">{{ item.poblacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankIdh1 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right">{{ item.idh || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankEsperanza || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right">{{ item.esperanzaVida || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankEducacion1 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right">{{ item.educacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankEducacion2 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right">{{ item.anosEducacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankAnios || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right">{{ item.ingreso || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:center">{{ item.rankIngreso || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
           </tr>
           <tr *ngIf="getIndiceDesarrolloHumanoTabla().length === 0">
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
-            <td class="table-cell">____</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>
           </tr>
         </tbody>
       </table>
     </div>
   </app-table-wrapper>
 
-  <p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteIDH() }}</p>
+  <p class="source" style="margin-top: 5px; font-size: 0.9em;">{{ SECCION17_TEMPLATES.labelFuente }}: {{ obtenerFuenteIDH() }}</p>
 
   <!-- Fotografías -->
   <div class="form-group-section mt-lg" *ngIf="getFotografiasVista().length > 0">
@@ -76,9 +76,9 @@
       [fotografias]="getFotografiasVista()"
       [sectionId]="seccionId"
       [photoPrefix]="photoPrefixSignal()"
-      [labelTitulo]="'Título'"
-      [labelFuente]="'Fuente'"
-      [labelImagen]="'Imagen'">
+      [labelTitulo]="SECCION17_TEMPLATES.labelTitulo"
+      [labelFuente]="SECCION17_TEMPLATES.labelFuente"
+      [labelImagen]="SECCION17_TEMPLATES.labelFotografias">
     </app-image-upload>
   </div>
 </div>

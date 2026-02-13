@@ -1,12 +1,12 @@
 <div class="seccion-vista-content">
-  <h5>B.1.3. Actividades económicas de la población</h5>
+  <h5>{{ SECCION24_TEMPLATES.tituloSeccion }}</h5>
   <p class="text-justify" [innerHTML]="viewModel().textos.introShort"></p>
   <p class="text-justify" *ngIf="viewModel().textos.introLong" [innerHTML]="viewModel().textos.introLong"></p>
 
   <p class="table-title">Cuadro N° {{ viewModel().globalTableNumber }}</p>
   
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloActividadesEconomicasAISI'] || 'PEA Ocupada según actividad económica – CP ' + (viewModel().data['centroPobladoAISI'] || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId" [hideNumber]="true">
-    <app-generic-table [data]="viewModel().actividades" [config]="{ columns: [ { key: 'actividad', header: 'Actividad Económica', width: '60%' }, { key: 'casos', header: 'Casos', width: '20%', align: 'center' }, { key: 'porcentaje', header: 'Porcentaje', width: '20%', align: 'center' } ], showHeader: true, showFooter: false }"></app-generic-table>
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloActividadesEconomicasAISI'] || SECCION24_TEMPLATES.labelCuadroPrincipal.replace('{centroPoblado}', viewModel().data['centroPobladoAISI'] || SECCION24_TEMPLATES.centroPobladoDefault))" [sectionId]="seccionId" [hideNumber]="true">
+    <app-generic-table [data]="viewModel().actividades" [config]="{ columns: [ { key: 'actividad', header: SECCION24_TEMPLATES.labelActividadEconomica, width: '60%' }, { key: 'casos', header: SECCION24_TEMPLATES.labelCasos, width: '20%', align: 'center' }, { key: 'porcentaje', header: SECCION24_TEMPLATES.labelPorcentaje, width: '20%', align: 'center' } ], showHeader: true, showFooter: false }"></app-generic-table>
   </app-table-wrapper>
 
   <p class="source">FUENTE: {{ viewModel().textos.fuente }}</p>
@@ -24,7 +24,7 @@
     [mostrarFuente]="true">
   </app-image-upload>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>a. Mercado y comercialización de productos</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION24_TEMPLATES.tituloMercado }}</strong></p>
   <p class="text-justify" *ngIf="viewModel().textos.mercado">{{ viewModel().textos.mercado }}</p>
 
   <app-image-upload
@@ -39,7 +39,7 @@
     [mostrarFuente]="true">
   </app-image-upload>
 
-  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>b. Hábitos de consumo</strong></p>
+  <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION24_TEMPLATES.tituloHabitos }}</strong></p>
   <p class="text-justify" *ngIf="viewModel().textos.habitos">{{ viewModel().textos.habitos }}</p>
 
   <app-image-upload

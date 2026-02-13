@@ -8,6 +8,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { TablePercentageHelper } from '../../../shared/utils/table-percentage-helper';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { SECCION15_SECTION_ID, SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS, SECCION15_TEMPLATES, SECCION15_WATCHED_FIELDS } from './seccion15-constants';
 
 @Component({
     standalone: true,
@@ -21,11 +22,16 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion15ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.A.1.11';
+  @Input() override seccionId: string = SECCION15_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
-  override readonly PHOTO_PREFIX = 'fotografiaIglesia';
+  // ✅ Exportar TEMPLATES e importados
+  readonly SECCION15_TEMPLATES = SECCION15_TEMPLATES;
+  readonly SECCION15_DEFAULT_TEXTS = SECCION15_DEFAULT_TEXTS;
+
+  override readonly PHOTO_PREFIX = SECCION15_PHOTO_PREFIX;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION15_WATCHED_FIELDS;
 
   fotografiasIglesia: FotoItem[] = [];
 
@@ -76,7 +82,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const tituloKey = `lenguasMaternasTitulo${prefijo}`;
     const raw = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-    const defaultTemplate = 'Lenguas maternas en población de 3 años a más – CC ____ (2017)';
+    const defaultTemplate = SECCION15_TEMPLATES.lenguasMaternasTituloDefault;
     const titulo = raw && String(raw).trim().length > 0 ? raw : defaultTemplate;
     const comunidad = this.obtenerNombreComunidadActual();
     const nombreNorm = comunidad.replace(/^CC\s+/i, '').trim();
@@ -86,14 +92,14 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
   readonly lenguasMaternasFuente: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const fuenteKey = `lenguasMaternasFuente${prefijo}`;
-    return this.projectFacade.selectField(this.seccionId, null, fuenteKey)() || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú';
+    return this.projectFacade.selectField(this.seccionId, null, fuenteKey)() || SECCION15_TEMPLATES.fuenteDefault;
   });
 
   readonly religionesTitulo: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const tituloKey = `religionesTitulo${prefijo}`;
     const raw = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-    const defaultTemplate = 'Religión – CC ____ (2017)';
+    const defaultTemplate = SECCION15_TEMPLATES.religionesTituloDefault;
     const titulo = raw && String(raw).trim().length > 0 ? raw : defaultTemplate;
     const comunidad = this.obtenerNombreComunidadActual();
     const nombreNorm = comunidad.replace(/^CC\s+/i, '').trim();
@@ -103,7 +109,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
   readonly religionesFuente: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const fuenteKey = `religionesFuente${prefijo}`;
-    return this.projectFacade.selectField(this.seccionId, null, fuenteKey)() || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú';
+    return this.projectFacade.selectField(this.seccionId, null, fuenteKey)() || SECCION15_TEMPLATES.fuenteDefault;
   });
 
   constructor(
@@ -154,7 +160,8 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const campoKey = `textoAspectosCulturales${prefijo}`;
     const texto = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-    const fallback = 'Los aspectos culturales juegan un papel significativo en la vida social y cultural de una comunidad, influyendo en sus valores, costumbres y prácticas cotidianas. En esta sección, se caracterizan y describen la diversidad religiosa en la CC ____, explorando las principales creencias.';
+    const comunidad = this.obtenerNombreComunidadActual();
+    const fallback = SECCION15_DEFAULT_TEXTS.textoAspectosCulturalesDefault(comunidad);
     const html = this.formatearParrafo(texto && String(texto).trim().length > 0 ? texto : fallback);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -163,7 +170,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const campoKey = `textoIdioma${prefijo}`;
     const texto = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-    const fallback = 'La lengua materna es la primera lengua o idioma que aprende una persona. De la data obtenida de los Censos Nacionales 2017, se aprecia que el castellano es la categoría mayoritaria, pues representa la mayor parte de la población de 3 años a más. En segundo lugar se halla el quechua como primer idioma.';
+    const fallback = SECCION15_DEFAULT_TEXTS.textoIdiomaDefault;
     const html = this.formatearParrafo(texto && String(texto).trim().length > 0 ? texto : fallback);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -172,7 +179,8 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const campoKey = `parrafoSeccion15_religion_completo${prefijo}`;
     const texto = this.projectFacade.selectField(this.seccionId, null, campoKey)();
-    const fallback = 'En la actualidad, la confesión predominante dentro de la CC ____ es la católica. Según las entrevistas aplicadas, la permanencia del catolicismo como la religión mayoritaria se debe a la presencia de la iglesia, denominada Iglesia Matriz ____, y a la inexistencia de templos evangélicos o de otras confesiones.\n\nEsta iglesia es el principal punto de reunión religiosa de la comunidad y juega un rol importante en la vida espiritual de sus habitantes. Otro espacio con gran valor espiritual es el cementerio, en donde los comuneros entierran y visitan a sus difuntos. Este lugar se halla al sur del anexo ____.';
+    const comunidad = this.obtenerNombreComunidadActual();
+    const fallback = SECCION15_DEFAULT_TEXTS.textoReligionDefault(comunidad);
     const html = this.formatearParrafo(texto && String(texto).trim().length > 0 ? texto : fallback);
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }

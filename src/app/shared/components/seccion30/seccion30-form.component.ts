@@ -8,6 +8,7 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { TableMockMergeService } from 'src/app/core/services/tables/table-mock-merge.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
+import { SECCION30_TEMPLATES, SECCION30_TABLE_CONFIG, SECCION30_CONFIG, SECCION30_WATCHED_FIELDS } from './seccion30-constants';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -17,43 +18,41 @@ import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
   standalone: true
 })
 export class Seccion30FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.B.1.9';
+  @Input() override seccionId: string = SECCION30_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ EXPORTAR CONSTANTS PARA USAR EN TEMPLATE
+  readonly SECCION30_TEMPLATES = SECCION30_TEMPLATES;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
+  override watchedFields: string[] = SECCION30_WATCHED_FIELDS;
 
-  // Textos por defecto
-  readonly PARRAFO_INTRO_DEFAULT = 'La educación es un pilar fundamental para el desarrollo social y económico de una comunidad. En ese sentido, los indicadores de educación juegan un papel crucial al proporcionar una visión clara del estado actual del sistema educativo y su impacto en la población. Este apartado se centra en dos indicadores clave: el nivel educativo de la población y la tasa de analfabetismo. El análisis de estos indicadores permite comprender mejor las fortalezas y desafíos del sistema educativo local, así como diseñar estrategias efectivas para mejorar la calidad educativa y reducir las desigualdades en el acceso a la educación.';
-  
-  readonly TITULO_NIVEL_EDUCATIVO_DEFAULT = 'Población de 15 años a más según nivel educativo alcanzado';
-  readonly FUENTE_NIVEL_EDUCATIVO_DEFAULT = 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
-  
-  readonly TITULO_TASA_ANALFABETISMO_DEFAULT = 'Tasa de analfabetismo en población de 15 años a más';
-  readonly FUENTE_TASA_ANALFABETISMO_DEFAULT = 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas';
+  // Textos por defecto - Ahora desde CONSTANTS ✅
+  readonly PARRAFO_INTRO_DEFAULT = SECCION30_TEMPLATES.parrafoIntroDefault;
+  readonly TITULO_NIVEL_EDUCATIVO_DEFAULT = SECCION30_TEMPLATES.tituloNivelEducativoDefault;
+  readonly FUENTE_NIVEL_EDUCATIVO_DEFAULT = SECCION30_TEMPLATES.fuenteNivelEducativoDefault;
+  readonly TITULO_TASA_ANALFABETISMO_DEFAULT = SECCION30_TEMPLATES.tituloTasaAnalfabetismoDefault;
+  readonly FUENTE_TASA_ANALFABETISMO_DEFAULT = SECCION30_TEMPLATES.fuenteTasaAnalfabetismoDefault;
 
   // Estructuras iniciales ELIMINADAS por request del usuario
   
-  nivelEducativoDynamicConfig = {
-    tablaKey: 'nivelEducativoTabla',
-    totalKey: 'nivel',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
-  };
+  nivelEducativoDynamicConfig = SECCION30_TABLE_CONFIG.nivelEducativo;
+  tasaAnalfabetismoDynamicConfig = SECCION30_TABLE_CONFIG.tasaAnalfabetismo;
 
-  tasaAnalfabetismoDynamicConfig = {
-    tablaKey: 'tasaAnalfabetismoTabla',
-    totalKey: 'indicador',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
-  };
+  // ✅ COLUMNAS COMO SIGNALS - Evita problemas con caracteres acentuados en templates
+  readonly nivelEducativoColumnasSignal: Signal<any[]> = computed(() => [
+    { field: 'nivel', label: SECCION30_TEMPLATES.lblCategoría, type: 'text', readonly: true },
+    { field: 'casos', label: SECCION30_TEMPLATES.lblCasos, type: 'number' },
+    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text', readonly: true }
+  ]);
+
+  readonly tasaAnalfabetismoColumnasSignal: Signal<any[]> = computed(() => [
+    { field: 'indicador', label: SECCION30_TEMPLATES.lblIndicador, type: 'text', readonly: true },
+    { field: 'casos', label: SECCION30_TEMPLATES.lblCasos, type: 'number' },
+    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text', readonly: true }
+  ]);
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
@@ -70,7 +69,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoNivelEducativo')();
     const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
     if (manual && manual.trim().length > 0) return manual;
-    return `En el CP ${cp}, el nivel educativo alcanzado por la mayor parte de la población de 15 años a más es la secundaria. A continuación se presentan los datos de nivel educativo según el censo nacional.`;
+    return SECCION30_TEMPLATES.textoNivelEducativoDefault(cp);
   });
 
   // ✅ TEXTO TASA ANALFABETISMO con fallback  
@@ -78,7 +77,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     const manual = this.projectFacade.selectField(this.seccionId, null, 'textoTasaAnalfabetismo')();
     const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
     if (manual && manual.trim().length > 0) return manual;
-    return `En el CP ${cp}, tomando en cuenta a la población de 15 años a más, se presentan los datos de tasa de analfabetismo según el censo nacional.`;
+    return SECCION30_TEMPLATES.textoTasaAnalfabetismoDefault(cp);
   });
 
   // ✅ TÍTULOS Y FUENTES DE TABLAS

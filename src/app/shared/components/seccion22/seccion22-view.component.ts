@@ -8,6 +8,7 @@ import { ISeccion22TextGeneratorService } from 'src/app/core/domain/interfaces';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION22_TEMPLATES } from './seccion22-constants';
 
 @Component({
   selector: 'app-seccion22-view',
@@ -18,6 +19,9 @@ import { TableNumberingService } from 'src/app/core/services/numbering/table-num
 })
 export class Seccion22ViewComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.1';
+
+  // ✅ EXPORTAR TEMPLATES PARA EL HTML
+  readonly SECCION22_TEMPLATES = SECCION22_TEMPLATES;
 
   // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;

@@ -9,6 +9,7 @@ import { ImageManagementFacade } from 'src/app/core/services/image/image-managem
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableNumberingService } from 'src/app/core/services/numbering/table-numbering.service';
+import { SECCION18_TEMPLATES } from './seccion18-constants';
 
 @Component({
     standalone: true,
@@ -21,6 +22,7 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
     @Input() override seccionId: string = '3.1.4.A.1.14';
     @Input() override modoFormulario: boolean = false;
 
+    readonly SECCION18_TEMPLATES = SECCION18_TEMPLATES;
     override readonly PHOTO_PREFIX = 'fotografiaNBI';
     override useReactiveSync: boolean = true;
 

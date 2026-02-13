@@ -1,12 +1,12 @@
 <div class="form-group-section">
-  <h4 class="section-title">A.1.14. Índice de necesidades básicas insatisfechas distrital</h4>
+  <h4 class="section-title">{{ SECCION18_TEMPLATES.sectionTitle }}</h4>
 
   <div class="form-group-section mt-lg">
-    <h4 class="section-title">Editar Párrafos</h4>
+    <h4 class="section-title">{{ SECCION18_TEMPLATES.editParrafosTitle }}</h4>
     <app-paragraph-editor
       [fieldId]="getFieldIdTextoNBI()"
-      label="Necesidades Básicas Insatisfechas - Texto Completo"
-      hint="Edite el texto completo. Use Enter para crear nuevos párrafos."
+      [label]="SECCION18_TEMPLATES.labelTextoCompleto"
+      [hint]="SECCION18_TEMPLATES.hintTextoCompleto"
       [rows]="6"
       [value]="obtenerTextoCompleto()"
       (valueChange)="onFieldChange('textoNecesidadesBasicasInsatisfechas', $event)">
@@ -15,25 +15,25 @@
 
   <!-- ✅ TABLA NBI CC AYROCA CON TÍTULO Y FUENTE EDITABLES -->
   <div class="form-field mt-xl">
-    <label class="label">Título - Tabla NBI CC</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelTituloNbiCC }}</label>
     <input 
       type="text" 
       class="form-control"
       [(ngModel)]="datos[getTituloNbiCCField()]"
       (change)="onTituloNbiCCChange($event)"
-      placeholder="Necesidades Básicas Insatisfechas (NBI) según población – CC Ayroca (2017)">
+      [placeholder]="SECCION18_TEMPLATES.placeholderTituloNbiCC">
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Tabla NBI CC Ayroca</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelTableNbiCC }}</label>
     <app-dynamic-table
       [datos]="projectFacade.obtenerDatos()"
       [sectionId]="seccionId"
       [config]="nbiCCAyrocaConfigSignal()"
       [columns]="[
-        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas con hacinamiento', readonly: true },
-        { field: 'casos', label: 'Casos', type: 'number', placeholder: '' },
-        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '', readonly: true }
+        { field: 'categoria', label: SECCION18_TEMPLATES.tableHeader.categoria, type: 'text', placeholder: SECCION18_TEMPLATES.tableRow.categoriaCC, readonly: true },
+        { field: 'casos', label: SECCION18_TEMPLATES.tableHeader.casos, type: 'number', placeholder: '' },
+        { field: 'porcentaje', label: SECCION18_TEMPLATES.tableHeader.porcentaje, type: 'text', placeholder: '', readonly: true }
       ]"
       [totalKey]="'categoria'"
       [showAddButton]="false"
@@ -43,36 +43,36 @@
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Fuente - Tabla NBI CC</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelFuenteNbiCC }}</label>
     <input 
       type="text" 
       class="form-control"
       [(ngModel)]="datos[getFuenteNbiCCField()]"
       (change)="onFuenteNbiCCChange($event)"
-      placeholder="Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas">
+      [placeholder]="SECCION18_TEMPLATES.placeholderFuenteNbiCC">
   </div>
 
   <!-- ✅ TABLA NBI DISTRITO CAHUACHO CON TÍTULO Y FUENTE EDITABLES -->
   <div class="form-field mt-xl">
-    <label class="label">Título - Tabla NBI Distrito</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelTituloNbiDistrito }}</label>
     <input 
       type="text" 
       class="form-control"
       [(ngModel)]="datos[getTituloNbiDistritoField()]"
       (change)="onTituloNbiDistritoChange($event)"
-      placeholder="Tipos de NBI existentes – Distrito Cahuacho (2017)">
+      [placeholder]="SECCION18_TEMPLATES.placeholderTituloNbiDistrito">
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Tabla NBI Distrito Cahuacho</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelTableNbiDistrito }}</label>
     <app-dynamic-table
       [datos]="projectFacade.obtenerDatos()"
       [sectionId]="seccionId"
       [config]="nbiDistritoCahuachoConfigSignal()"
       [columns]="[
-        { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Viviendas sin servicios higiénicos', readonly: true },
-        { field: 'casos', label: 'Casos', type: 'number', placeholder: '' },
-        { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '', readonly: true }
+        { field: 'categoria', label: SECCION18_TEMPLATES.tableHeader.categoria, type: 'text', placeholder: SECCION18_TEMPLATES.tableRow.categoriaDistrito, readonly: true },
+        { field: 'casos', label: SECCION18_TEMPLATES.tableHeader.casos, type: 'number', placeholder: '' },
+        { field: 'porcentaje', label: SECCION18_TEMPLATES.tableHeader.porcentaje, type: 'text', placeholder: '', readonly: true }
       ]"
       [totalKey]="'categoria'"
       [showAddButton]="false"
@@ -82,27 +82,28 @@
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Fuente - Tabla NBI Distrito</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelFuenteNbiDistrito }}</label>
     <input 
       type="text" 
       class="form-control"
       [(ngModel)]="datos[getFuenteNbiDistritoField()]"
       (change)="onFuenteNbiDistritoChange($event)"
-      placeholder="Perú: Mapa de Necesidades Básicas Insatisfechas (NBI), 1993, 2007 y 2017">
+      [placeholder]="SECCION18_TEMPLATES.placeholderFuenteNbiDistrito">
   </div>
 
   <div class="form-field mt-lg">
-    <label class="label">Fotografías de NBI</label>
+    <label class="label">{{ SECCION18_TEMPLATES.labelFotografias }}</label>
     <app-image-upload
       [fotografias]="fotografiasSignal()"
       [sectionId]="seccionId"
       [photoPrefix]="photoPrefixSignal()"
       [permitirMultiples]="true"
-      labelTitulo="Título de la fotografía"
-      labelFuente="Fuente de la fotografía"
-      labelImagen="Fotografía"
+      [labelTitulo]="SECCION18_TEMPLATES.labelFotoTitulo"
+      [labelFuente]="SECCION18_TEMPLATES.labelFotoFuente"
+      [labelImagen]="SECCION18_TEMPLATES.labelFotoImagen"
       [requerido]="false"
       (fotografiasChange)="onFotografiasChange($event)">
     </app-image-upload>
   </div>
 </div>
+
