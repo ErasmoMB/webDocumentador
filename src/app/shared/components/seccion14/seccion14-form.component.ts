@@ -240,8 +240,40 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   }
 
   public override obtenerNombreComunidadActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ PASO 1: Usar aisdGroups() signal para obtener el nombre del grupo actual
+    if (prefijo && prefijo.startsWith('_A')) {
+      const match = prefijo.match(/_A(\d+)/);
+      if (match) {
+        const index = parseInt(match[1]) - 1; // _A1 → índice 0, _A2 → índice 1
+        const grupos = this.aisdGroups();
+        if (grupos && grupos[index]?.nombre) {
+          return grupos[index].nombre; // ✅ RETORNA EL NOMBRE CORRECTO
+        }
+      }
+    }
+    
+    // ✅ PASO 2: Fallback a datos guardados
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
-    return grupoAISD || '____';
+    if (grupoAISD && grupoAISD.trim() !== '') {
+      return grupoAISD;
+    }
+    
+    const grupoConSufijo = prefijo ? this.datos[`grupoAISD${prefijo}`] : null;
+    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
+      return grupoConSufijo;
+    }
+    
+    // ✅ PASO 3: Fallback a comunidades campesinas
+    if (this.datos.comunidadesCampesinas && Array.isArray(this.datos.comunidadesCampesinas) && this.datos.comunidadesCampesinas.length > 0) {
+      const primerCC = this.datos.comunidadesCampesinas[0];
+      if (primerCC && primerCC.nombre && primerCC.nombre.trim() !== '') {
+        return primerCC.nombre;
+      }
+    }
+    
+    return '____'; // Placeholder como último recurso
   }
 
   getPorcentajePrimaria(): string {

@@ -133,8 +133,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       // Grupos AISD
       console.log(`📍 AISD (${gruposAISD.length} grupos):`);
       gruposAISD.forEach((g, i) => {
+        const prefijo = `_A${i+1}`; // _A1, _A2, etc. (letra A del sectionId)
         console.log(`  Grupo A.${i+1}: "${g.nombre}"`);
-        console.log(`    ID: ${g.id}`);
+        console.log(`    Prefijo: ${prefijo}`);
         console.log(`    ccppIds [${g.ccppIds.length}]: ${g.ccppIds.join(', ')}`);
         console.log(`    Centros poblados en grupo: ${g.ccppIds.length}`);
       });
@@ -142,8 +143,9 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
       // Grupos AISI
       console.log(`📍 AISI (${gruposAISI.length} grupos):`);
       gruposAISI.forEach((g, i) => {
+        const prefijo = `_B${i+1}`; // _B1, _B2, etc. (letra B del sectionId)
         console.log(`  Grupo B.${i+1}: "${g.nombre}"`);
-        console.log(`    ID: ${g.id}`);
+        console.log(`    Prefijo: ${prefijo}`);
         console.log(`    ccppIds [${g.ccppIds.length}]: ${g.ccppIds.join(', ')}`);
         console.log(`    Centros poblados en grupo: ${g.ccppIds.length}`);
       });
