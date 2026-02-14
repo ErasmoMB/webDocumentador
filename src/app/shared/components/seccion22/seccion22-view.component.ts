@@ -109,85 +109,45 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
   readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
-           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    
+    // Intentar leer con prefijo primero, luego sin prefijo
+    const conPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    if (conPrefijo && Array.isArray(conPrefijo) && conPrefijo.length > 0) {
+      return conPrefijo;
+    }
+    
+    // Fallback a la versión sin prefijo
+    const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'poblacionSexoAISI')();
+    return (sinPrefijo && Array.isArray(sinPrefijo)) ? sinPrefijo : [];
   });
 
   // ✅ CORREGIDO - Leer tabla con prefijo
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
-           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    
+    // Intentar leer con prefijo primero, luego sin prefijo
+    const conPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    if (conPrefijo && Array.isArray(conPrefijo) && conPrefijo.length > 0) {
+      return conPrefijo;
+    }
+    
+    // Fallback a la versión sin prefijo
+    const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'poblacionEtarioAISI')();
+    return (sinPrefijo && Array.isArray(sinPrefijo)) ? sinPrefijo : [];
   });
 
-  // Filtered view arrays (exclude 'Total' row appended by percentage helpers)
-  readonly poblacionSexoViewSignal: Signal<any[]> = computed(() => {
-    const rows = this.poblacionSexoSignal() || [];
-    return rows.filter((row: any) => {
-      const key = row?.sexo ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return !String(keyStr).toLowerCase().includes('total');
-    });
-  });
-
-  readonly poblacionEtarioViewSignal: Signal<any[]> = computed(() => {
-    const rows = this.poblacionEtarioSignal() || [];
-    return rows.filter((row: any) => {
-      const key = row?.categoria ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return !String(keyStr).toLowerCase().includes('total');
-    });
-  });
-
-  // Total row signals: extract the 'Total' row if present, or compute totals as fallback
-  readonly poblacionSexoTotalRowSignal: Signal<any | null> = computed(() => {
-    const rows = this.poblacionSexoSignal() || [];
-    const found = rows.find((r: any) => {
-      const key = r?.sexo ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return String(keyStr).toLowerCase().includes('total');
-    });
-    if (found) return found;
-
-    const filtered = rows.filter((r: any) => {
-      const key = r?.sexo ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return !String(keyStr).toLowerCase().includes('total');
-    });
-    const total = filtered.reduce((sum: number, row: any) => {
-      const casos = typeof row?.casos === 'number' ? row.casos : parseInt(row?.casos) || 0;
-      return sum + casos;
-    }, 0);
-    if (total === 0) return null;
-    return { sexo: 'Total', casos: { value: total, isCalculated: true }, porcentaje: { value: '100,00 %', isCalculated: true } };
-  });
-
-  readonly poblacionEtarioTotalRowSignal: Signal<any | null> = computed(() => {
-    const rows = this.poblacionEtarioSignal() || [];
-    const found = rows.find((r: any) => {
-      const key = r?.categoria ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return String(keyStr).toLowerCase().includes('total');
-    });
-    if (found) return found;
-
-    const filtered = rows.filter((r: any) => {
-      const key = r?.categoria ?? '';
-      const keyStr = (typeof key === 'string') ? key : (key?.value ?? '');
-      return !String(keyStr).toLowerCase().includes('total');
-    });
-    const total = filtered.reduce((sum: number, row: any) => {
-      const casos = typeof row?.casos === 'number' ? row.casos : parseInt(row?.casos) || 0;
-      return sum + casos;
-    }, 0);
-    if (total === 0) return null;
-    return { categoria: 'Total', casos: { value: total, isCalculated: true }, porcentaje: { value: '100,00 %', isCalculated: true } };
-  });
-
-  // Configs that include footer/total row for the view
-  readonly poblacionSexoConfigView = computed(() => ({ ...this.poblacionSexoConfig, showFooter: !!this.poblacionSexoTotalRowSignal(), totalRow: this.poblacionSexoTotalRowSignal() }));
-  readonly poblacionEtarioConfigView = computed(() => ({ ...this.poblacionEtarioConfig, showFooter: !!this.poblacionEtarioTotalRowSignal(), totalRow: this.poblacionEtarioTotalRowSignal() }));
+  // ✅ SEGÚN PATRÓN: No filtrar filas, mostrar todas incluyendo Total (sin estilos especiales)
+  // El backend ya envía la fila Total, no necesitamos filtrarla ni calcularla
+  readonly poblacionSexoConfigView = computed(() => ({ 
+    ...this.poblacionSexoConfig, 
+    showFooter: false  // No mostrar footer especial, la fila Total viene en los datos
+  }));
+  
+  readonly poblacionEtarioConfigView = computed(() => ({ 
+    ...this.poblacionEtarioConfig, 
+    showFooter: false  // No mostrar footer especial, la fila Total viene en los datos
+  }));
   
   // ✅ CORREGIDO - Leer título con prefijo
   readonly tituloPoblacionSexoSignal: Signal<string> = computed(() => {
@@ -272,10 +232,11 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
       grupoEtarioText: this.textoGrupoEtarioSignal()
     },
     fotos: this.fotosCacheSignal(),
+    // ✅ CORREGIDO: Usar signals directos que incluyen TODAS las filas (incluyendo Total)
     poblacionSexo: this.poblacionSexoSignal(),
-    poblacionSexoView: this.poblacionSexoViewSignal(),
+    poblacionSexoView: this.poblacionSexoSignal(), // Sin filtrar, mostrar todas las filas
     poblacionEtario: this.poblacionEtarioSignal(),
-    poblacionEtarioView: this.poblacionEtarioViewSignal(),
+    poblacionEtarioView: this.poblacionEtarioSignal(), // Sin filtrar, mostrar todas las filas
     tituloPoblacionSexo: this.tituloPoblacionSexoSignal(),
     fullTituloPoblacionSexo: this.fullTituloPoblacionSexoSignal(),
     fuentePoblacionSexo: this.fuentePoblacionSexoSignal(),
@@ -373,10 +334,35 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });
+
+    // ✅ EFFECT: Actualizar cuando los datos de las tablas cambian
+    effect(() => {
+      const sexo = this.poblacionSexoSignal();
+      const etario = this.poblacionEtarioSignal();
+      
+      // Forzar detección de cambios cuando hay nuevos datos
+      if (sexo && sexo.length > 0) {
+        this.cdRef.markForCheck();
+      }
+      if (etario && etario.length > 0) {
+        this.cdRef.markForCheck();
+      }
+    });
+
+    // ✅ EFFECT: Resetear cuando cambia el prefijo del grupo (si quisieras recargar en ese caso)
+    effect(() => {
+      this.obtenerPrefijoGrupo(); // Solo depender del prefijo para react
+    });
   }
 
-  protected override onInitCustom(): void { }
-  protected override detectarCambios(): boolean { return false; }
+  protected override onInitCustom(): void {
+    // ✅ NO cargar del backend en vista - el form component ya lo hizo
+    // Solo leer del estado compartido
+  }
+
+  protected override detectarCambios(): boolean { 
+    return false; 
+  }
 
   protected override actualizarValoresConPrefijo(): void {
     // Restaurar centroPobladoAISI con el prefijo correcto

@@ -22,15 +22,9 @@
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
-        [config]="{ tablaKey: tablaKeyPoblacionSexoSignal(), totalKey: 'sexo', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }"
-        [columns]="[
-          { field: 'sexo', label: SECCION22_TEMPLATES.columnaSexo, type: 'text', readonly: true },
-          { field: 'casos', label: SECCION22_TEMPLATES.columnaCasos, type: 'number' },
-          { field: 'porcentaje', label: SECCION22_TEMPLATES.columnaPorcentaje, type: 'text', readonly: true }
-        ]"
+        [config]="SECCION22_TABLA_POBLACION_SEXO_CONFIG"
+        [columns]="SECCION22_COLUMNAS_POBLACION_SEXO"
         [tablaKey]="tablaKeyPoblacionSexoSignal()"
-        [showAddButton]="false"
-        [showDeleteButton]="false"
         (tableUpdated)="onPoblacionSexoUpdated($event)">
       </app-dynamic-table>
     </div>
@@ -50,15 +44,9 @@
       <app-dynamic-table 
         [datos]="datos" 
         [sectionId]="seccionId"
-        [config]="{ tablaKey: tablaKeyPoblacionEtarioSignal(), totalKey: 'categoria', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, camposParaCalcular: ['casos'], noInicializarDesdeEstructura: true }" 
-        [columns]="[
-          { field: 'categoria', label: SECCION22_TEMPLATES.columnaCategoria, type: 'text', readonly: true },
-          { field: 'casos', label: SECCION22_TEMPLATES.columnaCasos, type: 'number' },
-          { field: 'porcentaje', label: SECCION22_TEMPLATES.columnaPorcentaje, type: 'text', readonly: true }
-        ]"
+        [config]="SECCION22_TABLA_POBLACION_ETARIO_CONFIG"
+        [columns]="SECCION22_COLUMNAS_POBLACION_ETARIO"
         [tablaKey]="tablaKeyPoblacionEtarioSignal()"
-        [showAddButton]="false"
-        [showDeleteButton]="false"
         (tableUpdated)="onPoblacionEtarioUpdated($event)">
       </app-dynamic-table>
     </div>

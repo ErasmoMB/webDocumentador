@@ -530,11 +530,11 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
     }
     
-    // Crear fila con datos del centro poblado
+    // Crear fila con datos del centro poblado (formateados como Sección 4)
     const tabla = [{
       localidad: ccppSeleccionado.nombre || '',
-      coordenadas: ccppSeleccionado.este && ccppSeleccionado.norte ? `${ccppSeleccionado.este}, ${ccppSeleccionado.norte}` : '',
-      altitud: ccppSeleccionado.altitud ? `${ccppSeleccionado.altitud} m.s.n.m.` : '',
+      coordenadas: this.formatCoordenadas(ccppSeleccionado.este, ccppSeleccionado.norte),
+      altitud: this.formatAltitud(ccppSeleccionado.altitud),
       distrito: ccppSeleccionado.dist || '',
       provincia: ccppSeleccionado.prov || '',
       departamento: ccppSeleccionado.dpto || ''
@@ -554,4 +554,39 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   trackByIndex(index: number): number { return index; }
+
+  /**
+   * Formatea números con separadores de miles (locales para Perú)
+   * @param valor - Número a formatear
+   * @returns String formateado (ej: 663078 → "663,078")
+   */
+  private formatMiles(valor: number | string | undefined | null): string {
+    if (valor === undefined || valor === null || valor === '') return '';
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '';
+    return num.toLocaleString('es-PE');
+  }
+
+  /**
+   * Formatea las coordenadas en el formato requerido (como Sección 4)
+   * @param este - Coordenada Este
+   * @param norte - Coordenada Norte
+   * @returns String formateado con zona UTM (ej: "18L\nE:  663,078 m\nN:  8,285,498 m")
+   */
+  private formatCoordenadas(este: number | string | undefined | null, norte: number | string | undefined | null): string {
+    const zonaUTM = '18L';
+    const esteFormateado = this.formatMiles(este);
+    const norteFormateado = this.formatMiles(norte);
+    return `${zonaUTM}\nE:  ${esteFormateado} m\nN:  ${norteFormateado} m`;
+  }
+
+  /**
+   * Formatea la altitud con su unidad
+   * @param altitud - Valor de altitud
+   * @returns String formateado (ej: 3423 → "3,423 msnm")
+   */
+  private formatAltitud(altitud: number | string | undefined | null): string {
+    const altitudFormateada = this.formatMiles(altitud);
+    return altitudFormateada ? `${altitudFormateada} msnm` : '';
+  }
 }

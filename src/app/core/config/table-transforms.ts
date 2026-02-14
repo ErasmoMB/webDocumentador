@@ -264,3 +264,36 @@ export function transformActividadesEconomicas(data: any): any[] {
     porcentaje: item.porcentaje || null
   }));
 }
+
+/**
+ * ✅ Transformar datos de NBI V2 desde backend (sp_nbi_from_cpp_v2)
+ * Para tabla: "Necesidades Básicas Insatisfechas (NBI) según población"
+ * 
+ * El backend devuelve:
+ * [
+ *   { categoria: "Población en Viviendas con características físicas inadecuadas", casos: 161, porcentaje: "32,92 %" },
+ *   { categoria: "Población en Viviendas con hacinamiento", casos: 90, porcentaje: "34,75 %" },
+ *   { categoria: "Población en Viviendas sin servicios higiénicos", casos: 25, porcentaje: "5,11 %" },
+ *   { categoria: "Población en Hogares con niños que no asisten a la escuela", casos: 0, porcentaje: "0,00 %" },
+ *   { categoria: "Total referencial", casos: 489, porcentaje: "" }
+ * ]
+ */
+export function transformNbiV2TablaSegunPoblacion(data: any): any[] {
+  // MAPEO DIRECTO DEL BACKEND: f0 → categoria, f1 → casos, f2 → porcentaje
+  // SIN CÁLCULOS ADICIONALES
+  const arr = Array.isArray(data) ? data : [];
+  return arr.map((item: any) => ({
+    categoria: item.f0 || '',
+    casos: item.f1 || 0,
+    porcentaje: item.f2 || ''
+  }));
+}
+
+/**
+ * ✅ Transformar datos de NBI V2 para tabla de Tipos de NBI existentes
+ * Es la misma transformación que transformNbiV2TablaSegunPoblacion
+ * pero se usa para la segunda tabla del patrón
+ */
+export function transformNbiV2TiposExistentes(data: any): any[] {
+  return transformNbiV2TablaSegunPoblacion(data);
+}

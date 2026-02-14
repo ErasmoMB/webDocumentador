@@ -118,15 +118,13 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
     }
 
     getNbiCCAyrocaConPorcentajes(): any[] {
-        const tabla = this.getTableNbiCC();
-        const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
-        return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
+        // DATOS DEL BACKEND SIN CÁLCULOS
+        return this.getTableNbiCC();
     }
 
     getNbiDistritoCahuachoConPorcentajes(): any[] {
-        const tabla = this.getTableNbiDistrito();
-        const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
-        return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
+        // DATOS DEL BACKEND SIN CÁLCULOS
+        return this.getTableNbiDistrito();
     }
 
     getNombreComunidad(): string {

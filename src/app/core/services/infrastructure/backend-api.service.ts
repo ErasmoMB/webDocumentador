@@ -391,6 +391,19 @@ export class BackendApiService {
   }
 
   /**
+   * Necesidades Básicas Insatisfechas V2 (NBI según población con tipos de carencia)
+   * POST /demograficos/nbi-v2
+   */
+  postNbiV2(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/nbi-v2`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Actividad económica
    * POST /demograficos/actividad-economica
    */

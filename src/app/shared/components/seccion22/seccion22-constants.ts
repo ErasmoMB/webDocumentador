@@ -8,6 +8,9 @@
  * - Foto: fotografiaSeccion22
  */
 
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableColumn } from 'src/app/shared/components/dynamic-table/dynamic-table.component';
+
 export const SECCION22_SECTION_ID = '3.1.4.B.1.1';
 
 export const SECCION22_WATCHED_FIELDS = [
@@ -113,3 +116,48 @@ export const SECCION22_TEMPLATES = {
   mensajeNoDatos: 'No hay datos registrados',
   mensajeListaVacia: 'No hay fotografías'
 };
+
+/**
+ * ✅ CONFIGURACIÓN DE TABLAS (según patrón de solo lectura)
+ * Estas tablas se llenan automáticamente desde el backend
+ */
+
+// Configuración para tabla: Población por Sexo
+export const SECCION22_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
+  tablaKey: 'poblacionSexoAISI',
+  totalKey: '',
+  campoTotal: '',
+  campoPorcentaje: '',
+  calcularPorcentajes: false,
+  camposParaCalcular: ['casos'],
+  noInicializarDesdeEstructura: true,
+  permiteAgregarFilas: false,
+  permiteEliminarFilas: false
+};
+
+// Configuración para tabla: Población por Grupo Etario
+export const SECCION22_TABLA_POBLACION_ETARIO_CONFIG: TableConfig = {
+  tablaKey: 'poblacionEtarioAISI',
+  totalKey: '',
+  campoTotal: '',
+  campoPorcentaje: '',
+  calcularPorcentajes: false,
+  camposParaCalcular: ['casos'],
+  noInicializarDesdeEstructura: true,
+  permiteAgregarFilas: false,
+  permiteEliminarFilas: false
+};
+
+// Columnas para tabla: Población por Sexo
+export const SECCION22_COLUMNAS_POBLACION_SEXO: TableColumn[] = [
+  { field: 'sexo', label: 'Sexo', type: 'text' as const, readonly: false },
+  { field: 'casos', label: 'Casos', type: 'number' as const },
+  { field: 'porcentaje', label: 'Porcentaje', type: 'text' as const, readonly: true }
+];
+
+// Columnas para tabla: Población por Grupo Etario
+export const SECCION22_COLUMNAS_POBLACION_ETARIO: TableColumn[] = [
+  { field: 'categoria', label: 'Categoría', type: 'text' as const, readonly: false },
+  { field: 'casos', label: 'Casos', type: 'number' as const },
+  { field: 'porcentaje', label: 'Porcentaje', type: 'text' as const, readonly: true }
+];

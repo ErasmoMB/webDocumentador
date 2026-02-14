@@ -9,7 +9,33 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
-import { SECCION22_TEMPLATES } from './seccion22-constants';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformPoblacionSexoDesdeDemograficos, transformPoblacionEtarioDesdeDemograficos } from 'src/app/core/config/table-transforms';
+import { 
+  SECCION22_TEMPLATES, 
+  SECCION22_TABLA_POBLACION_SEXO_CONFIG, 
+  SECCION22_TABLA_POBLACION_ETARIO_CONFIG,
+  SECCION22_COLUMNAS_POBLACION_SEXO,
+  SECCION22_COLUMNAS_POBLACION_ETARIO
+} from './seccion22-constants';
+import { debugLog } from 'src/app/shared/utils/debug';
+
+// ✅ Función helper para desenvuelver datos del backend
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  // El backend devuelve un array con un objeto que contiene rows
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -24,6 +50,12 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ EXPORTAR TEMPLATES PARA EL HTML
   readonly SECCION22_TEMPLATES = SECCION22_TEMPLATES;
+  
+  // ✅ EXPORTAR CONFIGURACIONES Y COLUMNAS PARA LAS TABLAS
+  readonly SECCION22_TABLA_POBLACION_SEXO_CONFIG = SECCION22_TABLA_POBLACION_SEXO_CONFIG;
+  readonly SECCION22_TABLA_POBLACION_ETARIO_CONFIG = SECCION22_TABLA_POBLACION_ETARIO_CONFIG;
+  readonly SECCION22_COLUMNAS_POBLACION_SEXO = SECCION22_COLUMNAS_POBLACION_SEXO;
+  readonly SECCION22_COLUMNAS_POBLACION_ETARIO = SECCION22_COLUMNAS_POBLACION_ETARIO;
 
   // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
@@ -213,7 +245,8 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
     private formChange: FormChangeService,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
     
@@ -258,6 +291,95 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.photoFieldsHash();
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
+    });
+  }
+
+  /**
+   * ✅ Inicializa las tablas como arrays vacíos antes de llenar con backend
+   * Esto evita errores si el backend tarda o falla
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Inicializar población por sexo
+    const poblacionSexoKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+    this.projectFacade.setField(this.seccionId, null, poblacionSexoKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISI', []);
+    
+    // Inicializar población por grupo etario
+    const poblacionEtarioKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+    this.projectFacade.setField(this.seccionId, null, poblacionEtarioKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISI', []);
+  }
+
+  /**
+   * ✅ Carga datos de los endpoints del backend para las tablas de demografía AISI
+   * - poblacionSexoAISI: /demograficos/datos
+   * - poblacionEtarioAISI: /demograficos/etario
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ OBTENER códigos de centros poblados del grupo AISI actual
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      debugLog('[SECCION22] ⚠️ No hay centros poblados en el grupo AISI actual');
+      return;
+    }
+
+    debugLog('[SECCION22] 📡 Cargando datos demográficos desde backend...', { codigos });
+
+    // ✅ OBTENER PREFIJO para guardar con clave correcta
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // Cargar población por sexo desde /demograficos/datos
+    this.backendApi.postDatosDemograficos(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformPoblacionSexoDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION22] ✅ Datos de sexo cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO y SIN PREFIJO (fallback)
+          if (datosTransformados.length > 0) {
+            const tablaKey = `poblacionSexoAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION22] ❌ Error transformando datos de sexo:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION22] ❌ Error cargando población por sexo:', err);
+      }
+    });
+
+    // Cargar población por grupo etario desde /demograficos/etario
+    this.backendApi.postEtario(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformPoblacionEtarioDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION22] ✅ Datos de etario cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO y SIN PREFIJO (fallback)
+          if (datosTransformados.length > 0) {
+            const tablaKey = `poblacionEtarioAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION22] ❌ Error transformando datos de etario:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION22] ❌ Error cargando población por etario:', err);
+      }
     });
   }
 
@@ -345,6 +467,12 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.datos['cuadroFuentePoblacionEtario'] = valorFuente; // Para compatibilidad
       this.onFieldChange(fuenteEtarioField, valorFuente, { refresh: false });
     }
+
+    // ✅ CARGAR DATOS DEL BACKEND
+    // Primero inicializar vacías para evitar errores
+    this.inicializarTablasVacias();
+    // Luego llenar con datos del backend
+    this.cargarDatosDelBackend();
   }
 
   protected override detectarCambios(): boolean { return false; }

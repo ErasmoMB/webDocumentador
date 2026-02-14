@@ -194,21 +194,8 @@ export class SectionFlowNavigationService {
     }
 
     // Se está en la primera subsección del grupo actual (subSectionNumber === 1)
-    if (groupType === 'AISI' && groupNumber === 1) {
-      // Es el primer grupo AISI - retroceder al último grupo AISD
-      const aisdGroupCount = this.getAISDGroupCount();
-      if (aisdGroupCount > 0) {
-        const targetSection = `3.1.4.A.${aisdGroupCount}.${this.AISD_SUBSECTIONS}`;
-        // Verificar si es accesible
-        if (this.accessControl.canAccessSection(targetSection)) {
-          return targetSection;
-        }
-      }
-      return null;
-    }
-
-    // Retroceder a la vista del grupo sin subsección específica
-    // Ej: 3.1.4.A.1.1 → 3.1.4.A.1
+    // Ir a la vista del grupo (sin subsección)
+    // Ej: 3.1.4.B.1.1 → 3.1.4.B.1
     return `3.1.4.${groupType === 'AISD' ? 'A' : 'B'}.${groupNumber}`;
   }
 

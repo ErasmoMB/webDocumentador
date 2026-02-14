@@ -7,7 +7,25 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformNbiV2TablaSegunPoblacion, transformNbiV2TiposExistentes } from 'src/app/core/config/table-transforms';
 import { SECCION18_PHOTO_PREFIX, SECCION18_DEFAULT_TEXTS, SECCION18_TEMPLATES } from './seccion18-constants';
+
+// ✅ Helper para desenvuelver datos del backend
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
     standalone: true,
@@ -22,6 +40,9 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     override readonly PHOTO_PREFIX = 'fotografiaNBI';
     override useReactiveSync: boolean = true;
+
+    // ✅ Inyectar BackendApiService
+    private backendApi: BackendApiService = this.injector.get(BackendApiService);
 
     // ✅ EXPORTAR CONSTANTES AL TEMPLATE
     readonly SECCION18_TEMPLATES = SECCION18_TEMPLATES;
@@ -94,7 +115,115 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
 
     constructor(cdRef: ChangeDetectorRef, injector: Injector) {
         super(cdRef, injector);
+        this.backendApi = injector.get(BackendApiService);
         this.inicializarCamposDesdeStore();
+    }
+
+    /**
+     * ✅ onInitCustom: Inicializar y cargar datos del backend
+     * Llamar después de que onInit() de la clase base se complete
+     */
+    protected override onInitCustom(): void {
+        super.onInitCustom();
+        this.inicializarTablasVacias();
+        this.cargarDatosDelBackend();
+    }
+
+    /**
+     * ✅ Inicializar tablas como arrays vacíos
+     */
+    private inicializarTablasVacias(): void {
+        const prefijo = this.obtenerPrefijoGrupo();
+        const tablaKeyCC = `nbiCCAyrocaTabla${prefijo}`;
+        const tablaKeyDistrito = `nbiDistritoCahuachoTabla${prefijo}`;
+        
+        this.projectFacade.setField(this.seccionId, null, tablaKeyCC, []);
+        this.projectFacade.setField(this.seccionId, null, `nbiCCAyrocaTabla`, []);
+        this.projectFacade.setField(this.seccionId, null, tablaKeyDistrito, []);
+        this.projectFacade.setField(this.seccionId, null, `nbiDistritoCahuachoTabla`, []);
+    }
+
+    /**
+     * ✅ Cargar datos del backend usando sp_nbi_from_cpp_v2 y sp_nbi_from_cpp
+     * Obtiene códigos de centros poblados del grupo actual
+     * Llama a dos endpoints: /demograficos/nbi-v2 y /demograficos/nbi
+     * Transforma los datos y los guarda en el state
+     */
+    private cargarDatosDelBackend(): void {
+        // 1. Obtener códigos de centros poblados del grupo AISD actual
+        const codigosArray = this.getCodigosCentrosPobladosAISD();
+        const codigos = [...codigosArray]; // Copia mutable
+
+        if (!codigos || codigos.length === 0) {
+            console.log('[SECCION18] ⚠️ No hay centros poblados en el grupo actual');
+            return;
+        }
+
+        console.log('[SECCION18] 📡 Cargando datos NBI desde backend para grupo actual...', { codigos });
+
+        const prefijo = this.obtenerPrefijoGrupo();
+
+        // 2. PRIMERA TABLA: Llamar al backend para obtener NBI según población (nbi-v2)
+        this.backendApi.postNbiV2(codigos).subscribe({
+            next: (response: any) => {
+                try {
+                    const dataRaw = response?.data || [];
+                    // Desenvuelver datos del backend
+                    const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+                    const datosTransformados = transformNbiV2TablaSegunPoblacion(datosDesenvueltos);
+                    console.log('[SECCION18] ✅ Datos NBI V2 (según población) cargados:', datosTransformados);
+                    
+                    // Guardar en el state CON PREFIJO
+                    if (datosTransformados.length > 0) {
+                        const tablaKey = `nbiCCAyrocaTabla${prefijo}`;
+                        
+                        // Guardar con prefijo
+                        this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                        
+                        // También guardar sin prefijo para fallback
+                        this.projectFacade.setField(this.seccionId, null, 'nbiCCAyrocaTabla', datosTransformados);
+                        
+                        this.cdRef.markForCheck();
+                    }
+                } catch (e) {
+                    console.error('[SECCION18] ❌ Error transformando datos NBI V2:', e);
+                }
+            },
+            error: (err: any) => {
+                console.error('[SECCION18] ❌ Error cargando datos NBI V2 del backend:', err);
+            }
+        });
+
+        // 3. SEGUNDA TABLA: Llamar al backend para obtener Tipos de NBI existentes (nbi viejo)
+        this.backendApi.postNbi(codigos).subscribe({
+            next: (response: any) => {
+                try {
+                    const dataRaw = response?.data || [];
+                    // Desenvuelver datos del backend
+                    const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+                    const datosTransformados = transformNbiV2TiposExistentes(datosDesenvueltos);
+                    console.log('[SECCION18] ✅ Datos NBI (tipos existentes) cargados:', datosTransformados);
+                    
+                    // Guardar en el state CON PREFIJO
+                    if (datosTransformados.length > 0) {
+                        const tablaKey = `nbiDistritoCahuachoTabla${prefijo}`;
+                        
+                        // Guardar con prefijo
+                        this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                        
+                        // También guardar sin prefijo para fallback
+                        this.projectFacade.setField(this.seccionId, null, 'nbiDistritoCahuachoTabla', datosTransformados);
+                        
+                        this.cdRef.markForCheck();
+                    }
+                } catch (e) {
+                    console.error('[SECCION18] ❌ Error transformando datos NBI (tipos):', e);
+                }
+            },
+            error: (err: any) => {
+                console.error('[SECCION18] ❌ Error cargando datos NBI (tipos) del backend:', err);
+            }
+        });
     }
 
     /**
