@@ -8,12 +8,87 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { TableColumn } from '../dynamic-table/dynamic-table.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import {
   SECCION7_WATCHED_FIELDS,
   SECCION7_SECTION_ID,
   SECCION7_TEMPLATES,
   SECCION7_TEXTOS_DEFAULT
 } from './seccion7-constants';
+
+// ============================================================================
+// FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
+// ============================================================================
+
+/**
+ * Desenvuelve datos demográficos del backend
+ * Maneja diferentes estructuras de respuesta
+ */
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+/**
+ * Transforma datos de PET (Población en Edad de Trabajar) del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformPETDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    casos: item.casos !== undefined ? item.casos : item.total || 0,
+    porcentaje: item.porcentaje || item.percentage || ''
+  }));
+};
+
+/**
+ * Transforma datos de PEA (Población Económicamente Activa) del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformPEADesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    hombres: item.hombres !== undefined ? item.hombres : 0,
+    porcentajeHombres: item.porcentaje_hombres || item.porcentajeHombres || '',
+    mujeres: item.mujeres !== undefined ? item.mujeres : 0,
+    porcentajeMujeres: item.porcentaje_mujeres || item.porcentajeMujeres || '',
+    casos: item.total !== undefined ? item.total : item.casos || 0,
+    porcentaje: item.porcentaje_total || item.porcentaje || ''
+  }));
+};
+
+/**
+ * Transforma datos de PEA Ocupada/Desocupada del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformPEAOcupadaDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    hombres: item.hombres !== undefined ? item.hombres : 0,
+    porcentajeHombres: item.porcentaje_hombres || item.porcentajeHombres || '',
+    mujeres: item.mujeres !== undefined ? item.mujeres : 0,
+    porcentajeMujeres: item.porcentaje_mujeres || item.porcentajeMujeres || '',
+    casos: item.total !== undefined ? item.total : item.casos || 0,
+    porcentaje: item.porcentaje_total || item.porcentaje || ''
+  }));
+};
 
 @Component({
   standalone: true,
@@ -161,7 +236,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -223,11 +299,14 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `petTabla${prefijo}`,
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      calcularPorcentajes: true,
-      camposParaCalcular: ['casos']
+      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
+      campoTotal: '',                      // ✅ NO calcular total
+      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
+      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
+      camposParaCalcular: [],
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
     };
   }
 
@@ -235,11 +314,14 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `peaTabla${prefijo}`,
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      calcularPorcentajes: false,
-      camposParaCalcular: ['hombres', 'mujeres', 'casos']
+      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
+      campoTotal: '',                      // ✅ NO calcular total
+      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
+      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
+      camposParaCalcular: [],
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
     };
   }
 
@@ -247,18 +329,85 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `peaOcupadaTabla${prefijo}`,
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      calcularPorcentajes: false,
-      camposParaCalcular: ['hombres', 'mujeres', 'casos']
+      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
+      campoTotal: '',                      // ✅ NO calcular total
+      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
+      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
+      camposParaCalcular: [],
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
     };
   }
 
   protected override onInitCustom(): void {
-    this.asegurarArraysValidos();
+    // ✅ PRIMERO: Asegurar que las tablas estén completamente vacías
+    this.inicializarTablasVacias();
+    // ✅ SEGUNDO: Cargar datos del backend
+    this.cargarDatosDelBackend();
     this.cargarFotografias();
     this.fotografiasSeccion7 = [...this.fotografiasCache];
+  }
+
+  /**
+   * ✅ Cargar datos del backend siguiendo el patrón de Sección 6
+   * Carga three tablas: PET, PEA, PEA Ocupada/Desocupada
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ Obtener códigos de centros poblados del grupo AISD actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      return;
+    }
+
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // 1. Cargar PET (Población en Edad de Trabajar)
+    this.backendApi.postPetGrupo(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformPETDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+        this.projectFacade.setField(this.seccionId, null, petTablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'petTabla', datosTransformados);
+      },
+      error: (err) => {
+        console.error('[SECCION7] Error cargando PET:', err);
+      }
+    });
+
+    // 2. Cargar PEA (Población Económicamente Activa)
+    this.backendApi.postPea(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformPEADesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
+        this.projectFacade.setField(this.seccionId, null, peaTablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'peaTabla', datosTransformados);
+      },
+      error: (err) => {
+        console.error('[SECCION7] Error cargando PEA:', err);
+      }
+    });
+
+    // 3. Cargar PEA Ocupada/Desocupada
+    this.backendApi.postPeaOcupadaDesocupada(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformPEAOcupadaDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+        this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', datosTransformados);
+      },
+      error: (err) => {
+        console.error('[SECCION7] Error cargando PEA Ocupada:', err);
+      }
+    });
   }
 
   override ngOnDestroy() {
@@ -270,7 +419,6 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    this.eliminarFilasTotal();
     const grupoAISD = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISD', this.seccionId);
     this.datos.grupoAISD = grupoAISD || null;
     this.datosAnteriores.grupoAISD = grupoAISD || null;
@@ -283,370 +431,69 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   asegurarArraysValidos() {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const petTabla = this.datos[petTablaKey] || [];
-    if (!Array.isArray(petTabla)) {
-      this.datos[petTablaKey] = [];
-    }
     const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
     const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
+    
+    // ✅ Solo asegurar que sean arrays - NO inicializar con datos
+    if (!Array.isArray(this.datos[petTablaKey])) {
+      this.datos[petTablaKey] = [];
+    }
     if (!Array.isArray(this.datos[peaTablaKey])) {
       this.datos[peaTablaKey] = [];
     }
     if (!Array.isArray(this.datos[peaOcupadaTablaKey])) {
       this.datos[peaOcupadaTablaKey] = [];
     }
-    this.eliminarFilasTotal();
   }
 
-  private eliminarFilasTotal(): void {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  /**
+   * ✅ Inicializar todas las tablas como arrays vacíos
+   * Esto asegura que solo se muestren datos del backend
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Limpiar tablas principales
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const petTabla = this.datos[petTablaKey];
-    if (petTabla && Array.isArray(petTabla)) {
-      const longitudOriginal = petTabla.length;
-      const datosFiltrados = petTabla.filter((item: any) => {
-        const categoria = item.categoria?.toString().toLowerCase() || '';
-        return !categoria.includes('total');
-      });
-      if (datosFiltrados.length !== longitudOriginal) {
-        this.datos[petTablaKey] = datosFiltrados;
-        this.onFieldChange(petTablaKey as any, datosFiltrados);
-      }
-    }
     const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-    const peaTabla = this.datos[peaTablaKey];
-    if (peaTabla && Array.isArray(peaTabla)) {
-      const longitudOriginal = peaTabla.length;
-      const datosFiltrados = peaTabla.filter((item: any) => {
-        const categoria = item.categoria?.toString().toLowerCase() || '';
-        return !categoria.includes('total');
-      });
-      if (datosFiltrados.length !== longitudOriginal) {
-        this.datos[peaTablaKey] = datosFiltrados;
-        this.onFieldChange(peaTablaKey as any, datosFiltrados);
-      }
-    }
     const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-    const peaOcupadaTabla = this.datos[peaOcupadaTablaKey];
-    if (peaOcupadaTabla && Array.isArray(peaOcupadaTabla)) {
-      const longitudOriginal = peaOcupadaTabla.length;
-      const datosFiltrados = peaOcupadaTabla.filter((item: any) => {
-        const categoria = item.categoria?.toString().toLowerCase() || '';
-        return !categoria.includes('total');
-      });
-      if (datosFiltrados.length !== longitudOriginal) {
-        this.datos[peaOcupadaTablaKey] = datosFiltrados;
-        this.onFieldChange(peaOcupadaTablaKey as any, datosFiltrados);
-      }
-    }
+    
+    // ✅ Establecer como arrays completamente vacíos
+    this.projectFacade.setField(this.seccionId, null, petTablaKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'petTabla', []);
+    this.projectFacade.setField(this.seccionId, null, peaTablaKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'peaTabla', []);
+    this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', []);
+    
+    console.log('[SECCION7] Tablas inicializadas como arrays vacíos');
   }
 
   getTablaPET(): any[] {
     return this.petTablaSignal();
   }
 
-  getPETTablaSinTotal(): any[] {
-    return this.petTablaSignal().filter((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      return !categoria.includes('total');
-    });
-  }
-
-  getTotalPET(): string {
-    const tabla = this.petTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.casos) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
-  }
-
   getTablaPEA(): any[] {
     return this.peaTablaSignal();
-  }
-
-  getPEATableSinTotal(): any[] {
-    return this.peaTablaSignal().filter((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      return !categoria.includes('total');
-    });
-  }
-
-  getTotalPEAHombres(): string {
-    const tabla = this.peaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.hombres) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
-  }
-
-  getTotalPEAMujeres(): string {
-    const tabla = this.peaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.mujeres) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
-  }
-
-  getTotalPEA(): string {
-    const tabla = this.peaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.casos) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
   }
 
   getTablaPEAOcupada(): any[] {
     return this.peaOcupadaTablaSignal();
   }
 
-  getPEAOcupadaTableSinTotal(): any[] {
-    return this.peaOcupadaTablaSignal().filter((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      return !categoria.includes('total');
-    });
-  }
-
-  getTotalPEAOcupadaHombres(): string {
-    const tabla = this.peaOcupadaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.hombres) || 0);
-      }
-      return sum;
+  // Agregar método que faltaba para compatibilidad
+  getTotalPET(): string {
+    const petTabla = this.getTablaPET();
+    if (!petTabla || !Array.isArray(petTabla)) {
+      return '0';
+    }
+    
+    const total = petTabla.reduce((sum: number, item: any) => {
+      const casos = parseInt(item.casos?.toString() || '0') || 0;
+      return sum + casos;
     }, 0);
+    
     return total.toString();
-  }
-
-  getTotalPEAOcupadaMujeres(): string {
-    const tabla = this.peaOcupadaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.mujeres) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
-  }
-
-  getTotalPEAOcupada(): string {
-    const tabla = this.peaOcupadaTablaSignal();
-    const total = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.casos) || 0);
-      }
-      return sum;
-    }, 0);
-    return total.toString();
-  }
-
-  calcularPorcentajesPET(): void {
-    const tabla = this.petTablaSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-
-    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) {
-      return;
-    }
-
-    const totalPET = tabla.reduce((sum: number, item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        return sum + (parseInt(item.casos) || 0);
-      }
-      return sum;
-    }, 0);
-
-    if (totalPET === 0) {
-      return;
-    }
-
-    const tablaActualizada = tabla.map((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-
-      if (categoria.includes('total')) {
-        return {
-          ...item,
-          porcentaje: '100,00 %'
-        };
-      }
-
-      const casos = parseInt(item.casos) || 0;
-      const porcentaje = ((casos / totalPET) * 100);
-      const porcentajeFormateado = porcentaje.toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).replace('.', ',') + ' %';
-
-      return {
-        ...item,
-        porcentaje: porcentajeFormateado
-      };
-    });
-
-    this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaActualizada);
-  }
-
-  calcularPorcentajesPEA(): void {
-    const tabla = this.peaTablaSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-
-    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) {
-      return;
-    }
-
-    let totalHombres = 0;
-    let totalMujeres = 0;
-    let totalCasos = 0;
-
-    tabla.forEach((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        const hombres = parseInt(item.hombres) || 0;
-        const mujeres = parseInt(item.mujeres) || 0;
-        totalHombres += hombres;
-        totalMujeres += mujeres;
-        totalCasos += (hombres + mujeres);
-      }
-    });
-
-    if (totalCasos === 0) {
-      return;
-    }
-
-    const tablaActualizada = tabla.map((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-
-      if (categoria.includes('total')) {
-        return {
-          ...item,
-          hombres: totalHombres,
-          mujeres: totalMujeres,
-          casos: totalCasos,
-          porcentajeHombres: '100,00 %',
-          porcentajeMujeres: '100,00 %',
-          porcentaje: '100,00 %'
-        };
-      }
-
-      const hombres = parseInt(item.hombres) || 0;
-      const mujeres = parseInt(item.mujeres) || 0;
-      const casos = hombres + mujeres;
-
-      const pctHombres = totalHombres > 0 ? ((hombres / totalHombres) * 100) : 0;
-      const pctMujeres = totalMujeres > 0 ? ((mujeres / totalMujeres) * 100) : 0;
-      const pctTotal = totalCasos > 0 ? ((casos / totalCasos) * 100) : 0;
-
-      return {
-        ...item,
-        casos: casos,
-        porcentajeHombres: pctHombres.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %',
-        porcentajeMujeres: pctMujeres.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %',
-        porcentaje: pctTotal.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %'
-      };
-    });
-
-    this.projectFacade.setField(this.seccionId, null, peaTablaKey, tablaActualizada);
-  }
-
-  calcularPorcentajesPEAOcupada(): void {
-    const tabla = this.peaOcupadaTablaSignal();
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-
-    if (!tabla || !Array.isArray(tabla) || tabla.length === 0) {
-      return;
-    }
-
-    let totalHombres = 0;
-    let totalMujeres = 0;
-    let totalCasos = 0;
-
-    tabla.forEach((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-      if (!categoria.includes('total')) {
-        const hombres = parseInt(item.hombres) || 0;
-        const mujeres = parseInt(item.mujeres) || 0;
-        totalHombres += hombres;
-        totalMujeres += mujeres;
-        totalCasos += (hombres + mujeres);
-      }
-    });
-
-    if (totalCasos === 0) {
-      return;
-    }
-
-    const tablaActualizada = tabla.map((item: any) => {
-      const categoria = item.categoria?.toString().toLowerCase() || '';
-
-      if (categoria.includes('total')) {
-        return {
-          ...item,
-          hombres: totalHombres,
-          mujeres: totalMujeres,
-          casos: totalCasos,
-          porcentajeHombres: '100,00 %',
-          porcentajeMujeres: '100,00 %',
-          porcentaje: '100,00 %'
-        };
-      }
-
-      const hombres = parseInt(item.hombres) || 0;
-      const mujeres = parseInt(item.mujeres) || 0;
-      const casos = hombres + mujeres;
-
-      const pctHombres = totalHombres > 0 ? ((hombres / totalHombres) * 100) : 0;
-      const pctMujeres = totalMujeres > 0 ? ((mujeres / totalMujeres) * 100) : 0;
-      const pctTotal = totalCasos > 0 ? ((casos / totalCasos) * 100) : 0;
-
-      return {
-        ...item,
-        casos: casos,
-        porcentajeHombres: pctHombres.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %',
-        porcentajeMujeres: pctMujeres.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %',
-        porcentaje: pctTotal.toLocaleString('es-PE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).replace('.', ',') + ' %'
-      };
-    });
-
-    this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, tablaActualizada);
   }
 
   // ============ GESTIÓN DE FOTOGRAFÍAS ============
@@ -898,7 +745,7 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onTablaPETActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada y recalcular porcentajes
+    // ✅ MODO IDEAL: Persistir tabla actualizada
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
     const tablaActual = this.datos[petTablaKey] || [];
@@ -906,13 +753,11 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     // Persistir cambios al projectFacade
     this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaActual);
     
-    // Recalcular porcentajes
-    this.calcularPorcentajesPET();
     this.cdRef.markForCheck();
   }
 
   onTablaPEAActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada y recalcular porcentajes
+    // ✅ MODO IDEAL: Persistir tabla actualizada
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
     const tablaActual = this.datos[peaTablaKey] || [];
@@ -920,13 +765,11 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     // Persistir cambios al projectFacade
     this.projectFacade.setField(this.seccionId, null, peaTablaKey, tablaActual);
     
-    // Recalcular porcentajes
-    this.calcularPorcentajesPEA();
     this.cdRef.markForCheck();
   }
 
   onTablaPEAOcupadaActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada y recalcular porcentajes
+    // ✅ MODO IDEAL: Persistir tabla actualizada
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
     const tablaActual = this.datos[peaOcupadaTablaKey] || [];
@@ -934,8 +777,6 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     // Persistir cambios al projectFacade
     this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, tablaActual);
     
-    // Recalcular porcentajes
-    this.calcularPorcentajesPEAOcupada();
     this.cdRef.markForCheck();
   }
 

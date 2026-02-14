@@ -13,26 +13,17 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getPETConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+        <tr *ngFor="let item of getPETConPorcentajes(); trackBy: trackByIndex">
             <td class="table-cell">
-                <span *ngIf="item.categoria && item.categoria !== '____'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'manual'">{{ item.categoria }}</span>
-                </span>
+                <span *ngIf="item.categoria && item.categoria !== '____'" [appDataHighlight]="'manual'">{{ item.categoria }}</span>
                 <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'manual'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
-                </span>
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="'manual'">{{ item.casos }}</span>
                 <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
-                </span>
+                <span *ngIf="item.porcentaje" [appDataHighlight]="'manual'">{{ item.porcentaje }}</span>
                 <span *ngIf="!item.porcentaje">____</span>
             </td>
         </tr>
@@ -83,54 +74,33 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getPEAConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+        <tr *ngFor="let item of getPEAConPorcentajes(); trackBy: trackByIndex">
             <td class="table-cell">
-                <span *ngIf="item.categoria && item.categoria !== '____'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
-                </span>
+                <span *ngIf="item.categoria && item.categoria !== '____'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
                 <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.hombres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.hombres }}</span>
-                </span>
+                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="'database'">{{ item.hombres }}</span>
                 <span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentajeHombres" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeHombres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeHombres }}</span>
-                </span>
+                <span *ngIf="item.porcentajeHombres" [appDataHighlight]="'database'">{{ item.porcentajeHombres }}</span>
                 <span *ngIf="!item.porcentajeHombres">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.mujeres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.mujeres }}</span>
-                </span>
+                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="'database'">{{ item.mujeres }}</span>
                 <span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentajeMujeres" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeMujeres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeMujeres }}</span>
-                </span>
+                <span *ngIf="item.porcentajeMujeres" [appDataHighlight]="'database'">{{ item.porcentajeMujeres }}</span>
                 <span *ngIf="!item.porcentajeMujeres">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
-                </span>
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="'database'">{{ item.casos }}</span>
                 <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
-                </span>
+                <span *ngIf="item.porcentaje" [appDataHighlight]="'database'">{{ item.porcentaje }}</span>
                 <span *ngIf="!item.porcentaje">____</span>
             </td>
         </tr>
@@ -180,54 +150,33 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of getPEAOcupadaConPorcentajes(); trackBy: trackByIndex" [class.total-row]="item.categoria === 'Total'">
+        <tr *ngFor="let item of getPEAOcupadaConPorcentajes(); trackBy: trackByIndex">
             <td class="table-cell">
-                <span *ngIf="item.categoria && item.categoria !== '____'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
-                </span>
+                <span *ngIf="item.categoria && item.categoria !== '____'" [appDataHighlight]="'database'">{{ item.categoria }}</span>
                 <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.hombres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.hombres }}</span>
-                </span>
+                <span *ngIf="item.hombres !== undefined && item.hombres !== '____'" [appDataHighlight]="'database'">{{ item.hombres }}</span>
                 <span *ngIf="item.hombres === undefined || item.hombres === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentajeHombres" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeHombres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeHombres }}</span>
-                </span>
+                <span *ngIf="item.porcentajeHombres" [appDataHighlight]="'database'">{{ item.porcentajeHombres }}</span>
                 <span *ngIf="!item.porcentajeHombres">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.mujeres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.mujeres }}</span>
-                </span>
+                <span *ngIf="item.mujeres !== undefined && item.mujeres !== '____'" [appDataHighlight]="'database'">{{ item.mujeres }}</span>
                 <span *ngIf="item.mujeres === undefined || item.mujeres === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentajeMujeres" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentajeMujeres }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentajeMujeres }}</span>
-                </span>
+                <span *ngIf="item.porcentajeMujeres" [appDataHighlight]="'database'">{{ item.porcentajeMujeres }}</span>
                 <span *ngIf="!item.porcentajeMujeres">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="item.categoria === 'Total' ? 'calculated' : 'database'">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
-                </span>
+                <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataHighlight]="'database'">{{ item.casos }}</span>
                 <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
             </td>
             <td class="table-cell">
-                <span *ngIf="item.porcentaje" appDataHighlight="calculated">
-                    <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
-                    <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
-                </span>
+                <span *ngIf="item.porcentaje" [appDataHighlight]="'database'">{{ item.porcentaje }}</span>
                 <span *ngIf="!item.porcentaje">____</span>
             </td>
         </tr>
