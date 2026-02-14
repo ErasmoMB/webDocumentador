@@ -10,7 +10,8 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
-import { SECCION26_TEMPLATES } from './seccion26-constants';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { SECCION26_TEMPLATES, transformAbastecimientoAguaDesdeDemograficos, transformSaneamientoDesdeDemograficos, transformCoberturaElectricaDesdeDemograficos, transformCombustiblesCocinarDesdeDemograficos, unwrapDemograficoData } from './seccion26-constants';
 
 @Component({
   standalone: true,
@@ -107,45 +108,53 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return prefijo ? `textoEnergiaCocinarCP${prefijo}` : 'textoEnergiaCocinarCP';
   }
 
-  // ✅ Tablas con noInicializarDesdeEstructura: true
+  // ✅ Tablas con noInicializarDesdeEstructura: true - PATRÓN SOLO LECTURA
   abastecimientoConfig: TableConfig = {
     tablaKey: 'abastecimientoAguaCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   };
 
   saneamientoConfig: TableConfig = {
     tablaKey: 'saneamientoCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   };
 
   coberturaConfig: TableConfig = {
     tablaKey: 'coberturaElectricaCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   };
 
   combustiblesConfig: TableConfig = {
     tablaKey: 'combustiblesCocinarCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   };
 
   // ✅ Campos con prefijos dinámicos
@@ -302,12 +311,27 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector,
+    private backendApi: BackendApiService
+  ) {
     super(cdRef, injector);
 
     effect(() => {
       const data = this.formDataSignal();
-      this.datos = { ...data };
+      const abastecimiento = this.abastecimientoSignal();
+      const saneamiento = this.saneamientoSignal();
+      const cobertura = this.coberturaSignal();
+      const combustibles = this.combustiblesSignal();
+      
+      this.datos = { 
+        ...data,
+        abastecimientoAguaCpTabla: abastecimiento,
+        saneamientoCpTabla: saneamiento,
+        coberturaElectricaCpTabla: cobertura,
+        combustiblesCocinarCpTabla: combustibles
+      };
       this.cdRef.markForCheck();
     });
 
@@ -319,8 +343,108 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     }, { allowSignalWrites: true });
   }
 
+  /**
+   * ✅ MÉTODOS DE CARGA DEL BACKEND
+   * Cargan datos demográficos del backend para llenar las tablas
+   */
+
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijo();
+    
+    // Inicializar cada tabla como array vacío
+    const tablas = [
+      'abastecimientoAguaCpTabla',
+      'saneamientoCpTabla', 
+      'coberturaElectricaCpTabla',
+      'combustiblesCocinarCpTabla'
+    ];
+    
+    for (const tablaKey of tablas) {
+      const tablaKeyConPrefijo = prefijo ? `${tablaKey}${prefijo}` : tablaKey;
+      this.projectFacade.setField(this.seccionId, null, tablaKeyConPrefijo, []);
+      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+    }
+  }
+
+  private cargarDatosDelBackend(): void {
+    // Obtener los códigos de centros poblados del grupo actual
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION26] ⚠️ No hay centros poblados AISI para cargar datos');
+      return;
+    }
+
+    // ✅ 1. CARGAR DATOS DE ABASTECIMIENTO DE AGUA
+    this.backendApi.postAbastecimientoAgua(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformAbastecimientoAguaDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `abastecimientoAguaCpTabla${prefijo}` : 'abastecimientoAguaCpTabla';
+        this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setTableData(this.seccionId, null, 'abastecimientoAguaCpTabla', datosTransformados);
+      },
+      error: (error: any) => console.error('[SECCION26] Error cargando abastecimiento de agua:', error)
+    });
+
+    // ✅ 2. CARGAR DATOS DE SANEAMIENTO
+    this.backendApi.postSaneamiento(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformSaneamientoDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `saneamientoCpTabla${prefijo}` : 'saneamientoCpTabla';
+        this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setTableData(this.seccionId, null, 'saneamientoCpTabla', datosTransformados);
+      },
+      error: (error: any) => console.error('[SECCION26] Error cargando saneamiento:', error)
+    });
+
+    // ✅ 3. CARGAR DATOS DE COBERTURA ELÉCTRICA
+    this.backendApi.postAlumbrado(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformCoberturaElectricaDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `coberturaElectricaCpTabla${prefijo}` : 'coberturaElectricaCpTabla';
+        this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setTableData(this.seccionId, null, 'coberturaElectricaCpTabla', datosTransformados);
+      },
+      error: (error: any) => console.error('[SECCION26] Error cargando cobertura eléctrica:', error)
+    });
+
+    // ✅ 4. CARGAR DATOS DE COMBUSTIBLES PARA COCINAR
+    this.backendApi.postCombustiblesCocinaPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformCombustiblesCocinarDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `combustiblesCocinarCpTabla${prefijo}` : 'combustiblesCocinarCpTabla';
+        this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setTableData(this.seccionId, null, 'combustiblesCocinarCpTabla', datosTransformados);
+      },
+      error: (error: any) => console.error('[SECCION26] Error cargando combustibles:', error)
+    });
+  }
+
   protected override onInitCustom(): void {
-    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    // ✅ 1. Inicializar tablas como vacías primero
+    this.inicializarTablasVacias();
+
+    // ✅ 2. Cargar datos del backend (Métodos POST demográficos)
+    this.cargarDatosDelBackend();
+
+    // ✅ 3. AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
     const prefijo = this.obtenerPrefijo();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';

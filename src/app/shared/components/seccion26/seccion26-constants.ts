@@ -129,41 +129,124 @@ export const SECCION26_DEFAULT_TEXTS = {
   textoEnergiaCocinarAISI: 'Para la preparación de alimentos, los pobladores utilizan diversas fuentes de energía. El acceso a combustible limpio es importante para la salud.'
 };
 
+/**
+ * ✅ PATRÓN DE SOLO LECTURA: Datos puros del backend
+ * - Tablas se llenan automáticamente desde el backend
+ * - NO se permite edición manual
+ * - NO se calculan porcentajes (vienen del backend)
+ * - NO hay botones agregar/eliminar filas
+ */
 export const SECCION26_TABLE_CONFIGS = {
   abastecimientoAgua: {
     tablaKey: 'abastecimientoAguaCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    calcularPorcentajes: false,
+    camposParaCalcular: ['casos'],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   },
   saneamiento: {
     tablaKey: 'saneamientoCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    calcularPorcentajes: false,
+    camposParaCalcular: ['casos'],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   },
   coberturaElectrica: {
     tablaKey: 'coberturaElectricaCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    calcularPorcentajes: false,
+    camposParaCalcular: ['casos'],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   },
   combustiblesCocinar: {
     tablaKey: 'combustiblesCocinarCpTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    calcularPorcentajes: false,
+    camposParaCalcular: ['casos'],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   }
+};
+
+/**
+ * ✅ TRANSFORMACIONES DE DATOS DEL BACKEND
+ * Mapean datos demográficos del backend a formato de tabla
+ */
+
+// Transforma datos de abastecimiento de agua
+export const transformAbastecimientoAguaDesdeDemograficos = (data: any[]): any[] => {
+  if (!data || !Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    casos: Number(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+// Transforma datos de saneamiento
+export const transformSaneamientoDesdeDemograficos = (data: any[]): any[] => {
+  if (!data || !Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    casos: Number(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+// Transforma datos de cobertura eléctrica
+export const transformCoberturaElectricaDesdeDemograficos = (data: any[]): any[] => {
+  if (!data || !Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    casos: Number(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+// Transforma datos de combustibles para cocinar
+export const transformCombustiblesCocinarDesdeDemograficos = (data: any[]): any[] => {
+  if (!data || !Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || '',
+    casos: Number(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+/**
+ * Helper para desenvuelto datos demográficos que vienen en nested structures
+ */
+export const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  // El backend puede devolver diferentes formatos
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return Array.isArray(data) ? data : [];
+  }
+  if (responseData.rows && Array.isArray(responseData.rows)) {
+    return responseData.rows;
+  }
+  return [];
 };
