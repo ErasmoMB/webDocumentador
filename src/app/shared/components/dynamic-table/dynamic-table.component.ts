@@ -79,11 +79,14 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     }
     // Aplicar regla: si existe estructuraInicial, ocultar botones de agregar/eliminar
     this.applyNoAddDeleteForEstructuraInicial();
+    // Aplicar permisos desde la configuración
+    this.applyPermissionsFromConfig();
     setTimeout(() => {
       this.verificarEInicializarTabla();
       this.actualizarTableData();
       // Asegurar la regla después de inicialización
       this.applyNoAddDeleteForEstructuraInicial();
+      this.applyPermissionsFromConfig();
     }, 0);
   }
 
@@ -108,6 +111,17 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     } catch (e) { /* noop */ }
   }
 
+  private applyPermissionsFromConfig(): void {
+    if (this.config) {
+      if (this.config.permiteAgregarFilas === false) {
+        this.showAddButton = false;
+      }
+      if (this.config.permiteEliminarFilas === false) {
+        this.showDeleteButton = false;
+      }
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (this.isCleaningLegacy || this.isInitializing) {
       return;
@@ -117,6 +131,8 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       if (nuevoConfig.campoTotal && nuevoConfig.campoPorcentaje) {
         this.config = nuevoConfig;
       }
+      // Aplicar permisos desde la nueva configuración
+      this.applyPermissionsFromConfig();
     }
     if (changes['datos'] || changes['config'] || changes['tablaKey'] || changes['fieldName'] || changes['sectionId']) {
       const tieneConfigValido = this.config && this.config.campoTotal && this.config.campoPorcentaje;

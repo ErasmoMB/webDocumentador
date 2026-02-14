@@ -6,6 +6,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from '../../../core/services/tables/table-management.service';
 import { FormChangeService } from '../../../core/services/state/form-change.service';
+import { BackendApiService } from '../../../core/services/infrastructure/backend-api.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION15_SECTION_ID, SECCION15_PHOTO_PREFIX, SECCION15_DEFAULT_TEXTS, SECCION15_TEMPLATES, SECCION15_WATCHED_FIELDS } from './seccion15-constants';
 
@@ -125,13 +126,14 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
     return {
       tablaKey: tablaKey,
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      calcularPorcentajes: true,
-      camposParaCalcular: ['casos'],
-      permiteAgregarFilas: true,
-      permiteEliminarFilas: true
+      totalKey: '',
+      campoTotal: '',
+      campoPorcentaje: '',
+      calcularPorcentajes: false,
+      camposParaCalcular: [],
+      permiteAgregarFilas: false,
+      permiteEliminarFilas: false,
+      noInicializarDesdeEstructura: true
     };
   });
 
@@ -140,20 +142,22 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
     return {
       tablaKey: tablaKey,
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      calcularPorcentajes: true,
-      camposParaCalcular: ['casos'],
-      permiteAgregarFilas: true,
-      permiteEliminarFilas: true
+      totalKey: '',
+      campoTotal: '',
+      campoPorcentaje: '',
+      calcularPorcentajes: false,
+      camposParaCalcular: [],
+      permiteAgregarFilas: false,
+      permiteEliminarFilas: false,
+      noInicializarDesdeEstructura: true
     };
   });
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private formChangeService: FormChangeService
+    private formChangeService: FormChangeService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -172,7 +176,130 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    this.inicializarTablasVacias();
+    this.cargarDatosDelBackend();
     this.cargarFotografias();
+  }
+
+  // ============================================================================
+  // 😨 PATRÓN SOLO LECTURA - CARGA DE DATOS DEL BACKEND
+  // ============================================================================
+
+  /**
+   * Inicializa tablas como arrays vacíos antes de cargar del backend
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijo();
+    
+    // Inicializar lenguas maternas
+    const lenguasKeyConPrefijo = `lenguasMaternasTabla${prefijo}`;
+    this.projectFacade.setField(this.seccionId, null, lenguasKeyConPrefijo, []);
+    this.projectFacade.setField(this.seccionId, null, 'lenguasMaternasTabla', []);
+    
+    // Inicializar religiones
+    const religionesKeyConPrefijo = `religionesTabla${prefijo}`;
+    this.projectFacade.setField(this.seccionId, null, religionesKeyConPrefijo, []);
+    this.projectFacade.setField(this.seccionId, null, 'religionesTabla', []);
+  }
+
+  /**
+   * Carga datos de lenguas maternas y religiones desde el backend
+   */
+  private cargarDatosDelBackend(): void {
+    // Obtener el ubigeo/id_ubigeo del grupo actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+    
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION15] No hay centros poblados en el grupo actual');
+      return;
+    }
+
+    const prefijo = this.obtenerPrefijo();
+
+    console.log('[SECCION15] Cargando datos del backend con codigos:', codigos);
+
+    // 1. Cargar Lenguas desde POST /demograficos/lengua
+    this.backendApi.postLengua(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          // El backend devuelve [{ rows: [...] }]
+          const dataRaw = response?.data?.[0]?.rows || [];
+          const datosTransformados = this.transformarLenguas(dataRaw);
+          console.log('[SECCION15] ✅ Datos de lenguas maternas cargados:', datosTransformados);
+          
+          const lenguasKeyConPrefijo = `lenguasMaternasTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, lenguasKeyConPrefijo, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'lenguasMaternasTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION15] ❌ Error procesando lenguas maternas:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION15] ❌ Error cargando lenguas maternas:', err);
+      }
+    });
+
+    // 2. Cargar Religiones desde POST /demograficos/religion-por-cpp
+    this.backendApi.postReligionPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          // El backend devuelve [{ rows: [...] }]
+          const dataRaw = response?.data?.[0]?.rows || [];
+          const datosTransformados = this.transformarReligiones(dataRaw);
+          console.log('[SECCION15] ✅ Datos de religiones cargados:', datosTransformados);
+          
+          const religionesKeyConPrefijo = `religionesTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, religionesKeyConPrefijo, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'religionesTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION15] ❌ Error procesando religiones:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION15] ❌ Error cargando religiones:', err);
+      }
+    });
+  }
+
+
+
+  /**
+   * Transforma datos de lenguas desde el formato del backend
+   * Filtra la fila Total que viene del backend
+   */
+  private transformarLenguas(data: any[]): any[] {
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    
+    // Filtrar la fila Total y devolver solo las categorías
+    return data
+      .filter(item => item.categoria !== 'Total')
+      .map(item => ({
+        categoria: item.categoria || item.lengua || item.nombre || '',
+        casos: parseInt(item.casos || item.count || '0', 10),
+        porcentaje: item.porcentaje || item.percentage || ''
+      }));
+  }
+
+  /**
+   * Transforma datos de religiones desde el formato del backend
+   * Filtra la fila Total que viene del backend
+   */
+  private transformarReligiones(data: any[]): any[] {
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    
+    // Filtrar la fila Total y devolver solo las categorías
+    return data
+      .filter(item => item.categoria !== 'Total')
+      .map(item => ({
+        categoria: item.categoria || item.religion || item.nombre || '',
+        casos: parseInt(item.casos || item.count || '0', 10),
+        porcentaje: item.porcentaje || item.percentage || ''
+      }));
   }
 
   onLenguasMaternasTableUpdated(updatedData?: any[]): void {
@@ -203,6 +330,20 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
     this.onFieldChange(tablaKey, tablaPersistida, { refresh: false });
     this.cdRef.markForCheck();
     this.cdRef.detectChanges();
+  }
+
+  // ============================================================================
+  // MÉTODOS GETTERS PARA CLAVES DE TABLA (Patrón de Sección 9)
+  // ============================================================================
+
+  getTablaKeyLenguasMaternas(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `lenguasMaternasTabla${prefijo}` : 'lenguasMaternasTabla';
+  }
+
+  getTablaKeyReligiones(): string {
+    const prefijo = this.obtenerPrefijo();
+    return prefijo ? `religionesTabla${prefijo}` : 'religionesTabla';
   }
 
   protected override detectarCambios(): boolean {

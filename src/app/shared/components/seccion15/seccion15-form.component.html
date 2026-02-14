@@ -33,15 +33,15 @@
 
         <label class="label mt-lg">{{ SECCION15_TEMPLATES.labelLenguasMaternasTitulo }}</label>
         <app-dynamic-table
-          [datos]="projectFacade.obtenerDatos()"
-          [sectionId]="seccionId"
+          [datos]="datos"
           [config]="lenguasMaternasConfigSignal()"
+          [tablaKey]="getTablaKeyLenguasMaternas()"
           [columns]="[
             { field: 'categoria', label: SECCION15_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCategoria1 },
             { field: 'casos', label: SECCION15_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCasos },
             { field: 'porcentaje', label: SECCION15_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderPorcentaje, readonly: true }
           ]"
-          [totalKey]="'categoria'"
+          [sectionId]="seccionId"
           (tableUpdated)="onLenguasMaternasTableUpdated($event)">
         </app-dynamic-table>
 
@@ -72,15 +72,15 @@
 
         <label class="label mt-lg">{{ SECCION15_TEMPLATES.labelReligionesTitulo }}</label>
         <app-dynamic-table
-          [datos]="projectFacade.obtenerDatos()"
-          [sectionId]="seccionId"
+          [datos]="datos"
           [config]="religionesConfigSignal()"
+          [tablaKey]="getTablaKeyReligiones()"
           [columns]="[
             { field: 'categoria', label: SECCION15_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCategoria2 },
             { field: 'casos', label: SECCION15_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCasos },
             { field: 'porcentaje', label: SECCION15_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderPorcentaje, readonly: true }
           ]"
-          [totalKey]="'categoria'"
+          [sectionId]="seccionId"
           (tableUpdated)="onReligionesTableUpdated($event)">
         </app-dynamic-table>
 
