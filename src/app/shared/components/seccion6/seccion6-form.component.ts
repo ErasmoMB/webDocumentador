@@ -11,6 +11,25 @@ import { debugLog } from 'src/app/shared/utils/debug';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { DomSanitizer } from '@angular/platform-browser';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformPoblacionSexoDesdeDemograficos, transformPoblacionEtarioDesdeDemograficos } from 'src/app/core/config/table-transforms';
+
+// Función helper para desenvuelver datos del backend (igual a auto-backend-endpoint-handlers)
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  // El backend devuelve un array con un objeto que contiene rows
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   standalone: true,
@@ -166,7 +185,8 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     injector: Injector,
     private sanitizer: DomSanitizer,
     private tableFacade: TableManagementFacade,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
@@ -246,6 +266,93 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     this.cargarFotografias();
     // ✅ Sincronizar fotografiasFormMulti con fotografiasCache después de cargar
     this.fotografiasFormMulti = [...this.fotografiasCache];
+    
+    // ✅ FASE 3: Cargar datos demográficos desde el backend
+    // Los endpoints están configurados en field-mappings para cargar automáticamente
+    this.cargarDatosDelBackend();
+  }
+  
+  /**
+   * ✅ Carga datos de los endpoints del backend para las tablas de demografía
+   * - poblacionSexoAISD: /demograficos/datos
+   * - poblacionEtarioAISD: /demograficos/etario
+   */
+  private cargarDatosDelBackend(): void {
+    // Obtener los centros poblados activos para cargar datos
+    const centrosPoblados = this.projectFacade.allPopulatedCenters()();
+    if (!centrosPoblados || centrosPoblados.length === 0) {
+      debugLog('[SECCION6] ⚠️ No hay centros poblados disponibles para cargar datos');
+      return;
+    }
+
+    // Extraer códigos de centros poblados
+    const codigos = centrosPoblados
+      .map((cp: any) => cp.codigo || cp.id_ubigeo || cp.ubigeo)
+      .filter((c: any) => c);
+
+    if (codigos.length === 0) {
+      debugLog('[SECCION6] ⚠️ No hay códigos de centros poblados para enviar al backend');
+      return;
+    }
+
+    debugLog('[SECCION6] 📡 Cargando datos de demografía desde backend...', { codigos });
+
+    // ✅ OBTENER PREFIJO PARA GUARDAR CON CLAVE CORRECTA
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Cargar población por sexo desde /demograficos/datos
+    this.backendApi.postDatosDemograficos(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          // Desenvuelver datos del backend
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformPoblacionSexoDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION6] ✅ Datos de sexo cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO
+          if (datosTransformados.length > 0) {
+            const tablaKey = `poblacionSexoAISD${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISD', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION6] ❌ Error transformando datos de sexo:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION6] ❌ Error cargando población por sexo:', err);
+      }
+    });
+
+    // Cargar población por grupo etario desde /demograficos/etario
+    this.backendApi.postEtario(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          // Desenvuelver datos del backend
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformPoblacionEtarioDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION6] ✅ Datos de etario cargados (sin Total):', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO
+          if (datosTransformados.length > 0) {
+            const tablaKey = `poblacionEtarioAISD${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISD', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION6] ❌ Error transformando datos de etario:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION6] ❌ Error cargando población por etario:', err);
+      }
+    });
   }
 
   /**
@@ -312,19 +419,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     return PrefijoHelper.obtenerValorConPrefijo(datos, campo, this.seccionId);
   }
 
-  getPoblacionSexoSinTotal(): any[] {
-    const poblacion = this.sectionDataSignal()['poblacionSexoAISD'] || [];
-    return Array.isArray(poblacion) 
-      ? poblacion.filter((item: any) => item['sexo'] && item['sexo'] !== 'Total')
-      : [];
-  }
 
-  getPoblacionEtarioSinTotal(): any[] {
-    const poblacion = this.sectionDataSignal()['poblacionEtarioAISD'] || [];
-    return Array.isArray(poblacion)
-      ? poblacion.filter((item: any) => item['categoria'] && item['categoria'] !== 'Total')
-      : [];
-  }
 
   getTotalPoblacionSexo(): number {
     return this.totalPoblacionSexoSignal();

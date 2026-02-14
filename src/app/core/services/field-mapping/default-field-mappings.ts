@@ -63,12 +63,12 @@ export function createDefaultFieldMappings(): Map<string, FieldMapping> {
   fieldMappings.set('poblacionSexoAISD', {
     fieldName: 'poblacionSexoAISD',
     dataSource: 'backend',
-    endpoint: '/aisd/poblacion-sexo'
+    endpoint: '/demograficos/datos'
   });
   fieldMappings.set('poblacionEtarioAISD', {
     fieldName: 'poblacionEtarioAISD',
     dataSource: 'backend',
-    endpoint: '/aisd/poblacion-etario'
+    endpoint: '/demograficos/etario'
   });
   fieldMappings.set('petAISD', { fieldName: 'petAISD', dataSource: 'backend' });
   fieldMappings.set('petTabla', {

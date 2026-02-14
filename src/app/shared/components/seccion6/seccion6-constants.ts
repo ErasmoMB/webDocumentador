@@ -144,14 +144,14 @@ La composición por grupos de edad refleja patrones de migración y acceso a ser
  */
 export const SECCION6_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
   tablaKey: 'poblacionSexoAISD',
-  totalKey: 'sexo',
-  campoTotal: 'casos',
-  campoPorcentaje: 'porcentaje',
-  calcularPorcentajes: true,
+  totalKey: '',
+  campoTotal: '',
+  campoPorcentaje: '',
+  calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: true,
-  permiteEliminarFilas: true
+  permiteAgregarFilas: false,
+  permiteEliminarFilas: false
 };
 
 /**
@@ -184,14 +184,14 @@ export const SECCION6_COLUMNAS_POBLACION_SEXO: TableColumn[] = [
  */
 export const SECCION6_TABLA_POBLACION_ETARIO_CONFIG: TableConfig = {
   tablaKey: 'poblacionEtarioAISD',
-  totalKey: 'categoria',
-  campoTotal: 'casos',
-  campoPorcentaje: 'porcentaje',
-  calcularPorcentajes: true,
+  totalKey: '',
+  campoTotal: '',
+  campoPorcentaje: '',
+  calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: true,
-  permiteEliminarFilas: true
+  permiteAgregarFilas: false,
+  permiteEliminarFilas: false
 };
 
 /**

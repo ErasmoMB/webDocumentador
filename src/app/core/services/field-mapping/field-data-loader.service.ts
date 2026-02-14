@@ -24,7 +24,8 @@ export class FieldDataLoaderService {
     }
 
     const params = this.requestParamsResolver.resolve(mapping, seccionId);
-    if (!params?.id_ubigeo && !params?.ubigeo) {
+    // ✅ ACEPTAR: id_ubigeo, ubigeo, O codigos (para POST endpoints)
+    if (!params?.id_ubigeo && !params?.ubigeo && !params?.codigos) {
       return of(null);
     }
 

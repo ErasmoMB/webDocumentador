@@ -178,19 +178,14 @@ export class GlobalNumberingService {
   private countImagesInSection(sectionId: string, prefix: string): number {
     const datos = this.projectFacade.obtenerDatos();
     let count = 0;
-    console.log(`[DEBUG-COUNT-IMAGES] sectionId=${sectionId}, prefix=${prefix}`);
     for (let i = 1; i <= 10; i++) {
       const key = `${prefix}${i}Imagen`;
       const img = datos[key];
       const hasImage = img && img !== 'null' && img.trim() !== '' && (img.startsWith('data:image') || img.length > 100);
       if (hasImage) {
         count++;
-        console.log(`[DEBUG-COUNT-IMAGES]   ${key}: SÍ ✅ (total: ${count})`);
-      } else {
-        console.log(`[DEBUG-COUNT-IMAGES]   ${key}: NO ❌`);
       }
     }
-    console.log(`[DEBUG-COUNT-IMAGES] TOTAL: ${count}`);
     return count;
   }
   
@@ -230,17 +225,13 @@ export class GlobalNumberingService {
     const currentGroupNum = this.extractGroupNumber(sectionId);
     const currentSectionNum = this.extractSectionNumber(sectionId);
     
-    console.log(`[DEBUG-PHOTO-OFFSET] sectionId=${sectionId}, groupNum=${currentGroupNum}, sectionNum=${currentSectionNum}`);
-    
     // 1. Secciones fijas (1-3) - fotos unificadas con prefijos fotografia1, 2, 3
     totalImages += this.countImagesInSection('3.1.1', 'fotografia1');
     totalImages += this.countImagesInSection('3.1.2', 'fotografia2');
     totalImages += this.countImagesInSection('3.1.3', 'fotografia3');
-    console.log(`[DEBUG-PHOTO-OFFSET] Secciones fijas: ${totalImages}`);
     
     // 2. Grupos AISD - sección base (3.1.4.A) con prefijo fotografiaA
     const aisdGroups = this.getAISDGroups();
-    console.log(`[DEBUG-PHOTO-OFFSET] Grupos AISD: ${aisdGroups.length}`);
     for (const group of aisdGroups) {
       const groupNum = this.extractGroupNumber(group.id);
       // Para AISD, la sección base usa prefijo fotografiaA
@@ -248,18 +239,14 @@ export class GlobalNumberingService {
       const sectionBaseId = '3.1.4.A'; // Sección base de AISD
       const count = this.countImagesInSection(sectionBaseId, prefix);
       totalImages += count;
-      console.log(`[DEBUG-PHOTO-OFFSET] AISD ${groupNum} (${sectionBaseId}): +${count}`);
     }
     
     // 3. Grupos AISI - solo sección base de cada grupo (B.1, B.2, etc.)
     const aisiGroups = this.getAISIGroups();
-    console.log(`[DEBUG-PHOTO-OFFSET] Grupos AISI: ${aisiGroups.length}, actual=${currentGroupNum}`);
-    console.log(`[DEBUG-PHOTO-OFFSET] Grupos AISI IDs: ${aisiGroups.map(g => g.id).join(', ')}`);
     
     for (const group of aisiGroups) {
       const groupNum = this.extractGroupNumber(group.id);
       const groupPrefix = `_B${groupNum}`;
-      console.log(`[DEBUG-PHOTO-OFFSET] Iterando grupo: B.${groupNum} (id: ${group.id})`);
       
       // Si es un grupo anterior al actual, contar fotos en sección base
       if (groupNum < currentGroupNum) {
@@ -267,24 +254,20 @@ export class GlobalNumberingService {
         const prefix = this.getPhotoPrefix(sectionBaseId, groupPrefix);
         const count = this.countImagesInSection(sectionBaseId, prefix);
         totalImages += count;
-        console.log(`[DEBUG-PHOTO-OFFSET] AISI B.${groupNum} (${sectionBaseId}): +${count} (total: ${totalImages})`);
       }
       
       // Si es el grupo actual, contar fotos en subsecciones anteriores
       if (groupNum === currentGroupNum && currentSectionNum > 1) {
-        console.log(`[DEBUG-PHOTO-OFFSET] Contando subsecciones anteriores en B.${groupNum}`);
         for (let secNum = 1; secNum < currentSectionNum; secNum++) {
           const subSectionId = `3.1.4.B.${groupNum}.${secNum}`;
           const prefix = this.getPhotoPrefix(subSectionId, prefijoGrupo);
           const count = this.countImagesInSection(subSectionId, prefix);
           totalImages += count;
-          console.log(`[DEBUG-PHOTO-OFFSET]   Subsección ${subSectionId}: +${count}`);
         }
         break;
       }
     }
     
-    console.log(`[DEBUG-PHOTO-OFFSET] TOTAL OFFSET: ${totalImages}`);
     return totalImages;
   }
   
@@ -341,18 +324,6 @@ export class GlobalNumberingService {
     
     // La fórmula: numero = fotosAnteriores + photoIndex + 1
     const globalNumber = fotosAnteriores + photoIndex + 1;
-    
-    console.log(`[DEBUG-PHOTO] ==========`);
-    console.log(`[DEBUG-PHOTO] sectionId: ${sectionId}`);
-    console.log(`[DEBUG-PHOTO] prefijoGrupo: ${prefijoGrupo}`);
-    console.log(`[DEBUG-PHOTO] fotoPrefix: ${fotoPrefix}`);
-    console.log(`[DEBUG-PHOTO] fotoIndex (0-basado): ${photoIndex}`);
-    console.log(`[DEBUG-PHOTO] clave de imagen: ${key}`);
-    console.log(`[DEBUG-PHOTO] ¿HAY IMAGEN?: ${hayImagen ? 'SÍ ✅' : 'NO ❌'}`);
-    console.log(`[DEBUG-PHOTO] fotos anteriores: ${fotosAnteriores}`);
-    console.log(`[DEBUG-PHOTO] globalNumber: ${fotosAnteriores} + ${photoIndex} + 1 = ${globalNumber}`);
-    console.log(`[DEBUG-PHOTO] RESULTADO: 3.${globalNumber}`);
-    console.log(`[DEBUG-PHOTO] ==========`);
     
     return `3.${globalNumber}`;
   }

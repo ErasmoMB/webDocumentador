@@ -31,11 +31,6 @@
             <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
         </tr>
-        <tr class="total-row" *ngIf="getPoblacionSexoConPorcentajes().length > 0">
-          <td class="table-cell"><strong>{{ SECCION6_TEMPLATES.headerTotal }}</strong></td>
-          <td class="table-cell"><span appDataHighlight="calculated">{{ getTotalPoblacionSexo() }}</span></td>
-          <td class="table-cell"><span appDataHighlight="calculated">{{ getPorcentajeTotalPoblacionSexo() }}</span></td>
-        </tr>
         <tr *ngIf="getPoblacionSexoConPorcentajes().length === 0">
           <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
           <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
@@ -83,11 +78,6 @@
             <span *ngIf="item.porcentaje" appDataHighlight="calculated">{{ item.porcentaje }}</span>
             <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
-        </tr>
-        <tr *ngIf="getPoblacionEtarioConPorcentajes().length === 0">
-          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
-          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
-          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
         </tr>
       </tbody>
     </table>

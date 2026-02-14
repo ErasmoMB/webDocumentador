@@ -154,49 +154,49 @@ export function initializeTablesRegistry(): void {
       sectionKey: 'seccion6_aisd',
       fieldName: 'poblacionSexoAISD',
       tablaKey: 'poblacionSexoAISD',
-      endpoint: '/centros-poblados/por-codigos-ubigeo',
+      endpoint: '/demograficos/datos',
       method: 'POST',
       paramType: 'id_ubigeo',
-      aggregatable: true,
+      aggregatable: false,
       transformType: 'custom',
-      customTransform: transformPoblacionSexoDesdeCentrosPoblados,
+      customTransform: transformPoblacionSexoDesdeDemograficos,
       tableConfig: {
-        totalKey: 'sexo',
-        campoTotal: 'casos',
-        campoPorcentaje: 'porcentaje',
-        calcularPorcentajes: true
+        totalKey: '',  // No usar totalKey - el backend ya tiene un Total si lo necesita
+        campoTotal: '',
+        campoPorcentaje: '',
+        calcularPorcentajes: false
       },
-      editable: true,
+      editable: false, // ✅ Ya no es editable - los datos vienen del backend
       columns: [
         { field: 'sexo', label: 'Sexo', type: 'text' },
         { field: 'casos', label: 'Casos', type: 'number' },
         { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
       ],
-      description: 'Población según sexo - Agregada desde múltiples centros poblados'
+      description: 'Población según sexo - Datos del backend demográficos'
     },
     {
       sectionKey: 'seccion6_aisd',
       fieldName: 'poblacionEtarioAISD',
       tablaKey: 'poblacionEtarioAISD',
-      endpoint: '/centros-poblados/por-codigos-ubigeo',
+      endpoint: '/demograficos/etario',
       method: 'POST',
       paramType: 'id_ubigeo',
-      aggregatable: true,
+      aggregatable: false,
       transformType: 'custom',
-      customTransform: transformPoblacionEtarioDesdeCentrosPoblados,
+      customTransform: transformPoblacionEtarioDesdeDemograficos,
       tableConfig: {
-        totalKey: 'categoria',
-        campoTotal: 'casos',
-        campoPorcentaje: 'porcentaje',
-        calcularPorcentajes: true
+        totalKey: '',  // No usar totalKey - el backend ya tiene un Total si lo necesita
+        campoTotal: '',
+        campoPorcentaje: '',
+        calcularPorcentajes: false
       },
-      editable: true,
+      editable: false, // ✅ No editable - datos del backend
       columns: [
         { field: 'categoria', label: 'Categoría', type: 'text' },
         { field: 'casos', label: 'Casos', type: 'number' },
         { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true }
       ],
-      description: 'Población según grupo etario - Agregada desde múltiples centros poblados'
+      description: 'Población según grupo etario - Datos del backend demográficos'
     }
   ]);
 

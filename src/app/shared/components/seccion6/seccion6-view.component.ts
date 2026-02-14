@@ -191,79 +191,11 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   getPoblacionSexoConPorcentajes(): any[] {
-    const tablaSexo = this.getTablaSexo();
-    if (!tablaSexo || !Array.isArray(tablaSexo) || tablaSexo.length === 0) {
-      return [];
-    }
-
-    const total = tablaSexo.reduce((sum, item) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      return sum + casos;
-    }, 0);
-
-    if (total <= 0) {
-      return tablaSexo.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
-    }
-
-    const tablaConPorcentajes = tablaSexo.map((item: any) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      const porcentaje = (casos / total) * 100;
-      const porcentajeFormateado = porcentaje
-        .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace('.', ',') + ' %';
-
-      return {
-        ...item,
-        casos,
-        porcentaje: porcentajeFormateado
-      };
-    });
-
-    tablaConPorcentajes.push({
-      sexo: 'Total',
-      casos: total,
-      porcentaje: '100,00 %'
-    });
-
-    return tablaConPorcentajes;
+    return this.getTablaSexo();
   }
 
   getPoblacionEtarioConPorcentajes(): any[] {
-    const tablaEtario = this.getTablaEtario();
-    if (!tablaEtario || !Array.isArray(tablaEtario) || tablaEtario.length === 0) {
-      return [];
-    }
-
-    const total = tablaEtario.reduce((sum, item) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      return sum + casos;
-    }, 0);
-
-    if (total <= 0) {
-      return tablaEtario.map((item: any) => ({ ...item, porcentaje: '0,00 %' }));
-    }
-
-    const tablaConPorcentajes = tablaEtario.map((item: any) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      const porcentaje = (casos / total) * 100;
-      const porcentajeFormateado = porcentaje
-        .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace('.', ',') + ' %';
-
-      return {
-        ...item,
-        casos,
-        porcentaje: porcentajeFormateado
-      };
-    });
-
-    tablaConPorcentajes.push({
-      categoria: 'Total',
-      casos: total,
-      porcentaje: '100,00 %'
-    });
-
-    return tablaConPorcentajes;
+    return this.getTablaEtario();
   }
 
   private getTablaSexo(): any[] {

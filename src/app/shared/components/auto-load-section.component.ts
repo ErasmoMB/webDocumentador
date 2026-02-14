@@ -81,12 +81,6 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
   }
 
   protected loadAutoSectionData(forceRefresh: boolean = false): void {
-    // ⚠️ BACKEND DESACTIVADO TEMPORALMENTE - Solo flujo frontend
-    // DESCOMENTAR cuando el backend esté listo:
-    // console.warn('⚠️ Carga automática de backend DESACTIVADA');
-    return;
-    
-    /* CÓDIGO COMENTADO - REACTIVAR CON BACKEND
     // No cargar datos automáticamente en modo vista (plantilla)
     // Los datos ya están disponibles desde formularioService
     if (this.modoFormulario === false) {
@@ -123,7 +117,6 @@ export abstract class AutoLoadSectionComponent extends BaseSectionComponent impl
       });
 
     this.autoLoadSubscriptions.push(subscription);
-    */
   }
 
   protected applyLoadedData(loadedData: { [fieldName: string]: any }): void {

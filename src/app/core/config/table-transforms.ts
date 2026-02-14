@@ -237,33 +237,42 @@ export function transformReligionesTabla(data: any): any[] {
 }
 
 export function transformPoblacionSexoDesdeDemograficos(data: any): any[] {
-  const arr = Array.isArray(data) ? data : [];
-  if (arr.length === 0) {
+  // NOTA: El backend devuelve un array con un objeto que tiene:
+  // [{ hombres: 332, mujeres: 290, total: 622, porcentaje_hombres: "53.38 %", porcentaje_mujeres: "46.62 %" }]
+  
+  // Si es array, tomar el primer elemento
+  const item = Array.isArray(data) ? data[0] : data;
+  
+  if (!item) {
     return [];
   }
 
-  const item = arr[0];
+  // Transformar a formato de tabla con formato correcto (incluyendo Total)
   return [
-    { sexo: 'Hombre', casos: item?.hombres || 0 },
-    { sexo: 'Mujer', casos: item?.mujeres || 0 }
-  ];
+    { sexo: 'Hombre', casos: item.hombres || 0, porcentaje: item.porcentaje_hombres || '0 %' },
+    { sexo: 'Mujer', casos: item.mujeres || 0, porcentaje: item.porcentaje_mujeres || '0 %' },
+    { sexo: 'Total', casos: item.total || 0, porcentaje: '100.00 %' }
+  ].filter(row => (row.casos || 0) > 0);
 }
 
 export function transformPoblacionEtarioDesdeDemograficos(data: any): any[] {
+  // NOTA: El backend devuelve DIRECTAMENTE el array de rows (después de unwrapDemograficoData):
+  // [
+  //   { categoria: "0-14 años", casos: 143, porcentaje: "22.99 %" },
+  //   { categoria: "15-29 años", casos: 91, porcentaje: "14.63 %" },
+  //   ...
+  //   { categoria: "Total", casos: 622, porcentaje: "100.00 %" }
+  // ]
+  
   const arr = Array.isArray(data) ? data : [];
-  if (arr.length === 0) {
-    return [];
-  }
-
-  const d = arr[0];
-  return [
-    { categoria: 'Menores de 1', casos: d?.menores_1 || 0 },
-    { categoria: '1-14 años', casos: d?.de_1_a_14 || 0 },
-    { categoria: '15-29 años', casos: d?.de_15_a_29 || 0 },
-    { categoria: '30-44 años', casos: d?.de_30_a_44 || 0 },
-    { categoria: '45-64 años', casos: d?.de_45_a_64 || 0 },
-    { categoria: '65+ años', casos: d?.mayores_65 || 0 }
-  ].filter((item) => (item.casos || 0) > 0);
+  
+  // Filtrar para excluir la fila de Total (la tabla maneja su propio Total)
+  // y solo devolver filas con datos reales
+  return arr.filter((row: any) => {
+    const categoria = (row.categoria || '').toLowerCase().trim();
+    // Excluir filas de Total - solo queremos datos demográficos
+    return categoria !== 'total' && (row.casos || 0) > 0;
+  });
 }
 
 export function transformPETDesdeAisdPet(data: any): any[] {
