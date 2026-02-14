@@ -266,12 +266,10 @@ export function transformPoblacionEtarioDesdeDemograficos(data: any): any[] {
   
   const arr = Array.isArray(data) ? data : [];
   
-  // Filtrar para excluir la fila de Total (la tabla maneja su propio Total)
-  // y solo devolver filas con datos reales
+  // Devolver todas las filas incluyendo Total (igual que en transformPoblacionSexoDesdeDemograficos)
   return arr.filter((row: any) => {
-    const categoria = (row.categoria || '').toLowerCase().trim();
-    // Excluir filas de Total - solo queremos datos demográficos
-    return categoria !== 'total' && (row.casos || 0) > 0;
+    const casos = (row.casos || 0) > 0;
+    return casos;
   });
 }
 

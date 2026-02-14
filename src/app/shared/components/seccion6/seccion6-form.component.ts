@@ -278,24 +278,17 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
    * - poblacionEtarioAISD: /demograficos/etario
    */
   private cargarDatosDelBackend(): void {
-    // Obtener los centros poblados activos para cargar datos
-    const centrosPoblados = this.projectFacade.allPopulatedCenters()();
-    if (!centrosPoblados || centrosPoblados.length === 0) {
-      debugLog('[SECCION6] ⚠️ No hay centros poblados disponibles para cargar datos');
+    // ✅ USAR getCodigosCentrosPobladosAISD() DEL GRUPO ACTUAL (clase base)
+    // Esto obtiene solo los centros poblados específicos del grupo AISD actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Crear copia mutable para el API
+
+    if (!codigos || codigos.length === 0) {
+      debugLog('[SECCION6] ⚠️ No hay centros poblados en el grupo actual para cargar datos');
       return;
     }
 
-    // Extraer códigos de centros poblados
-    const codigos = centrosPoblados
-      .map((cp: any) => cp.codigo || cp.id_ubigeo || cp.ubigeo)
-      .filter((c: any) => c);
-
-    if (codigos.length === 0) {
-      debugLog('[SECCION6] ⚠️ No hay códigos de centros poblados para enviar al backend');
-      return;
-    }
-
-    debugLog('[SECCION6] 📡 Cargando datos de demografía desde backend...', { codigos });
+    debugLog('[SECCION6] 📡 Cargando datos de demografía desde backend para grupo actual...', { codigos });
 
     // ✅ OBTENER PREFIJO PARA GUARDAR CON CLAVE CORRECTA
     const prefijo = this.obtenerPrefijoGrupo();
