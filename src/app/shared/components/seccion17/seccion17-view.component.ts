@@ -146,33 +146,39 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
     }
 
     obtenerTextoIDHConResaltado(): SafeHtml {
-        const texto = this.obtenerTextoIDHCompleto();
-        // ✅ REFACTOR: Usar ubicacionGlobal
-        const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
-        const idh = this.getIDH();
-        const rankIdh = this.getRankIDH();
+        try {
+            const texto = this.obtenerTextoIDHCompleto();
+            // ✅ REFACTOR: Usar ubicacionGlobal
+            const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
+            const idh = String(this.getIDH() || '');
+            const rankIdh = String(this.getRankIDH() || '');
 
-        let html = this.escapeHtml(texto);
+            let html = this.escapeHtml(texto);
 
-        if (distrito !== 'Cahuacho') {
-            html = html.replace(this.obtenerRegExp(this.escapeRegex(distrito)), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+            if (distrito !== 'Cahuacho') {
+                const distritoStr = String(distrito);
+                html = html.replace(this.obtenerRegExp(this.escapeRegex(distritoStr)), `<span class="data-section">${this.escapeHtml(distritoStr)}</span>`);
+            }
+
+            if (idh !== '____' && idh !== '0.000' && idh !== '0,000') {
+                const idhEscapado = this.escapeHtml(idh);
+                html = html.replace(this.obtenerRegExp(this.escapeRegex(idh)), `<span class="data-manual">${idhEscapado}</span>`);
+            }
+
+            if (rankIdh !== '____' && rankIdh !== '0') {
+                const rankEscapado = this.escapeHtml(rankIdh);
+                html = html.replace(this.obtenerRegExp(`N°${this.escapeRegex(rankIdh)}`), `N°<span class="data-manual">${rankEscapado}</span>`);
+                html = html.replace(this.obtenerRegExp(`puesto N°${this.escapeRegex(rankIdh)}`), `puesto N°<span class="data-manual">${rankEscapado}</span>`);
+            }
+
+            html = html.replace(/\n\n/g, '</p><p class="text-justify">');
+            html = `<p class="text-justify">${html}</p>`;
+
+            return this.sanitizer.bypassSecurityTrustHtml(html);
+        } catch (error) {
+            console.error('[SECCION17_VIEW] Error en obtenerTextoIDHConResaltado:', error);
+            return this.sanitizer.bypassSecurityTrustHtml(`<p class="text-justify">${this.escapeHtml(this.obtenerTextoIDHCompleto())}</p>`);
         }
-
-        if (idh !== '____' && idh !== '0.000' && idh !== '0,000') {
-            const idhEscapado = this.escapeHtml(idh);
-            html = html.replace(this.obtenerRegExp(this.escapeRegex(idh)), `<span class="data-manual">${idhEscapado}</span>`);
-        }
-
-        if (rankIdh !== '____' && rankIdh !== '0') {
-            const rankEscapado = this.escapeHtml(rankIdh);
-            html = html.replace(this.obtenerRegExp(`N°${this.escapeRegex(rankIdh)}`), `N°<span class="data-manual">${rankEscapado}</span>`);
-            html = html.replace(this.obtenerRegExp(`puesto N°${this.escapeRegex(rankIdh)}`), `puesto N°<span class="data-manual">${rankEscapado}</span>`);
-        }
-
-        html = html.replace(/\n\n/g, '</p><p class="text-justify">');
-        html = `<p class="text-justify">${html}</p>`;
-
-        return this.sanitizer.bypassSecurityTrustHtml(html);
     }
 
     // === LÓGICA DE TABLA ===
@@ -240,17 +246,19 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         return this.regexCache.get(pattern)!;
     }
 
-    private escapeRegex(text: string): string {
-        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    private escapeRegex(text: any): string {
+        const str = String(text || '');
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    private escapeHtml(text: string): string {
+    private escapeHtml(text: any): string {
         if (!text) return '';
-        return text
-            .replace(/&/g, '&')
-            .replace(/</g, '<')
-            .replace(/>/g, '>')
-            .replace(/"/g, '"')
+        const str = String(text); // Convertir a string si no lo es
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
 

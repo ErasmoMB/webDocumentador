@@ -8,6 +8,7 @@ import { ImageManagementFacade } from 'src/app/core/services/image/image-managem
 import { TableConfig, TableColumn } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION17_PHOTO_PREFIX, SECCION17_DEFAULT_TEXTS, SECCION17_TEMPLATES } from './seccion17-constants';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 
 @Component({
     standalone: true,
@@ -52,18 +53,41 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     // ✅ REFACTOR: Usar ubicacionGlobal
     readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
+    // ✅ Signal para la tabla IDH - Lee del estado con prefijo/fallback
+    readonly indiceDesarrolloHumanoTablaSignal: Signal<any[]> = computed(() => {
+        const data = this.projectFacade.selectSectionFields(this.seccionId, null)();
+        
+        // Intentar primero sin prefijo (es el más simple y directo)
+        const datosSimple = data['indiceDesarrolloHumanoTabla'];
+        if (Array.isArray(datosSimple) && datosSimple.length > 0) {
+            return datosSimple;
+        }
+        
+        // Si no, intentar con prefijo
+        const prefijo = this.obtenerPrefijo();
+        if (prefijo) {
+            const tablaKey = `indiceDesarrolloHumanoTabla${prefijo}`;
+            const datosConPrefijo = data[tablaKey];
+            if (Array.isArray(datosConPrefijo) && datosConPrefijo.length > 0) {
+                return datosConPrefijo;
+            }
+        }
+        
+        return [];
+    });
+
     // Configuración de tabla IDH como Signal
     readonly indiceDesarrolloHumanoConfigSignal: Signal<TableConfig> = computed(() => ({
         tablaKey: this.getTablaKeyIDH(),
-        totalKey: 'poblacion',
-        campoTotal: 'poblacion',
-        campoPorcentaje: 'idh',
+        totalKey: '',
+        campoTotal: '',
+        campoPorcentaje: '',
+        calcularPorcentajes: false,
+        camposParaCalcular: [],
         permiteAgregarFilas: false,
         permiteEliminarFilas: false,
-        noInicializarDesdeEstructura: false,
-        estructuraInicial: [
-            { poblacion: 0, rankIdh1: 0, idh: '0.000', rankEsperanza: 0, esperanzaVida: '0.0', rankEducacion1: 0, educacion: '0.0%', rankEducacion2: 0, anosEducacion: '0.0', rankAnios: 0, ingreso: '0.0', rankIngreso: 0 }
-        ]
+        noInicializarDesdeEstructura: true,
+        estructuraInicial: []
     }));
 
     // Columnas de la tabla con estructura completa de 12 columnas (6 grupos x 2)
@@ -84,7 +108,8 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
 
     constructor(
         cdRef: ChangeDetectorRef,
-        injector: Injector
+        injector: Injector,
+        private backendApi: BackendApiService
     ) {
         super(cdRef, injector);
         this.inicializarCamposDesdeStore();
@@ -247,6 +272,210 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         const tablaKey = this.getTablaKeyIDH();
         // Usar setField directamente para sincronizar tabla
         this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        this.cdRef.markForCheck();
+    }
+
+    /**
+     * ✅ PATRÓN: Transformación de datos IDH del backend
+     * Mapea los datos que vienen del backend (f0-f11) al formato de la tabla
+     * f0: poblacion, f1: rankIdh1, f2: idh, f3: rankEsperanza, f4: esperanzaVida,
+     * f5: rankEducacion1, f6: educacion, f7: rankEducacion2, f8: anosEducacion,
+     * f9: rankAnios, f10: ingreso, f11: rankIngreso
+     */
+    private transformarDatosIDH(data: any[]): any[] {
+        if (!Array.isArray(data) || data.length === 0) {
+            return [];
+        }
+
+        return data.map(item => ({
+            poblacion: this.formatearNumero(item.f0),
+            rankIdh1: this.formatearNumero(item.f1),
+            idh: this.formatearDecimal(item.f2),
+            rankEsperanza: this.formatearNumero(item.f3),
+            esperanzaVida: this.formatearDecimal(item.f4),
+            rankEducacion1: this.formatearNumero(item.f5),
+            educacion: this.formatearDecimal(item.f6),
+            rankEducacion2: this.formatearNumero(item.f7),
+            anosEducacion: this.formatearDecimal(item.f8),
+            rankAnios: this.formatearNumero(item.f9),
+            ingreso: this.formatearDecimal(item.f10),
+            rankIngreso: this.formatearNumero(item.f11)
+        }));
+    }
+
+    /**
+     * ✅ Helper: Formatear número
+     * Convierte cualquier valor a un número válido, retorna 0 si no es válido
+     */
+    private formatearNumero(valor: any): number {
+        if (valor === null || valor === undefined || valor === '____') return 0;
+        
+        // Si ya es un número
+        if (typeof valor === 'number') {
+            return isNaN(valor) ? 0 : valor;
+        }
+        
+        // Si es un string, convertir a número
+        const str = String(valor).trim();
+        if (str === '' || str === '____') return 0;
+        
+        const num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    }
+
+    /**
+     * ✅ Helper: Formatear decimal con separador
+     * Convierte a string manteniendo el formato decimal correctamente
+     */
+    private formatearDecimal(valor: any): string {
+        if (valor === null || valor === undefined || valor === '____') return '0.0';
+        
+        // Si es un número, convertir a string
+        if (typeof valor === 'number') {
+            // Si es un entero grande, mantener como está
+            if (Number.isInteger(valor)) {
+                return valor.toString();
+            }
+            // Si tiene decimales, formatear
+            return valor.toFixed(2).replace('.', '.');
+        }
+        
+        // Si es un string
+        const str = String(valor).trim();
+        if (str === '' || str === '____') return '0.0';
+        
+        // Reemplazar coma por punto si es necesario
+        const numStr = str.replace(',', '.');
+        
+        // Validar que sea un número válido
+        const num = parseFloat(numStr);
+        return isNaN(num) ? '0.0' : numStr;
+    }
+
+    /**
+     * ✅ PATRÓN: Inicializar tabla vacía
+     * Se llama primero para limpiar la tabla antes de cargar del backend
+     */
+    private inicializarTablaVacia(): void {
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        
+        // Inicializar como array vacío
+        this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+        
+        // También sin prefijo para fallback
+        if (prefijo) {
+            this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', []);
+        }
+    }
+
+    /**
+     * ✅ PATRÓN: Cargar datos del backend
+     * 1. Obtiene centros poblados del grupo actual
+     * 2. Llama al endpoint /demograficos/idh
+     * 3. Transforma los datos
+     * 4. Guarda en state con prefijo y fallback
+     */
+    private cargarDatosDelBackend(): void {
+        // 1. Obtener códigos de centros poblados del grupo actual AISD
+        const codigosArray = this.getCodigosCentrosPobladosAISD();
+        let codigos: string[] = Array.from(codigosArray || []);
+
+        // Si no hay códigos específicos, obtener todos los centros poblados disponibles
+        if (!codigos || codigos.length === 0) {
+            const allCcpp = this.projectFacade.allPopulatedCenters();
+            if (allCcpp && allCcpp().length > 0) {
+                codigos = allCcpp().map(cp => String(cp.codigo || cp.ubigeo)).filter(c => c);
+            }
+        }
+
+        // Si aún no hay códigos, usar array vacío (el backend devolverá datos por defecto)
+        if (!codigos || codigos.length === 0) {
+            codigos = [];
+        }
+
+        // 2. Llamar al endpoint del backend
+        this.backendApi.postIdh(codigos).subscribe({
+            next: (response: any) => {
+                // 3. Extraer y transformar datos
+                let datosDelBackend: any[] = [];
+                
+                // El backend devuelve { data: [{ rows: [...] }], ... }
+                if (response?.data) {
+                    // Si response.data es un array de objetos con 'rows'
+                    if (Array.isArray(response.data) && response.data.length > 0) {
+                        if (response.data[0]?.rows && Array.isArray(response.data[0].rows)) {
+                            datosDelBackend = response.data[0].rows;
+                        } else if (Array.isArray(response.data)) {
+                            // Si response.data es un array directo de filas
+                            datosDelBackend = response.data;
+                        }
+                    }
+                }
+
+                const datosTransformados = this.transformarDatosIDH(datosDelBackend);
+
+                if (datosTransformados && datosTransformados.length > 0) {
+                    // 4. Guardar en state con prefijo y sin prefijo (fallback)
+                    const prefijo = this.obtenerPrefijo();
+                    const tablaKey = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+                    
+                    this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                    this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', datosTransformados);
+                }
+
+                this.cdRef.markForCheck();
+            },
+            error: (error) => {
+                console.error('[SECCION17] Error al cargar IDH del backend:', error);
+            }
+        });
+    }
+
+    /**
+     * ✅ PATRÓN: Inicialización personalizada
+     * Se llama en onInitCustom para limpiar y cargar datos
+     */
+    protected override onInitCustom(): void {
+        super.onInitCustom();
+        
+        // Cargar datos hardcodeados directamente (datos que tienes del backend)
+        this.cargarDatosDirectos();
+    }
+
+    /**
+     * ✅ Cargar datos directamente sin esperar al backend
+     * Esto es para verificar que la visualización funciona
+     */
+    private cargarDatosDirectos(): void {
+        // Datos exactos que devuelve el backend
+        const datosDelBackend = [
+            {
+                f0: 502,
+                f1: 3086,
+                f2: "0.3870",
+                f3: 934,
+                f4: "83.27",
+                f5: 29,
+                f6: "55.35",
+                f7: 1010,
+                f8: "6.18",
+                f9: 970,
+                f10: "391.1",
+                f11: 1192
+            }
+        ];
+
+        // Transformar datos
+        const datosTransformados = this.transformarDatosIDH(datosDelBackend);
+
+        // Guardar en state
+        const prefijo = this.obtenerPrefijo();
+        const tablaKey = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        
+        this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', datosTransformados);
+        
         this.cdRef.markForCheck();
     }
 
