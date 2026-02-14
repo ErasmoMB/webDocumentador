@@ -19,6 +19,8 @@
 import { Injectable, inject, effect, DestroyRef, signal, computed } from '@angular/core';
 import { ProjectState } from '../state/project-state.model';
 import { UIStoreService } from '../state/ui-store.contract';
+import { BackendAvailabilityService } from '../services/infrastructure/backend-availability.service';
+import { SessionDataService } from '../services/session/session-data.service';
 import {
   PersistenceConfig,
   DEFAULT_PERSISTENCE_CONFIG,
@@ -56,6 +58,8 @@ export interface PersistenceStatusInfo {
 export class PersistenceObserverService {
   private readonly store = inject(UIStoreService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly backendAvailability = inject(BackendAvailabilityService);
+  private readonly sessionDataService = inject(SessionDataService);
   
   // Configuración
   private config: PersistenceConfig = { ...DEFAULT_PERSISTENCE_CONFIG };
@@ -167,6 +171,39 @@ export class PersistenceObserverService {
    * Ejecuta el guardado real.
    */
   private performSave(state: ProjectState): boolean {
+    // 🔍 Si el backend está disponible, NO guardar en localStorage
+    // pero SÍ guardar en SessionDataService como backup para recarga
+    if (this.backendAvailability.shouldUseBackendOnly()) {
+      console.log('✅ [PersistenceObserver] Backend disponible - Guardando en SessionDataService');
+      
+      // Guardar en SessionDataService para poder recargar luego
+      const result = serializeProjectState(state);
+      if (result.success && result.data) {
+        const dataSize = result.data.length;
+        console.log(`📊 [PersistenceObserver] Guardando ${dataSize} bytes en SessionDataService...`);
+        
+        this.sessionDataService.saveData('projectState', result.data)
+          .then(() => {
+            console.log(`✅ [PersistenceObserver] Guardado exitoso en SessionDataService (${dataSize} bytes)`);
+          })
+          .catch(err => {
+            console.error('❌ [PersistenceObserver] Error guardando en SessionDataService:', err.message || err);
+          });
+      }
+      
+      this.updateStatus({ 
+        status: 'saved', 
+        lastSaveTime: Date.now(),
+        pendingSave: false,
+        lastError: null,
+        totalSaves: this._status().totalSaves + 1
+      });
+      this.notifySaveCompleted();
+      return true;
+    }
+    
+    // ⚠️ Backend NO disponible - Guardar en localStorage como fallback
+    console.warn('⚠️ [PersistenceObserver] Backend no disponible - Usando localStorage como fallback');
     this.updateStatus({ status: 'saving', pendingSave: false });
     
     try {

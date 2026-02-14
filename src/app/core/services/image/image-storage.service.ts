@@ -5,6 +5,7 @@ import { FormChangeService } from '../state/form-change.service';
 import { PhotoNumberingService } from '../numbering/photo-numbering.service';
 import { FotoItem } from '../../../shared/components/image-upload/image-upload.component';
 import { ImageLogicService } from './image-logic.service';
+import { BackendAvailabilityService } from '../infrastructure/backend-availability.service';
 
 /**
  * ✅ FASE 4: Migrado - eliminada dependencia de LegacyDocumentSnapshotService
@@ -20,7 +21,8 @@ export class ImageStorageService {
     private photoNumberingService: PhotoNumberingService,
     private stateAdapter: ReactiveStateAdapter,
     private formChange: FormChangeService,
-    private imageLogic: ImageLogicService
+    private imageLogic: ImageLogicService,
+    private backendAvailability: BackendAvailabilityService
   ) {}
 
   loadImages(
@@ -143,6 +145,14 @@ export class ImageStorageService {
     });
 
     if (Object.keys(updates).length > 0) {
+      // 📸 ESTRATEGIA DE PERSISTENCIA DE IMÁGENES:
+      // - Base64 SIEMPRE se crea (necesario para exportar a Word)
+      // - Se actualizan en el projectFacade state (en memoria)
+      // - PersistenceObserver maneja el almacenamiento según disponibilidad del backend:
+      //   * Backend disponible → NO guarda en localStorage (SessionDataService maneja)
+      //   * Backend NO disponible → Guarda en localStorage (fallback)
+      console.log(`📸 [ImageStorageService] Guardando ${Object.keys(updates).length} propiedades de imágenes para sección: ${sectionId}`);
+      
       // apply updates
       this.projectFacade.setFields(sectionId, null, updates);
       try { this.formChange.persistFields(sectionId, 'form', updates); } catch (e) { /* persist form error */ }

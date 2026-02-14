@@ -20,6 +20,7 @@ import { Injectable, inject, APP_INITIALIZER, Provider, signal } from '@angular/
 import { ProjectState, INITIAL_PROJECT_STATE } from '../state/project-state.model';
 import { UIStoreService } from '../state/ui-store.contract';
 import { PersistenceObserverService } from './persistence-observer.service';
+import { SessionDataService } from '../services/session/session-data.service';
 import { 
   autoDeserialize, 
   DeserializationResult 
@@ -69,6 +70,7 @@ const DEFAULT_OPTIONS: RehydrationOptions = {
 export class StateRehydrationService {
   private readonly store = inject(UIStoreService);
   private readonly persistence = inject(PersistenceObserverService);
+  private readonly sessionDataService = inject(SessionDataService);
   
   // Estado de rehidratación
   private _rehydrationResult = signal<RehydrationResult | null>(null);
@@ -93,8 +95,32 @@ export class StateRehydrationService {
     let migrationsApplied: string[] = [];
     
     try {
-      // 1. Intentar cargar desde storage principal
-      const mainResult = this.loadFromMainStorage();
+      // 1. Intentar cargar desde storage principal (localStorage)
+      let mainResult = this.loadFromMainStorage();
+      
+      // 2. Si localStorage vacío, intentar desde SessionDataService
+      if (!mainResult?.success && !mainResult?.state) {
+        console.log('📊 [StateRehydration] localStorage vacío, intentando cargar desde SessionDataService...');
+        try {
+          const sessionData = await this.sessionDataService.loadData('projectState');
+          if (sessionData) {
+            console.log('✅ [StateRehydration] Estado cargado desde SessionDataService:', typeof sessionData);
+            
+            // ⚠️ SessionDataService devuelve el dato como fue guardado
+            // Si fue guardado como string JSON, NO hacer JSON.stringify de nuevo
+            let dataToDeserialize = sessionData;
+            if (typeof sessionData === 'string') {
+              // Ya es JSON string, deserializar directamente
+              mainResult = autoDeserialize(sessionData);
+            } else if (typeof sessionData === 'object') {
+              // Es un objeto, stringificar primero
+              mainResult = autoDeserialize(JSON.stringify(sessionData));
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ [StateRehydration] No se pudo cargar desde SessionDataService:', err);
+        }
+      }
       
       if (mainResult?.success && mainResult.state) {
         migrationsApplied = mainResult.migrationsApplied;

@@ -250,20 +250,13 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   }
 
   procesarImagen(file: File, index?: number) {
-    const projectName = this.projectFacade.obtenerDatos()['projectName'] || 'default';
     const numGlobal = this.calculateGlobalPhotoNumber(index || 0);
 
-    this.imageBackendService.uploadImage(file, projectName, this.sectionId, this.photoPrefix).subscribe({
-      next: (res) => {
-        const url = this.imageBackendService.getImageUrl(res.image_id);
-        this.aplicarImagenLocalmente(url, numGlobal, res.image_id, index);
-      },
-      error: (err) => {
-        console.warn('Backend inalcanzable. Usando fallback Base64.', err);
-        this.comprimirImagen(file).then(base64 => {
-          this.aplicarImagenLocalmente(base64, numGlobal, base64, index);
-        });
-      }
+    // ✅ ESTRATEGIA: Ir directo a base64 (no intentar upload al backend)
+    // Las imágenes en base64 se guardan en SessionDataService + fallback localStorage
+    // Base64 es lo necesario para exportar a Word
+    this.comprimirImagen(file).then(base64 => {
+      this.aplicarImagenLocalmente(base64, numGlobal, base64, index);
     });
   }
 
@@ -276,19 +269,28 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias[index].numero = numGlobal;
       
       const foto = this._fotografias[index];
+      
+      // 🔑 Obtener groupPrefix para aislar por grupos dinámicos
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      
+      // 🔑 Construir claves CON groupPrefix: fotografia1Imagen_A1 (no fotografia1Imagen)
+      const imagenKey = groupPrefix ? `${this.photoPrefix}${index + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${index + 1}Imagen`;
+      const numeroKey = groupPrefix ? `${this.photoPrefix}${index + 1}Numero${groupPrefix}` : `${this.photoPrefix}${index + 1}Numero`;
+      const tituloKey = groupPrefix ? `${this.photoPrefix}${index + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${index + 1}Titulo`;
+      const fuenteKey = groupPrefix ? `${this.photoPrefix}${index + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${index + 1}Fuente`;
+      
       // Persistir imagen y metadatos e indicar notifySync para actualizar vista inmediatamente
       try { this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}${index + 1}Imagen`]: persistValue,
-        [`${this.photoPrefix}${index + 1}Numero`]: numGlobal,
-        [`${this.photoPrefix}${index + 1}Titulo`]: foto.titulo || this.tituloDefault,
-        [`${this.photoPrefix}${index + 1}Fuente`]: foto.fuente || this.fuenteDefault
+        [imagenKey]: persistValue,
+        [numeroKey]: numGlobal,
+        [tituloKey]: foto.titulo || this.tituloDefault,
+        [fuenteKey]: foto.fuente || this.fuenteDefault
       }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields error', e); }
 
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
 
       try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
         const fotosParaGuardar = this._fotografias.map(f => ({
           ...f,
           imagen: this.extractImageId(f.imagen) || f.imagen
@@ -302,16 +304,25 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     } else {
       this.preview = imgData;
       this.imagenChange.emit(imgData);
+      
+      // 🔑 Obtener groupPrefix para aislar por grupos dinámicos
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      
+      // 🔑 Construir claves CON groupPrefix: fotografiaImagen_A1 (no fotografiaImagen)
+      const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
+      const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
+      const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
+      const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
+      
       // Persistir imagen y metadatos (single) e indicar notifySync para actualizar vista inmediatamente
       try { this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}Imagen`]: persistValue,
-        [`${this.photoPrefix}Numero`]: numGlobal,
-        [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
-        [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
+        [imagenKey]: persistValue,
+        [numeroKey]: numGlobal,
+        [tituloKey]: this.titulo || this.tituloDefault,
+        [fuenteKey]: this.fuente || this.fuenteDefault
       }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(single) error', e); }
 
       try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
         const fotosParaGuardar = [{
           numero: numGlobal,
           titulo: this.titulo || this.tituloDefault,

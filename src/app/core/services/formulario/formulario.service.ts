@@ -9,6 +9,7 @@ import { FormularioStorageService } from './formulario-storage.service';
 import { FormularioImageMigrationService } from './formulario-image-migration.service';
 import { FormularioMockService } from './formulario-mock.service';
 import { SessionDataService } from '../session/session-data.service';
+import { BackendAvailabilityService } from '../infrastructure/backend-availability.service';
 
 /**
  * @deprecated FASE 1 - Migración SOLID: Este servicio está deprecated.
@@ -58,7 +59,8 @@ export class FormularioService {
     private imageBackendService: ImageBackendService,
     private mockService: FormularioMockService,
     private logger: LoggerService,
-    private sessionDataService: SessionDataService
+    private sessionDataService: SessionDataService,
+    private backendAvailability: BackendAvailabilityService
   ) {
     this.cargarDesdeLocalStorage();
     this.ejecutarMigracionImagenes();
@@ -129,6 +131,15 @@ export class FormularioService {
   }
 
   private ejecutarGuardado(): void {
+    // 🔍 Si el backend está disponible, NO guardar en localStorage
+    // FormularioService solo mantiene datos en el store
+    if (this.backendAvailability.shouldUseBackendOnly()) {
+      console.log('✅ [FormularioService] Backend disponible - Saltando guardado en localStorage');
+      return;
+    }
+    
+    // ⚠️ Backend NO disponible - Guardar en localStorage como fallback
+    console.warn('⚠️ [FormularioService] Backend no disponible - Guardando en localStorage');
     this.storage.saveDatos(this.store.getDatos());
   }
 
