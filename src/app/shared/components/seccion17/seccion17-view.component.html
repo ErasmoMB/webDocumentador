@@ -34,18 +34,18 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of getIndiceDesarrolloHumanoTabla()">
-            <td style="text-align:right">{{ item.poblacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankIdh1 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:right">{{ item.idh || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankEsperanza || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:right">{{ item.esperanzaVida || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankEducacion1 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:right">{{ item.educacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankEducacion2 || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:right">{{ item.anosEducacion || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankAnios || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:right">{{ item.ingreso || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
-            <td style="text-align:center">{{ item.rankIngreso || SECCION17_TEMPLATES.mensajeSinDatos }}</td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.poblacion || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankIdh1 || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.idh || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankEsperanza || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.esperanzaVida || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankEducacion1 || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.educacion || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankEducacion2 || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.anosEducacion || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankAnios || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:right"><span [appDataSource]="'backend'">{{ item.ingreso || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
+            <td style="text-align:center"><span [appDataSource]="'backend'">{{ item.rankIngreso || SECCION17_TEMPLATES.mensajeSinDatos }}</span></td>
           </tr>
           <tr *ngIf="getIndiceDesarrolloHumanoTabla().length === 0">
             <td class="table-cell">{{ SECCION17_TEMPLATES.mensajeSinDatos }}</td>

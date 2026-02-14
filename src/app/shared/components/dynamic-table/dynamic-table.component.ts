@@ -771,6 +771,32 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     const noInit = this.config?.noInicializarDesdeEstructura;
     let datosFinales: any[] = [];
 
+    // ✅ NUEVO: Si noInicializarDesdeEstructura es true Y estructuraInicial está vacío,
+    // usar directamente los datos existentes sin intentar inicializar ni comparar estructuras
+    if (noInit && (!estructura || estructura.length === 0)) {
+      // Primero buscar en datosConPrefijo
+      if (datosConPrefijo && Array.isArray(datosConPrefijo) && datosConPrefijo.length > 0) {
+        datosFinales = datosConPrefijo;
+      } 
+      // Luego buscar en fallback
+      else if (fallback && Array.isArray(fallback) && fallback.length > 0) {
+        datosFinales = structuredClone(fallback);
+        this.datos[tablaKeyActual] = datosFinales;
+      }
+      // Finalmente buscar en el input data
+      else if (this.data && Array.isArray(this.data) && this.data.length > 0) {
+        datosFinales = this.data;
+        this.datos[tablaKeyActual] = datosFinales;
+        if (tablaKeyBase && tablaKeyBase !== tablaKeyActual) {
+          this.datos[tablaKeyBase] = datosFinales;
+        }
+      }
+      
+      this.tableData = datosFinales;
+      this.lastTablaKey = '';
+      return;
+    }
+
     if (noInit && estructura && estructura.length > 0) {
       const datosExistentes = datosConPrefijo ?? (tablaKeyBase ? this.datos[tablaKeyBase] : undefined);
       if (datosExistentes && Array.isArray(datosExistentes) && datosExistentes.length === estructura.length) {

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed } from '@angular/core';
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -7,8 +7,10 @@ import { BaseSectionComponent } from '../base-section.component';
 import { ImageManagementFacade } from 'src/app/core/services/image/image-management.facade';
 import { TableConfig, TableColumn } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { PrefixManager } from '../../utils/prefix-manager';
 import { SECCION17_PHOTO_PREFIX, SECCION17_DEFAULT_TEXTS, SECCION17_TEMPLATES } from './seccion17-constants';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from '../../../core/services/state/form-change.service';
 
 @Component({
     standalone: true,
@@ -27,10 +29,18 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     // ✅ EXPORTAR CONSTANTES AL TEMPLATE
     readonly SECCION17_TEMPLATES = SECCION17_TEMPLATES;
     readonly SECCION17_DEFAULT_TEXTS = SECCION17_DEFAULT_TEXTS;
+    readonly Object = Object; // Para usar Object.keys en el template
 
     // ✅ HELPER PARA OBTENER PREFIJO
     private obtenerPrefijo(): string {
         return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+    }
+
+    // ✅ OVERRIDE: onFieldChange CON PREFIJO AUTOMÁTICO (igual que sección 15)
+    override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+        const prefijo = this.obtenerPrefijo();
+        const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+        super.onFieldChange(campoConPrefijo, value, options);
     }
 
     // ✅ SIGNALS REACTIVAS CON createAutoSyncField (CON PREFIJO DE GRUPO)
@@ -53,32 +63,44 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     // ✅ REFACTOR: Usar ubicacionGlobal
     readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-    // ✅ Signal para la tabla IDH - Lee del estado con prefijo/fallback
-    readonly indiceDesarrolloHumanoTablaSignal: Signal<any[]> = computed(() => {
-        const data = this.projectFacade.selectSectionFields(this.seccionId, null)();
-        
-        // Intentar primero sin prefijo (es el más simple y directo)
-        const datosSimple = data['indiceDesarrolloHumanoTabla'];
-        if (Array.isArray(datosSimple) && datosSimple.length > 0) {
-            return datosSimple;
-        }
-        
-        // Si no, intentar con prefijo
-        const prefijo = this.obtenerPrefijo();
-        if (prefijo) {
-            const tablaKey = `indiceDesarrolloHumanoTabla${prefijo}`;
-            const datosConPrefijo = data[tablaKey];
-            if (Array.isArray(datosConPrefijo) && datosConPrefijo.length > 0) {
-                return datosConPrefijo;
-            }
-        }
-        
-        return [];
+    // ✅ Combinar datos legacy con section data (igual que en vista)
+    readonly allSectionData: Signal<Record<string, any>> = computed(() => {
+        const sectionData = this.projectFacade.selectSectionFields(this.seccionId, null)();
+        const legacyData = this.projectFacade.obtenerDatos();
+        return { ...legacyData, ...sectionData };
     });
 
-    // Configuración de tabla IDH como Signal
+    // ✅ Signal EXACTAMENTE igual al de la vista (lo que funciona)
+    readonly indiceDesarrolloHumanoSignal: Signal<any[]> = computed(() => {
+        const data = this.allSectionData();
+        
+        // ✅ USAR AMBOS MÉTODOS para compatibilidad
+        const prefijo = this.obtenerPrefijo();
+        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
+        
+        // Priorizar PrefixManager (usado por app-dynamic-table)
+        if (Array.isArray(data[tablaKeyPrefixManager])) {
+            return data[tablaKeyPrefixManager];
+        }
+        
+        // Fallback a PrefijoHelper
+        if (Array.isArray(data[tablaKeyPrefijoHelper])) {
+            return data[tablaKeyPrefijoHelper];
+        }
+        
+        // Fallback final
+        return data['indiceDesarrolloHumanoTabla'] || [];
+    });
+
+    // ✅ Signal para la tabla IDH - USANDO EL MISMO QUE LA VISTA
+    readonly indiceDesarrolloHumanoTablaSignal: Signal<any[]> = computed(() => {
+        return this.indiceDesarrolloHumanoSignal();
+    });
+
+    // Configuración de tabla IDH como Signal (SIMPLIFICADA)
     readonly indiceDesarrolloHumanoConfigSignal: Signal<TableConfig> = computed(() => ({
-        tablaKey: this.getTablaKeyIDH(),
+        tablaKey: 'indiceDesarrolloHumanoTabla', // Usar clave base simple
         totalKey: '',
         campoTotal: '',
         campoPorcentaje: '',
@@ -106,13 +128,37 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         { field: 'rankIngreso', label: SECCION17_TEMPLATES.tableHeaders.rankIngreso, type: 'number', placeholder: '0' }
     ];
 
+    // ✅ Propiedad para pasar a app-dynamic-table
+    override datos: Record<string, any> = {};
+
     constructor(
         cdRef: ChangeDetectorRef,
         injector: Injector,
-        private backendApi: BackendApiService
+        private backendApi: BackendApiService,
+        private formChangeService: FormChangeService
     ) {
         super(cdRef, injector);
         this.inicializarCamposDesdeStore();
+
+        // ✅ EFFECT: Auto-sync datos generales Y tabla IDH (usando el mismo patrón de la vista)
+        effect(() => {
+            const data = this.allSectionData();
+            const tablaData = this.indiceDesarrolloHumanoSignal();
+            const tablaKey = this.getTablaKeyIDH();
+            
+            // Combinar datos generales con datos de la tabla
+            this.datos = { ...data, [tablaKey]: tablaData };
+            
+            // También actualizar con la clave base para compatibilidad
+            this.datos['indiceDesarrolloHumanoTabla'] = tablaData;
+            
+            this.cdRef.markForCheck();
+            this.cdRef.detectChanges(); 
+            
+            setTimeout(() => {
+                this.cdRef.detectChanges();
+            }, 0);
+        });
     }
 
     /**
@@ -243,15 +289,18 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
 
     // === LÓGICA DE TABLA ===
 
-    getTablaKeyIDH(): string {
-        const prefijo = this.obtenerPrefijo();
-        return prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+    getIndiceDesarrolloHumanoTabla(): any[] {
+        return this.indiceDesarrolloHumanoSignal();
     }
 
-    getIndiceDesarrolloHumanoTabla(): any[] {
-        const tablaKey = this.getTablaKeyIDH();
-        const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
-        return Array.isArray(tabla) ? tabla : [];
+    getTablaKeyIDH(): string {
+        const prefijo = this.obtenerPrefijo();
+        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        
+        // ✅ USAR EL MISMO MÉTODO QUE USA app-dynamic-table internamente
+        const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
+        
+        return tablaKeyPrefixManager;
     }
 
     getIDH(): string {
@@ -270,9 +319,25 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
 
     onTablaActualizada(tablaData: any[]): void {
         const tablaKey = this.getTablaKeyIDH();
-        // Usar setField directamente para sincronizar tabla
-        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        
+        // ✅ Usar el mismo patrón exacto que sección 15
+        const dataToPersist = tablaData || this.indiceDesarrolloHumanoTablaSignal();
+        
+        // 1. Usar FormChangeService como sección 15
+        this.formChangeService.persistFields(this.seccionId, 'table', {
+            [tablaKey]: dataToPersist
+        }, { updateState: true, notifySync: true, persist: false });
+
+        // 2. Obtener datos persistidos y actualizar this.datos
+        const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || dataToPersist || [];
+        this.datos[tablaKey] = tablaPersistida;
+        
+        // 3. Llamar a onFieldChange para sincronización completa
+        this.onFieldChange(tablaKey, tablaPersistida, { refresh: false });
+        
+        // 4. Forzar detección de cambios
         this.cdRef.markForCheck();
+        this.cdRef.detectChanges();
     }
 
     /**
@@ -287,20 +352,25 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
             return [];
         }
 
-        return data.map(item => ({
-            poblacion: this.formatearNumero(item.f0),
-            rankIdh1: this.formatearNumero(item.f1),
-            idh: this.formatearDecimal(item.f2),
-            rankEsperanza: this.formatearNumero(item.f3),
-            esperanzaVida: this.formatearDecimal(item.f4),
-            rankEducacion1: this.formatearNumero(item.f5),
-            educacion: this.formatearDecimal(item.f6),
-            rankEducacion2: this.formatearNumero(item.f7),
-            anosEducacion: this.formatearDecimal(item.f8),
-            rankAnios: this.formatearNumero(item.f9),
-            ingreso: this.formatearDecimal(item.f10),
-            rankIngreso: this.formatearNumero(item.f11)
-        }));
+        const resultado = data.map(item => {
+            const transformado = {
+                poblacion: this.formatearNumero(item.f0),
+                rankIdh1: this.formatearNumero(item.f1),
+                idh: this.formatearDecimal(item.f2),
+                rankEsperanza: this.formatearNumero(item.f3),
+                esperanzaVida: this.formatearDecimal(item.f4),
+                rankEducacion1: this.formatearNumero(item.f5),
+                educacion: this.formatearDecimal(item.f6),
+                rankEducacion2: this.formatearNumero(item.f7),
+                anosEducacion: this.formatearDecimal(item.f8),
+                rankAnios: this.formatearNumero(item.f9),
+                ingreso: this.formatearDecimal(item.f10),
+                rankIngreso: this.formatearNumero(item.f11)
+            };
+            return transformado;
+        });
+        
+        return resultado;
     }
 
     /**
@@ -358,15 +428,15 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
      */
     private inicializarTablaVacia(): void {
         const prefijo = this.obtenerPrefijo();
-        const tablaKey = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
         
-        // Inicializar como array vacío
-        this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+        // Inicializar con PrefijoHelper
+        this.projectFacade.setField(this.seccionId, null, tablaKeyPrefijoHelper, []);
+        this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', []);
         
-        // También sin prefijo para fallback
-        if (prefijo) {
-            this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', []);
-        }
+        // Inicializar con PrefixManager  
+        this.projectFacade.setField(this.seccionId, null, tablaKeyPrefixManager, []);
     }
 
     /**
@@ -416,12 +486,22 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
                 const datosTransformados = this.transformarDatosIDH(datosDelBackend);
 
                 if (datosTransformados && datosTransformados.length > 0) {
-                    // 4. Guardar en state con prefijo y sin prefijo (fallback)
+                    // 4. Guardar en AMBOS formatos de clave para compatibilidad completa
                     const prefijo = this.obtenerPrefijo();
-                    const tablaKey = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+                    const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+                    const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
                     
-                    this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                    // Guardar con PrefijoHelper (usado por vista)
+                    this.projectFacade.setField(this.seccionId, null, tablaKeyPrefijoHelper, datosTransformados);
                     this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', datosTransformados);
+                    
+                    // Guardar con PrefixManager (usado por app-dynamic-table)
+                    this.projectFacade.setField(this.seccionId, null, tablaKeyPrefixManager, datosTransformados);
+                    
+                    // También actualizar this.datos directamente para ambas claves
+                    this.datos[tablaKeyPrefijoHelper] = datosTransformados;
+                    this.datos[tablaKeyPrefixManager] = datosTransformados;
+                    this.datos['indiceDesarrolloHumanoTabla'] = datosTransformados;
                 }
 
                 this.cdRef.markForCheck();
@@ -435,12 +515,14 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     /**
      * ✅ PATRÓN: Inicialización personalizada
      * Se llama en onInitCustom para limpiar y cargar datos
+     * Sigue el patrón de Sección 9: 1) inicializar tabla vacía, 2) cargar del backend
      */
     protected override onInitCustom(): void {
         super.onInitCustom();
         
-        // Cargar datos hardcodeados directamente (datos que tienes del backend)
-        this.cargarDatosDirectos();
+        // ✅ PATRÓN SECCIÓN 9: Primero inicializar tabla vacía, luego cargar del backend
+        this.inicializarTablaVacia();
+        this.cargarDatosDelBackend();
     }
 
     /**
