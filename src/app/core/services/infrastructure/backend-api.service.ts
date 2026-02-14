@@ -204,6 +204,369 @@ export class BackendApiService {
     );
   }
 
+  // ============================================================================
+  // ENDPOINTS DEMOGRÁFICOS - POST con {codigos: string[]}
+  // ============================================================================
+
+  /**
+   * Población por sexo
+   * POST /demograficos/datos
+   */
+  postDatosDemograficos(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/datos`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * PET por grupo etario
+   * POST /demograficos/pet-grupo
+   */
+  postPetGrupo(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/pet-grupo`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * PEA por sexo
+   * POST /demograficos/pea
+   */
+  postPea(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/pea`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * PEA ocupada/desocupada
+   * POST /demograficos/pea-ocupada-desocupada
+   */
+  postPeaOcupadaDesocupada(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/pea-ocupada-desocupada`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Población por edad
+   * POST /demograficos/etario
+   */
+  postEtario(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/etario`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Condición de ocupación
+   * POST /demograficos/condicion-ocupacion
+   */
+  postCondicionOcupacion(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/condicion-ocupacion`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Materiales de construcción
+   * POST /demograficos/materiales-construccion
+   */
+  postMaterialesConstruccion(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/materiales-construccion`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Saneamiento
+   * POST /demograficos/saneamiento
+   */
+  postSaneamiento(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/saneamiento`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Alumbrado
+   * POST /demograficos/alumbrado
+   */
+  postAlumbrado(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/alumbrado`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Seguro de salud
+   * POST /demograficos/seguro-salud
+   */
+  postSeguroSalud(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/seguro-salud`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Educación
+   * POST /demograficos/educacion
+   */
+  postEducacion(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/educacion`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Alfabetización
+   * POST /demograficos/alfabetizacion
+   */
+  postAlfabetizacion(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/alfabetizacion`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Índice de Desarrollo Humano (IDH)
+   * POST /demograficos/idh
+   */
+  postIdh(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/idh`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Necesidades Básicas Insatisfechas (NBI)
+   * POST /demograficos/nbi
+   */
+  postNbi(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/nbi`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Actividad económica
+   * POST /demograficos/actividad-economica
+   */
+  postActividadEconomica(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/actividad-economica`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Tipo de vivienda
+   * POST /demograficos/tipo-vivienda
+   */
+  postTipoVivienda(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/tipo-vivienda`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Lengua
+   * POST /demograficos/lengua
+   */
+  postLengua(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/lengua`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Abastecimiento de agua
+   * POST /demograficos/abastecimiento-agua
+   */
+  postAbastecimientoAgua(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/abastecimiento-agua`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  // ============================================================================
+  // ENDPOINTS "POR CPP" - POST con {codigos: string[]}
+  // ============================================================================
+
+  /**
+   * Condición de ocupación por CPP
+   * POST /demograficos/condicion-ocupacion-cpp
+   */
+  postCondicionOcupacionCpp(codigos: string[], mode?: string): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/condicion-ocupacion-cpp`;
+    const payload = { codigos, mode };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Materiales por CPP
+   * POST /demograficos/materiales-por-cpp
+   */
+  postMaterialesPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/materiales-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Abastecimiento de agua por CPP
+   * POST /demograficos/abastecimiento-agua-por-cpp
+   */
+  postAbastecimientoAguaPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/abastecimiento-agua-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Saneamiento por CPP
+   * POST /demograficos/saneamiento-por-cpp
+   */
+  postSaneamientoPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/saneamiento-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Alumbrado por CPP
+   * POST /demograficos/alumbrado-por-cpp
+   */
+  postAlumbradoPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/alumbrado-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Combustibles de cocina por CPP
+   * POST /demograficos/combustibles-cocina-por-cpp
+   */
+  postCombustiblesCocinaPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/combustibles-cocina-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Seguro de salud por CPP
+   * POST /demograficos/seguro-salud-por-cpp
+   */
+  postSeguroSaludPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/seguro-salud-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Religión por CPP
+   * POST /demograficos/religion-por-cpp
+   */
+  postReligionPorCpp(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/religion-por-cpp`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Centros poblados por códigos ubigeo
+   * POST /centros-poblados/por-codigos-ubigeo
+   */
+  postCentrosPobladosPorCodigosUbigeo(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/centros-poblados/por-codigos-ubigeo`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  // ============================================================================
+  // ENDPOINTS GET (antiguos - mantener para compatibilidad si es necesario)
+  // ============================================================================
+
   getResumenServicios(idUbigeo?: string): Observable<BackendResponse<any[]>> {
     const url = `${this.baseUrl}/servicios/resumen`;
     let params = new HttpParams();
