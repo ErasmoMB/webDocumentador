@@ -61,116 +61,17 @@ const transformCondicionOcupacionDesdeBackend = (data: any[]): any[] => {
 
 /**
  * Transforma datos de Materiales de Construcción del backend
- * Agrupa automáticamente por categorías repetidas en formato mejorado
+ * Mapea directamente TODOS los campos sin filtros ni agrupaciones
  */
 const transformMaterialesConstruccionDesdeBackend = (data: any[]): any[] => {
   if (!Array.isArray(data)) return [];
   
-  // Mapear datos básicos
-  const datosBasicos = data.map(item => ({
+  return data.map(item => ({
     categoria: item.categoria || item.tipo_categoria || '',
     tipoMaterial: item.subcategoria || item.tipo_material || item.material || item.tipoMaterial || '',
     casos: parseFloat(item.casos) || 0,
     porcentaje: item.porcentaje || ''
   }));
-
-  // Agrupar por categoría
-  const categorias = new Map<string, any[]>();
-  for (const item of datosBasicos) {
-    if (!categorias.has(item.categoria)) {
-      categorias.set(item.categoria, []);
-    }
-    categorias.get(item.categoria)!.push(item);
-  }
-
-  // Crear formato agrupado
-  const resultado: any[] = [];
-  const mapeoNombres: Record<string, string> = {
-    'Pared': 'Materiales de las paredes de las viviendas',
-    'Piso': 'Materiales de los pisos de las viviendas', 
-    'Techo': 'Materiales de los techos de las viviendas'
-  };
-
-  for (const [categoria, items] of categorias) {
-    // Solo proceder si hay más de una fila para esta categoría
-    if (items.length > 1) {
-      // Encabezado del grupo
-      const nombreGrupo = mapeoNombres[categoria] || `Materiales de ${categoria.toLowerCase()}`;
-      resultado.push({
-        categoria: nombreGrupo,
-        tipoMaterial: '',
-        casos: '',
-        porcentaje: '',
-        esEncabezadoGrupo: true // Flag para styling
-      });
-
-      // Filtrar y consolidar subcategorías
-      const subcategoriasMap = new Map<string, any>();
-      items.forEach(item => {
-        const tipoKey = item.tipoMaterial?.toLowerCase().trim();
-        
-        // Skip filas vacías, totales, o con 0 casos (excepto Total real)
-        if (!item.tipoMaterial || 
-            item.casos === 0 || 
-            (tipoKey === 'total' && subcategoriasMap.size === 0)) {
-          return;
-        }
-
-        // Si es Total, guardarlo separado
-        if (tipoKey === 'total') {
-          subcategoriasMap.set('TOTAL_ROW', item);
-          return;
-        }
-
-        // Consolidar materiales similares (ej: "Triplay/Calamina" vs "Triplay, calamina")
-        const normalizedKey = tipoKey
-          .replace(/[\/,]/g, '')
-          .replace(/\s+/g, ' ')
-          .toLowerCase();
-
-        if (subcategoriasMap.has(normalizedKey)) {
-          // Sumar casos si ya existe material similar
-          const existing = subcategoriasMap.get(normalizedKey);
-          existing.casos += item.casos;
-        } else {
-          subcategoriasMap.set(normalizedKey, { ...item });
-        }
-      });
-
-      // Agregar subcategorías (excluir TOTAL_ROW)
-      const subcategorias = Array.from(subcategoriasMap.entries())
-        .filter(([key]) => key !== 'TOTAL_ROW')
-        .map(([_, item]) => item)
-        .sort((a, b) => b.casos - a.casos); // Ordenar por casos descendente
-
-      subcategorias.forEach(item => {
-        resultado.push({
-          categoria: '', // Vacío para subcategorías
-          tipoMaterial: item.tipoMaterial,
-          casos: item.casos,
-          porcentaje: item.porcentaje,
-          esSubcategoria: true // Flag para styling
-        });
-      });
-
-      // Total del grupo
-      const totalRow = subcategoriasMap.get('TOTAL_ROW');
-      const totalCasos = totalRow?.casos || subcategorias.reduce((sum, item) => sum + item.casos, 0);
-      
-      resultado.push({
-        categoria: '',
-        tipoMaterial: 'Total',
-        casos: totalCasos,
-        porcentaje: '100,00 %',
-        esTotalGrupo: true // Flag para styling
-      });
-    } else {
-      // Si solo hay una fila para esta categoría, mantener formato original
-      resultado.push(...items);
-    }
-  }
-
-  return resultado;
 };
 
 // ============================================================================

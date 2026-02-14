@@ -86,29 +86,35 @@ export const SECCION25_TEMPLATES = {
 export const SECCION25_TABLE_CONFIGS = {
   tiposVivienda: {
     tablaKey: 'tiposViviendaAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   },
   condicionOcupacion: {
     tablaKey: 'condicionOcupacionAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   },
   materialesVivienda: {
     tablaKey: 'materialesViviendaAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   }
 };

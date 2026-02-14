@@ -5,7 +5,7 @@
 
   <app-table-wrapper [title]="viewModel().cuadroTituloTiposVivienda || (SECCION25_TEMPLATES.tituloTiposViviendaDefault + ' – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
     <app-generic-table
-      [data]="viewModel().tiposViviendaConPorcentajes"
+      [data]="viewModel().tiposVivienda"
       [config]="{
         columns: [
           { key: 'categoria', header: SECCION25_TEMPLATES.columnCategoria, align: 'left' },
@@ -25,7 +25,7 @@
 
   <app-table-wrapper [title]="viewModel().cuadroTituloCondicionOcupacion || (SECCION25_TEMPLATES.tituloCondicionOcupacionDefault + ' de la Vivienda – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
     <app-generic-table
-      [data]="viewModel().condicionOcupacionConPorcentajes"
+      [data]="viewModel().condicionOcupacion"
       [config]="{
         columns: [
           { key: 'categoria', header: SECCION25_TEMPLATES.columnCategoria, align: 'left' },
@@ -46,20 +46,40 @@
   <p class="text-justify" *ngIf="!viewModel().textoEstructura || viewModel().textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span class="data-calculated">{{ viewModel().porcentajePisosTierra }}</span>). El porcentaje restante, que consta del <span class="data-calculated">{{ viewModel().porcentajePisosCemento }}</span>, cuentan con pisos elaborados a base de cemento.</p>
 
   <app-table-wrapper [title]="viewModel().cuadroTituloMaterialesVivienda || (SECCION25_TEMPLATES.tituloMaterialesViviendaDefault + ' – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
-    <app-generic-table
-      [data]="viewModel().materialesConPorcentajes"
-      [config]="{
-        columns: [
-          { key: 'categoria', header: SECCION25_TEMPLATES.columnCategoria, align: 'left' },
-          { key: 'tipoMaterial', header: SECCION25_TEMPLATES.columnTipoMaterial, align: 'left' },
-          { key: 'casos', header: SECCION25_TEMPLATES.columnCasos, align: 'right' },
-          { key: 'porcentaje', header: SECCION25_TEMPLATES.columnPorcentaje, align: 'right' }
-        ],
-        showFooter: false,
-        striped: true,
-        hover: true
-      }">
-    </app-generic-table>
+    <table class="table-container">
+      <thead>
+        <tr>
+          <th class="table-header">{{ SECCION25_TEMPLATES.columnCategoria }}</th>
+          <th class="table-header">{{ SECCION25_TEMPLATES.columnTipoMaterial }}</th>
+          <th class="table-header">{{ SECCION25_TEMPLATES.columnCasos }}</th>
+          <th class="table-header">{{ SECCION25_TEMPLATES.columnPorcentaje }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of getMaterialesAgrupados(); let i = index">
+          <td class="table-cell" 
+              [attr.rowspan]="getRowspanMateriales(i)"
+              [style.display]="shouldShowCategoriaMateriales(i) ? '' : 'none'">
+            <span [appDataSource]="'backend'">{{ item.categoria }}</span>
+          </td>
+          <td class="table-cell">
+            <span [appDataSource]="'backend'">{{ item.subcategoria }}</span>
+          </td>
+          <td class="table-cell">
+            <span [appDataSource]="'backend'">{{ item.casos }}</span>
+          </td>
+          <td class="table-cell">
+            <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
+          </td>
+        </tr>
+        <tr *ngIf="viewModel().materiales.length === 0">
+          <td class="table-cell">____</td>
+          <td class="table-cell">____</td>
+          <td class="table-cell">____</td>
+          <td class="table-cell">____</td>
+        </tr>
+      </tbody>
+    </table>
   </app-table-wrapper>
   <p class="source">Fuente: <span *ngIf="viewModel().cuadroFuenteMaterialesVivienda && viewModel().cuadroFuenteMaterialesVivienda !== '____'" appDataHighlight="manual">{{ viewModel().cuadroFuenteMaterialesVivienda }}</span><span *ngIf="!viewModel().cuadroFuenteMaterialesVivienda || viewModel().cuadroFuenteMaterialesVivienda === '____'" appDataHighlight="manual">{{ SECCION25_TEMPLATES.fuenteDefault }}</span></p>
 

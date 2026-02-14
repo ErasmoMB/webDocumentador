@@ -64,32 +64,31 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     return this.generarTextoEstructuraDefault();
   });
 
-  readonly tiposViviendaSignal = computed(() => {
+  // ✅ Signal que SINCRONIZA exactamente con el formulario (datos del backend sin modificar)
+  readonly tiposViviendaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tableKeyPref = prefijo ? `tiposViviendaAISI${prefijo}` : 'tiposViviendaAISI';
-    // Prefer table store (canonical) and fallback to legacy field
-    return this.projectFacade.selectTableData(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectTableData(this.seccionId, null, 'tiposViviendaAISI')() ??
-           this.projectFacade.selectField(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectField(this.seccionId, null, 'tiposViviendaAISI')() ?? [];
+    const tablaKey = prefijo ? `tiposViviendaAISI${prefijo}` : 'tiposViviendaAISI';
+    // Leer exactamente los datos del backend - usar selectField como en el formulario
+    const data = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    return Array.isArray(data) ? data : [];
   });
 
-  readonly condicionOcupacionSignal = computed(() => {
+  // ✅ Signal que SINCRONIZA exactamente con el formulario (datos del backend sin modificar)
+  readonly condicionOcupacionSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tableKeyPref = prefijo ? `condicionOcupacionAISI${prefijo}` : 'condicionOcupacionAISI';
-    return this.projectFacade.selectTableData(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectTableData(this.seccionId, null, 'condicionOcupacionAISI')() ??
-           this.projectFacade.selectField(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectField(this.seccionId, null, 'condicionOcupacionAISI')() ?? [];
+    const tablaKey = prefijo ? `condicionOcupacionAISI${prefijo}` : 'condicionOcupacionAISI';
+    // Leer exactamente los datos del backend - usar selectField como en el formulario
+    const data = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    return Array.isArray(data) ? data : [];
   });
 
-  readonly materialesViviendaSignal = computed(() => {
+  // ✅ Signal que SINCRONIZA exactamente con el formulario (datos del backend sin modificar)
+  readonly materialesViviendaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tableKeyPref = prefijo ? `materialesViviendaAISI${prefijo}` : 'materialesViviendaAISI';
-    return this.projectFacade.selectTableData(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectTableData(this.seccionId, null, 'materialesViviendaAISI')() ??
-           this.projectFacade.selectField(this.seccionId, null, tableKeyPref)() ??
-           this.projectFacade.selectField(this.seccionId, null, 'materialesViviendaAISI')() ?? [];
+    const tablaKey = prefijo ? `materialesViviendaAISI${prefijo}` : 'materialesViviendaAISI';
+    // Leer exactamente los datos del backend - usar selectField como en el formulario
+    const data = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    return Array.isArray(data) ? data : [];
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -152,15 +151,10 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     cuadroTituloMaterialesVivienda: this.formDataSignal()?.['cuadroTituloMaterialesVivienda'] || '',
     cuadroFuenteMaterialesVivienda: this.formDataSignal()?.['cuadroFuenteMaterialesVivienda'] || '',
 
-    // tables and computed versions
+    // ✅ TABLAS DEL BACKEND - Sin modificaciones ni cálculos
     tiposVivienda: this.tiposViviendaSignal(),
-    tiposViviendaConPorcentajes: this.tiposViviendaConPorcentajes(),
-
     condicionOcupacion: this.condicionOcupacionSignal(),
-    condicionOcupacionConPorcentajes: this.condicionOcupacionConPorcentajes(),
-
     materiales: this.materialesViviendaSignal(),
-    materialesConPorcentajes: this.materialesConPorcentajes(),
 
     // derived values
     totalViviendas: this.totalViviendasSignal(),
@@ -286,6 +280,44 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
   obtenerNumeroCuadroMateriales(): string {
     return this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
+  }
+
+  // ✅ Métodos para agrupar materiales por categoría (con rowspan)
+  getMaterialesAgrupados(): any[] {
+    return this.materialesViviendaSignal() || [];
+  }
+
+  getRowspanMateriales(index: number): number {
+    const datos = this.getMaterialesAgrupados();
+    if (!datos || datos.length === 0) return 1;
+    
+    const currentItem = datos[index];
+    if (!currentItem) return 1;
+    
+    // Contar cuántas filas consecutivas tienen la misma categoría
+    let rowspan = 1;
+    const currentCategoria = currentItem.categoria;
+    
+    for (let i = index + 1; i < datos.length; i++) {
+      if (datos[i].categoria === currentCategoria) {
+        rowspan++;
+      } else {
+        break;
+      }
+    }
+    
+    return rowspan;
+  }
+
+  shouldShowCategoriaMateriales(index: number): boolean {
+    const datos = this.getMaterialesAgrupados();
+    if (index === 0) return true;
+    
+    const currentItem = datos[index];
+    const previousItem = datos[index - 1];
+    
+    // Mostrar categoría solo si es diferente a la anterior
+    return currentItem.categoria !== previousItem.categoria;
   }
 
   // --- Computed signals for preview (MODO IDEAL) ---

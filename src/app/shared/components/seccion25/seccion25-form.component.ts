@@ -12,6 +12,56 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { SECCION25_TEMPLATES, SECCION25_WATCHED_FIELDS } from './seccion25-constants';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { debugLog } from 'src/app/shared/utils/debug';
+
+// ✅ Helper para desenvuelver datos del backend
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  // El backend devuelve un array con un objeto que contiene rows
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+// ✅ Función de transformación para Tipos de Vivienda
+const transformTiposViviendaDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.f0 || '',
+    casos: typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0,
+    porcentaje: item.porcentaje || item.f2 || ''
+  }));
+};
+
+// ✅ Función de transformación para Condición de Ocupación
+const transformCondicionOcupacionDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.f0 || '',
+    casos: typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0,
+    porcentaje: item.porcentaje || item.f2 || ''
+  }));
+};
+
+// ✅ Función de transformación para Materiales de Vivienda
+const transformMaterialesViviendaDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  return data.map(item => ({
+    categoria: item.categoria || item.f0 || '',
+    subcategoria: item.subcategoria || '',  // ✅ Incluir subcategoria del backend
+    casos: typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0,
+    porcentaje: item.porcentaje || item.f2 || ''
+  }));
+};
 
 @Component({
   standalone: true,
@@ -122,35 +172,41 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   });
 
 
-  // ✅ Table configs con noInicializarDesdeEstructura
+  // ✅ Table configs con noInicializarDesdeEstructura - datos del backend
   tiposViviendaConfig: TableConfig = {
     tablaKey: 'tiposViviendaAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   };
 
   condicionOcupacionConfig: TableConfig = {
     tablaKey: 'condicionOcupacionAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   };
 
   materialesViviendaConfig: TableConfig = {
     tablaKey: 'materialesViviendaAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                        // ✅ Sin fila de total separada
+    campoTotal: '',                      // ✅ Backend ya envía Total
+    campoPorcentaje: '',                 // ✅ No calcular porcentaje
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    calcularPorcentajes: false,          // ✅ Backend ya calcula
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,          // ✅ Solo lectura
+    permiteEliminarFilas: false          // ✅ Solo lectura
   };
 
   // viewModel
@@ -176,7 +232,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
     private globalNumbering: GlobalNumberingService,
-    private formChange: FormChangeService
+    private formChange: FormChangeService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
     
@@ -309,9 +366,130 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
       // NOTE: Tablas se llenan con datos del backend (no hay estructura inicial)
       // La configuración `noInicializarDesdeEstructura: true` en los TableConfigs asegura esto
+      
+      // ✅ FASE 3: Cargar datos demográficos desde el backend
+      this.inicializarTablasVacias();  // Primero vacías
+      this.cargarDatosDelBackend();    // Luego llenar con backend
     } catch (e) {
       /* no bloquear inicio por este auto-fill */
     }
+  }
+
+  /**
+   * ✅ Inicializa las tablas de vivienda como arrays vacíos
+   * Se cargará del backend en cargarDatosDelBackend()
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Inicializar Tipos de Vivienda
+    const tablaKeyTipos = `tiposViviendaAISI${prefijo}`;
+    this.projectFacade.setField(this.seccionId, null, tablaKeyTipos, []);
+    this.projectFacade.setField(this.seccionId, null, 'tiposViviendaAISI', []);
+    
+    // Inicializar Condición de Ocupación
+    const tablaKeyCond = `condicionOcupacionAISI${prefijo}`;
+    this.projectFacade.setField(this.seccionId, null, tablaKeyCond, []);
+    this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionAISI', []);
+    
+    // Inicializar Materiales de Vivienda
+    const tablaKeyMat = `materialesViviendaAISI${prefijo}`;
+    this.projectFacade.setField(this.seccionId, null, tablaKeyMat, []);
+    this.projectFacade.setField(this.seccionId, null, 'materialesViviendaAISI', []);
+  }
+
+  /**
+   * ✅ Carga datos de los endpoints del backend para las tablas de vivienda
+   * - tiposViviendaAISI: /demograficos/tipo-vivienda
+   * - condicionOcupacionAISI: /demograficos/condicion-ocupacion-cpp
+   * - materialesViviendaAISI: /demograficos/materiales-por-cpp
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ USAR getCodigosCentrosPobladosAISI() DEL GRUPO ACTUAL (clase base)
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Crear copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      debugLog('[SECCION25] ⚠️ No hay centros poblados en el grupo actual para cargar datos');
+      return;
+    }
+
+    debugLog('[SECCION25] 📡 Cargando datos de viviendas desde backend...');
+
+    // ✅ OBTENER PREFIJO PARA GUARDAR CON CLAVE CORRECTA
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // 1️⃣ Cargar Tipos de Vivienda
+    this.backendApi.postTipoVivienda(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformTiposViviendaDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION25] ✅ Tipos de vivienda cargados:', datosTransformados);
+          
+          if (datosTransformados.length > 0) {
+            const tablaKey = `tiposViviendaAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'tiposViviendaAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION25] ❌ Error transformando tipos de vivienda:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION25] ❌ Error cargando tipos de vivienda:', err);
+      }
+    });
+
+    // 2️⃣ Cargar Condición de Ocupación
+    this.backendApi.postCondicionOcupacionCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformCondicionOcupacionDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION25] ✅ Condición de ocupación cargada:', datosTransformados);
+          
+          if (datosTransformados.length > 0) {
+            const tablaKey = `condicionOcupacionAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION25] ❌ Error transformando condición de ocupación:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION25] ❌ Error cargando condición de ocupación:', err);
+      }
+    });
+
+    // 3️⃣ Cargar Materiales de Vivienda
+    this.backendApi.postMaterialesPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformMaterialesViviendaDesdeDemograficos(datosDesenvueltos);
+          debugLog('[SECCION25] ✅ Materiales de vivienda cargados:', datosTransformados);
+          
+          if (datosTransformados.length > 0) {
+            const tablaKey = `materialesViviendaAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'materialesViviendaAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION25] ❌ Error transformando materiales de vivienda:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION25] ❌ Error cargando materiales de vivienda:', err);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean { return false; }
