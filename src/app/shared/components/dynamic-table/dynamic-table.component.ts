@@ -871,7 +871,15 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
 
   getEditableRows(): any[] {
     if (!this.tableData || this.tableData.length === 0) return [];
-    const totalKeyToUse = this.config?.totalKey || this.totalKey;
+    
+    // ✅ Para sección 8: Si totalKey es vacío, devolver TODO sin procesar
+    const configTotalKey = this.config?.totalKey;
+    if (configTotalKey === '' || configTotalKey === null || configTotalKey === undefined) {
+      return this.tableData; // Devolver TODOS los datos exactamente como vienen
+    }
+    
+    // Lógica original para tablas con totalKey configurado
+    const totalKeyToUse = configTotalKey || this.totalKey;
     const lastRow = this.tableData[this.tableData.length - 1];
     if (lastRow && lastRow[totalKeyToUse] && lastRow[totalKeyToUse].toString().toLowerCase().includes('total')) {
       return this.tableData.slice(0, -1);
@@ -895,8 +903,15 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   }
 
   getTotalRow(): any {
+    // ✅ Para sección 8: Si totalKey es explícitamente vacío, NO mostrar fila especial
+    const configTotalKey = this.config?.totalKey;
+    if (configTotalKey === '' || configTotalKey === null || configTotalKey === undefined) {
+      return null; // NO mostrar ninguna fila especial
+    }
+    
+    // Lógica original para tablas con totalKey configurado
     if (!this.tableData || this.tableData.length === 0) return null;
-    const totalKeyToUse = this.config?.totalKey || this.totalKey;
+    const totalKeyToUse = configTotalKey || this.totalKey;
     const lastRow = this.tableData[this.tableData.length - 1];
     if (lastRow && lastRow[totalKeyToUse] && lastRow[totalKeyToUse].toString().toLowerCase().includes('total')) {
       return lastRow;

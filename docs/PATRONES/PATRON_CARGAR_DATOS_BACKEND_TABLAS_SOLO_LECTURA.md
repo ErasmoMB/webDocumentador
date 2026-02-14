@@ -2,41 +2,219 @@
 
 ## Descripción General
 
-Este documento describe el patrón implementado en la **Sección 6 (Aspectos Demográficos)** para cargar datos del backend en tablas que son de **solo lectura** en el formulario (sin botones de agregar/eliminar filas ni fila de totales adicional), y que además se muestran correctamente en la **vista** del documento.
+Este documento describe el **patrón estándar** para implementar tablas que se llenan automáticamente con datos del backend, sin permitir edición manual. Este patrón se ha implementado exitosamente en:
+- **Sección 6**: Aspectos Demográficos (población por sexo y grupo etario)  
+- **Sección 7**: Población Económicamente Activa (PET, PEA, PEA Ocupada)
 
-## Problema Original
+## Cuándo Usar Este Patrón
 
-Las tablas de demografía (población por sexo y población por grupo etario) necesitaban:
+✅ **Úsalo cuando**:
+- Los datos vienen del backend y **NO deben ser editados** manualmente
+- Necesitas **llenar automáticamente** las tablas al abrir el formulario
+- Quieres mostrar datos exactos **sin filtros ni cálculos** adicionales
+- Los datos deben verse **iguales** en formulario y vista
+
+❌ **NO lo uses cuando**:
+- Los usuarios deben poder agregar/eliminar filas manualmente
+- Necesitas cálculos o transformaciones complejas de los datos
+- Los datos son editables o requieren validación de usuario
+
+## Problema Que Resuelve
+
+Las tablas necesitan:
 1. **Cargarse automáticamente desde el backend** al abrir el formulario
-2. **Ser de solo lectura** - los datos vienen del backend y no deben ser editados manualmente
-3. **No mostrar** botones de agregar fila, eliminar fila, ni fila de totales adicional
-4. **Verse correctamente** tanto en el formulario como en la vista del documento
+2. **Ser de solo lectura** - los datos vienen del backend exactamente como están
+3. **No mostrar** botones de agregar/eliminar filas ni controles de edición
+4. **Verse exactamente igual** tanto en el formulario como en la vista
+5. **NO duplicar filas Total** - el backend ya las envía
+6. **NO aplicar estilos especiales** a ninguna fila (todas iguales)
 
-## Solución Implementada
+## 🚀 PASOS PARA IMPLEMENTAR (Guía Rápida)
 
-### 1. Configuración de Tabla en Constants (seccion6-constants.ts)
+### Paso 1: Configurar la Tabla en Constants
+En tu archivo `seccionX-constants.ts`:
 
 ```typescript
-export const SECCION6_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
-  tablaKey: 'poblacionSexoAISD',
-  totalKey: '',           // ✅ Sin fila de total adicional
-  campoTotal: '',         // ✅ Sin campo total
-  campoPorcentaje: '',    // ✅ Sin cálculo de porcentaje automático
-  calcularPorcentajes: false,
-  camposParaCalcular: ['casos'],
-  noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
-  permiteAgregarFilas: false,           // ✅ Ocultar botón agregar
-  permiteEliminarFilas: false           // ✅ Ocultar botón eliminar
+export const SECCIONX_TABLA_MI_TABLA_CONFIG: TableConfig = {
+  tablaKey: 'miTablaKey',
+  totalKey: '',                    // ✅ Sin fila de total
+  campoTotal: '',                  // ✅ Sin cálculo total
+  campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+  calcularPorcentajes: false,      // ✅ No calcular automáticamente
+  camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+  permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+  permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
 };
 ```
 
-**Propiedades clave:**
-- `permiteAgregarFilas: false` - Oculta el botón "+ Agregar Fila"
-- `permiteEliminarFilas: false` - Oculta los botones "×" de eliminar cada fila
-- `campoTotal: ''` - No muestra fila de totales adicional
-- `noInicializarDesdeEstructura: true` - No inicializa con estructura vacía
+### Paso 2: Función de Transformación de Datos
+Crea una función que mapee los datos del backend a tu formato de tabla:
 
-### 2. Carga de Datos desde el Backend (seccion6-form.component.ts)
+```typescript
+const transformMiTablaDesdeDemograficos = (data: any[]): any[] => {
+  return data.map(item => ({
+    // Mapea EXACTAMENTE los campos del backend a tu tabla
+    campo1: item.nombre_campo_backend1,
+    campo2: item.nombre_campo_backend2,
+    campo3: item.nombre_campo_backend3,
+    // 🚨 IMPORTANTE: NO AGREGAR FILAS TOTAL AQUÍ
+    // El backend ya las envía, solo mapear los datos
+  }));
+};
+```
+
+### Paso 3: Método de Carga en el Componente
+En tu `seccionX-form.component.ts`, agrega:
+
+```typescript
+private cargarDatosDelBackend(): void {
+  // 1. Obtener los códigos de centros poblados del grupo actual
+  const codigosArray = this.getCodigosCentrosPobladosAISD();
+  const codigos = [...codigosArray]; // Copia mutable
+
+  if (!codigos || codigos.length === 0) {
+    debugLog('[SECCIONX] ⚠️ No hay centros poblados');
+    return;
+  }
+
+  // 2. Llamar al backend para cada tabla que necesites
+  this.backendApi.postMiEndpoint(codigos).subscribe({
+    next: (response: any) => {
+      // 3. Transformar datos usando tu función
+      const datosTransformados = transformMiTablaDesdeDemograficos(
+        unwrapDemograficoData(response?.data || [])
+      );
+      
+      // 4. Guardar con prefijo del grupo y sin prefijo (fallback)
+      const prefijo = this.obtenerPrefijoGrupo();
+      const tablaKey = `miTablaKey${prefijo}`;
+      this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+      this.projectFacade.setField(this.seccionId, null, 'miTablaKey', datosTransformados);
+    },
+    error: (error) => console.error('[SECCIONX] Error:', error)
+  });
+}
+```
+
+### Paso 4: Inicializar Tablas Vacías
+En el mismo componente, agrega:
+
+```typescript
+private inicializarTablasVacias(): void {
+  const prefijo = this.obtenerPrefijoGrupo();
+  
+  // Inicializar cada tabla como array vacío
+  this.projectFacade.setField(this.seccionId, null, `miTablaKey${prefijo}`, []);
+  this.projectFacade.setField(this.seccionId, null, 'miTablaKey', []);
+}
+```
+
+### Paso 5: Llamar Métodos en onInitCustom
+```typescript
+protected override onInitCustom(): void {
+  super.onInitCustom();
+  this.inicializarTablasVacias();  // Primero vacías
+  this.cargarDatosDelBackend();    // Luego llenar con backend
+}
+```
+
+### Paso 6: Signals para Leer los Datos
+```typescript
+readonly miTablaSignal: Signal<any[]> = computed(() => {
+  const prefijo = this.prefijoGrupoSignal();
+  const data = this.sectionDataSignal();
+  const tablaKey = `miTablaKey${prefijo}`;
+  return data[tablaKey] || data['miTablaKey'] || [];
+});
+```
+
+### Paso 7: Usar en el Template
+```html
+<dynamic-table 
+  [tableData]="miTablaSignal()"
+  [config]="SECCIONX_TABLA_MI_TABLA_CONFIG"
+  [modoVista]="false">
+</dynamic-table>
+```
+
+### Paso 7.1: ⚠️ CRÍTICO - Template HTML para Vista
+En `seccionX-view.component.html`, **NUNCA** uses:
+```html
+<!-- ❌ MAL: No usar estas clases ni estilos especiales -->
+<tr *ngFor="let item of datos" [class.total-row]="item.categoria === 'Total'">
+  <td><strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong></td>
+</tr>
+```
+
+✅ **CORRECTO**: Todas las filas iguales, sin estilos especiales:
+```html
+<tr *ngFor="let item of datos">
+  <td><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+  <td><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
+  <td><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
+</tr>
+```
+
+### Paso 8: Configurar Vista (seccionX-view.component.ts)
+```typescript
+getMiTablaData(): any[] {
+  const prefijo = this.obtenerPrefijoGrupo();
+  const tablaConPrefijo = prefijo ? this.datos[`miTablaKey${prefijo}`] : null;
+  if (tablaConPrefijo && tablaConPrefijo.length > 0) {
+    return tablaConPrefijo;
+  }
+  return this.datos.miTablaKey || [];
+}
+```
+
+## 📋 CHECKLIST DE IMPLEMENTACIÓN
+
+Para usar este patrón en cualquier sección, marca cada paso:
+
+- [ ] **Constants**: ✅ Creado TableConfig con `permiteAgregarFilas: false`  
+- [ ] **Transform**: ✅ Función de transformación que mapea backend → frontend
+- [ ] **Backend**: ✅ Método `cargarDatosDelBackend()` que llama al API
+- [ ] **Vacías**: ✅ Método `inicializarTablasVacias()` que inicializa arrays vacíos
+- [ ] **Init**: ✅ Llamar ambos métodos en `onInitCustom()`
+- [ ] **Signals**: ✅ Signal computed que lee los datos con prefijo/fallback
+- [ ] **Template**: ✅ `<dynamic-table>` usando el signal y config
+- [ ] **Vista**: ✅ Método getter en `seccionX-view.component.ts`
+- [ ] **🚨 NO DUPLICAR TOTAL**: ✅ Verificar que NO se agregue filas Total en código
+- [ ] **🚨 SIN ESTILOS ESPECIALES**: ✅ No usar `[class.total-row]` ni `<strong>` en template
+- [ ] **Verificar**: ✅ Datos se ven iguales en formulario y vista
+
+## 📊 EJEMPLOS REALES
+
+### Ejemplo 1: Sección 6 - Aspectos Demográficos
+
+**Constants (seccion6-constants.ts):**
+```typescript
+export const SECCION6_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
+  tablaKey: 'poblacionSexoAISD',
+  totalKey: '',
+  campoTotal: '',
+  campoPorcentaje: '',
+  calcularPorcentajes: false,
+  camposParaCalcular: ['casos'],
+  noInicializarDesdeEstructura: true,
+  permiteAgregarFilas: false,
+  permiteEliminarFilas: false
+};
+```
+
+**Transform Function:**
+```typescript
+const transformPoblacionSexoDesdeDemograficos = (data: any[]): any[] => {
+  return data.map(item => ({
+    sexo: item.sexo || '',
+    casos: parseFloat(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+```
+
+**Carga de Datos:**
 
 ```typescript
 private cargarDatosDelBackend(): void {
@@ -215,13 +393,51 @@ En el template del `DynamicTableComponent`:
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 🚨 ERRORES COMUNES A EVITAR
+
+### ❌ Error 1: Duplicar Filas Total
+**Problema**: Agregar manualmente filas Total cuando el backend ya las envía
+```typescript
+// ❌ MAL: No hacer esto si el backend ya envía la fila Total
+const filaTotal = { categoria: 'Total', casos: total, porcentaje: '100,00 %' };
+tablaConPorcentajes.push(filaTotal);
+```
+**Solución**: Dejar que el backend envíe la fila Total
+```typescript
+// ✅ BIEN: Solo devolver los datos del backend sin modificar
+return tablaConPorcentajes;
+```
+
+### ❌ Error 2: Estilos Especiales para Fila Total
+**Problema**: Hacer que la fila Total se vea diferente con CSS o negritas
+```html
+<!-- ❌ MAL: No usar estilos especiales -->
+<tr [class.total-row]="item.categoria === 'Total'">
+  <td><strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong></td>
+</tr>
+```
+**Solución**: Todas las filas con el mismo estilo
+```html
+<!-- ✅ BIEN: Todas las filas iguales -->
+<tr *ngFor="let item of datos">
+  <td><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+</tr>
+```
+
+### ❌ Error 3: Duplicación en Form Y View Components
+**Problema**: Tanto el form component como el view component agregan Total
+**Solución**: Verificar AMBOS archivos:
+- `seccionX-form.component.ts`
+- `seccionX-view.component.ts`
+
 ## Beneficios del Patrón
 
-1. **Datos de solo lectura**: Los datos demográficos vienen del backend y no pueden ser editados manualmente
+1. **Datos exactos del backend**: Sin modificaciones, cálculos o agregados manuales
 2. **Interfaz limpia**: Sin botones de agregar/eliminar que no tienen sentido para datos externos
-3. **Sincronización automática**: Los datos se comparten entre formulario y vista mediante el state
-4. **Fallback robusto**: Si no hay prefijo de grupo, usa la versión sin prefijo
-5. **Transformación flexible**: Los datos del backend se pueden transformar antes de guardar
+3. **Estilo uniforme**: Todas las filas se ven iguales, sin destacar ninguna
+4. **Sincronización automática**: Los datos se comparten entre formulario y vista mediante el state
+5. **Fallback robusto**: Si no hay prefijo de grupo, usa la versión sin prefijo
+6. **Sin duplicaciones**: Una sola fuente de verdad (el backend)
 
 ## Propiedades de TableConfig Resumen
 

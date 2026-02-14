@@ -12,25 +12,22 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of getPEAOcupacionesConPorcentajes()" [class.total-row]="item.categoria === 'Total'">
+      <tr *ngFor="let item of getPEAOcupacionesConPorcentajes()">
         <td class="table-cell">
           <span *ngIf="item.categoria && item.categoria !== '____'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
-            <span *ngIf="item.categoria !== 'Total'" [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria }}</span>
+            <span [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria }}</span>
           </span>
           <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
         </td>
         <td class="table-cell">
-          <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="item.categoria === 'Total' ? 'calculated' : 'backend'" [fieldName]="'casos'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.casos | number:'1.0-0' }}</strong>
-            <span *ngIf="item.categoria !== 'Total'">{{ item.casos | number:'1.0-0' }}</span>
+          <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'casos'">
+            {{ item.casos | number:'1.0-0' }}
           </span>
           <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
         </td>
         <td class="table-cell">
-          <span *ngIf="item.porcentaje" [appDataSource]="'calculated'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
-            <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
+          <span *ngIf="item.porcentaje" [appDataSource]="'backend'">
+            {{ item.porcentaje }}
           </span>
           <span *ngIf="!item.porcentaje">____</span>
         </td>

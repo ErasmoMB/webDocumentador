@@ -121,16 +121,19 @@ export const SECCION8_TEMPLATES = {
  */
 
 /**
- * Configuración para tabla PEA Ocupaciones
+ * ✅ Configuración para tabla PEA Ocupaciones - PATRÓN SOLO LECTURA
+ * Los datos vienen del backend automáticamente
  */
 export const SECCION8_TABLA_PEA_OCUPACIONES_CONFIG: TableConfig = {
   tablaKey: 'peaOcupacionesTabla',
-  totalKey: 'categoria',
-  campoTotal: 'casos',
-  campoPorcentaje: 'porcentaje',
-  calcularPorcentajes: true,
-  camposParaCalcular: ['casos'],
-  estructuraInicial: []
+  totalKey: '',                        // ✅ Sin total automático - datos vienen del backend
+  campoTotal: '',                      // ✅ Sin cálculo de total
+  campoPorcentaje: '',                 // ✅ Sin cálculo de porcentaje
+  calcularPorcentajes: false,          // ✅ Los porcentajes vienen del backend
+  camposParaCalcular: [],              // ✅ No calcular nada - datos puros del backend
+  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+  permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
+  permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
 };
 
 /**

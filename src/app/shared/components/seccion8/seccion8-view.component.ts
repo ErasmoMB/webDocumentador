@@ -102,13 +102,7 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
       };
     });
 
-    const filaTotal = {
-      categoria: 'Total',
-      casos: total,
-      porcentaje: '100,00 %'
-    };
-    tablaConPorcentajes.push(filaTotal);
-    
+    // No agregar fila Total manualmente, el backend ya la envía
     return tablaConPorcentajes;
   });
 

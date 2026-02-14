@@ -7,6 +7,7 @@ import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { 
   SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, 
   SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, 
@@ -17,6 +18,45 @@ import {
   SECCION8_TEMPLATES,
   SECCION8_WATCHED_FIELDS
 } from './seccion8-constants';
+
+// ============================================================================
+// FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
+// ============================================================================
+
+/**
+ * Desenvuelve datos del backend
+ * Maneja diferentes estructuras de respuesta
+ */
+const unwrapData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+/**
+ * Transforma datos de PEA Ocupaciones del backend
+ * Mapea directamente TODOS los campos sin filtros ni procesamiento
+ * Incluye todas las filas tal como vienen del backend (incluyendo totales)
+ */
+const transformPEAOcupacionesDesdePEA = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.ocupacion || item.actividad || item.nombre || '',
+    casos: item.casos !== undefined ? item.casos : item.total || item.valor || 0,
+    porcentaje: item.porcentaje || item.percentage || item.pct || ''
+  }));
+};
 
 @Component({
   standalone: true,
@@ -53,6 +93,9 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   fotografiasAgriculturaCache: FotoItem[] = [];
   fotografiasComercioCache: FotoItem[] = [];
 
+  // ✅ Signal para obtener el prefijo del grupo actual
+  readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
+
   // ✅ CAMPOS EDITABLES CON createAutoSyncField (CON PREFIJO DE GRUPO)
   readonly textoActividadesEconomicas = this.createAutoSyncField(`textoActividadesEconomicas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
   readonly textoFuentesActividadesEconomicas = this.createAutoSyncField(`textoFuentesActividadesEconomicas${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
@@ -71,7 +114,22 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   readonly textoHabitosConsumo2 = this.createAutoSyncField(`textoHabitosConsumo2${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
 
   // Configs y Columns para tablas
-  peaOcupacionesConfig = SECCION8_TABLA_PEA_OCUPACIONES_CONFIG;
+  get peaOcupacionesConfig() {
+    const prefijo = this.prefijoGrupoSignal();
+    const config = {
+      tablaKey: `peaOcupacionesTabla${prefijo}`,
+      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
+      campoTotal: '',                      // ✅ NO calcular total
+      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
+      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
+      camposParaCalcular: [],              // ✅ NO procesar nada - datos puros del backend
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+    };
+    console.log('[SECCION8] 🔍 Config generado:', config);
+    return config;
+  }
   poblacionPecuariaConfig = SECCION8_TABLA_POBLACION_PECUARIA_CONFIG;
   caracteristicasAgriculturaConfig = SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG;
   
@@ -164,7 +222,8 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -196,7 +255,62 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
+    // ✅ PRIMERO: Asegurar que las tablas estén completamente vacías
+    this.inicializarTablasVacias();
+    // ✅ SEGUNDO: Cargar datos del backend
+    this.cargarDatosDelBackend();
+    // TERCERO: Cargar fotografías
     this.cargarFotografias();
+  }
+
+  /**
+   * Inicializa las tablas como arrays vacíos con prefijo de grupo
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Solo la primera tabla (PEA Ocupaciones) sigue el patrón
+    this.projectFacade.setField(this.seccionId, null, `peaOcupacionesTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', []);
+  }
+
+  /**
+   * ✅ Cargar datos del backend siguiendo el patrón de Sección 6 y 7
+   * Carga solo la tabla PEA Ocupaciones desde el backend
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ Obtener códigos de centros poblados del grupo AISD actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION8] ⚠️ No hay centros poblados en el grupo actual');
+      return;
+    }
+
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // Cargar PEA Actividades Ocupadas
+    this.backendApi.postCondicionOcupacion(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformPEAOcupacionesDesdePEA(
+          unwrapData(response?.data || [])
+        );
+        
+        console.log('[SECCION8] 🔍 Backend response:', response);
+        console.log('[SECCION8] 🔍 Datos transformados:', datosTransformados);
+        
+        // Guardar con prefijo del grupo y sin prefijo (fallback)
+        const tablaKey = `peaOcupacionesTabla${prefijo}`;
+        this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', datosTransformados);
+        
+        console.log('[SECCION8] ✅ Datos PEA Ocupaciones cargados y guardados');
+      },
+      error: (err) => {
+        console.error('[SECCION8] Error cargando PEA Ocupaciones:', err);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean {
@@ -386,13 +500,7 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
       };
     });
 
-    const filaTotal = {
-      categoria: 'Total',
-      casos: total,
-      porcentaje: '100,00 %'
-    };
-    tablaConPorcentajes.push(filaTotal);
-    
+    // No agregar fila Total manualmente, el backend ya la envía
     return tablaConPorcentajes;
   }
 
