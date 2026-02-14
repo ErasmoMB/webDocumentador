@@ -9,6 +9,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { SessionDataService } from 'src/app/core/services/session/session-data.service';
 import { 
   SECCION11_WATCHED_FIELDS, 
   SECCION11_PHOTO_PREFIX_TRANSPORTE, 
@@ -51,6 +52,9 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   override fotografiasCache: FotoItem[] = [];
   fotografiasTransporteCache: FotoItem[] = [];
   fotografiasTelecomunicacionesCache: FotoItem[] = [];
+
+  // ✅ Inyectar SessionDataService para almacenamiento temporal
+  private sessionDataService = this.injector.get(SessionDataService);
 
   // ✅ CAMPOS EDITABLES CON AUTO-SYNC (createAutoSyncField) - CON PREFIJO DE GRUPO
   readonly parrafoTransporte = this.createAutoSyncField(`parrafoSeccion11_transporte_completo${PrefijoHelper.obtenerPrefijoGrupo(this.seccionId)}`, '');
@@ -261,11 +265,57 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ MANEJADOR DE TABLA DE TELECOMUNICACIONES
   onTelecomunicacionesTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyTelecomunicaciones();
-    this.cdRef.markForCheck();
+    console.log('🔵 [SECCION11] onTelecomunicacionesTableUpdated LLAMADO');
+    
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `telecomunicacionesTabla${prefijo}`;
+    
+    console.log(`🔵 [SECCION11] Prefijo: "${prefijo}", Tabla Key: ${tablaKey}`);
+    console.log(`🔵 [SECCION11] Tabla actualizada - ${tablaKey}:`, updatedData);
+
+    const tablaDelState = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    const datos = tablaDelState || updatedData || [];
+    this.datos[tablaKey] = datos;
+    
+    console.log(`🔵 [SECCION11] Datos finales:`, datos);
+    
+    // Guardar en backend
+    void this.sessionDataService.saveData(`seccion-11:${tablaKey}`, datos)
+      .then(() => {
+        console.log(`✅ [SECCION11] Tabla guardada en backend: ${tablaKey}`);
+      })
+      .catch((error) => {
+        console.warn(`⚠️ [SECCION11] Error guardando tabla en backend:`, error);
+      });
+
+    this.onFieldChange(tablaKey, datos, { refresh: true });
+    this.cdRef.detectChanges(); // ✅ INMEDIATO
   }
 
-  // ✅ MÉTODOS PARA OBTENER TEXTOS CON VALORES POR DEFECTO (PATRON SINCRONIZADO VISTA-FORMULARIO)
+  override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
+    console.log(`🔵 [SECCION11] onFieldChange LLAMADO - Campo: ${fieldId}`);
+    
+    // 🔵 [SECCION11] Depuración de guardado de datos
+    console.log(`🔵 [SECCION11] onFieldChange - Campo: ${fieldId}, Valor:`, value);
+
+    // ⚠️ NO agregar prefijo aquí - puede que ya lo tenga desde onTelecomunicacionesTableUpdated
+    // Solo si NO tiene prefijo, agregarlo
+    const prefijo = this.obtenerPrefijo();
+    const campoConPrefijo = prefijo && !fieldId.includes(prefijo) ? `${fieldId}${prefijo}` : fieldId;
+    
+    console.log(`🔵 [SECCION11] Campo original: ${fieldId}, Campo con prefijo: ${campoConPrefijo}`);
+    
+    // Guardar en SessionDataService (backend) para datos temporales
+    void this.sessionDataService.saveData(`seccion-11:${campoConPrefijo}`, value)
+      .then(() => {
+        console.log(`✅ [SECCION11] Datos guardados en backend: ${campoConPrefijo}`);
+      })
+      .catch((error) => {
+        console.warn(`⚠️ [SECCION11] Error guardando en backend, usando fallback localStorage:`, error);
+      });
+
+    super.onFieldChange(campoConPrefijo, value, options);
+  }
   obtenerTextoSeccion11TransporteCompleto(): string {
     const prefijo = this.obtenerPrefijo();
     const manualKey = `parrafoSeccion11_transporte_completo${prefijo}`;

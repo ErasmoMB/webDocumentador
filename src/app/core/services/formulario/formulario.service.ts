@@ -8,6 +8,7 @@ import { FormularioStoreService } from './formulario-store.service';
 import { FormularioStorageService } from './formulario-storage.service';
 import { FormularioImageMigrationService } from './formulario-image-migration.service';
 import { FormularioMockService } from './formulario-mock.service';
+import { SessionDataService } from '../session/session-data.service';
 
 /**
  * @deprecated FASE 1 - Migración SOLID: Este servicio está deprecated.
@@ -56,7 +57,8 @@ export class FormularioService {
     private imageMigration: FormularioImageMigrationService,
     private imageBackendService: ImageBackendService,
     private mockService: FormularioMockService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private sessionDataService: SessionDataService
   ) {
     this.cargarDesdeLocalStorage();
     this.ejecutarMigracionImagenes();
@@ -164,6 +166,15 @@ export class FormularioService {
     
     this.store.resetDatos();
     this.storage.clearAll();
+    void this.sessionDataService.clearAll();
+  }
+
+  async guardarTablesTemporal(nombre: string, datos: any): Promise<void> {
+    await this.sessionDataService.saveData(nombre, datos);
+  }
+
+  async cargarTablesTemporal(nombre: string): Promise<any> {
+    return this.sessionDataService.loadData(nombre);
   }
 
   async cargarMockCapitulo3(): Promise<boolean> {

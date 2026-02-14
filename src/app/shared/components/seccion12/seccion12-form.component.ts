@@ -7,6 +7,7 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { SECCION12_PHOTO_PREFIX_SALUD, SECCION12_PHOTO_PREFIX_IE_AYROCA, SECCION12_PHOTO_PREFIX_IE_40270, SECCION12_PHOTO_PREFIX_RECREACION, SECCION12_PHOTO_PREFIX_DEPORTE, SECCION12_TEMPLATES } from './seccion12-constants';
+import { SessionDataService } from 'src/app/core/services/session/session-data.service';
 
 @Component({
   selector: 'app-seccion12-form',
@@ -23,6 +24,9 @@ import { SECCION12_PHOTO_PREFIX_SALUD, SECCION12_PHOTO_PREFIX_IE_AYROCA, SECCION
 export class Seccion12FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.12';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Inyectar SessionDataService para almacenamiento temporal
+  private sessionDataService = this.injector.get(SessionDataService);
 
   // ✅ Exportar TEMPLATES para el HTML
   readonly SECCION12_TEMPLATES = SECCION12_TEMPLATES;
@@ -721,9 +725,23 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
-    // Agregar prefijo al campo para aislamiento AISD
+    // 🔵 [SECCION12] Depuración de guardado de datos
+    console.log(`🔵 [SECCION12] onFieldChange - Campo: ${fieldId}, Valor:`, value);
+
+    // ⚠️ NO agregar prefijo aquí - puede que ya lo tenga desde onCaracteristicasSaludTableUpdated
+    // Solo si NO tiene prefijo, agregarlo
     const prefijo = this.obtenerPrefijo();
-    const campoConPrefijo = prefijo ? `${fieldId}${prefijo}` : fieldId;
+    const campoConPrefijo = prefijo && !fieldId.includes(prefijo) ? `${fieldId}${prefijo}` : fieldId;
+    
+    // Guardar en SessionDataService (backend) para datos temporales
+    void this.sessionDataService.saveData(`seccion-12:${campoConPrefijo}`, value)
+      .then(() => {
+        console.log(`✅ [SECCION12] Datos guardados en backend: ${campoConPrefijo}`);
+      })
+      .catch((error) => {
+        console.warn(`⚠️ [SECCION12] Error guardando en backend, usando fallback localStorage:`, error);
+      });
+
     super.onFieldChange(campoConPrefijo, value, options);
   }
 
@@ -739,9 +757,22 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   onCaracteristicasSaludTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `caracteristicasSaludTabla${prefijo}`;
+    
+    console.log(`🔵 [SECCION12] Tabla actualizada - ${tablaKey}:`, updatedData);
+
     const tablaDelState = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = tablaDelState || updatedData || [];
     this.datos[tablaKey] = datos;
+    
+    // Guardar en backend également
+    void this.sessionDataService.saveData(`seccion-12:${tablaKey}`, datos)
+      .then(() => {
+        console.log(`✅ [SECCION12] Tabla guardada en backend: ${tablaKey}`);
+      })
+      .catch((error) => {
+        console.warn(`⚠️ [SECCION12] Error guardando tabla en backend:`, error);
+      });
+
     this.onFieldChange(tablaKey, datos, { refresh: true });
     this.cdRef.detectChanges(); // ✅ INMEDIATO
   }
