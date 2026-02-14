@@ -10,7 +10,60 @@ import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-hel
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { SECCION13_PHOTO_PREFIX, SECCION13_TEMPLATES } from './seccion13-constants';
+
+// ============================================================================
+// HELPER FUNCTIONS - TRANSFORMACIÓN DE DATOS
+// ============================================================================
+
+/**
+ * 🔄 Desenvuelve datos del backend (maneja diferentes formatos de respuesta)
+ * El backend puede devolver datos en diferentes estructuras
+ */
+const unwrapAfiliacionSaludData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  // Si es un array
+  if (Array.isArray(responseData)) {
+    // Si es un array de objetos con "rows" (formato: [{ rows: [...] }])
+    if (responseData.length > 0 && responseData[0]?.rows && Array.isArray(responseData[0].rows)) {
+      return responseData[0].rows;
+    }
+    // Si es un array directo de datos
+    return responseData;
+  }
+  
+  // Si tiene estructura con rows
+  if (responseData.rows && Array.isArray(responseData.rows)) {
+    return responseData.rows;
+  }
+  
+  // Si tiene estructura data.rows
+  if (responseData.data && Array.isArray(responseData.data)) {
+    return responseData.data;
+  }
+  
+  return [];
+};
+
+/**
+ * 🔄 Transforma datos desde `/demograficos/seguro-salud`
+ * Mapea el formato del backend directamente a la tabla
+ * ✅ SIN FILTROS, SIN MODIFICACIONES - devuelve exactamente lo del backend
+ */
+const transformAfiliacionSaludDesdeBackend = (data: any[]): any[] => {
+  if (!Array.isArray(data) || data.length === 0) {
+    return [];
+  }
+  
+  // ✅ Mapeo directo - sin filtrar "Total referencial"
+  return data.map((item: any) => ({
+    categoria: item.categoria || '',
+    casos: item.casos !== undefined ? item.casos : 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
 
 @Component({
   selector: 'app-seccion13-form',
@@ -102,16 +155,14 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   readonly afiliacionSaludConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `afiliacionSaludTabla${this.obtenerPrefijo()}`,
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    permiteAgregarFilas: true,
-    permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
-    estructuraInicial: [
-      { categoria: '', casos: 0, porcentaje: '0%' }
-    ],
-    calcularPorcentajes: false  // ❌ DESACTIVADO: Causa ocultamiento de filas
+    totalKey: '',                    // ✅ Sin fila de total
+    campoTotal: '',                  // ✅ Sin cálculo total
+    campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+    calcularPorcentajes: false,      // ✅ No calcular automáticamente
+    camposParaCalcular: ['casos', 'porcentaje'],  // Los campos ya vienen calculados del backend
+    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+    permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
   }));
 
   // ✅ REFACTOR: Usar ubicacionGlobal
@@ -144,7 +195,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -163,6 +215,80 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
+    // ✅ PATRÓN: Cargar datos desde backend
+    this.inicializarTablasVacias();  // Primero vacías
+    this.cargarDatosDelBackend();    // Luego llenar con backend
+  }
+
+  /**
+   * 🔄 Inicializa la tabla de afiliación como array vacío
+   * Sin estructura inicial, sin filas de total
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `afiliacionSaludTabla${prefijo}`;
+    
+    // Inicializar como array vacío
+    this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+    this.projectFacade.setField(this.seccionId, null, 'afiliacionSaludTabla', []);
+    
+    console.log(`[SECCION13] ✅ Tabla ${tablaKey} inicializada vacía`);
+  }
+
+  /**
+   * 🔄 Carga datos de afiliación de salud desde el backend
+   * Endpoint: POST /demograficos/seguro-salud
+   * ✅ PATRÓN: Solo lectura - los datos vienen tal cual del backend
+   */
+  private cargarDatosDelBackend(): void {
+    // 1. Obtener los códigos de centros poblados del grupo actual AISD
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.warn('[SECCION13] ⚠️ No hay centros poblados en el grupo AISD actual');
+      return;
+    }
+
+    console.log('[SECCION13] 📡 Cargando datos de afiliación de salud desde backend...');
+    console.log('[SECCION13] 📍 Centros poblados:', codigos);
+
+    // 2. Llamar al endpoint del backend
+    this.backendApi.postSeguroSalud(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          // 3. Desenvuelver datos (maneja diferentes formatos de respuesta)
+          const datosRaw = response?.data || [];
+          const datosDesenvueltos = unwrapAfiliacionSaludData(datosRaw);
+          
+          console.log('[SECCION13] 📨 Respuesta del backend:', response);
+          console.log('[SECCION13] 🔍 Datos desenvueltos:', datosDesenvueltos);
+
+          // 4. Transformar (mapeo de campos - SIN FILTROS)
+          const datosTransformados = transformAfiliacionSaludDesdeBackend(datosDesenvueltos);
+          
+          console.log('[SECCION13] ✨ Datos transformados:', datosTransformados);
+
+          // 5. Guardar con prefijo del grupo actual
+          const prefijo = this.obtenerPrefijo();
+          const tablaKey = `afiliacionSaludTabla${prefijo}`;
+          
+          // ✅ Guardar directamente SIN cálculos adicionales
+          // ✅ TODAS las filas incluyendo "Total referencial"
+          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'afiliacionSaludTabla', datosTransformados);
+          
+          console.log(`[SECCION13] ✅ Tabla ${tablaKey} cargada con ${datosTransformados.length} filas del backend`);
+          
+          this.cdRef.markForCheck();
+        } catch (error) {
+          console.error('[SECCION13] ❌ Error procesando datos de afiliación:', error);
+        }
+      },
+      error: (error: any) => {
+        console.error('[SECCION13] ❌ Error cargando datos del backend:', error);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean {
@@ -409,9 +535,9 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }
 
   getAfiliacionSaludConPorcentajes(): any[] {
+    // ✅ PATRÓN: Solo lectura - devolver datos exactos del backend SIN cálculos
     const tabla = this.afiliacionSaludTablaSignal();
-    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
+    return tabla || [];
   }
 
   formatearPorcentaje(value: any): string {
@@ -476,12 +602,11 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   onAfiliacionSaludTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyAfiliacionSalud();
-    const datosRaw = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
-    const cuadro = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
-    const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosRaw, cuadro);
-    this.datos[tablaKey] = datosConPorcentajes;
+    // ✅ Sin cálculos: Solo persistir los datos exactos del backend
+    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosConPorcentajes }, { updateState: true, notifySync: true, persist: false } as any);
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
     this.cdRef.detectChanges();
   }
 

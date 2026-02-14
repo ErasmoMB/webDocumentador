@@ -389,9 +389,9 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   getAfiliacionSaludConPorcentajes(): any[] {
+    // ✅ PATRÓN: Solo lectura - devolver datos exactos del backend SIN cálculos
     const tabla = this.afiliacionSaludTablaSignal();
-    const cuadroNumero = this.globalNumbering.getGlobalTableNumber(this.seccionId, 2);
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadroNumero);
+    return tabla || [];
   }
 
   private obtenerRegExp(pattern: string): RegExp {
