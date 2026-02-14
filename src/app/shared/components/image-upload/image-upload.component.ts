@@ -369,11 +369,18 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias.splice(i, 1);
       if (this._fotografias.length === 0) this._fotografias = [this.createEmptyFoto()];
       
+      // ✅ CRÍTICO: Usar groupPrefix al eliminar (como se hace al guardar)
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      const imagenKey = groupPrefix ? `${this.photoPrefix}${i + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${i + 1}Imagen`;
+      const numeroKey = groupPrefix ? `${this.photoPrefix}${i + 1}Numero${groupPrefix}` : `${this.photoPrefix}${i + 1}Numero`;
+      const tituloKey = groupPrefix ? `${this.photoPrefix}${i + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${i + 1}Titulo`;
+      const fuenteKey = groupPrefix ? `${this.photoPrefix}${i + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${i + 1}Fuente`;
+      
       try { this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}${i + 1}Imagen`]: '',
-        [`${this.photoPrefix}${i + 1}Numero`]: '',
-        [`${this.photoPrefix}${i + 1}Titulo`]: '',
-        [`${this.photoPrefix}${i + 1}Fuente`]: ''
+        [imagenKey]: '',
+        [numeroKey]: '',
+        [tituloKey]: '',
+        [fuenteKey]: ''
       }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(remove) error', e); }
       
       this.emitirCambios();
@@ -385,24 +392,35 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           imagen: this.extractImageId(f.imagen) || f.imagen
         }));
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-        // Forzar actualización global por si algo no se refresca inmediatamente
+        // ✅ Forzar actualización en todos los componentes (including seccion3-view) para reflejar eliminación inmediata
         try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+        try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
       } catch (e) {
       }
     } else {
       // single mode
       this.preview = null;
       this.imagenChange.emit('');
+      
+      // ✅ CRÍTICO: Usar groupPrefix al eliminar (como se hace al guardar)
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+      const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
+      const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
+      const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
+      const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
+      
       this.formChange.persistFields(this.sectionId, 'images', {
-        [`${this.photoPrefix}Imagen`]: '',
-        [`${this.photoPrefix}Numero`]: '',
-        [`${this.photoPrefix}Titulo`]: '',
-        [`${this.photoPrefix}Fuente`]: ''
-      });
+        [imagenKey]: '',
+        [numeroKey]: '',
+        [tituloKey]: '',
+        [fuenteKey]: ''
+      }, { notifySync: true });
 
       try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
         this.imageFacade.saveImages(this.sectionId, this.photoPrefix, [], groupPrefix);
+        // ✅ Forzar actualización en todos los componentes para reflejar eliminación inmediata
+        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+        try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
       } catch (e) {
       }
     }
@@ -437,8 +455,10 @@ export class ImageUploadComponent implements OnInit, OnChanges {
           this.metaDebounceTimers.delete(key);
           return;
         }
-        const tituloKey = `${this.photoPrefix}${index + 1}Titulo`;
-        const fuenteKey = `${this.photoPrefix}${index + 1}Fuente`;
+        // ✅ CRÍTICO: Usar groupPrefix al actualizar metadatos
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+        const tituloKey = groupPrefix ? `${this.photoPrefix}${index + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${index + 1}Titulo`;
+        const fuenteKey = groupPrefix ? `${this.photoPrefix}${index + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${index + 1}Fuente`;
         try {
           this.formChange.persistFields(this.sectionId, 'images', {
             [tituloKey]: foto.titulo || this.tituloDefault,
@@ -466,16 +486,20 @@ export class ImageUploadComponent implements OnInit, OnChanges {
 
       } else {
         // single image
+        // ✅ CRÍTICO: Usar groupPrefix al actualizar metadatos en modo single
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+        const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
+        const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
+        
         try {
           this.formChange.persistFields(this.sectionId, 'images', {
-            [`${this.photoPrefix}Titulo`]: this.titulo || this.tituloDefault,
-            [`${this.photoPrefix}Fuente`]: this.fuente || this.fuenteDefault
+            [tituloKey]: this.titulo || this.tituloDefault,
+            [fuenteKey]: this.fuente || this.fuenteDefault
           }, { notifySync: true });
         } catch (e) { console.warn('[ImageUpload] scheduleMetaPersist persist(single) error', e); }
 
         // Also persist image-group for single mode so preview uses saved metadata
         try {
-          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
           const imagenPersist = this.extractImageId(this.preview) || this.preview || '';
           const payload = [{ numero: this.calculateGlobalPhotoNumber(0), titulo: this.titulo || this.tituloDefault, fuente: this.fuente || this.fuenteDefault, imagen: imagenPersist }];
           this.imageFacade.saveImages(this.sectionId, this.photoPrefix, payload, groupPrefix);
