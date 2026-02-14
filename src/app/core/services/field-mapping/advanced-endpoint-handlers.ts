@@ -34,30 +34,6 @@ export interface AdvancedEndpointHandlerDeps {
 export function createAdvancedEndpointHandlers(deps: AdvancedEndpointHandlerDeps): AdvancedEndpointHandler[] {
   return [
     {
-      id: 'aisd-poblacion-sexo',
-      matches: ({ mapping }) => mapping.endpoint === '/aisd/poblacion-sexo',
-      load: ({ seccionId, mapping }) =>
-        deps.aisdAggregation
-          .loadAggregated(
-            seccionId,
-            (codigo) => deps.backendApi.getDatosDemograficos(codigo),
-            (acumulado, nuevos) => deps.demographyAggregator.addDemograficos(acumulado, nuevos)
-          )
-          .pipe(map(response => deps.demographyTransform.transformarPoblacionSexo(response)))
-    },
-    {
-      id: 'aisd-poblacion-etario',
-      matches: ({ mapping }) => mapping.endpoint === '/aisd/poblacion-etario',
-      load: ({ seccionId }) =>
-        deps.aisdAggregation
-          .loadAggregated(
-            seccionId,
-            (codigo) => deps.backendApi.getDatosDemograficos(codigo),
-            (acumulado, nuevos) => deps.demographyAggregator.addDemograficos(acumulado, nuevos)
-          )
-          .pipe(map(response => deps.demographyTransform.transformarPoblacionEtario(response)))
-    },
-    {
       id: 'aisd-pet',
       matches: ({ mapping }) => mapping.endpoint === '/aisd/pet',
       load: ({ seccionId, mapping }) =>
@@ -68,44 +44,6 @@ export function createAdvancedEndpointHandlers(deps: AdvancedEndpointHandlerDeps
             (acumulado, nuevos) => deps.demographyAggregator.addDemografia(acumulado, nuevos)
           )
           .pipe(map(response => (mapping.transform ? mapping.transform(response) : response)))
-    },
-    {
-      id: 'petTabla',
-      matches: ({ fieldName }) => fieldName === 'petTabla',
-      load: ({ seccionId }) =>
-        deps.aisdAggregation
-          .loadAggregated(
-            seccionId,
-            (codigo) => deps.backendApi.getDatosDemograficos(codigo),
-            (acumulado, nuevos) => deps.demographyAggregator.addDemograficos(acumulado, nuevos)
-          )
-          .pipe(map(response => deps.demographyTransform.transformarPET(response)))
-    },
-    {
-      id: 'peaOcupacionesTabla',
-      matches: ({ fieldName }) => fieldName === 'peaOcupacionesTabla',
-      load: ({ seccionId }) =>
-        deps.aisdAggregation
-          .loadAggregated(
-            seccionId,
-            (codigo) =>
-              deps.backendApi.getActividadesPrincipales(codigo).pipe(
-                map(response => {
-                  const datos = response?.data || response || [];
-                  const datosFiltrados = Array.isArray(datos)
-                    ? datos.filter(item => {
-                        if (!item) return false;
-                        const categoria = item.categoria;
-                        const casos = parseInt(item.casos || '0') || 0;
-                        return categoria !== null && categoria !== undefined && categoria !== '' && casos > 0;
-                      })
-                    : [];
-                  return datosFiltrados;
-                })
-              ),
-            (acumulado, nuevos) => deps.categoryAggregation.addDirectByCategoria(acumulado, nuevos)
-          )
-          .pipe(map(datosAgregados => deps.categoryTransform.transformPEAOcupaciones(datosAgregados)))
     },
     {
       id: 'lenguasMaternasTabla',

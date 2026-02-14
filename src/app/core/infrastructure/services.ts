@@ -2164,16 +2164,6 @@ export class EducacionService {
   }
 
   /**
-   * Obtiene datos de educación por códigos de ubicación
-   * @param codigosUbigeo Array de códigos CPP
-   */
-  obtenerEducacionPorCodigos(codigosUbigeo: string[]): Observable<any> {
-    return this.http.post(`${this.baseUrl}/educacion/por-codigos`, {
-      codigos_ubigeo: codigosUbigeo
-    });
-  }
-
-  /**
    * Obtiene niveles educativos para un CPP específico (Sección 28)
    */
   obtenerNivelesPorCpp(cpp: string): Observable<any> {

@@ -9,6 +9,8 @@ import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS, SECCION29_WATCHED_FIELDS } from './seccion29-constants';
+import { transformAfiliacionSaludTabla } from 'src/app/core/config/table-transforms';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 
 @Component({
   selector: 'app-seccion29-form',
@@ -26,6 +28,35 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   override readonly PHOTO_PREFIX: string;
   override useReactiveSync: boolean = true;
   override watchedFields: string[] = SECCION29_WATCHED_FIELDS;
+
+  /**
+   * 🔄 Transforma datos desde `/demograficos/seguro-salud-por-cpp`
+   * Desenvuelve la respuesta del backend y devuelve un array limpio
+   */
+  private readonly unwrapDemograficoData = (responseData: any): any[] => {
+    if (!responseData) return [];
+    
+    // Si es un array, tomar el primer elemento y extraer 'rows'
+    if (Array.isArray(responseData) && responseData.length > 0) {
+      return responseData[0]?.rows || responseData[0] || [];
+    }
+    
+    // Si tiene propiedad 'data', usar eso
+    if (responseData.data) {
+      const data = responseData.data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0]?.rows || data;
+      }
+      return data;
+    }
+    
+    // Si tiene 'rows' directamente, devolverlo
+    if (responseData.rows && Array.isArray(responseData.rows)) {
+      return responseData.rows;
+    }
+    
+    return responseData && Array.isArray(responseData) ? responseData : [];
+  };
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
@@ -111,7 +142,7 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private backendApi: BackendApiService) {
     super(cdRef, injector);
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
@@ -190,6 +221,53 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     return item?.mortalidad || 0;
   }
 
+  /**
+   * ✅ Cargar tabla de Afiliación a Salud desde el backend
+   * Endpoint: POST /demograficos/seguro-salud-por-cpp
+   * Datos son de solo lectura (100% backend, sin lógica del frontend)
+   */
+  private cargarAfiliacionDelBackend(): void {
+    // 1. Obtener los códigos de centros poblados del grupo actual
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION29-AFILIACION] ⚠️ No hay centros poblados en el grupo');
+      return;
+    }
+
+    // 2. Llamar al backend para obtener datos de afiliación a seguros
+    this.backendApi.postSeguroSaludPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          // 3. Desenvuelver y transformar datos (tal cual del backend, sin filtros)
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = this.unwrapDemograficoData(dataRaw);
+          let datosTransformados = transformAfiliacionSaludTabla(datosDesenvueltos);
+          
+          console.log('[SECCION29-AFILIACION] ✅ Datos cargados del backend (100% sin lógica frontend):', datosTransformados);
+          
+          // 4. Guardar en state CON PREFIJO y SIN PREFIJO (fallback)
+          if (datosTransformados.length > 0) {
+            const prefijo = this.obtenerPrefijoGrupo();
+            const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+            
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'afiliacionSaludTabla', datosTransformados);
+            
+            this.cdRef.markForCheck();
+          }
+        } catch (error) {
+          console.error('[SECCION29-AFILIACION] ❌ Error transformando datos:', error);
+        }
+      },
+      error: (error: any) => {
+        console.error('[SECCION29-AFILIACION] ❌ Error cargando datos del backend:', error);
+      }
+    });
+  }
+
   protected override onInitCustom(): void {
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
@@ -212,6 +290,9 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     if (!Array.isArray(this.afiliacionTablaSignal())) {
       this.onFieldChange('afiliacionSaludTabla', []);
     }
+
+    // ✅ CARGAR datos de afiliación del backend (tabla de solo lectura)
+    this.cargarAfiliacionDelBackend();
 
     // Ensure paragraph fields exist so editor shows current value (empty string if not set)
     ['textoNatalidadCP1', 'textoNatalidadCP2', 'textoMorbilidadCP', 'textoAfiliacionSalud'].forEach(field => {
@@ -260,12 +341,14 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
 
   readonly afiliacionConfig: TableConfig = {
     tablaKey: 'afiliacionSaludTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',                  // ✅ Sin fila de total (datos del backend)
+    campoTotal: '',                // ✅ Sin cálculo total
+    campoPorcentaje: '',           // ✅ Sin cálculo de porcentaje
+    calcularPorcentajes: false,    // ✅ No calcular (viene del backend)
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,    // ✅ Solo lectura - no agregar
+    permiteEliminarFilas: false    // ✅ Solo lectura - no eliminar
   };
 
   // ✅ Columnas para tables (evita problemas con caracteres especiales en templates)

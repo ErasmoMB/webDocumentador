@@ -81,16 +81,6 @@ export function createDefaultFieldMappings(): Map<string, FieldMapping> {
     dataSource: 'backend',
     endpoint: '/economicos/principales'
   });
-  fieldMappings.set('lenguasMaternasTabla', {
-    fieldName: 'lenguasMaternasTabla',
-    dataSource: 'backend',
-    endpoint: '/vistas/lenguas-ubicacion'
-  });
-  fieldMappings.set('religionesTabla', {
-    fieldName: 'religionesTabla',
-    dataSource: 'backend',
-    endpoint: '/vistas/religiones-ubicacion'
-  });
   fieldMappings.set('tablaAISD2Punto', { fieldName: 'tablaAISD2Punto', dataSource: 'backend' });
   fieldMappings.set('tablaAISD2Codigo', { fieldName: 'tablaAISD2Codigo', dataSource: 'backend' });
   fieldMappings.set('tablaAISD2Poblacion', { fieldName: 'tablaAISD2Poblacion', dataSource: 'backend' });

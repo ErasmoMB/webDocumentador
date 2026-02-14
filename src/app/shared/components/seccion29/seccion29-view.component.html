@@ -5,35 +5,35 @@
   <p class="text-justify">{{ obtenerTextoNatalidadCP1() }}</p>
   <p class="text-justify">{{ obtenerTextoNatalidadCP2() }}</p>
 
-  <app-table-wrapper [title]="(tituloNatalidadSignal() && tituloNatalidadSignal().trim().length>0) ? tituloNatalidadSignal() : (SECCION29_TEMPLATES.placeholderTituloNatalidad.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
+  <app-table-wrapper [title]="(tituloNatalidadSignal() && tituloNatalidadSignal().trim().length>0) ? tituloNatalidadSignal() : (SECCION29_TEMPLATES.placeholderTituloNatalidadView.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
     <app-generic-table
       [data]="getNatalidadMortalidadSinTotal()"
       [config]="natalidadTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteNatalidadSignal() && fuenteNatalidadSignal().trim().length>0 ? fuenteNatalidadSignal() : SECCION29_TEMPLATES.placeholderFuenteNatalidad }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteNatalidadSignal() && fuenteNatalidadSignal().trim().length>0 ? fuenteNatalidadSignal() : SECCION29_TEMPLATES.placeholderFuenteNatalidadView }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>{{ SECCION29_TEMPLATES.tituloSubseccionB }}</strong></p>
   <p class="text-justify">{{ obtenerTextoMorbilidadCP() }}</p>
 
-  <app-table-wrapper [title]="(tituloMorbilidadSignal() && tituloMorbilidadSignal().trim().length>0) ? tituloMorbilidadSignal() : (SECCION29_TEMPLATES.placeholderTituloMorbilidad.replace('_____', distritoSeleccionadoSignal()))" [sectionId]="seccionId">
+  <app-table-wrapper [title]="(tituloMorbilidadSignal() && tituloMorbilidadSignal().trim().length>0) ? tituloMorbilidadSignal() : (SECCION29_TEMPLATES.placeholderTituloMorbilidadView.replace('_____', distritoSeleccionadoSignal()))" [sectionId]="seccionId">
     <app-generic-table
       [data]="getMorbilidadSinTotal()"
       [config]="morbilidadTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteMorbilidadSignal() && fuenteMorbilidadSignal().trim().length>0 ? fuenteMorbilidadSignal() : SECCION29_TEMPLATES.placeholderFuenteMorbilidad }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteMorbilidadSignal() && fuenteMorbilidadSignal().trim().length>0 ? fuenteMorbilidadSignal() : SECCION29_TEMPLATES.placeholderFuenteMorbilidadView }}</span></p>
 
   <p class="mt-lg mb-sm"><strong>{{ SECCION29_TEMPLATES.tituloSubseccionC }}</strong></p>
   <p class="text-justify">{{ obtenerTextoAfiliacionSalud() }}</p>
 
-  <app-table-wrapper [title]="(tituloAfiliacionSignal() && tituloAfiliacionSignal().trim().length>0) ? tituloAfiliacionSignal() : (SECCION29_TEMPLATES.placeholderTituloAfiliacion.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
+  <app-table-wrapper [title]="(tituloAfiliacionSignal() && tituloAfiliacionSignal().trim().length>0) ? tituloAfiliacionSignal() : (SECCION29_TEMPLATES.placeholderTituloAfiliacionView.replace('_____', centroPobladoSignal()))" [sectionId]="seccionId">
     <app-generic-table
-      [data]="getAfiliacionSaludSinTotal()"
+      [data]="afiliacionTablaSignal()"
       [config]="afiliacionTableConfig">
     </app-generic-table>
   </app-table-wrapper>
-  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteAfiliacionSignal() && fuenteAfiliacionSignal().trim().length>0 ? fuenteAfiliacionSignal() : SECCION29_TEMPLATES.placeholderFuenteAfiliacion }}</span></p>
+  <p class="source">FUENTE:<span [appDataSource]="'manual'"> {{ fuenteAfiliacionSignal() && fuenteAfiliacionSignal().trim().length>0 ? fuenteAfiliacionSignal() : SECCION29_TEMPLATES.placeholderFuenteAfiliacionView }}</span></p>
 
   <app-image-upload
       [modoVista]="true"

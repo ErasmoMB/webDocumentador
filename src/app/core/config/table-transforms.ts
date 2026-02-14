@@ -297,3 +297,40 @@ export function transformNbiV2TablaSegunPoblacion(data: any): any[] {
 export function transformNbiV2TiposExistentes(data: any): any[] {
   return transformNbiV2TablaSegunPoblacion(data);
 }
+
+/**
+ * ✅ SECCION 30: Transformar datos de Nivel Educativo desde endpoint /demograficos/educacion
+ * El backend devuelve filas directamente con: { categoria, casos, porcentaje }
+ * Incluye la fila Total que debe ser mostrada en la tabla
+ */
+export function transformNivelEducativoDesdeDemograficos(data: any): any[] {
+  const arr = Array.isArray(data) ? data : [];
+  // Devolver todas las filas incluyendo Total (viene del backend)
+  return arr.filter((row: any) => {
+    const casos = (row.casos || 0) >= 0;
+    return casos;
+  }).map((row: any) => ({
+    nivel: row.categoria || row.nivel || '',
+    casos: row.casos || 0,
+    porcentaje: row.porcentaje || '0.00 %'
+  }));
+}
+
+/**
+ * ✅ SECCION 30: Transformar datos de Tasa de Analfabetismo desde endpoint /demograficos/alfabetizacion
+ * El backend devuelve filas directamente con: { categoria, casos, porcentaje }
+ * Se mapea a: { indicador, casos, porcentaje }
+ * Incluye la fila Total que debe ser mostrada en la tabla
+ */
+export function transformTasaAnalfabetismoDesdeDemograficos(data: any): any[] {
+  const arr = Array.isArray(data) ? data : [];
+  // Devolver todas las filas incluyendo Total (viene del backend)
+  return arr.filter((row: any) => {
+    const casos = (row.casos || 0) >= 0;
+    return casos;
+  }).map((row: any) => ({
+    indicador: row.categoria || row.indicador || '',
+    casos: row.casos || 0,
+    porcentaje: row.porcentaje || '0.00 %'
+  }));
+}

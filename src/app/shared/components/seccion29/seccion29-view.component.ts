@@ -273,7 +273,8 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   }
 
   getAfiliacionSaludSinTotal(): any[] {
-    return (this.afiliacionTablaSignal() || []).filter((item: any) => !item?.categoria?.toString?.().toLowerCase?.().includes('total'));
+    // ✅ REMOVIDO: Ahora mostramos todas las filas del backend sin filtros
+    return (this.afiliacionTablaSignal() || []);
   }
 
   // Total removed by user request

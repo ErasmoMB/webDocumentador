@@ -64,9 +64,11 @@ export const SECCION29_TEMPLATES = {
   
   labelTituloNatalidad: 'Título — Indicadores de natalidad y mortalidad',
   placeholderTituloNatalidad: 'Ej: Indicadores de natalidad y mortalidad – CP _____ (2023-2024)',
+  placeholderTituloNatalidadView: 'Indicadores de natalidad y mortalidad – CP _____ (2023-2024)',
   labelTabdlaNatalidad: 'Tabla Indicadores de natalidad y mortalidad',
   labelFuenteNatalidad: 'Fuente',
   placeholderFuenteNatalidad: 'Ej: GEADES (2024)',
+  placeholderFuenteNatalidadView: 'GEADES (2024)',
   
   // ============ SECCIÓN B: MORBILIDAD ============
   tituloSubseccionB: 'b. Morbilidad',
@@ -76,9 +78,11 @@ export const SECCION29_TEMPLATES = {
   
   labelTituloMorbilidad: 'Título — Casos por grupos de morbilidad',
   placeholderTituloMorbilidad: 'Ej: Casos por grupos de morbilidad – Distrito _____ (2023)',
+  placeholderTituloMorbilidadView: 'Casos por grupos de morbilidad – Distrito _____ (2023)',
   labelTablaMorbilidad: 'Tabla Casos por grupos de morbilidad',
   labelFuenteMorbilidad: 'Fuente',
   placeholderFuenteMorbilidad: 'Ej: REUNIS (2024)',
+  placeholderFuenteMorbilidadView: 'REUNIS (2024)',
   
   // ============ SECCIÓN C: AFILIACIÓN A SEGUROS ============
   tituloSubseccionC: 'c. Población afiliada a Seguros de Salud',
@@ -88,9 +92,11 @@ export const SECCION29_TEMPLATES = {
   
   labelTituloAfiliacion: 'Título — Población según tipo de seguro de salud afiliado',
   placeholderTituloAfiliacion: 'Ej: Población según tipo de seguro de salud afiliado – CP _____ (2017)',
+  placeholderTituloAfiliacionView: 'Población según tipo de seguro de salud afiliado – CP _____ (2017)',
   labelTablaAfiliacion: 'Tabla Población según tipo de seguro de salud afiliado',
   labelFuenteAfiliacion: 'Fuente',
   placeholderFuenteAfiliacion: 'Ej: INEI (2017)',
+  placeholderFuenteAfiliacionView: 'INEI (2017)',
   
   // ============ VALORES POR DEFECTO Y FALLBACKS ============
   centroPobladoDefault: 'Cahuacho',

@@ -9,7 +9,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { GroupConfigService } from 'src/app/core/services/groups/group-config.service';
-import { EducacionService } from 'src/app/core/infrastructure/services';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { AISIGroupService } from 'src/app/core/services/groups/aisi-group.service';
 import { SECCION28_TEMPLATES } from './seccion28-constants';
 
@@ -183,7 +183,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     injector: Injector,
     protected tableFacade: TableManagementFacade,
     private groupConfig: GroupConfigService,
-    private educacionService: EducacionService
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -412,7 +412,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (!codigos || codigos.length === 0) return;
 
     // ✅ Subscription única sin takeUntil (solo se ejecuta una vez desde cargarEducacionDelBackend)
-    this.educacionService.obtenerEducacionPorCodigos(codigos)
+    this.backendApi.postEducacion(codigos)
       .subscribe(
       (response: any) => {
         if (response.success && response.data && Array.isArray(response.data)) {

@@ -9,7 +9,26 @@ import { TableMockMergeService } from 'src/app/core/services/tables/table-mock-m
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { ViewChildHelper } from 'src/app/shared/utils/view-child-helper';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformNivelEducativoDesdeDemograficos, transformTasaAnalfabetismoDesdeDemograficos } from 'src/app/core/config/table-transforms';
 import { SECCION30_TEMPLATES, SECCION30_TABLE_CONFIG, SECCION30_CONFIG, SECCION30_WATCHED_FIELDS } from './seccion30-constants';
+
+// ✅ Helper para desenvuelver datos del backend (respuesta del endpoint)
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  // El backend devuelve un array con un objeto que contiene rows
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -44,15 +63,15 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ COLUMNAS COMO SIGNALS - Evita problemas con caracteres acentuados en templates
   readonly nivelEducativoColumnasSignal: Signal<any[]> = computed(() => [
-    { field: 'nivel', label: SECCION30_TEMPLATES.lblCategoría, type: 'text', readonly: true },
+    { field: 'nivel', label: SECCION30_TEMPLATES.lblCategoría, type: 'text' },
     { field: 'casos', label: SECCION30_TEMPLATES.lblCasos, type: 'number' },
-    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text', readonly: true }
+    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text' }
   ]);
 
   readonly tasaAnalfabetismoColumnasSignal: Signal<any[]> = computed(() => [
-    { field: 'indicador', label: SECCION30_TEMPLATES.lblIndicador, type: 'text', readonly: true },
+    { field: 'indicador', label: SECCION30_TEMPLATES.lblIndicador, type: 'text' },
     { field: 'casos', label: SECCION30_TEMPLATES.lblCasos, type: 'number' },
-    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text', readonly: true }
+    { field: 'porcentaje', label: SECCION30_TEMPLATES.lblPorcentaje, type: 'text' }
   ]);
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -172,7 +191,12 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   private tableFacade: TableManagementFacade;
   private tablasYaInicializadas = new Set<string>(); // Evitar bucles de inicialización
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService) {
+  constructor(
+    cdRef: ChangeDetectorRef, 
+    injector: Injector, 
+    private formChange: FormChangeService,
+    private backendApi: BackendApiService
+  ) {
     super(cdRef, injector);
     this.mockMergeService = injector.get(TableMockMergeService);
     this.tableFacade = injector.get(TableManagementFacade);
@@ -203,7 +227,13 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
+    // ✅ 1. Inicializar tablas como vacías primero
+    this.inicializarTablasVacias();
+
+    // ✅ 2. Cargar datos del backend (Métodos POST demográficos)
+    this.cargarDatosDelBackend();
+
+    // ✅ 3. AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
@@ -215,26 +245,103 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     
     this.cargarFotografias();
-    
-    // Estructura inicial eliminada - solo inicializar vacío si no hay datos
-    this.inicializarTablaVacia('nivelEducativoTabla');
-    this.inicializarTablaVacia('tasaAnalfabetismoTabla');
   }
 
   /**
-   * Inicializa una tabla vacía si no hay datos
+   * ✅ Inicializa las tablas como vacías si no hay datos
    */
-  private inicializarTablaVacia(tablaKey: string): void {
-    if (this.tablasYaInicializadas.has(tablaKey)) {
+  private inicializarTablasVacias(): void {
+    const tablas = ['nivelEducativoTabla', 'tasaAnalfabetismoTabla'];
+    
+    tablas.forEach(tablaKey => {
+      if (this.tablasYaInicializadas.has(tablaKey)) {
+        return;
+      }
+      const datosActuales = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
+        ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+      if (!Array.isArray(datosActuales) || datosActuales.length === 0) {
+        this.tablasYaInicializadas.add(tablaKey);
+        this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+        this.onFieldChange(tablaKey, []);
+      }
+    });
+  }
+
+  /**
+   * ✅ Carga datos de los endpoints del backend para las tablas de educación
+   * - nivelEducativoTabla: /demograficos/educacion
+   * - tasaAnalfabetismoTabla: /demograficos/alfabetizacion
+   * 
+   * PATRÓN: 100% datos del backend, tablas de solo lectura
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ USAR getCodigosCentrosPobladosAISI() DEL GRUPO ACTUAL (clase base)
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Crear copia mutable para el API
+
+    if (!codigos || codigos.length === 0) {
+      console.warn('[SECCION30] ⚠️ No hay centros poblados en el grupo actual para cargar datos');
       return;
     }
-    const datosActuales = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
-      ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    if (!Array.isArray(datosActuales) || datosActuales.length === 0) {
-      this.tablasYaInicializadas.add(tablaKey);
-      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
-      this.onFieldChange(tablaKey, []);
-    }
+
+    console.log('[SECCION30] 📡 Cargando datos de educación desde backend...', { codigos });
+
+    // ✅ OBTENER PREFIJO PARA GUARDAR CON CLAVE CORRECTA
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // ✅ 1. CARGAR DATOS DE NIVEL EDUCATIVO
+    this.backendApi.postEducacion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          // Desenvuelver datos del backend
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformNivelEducativoDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION30] ✅ Datos de nivel educativo cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO y SIN PREFIJO (fallback)
+          if (datosTransformados.length > 0) {
+            const tablaKey = `nivelEducativoTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          console.error('[SECCION30] ❌ Error transformando datos de nivel educativo:', e);
+        }
+      },
+      error: (err: any) => {
+        console.error('[SECCION30] ❌ Error cargando nivel educativo:', err);
+      }
+    });
+
+    // ✅ 2. CARGAR DATOS DE TASA DE ANALFABETISMO (Alfabetización)
+    this.backendApi.postAlfabetizacion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          // Desenvuelver datos del backend
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformTasaAnalfabetismoDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION30] ✅ Datos de analfabetismo cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO y SIN PREFIJO (fallback)
+          if (datosTransformados.length > 0) {
+            const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          console.error('[SECCION30] ❌ Error transformando datos de analfabetismo:', e);
+        }
+      },
+      error: (err: any) => {
+        console.error('[SECCION30] ❌ Error cargando analfabetismo:', err);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean { return false; }

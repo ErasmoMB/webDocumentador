@@ -137,21 +137,25 @@ export const SECCION30_TEMPLATES = {
 export const SECCION30_TABLE_CONFIG = {
   nivelEducativo: {
     tablaKey: 'nivelEducativoTabla',
-    totalKey: 'nivel',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,      // ✅ Sin botón agregar
+    permiteEliminarFilas: false      // ✅ Sin botón eliminar
   },
   tasaAnalfabetismo: {
     tablaKey: 'tasaAnalfabetismoTabla',
-    totalKey: 'indicador',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    calcularPorcentajes: true,
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
+    calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: false,      // ✅ Sin botón agregar
+    permiteEliminarFilas: false      // ✅ Sin botón eliminar
   },
 };
 

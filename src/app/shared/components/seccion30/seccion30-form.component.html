@@ -43,9 +43,6 @@
           [config]="nivelEducativoDynamicConfig"
           [columns]="nivelEducativoColumnasSignal()"
           [tablaKey]="getNivelEducativoTablaKey()"
-          [totalKey]="'nivel'"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onNivelEducativoTableUpdated($event)">
         </app-dynamic-table>
 
@@ -84,9 +81,6 @@
           [config]="tasaAnalfabetismoDynamicConfig"
           [columns]="tasaAnalfabetismoColumnasSignal()"
           [tablaKey]="getTasaAnalfabetismoTablaKey()"
-          [totalKey]="'indicador'"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
         </app-dynamic-table>
 

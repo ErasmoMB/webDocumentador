@@ -204,11 +204,6 @@ export class SimpleEndpointDataLoaderService {
    */
   private tryLoadGet(mapping: FieldMapping, idUbigeo: string): Observable<any> | null {
     switch (mapping.endpoint) {
-      case '/demograficos/datos':
-        return this.backendApi.getDatosDemograficos(idUbigeo).pipe(
-          map(response => (mapping.transform ? mapping.transform(response.data) : response.data))
-        );
-
       case '/aisd/informacion-referencial':
         return this.backendApi.getInformacionReferencialAISD(idUbigeo).pipe(
           map(response => (mapping.transform ? mapping.transform(response.data) : response.data))

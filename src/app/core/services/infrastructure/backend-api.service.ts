@@ -141,15 +141,6 @@ export class BackendApiService {
     );
   }
 
-  postEducacionPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
-    const url = `${this.baseUrl}/educacion/por-codigos`;
-    const payload = { codigos_ubigeo: codigosUBIGEO };
-    return this.http.post<any>(url, payload).pipe(
-      map(data => this.transformResponse(data)),
-      catchError(this.handleError)
-    );
-  }
-
   postTasaAnalfabetismoPorCodigos(codigosUBIGEO: string[]): Observable<BackendResponse<any>> {
     const url = `${this.baseUrl}/educacion/tasa-analfabetismo/por-codigos`;
     const payload = { codigos_ubigeo: codigosUBIGEO };
