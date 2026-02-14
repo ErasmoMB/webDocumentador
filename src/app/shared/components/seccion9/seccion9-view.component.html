@@ -1,7 +1,7 @@
 <h5>{{ SECCION9_TEMPLATES.seccionViviendas }}</h5>
 <p class="text-justify">{{ textoViviendasSignal() }}</p>
 
-<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroCondicionOcupacion() + ' - ' + tituloCondicionOcupacionSignal()" [hideNumber]="true" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="tituloCondicionOcupacionSignal()" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>
@@ -35,7 +35,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION9_TEMPLATES.seccionEstructura }}</strong></p>
 <div class="text-justify">{{ textoEstructuraSignal() }}</div>
 
-<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroTiposMateriales() + ' - ' + tituloTiposMaterialesSignal()" [hideNumber]="true" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="tituloTiposMaterialesSignal()" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>

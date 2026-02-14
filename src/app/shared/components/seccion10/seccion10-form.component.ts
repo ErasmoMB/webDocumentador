@@ -9,6 +9,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -16,6 +17,86 @@ import {
   SECCION10_CONFIG,
   SECCION10_SECTION_ID
 } from './seccion10-constants';
+
+// ============================================================================
+// FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
+// ============================================================================
+
+/**
+ * 🚨 PATRÓN SOLO LECTURA - Desenvuelve datos demográficos del backend
+ * Maneja diferentes estructuras de respuesta
+ */
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+/**
+ * 🚨 PATRÓN SOLO LECTURA - Transforma datos de Abastecimiento de Agua del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformAbastecimientoAguaDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || item.tipo || '',
+    casos: item.casos !== undefined ? item.casos : (item.total || 0),
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+/**
+ * 🚨 PATRÓN SOLO LECTURA - Transforma datos de Saneamiento del backend  
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformSaneamientoDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || item.tipo || '',
+    casos: item.casos !== undefined ? item.casos : (item.total || 0),
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+/**
+ * 🚨 PATRÓN SOLO LECTURA - Transforma datos de Alumbrado Eléctrico del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformAlumbradoElectricoDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || item.tipo || '',
+    casos: item.casos !== undefined ? item.casos : (item.total || 0),
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+/**
+ * 🚨 PATRÓN SOLO LECTURA - Transforma datos de Energía para Cocinar del backend
+ * Mapea directamente TODOS los campos sin filtros 
+ */
+const transformEnergiaCocinarDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.nombre || item.tipo || item.combustible || '',
+    casos: item.casos !== undefined ? item.casos : (item.total || 0),
+    porcentaje: item.porcentaje || ''
+  }));
+};
 
 @Component({
   standalone: true,
@@ -149,7 +230,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -170,6 +252,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    this.inicializarTablasVacias();  // ✅ Primero vacías
+    this.cargarDatosDelBackend();    // ✅ Luego llenar con backend
     this.cargarFotografias();
   }
 
@@ -179,6 +263,183 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
 
   protected override actualizarValoresConPrefijo(): void {
   }
+
+  // ============================================================================
+  // 😨 PATRÓN SOLO LECTURA - CARGA DE DATOS DEL BACKEND
+  // ============================================================================
+
+  /**
+   * 😨 PATRÓN SOLO LECTURA - Inicializar tablas vacías
+   * Se ejecuta ANTES de cargar datos del backend
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Inicializar cada tabla como array vacío
+    this.projectFacade.setField(this.seccionId, null, `abastecimientoAguaTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'abastecimientoAguaTabla', []);
+    
+    this.projectFacade.setField(this.seccionId, null, `tiposSaneamientoTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'tiposSaneamientoTabla', []);
+    
+    this.projectFacade.setField(this.seccionId, null, `alumbradoElectricoTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'alumbradoElectricoTabla', []);
+    
+    this.projectFacade.setField(this.seccionId, null, `energiaCocinarTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'energiaCocinarTabla', []);
+    
+    // Tecnología de comunicaciones - solo inicializar vacía (sin endpoint disponible)
+    this.projectFacade.setField(this.seccionId, null, `tecnologiaComunicacionesTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'tecnologiaComunicacionesTabla', []);
+  }
+
+  /**
+   * 😨 PATRÓN SOLO LECTURA - Carga datos del backend
+   * Se ejecuta DESPUÉS de inicializar tablas vacías
+   */
+  private cargarDatosDelBackend(): void {
+    // 1. Obtener los códigos de centros poblados del grupo actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION10] ⚠️ No hay centros poblados en el grupo actual');
+      return;
+    }
+
+    console.log('[SECCION10] 🔍 Cargando datos del backend con códigos:', codigos);
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // 2. Cargar Abastecimiento de Agua desde /demograficos/abastecimiento-agua-por-cpp
+    this.backendApi.postAbastecimientoAguaPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformAbastecimientoAguaDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION10] ✅ Datos de abastecimiento de agua cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)
+          const tablaKey = `abastecimientoAguaTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'abastecimientoAguaTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION10] ❌ Error procesando abastecimiento de agua:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION10] ❌ Error cargando abastecimiento de agua:', err);
+      }
+    });
+
+    // 3. Cargar Saneamiento desde /demograficos/saneamiento-por-cpp
+    this.backendApi.postSaneamientoPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformSaneamientoDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION10] ✅ Datos de saneamiento cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)
+          const tablaKey = `tiposSaneamientoTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'tiposSaneamientoTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION10] ❌ Error procesando saneamiento:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION10] ❌ Error cargando saneamiento:', err);
+      }
+    });
+
+    // 4. Cargar Alumbrado Eléctrico desde /demograficos/alumbrado-por-cpp
+    this.backendApi.postAlumbradoPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformAlumbradoElectricoDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION10] ✅ Datos de alumbrado eléctrico cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)
+          const tablaKey = `alumbradoElectricoTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'alumbradoElectricoTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION10] ❌ Error procesando alumbrado eléctrico:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION10] ❌ Error cargando alumbrado eléctrico:', err);
+      }
+    });
+
+    // 5. Cargar Energía para Cocinar desde /demograficos/combustibles-cocina-por-cpp
+    this.backendApi.postCombustiblesCocinaPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformEnergiaCocinarDesdeDemograficos(datosDesenvueltos);
+          console.log('[SECCION10] ✅ Datos de energía para cocinar cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)
+          const tablaKey = `energiaCocinarTabla${prefijo}`;
+          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+          this.projectFacade.setField(this.seccionId, null, 'energiaCocinarTabla', datosTransformados);
+        } catch (err) {
+          console.error('[SECCION10] ❌ Error procesando energía para cocinar:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION10] ❌ Error cargando energía para cocinar:', err);
+      }
+    });
+
+    // NOTA: Tecnología de comunicaciones - no hay endpoint disponible
+    // La tabla queda vacía para entrada manual si es necesario
+  }
+
+  // ============================================================================
+  // 😨 PATRÓN SOLO LECTURA - SIGNALS PARA DATOS DEL BACKEND
+  // ============================================================================
+
+  readonly abastecimientoAguaSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.formDataSignal();
+    const tablaKey = `abastecimientoAguaTabla${prefijo}`;
+    return data[tablaKey] || data['abastecimientoAguaTabla'] || [];
+  });
+
+  readonly tiposSaneamientoSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.formDataSignal();
+    const tablaKey = `tiposSaneamientoTabla${prefijo}`;
+    return data[tablaKey] || data['tiposSaneamientoTabla'] || [];
+  });
+
+  readonly alumbradoElectricoSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.formDataSignal();
+    const tablaKey = `alumbradoElectricoTabla${prefijo}`;
+    return data[tablaKey] || data['alumbradoElectricoTabla'] || [];
+  });
+
+  readonly energiaCocinarSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.formDataSignal();
+    const tablaKey = `energiaCocinarTabla${prefijo}`;
+    return data[tablaKey] || data['energiaCocinarTabla'] || [];
+  });
+
+  readonly tecnologiaComunicacionesSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const data = this.formDataSignal();
+    const tablaKey = `tecnologiaComunicacionesTabla${prefijo}`;
+    return data[tablaKey] || data['tecnologiaComunicacionesTabla'] || [];
+  });
 
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
     super.onFotografiasChange(fotografias, customPrefix);
@@ -191,59 +452,74 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return index;
   }
 
-  // ✅ CONFIGURACIONES DE TABLAS
+  // ✅ CONFIGURACIONES DE TABLAS - PATRÓN SOLO LECTURA BACKEND
   get abastecimientoAguaConfig(): any {
     return {
       tablaKey: this.getTablaKeyAbastecimientoAgua(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      totalKey: '',                    // ✅ Sin fila de total
+      campoTotal: '',                  // ✅ Sin cálculo total
+      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+      calcularPorcentajes: false,      // ✅ No calcular automáticamente
+      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
     };
   }
 
   get tiposSaneamientoConfig(): any {
     return {
       tablaKey: this.getTablaKeyTiposSaneamiento(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      totalKey: '',                    // ✅ Sin fila de total
+      campoTotal: '',                  // ✅ Sin cálculo total
+      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+      calcularPorcentajes: false,      // ✅ No calcular automáticamente
+      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
     };
   }
 
   get coberturaElectricaConfig(): any {
     return {
       tablaKey: this.getTablaKeyCoberturaElectrica(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      totalKey: '',                    // ✅ Sin fila de total
+      campoTotal: '',                  // ✅ Sin cálculo total
+      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+      calcularPorcentajes: false,      // ✅ No calcular automáticamente
+      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
     };
   }
 
   get energiaCocinarConfig(): any {
     return {
       tablaKey: this.getTablaKeyEnergiaCocinar(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      totalKey: '',                    // ✅ Sin fila de total
+      campoTotal: '',                  // ✅ Sin cálculo total
+      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+      calcularPorcentajes: false,      // ✅ No calcular automáticamente
+      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
     };
   }
 
   get tecnologiaComunicacionesConfig(): any {
     return {
       tablaKey: this.getTablaKeyTecnologiaComunicaciones(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      totalKey: '',                    // ✅ Sin fila de total
+      campoTotal: '',                  // ✅ Sin cálculo total
+      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+      calcularPorcentajes: false,      // ✅ No calcular automáticamente
+      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
     };
   }
 

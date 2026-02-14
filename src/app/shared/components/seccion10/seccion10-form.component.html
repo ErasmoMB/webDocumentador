@@ -46,15 +46,8 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="abastecimientoAguaConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaAbastecimiento }}', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
-          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyAbastecimientoAgua()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onAbastecimientoAguaTableUpdated($event)">
         </app-dynamic-table>
       </div>
@@ -114,15 +107,8 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="tiposSaneamientoConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaSaneamiento }}', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
-          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyTiposSaneamiento()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTiposSaneamientoTableUpdated($event)">
         </app-dynamic-table>
       </div>
@@ -226,15 +212,8 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="coberturaElectricaConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaElectricidad }}', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
-          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyCoberturaElectrica()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onCoberturaElectricaTableUpdated($event)">
         </app-dynamic-table>
       </div>
@@ -294,15 +273,8 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="energiaCocinarConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: '{{ SECCION10_TEMPLATES.placeholderCategoriaEnergia }}', readonly: true },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%', readonly: true }
-          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyEnergiaCocinar()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onEnergiaCocinarTableUpdated($event)">
         </app-dynamic-table>
       </div>

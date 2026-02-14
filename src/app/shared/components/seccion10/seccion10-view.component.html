@@ -20,19 +20,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of abastecimientoAguaConPorcentajesSignal(); trackBy: trackByIndex">
-        <td class="table-cell">{{ item.categoria || '____' }}</td>
-        <td class="table-cell">{{ item.casos || '____' }}</td>
-        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
       </tr>
       <tr *ngIf="!abastecimientoAguaConPorcentajesSignal() || abastecimientoAguaConPorcentajesSignal().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
-      </tr>
-      <tr *ngIf="obtenerTotalAbastecimientoAgua()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
-        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().categoria }}</td>
-        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().casos }}</td>
-        <td class="table-cell">{{ obtenerTotalAbastecimientoAgua().porcentaje?.value }}</td>
       </tr>
     </tbody>
   </table>
@@ -57,19 +52,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of tiposSaneamientoConPorcentajesSignal(); trackBy: trackByIndex">
-        <td class="table-cell">{{ item.categoria || '____' }}</td>
-        <td class="table-cell">{{ item.casos || '____' }}</td>
-        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
       </tr>
       <tr *ngIf="!tiposSaneamientoConPorcentajesSignal() || tiposSaneamientoConPorcentajesSignal().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
-      </tr>
-      <tr *ngIf="obtenerTotalTiposSaneamiento()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
-        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().categoria }}</td>
-        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().casos }}</td>
-        <td class="table-cell">{{ obtenerTotalTiposSaneamiento().porcentaje?.value }}</td>
       </tr>
     </tbody>
   </table>
@@ -111,19 +101,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of coberturaElectricaConPorcentajesSignal(); trackBy: trackByIndex">
-        <td class="table-cell">{{ item.categoria || '____' }}</td>
-        <td class="table-cell">{{ item.casos || '____' }}</td>
-        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
       </tr>
       <tr *ngIf="!coberturaElectricaConPorcentajesSignal() || coberturaElectricaConPorcentajesSignal().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
-      </tr>
-      <tr *ngIf="obtenerTotalCoberturaElectrica()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
-        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().categoria }}</td>
-        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().casos }}</td>
-        <td class="table-cell">{{ obtenerTotalCoberturaElectrica().porcentaje?.value }}</td>
       </tr>
     </tbody>
   </table>
@@ -159,19 +144,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of energiaCocinarConPorcentajesSignal(); trackBy: trackByIndex">
-        <td class="table-cell">{{ item.categoria || '____' }}</td>
-        <td class="table-cell">{{ item.casos || '____' }}</td>
-        <td class="table-cell">{{ item.porcentaje?.value || '____' }}</td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
+        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
       </tr>
       <tr *ngIf="!energiaCocinarConPorcentajesSignal() || energiaCocinarConPorcentajesSignal().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
-      </tr>
-      <tr *ngIf="obtenerTotalEnergiaCocinar()" class="total-row" style="font-weight: bold; background-color: #f5f5f5;">
-        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().categoria }}</td>
-        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().casos }}</td>
-        <td class="table-cell">{{ obtenerTotalEnergiaCocinar().porcentaje?.value }}</td>
       </tr>
     </tbody>
   </table>

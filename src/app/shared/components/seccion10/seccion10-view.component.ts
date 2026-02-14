@@ -215,24 +215,26 @@ En base a estos criterios se han identificado las áreas de influencia social di
   readonly tiposSaneamientoSignal: Signal<any[]> = this.getTablaSignal('tiposSaneamientoTabla');
   readonly alumbradoElectricoSignal: Signal<any[]> = this.getTablaSignal('alumbradoElectricoTabla');
 
+  // 🚨 PATRÓN SOLO LECTURA - Mostrar datos DIRECTOS del backend
   readonly abastecimientoAguaConPorcentajesSignal: Signal<any[]> = computed(() => {
-    return this.calcularPorcentajesPuros(this.abastecimientoAguaSignal());
+    return this.abastecimientoAguaSignal(); // Datos directos sin procesamiento
   });
 
   readonly tiposSaneamientoConPorcentajesSignal: Signal<any[]> = computed(() => {
-    return this.calcularPorcentajesPuros(this.tiposSaneamientoSignal());
+    return this.tiposSaneamientoSignal(); // Datos directos sin procesamiento  
   });
 
   readonly coberturaElectricaConPorcentajesSignal: Signal<any[]> = computed(() => {
-    return this.calcularPorcentajesPuros(this.alumbradoElectricoSignal());
+    return this.alumbradoElectricoSignal(); // Datos directos sin procesamiento
   });
 
+  // 🚨 PATRÓN SOLO LECTURA - Datos directos del backend
   energiaCocinarConPorcentajesSignal(): any[] {
     const data = this.formDataSignal();
     const prefijo = this.obtenerPrefijo();
     const tablaKey = prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
     const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-    return this.calcularPorcentajesPuros(tabla);
+    return tabla; // Datos directos sin procesamiento
   }
 
   tecnologiaComunicacionesConPorcentajesSignal(): any[] {
@@ -240,7 +242,7 @@ En base a estos criterios se han identificado las áreas de influencia social di
     const prefijo = this.obtenerPrefijo();
     const tablaKey = prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
     const tabla = Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
-    return this.calcularPorcentajesPuros(tabla);
+    return tabla; // Datos directos sin procesamiento
   }
 
   // ✅ TEXTOS CON PREFIJO
