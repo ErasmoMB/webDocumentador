@@ -8,7 +8,26 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformNivelEducativoTabla, transformTasaAnalfabetismoTabla } from 'src/app/core/config/table-transforms';
+import { debugLog } from 'src/app/shared/utils/debug';
 import { SECCION14_PHOTO_PREFIX, SECCION14_DEFAULT_TEXTS, SECCION14_TEMPLATES, SECCION14_WATCHED_FIELDS } from './seccion14-constants';
+
+// Función helper para desenvuelver datos del backend
+const unwrapEducacionData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   selector: 'app-seccion14-form',
@@ -81,18 +100,24 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
 
   readonly nivelEducativoTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
+    // Leer directamente del state del projectFacade
     const tablaKey = `nivelEducativoTabla${prefijo}`;
-    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return fromField ?? fromTable ?? [];
+    const dataConPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    if (dataConPrefijo && dataConPrefijo.length > 0) return dataConPrefijo;
+    
+    const dataSinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'nivelEducativoTabla')();
+    return dataSinPrefijo || [];
   });
 
   readonly tasaAnalfabetismoTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
+    // Leer directamente del state del projectFacade
     const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
-    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return fromField ?? fromTable ?? [];
+    const dataConPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    if (dataConPrefijo && dataConPrefijo.length > 0) return dataConPrefijo;
+    
+    const dataSinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'tasaAnalfabetismoTabla')();
+    return dataSinPrefijo || [];
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -108,38 +133,33 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     return hash;
   });
 
-  // ✅ CONFIGURACIONES DE TABLAS - Habilitar agregar/eliminar y cálculos
+  // ✅ CONFIGURACIONES DE TABLAS - Solo lectura, datos del backend
   readonly nivelEducativoConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `nivelEducativoTabla${this.obtenerPrefijo()}`,
-    totalKey: 'categoria',
-    campoTotal: 'casos',
+    totalKey: '',
+    campoTotal: '',
     campoPorcentaje: 'porcentaje',
-    permiteAgregarFilas: true,
-    permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
-    estructuraInicial: [
-      { categoria: '', casos: 0, porcentaje: '0%' }
-    ],
-    calcularPorcentajes: true
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false,
+    noInicializarDesdeEstructura: true,
+    calcularPorcentajes: false
   }));
 
   readonly tasaAnalfabetismoConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `tasaAnalfabetismoTabla${this.obtenerPrefijo()}`,
-    totalKey: 'indicador',
-    campoTotal: 'casos',
+    totalKey: '',
+    campoTotal: '',
     campoPorcentaje: 'porcentaje',
-    permiteAgregarFilas: true,
-    permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
-    estructuraInicial: [
-      { indicador: '', casos: 0, porcentaje: '0%' }
-    ],
-    calcularPorcentajes: true
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false,
+    noInicializarDesdeEstructura: true,
+    calcularPorcentajes: false
   }));
 
   constructor(
     cdRef: ChangeDetectorRef,
-    injector: Injector
+    injector: Injector,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -158,6 +178,89 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
+    // ✅ Inicializar tablas vacías y luego cargar datos del backend
+    this.inicializarTablasVacias();
+    this.cargarDatosDelBackend();
+  }
+
+  /**
+   * ✅ Inicializar tablas como arrays vacíos
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Inicializar nivel educativo
+    this.projectFacade.setField(this.seccionId, null, `nivelEducativoTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', []);
+    
+    // Inicializar tasa analfabetismo
+    this.projectFacade.setField(this.seccionId, null, `tasaAnalfabetismoTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', []);
+  }
+
+  /**
+   * ✅ Carga datos educativos desde el backend
+   */
+  private cargarDatosDelBackend(): void {
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray];
+
+    if (!codigos || codigos.length === 0) {
+      debugLog('[SECCION14] ⚠️ No hay centros poblados en el grupo actual');
+      return;
+    }
+
+    debugLog('[SECCION14] 📡 Cargando datos educativos desde backend...', { codigos });
+
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // Cargar nivel educativo
+    this.backendApi.postEducacion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapEducacionData(dataRaw);
+          const datosTransformados = transformNivelEducativoTabla(datosDesenvueltos);
+          debugLog('[SECCION14] ✅ Nivel educativo cargado:', datosTransformados);
+
+          if (datosTransformados.length > 0) {
+            const tablaKey = `nivelEducativoTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION14] ❌ Error transformando nivel educativo:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION14] ❌ Error cargando nivel educativo:', err);
+      }
+    });
+
+    // Cargar tasa de analfabetismo
+    this.backendApi.postAlfabetizacion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapEducacionData(dataRaw);
+          const datosTransformados = transformTasaAnalfabetismoTabla(datosDesenvueltos);
+          debugLog('[SECCION14] ✅ Tasa analfabetismo cargada:', datosTransformados);
+
+          if (datosTransformados.length > 0) {
+            const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          debugLog('[SECCION14] ❌ Error transformando tasa analfabetismo:', e);
+        }
+      },
+      error: (err: any) => {
+        debugLog('[SECCION14] ❌ Error cargando tasa analfabetismo:', err);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean {
@@ -193,13 +296,15 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   getNivelEducativoConPorcentajes(): any[] {
     const tabla = this.nivelEducativoTablaSignal();
     if (!tabla || tabla.length === 0) return [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, 'casos');
+    // Los datos ya vienen con porcentajes del backend
+    return tabla;
   }
 
   getTasaAnalfabetismoConPorcentajes(): any[] {
     const tabla = this.tasaAnalfabetismoTablaSignal();
     if (!tabla || tabla.length === 0) return [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, 'casos');
+    // Los datos ya vienen con porcentajes del backend
+    return tabla;
   }
 
   onNivelEducativoTableUpdated(updatedData?: any[]): void {

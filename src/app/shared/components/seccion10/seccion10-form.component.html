@@ -46,6 +46,11 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="abastecimientoAguaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyAbastecimientoAgua()"
           (tableUpdated)="onAbastecimientoAguaTableUpdated($event)">
@@ -107,6 +112,11 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="tiposSaneamientoConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyTiposSaneamiento()"
           (tableUpdated)="onTiposSaneamientoTableUpdated($event)">
@@ -212,6 +222,11 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="coberturaElectricaConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyCoberturaElectrica()"
           (tableUpdated)="onCoberturaElectricaTableUpdated($event)">
@@ -273,6 +288,11 @@
         <app-dynamic-table
           [datos]="datos"
           [config]="energiaCocinarConfig"
+          [columns]="[
+            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+          ]"
           [sectionId]="seccionId"
           [tablaKey]="getTablaKeyEnergiaCocinar()"
           (tableUpdated)="onEnergiaCocinarTableUpdated($event)">

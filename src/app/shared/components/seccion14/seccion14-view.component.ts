@@ -175,15 +175,15 @@ export class Seccion14ViewComponent extends BaseSectionComponent implements OnDe
   getNivelEducativoConPorcentajes(): any[] {
     const tabla = this.nivelEducativoTablaSignal();
     if (!tabla || tabla.length === 0) return [];
-    return TablePercentageHelper.calcularPorcentajesSimple(tabla, 'casos');
+    // Los datos ya vienen con porcentajes del backend
+    return tabla;
   }
 
   getTasaAnalfabetismoConPorcentajes(): any[] {
     const tabla = this.tasaAnalfabetismoTablaSignal();
     if (!tabla || tabla.length === 0) return [];
-    // Usar calculadora específica para analfabetismo que agrega fila 'Total' en la columna 'indicador'
-    const cuadroNumero = this.globalNumbering.getGlobalTableNumber(this.seccionId, 1);
-    return TablePercentageHelper.calcularPorcentajesAnalfabetismo(tabla, cuadroNumero);
+    // Los datos ya vienen con porcentajes del backend
+    return tabla;
   }
 
   public override obtenerNombreComunidadActual(): string {

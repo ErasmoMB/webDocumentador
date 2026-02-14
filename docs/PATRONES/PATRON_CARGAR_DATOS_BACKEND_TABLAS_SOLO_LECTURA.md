@@ -452,6 +452,151 @@ return tablaConPorcentajes;
 | `noInicializarDesdeEstructura` | `true` | No iniciar con estructura vacía |
 | `editable` | `false` | En registry, indica que no es editable |
 
+## 🔍 Caso Real Resuelto: Sección 10 - Servicios Básicos
+
+### El Problema
+Las tablas de Sección 10 (Abastecimiento de Agua, Saneamiento, Electricidad, Energía) **se llenaban correctamente en la vista**, pero **aparecían vacías en el formulario**, aunque los datos estaban siendo cargados correctamente del backend en el estado (store).
+
+### Síntomas
+- ✅ En **view component**: Las tablas mostraban los datos del backend correctamente
+- ❌ En **form component**: Las mismas tablas aparecían vacías
+- ✅ Los **signals** estaban retornando datos correctamente
+- ✅ El **backend** estaba cargando los datos sin problemas
+- ✅ El **state** guardaba los datos correctamente via `setField()`
+
+### Raíz del Problema
+El componente `DynamicTableComponent` requiere que se especifique explícitamente el **input `[columns]`** con la definición de los campos. 
+
+**Sin `[columns]`**, aunque los datos existan en el State, el componente no sabe cómo renderizarlos porque no conoce:
+- Qué campos mostrar
+- Cómo nombrar cada columna
+- Qué tipo de data es cada campo
+
+### Diferencia Entre Implementaciones
+
+**Sección 9 (FUNCIONA ✅):** Especifica `[columns]` en el template
+```html
+<app-dynamic-table
+  [datos]="datos"
+  [config]="condicionOcupacionConfig"
+  [columns]="[
+    { field: 'categoria', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria, type: 'text' },
+    { field: 'casos', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.casos, type: 'number' },
+    { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.porcentaje, type: 'text' }
+  ]"
+  [sectionId]="seccionId"
+  [tablaKey]="getTablaKeyCondicionOcupacion()">
+</app-dynamic-table>
+```
+
+**Sección 10 (NO FUNCIONA ❌):** NO especificaba `[columns]`
+```html
+<app-dynamic-table
+  [datos]="datos"
+  [config]="abastecimientoAguaConfig"
+  [sectionId]="seccionId"
+  [tablaKey]="getTablaKeyAbastecimientoAgua()">
+</app-dynamic-table>
+```
+
+### La Solución
+
+Agregar el input `[columns]` a TODAS las tablas dinámicas en el template `seccion10-form.component.html`:
+
+```html
+<app-dynamic-table
+  [datos]="datos"
+  [config]="abastecimientoAguaConfig"
+  [columns]="[
+    { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+    { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+    { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+  ]"
+  [sectionId]="seccionId"
+  [tablaKey]="getTablaKeyAbastecimientoAgua()"
+  (tableUpdated)="onAbastecimientoAguaTableUpdated($event)">
+</app-dynamic-table>
+```
+
+### Qué Cambió
+Se actualizaron **4 tablas** en `seccion10-form.component.html`:
+1. ✅ Tabla Abastecimiento de Agua
+2. ✅ Tabla Saneamiento  
+3. ✅ Tabla Electricidad (Cobertura Eléctrica)
+4. ✅ Tabla Energía para Cocinar
+
+Cada una ahora especifica sus columnas con los campos: `categoria`, `casos`, `porcentaje`
+
+### Lección Aprendida
+
+**🚨 REGLA CRÍTICA**: Siempre especifica `[columns]` en `app-dynamic-table`
+
+Aunque el componente pueda deducir algunos campos del `config.estructuraInicial`, **cuando usas `noInicializarDesdeEstructura: true`** (tablas de solo lectura), DEBES proporcionar explícitamente las columnas. De lo contrario:
+- No hay estructura inicial en el config
+- No hay información de columnas
+- El componente no puede renderizar los datos aunque existan en el Estado
+
+### Template Completo de Ejemplo
+
+```html
+<!-- TABLA 1: Abastecimiento de Agua -->
+<div class="form-group-section" style="margin-top: 15px;">
+  <label class="label">{{ SECCION10_TEMPLATES.labelTablaAbastecimientoAgua }}</label>
+  <app-dynamic-table
+    [datos]="datos"
+    [config]="abastecimientoAguaConfig"
+    [columns]="[
+      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+      { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+      { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+    ]"
+    [sectionId]="seccionId"
+    [tablaKey]="getTablaKeyAbastecimientoAgua()"
+    (tableUpdated)="onAbastecimientoAguaTableUpdated($event)">
+  </app-dynamic-table>
+</div>
+
+<!-- TABLA 2: Saneamiento -->
+<div class="form-group-section" style="margin-top: 15px;">
+  <label class="label">{{ SECCION10_TEMPLATES.labelTablaTiposSaneamiento }}</label>
+  <app-dynamic-table
+    [datos]="datos"
+    [config]="tiposSaneamientoConfig"
+    [columns]="[
+      { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
+      { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
+      { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
+    ]"
+    [sectionId]="seccionId"
+    [tablaKey]="getTablaKeyTiposSaneamiento()"
+    (tableUpdated)="onTiposSaneamientoTableUpdated($event)">
+  </app-dynamic-table>
+</div>
+```
+
+### Checklist para Evitar Este Problema en Nuevas Secciones
+
+- [ ] ✅ El componente tiene `cargarDatosDelBackend()`
+- [ ] ✅ El componente llama `this.projectFacade.setField()` correctamente
+- [ ] ✅ El signal `computed()` lee los datos del estado
+- [ ] ✅ **`app-dynamic-table` tiene `[columns]` especificado** ⚠️ **CRÍTICO**
+- [ ] ✅ Cada columna tiene `field`, `label`, `type`
+- [ ] ✅ Los `field` coinciden exactamente con las keys de los datos del backend
+
+### Por Qué No Se Notó Este El Principio
+
+Este error fue difícil de detectar porque:
+1. El view component **SÍ funcionaba** (usa templates HTML manuales, no DynamicTableComponent)
+2. El state **SÍ tenía los datos** (se podría ver en DevTools del store)  
+3. El signal **SÍ retornaba datos** (los logs mostraban arrays llenos)
+4. Solo el **form component fallaba** (pero solo con DynamicTableComponent)
+
+Esto llevó a investigar innecesariamente en:
+- ❌ Effects y reactivity
+- ❌ Change detection
+- ❌ Código de carga del backend
+- ✅ Cuando el verdadero culpable fue simplemente: **falta de `[columns]`**
+
 ## Ejemplo de Uso en Otras Secciones
 
 Para implementar el mismo patrón en otra sección:

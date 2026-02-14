@@ -41,57 +41,32 @@ export function transformAfiliacionSaludTabla(data: any): any[] {
 }
 
 export function transformNivelEducativoTabla(data: any): any[] {
+  // El backend ya devuelve los datos correctamente con categoria, casos y porcentaje
   const datosArray = normalizeArrayFromApi(data);
   if (datosArray.length === 0) {
     return [];
   }
-
-  const nivelesMap = new Map<string, any>();
-  let totalCasos = 0;
-
-  datosArray.forEach((item: any) => {
-    const nivel = (item.nivel_educativo || item.categoria || 'Sin categoría').trim();
-    const key = nivel.toLowerCase();
-
-    const cantidad = item.casos || item.cantidad || 0;
-    totalCasos += cantidad;
-
-    if (nivelesMap.has(key)) {
-      const existing = nivelesMap.get(key);
-      existing.casos = (existing.casos || 0) + cantidad;
-    } else {
-      nivelesMap.set(key, {
-        categoria: nivel,
-        casos: cantidad,
-        porcentaje: 0
-      });
-    }
-  });
-
-  const resultado = Array.from(nivelesMap.values());
-  resultado.forEach((item: any) => {
-    if (totalCasos > 0) {
-      const porcentajeNum = (item.casos / totalCasos) * 100;
-      item.porcentaje = porcentajeNum.toFixed(2).replace('.', ',') + ' %';
-    } else {
-      item.porcentaje = '0,00 %';
-    }
-  });
-
-  resultado.sort((a, b) => (b.casos || 0) - (a.casos || 0));
-  return resultado;
+  
+  // Devolver los datos tal cual del backend (sin recalcular porcentajes)
+  return datosArray.map((item: any) => ({
+    categoria: item.categoria || '',
+    casos: item.casos || 0,
+    porcentaje: item.porcentaje || ''
+  }));
 }
 
 export function transformTasaAnalfabetismoTabla(data: any): any[] {
+  // El backend devuelve 'categoria' pero la tabla espera 'indicador'
   const datosArray = normalizeArrayFromApi(data);
   if (datosArray.length === 0) {
     return [];
   }
-
+  
+  // Mapear 'categoria' a 'indicador' para la tabla
   return datosArray.map((item: any) => ({
-    indicador: item.indicador || 'Sin categoría',
+    indicador: item.categoria || '',
     casos: item.casos || 0,
-    porcentaje: item.porcentaje || 0
+    porcentaje: item.porcentaje || ''
   }));
 }
 
