@@ -162,8 +162,11 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   }
 
   obtenerTextoSeccion2AISDCompleto(): string {
-    // ✅ PROBLEMA: Si hay texto manual guardado, lo retornaba sin regenerar
-    // Solución: Siempre regenerar el texto para que refleje los nombres actuales
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+
     const comunidades = this.obtenerTextoComunidades();
     const ubicacion = this.ubicacionGlobal();
     const distrito = ubicacion.distrito || '____';
@@ -181,8 +184,11 @@ export class Seccion2ViewComponent extends BaseSectionComponent {
   }
 
   obtenerTextoSeccion2AISICompleto(): string {
-    // ✅ Si hay texto manual guardado, lo ignoramos y siempre regeneramos
-    // para que refleje los nombres actuales de los distritos
+    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
+    if (manual && manual.trim().length > 0) {
+      return manual;
+    }
+
     const gruposAISI = this.aisiGroups();
     const distritosNombres = gruposAISI
       .map(g => g.nombre?.trim())

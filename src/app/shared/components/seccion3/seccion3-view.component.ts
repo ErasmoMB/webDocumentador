@@ -6,7 +6,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DataHighlightService } from '../../directives/data-highlight.service';
 import { ProjectStateFacade } from '../../../core/state/project-state.facade';
 import { BaseSectionComponent } from '../base-section.component';
-import { SECCION3_TEMPLATES } from './seccion3-constants';
+import { SECCION3_CONFIG, SECCION3_TEMPLATES } from './seccion3-constants';
 
 @Component({
   selector: 'app-seccion3-view',
@@ -26,7 +26,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   // ✅ Hacer TEMPLATES accesible en el template
   readonly SECCION3_TEMPLATES = SECCION3_TEMPLATES;
 
-  override readonly PHOTO_PREFIX = 'fotografiaSeccion3';
+  override readonly PHOTO_PREFIX = SECCION3_CONFIG.photoPrefix;
   override useReactiveSync: boolean = false;
 
   fotografiasSeccion3: FotoItem[] = [];
@@ -36,26 +36,26 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   });
 
   readonly fuentesSecundariasListaSignal: Signal<string[]> = computed(() => {
-    const value = this.projectFacade.selectField(this.seccionId, null, 'fuentesSecundariasLista')();
+    const value = this.formDataSignal()['fuentesSecundariasLista'];
     return Array.isArray(value) ? value : [];
   });
 
   readonly entrevistadosSignal: Signal<any[]> = computed(() => {
-    const value = this.projectFacade.selectField(this.seccionId, null, 'entrevistados')();
+    const value = this.formDataSignal()['entrevistados'];
     return Array.isArray(value) ? value : [];
   });
 
   // ✅ SEÑALES PARA PLACEHOLDERS DE FUENTES PRIMARIAS
   readonly cantidadEntrevistasSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'cantidadEntrevistas')() || '____';
+    return this.formDataSignal()['cantidadEntrevistas'] || '____';
   });
 
   readonly fechaTrabajoCampoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'fechaTrabajoCampo')() || '____';
+    return this.formDataSignal()['fechaTrabajoCampo'] || '____';
   });
 
   readonly parrafoFuentesPrimariasSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion3_fuentes_primarias')() || '';
+    return this.formDataSignal()['parrafoSeccion3_fuentes_primarias'] || '';
   });
 
   // ✅ COMPUTED PARA TEXTO DERIVADO - INCLUYE DEPENDENCIA DEL PARRAFO PERSONALIZADO
@@ -140,6 +140,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override actualizarDatosCustom(): void {
+    this.cargarFotografias();
     this.cdRef.markForCheck();
   }
 
@@ -212,16 +213,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   override cargarFotografias(): void {
-    const fotos: FotoItem[] = [];
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-      if (imagen) {
-        fotos.push({ titulo, fuente, imagen });
-      }
-    }
-    this.fotografiasSeccion3 = fotos;
+    super.cargarFotografias();
   }
 
   get key(): number {

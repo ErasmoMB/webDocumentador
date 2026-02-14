@@ -106,9 +106,6 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
     
-    // ✅ Inicializar campos desde store
-    this.inicializarCamposDesdeStore();
-    
     // ✅ Effect para sincronización de nombres de AISD/AISI con textos formateados
     effect(() => {
       this.aisdGroups();
@@ -161,9 +158,27 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   private inicializarCamposDesdeStore(): void {
     // Párrafos: siempre regenerar para que refleje los nombres actuales
     // (el texto manual guardado puede estar desactualizado)
-    this.parrafoIntroduccion.update(this.obtenerTextoSeccion2Introduccion());
-    this.parrafoAISD.update(this.obtenerTextoSeccion2AISDParaEdicion());
-    this.parrafoAISI.update(this.obtenerTextoSeccion2AISIParaEdicion());
+    const parrafoIntroduccionGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_introduccion')();
+    const parrafoAISDGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisd_completo')();
+    const parrafoAISIGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion2_aisi_completo')();
+
+    this.parrafoIntroduccion.update(
+      parrafoIntroduccionGuardado && String(parrafoIntroduccionGuardado).trim().length > 0
+        ? parrafoIntroduccionGuardado
+        : this.obtenerTextoSeccion2Introduccion()
+    );
+
+    this.parrafoAISD.update(
+      parrafoAISDGuardado && String(parrafoAISDGuardado).trim().length > 0
+        ? parrafoAISDGuardado
+        : this.obtenerTextoSeccion2AISDParaEdicion()
+    );
+
+    this.parrafoAISI.update(
+      parrafoAISIGuardado && String(parrafoAISIGuardado).trim().length > 0
+        ? parrafoAISIGuardado
+        : this.obtenerTextoSeccion2AISIParaEdicion()
+    );
     
     // Geo info - LEER DE SECCIÓN 1 (3.1.1)
     const geoInfo = this.projectFacade.selectField('3.1.1', null, 'geoInfo')();
@@ -237,6 +252,7 @@ export class Seccion2FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
+    this.inicializarCamposDesdeStore();
     this.cargarFotografias();
   }
 

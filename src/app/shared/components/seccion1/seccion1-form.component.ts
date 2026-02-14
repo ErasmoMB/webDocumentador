@@ -700,6 +700,11 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
    * cuando cambian departamento, provincia o distrito
    */
   private actualizarParrafoPrincipal(): void {
+    const parrafoGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')();
+    if (parrafoGuardado && String(parrafoGuardado).trim().length > 0) {
+      return;
+    }
+
     const proyecto = this.projectName.value() || '____';
     const distrito = this.distritoSeleccionado.value() || '____';
     const provincia = this.provinciaSeleccionada.value() || '____';

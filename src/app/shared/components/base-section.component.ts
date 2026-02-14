@@ -858,10 +858,17 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
   } {
     const formChangeService = this.resolve(FormChangeService);
     const valueSignal = signal(initialValue);
+    let isFirstRun = true;
 
     // AUTO-PERSIST: Cada cambio en el signal persiste automáticamente
     effect(() => {
       const newValue = valueSignal();
+
+      if (isFirstRun) {
+        isFirstRun = false;
+        return;
+      }
+
       if (newValue !== undefined && newValue !== null) {
         formChangeService.persistFields(
           this.seccionId,

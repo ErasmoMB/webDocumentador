@@ -150,9 +150,6 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
 
-    // ✅ Inicializar campos desde store O fallback
-    this.inicializarCamposDesdeStore();
-
     effect(() => {
       const formData = this.formDataSignal();
       const fuentesSecundariasLista = this.fuentesSecundariasListaSignal();
@@ -211,8 +208,8 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
-    // Restaurar datos desde localStorage cuando se inicializa
-    this.formChangeService.restoreSectionState(this.seccionId, this.formDataSignal());
+    this.inicializarCamposDesdeStore();
+    this.cargarFotografias();
   }
 
   protected override detectarCambios(): boolean {
@@ -282,6 +279,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     if (listaActual[index] !== valor) {
       listaActual[index] = valor;
       this.fuentesSecundariasLista.update(listaActual);
+      this.onFieldChange('fuentesSecundariasLista', listaActual, { refresh: false });
       this.cdRef.markForCheck();
     }
   }
@@ -290,6 +288,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     const listaActual = [...this.fuentesSecundariasLista.value()];
     listaActual.splice(index, 1);
     this.fuentesSecundariasLista.update(listaActual);
+    this.onFieldChange('fuentesSecundariasLista', listaActual, { refresh: false });
     this.cdRef.markForCheck();
   }
 
@@ -297,6 +296,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     const listaActual = [...this.fuentesSecundariasLista.value()];
     listaActual.push('');
     this.fuentesSecundariasLista.update(listaActual);
+    this.onFieldChange('fuentesSecundariasLista', listaActual, { refresh: false });
     this.cdRef.markForCheck();
   }
 
@@ -327,15 +327,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
-    // fotografias es un array de FotoItem[]
-    // Ya están guardadas en el state por ImageUploadComponent
-    // Solo necesitamos actualizar las referencias locales
-    this.fotografiasSeccion3 = fotografias || [];
-    this.cdRef.markForCheck();
-  }
-
-  get key(): number {
-    return Date.now();
+    super.onFotografiasChange(fotografias);
   }
 
   override ngOnDestroy(): void {
