@@ -8,7 +8,60 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION19_TEMPLATES } from './seccion19.constants';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { SECCION19_TEMPLATES, SECCION19_TABLA_AUTORIDADES_CONFIG } from './seccion19.constants';
+
+// ============================================================================
+// FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
+// ============================================================================
+
+/**
+ * Desenvuelve datos demográficos del backend
+ * Maneja diferentes estructuras de respuesta
+ */
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+/**
+ * Transforma datos de autoridades del backend
+ * Mapea campos a: organizacion, cargo, nombre (nombres y apellidos)
+ * Si solo hay categoría/casos/porcentaje, transforma a este formato
+ */
+const transformAutoridadesDesdeDemograficos = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => {
+    // Si el item ya tiene organizacion, cargo, nombre, devolverlo como está
+    if (item.organizacion || item.cargo || item.nombre) {
+      return {
+        organizacion: item.organizacion || '',
+        cargo: item.cargo || '',
+        nombre: item.nombre || item.nombres_apellidos || ''
+      };
+    }
+    
+    // Si viene en formato de categoría/casos, mapear a formato de tabla
+    // (cuando se carga desde endpoints genéricos como religión)
+    return {
+      organizacion: item.categoria || item.nombre || '',
+      cargo: item.tipo || item.categoria || '',
+      nombre: item.casos ? `${item.casos}` : ''
+    };
+  });
+};
 
 @Component({
     imports: [
@@ -29,8 +82,9 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   override readonly PHOTO_PREFIX = 'fotografiaOrganizacionSocial';
   override useReactiveSync: boolean = true;
 
-  // ✅ Exportar TEMPLATES para el HTML
+  // ✅ Exportar TEMPLATES y CONFIG para el HTML
   readonly SECCION19_TEMPLATES = SECCION19_TEMPLATES;
+  readonly SECCION19_TABLA_AUTORIDADES_CONFIG = SECCION19_TABLA_AUTORIDADES_CONFIG;
 
   override fotografiasFormMulti: FotoItem[] = [];
 
@@ -136,7 +190,8 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private formChange: FormChangeService
+    private formChange: FormChangeService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -197,6 +252,11 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
+    // ✅ PRIMERO: Asegurar que las tablas estén completamente vacías
+    this.inicializarTablasVacias();
+    // ✅ SEGUNDO: Cargar datos del backend
+    this.cargarDatosDelBackend();
+    
     // ✅ Inicializar campos de título y fuente si no existen
     const tituloAutoridadesField = this.getTituloAutoridadesField();
     if (!this.datos[tituloAutoridadesField]) {
@@ -212,29 +272,56 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
       this.onFieldChange(fuenteAutoridadesField, fuente, { refresh: false });
     }
     
-    // ✅ Inicializar tabla de autoridades si no existe
-    const tablaKey = this.getTablaKeyAutoridades();
-    if (!this.datos[tablaKey] || (Array.isArray(this.datos[tablaKey]) && this.datos[tablaKey].length === 0)) {
-      const autoridadesInicial = [{ organizacion: '', cargo: '', nombre: '' }];
-      this.datos[tablaKey] = autoridadesInicial;
-      this.onFieldChange(tablaKey, autoridadesInicial, { refresh: false });
-
-      // Persistir la tabla con FormChangeService para que DynamicTable la detecte correctamente
-      try {
-        this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: autoridadesInicial });
-      } catch {}
-
-      // Forzar actualización de preview/otros componentes
-      try {
-        const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
-        ViewChildHelper.updateAllComponents('actualizarDatos');
-      } catch {}
-
-      // Asegurar que el formulario reciba la detección de cambios para habilitar inputs
-      this.cdRef.markForCheck();
-    }
-    
     this.cargarFotografias();
+  }
+
+  /**
+   * ✅ Inicializar todas las tablas como arrays vacíos
+   * Esto asegura que DynamicTableComponent no muestre datos stale
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `autoridades${prefijo}` : 'autoridades';
+    
+    if (!Array.isArray(this.datos[tablaKey])) {
+      this.datos[tablaKey] = [];
+      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+      this.projectFacade.setField(this.seccionId, null, 'autoridades', []);
+    }
+  }
+
+  /**
+   * ✅ Cargar datos del backend siguiendo el patrón de Sección 6/7
+   * Carga autoridades desde el backend
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ Obtener códigos de centros poblados del grupo AISD actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      return;
+    }
+
+    const prefijo = this.obtenerPrefijoGrupo();
+
+    // ✅ Cargar datos de autoridades - NOTA: Aquí puedes usar el endpoint específico
+    // Por ahora usa postReligionPorCpp como ejemplo (devuelve el formato estándar)
+    // Cambiar a: this.backendApi.postAutoridadesPorCpp(codigos) cuando esté disponible
+    this.backendApi.postReligionPorCpp(codigos).subscribe({
+      next: (response: any) => {
+        const datosTransformados = transformAutoridadesDesdeDemograficos(
+          unwrapDemograficoData(response?.data || [])
+        );
+        const autoridadesTablaKey = prefijo ? `autoridades${prefijo}` : 'autoridades';
+        this.projectFacade.setField(this.seccionId, null, autoridadesTablaKey, datosTransformados);
+        this.projectFacade.setField(this.seccionId, null, 'autoridades', datosTransformados);
+        this.cdRef.markForCheck();
+      },
+      error: (err) => {
+        console.error('[SECCION19] Error cargando autoridades del backend:', err);
+      }
+    });
   }
 
   protected override detectarCambios(): boolean { return false; }

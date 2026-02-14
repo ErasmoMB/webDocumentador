@@ -15,7 +15,7 @@
       </app-paragraph-editor>
     </div>
 
-    <div class="form-field mt-xl">
+    <div class="form-field mt-lg">
       <label class="label">{{ SECCION19_TEMPLATES.labelTituloAutoridades }}</label>
       <input 
         type="text" 
@@ -29,19 +29,14 @@
       <app-dynamic-table
         [datos]="projectFacade.obtenerDatos()"
         [sectionId]="seccionId"
-        [config]="{
-          tablaKey: getTablaKeyAutoridades(),
-          totalKey: 'organizacion',
-          campoTotal: 'organizacion',
-          permiteAgregarFilas: true,
-          permiteEliminarFilas: true
-        }"
+        [config]="SECCION19_TABLA_AUTORIDADES_CONFIG"
         [columns]="[
           { field: 'organizacion', label: SECCION19_TEMPLATES.labelColumnaOrganizacion, type: 'text', placeholder: SECCION19_TEMPLATES.placeholderColumnaOrganizacion },
           { field: 'cargo', label: SECCION19_TEMPLATES.labelColumnaCargo, type: 'text', placeholder: SECCION19_TEMPLATES.placeholderColumnaCargo },
           { field: 'nombre', label: SECCION19_TEMPLATES.labelColumnaPersona, type: 'text', placeholder: SECCION19_TEMPLATES.placeholderColumnaPersona }
         ]"
-        [totalKey]="'organizacion'"
+        [totalKey]="''"
+        [tablaKey]="getTablaKeyAutoridades()"
         (tableUpdated)="onAutoridadesTableUpdated($event)">
       </app-dynamic-table>
     </div>

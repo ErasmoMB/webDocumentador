@@ -73,6 +73,19 @@ También se hallan autoridades locales como el teniente gobernador, quien es el 
   grupoAISDDefault: '____',
 };
 
+// ✅ CONFIGURACION DE TABLAS - Patrón: Cargar datos del backend (solo lectura)
+export const SECCION19_TABLA_AUTORIDADES_CONFIG = {
+  tablaKey: 'autoridades',
+  totalKey: '',                           // ✅ NO agregar fila de total
+  campoTotal: '',                         // ✅ NO calcular total
+  campoPorcentaje: '',                    // ✅ NO calcular porcentaje
+  calcularPorcentajes: false,             // ✅ Los datos vienen del backend
+  camposParaCalcular: [],
+  noInicializarDesdeEstructura: true,     // ✅ No inicializar desde estructura
+  permiteAgregarFilas: true,              // Permitir edición manual en la tabla
+  permiteEliminarFilas: true
+};
+
 // ✅ CONFIGURACION LEGACY (por compatibilidad)
 export const SECCION19_CONSTANTS = {
   PHOTO_PREFIX: SECCION19_CONFIG.photoPrefix,

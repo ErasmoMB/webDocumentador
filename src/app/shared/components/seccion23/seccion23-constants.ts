@@ -34,30 +34,36 @@ export const SECCION23_WATCHED_FIELDS = [
 export const SECCION23_TABLE_CONFIGS = {
   petGruposEdad: {
     tablaKey: 'petGruposEdadAISI',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    calcularPorcentajes: false,
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   },
   peaDistritoSexo: {
     tablaKey: 'peaDistritoSexoTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['hombres', 'mujeres']
+    calcularPorcentajes: false,
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   },
   peaOcupadaDesocupada: {
     tablaKey: 'peaOcupadaDesocupadaTabla',
-    totalKey: 'categoria',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
+    totalKey: '',
+    campoTotal: '',
+    campoPorcentaje: '',
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['hombres', 'mujeres']
+    calcularPorcentajes: false,
+    camposParaCalcular: [],
+    permiteAgregarFilas: false,
+    permiteEliminarFilas: false
   }
 };
 
@@ -149,6 +155,11 @@ export const SECCION23_TEMPLATES = {
   defaultPETTableTitle: 'PET según grupos de edad – CP {{centroPoblado}} (2017)',
   defaultPeaDistritoSexoTableTitle: 'Conformación de la PEA y No PEA, según sexo – Distrito {{distrito}} (2017)',
   defaultPeaOcupadaDesocupadaTableTitle: 'Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito {{distrito}} (2017)',
+
+  // ===== NÚMEROS DE CUADRO =====
+  tableNumberPET: 'Cuadro N° 3.42',
+  tableNumberPeaDistritoSexo: 'Cuadro N° 3.41',
+  tableNumberPeaOcupadaDesocupada: 'Cuadro N° 3.43',
 
   // ===== FUENTES POR DEFECTO =====
   defaultPETFuente: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
