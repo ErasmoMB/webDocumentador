@@ -170,9 +170,9 @@ export class FormChangeService {
     }
   }
 
-  restoreSectionState(sectionId: string | undefined, currentData: Record<string, any>): void {
+  async restoreSectionState(sectionId: string | undefined, currentData: Record<string, any>): Promise<void> {
     const resolvedSectionId = sectionId || 'global';
-    const saved = this.formPersistence.loadSectionState(resolvedSectionId);
+    const saved = await this.formPersistence.loadSectionState(resolvedSectionId);
 
     if (!saved) {
       return;

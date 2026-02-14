@@ -241,14 +241,20 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
 
   // ✅ MÉTODOS PARA TÍTULO Y FUENTE DE LA TABLA (SIN HARDCODEADOS)
   obtenerTituloTelecomunicaciones(): string {
-    const titulo = this.projectFacade.selectField(this.seccionId, null, 'tituloTelecomunicaciones')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tituloKey = prefijo ? `tituloTelecomunicaciones${prefijo}` : 'tituloTelecomunicaciones';
+    const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)()
+      || this.projectFacade.selectField(this.seccionId, null, 'tituloTelecomunicaciones')();
     if (titulo && titulo.trim().length > 0) return titulo;
     const comunidad = this.obtenerNombreComunidadActual();
     return `Servicios de telecomunicaciones – CC ${comunidad}`;
   }
 
   obtenerFuenteTelecomunicaciones(): string {
-    const fuente = this.projectFacade.selectField(this.seccionId, null, 'fuenteTelecomunicaciones')();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const fuenteKey = prefijo ? `fuenteTelecomunicaciones${prefijo}` : 'fuenteTelecomunicaciones';
+    const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)()
+      || this.projectFacade.selectField(this.seccionId, null, 'fuenteTelecomunicaciones')();
     if (fuente && fuente.trim().length > 0) return fuente;
     return SECCION11_TEMPLATES.placeholderFuenteTelecomunicaciones || 'GEADES (2024)';
   }

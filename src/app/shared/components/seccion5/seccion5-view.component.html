@@ -6,7 +6,7 @@
     {{ obtenerParrafoInstitucionalidad() }}
   </p>
 
-  <app-table-wrapper [title]="viewModel().titulo || SECCION5_TEMPLATES.labelInstituciones.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" [sectionId]="'3.1.4.A.1.1'">
+  <app-table-wrapper [title]="viewModel().titulo || SECCION5_TEMPLATES.labelInstituciones.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" [sectionId]="seccionId">
     <app-dynamic-table
       [datos]="datos"
       [config]="institucionesConfig"
@@ -28,7 +28,7 @@
       [modoVista]="true"
       [fotografias]="fotografiasVista"
       [sectionId]="seccionId"
-      [photoPrefix]="PHOTO_PREFIX + obtenerPrefijoGrupo()"
+      [photoPrefix]="getPhotoPrefixActual()"
       [mostrarTitulo]="true"
       [mostrarFuente]="true"
       [mostrarNumero]="true"

@@ -73,8 +73,8 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     const distrito = data['distritoSeleccionado'] || 'Cahuacho';
     const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
     return SECCION28_TEMPLATES.textoSaludDefault
-      .replace(/____/g, distrito)
-      .replace(/____/g, centroPoblado);
+      .replace('____', distrito)
+      .replace('____', centroPoblado);
   }
 
   obtenerTextoEducacionCP(): string {
@@ -86,9 +86,9 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     const nombreIE = data['nombreIEMayorEstudiantes'] || 'IE Virgen de Copacabana';
     const cantidadEstudiantes = data['cantidadEstudiantesIEMayor'] || '28';
     return SECCION28_TEMPLATES.textoEducacionDefault
-      .replace(/____/g, centroPoblado)
-      .replace(/____/g, nombreIE)
-      .replace(/____/g, cantidadEstudiantes);
+      .replace('____', centroPoblado)
+      .replace('____', nombreIE)
+      .replace('____', cantidadEstudiantes);
   }
 
   obtenerTextoRecreacionCP1(): string {

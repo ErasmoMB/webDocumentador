@@ -31,6 +31,7 @@ import {
 export class Seccion1FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = SECCION1_SECTION_ID;
   @Input() override modoFormulario: boolean = true;
+  private parrafoPrincipalBloqueadoPorEdicionManual = false;
 
   // ✅ Hacer TEMPLATES accesible en el template
   readonly SECCION1_TEMPLATES = SECCION1_TEMPLATES;
@@ -286,7 +287,9 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     }
     
     // ✅ Usar métodos getter como fallback para párrafos
-    const parrafoPrincipalValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')() || this.obtenerTextoParrafoPrincipal();
+    const parrafoPrincipalGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')();
+    this.parrafoPrincipalBloqueadoPorEdicionManual = !!(parrafoPrincipalGuardado && String(parrafoPrincipalGuardado).trim().length > 0);
+    const parrafoPrincipalValue = parrafoPrincipalGuardado || this.obtenerTextoParrafoPrincipal();
     this.parrafoPrincipal.update(parrafoPrincipalValue);
     
     const parrafoIntroduccionValue = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_4')() || this.obtenerTextoIntroduccionObjetivos();
@@ -700,8 +703,13 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
    * cuando cambian departamento, provincia o distrito
    */
   private actualizarParrafoPrincipal(): void {
+    if (this.parrafoPrincipalBloqueadoPorEdicionManual) {
+      return;
+    }
+
     const parrafoGuardado = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion1_principal')();
     if (parrafoGuardado && String(parrafoGuardado).trim().length > 0) {
+      this.parrafoPrincipalBloqueadoPorEdicionManual = true;
       return;
     }
 
@@ -731,6 +739,11 @@ Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacio
 
     // Actualizar el signal del párrafo
     this.parrafoPrincipal.update(resultado);
+  }
+
+  onParrafoPrincipalChange(value: string): void {
+    this.parrafoPrincipalBloqueadoPorEdicionManual = true;
+    this.parrafoPrincipal.update(value);
   }
 
   /**

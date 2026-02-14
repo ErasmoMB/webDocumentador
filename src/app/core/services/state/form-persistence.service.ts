@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { StorageFacade } from '../infrastructure/storage-facade.service';
+import { SessionDataService } from '../session/session-data.service';
+
+/**
+ * ✅ UNIFICADO: Usa SessionDataService como única capa de persistencia
+ * - Backend primero (SessionDataService maneja esto automáticamente)
+ * - Fallback a localStorage si backend falla
+ * - Elimina confusión entre múltiples sistemas de almacenamiento
+ */
 
 type SectionFormState = {
   [groupId: string]: {
@@ -56,9 +63,10 @@ function stripBlobsFromState(state: SectionFormState): SectionFormState {
 
 @Injectable({ providedIn: 'root' })
 export class FormPersistenceService {
-  constructor(private storage: StorageFacade) {}
+  constructor(private sessionData: SessionDataService) {}
 
   saveSectionState(sectionId: string, state: SectionFormState, ttl = DEFAULT_TTL_MS): void {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
     const dataToPersist = stripBlobsFromState(state);
     const payload: PersistedState = {
       savedAt: Date.now(),
@@ -66,24 +74,21 @@ export class FormPersistenceService {
       data: dataToPersist,
     };
     const key = this.getKey(sectionId);
-    try {
-      this.storage.setItem(key, JSON.stringify(payload));
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-        this.clearSectionState(sectionId);
-        this.storage.setItem(key, JSON.stringify({ savedAt: Date.now(), ttl, data: {} }));
-      } else {
-        throw err;
-      }
-    }
+    
+    this.sessionData.saveData(key, payload).catch(err => {
+      console.warn('[FormPersistence] Error saving section state:', err);
+    });
   }
 
-  loadSectionState(sectionId: string): SectionFormState | null {
-    const raw = this.storage.getItem(this.getKey(sectionId));
-    if (!raw) return null;
-
+  async loadSectionState(sectionId: string): Promise<SectionFormState | null> {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    const key = this.getKey(sectionId);
+    
     try {
-      const parsed = JSON.parse(raw) as PersistedState;
+      const payload = await this.sessionData.loadData(key);
+      if (!payload) return null;
+
+      const parsed = payload as PersistedState;
       if (Date.now() - parsed.savedAt > parsed.ttl) {
         this.clearSectionState(sectionId);
         return null;
@@ -96,13 +101,18 @@ export class FormPersistenceService {
   }
 
   clearSectionState(sectionId: string): void {
-    this.storage.removeItem(this.getKey(sectionId));
+    // ✅ UNIFICADO: Limpia tanto backend como localStorage
+    const key = this.getKey(sectionId);
+    this.sessionData.saveData(key, null).catch(() => {
+      // Ignorar errores al limpiar
+    });
   }
 
   clearAll(): void {
-    this.storage.keys()
-      .filter(key => key.startsWith(STORAGE_PREFIX))
-      .forEach(key => this.storage.removeItem(key));
+    // ✅ UNIFICADO: Limpia tanto backend como localStorage
+    this.sessionData.clearAll().catch(() => {
+      // Ignorar errores al limpiar
+    });
   }
 
   private getKey(sectionId: string): string {

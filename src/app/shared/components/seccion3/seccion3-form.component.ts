@@ -134,7 +134,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   get fotografias(): FotoItem[] {
-    return this.fotografiasSeccion3;
+    return this.fotografiasCache;
   }
 
   get photoPrefix(): string {

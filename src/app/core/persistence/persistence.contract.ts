@@ -175,6 +175,42 @@ export function extractPersistibleState(state: ProjectState): PersistibleState {
 }
 
 /**
+ * ✅ NUEVO: Extrae estado persistible PERO excluye imágenes base64.
+ * Útil para SessionDataService donde storage está limitado.
+ * Las imágenes base64 se persisten por separado vía backend.
+ */
+export function extractPersistibleStateWithoutBase64(state: ProjectState): PersistibleState {
+  const persistible = extractPersistibleState(state);
+  
+  // Copiar campos pero filtrar imágenes base64
+  const filtered = JSON.parse(JSON.stringify(persistible));
+  
+  // Filtrar campos que típicamente contienen imágenes base64
+  if (filtered.fields && typeof filtered.fields === 'object') {
+    const fieldsToRemove: string[] = [];
+    
+    Object.keys(filtered.fields).forEach(key => {
+      // Detectar claves de imagen: *Imagen, *Imagen_A1, etc.
+      // y si el valor es base64 (comienza con "data:image")
+      if (key.includes('Imagen') && typeof filtered.fields[key] === 'string') {
+        const value = filtered.fields[key];
+        // Si es base64, excluir
+        if (value.startsWith('data:image')) {
+          fieldsToRemove.push(key);
+        }
+      }
+    });
+    
+    // Remover campos de imagen base64
+    fieldsToRemove.forEach(key => {
+      delete filtered.fields[key];
+    });
+  }
+  
+  return filtered;
+}
+
+/**
  * Verifica si una versión está soportada.
  */
 export function isVersionSupported(version: string): version is SupportedSchemaVersion {

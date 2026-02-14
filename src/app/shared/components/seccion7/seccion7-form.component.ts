@@ -500,16 +500,18 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
 
   override cargarFotografias(): void {
     const formData = this.formDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
 
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagenKey = `${prefix}${i}Imagen`;
       const imagen = formData[imagenKey];
 
       if (imagen) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero`;
+        const tituloKey = `${prefix}${i}Titulo`;
+        const fuenteKey = `${prefix}${i}Fuente`;
+        const numeroKey = `${prefix}${i}Numero`;
 
         fotos.push({
           imagen: imagen,

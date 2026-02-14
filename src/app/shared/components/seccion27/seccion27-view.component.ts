@@ -61,8 +61,8 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     const data = this.formDataSignal();
     const ciudadOrigen = data?.['ciudadOrigenComercio'] || 'Caravelí';
     const distrito = data?.['distritoSeleccionado'] || 'Cahuacho';
-    const costoMin = data?.['costoTransporteMinimo'] || '25';
-    const costoMax = data?.['costoTransporteMaximo'] || '30';
+    const costoMin = data?.[`costoTransporteMinimo${prefijo}`] || data?.['costoTransporteMinimo'] || '25';
+    const costoMax = data?.[`costoTransporteMaximo${prefijo}`] || data?.['costoTransporteMaximo'] || '30';
     return `Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de ${ciudadOrigen}, a la cual parte cerca de las 10:30 am desde la capital distrital de ${distrito}. El costo por este servicio varía entre S/. ${costoMin} y S/. ${costoMax} por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los habitantes para desplazarse a ciudades más grandes.`;
   });
 

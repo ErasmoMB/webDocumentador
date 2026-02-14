@@ -11,7 +11,7 @@
   <div [innerHTML]="viewModel().texts.comunidadText"></div>
 
   <!-- Tabla de Ubicación Referencial -->
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD1'] || SECCION4_TEMPLATES.labelTablaUbicacionReferencial) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A1'">
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD1'] || SECCION4_TEMPLATES.labelTablaUbicacionReferencial) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="seccionId">
     <app-generic-table
       [data]="viewModel().tables.tablaAISD1"
       [config]="{
@@ -50,7 +50,7 @@
   <div [innerHTML]="viewModel().texts.caracterizacionText"></div>
 
   <!-- Tabla de Población y Viviendas -->
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD2'] || SECCION4_TEMPLATES.labelTablaPoblacionViviendas) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="'3.1.4.A2'">
+  <app-table-wrapper [title]="(viewModel().data['cuadroTituloAISD2'] || SECCION4_TEMPLATES.labelTablaPoblacionViviendas) + ' – ' + SECCION4_TEMPLATES.labelCC + ' ' + viewModel().nombreComunidad" [sectionId]="seccionId">
     <app-generic-table
       [data]="viewModel().tables.tablaAISD2"
       [config]="{

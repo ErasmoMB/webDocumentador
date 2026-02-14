@@ -870,10 +870,15 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
       }
 
       if (newValue !== undefined && newValue !== null) {
+        const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
+        const resolvedFieldName = prefijo && !fieldName.endsWith(prefijo)
+          ? `${fieldName}${prefijo}`
+          : fieldName;
+
         formChangeService.persistFields(
           this.seccionId,
           null, // groupId: null para campos sin grupo específico
-          { [fieldName]: newValue },
+          { [resolvedFieldName]: newValue },
           { updateLegacy: true, updateState: true, notifySync: true, persist: true }
         );
         // Force change detection para vista

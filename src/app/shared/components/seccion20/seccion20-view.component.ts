@@ -7,7 +7,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
-import { SECCION20_TEMPLATES } from './seccion20.constants';
+import { SECCION20_CONFIG, SECCION20_TEMPLATES } from './seccion20.constants';
 
 @Component({
   selector: 'app-seccion20-view',
@@ -17,7 +17,7 @@ import { SECCION20_TEMPLATES } from './seccion20.constants';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion20ViewComponent extends BaseSectionComponent {
-  @Input() override seccionId: string = '';
+  @Input() override seccionId: string = SECCION20_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
 
   // ✅ Exportar TEMPLATES para el HTML

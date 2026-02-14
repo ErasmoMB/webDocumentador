@@ -27,49 +27,51 @@ import {
 
 /**
  * Desenvuelve datos demográficos del backend
- * Maneja diferentes estructuras de respuesta
+ * Estructura: [{ rows: [...] }]
+ * Extrae directamente el array de rows
  */
 const unwrapDemograficoData = (responseData: any): any[] => {
   if (!responseData) return [];
   
-  if (Array.isArray(responseData) && responseData.length > 0) {
-    return responseData[0]?.rows || responseData;
+  // Estructura: [{ rows: [...] }]
+  if (Array.isArray(responseData) && responseData.length > 0 && responseData[0]?.rows) {
+    return responseData[0].rows;
   }
-  if (responseData.data) {
-    const data = responseData.data;
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0]?.rows || data;
-    }
-    return data;
+  
+  // Fallback si ya es un array de items
+  if (Array.isArray(responseData)) {
+    return responseData;
   }
+  
   return [];
 };
 
 /**
  * Transforma datos de Condición de Ocupación del backend
- * Mapea directamente TODOS los campos sin filtros
+ * Cada item ya tiene: categoria, casos, porcentaje
  */
 const transformCondicionOcupacionDesdeBackend = (data: any[]): any[] => {
   if (!Array.isArray(data)) return [];
   
   return data.map(item => ({
     categoria: item.categoria || item.condicion || '',
-    casos: parseFloat(item.casos) || 0,
+    casos: parseFloat(item.casos || 0) || 0,
     porcentaje: item.porcentaje || ''
   }));
 };
 
 /**
  * Transforma datos de Materiales de Construcción del backend
- * Mapea directamente TODOS los campos sin filtros ni agrupaciones
+ * Cada item ya tiene: categoria, subcategoria, casos, porcentaje
+ * Mapea subcategoria a tipoMaterial
  */
 const transformMaterialesConstruccionDesdeBackend = (data: any[]): any[] => {
   if (!Array.isArray(data)) return [];
   
   return data.map(item => ({
-    categoria: item.categoria || item.tipo_categoria || '',
-    tipoMaterial: item.subcategoria || item.tipo_material || item.material || item.tipoMaterial || '',
-    casos: parseFloat(item.casos) || 0,
+    categoria: item.categoria || '',                    // ✅ Ya viene en el item
+    tipoMaterial: item.subcategoria || item.material || item.tipo_material || item.tipoMaterial || '',
+    casos: parseFloat(item.casos || 0) || 0,
     porcentaje: item.porcentaje || ''
   }));
 };
@@ -354,11 +356,15 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
           const datosDesenvueltos = unwrapDemograficoData(dataRaw);
           const datosTransformados = transformMaterialesConstruccionDesdeBackend(datosDesenvueltos);
           
-          console.log('[SECCION9] ✅ Datos de materiales construcción cargados:', datosTransformados);
+          console.log('[SECCION9] 🔍 RAW DATA:', dataRaw);
+          console.log('[SECCION9] 🔍 DATOS DESENVUELTOS:', datosDesenvueltos);
+          console.log('[SECCION9] ✅ Datos de materiales construcción TRANSFORMADOS:', datosTransformados);
           
           // Guardar CON prefijo y SIN prefijo (fallback)  
           if (datosTransformados.length > 0) {
             const tablaKey = `tiposMaterialesTabla${prefijo}`;
+            console.log('[SECCION9] 💾 Guardando en clave:', tablaKey);
+            console.log('[SECCION9] 💾 Primer item guardado:', datosTransformados[0]);
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'tiposMaterialesTabla', datosTransformados);
           }

@@ -162,22 +162,93 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   override cargarFotografias(): void {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    this.fotografiasGanaderiaCache = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_GANADERIA,
-      groupPrefix
-    ) || [];
-    this.fotografiasAgriculturaCache = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_AGRICULTURA,
-      groupPrefix
-    ) || [];
-    this.fotografiasComercioCache = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_COMERCIO,
-      groupPrefix
-    ) || [];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const maxFotos = 10;
+    
+    // ✅ Cargar Ganadería desde estado (projectFacade) primero
+    const fotosGanaderia: FotoItem[] = [];
+    for (let i = 1; i <= maxFotos; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen${prefijo}`;
+      
+      const titulo = this.datos[tituloKey] || '';
+      const fuente = this.datos[fuenteKey] || '';
+      const imagen = this.datos[imagenKey] || '';
+      
+      if (titulo || fuente || imagen) {
+        fotosGanaderia.push({ titulo, fuente, imagen });
+      }
+    }
+    
+    // Fallback a imageService si no hay datos en estado
+    if (fotosGanaderia.length === 0) {
+      const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+      this.fotografiasGanaderiaCache = this.imageService.loadImages(
+        this.seccionId,
+        this.PHOTO_PREFIX_GANADERIA,
+        groupPrefix
+      ) || [];
+    } else {
+      this.fotografiasGanaderiaCache = fotosGanaderia;
+    }
+    
+    // ✅ Cargar Agricultura desde estado (projectFacade) primero
+    const fotosAgricultura: FotoItem[] = [];
+    for (let i = 1; i <= maxFotos; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Imagen${prefijo}`;
+      
+      const titulo = this.datos[tituloKey] || '';
+      const fuente = this.datos[fuenteKey] || '';
+      const imagen = this.datos[imagenKey] || '';
+      
+      if (titulo || fuente || imagen) {
+        fotosAgricultura.push({ titulo, fuente, imagen });
+      }
+    }
+    
+    // Fallback a imageService si no hay datos en estado
+    if (fotosAgricultura.length === 0) {
+      const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+      this.fotografiasAgriculturaCache = this.imageService.loadImages(
+        this.seccionId,
+        this.PHOTO_PREFIX_AGRICULTURA,
+        groupPrefix
+      ) || [];
+    } else {
+      this.fotografiasAgriculturaCache = fotosAgricultura;
+    }
+    
+    // ✅ Cargar Comercio desde estado (projectFacade) primero
+    const fotosComercio: FotoItem[] = [];
+    for (let i = 1; i <= maxFotos; i++) {
+      const tituloKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Imagen${prefijo}`;
+      
+      const titulo = this.datos[tituloKey] || '';
+      const fuente = this.datos[fuenteKey] || '';
+      const imagen = this.datos[imagenKey] || '';
+      
+      if (titulo || fuente || imagen) {
+        fotosComercio.push({ titulo, fuente, imagen });
+      }
+    }
+    
+    // Fallback a imageService si no hay datos en estado
+    if (fotosComercio.length === 0) {
+      const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
+      this.fotografiasComercioCache = this.imageService.loadImages(
+        this.seccionId,
+        this.PHOTO_PREFIX_COMERCIO,
+        groupPrefix
+      ) || [];
+    } else {
+      this.fotografiasComercioCache = fotosComercio;
+    }
+    
     this.cdRef.markForCheck();
   }
 
@@ -185,10 +256,17 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     return this.peaOcupacionesConPorcentajesSignal();
   }
 
-  obtenerTextoActividadesEconomicas(): string {
+  private obtenerValorCampo(baseField: string): any {
     const formData = this.formDataSignal();
-    if (formData['textoActividadesEconomicas'] && formData['textoActividadesEconomicas'] !== '____') {
-      return formData['textoActividadesEconomicas'];
+    const prefijo = this.obtenerPrefijoGrupo();
+    const claveConPrefijo = `${baseField}${prefijo}`;
+    return formData[claveConPrefijo] ?? formData[baseField];
+  }
+
+  obtenerTextoActividadesEconomicas(): string {
+    const manual = this.obtenerValorCampo('textoActividadesEconomicas');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -197,9 +275,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoFuentesActividadesEconomicas(): string {
-    const formData = this.formDataSignal();
-    if (formData['textoFuentesActividadesEconomicas'] && formData['textoFuentesActividadesEconomicas'] !== '____') {
-      return formData['textoFuentesActividadesEconomicas'];
+    const manual = this.obtenerValorCampo('textoFuentesActividadesEconomicas');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -208,22 +286,41 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTituloPEA(): string {
-    const formData = this.formDataSignal();
-    const titulo = formData['cuadroTituloPEA'] || 'PEA Ocupada según ocupaciones principales';
+    const titulo = this.obtenerValorCampo('cuadroTituloPEA') || 'PEA Ocupada según ocupaciones principales';
     const comunidad = this.obtenerNombreComunidadActual();
     return `${titulo} – CC ${comunidad} (2017)`;
   }
 
+  obtenerFuentePEA(): string {
+    return this.obtenerValorCampo('cuadroFuentePEA') || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú';
+  }
+
+  obtenerFuentePoblacionPecuaria(): string {
+    return this.obtenerValorCampo('cuadroFuentePoblacionPecuaria') || 'GEADES (2024)';
+  }
+
+  obtenerFuenteCaracteristicasAgricultura(): string {
+    return this.obtenerValorCampo('cuadroFuenteCaracteristicasAgricultura') || 'GEADES (2024)';
+  }
+
   obtenerTituloGanaderia(): string {
     const formData = this.formDataSignal();
-    const titulo = formData['cuadroTituloPoblacionPecuaria'] || 'Población Pecuaria';
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Buscar CON prefijo primero (forma de guardar del formulario)
+    const claveConPrefijo = `cuadroTituloPoblacionPecuaria${prefijo}`;
+    const titulo = formData[claveConPrefijo] || formData['cuadroTituloPoblacionPecuaria'] || 'Población Pecuaria';
     const comunidad = this.obtenerNombreComunidadActual();
     return `${titulo} – CC ${comunidad}`;
   }
 
   obtenerTituloAgricultura(): string {
     const formData = this.formDataSignal();
-    const titulo = formData['cuadroTituloCaracteristicasAgricultura'] || 'Características de la Agricultura';
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Buscar CON prefijo primero (forma de guardar del formulario)
+    const claveConPrefijo = `cuadroTituloCaracteristicasAgricultura${prefijo}`;
+    const titulo = formData[claveConPrefijo] || formData['cuadroTituloCaracteristicasAgricultura'] || 'Características de la Agricultura';
     const comunidad = this.obtenerNombreComunidadActual();
     return `${titulo} – CC ${comunidad}`;
   }
@@ -241,10 +338,10 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoAnalisisCuadro310(): string {
-    const formData = this.formDataSignal();
+    const manual = this.obtenerValorCampo('textoAnalisisCuadro310');
     // ✅ Si el usuario editó manualmente, usar ESO (no regenerar)
-    if (formData['textoAnalisisCuadro310'] && formData['textoAnalisisCuadro310'] !== '____' && formData['textoAnalisisCuadro310'].trim().length > 0) {
-      return formData['textoAnalisisCuadro310'];
+    if (manual && manual !== '____' && manual.trim().length > 0) {
+      return manual;
     }
     
     // Solo si está vacío, generar por defecto
@@ -269,6 +366,15 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
 
   obtenerTextoSeccion8GanaderiaCompleto(): string {
     const formData = this.formDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Buscar CON prefijo primero (forma de guardar del formulario)
+    const claveConPrefijo = `parrafoSeccion8_ganaderia_completo${prefijo}`;
+    if (formData[claveConPrefijo]) {
+      return formData[claveConPrefijo];
+    }
+    
+    // Fallback sin prefijo para compatibilidad
     if (formData['parrafoSeccion8_ganaderia_completo']) {
       return formData['parrafoSeccion8_ganaderia_completo'];
     }
@@ -277,7 +383,7 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     // ✅ REFACTOR: Usar ubicacionGlobal en lugar de formData
     const provincia = this.ubicacionGlobal().provincia || '____';
     
-    return `En la CC ${grupoAISD}, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, las gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.\n\nLa alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de ${provincia} para la venta; también se elabora yogurt, aunque en menor medida.\n\nA pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.`;
+    return `En la CC ${grupoAISD}, la ganadería es la actividad económica predominante, con un 80 % de la producción destinada al autoconsumo familiar y un 20 % a la venta, según los entrevistados. Las principales especies que se crían son los vacunos y los ovinos, aunque también se crían caprinos y animales menores como gallinas y cuyes. El precio del ganado en pie varía dependiendo de la especie: los vacunos se venden entre S/. 1 200 y S/. 1 500, los ovinos entre S/. 180 y S/. 200, les gallinas entre S/. 20 y S/. 30, y los cuyes entre S/. 25 y S/. 30.\n\nLa alimentación del ganado se basa principalmente en pasto natural, aunque también se les proporciona pasto cultivable en las temporadas de escasez. Uno de los productos derivados más importantes es el queso, el cual se destina particularmente a la capital provincial de ${provincia} para la venta; también se elabora yogurt, aunque en menor medida.\n\nA pesar de la importancia de esta actividad para la economía local, la ganadería enfrenta diversas problemáticas. Entre las principales están la falta de especialistas en salud veterinaria, así como los desafíos climáticos, especialmente las heladas, que pueden reducir la disponibilidad de pastos y generar pérdidas en los rebaños. Estas dificultades impactan directamente en la productividad y los ingresos de los comuneros ganaderos.`;
   }
 
   obtenerTextoSeccion8GanaderiaCompletoConResaltado(): SafeHtml {
@@ -292,6 +398,15 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
 
   obtenerTextoSeccion8AgriculturaCompleto(): string {
     const formData = this.formDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Buscar CON prefijo primero (forma de guardar del formulario)
+    const claveConPrefijo = `parrafoSeccion8_agricultura_completo${prefijo}`;
+    if (formData[claveConPrefijo]) {
+      return formData[claveConPrefijo];
+    }
+    
+    // Fallback sin prefijo para compatibilidad
     if (formData['parrafoSeccion8_agricultura_completo']) {
       return formData['parrafoSeccion8_agricultura_completo'];
     }
@@ -312,9 +427,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoMercadoComercializacion1(): string {
-    const formData = this.formDataSignal();
-    if (formData['textoMercadoComercializacion1'] && formData['textoMercadoComercializacion1'] !== '____') {
-      return formData['textoMercadoComercializacion1'];
+    const manual = this.obtenerValorCampo('textoMercadoComercializacion1');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -336,9 +451,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoMercadoComercializacion2(): string {
-    const formData = this.formDataSignal();
-    if (formData['textoMercadoComercializacion2'] && formData['textoMercadoComercializacion2'] !== '____') {
-      return formData['textoMercadoComercializacion2'];
+    const manual = this.obtenerValorCampo('textoMercadoComercializacion2');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     return `Esta dependencia de los intermediarios presenta diversas dificultades. Por un lado, los comuneros reciben precios más bajos en comparación con los que podrían obtener si tuvieran acceso directo a mercados más grandes o si contaran con un punto de venta dentro de la comunidad. Además, el transporte de los productos fuera de la comunidad aumenta los costos logísticos, afectando la rentabilidad de las actividades económicas. Este sistema de comercialización se traduce en una vulnerabilidad económica para las familias, ya que dependen de las condiciones impuestas por terceros para la venta de sus bienes.`;
@@ -350,9 +465,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoHabitosConsumo1(): string {
-    const formData = this.formDataSignal();
-    if (formData['textoHabitosConsumo1'] && formData['textoHabitosConsumo1'] !== '____') {
-      return formData['textoHabitosConsumo1'];
+    const manual = this.obtenerValorCampo('textoHabitosConsumo1');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();
@@ -374,9 +489,9 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   obtenerTextoHabitosConsumo2(): string {
-    const formData = this.formDataSignal();
-    if (formData['textoHabitosConsumo2'] && formData['textoHabitosConsumo2'] !== '____') {
-      return formData['textoHabitosConsumo2'];
+    const manual = this.obtenerValorCampo('textoHabitosConsumo2');
+    if (manual && manual !== '____') {
+      return manual;
     }
     
     const grupoAISD = this.obtenerNombreComunidadActual();

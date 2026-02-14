@@ -323,9 +323,9 @@ export class ResumenComponent implements OnInit, AfterViewInit {
     return this.datos.mapaActores.filter((a: any) => a.categoria === categoria).length;
   }
 
-  getFilasTablaAISD2(): any[] {
+  async getFilasTablaAISD2(): Promise<any[]> {
     const filas: any[] = [];
-    const filasActivas = this.formularioService.obtenerFilasActivasTablaAISD2();
+    const filasActivas = await this.formularioService.obtenerFilasActivasTablaAISD2();
     
     // Buscar todas las filas con datos (hasta 20 filas máximo)
     for (let i = 1; i <= 20; i++) {

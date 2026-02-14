@@ -186,6 +186,13 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     return this.obtenerPrefijoGrupo();
   }
 
+  private obtenerValorCampo(baseField: string): string {
+    const viewData = this.viewDataSignal();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const claveConPrefijo = `${baseField}${prefijo}`;
+    return viewData[claveConPrefijo] || viewData[baseField] || '';
+  }
+
   getFotografiasPEAVista(): FotoItem[] {
     return this.fotografiasVista;
   }
@@ -193,15 +200,31 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
   // ✅ MÉTODOS PARA TÍTULOS DINÁMICOS CON DISTRITO
   
   obtenerTituloCuadro3_8(): string {
-    const titulo = this.datos.cuadroTituloPEA || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA;
+    const titulo = this.obtenerValorCampo('cuadroTituloPEA') || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA;
     const distrito = this.distritoDesdeSeccion4Signal();
     return `${titulo} – Distrito ${distrito} (2017)`;
   }
 
   obtenerTituloCuadro3_9(): string {
-    const titulo = this.datos.cuadroTituloPEAOcupada || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA_OCUPADA;
+    const titulo = this.obtenerValorCampo('cuadroTituloPEAOcupada') || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PEA_OCUPADA;
     const distrito = this.distritoDesdeSeccion4Signal();
     return `${titulo} – Distrito ${distrito} (2017)`;
+  }
+
+  obtenerTituloCuadro3_7(): string {
+    return this.obtenerValorCampo('cuadroTituloPET') || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PET;
+  }
+
+  obtenerFuenteCuadro3_7(): string {
+    return this.obtenerValorCampo('cuadroFuentePET') || 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)';
+  }
+
+  obtenerFuenteCuadro3_8(): string {
+    return this.obtenerValorCampo('cuadroFuentePEA') || 'Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018';
+  }
+
+  obtenerFuenteCuadro3_9(): string {
+    return this.obtenerValorCampo('cuadroFuentePEAOcupada') || 'Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018';
   }
   
   obtenerTextoSeccion7PETCompletoConResaltado(): SafeHtml {
@@ -309,10 +332,10 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     const viewData = this.viewDataSignal();
     const prefijo = this.obtenerPrefijo();
     
-    const manualKey = `parrafoSeccion7_indice_desempleo${prefijo}`;
+    const manualKey = `textoIndiceDesempleo${prefijo}`;
     let texto = viewData[manualKey];
     if (!texto) {
-      texto = viewData['parrafoSeccion7_indice_desempleo'];
+      texto = viewData['textoIndiceDesempleo'];
     }
     if (!texto || texto.trim() === '') {
       texto = `El índice de desempleo es un indicador clave para evaluar la salud económica de la jurisdicción. Refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en búsqueda activa de empleo sin haberlo logrado obtener.`;

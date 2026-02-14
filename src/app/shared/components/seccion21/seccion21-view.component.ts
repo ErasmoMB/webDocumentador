@@ -7,7 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
-import { SECCION21_TEMPLATES } from './seccion21-constants';
+import { SECCION21_CONFIG, SECCION21_TEMPLATES } from './seccion21-constants';
 
 @Component({
   selector: 'app-seccion21-view',
@@ -17,7 +17,7 @@ import { SECCION21_TEMPLATES } from './seccion21-constants';
   standalone: true
 })
 export class Seccion21ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.4.B';
+  @Input() override seccionId: string = SECCION21_CONFIG.sectionId;
 
   // ✅ EXPORTAR CONSTANTES PARA EL TEMPLATE
   readonly SECCION21_TEMPLATES = SECCION21_TEMPLATES;

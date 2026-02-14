@@ -60,28 +60,39 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
+  private getFieldKey(field: string): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `${field}${prefijo}` : field;
+  }
+
+  private getFieldValue(field: string): any {
+    const key = this.getFieldKey(field);
+    return this.projectFacade.selectField(this.seccionId, null, key)()
+      ?? this.projectFacade.selectField(this.seccionId, null, field)();
+  }
+
   readonly centroPobladoSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '');
 
   readonly textoNatalidadCP1Signal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoNatalidadCP1')();
+    const manual = this.getFieldValue('textoNatalidadCP1');
     if (manual && manual.trim().length > 0) return manual;
     return this.generarTextoNatalidadCP1();
   });
 
   readonly textoNatalidadCP2Signal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoNatalidadCP2')();
+    const manual = this.getFieldValue('textoNatalidadCP2');
     if (manual && manual.trim().length > 0) return manual;
     return this.generarTextoNatalidadCP2();
   });
 
   readonly textoMorbilidadCPSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoMorbilidadCP')();
+    const manual = this.getFieldValue('textoMorbilidadCP');
     if (manual && manual.trim().length > 0) return manual;
     return this.generarTextoMorbilidadCP();
   });
 
   readonly textoAfiliacionSaludSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'textoAfiliacionSalud')();
+    const manual = this.getFieldValue('textoAfiliacionSalud');
     if (manual && manual.trim().length > 0) return manual;
     return this.generarTextoAfiliacionSalud();
   });
@@ -112,14 +123,14 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   });
 
   // Titles and sources for tables (editable fields)
-  readonly tituloNatalidadSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloNatalidadMortalidad')() ?? '');
-  readonly fuenteNatalidadSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteNatalidadMortalidad')() ?? '');
+  readonly tituloNatalidadSignal: Signal<string> = computed(() => this.getFieldValue('tituloNatalidadMortalidad') ?? '');
+  readonly fuenteNatalidadSignal: Signal<string> = computed(() => this.getFieldValue('fuenteNatalidadMortalidad') ?? '');
 
-  readonly tituloMorbilidadSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloMorbilidad')() ?? '');
-  readonly fuenteMorbilidadSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteMorbilidad')() ?? '');
+  readonly tituloMorbilidadSignal: Signal<string> = computed(() => this.getFieldValue('tituloMorbilidad') ?? '');
+  readonly fuenteMorbilidadSignal: Signal<string> = computed(() => this.getFieldValue('fuenteMorbilidad') ?? '');
 
-  readonly tituloAfiliacionSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloAfiliacionSalud')() ?? '');
-  readonly fuenteAfiliacionSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteAfiliacionSalud')() ?? '');
+  readonly tituloAfiliacionSignal: Signal<string> = computed(() => this.getFieldValue('tituloAfiliacionSalud') ?? '');
+  readonly fuenteAfiliacionSignal: Signal<string> = computed(() => this.getFieldValue('fuenteAfiliacionSalud') ?? '');
 
   readonly viewModel = computed(() => ({
     centroPoblado: this.centroPobladoSignal(),
@@ -296,9 +307,9 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
 
     // Ensure paragraph fields exist so editor shows current value (empty string if not set)
     ['textoNatalidadCP1', 'textoNatalidadCP2', 'textoMorbilidadCP', 'textoAfiliacionSalud'].forEach(field => {
-      const current = this.projectFacade.selectField(this.seccionId, null, field)();
+      const current = this.getFieldValue(field);
       if (current === undefined || current === null) {
-        this.onFieldChange(field, '');
+        this.onFieldChange(this.getFieldKey(field), '');
       }
     });
 
@@ -310,10 +321,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     ];
 
     keys.forEach(([tituloKey, fuenteKey]) => {
-      const t = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-      const f = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
-      if (t === undefined || t === null) this.onFieldChange(tituloKey, '');
-      if (f === undefined || f === null) this.onFieldChange(fuenteKey, '');
+      const t = this.getFieldValue(tituloKey);
+      const f = this.getFieldValue(fuenteKey);
+      if (t === undefined || t === null) this.onFieldChange(this.getFieldKey(tituloKey), '');
+      if (f === undefined || f === null) this.onFieldChange(this.getFieldKey(fuenteKey), '');
     });
   }
 
@@ -375,7 +386,7 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   ];
 
   actualizarTexto(field: string, valor: string) {
-    this.onFieldChange(field, valor);
+    this.onFieldChange(this.getFieldKey(field), valor);
   }
 
   onTablaUpdated(tablaKey: string, tabla: any[]) {

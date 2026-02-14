@@ -42,6 +42,15 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   private autoLlenarTablasExecuted = false;
   private isProcessingPipeline = false;
 
+  private getPrefixedFieldKey(baseField: string): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return `${baseField}${prefijo}`;
+  }
+
+  actualizarCampoPrefijado(baseField: string, value: any): void {
+    this.onFieldChange(this.getPrefixedFieldKey(baseField), value, { refresh: false });
+  }
+
   readonly formDataSignal: Signal<Record<string, any>>;
   readonly tablaAISD1Signal: Signal<any[]>;
   readonly tablaAISD2Signal: Signal<any[]>;
@@ -445,8 +454,11 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       payload[keyA2] = tablaA2Actual.map((r: any) => (typeof r === 'object' && r != null ? { ...r } : r));
     }
     
-    if (Object.keys(payload).length > 0) {
-      this.projectFacade.setFields(this.seccionId, null, payload);
+    if (payload[keyA1]) {
+      this.onFieldChange(keyA1, payload[keyA1], { refresh: false });
+    }
+    if (payload[keyA2]) {
+      this.onFieldChange(keyA2, payload[keyA2], { refresh: false });
     }
     
     // Calcular totales inline
@@ -462,7 +474,9 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     totalesPayload[`tablaAISD2TotalPoblacion${prefijo}`] = totals.poblacion;
     totalesPayload[`tablaAISD2TotalViviendasEmpadronadas${prefijo}`] = totals.viviendasEmpadronadas;
     totalesPayload[`tablaAISD2TotalViviendasOcupadas${prefijo}`] = totals.viviendasOcupadas;
-    this.projectFacade.setFields(this.seccionId, null, totalesPayload);
+    Object.entries(totalesPayload).forEach(([key, value]) => {
+      this.onFieldChange(key, value, { refresh: false });
+    });
     
     this.actualizarDatos();
     this.cdRef.markForCheck();

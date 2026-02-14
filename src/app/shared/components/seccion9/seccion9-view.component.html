@@ -50,7 +50,7 @@
         <td class="table-cell" 
             [attr.rowspan]="getRowspanTiposMateriales(i)"
             [style.display]="shouldShowCategoriaCellTiposMateriales(i) ? '' : 'none'"
-            [class.categoria-agrupada]="item?.esEncabezadoGrupo">
+            [class.categoria-agrupada]="isFirstRowOfGroup(i)">
           <span [appDataSource]="'backend'">{{ item.categoria }}</span>
         </td>
         <td class="table-cell">

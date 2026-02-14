@@ -1230,10 +1230,10 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!seccionId.match(new RegExp(pattern));
   }
 
-  getFilasTabla(): any[] {
+  async getFilasTabla(): Promise<any[]> {
     const component = ViewChildHelper.getComponent('seccion4');
     if (component && component['getFilasTablaAISD2']) {
-      return component['getFilasTablaAISD2']();
+      return await component['getFilasTablaAISD2']();
     }
     return [];
   }

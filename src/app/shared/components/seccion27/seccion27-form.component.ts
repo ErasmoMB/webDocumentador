@@ -178,6 +178,8 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
 
   private sincronizarCamposDesdeStore(): void {
     try {
+      const prefijo = this.obtenerPrefijo();
+
       const val1 = this.projectFacade.selectField(this.seccionId, null, this.getKeyTransporteCP1())() || '';
       this.textoTransporteCP1.update(val1);
 
@@ -193,16 +195,24 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
       const val5 = this.projectFacade.selectField(this.seccionId, null, this.getKeyTelecomunicacionesCP3())() || '';
       this.textoTelecomunicacionesCP3.update(val5);
 
-      const costoMin = this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMinimo')() || '';
+      const costoMin = this.projectFacade.selectField(this.seccionId, null, `costoTransporteMinimo${prefijo}`)()
+        || this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMinimo')()
+        || '';
       this.costoTransporteMinimo.update(costoMin);
 
-      const costoMax = this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMaximo')() || '';
+      const costoMax = this.projectFacade.selectField(this.seccionId, null, `costoTransporteMaximo${prefijo}`)()
+        || this.projectFacade.selectField(this.seccionId, null, 'costoTransporteMaximo')()
+        || '';
       this.costoTransporteMaximo.update(costoMax);
 
-      const titulo = this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloTelecomunicaciones')() || '';
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `cuadroTituloTelecomunicaciones${prefijo}`)()
+        || this.projectFacade.selectField(this.seccionId, null, 'cuadroTituloTelecomunicaciones')()
+        || '';
       this.cuadroTituloTelecomunicaciones.update(titulo);
 
-      const fuente = this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteTelecomunicaciones')() || '';
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `cuadroFuenteTelecomunicaciones${prefijo}`)()
+        || this.projectFacade.selectField(this.seccionId, null, 'cuadroFuenteTelecomunicaciones')()
+        || '';
       this.cuadroFuenteTelecomunicaciones.update(fuente);
     } catch (e) {
     }

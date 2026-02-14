@@ -11,7 +11,7 @@
         [label]="SECCION4_TEMPLATES.labelIntroduccionAISD"
         [rows]="4"
         [value]="viewModel().texts.introduccionText"
-        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_introduccion_aisd' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="actualizarCampoPrefijado('parrafoSeccion4_introduccion_aisd', $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
@@ -19,7 +19,7 @@
         [label]="SECCION4_TEMPLATES.labelDescripcionComunidad"
         [rows]="5"
         [value]="viewModel().texts.comunidadText"
-        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_comunidad_completo' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="actualizarCampoPrefijado('parrafoSeccion4_comunidad_completo', $event)">
       </app-paragraph-editor>
 
       <app-paragraph-editor
@@ -27,13 +27,13 @@
         [label]="SECCION4_TEMPLATES.labelCaracterizacionIndicadores"
         [rows]="4"
         [value]="viewModel().texts.caracterizacionText"
-        (valueChange)="projectFacade.setField(seccionId, null, 'parrafoSeccion4_caracterizacion_indicadores' + obtenerPrefijoGrupo(), $event)">
+        (valueChange)="actualizarCampoPrefijado('parrafoSeccion4_caracterizacion_indicadores', $event)">
       </app-paragraph-editor>
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">{{ SECCION4_TEMPLATES.labelTituloTablaUbicacion }}</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroTituloAISD1' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloUbicacion">
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD1' + obtenerPrefijoGrupo()]" (ngModelChange)="actualizarCampoPrefijado('cuadroTituloAISD1', $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloUbicacion">
     </div>
 
     <label class="label" style="margin-top:10px">{{ SECCION4_TEMPLATES.labelTablaUbicacionReferencial }}</label>
@@ -49,12 +49,12 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">{{ SECCION4_TEMPLATES.labelFuenteTablaA1 }}</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD1Source" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroFuenteAISD1' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
+      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD1Source" (ngModelChange)="actualizarCampoPrefijado('cuadroFuenteAISD1', $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">{{ SECCION4_TEMPLATES.labelTituloTabla }}</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroTituloAISD2' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloPoblacion">
+      <input type="text" class="form-control" [ngModel]="viewModel().data['cuadroTituloAISD2' + obtenerPrefijoGrupo()]" (ngModelChange)="actualizarCampoPrefijado('cuadroTituloAISD2', $event)" [placeholder]="SECCION4_TEMPLATES.placeholderTituloPoblacion">
     </div>
 
     <label class="label" style="margin-top:10px">{{ SECCION4_TEMPLATES.labelTablaPoblacionViviendas }}</label>
@@ -70,7 +70,7 @@
 
     <div class="form-field" style="margin-top: 20px;">
       <label class="label">{{ SECCION4_TEMPLATES.labelFuenteTablaA2 }}</label>
-      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD2Source" (ngModelChange)="projectFacade.setField(seccionId, null, 'cuadroFuenteAISD2' + obtenerPrefijoGrupo(), $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
+      <input type="text" class="form-control" [ngModel]="viewModel().sources.tablaAISD2Source" (ngModelChange)="actualizarCampoPrefijado('cuadroFuenteAISD2', $event)" [placeholder]="SECCION4_TEMPLATES.placeholderFuente">
     </div>
 
     <div class="form-field" style="margin-top: 20px;">

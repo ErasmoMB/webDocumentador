@@ -20,7 +20,7 @@ import { SECCION3_CONFIG, SECCION3_TEMPLATES } from './seccion3-constants';
   standalone: true
 })
 export class Seccion3ViewComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '3.1.3';
+  @Input() override seccionId: string = SECCION3_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
 
   // ✅ Hacer TEMPLATES accesible en el template
@@ -214,6 +214,10 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
 
   override cargarFotografias(): void {
     super.cargarFotografias();
+  }
+
+  override getFotografiasVista(): FotoItem[] {
+    return this.fotografiasCache;
   }
 
   get key(): number {

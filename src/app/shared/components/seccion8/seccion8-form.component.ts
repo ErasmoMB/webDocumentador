@@ -523,19 +523,64 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onFotografiasGanaderiaChange(fotografias: FotoItem[]) {
+    // ✅ Guardar via heredado (imageService)
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX_GANADERIA, fotografias);
+    
+    // ✅ PLUS: Guardar también en projectFacade para persistencia en SessionDataService/Backend
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const fotosData = fotografias.map((f, idx) => {
+      const i = idx + 1;
+      const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Imagen${prefijo}`;
+      
+      this.projectFacade.setField(this.seccionId, null, tituloKey, f.titulo || '');
+      this.projectFacade.setField(this.seccionId, null, fuenteKey, f.fuente || '');
+      this.projectFacade.setField(this.seccionId, null, imagenKey, f.imagen || '');
+    });
+    
     this.fotografiasGanaderiaFormMulti = [...fotografias];
     this.cdRef.detectChanges();
   }
 
   onFotografiasAgriculturaChange(fotografias: FotoItem[]) {
+    // ✅ Guardar via heredado (imageService)
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX_AGRICULTURA, fotografias);
+    
+    // ✅ PLUS: Guardar también en projectFacade para persistencia en SessionDataService/Backend
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    fotografias.forEach((f, idx) => {
+      const i = idx + 1;
+      const tituloKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_AGRICULTURA}${i}Imagen${prefijo}`;
+      
+      this.projectFacade.setField(this.seccionId, null, tituloKey, f.titulo || '');
+      this.projectFacade.setField(this.seccionId, null, fuenteKey, f.fuente || '');
+      this.projectFacade.setField(this.seccionId, null, imagenKey, f.imagen || '');
+    });
+    
     this.fotografiasAgriculturaFormMulti = [...fotografias];
     this.cdRef.detectChanges();
   }
 
   onFotografiasComercioChange(fotografias: FotoItem[]) {
+    // ✅ Guardar via heredado (imageService)
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX_COMERCIO, fotografias);
+    
+    // ✅ PLUS: Guardar también en projectFacade para persistencia en SessionDataService/Backend
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    fotografias.forEach((f, idx) => {
+      const i = idx + 1;
+      const tituloKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX_COMERCIO}${i}Imagen${prefijo}`;
+      
+      this.projectFacade.setField(this.seccionId, null, tituloKey, f.titulo || '');
+      this.projectFacade.setField(this.seccionId, null, fuenteKey, f.fuente || '');
+      this.projectFacade.setField(this.seccionId, null, imagenKey, f.imagen || '');
+    });
+    
     this.fotografiasComercioFormMulti = [...fotografias];
     this.cdRef.detectChanges();
   }

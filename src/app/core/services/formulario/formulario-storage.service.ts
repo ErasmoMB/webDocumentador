@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from '../infrastructure/logger.service';
-import { StorageFacade } from '../infrastructure/storage-facade.service';
+import { SessionDataService } from '../session/session-data.service';
 import { CentroPobladoData, FormularioDatos } from '../../models/formulario.model';
 
+/**
+ * ✅ UNIFICADO: Usa SessionDataService como única capa de persistencia
+ * - Backend primero (SessionDataService maneja esto automáticamente)
+ * - Fallback a localStorage si backend falla
+ * - Elimina confusión entre múltiples sistemas de almacenamiento
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -13,78 +19,66 @@ export class FormularioStorageService {
 
   constructor(
     private logger: LoggerService,
-    private storage: StorageFacade
+    private sessionData: SessionDataService
   ) {}
 
   saveDatos(datos: FormularioDatos): void {
-    try {
-      const datosSerializados = JSON.stringify(datos);
-      const tamanioMB = new Blob([datosSerializados]).size / (1024 * 1024);
-      if (tamanioMB > 4) {
-        this.logger.warn(`Los datos son muy grandes (${tamanioMB.toFixed(2)} MB). Algunas imágenes pueden no guardarse correctamente.`);
-      }
-      this.storage.setItem(this.STORAGE_KEY, datosSerializados);
-    } catch (error: any) {
-      if (error.name === 'QuotaExceededError' || error.code === 22) {
-        this.logger.error('Error: localStorage está lleno. Intenta eliminar datos antiguos o reducir el tamaño de las imágenes.');
-      } else {
-        this.logger.error('Error al guardar en localStorage', error);
-      }
-    }
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    this.sessionData.saveData(this.STORAGE_KEY, datos).catch(error => {
+      this.logger.error('Error al guardar datos del formulario', error);
+    });
   }
 
-  loadDatos(): Partial<FormularioDatos> | null {
+  async loadDatos(): Promise<Partial<FormularioDatos> | null> {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
     try {
-      const datosGuardados = this.storage.getItem(this.STORAGE_KEY);
-      if (datosGuardados) {
-        return JSON.parse(datosGuardados);
-      }
+      const datos = await this.sessionData.loadData(this.STORAGE_KEY);
+      return datos || null;
     } catch (error) {
-      this.logger.error('Error al cargar desde localStorage', error);
+      this.logger.error('Error al cargar datos del formulario', error);
+      return null;
     }
-    return null;
   }
 
   saveJson(data: CentroPobladoData[]): void {
-    try {
-      this.storage.setItem(this.STORAGE_JSON_KEY, JSON.stringify(data));
-    } catch (error) {
-      this.logger.error('Error al guardar JSON en localStorage', error);
-    }
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    this.sessionData.saveData(this.STORAGE_JSON_KEY, data).catch(error => {
+      this.logger.error('Error al guardar JSON', error);
+    });
   }
 
-  loadJson(): CentroPobladoData[] | null {
+  async loadJson(): Promise<CentroPobladoData[] | null> {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
     try {
-      const jsonGuardado = this.storage.getItem(this.STORAGE_JSON_KEY);
-      if (jsonGuardado) {
-        return JSON.parse(jsonGuardado);
-      }
+      const json = await this.sessionData.loadData(this.STORAGE_JSON_KEY);
+      return json || null;
     } catch (error) {
-      this.logger.error('Error al cargar JSON desde localStorage', error);
+      this.logger.error('Error al cargar JSON', error);
+      return null;
     }
-    return null;
   }
 
   saveActiveRows(codigosActivos: string[], prefijo: string = ''): void {
-    try {
-      const key = prefijo ? `${this.STORAGE_TABLA_FILAS_KEY}${prefijo}` : this.STORAGE_TABLA_FILAS_KEY;
-      this.storage.setItem(key, JSON.stringify(codigosActivos));
-    } catch (error) {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    const key = prefijo ? `${this.STORAGE_TABLA_FILAS_KEY}${prefijo}` : this.STORAGE_TABLA_FILAS_KEY;
+    this.sessionData.saveData(key, codigosActivos).catch(error => {
       this.logger.error('Error al guardar filas activas', error);
-    }
+    });
   }
 
-  loadActiveRows(prefijo: string = ''): string[] {
+  async loadActiveRows(prefijo: string = ''): Promise<string[]> {
+    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
     try {
       const key = prefijo ? `${this.STORAGE_TABLA_FILAS_KEY}${prefijo}` : this.STORAGE_TABLA_FILAS_KEY;
-      const filasGuardadas = this.storage.getItem(key);
-      if (filasGuardadas) {
-        return JSON.parse(filasGuardadas);
+      const filas = await this.sessionData.loadData(key);
+      if (filas && Array.isArray(filas)) {
+        return filas;
       }
+      // Fallback a clave con _A1 si no hay prefijo
       if (!prefijo) {
-        const filasA1 = this.storage.getItem(`${this.STORAGE_TABLA_FILAS_KEY}_A1`);
-        if (filasA1) {
-          return JSON.parse(filasA1);
+        const filasA1 = await this.sessionData.loadData(`${this.STORAGE_TABLA_FILAS_KEY}_A1`);
+        if (filasA1 && Array.isArray(filasA1)) {
+          return filasA1;
         }
       }
     } catch (error) {
@@ -94,7 +88,9 @@ export class FormularioStorageService {
   }
 
   clearAll(): void {
-    // Limpiar todo localStorage para asegurar un reset completo
-    this.storage.clear();
+    // ✅ UNIFICADO: Limpia tanto backend como localStorage
+    this.sessionData.clearAll().catch(error => {
+      this.logger.error('Error al limpiar datos', error);
+    });
   }
 }

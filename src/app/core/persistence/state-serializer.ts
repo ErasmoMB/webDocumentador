@@ -18,6 +18,7 @@ import {
   SCHEMA_VERSION,
   MIGRATIONS,
   extractPersistibleState,
+  extractPersistibleStateWithoutBase64,
   generateChecksum,
   validateChecksum,
   validateEnvelopeStructure,
@@ -100,6 +101,50 @@ export function serializeForDebug(state: ProjectState): string {
     return JSON.stringify(extractPersistibleState(state), null, 2);
   } catch {
     return '{"error": "Failed to serialize for debug"}';
+  }
+}
+
+/**
+ * ✅ NUEVO: Serializa el estado PERO excluye imágenes base64.
+ * Usado para SessionDataService donde storage está limitado (cuota ~5-10MB).
+ * Las imágenes base64 se persisten por separado vía backend.
+ * 
+ * @param state - Estado completo del proyecto
+ * @returns Resultado de serialización sin imágenes base64
+ */
+export function serializeProjectStateWithoutBase64(state: ProjectState): SerializationResult {
+  try {
+    // 1. Extraer estado persistible SIN imágenes base64
+    const persistible = extractPersistibleStateWithoutBase64(state);
+    
+    // 2. Generar checksum
+    const checksum = generateChecksum(persistible);
+    
+    // 3. Crear envelope con metadatos
+    const envelope: PersistenceEnvelope = {
+      schemaVersion: SCHEMA_VERSION,
+      savedAt: Date.now(),
+      checksum,
+      state: persistible
+    };
+    
+    // 4. Serializar a JSON
+    const json = JSON.stringify(envelope);
+    
+    return {
+      success: true,
+      data: json,
+      error: null,
+      envelope
+    };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown serialization error';
+    return {
+      success: false,
+      data: null,
+      error: `Serialization failed (no base64): ${errorMessage}`,
+      envelope: null
+    };
   }
 }
 

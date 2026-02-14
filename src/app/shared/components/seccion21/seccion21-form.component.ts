@@ -7,7 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
-import { SECCION21_TEMPLATES } from './seccion21-constants';
+import { SECCION21_CONFIG, SECCION21_TEMPLATES } from './seccion21-constants';
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule],
@@ -17,7 +17,7 @@ import { SECCION21_TEMPLATES } from './seccion21-constants';
   standalone: true
 })
 export class Seccion21FormComponent extends BaseSectionComponent implements OnDestroy {
-  @Input() override seccionId: string = '';
+  @Input() override seccionId: string = SECCION21_CONFIG.sectionId;
   @Input() override modoFormulario: boolean = false;
 
   // ✅ EXPORTAR CONSTANTES PARA EL TEMPLATE

@@ -126,15 +126,17 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
     this.cargarFotografias();
   }
 
+  getPhotoPrefixActual(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+  }
+
   protected override cargarFotografias(): void {
-    if (this.photoGroupsConfig.length > 0) {
-      this.cargarTodosLosGrupos();
-      // Actualizar fotografiasVista basado en el primer grupo (Institucionalidad)
-      this.fotografiasVista = this.fotografiasVistaCache;
-      this.cdRef.markForCheck();
-    } else {
-      super.cargarFotografias();
-    }
+    const prefix = this.getPhotoPrefixActual();
+    const fotos = this.getFotografiasVista(prefix);
+    this.fotografiasVistaCache = [...fotos];
+    this.fotografiasVista = [...fotos];
+    this.cdRef.markForCheck();
   }
 
   protected override detectarCambios(): boolean {

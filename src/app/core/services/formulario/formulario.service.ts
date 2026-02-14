@@ -62,7 +62,8 @@ export class FormularioService {
     private sessionDataService: SessionDataService,
     private backendAvailability: BackendAvailabilityService
   ) {
-    this.cargarDesdeLocalStorage();
+    // ✅ UNIFICADO: Carga inicial ahora es asíncrona
+    void this.cargarDesdeLocalStorage();
     this.ejecutarMigracionImagenes();
     this.inicializarDebounceGuardado();
   }
@@ -78,7 +79,7 @@ export class FormularioService {
   private async ejecutarMigracionImagenes(): Promise<void> {
     const migrated = await this.imageMigration.executeIfNeeded();
     if (migrated) {
-      this.cargarDesdeLocalStorage();
+      await this.cargarDesdeLocalStorage();
     }
   }
 
@@ -131,24 +132,18 @@ export class FormularioService {
   }
 
   private ejecutarGuardado(): void {
-    // 🔍 Si el backend está disponible, NO guardar en localStorage
-    // FormularioService solo mantiene datos en el store
-    if (this.backendAvailability.shouldUseBackendOnly()) {
-      // console.log('✅ [FormularioService] Backend disponible - Saltando guardado en localStorage');
-      return;
-    }
-    
-    // ⚠️ Backend NO disponible - Guardar en localStorage como fallback
-    // console.warn('⚠️ [FormularioService] Backend no disponible - Guardando en localStorage');
+    // ✅ SIEMPRE guardar en localStorage para garantizar persistencia en recarga (F5)
+    // El backend se sincroniza por separado a través de otros servicios
     this.storage.saveDatos(this.store.getDatos());
   }
 
-  private cargarDesdeLocalStorage(): void {
-    const datosCargados = this.storage.loadDatos();
+  private async cargarDesdeLocalStorage(): Promise<void> {
+    // ✅ UNIFICADO: Ahora carga desde backend primero, fallback a localStorage automático
+    const datosCargados = await this.storage.loadDatos();
     if (datosCargados) {
       this.store.mergeDatos(datosCargados);
     }
-    const jsonGuardado = this.storage.loadJson();
+    const jsonGuardado = await this.storage.loadJson();
     if (jsonGuardado) {
       this.store.setJson(jsonGuardado);
     }
@@ -158,7 +153,7 @@ export class FormularioService {
     this.storage.saveActiveRows(codigosActivos, prefijo);
   }
 
-  obtenerFilasActivasTablaAISD2(prefijo: string = ''): string[] {
+  async obtenerFilasActivasTablaAISD2(prefijo: string = ''): Promise<string[]> {
     return this.storage.loadActiveRows(prefijo);
   }
 

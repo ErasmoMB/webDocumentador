@@ -40,7 +40,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuentePEA')() || 'Plataforma Nacional de Datos Georreferenciados – Geo Perú' }}</p>
+<p class="source">Fuente: {{ obtenerFuentePEA() }}</p>
 
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisCuadro310ConResaltado()"></p>
 
@@ -75,7 +75,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuentePoblacionPecuaria')() || 'GEADES (2024)' }}</p>
+<p class="source">Fuente: {{ obtenerFuentePoblacionPecuaria() }}</p>
 
 <app-image-upload
     [modoVista]="true"
@@ -111,7 +111,7 @@
     </tbody>
   </table>
 </app-table-wrapper>
-<p class="source">Fuente: {{ projectFacade.selectField(seccionId, null, 'cuadroFuenteCaracteristicasAgricultura')() || 'GEADES (2024)' }}</p>
+<p class="source">Fuente: {{ obtenerFuenteCaracteristicasAgricultura() }}</p>
 
 <app-image-upload
     [modoVista]="true"

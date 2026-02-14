@@ -29,6 +29,7 @@ import {
 } from './persistence.contract';
 import {
   serializeProjectState,
+  serializeProjectStateWithoutBase64,
   autoDeserialize,
   DeserializationResult
 } from './state-serializer';
@@ -176,11 +177,12 @@ export class PersistenceObserverService {
     if (this.backendAvailability.shouldUseBackendOnly()) {
       // console.log('✅ [PersistenceObserver] Backend disponible - Guardando en SessionDataService');
       
-      // Guardar en SessionDataService para poder recargar luego
-      const result = serializeProjectState(state);
+      // ✅ Guardar en SessionDataService SIN imágenes base64 para evitar exceder cuota
+      // Las imágenes base64 se persisten por separado al backend via ImageStorageService
+      const result = serializeProjectStateWithoutBase64(state);
       if (result.success && result.data) {
         const dataSize = result.data.length;
-        // console.log(`📊 [PersistenceObserver] Guardando ${dataSize} bytes en SessionDataService...`);
+        // console.log(`📊 [PersistenceObserver] Guardando ${dataSize} bytes en SessionDataService (sin imágenes base64)...`);
         
         this.sessionDataService.saveData('projectState', result.data)
           .then(() => {

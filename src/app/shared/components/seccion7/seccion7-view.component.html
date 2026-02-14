@@ -3,7 +3,7 @@
 <p class="section-subtitle"><strong>{{ SECCION7_TEMPLATES.SUBTITULO_PET }}</strong></p>
 <p class="text-justify" [innerHTML]="obtenerTextoSeccion7PETCompletoConResaltado()"></p>
 
-<app-table-wrapper [title]="(datos.cuadroTituloPET || SECCION7_TEMPLATES.PLACEHOLDER_TITULO_PET) + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
+<app-table-wrapper [title]="obtenerTituloCuadro3_7() + ' – CC ' + obtenerNombreComunidadActual() + ' (2017)'" [sectionId]="seccionId">
 <table class="table-container">
     <thead>
         <tr>
@@ -35,7 +35,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente: <span *ngIf="datos.cuadroFuentePET && datos.cuadroFuentePET !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePET }}</span><span *ngIf="!datos.cuadroFuentePET || datos.cuadroFuentePET === '____'" appDataHighlight="manual">Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)</span></p>
+<p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadro3_7() }}</span></p>
 
 <app-image-upload
     [modoVista]="true"
@@ -116,7 +116,7 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente: <span appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+<p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadro3_8() }}</span></p>
 
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisPEAConResaltado()"></p>
 
@@ -192,6 +192,6 @@
     </tbody>
 </table>
 </app-table-wrapper>
-<p class="source">Fuente: <span *ngIf="datos.cuadroFuentePEAOcupada && datos.cuadroFuentePEAOcupada !== '____'" appDataHighlight="manual">{{ datos.cuadroFuentePEAOcupada }}</span><span *ngIf="!datos.cuadroFuentePEAOcupada || datos.cuadroFuentePEAOcupada === '____'" appDataHighlight="manual">Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018</span></p>
+<p class="source">Fuente: <span appDataHighlight="manual">{{ obtenerFuenteCuadro3_9() }}</span></p>
 
 <p class="text-justify" [innerHTML]="obtenerTextoAnalisisOcupacionConResaltado()"></p>

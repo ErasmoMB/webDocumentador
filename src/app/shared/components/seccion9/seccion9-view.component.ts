@@ -91,7 +91,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   // ✅ TEXTOS DINÁMICOS: Con sustitución de comunidad
   readonly textoViviendasSignal: Signal<string> = computed(() => {
     const data = this.formDataSignal();
-    const guardado = data['textoViviendas'];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const guardado = data[`textoViviendas${prefijo}`] || data['textoViviendas'];
     if (guardado && guardado.trim().length > 0) {
       return guardado;
     }
@@ -101,7 +102,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
 
   readonly textoEstructuraSignal: Signal<string> = computed(() => {
     const data = this.formDataSignal();
-    const guardado = data['textoEstructura'];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const guardado = data[`textoEstructura${prefijo}`] || data['textoEstructura'];
     if (guardado && guardado.trim().length > 0) {
       return guardado;
     }
@@ -262,9 +264,16 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaConPrefijo = prefijo ? this.datos[`tiposMaterialesTabla${prefijo}`] : null;
     if (tablaConPrefijo && this.tieneContenidoReal(tablaConPrefijo)) {
+      console.log('[SECCION9-VIEW] 📊 Tabla con prefijo encontrada:', tablaConPrefijo);
+      console.log('[SECCION9-VIEW] 📊 Primer item:', tablaConPrefijo[0]);
       return tablaConPrefijo;
     }
-    return this.datos.tiposMaterialesTabla || [];
+    const tabla = this.datos.tiposMaterialesTabla || [];
+    console.log('[SECCION9-VIEW] 📊 Tabla SIN prefijo (fallback):', tabla);
+    if (tabla.length > 0) {
+      console.log('[SECCION9-VIEW] 📊 Primer item:', tabla[0]);
+    }
+    return tabla;
   }
 
   /**
@@ -285,40 +294,53 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   // ✅ MÉTODOS PARA ROWSPAN EN TABLAS AGRUPADAS EN VISTA
 
   /**
-   * Calcula el rowspan para categoría en tabla de tipos de materiales
+   * Determina si una fila es la primera de su grupo de categoría
    */
-  getRowspanTiposMateriales(rowIndex: number): number {
+  isFirstRowOfGroup(rowIndex: number): boolean {
     const data = this.getTiposMaterialesData();
-    if (!data || rowIndex >= data.length) return 1;
+    if (!data || rowIndex >= data.length || rowIndex < 0) return false;
     
-    const currentRow = data[rowIndex];
+    // Primera fila siempre es primera del grupo
+    if (rowIndex === 0) return true;
     
-    // Si es encabezado de grupo, contar todas las filas hasta el siguiente encabezado
-    if (currentRow?.esEncabezadoGrupo) {
-      let count = 1;
-      for (let i = rowIndex + 1; i < data.length; i++) {
-        const nextRow = data[i];
-        // Parar si encontramos otro encabezado de grupo
-        if (nextRow?.esEncabezadoGrupo) break;
-        count++;
-      }
-      return count;
-    }
+    const currentCategory = data[rowIndex].categoria;
+    const previousCategory = data[rowIndex - 1].categoria;
     
-    return 1;
+    // Es primera del grupo si la categoría cambió
+    return currentCategory !== previousCategory;
   }
 
   /**
-   * Determina si mostrar la celda de categoría (solo para encabezados de grupo)
+   * Calcula el rowspan para categoría en tabla de tipos de materiales
+   * Cuenta cuántas filas consecutivas tienen la misma categoría
+   */
+  getRowspanTiposMateriales(rowIndex: number): number {
+    const data = this.getTiposMaterialesData();
+    if (!data || rowIndex >= data.length || rowIndex < 0) return 1;
+    
+    // Solo calcular rowspan si es la primera fila del grupo
+    if (!this.isFirstRowOfGroup(rowIndex)) return 1;
+    
+    const currentCategory = data[rowIndex].categoria;
+    let count = 1;
+    
+    // Contar filas consecutivas con la misma categoría
+    for (let i = rowIndex + 1; i < data.length; i++) {
+      if (data[i].categoria === currentCategory) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    
+    return count;
+  }
+
+  /**
+   * Determina si mostrar la celda de categoría (solo para primera fila del grupo)
    */
   shouldShowCategoriaCellTiposMateriales(rowIndex: number): boolean {
-    const data = this.getTiposMaterialesData();
-    if (!data || rowIndex >= data.length) return true;
-    
-    const currentRow = data[rowIndex];
-    
-    // Solo mostrar celda para encabezados de grupo
-    return !!currentRow?.esEncabezadoGrupo;
+    return this.isFirstRowOfGroup(rowIndex);
   }
 
   /**

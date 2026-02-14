@@ -24,23 +24,34 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
-  readonly textoNatalidadCP1Signal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'textoNatalidadCP1')() ?? '');
-  readonly textoNatalidadCP2Signal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'textoNatalidadCP2')() ?? '');
-  readonly textoMorbilidadCPSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'textoMorbilidadCP')() ?? '');
-  readonly textoAfiliacionSaludSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'textoAfiliacionSalud')() ?? '');
+  private getFieldKey(field: string): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `${field}${prefijo}` : field;
+  }
+
+  private getFieldValue(field: string): any {
+    const key = this.getFieldKey(field);
+    return this.projectFacade.selectField(this.seccionId, null, key)()
+      ?? this.projectFacade.selectField(this.seccionId, null, field)();
+  }
+
+  readonly textoNatalidadCP1Signal = computed(() => this.getFieldValue('textoNatalidadCP1') ?? '');
+  readonly textoNatalidadCP2Signal = computed(() => this.getFieldValue('textoNatalidadCP2') ?? '');
+  readonly textoMorbilidadCPSignal = computed(() => this.getFieldValue('textoMorbilidadCP') ?? '');
+  readonly textoAfiliacionSaludSignal = computed(() => this.getFieldValue('textoAfiliacionSalud') ?? '');
 
   // Titles and fuentes
-  readonly tituloNatalidadSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloNatalidadMortalidad')() ?? '');
-  readonly fuenteNatalidadSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteNatalidadMortalidad')() ?? '');
+  readonly tituloNatalidadSignal = computed(() => this.getFieldValue('tituloNatalidadMortalidad') ?? '');
+  readonly fuenteNatalidadSignal = computed(() => this.getFieldValue('fuenteNatalidadMortalidad') ?? '');
 
-  readonly tituloMorbilidadSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloMorbilidad')() ?? '');
-  readonly fuenteMorbilidadSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteMorbilidad')() ?? '');
+  readonly tituloMorbilidadSignal = computed(() => this.getFieldValue('tituloMorbilidad') ?? '');
+  readonly fuenteMorbilidadSignal = computed(() => this.getFieldValue('fuenteMorbilidad') ?? '');
 
-  readonly tituloAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'tituloAfiliacionSalud')() ?? '');
-  readonly fuenteAfiliacionSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'fuenteAfiliacionSalud')() ?? '');
+  readonly tituloAfiliacionSignal = computed(() => this.getFieldValue('tituloAfiliacionSalud') ?? '');
+  readonly fuenteAfiliacionSignal = computed(() => this.getFieldValue('fuenteAfiliacionSalud') ?? '');
 
-  readonly centroPobladoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() ?? SECCION29_TEMPLATES.centroPobladoDefault);
-  readonly distritoSeleccionadoSignal = computed(() => this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() ?? SECCION29_TEMPLATES.distritoDefault);
+  readonly centroPobladoSignal = computed(() => this.getFieldValue('centroPobladoAISI') ?? SECCION29_TEMPLATES.centroPobladoDefault);
+  readonly distritoSeleccionadoSignal = computed(() => this.getFieldValue('distritoSeleccionado') ?? SECCION29_TEMPLATES.distritoDefault);
 
   readonly natalidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -75,7 +86,7 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
     tituloAfiliacion: this.tituloAfiliacionSignal(),
     fuenteAfiliacion: this.fuenteAfiliacionSignal(),
     fotografias: this.fotografiasSignal(),
-    centroPobladoAISI: this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() ?? ''
+    centroPobladoAISI: this.getFieldValue('centroPobladoAISI') ?? ''
   }));
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
@@ -170,33 +181,33 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
 
   // ✅ Métodos de generación de texto (copiados del form)
   obtenerTextoNatalidadCP1(): string {
-    const data = this.formDataSignal();
-    if (data['textoNatalidadCP1'] && data['textoNatalidadCP1'].trim().length > 0) {
-      return data['textoNatalidadCP1'];
+    const manual = this.getFieldValue('textoNatalidadCP1');
+    if (manual && String(manual).trim().length > 0) {
+      return manual;
     }
     return this.generarTextoNatalidadCP1();
   }
 
   obtenerTextoNatalidadCP2(): string {
-    const data = this.formDataSignal();
-    if (data['textoNatalidadCP2'] && data['textoNatalidadCP2'].trim().length > 0) {
-      return data['textoNatalidadCP2'];
+    const manual = this.getFieldValue('textoNatalidadCP2');
+    if (manual && String(manual).trim().length > 0) {
+      return manual;
     }
     return this.generarTextoNatalidadCP2();
   }
 
   obtenerTextoMorbilidadCP(): string {
-    const data = this.formDataSignal();
-    if (data['textoMorbilidadCP'] && data['textoMorbilidadCP'].trim().length > 0) {
-      return data['textoMorbilidadCP'];
+    const manual = this.getFieldValue('textoMorbilidadCP');
+    if (manual && String(manual).trim().length > 0) {
+      return manual;
     }
     return this.generarTextoMorbilidadCP();
   }
 
   obtenerTextoAfiliacionSalud(): string {
-    const data = this.formDataSignal();
-    if (data['textoAfiliacionSalud'] && data['textoAfiliacionSalud'].trim().length > 0) {
-      return data['textoAfiliacionSalud'];
+    const manual = this.getFieldValue('textoAfiliacionSalud');
+    if (manual && String(manual).trim().length > 0) {
+      return manual;
     }
     return this.generarTextoAfiliacionSalud();
   }
