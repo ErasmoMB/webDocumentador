@@ -12,8 +12,12 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of getEditableRows(); let i = index; trackBy: trackByIndex">
-        <td *ngFor="let col of columns" [attr.data-label]="col.label">
+      <tr *ngFor="let item of getEditableRows(); let i = index; trackBy: trackByIndex" [class]="getRowClasses(item)">
+        <td *ngFor="let col of columns; let colIndex = index" 
+            [attr.data-label]="col.label"
+            [attr.rowspan]="(col.field === 'categoria' && item?.esEncabezadoGrupo) ? getRowspan(i, col.field) : null"
+            [style.display]="(col.field === 'categoria' && item?.esSubcategoria) ? 'none' : ''"
+            [class.categoria-agrupada]="col.field === 'categoria' && item?.esEncabezadoGrupo">
           <!-- Modo vista: mostrar solo texto -->
           <span *ngIf="modoVista">{{ getFormattedValue(item, col) }}</span>
           <!-- Modo edición: elementos interactivos -->

@@ -6,6 +6,8 @@
  * - Todos los textos visibles centralizados
  */
 
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+
 export const SECCION9_WATCHED_FIELDS: string[] = [
   'grupoAISD',
   'textoViviendas',
@@ -110,4 +112,38 @@ export const SECCION9_TEMPLATES = {
   // Fuentes por defecto
   fuenteDefaultCondicionOcupacion: 'Reporte de Indicadores de Desarrollo e Inclusión Social de Centro Poblado – REDINFORMA (MIDIS)',
   fuenteDefaultTiposMateriales: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas',
+};
+
+// ============================================================================
+// ✅ TABLE CONFIGS - PATRÓN SOLO LECTURA BACKEND
+// ============================================================================
+
+/**
+ * Configuración para Tabla 1: Condición de Ocupación (Solo Lectura - Backend)
+ */
+export const SECCION9_TABLA_CONDICION_OCUPACION_CONFIG: TableConfig = {
+  tablaKey: 'condicionOcupacionTabla',
+  totalKey: '',                    // ✅ Sin fila de total - backend la envía
+  campoTotal: '',                  // ✅ Sin cálculo total  
+  campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
+  calcularPorcentajes: false,      // ✅ No calcular automáticamente
+  camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+  permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+  permiteEliminarFilas: false      // ✅ Ocultar botón eliminar  
+};
+
+/**
+ * Configuración para Tabla 2: Tipos de Materiales (Solo Lectura - Backend)
+ */
+export const SECCION9_TABLA_TIPOS_MATERIALES_CONFIG: TableConfig = {
+  tablaKey: 'tiposMaterialesTabla',
+  totalKey: '',                    // ✅ Sin fila de total - backend la envía
+  campoTotal: '',                  // ✅ Sin cálculo total
+  campoPorcentaje: '',             // ✅ Sin cálculo porcentaje  
+  calcularPorcentajes: false,      // ✅ No calcular automáticamente
+  camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
+  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+  permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
+  permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
 };

@@ -109,63 +109,34 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
     return SECCION9_PLANTILLAS_DINAMICAS.textoEstructuraTemplate.replace('__COMUNIDAD__', comunidad);
   });
 
-  // ✅ TABLAS CON CÁLCULOS: Condición de Ocupación
+  // ✅ TABLAS DE SOLO LECTURA - DATOS DEL BACKEND SIN MODIFICACIÓN
   readonly condicionOcupacionConPorcentajesSignal: Signal<any[]> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
-    let datos = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
     
-    if (!Array.isArray(datos) || datos.length === 0) {
-      return [];
+    // Intentar con prefijo primero, luego fallback sin prefijo
+    const datosConPrefijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, tablaKey)() : null;
+    if (datosConPrefijo && this.tieneContenidoReal(datosConPrefijo)) {
+      return datosConPrefijo;
     }
-
-    const total = datos.reduce((sum, item) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      return sum + casos;
-    }, 0);
-
-    if (total <= 0) {
-      return datos.map((item: any) => ({ ...item, porcentaje: '____' }));
-    }
-
-    const tablaConPorcentajes = datos.map((item: any) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      const porcentaje = (casos / total) * 100;
-      const formateado = porcentaje.toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).replace('.', ',') + ' %';
-      return { ...item, casos, porcentaje: formateado };
-    });
-
-    tablaConPorcentajes.push({
-      categoria: 'Total',
-      casos: total,
-      porcentaje: '100,00 %'
-    });
-
-    return tablaConPorcentajes;
+    
+    // Fallback a versión sin prefijo
+    return this.projectFacade.selectField(this.seccionId, null, 'condicionOcupacionTabla')() || [];
   });
 
-  // ✅ TABLAS CON AGRUPACIONES: Tipos de Materiales
-  readonly tiposMaterialesAgrupados: Signal<{ [key: string]: any[] }> = computed(() => {
+  // ✅ TABLAS DE SOLO LECTURA - DATOS DEL BACKEND SIN MODIFICACIÓN
+  readonly tiposMaterialesSignal: Signal<any[]> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
-    const datos = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
     
-    const agrupados: { [key: string]: any[] } = {};
-
-    if (Array.isArray(datos)) {
-      datos.forEach((item: any) => {
-        const categoria = item.categoria || '____';
-        if (!agrupados[categoria]) {
-          agrupados[categoria] = [];
-        }
-        agrupados[categoria].push(item);
-      });
+    // Intentar con prefijo primero, luego fallback sin prefijo  
+    const datosConPrefijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, tablaKey)() : null;
+    if (datosConPrefijo && this.tieneContenidoReal(datosConPrefijo)) {
+      return datosConPrefijo;
     }
-
-    return agrupados;
+    
+    // Fallback a versión sin prefijo
+    return this.projectFacade.selectField(this.seccionId, null, 'tiposMaterialesTabla')() || [];
   });
 
   // ✅ TÍTULOS Y FUENTES: Con fallback a defaults
@@ -252,7 +223,7 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
     // ✅ EFFECT: Monitorear cambios en tablas
     effect(() => {
       this.condicionOcupacionConPorcentajesSignal();
-      this.tiposMaterialesAgrupados();
+      this.tiposMaterialesSignal();
       this.cdRef.markForCheck();
     });
   }
@@ -268,25 +239,114 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   protected override actualizarValoresConPrefijo(): void {
   }
 
-  // ✅ HELPER: Obtener categorías de materiales
-  getCategoriasMateriales(): string[] {
-    const agrupados = this.tiposMaterialesAgrupados();
-    return Object.keys(agrupados).filter(cat => cat !== '____');
+  // ============================================================================
+  // ✅ MÉTODOS PATRÓN SOLO LECTURA - GETTER PARA VISTA  
+  // ============================================================================
+
+  /**
+   * Obtener datos de Condición de Ocupación para mostar en vista
+   */
+  getCondicionOcupacionData(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaConPrefijo = prefijo ? this.datos[`condicionOcupacionTabla${prefijo}`] : null;
+    if (tablaConPrefijo && this.tieneContenidoReal(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    return this.datos.condicionOcupacionTabla || [];
   }
 
-  // ✅ HELPER: Obtener items de categoría
-  getItemsPorCategoria(categoria: string): any[] {
-    const agrupados = this.tiposMaterialesAgrupados();
-    return agrupados[categoria] || [];
+  /**
+   * Obtener datos de Tipos de Materiales para mostrar en vista
+   */
+  getTiposMaterialesData(): any[] {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaConPrefijo = prefijo ? this.datos[`tiposMaterialesTabla${prefijo}`] : null;
+    if (tablaConPrefijo && this.tieneContenidoReal(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    return this.datos.tiposMaterialesTabla || [];
   }
 
-  // ✅ HELPER: Calcular total por categoría
-  calcularTotalPorCategoria(categoria: string): number {
-    const items = this.getItemsPorCategoria(categoria);
-    return items.reduce((sum, item) => {
-      const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
-      return sum + casos;
-    }, 0);
+  /**
+   * Helper para verificar si una tabla tiene contenido real (no datos de ejemplo)
+   */
+  private tieneContenidoReal(tabla: any[]): boolean {
+    if (!Array.isArray(tabla) || tabla.length === 0) {
+      return false;
+    }
+    
+    // Verificar que al menos un elemento tenga casos > 0
+    return tabla.some(item => {
+      const casos = parseFloat(item.casos) || 0;
+      return casos > 0;
+    });
+  }
+
+  // ✅ MÉTODOS PARA ROWSPAN EN TABLAS AGRUPADAS EN VISTA
+
+  /**
+   * Calcula el rowspan para categoría en tabla de tipos de materiales
+   */
+  getRowspanTiposMateriales(rowIndex: number): number {
+    const data = this.getTiposMaterialesData();
+    if (!data || rowIndex >= data.length) return 1;
+    
+    const currentRow = data[rowIndex];
+    
+    // Si es encabezado de grupo, contar todas las filas hasta el siguiente encabezado
+    if (currentRow?.esEncabezadoGrupo) {
+      let count = 1;
+      for (let i = rowIndex + 1; i < data.length; i++) {
+        const nextRow = data[i];
+        // Parar si encontramos otro encabezado de grupo
+        if (nextRow?.esEncabezadoGrupo) break;
+        count++;
+      }
+      return count;
+    }
+    
+    return 1;
+  }
+
+  /**
+   * Determina si mostrar la celda de categoría (solo para encabezados de grupo)
+   */
+  shouldShowCategoriaCellTiposMateriales(rowIndex: number): boolean {
+    const data = this.getTiposMaterialesData();
+    if (!data || rowIndex >= data.length) return true;
+    
+    const currentRow = data[rowIndex];
+    
+    // Solo mostrar celda para encabezados de grupo
+    return !!currentRow?.esEncabezadoGrupo;
+  }
+
+  /**
+   * Obtiene las clases CSS para filas agrupadas
+   */
+  getRowClassesTiposMateriales(item: any): string {
+    const classes: string[] = [];
+    
+    if (item?.esEncabezadoGrupo) {
+      classes.push('fila-encabezado-grupo');
+    }
+    
+    if (item?.esSubcategoria) {
+      classes.push('fila-subcategoria');
+    }
+    
+    if (item?.esTotalGrupo) {
+      classes.push('fila-total');
+    }
+    
+    return classes.join(' ');
+  }
+
+  /**
+   * Helper interno - obtener prefijo de grupo
+   */
+  protected override obtenerPrefijoGrupo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
   // ✅ HELPER: Obtener número de cuadro (ahora usando GlobalNumberingService)
@@ -300,14 +360,6 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
 
   override getFotografiasVista(): FotoItem[] {
     return this.fotografiasCache;
-  }
-
-  trackByIndex(index: number): number {
-    return index;
-  }
-
-  trackByCategoria(_: number, cat: string): string {
-    return cat;
   }
 
   /**

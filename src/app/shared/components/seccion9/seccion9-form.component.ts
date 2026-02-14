@@ -9,13 +9,173 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import {
   SECCION9_WATCHED_FIELDS,
   SECCION9_SECTION_ID,
   SECCION9_TEMPLATES,
   SECCION9_PLANTILLAS_DINAMICAS,
-  SECCION9_CONFIG
+  SECCION9_CONFIG,
+  SECCION9_TABLA_CONDICION_OCUPACION_CONFIG,
+  SECCION9_TABLA_TIPOS_MATERIALES_CONFIG
 } from './seccion9-constants';
+
+// ============================================================================
+// FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
+// ============================================================================
+
+/**
+ * Desenvuelve datos demográficos del backend
+ * Maneja diferentes estructuras de respuesta
+ */
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
+
+/**
+ * Transforma datos de Condición de Ocupación del backend
+ * Mapea directamente TODOS los campos sin filtros
+ */
+const transformCondicionOcupacionDesdeBackend = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  return data.map(item => ({
+    categoria: item.categoria || item.condicion || '',
+    casos: parseFloat(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+};
+
+/**
+ * Transforma datos de Materiales de Construcción del backend
+ * Agrupa automáticamente por categorías repetidas en formato mejorado
+ */
+const transformMaterialesConstruccionDesdeBackend = (data: any[]): any[] => {
+  if (!Array.isArray(data)) return [];
+  
+  // Mapear datos básicos
+  const datosBasicos = data.map(item => ({
+    categoria: item.categoria || item.tipo_categoria || '',
+    tipoMaterial: item.subcategoria || item.tipo_material || item.material || item.tipoMaterial || '',
+    casos: parseFloat(item.casos) || 0,
+    porcentaje: item.porcentaje || ''
+  }));
+
+  // Agrupar por categoría
+  const categorias = new Map<string, any[]>();
+  for (const item of datosBasicos) {
+    if (!categorias.has(item.categoria)) {
+      categorias.set(item.categoria, []);
+    }
+    categorias.get(item.categoria)!.push(item);
+  }
+
+  // Crear formato agrupado
+  const resultado: any[] = [];
+  const mapeoNombres: Record<string, string> = {
+    'Pared': 'Materiales de las paredes de las viviendas',
+    'Piso': 'Materiales de los pisos de las viviendas', 
+    'Techo': 'Materiales de los techos de las viviendas'
+  };
+
+  for (const [categoria, items] of categorias) {
+    // Solo proceder si hay más de una fila para esta categoría
+    if (items.length > 1) {
+      // Encabezado del grupo
+      const nombreGrupo = mapeoNombres[categoria] || `Materiales de ${categoria.toLowerCase()}`;
+      resultado.push({
+        categoria: nombreGrupo,
+        tipoMaterial: '',
+        casos: '',
+        porcentaje: '',
+        esEncabezadoGrupo: true // Flag para styling
+      });
+
+      // Filtrar y consolidar subcategorías
+      const subcategoriasMap = new Map<string, any>();
+      items.forEach(item => {
+        const tipoKey = item.tipoMaterial?.toLowerCase().trim();
+        
+        // Skip filas vacías, totales, o con 0 casos (excepto Total real)
+        if (!item.tipoMaterial || 
+            item.casos === 0 || 
+            (tipoKey === 'total' && subcategoriasMap.size === 0)) {
+          return;
+        }
+
+        // Si es Total, guardarlo separado
+        if (tipoKey === 'total') {
+          subcategoriasMap.set('TOTAL_ROW', item);
+          return;
+        }
+
+        // Consolidar materiales similares (ej: "Triplay/Calamina" vs "Triplay, calamina")
+        const normalizedKey = tipoKey
+          .replace(/[\/,]/g, '')
+          .replace(/\s+/g, ' ')
+          .toLowerCase();
+
+        if (subcategoriasMap.has(normalizedKey)) {
+          // Sumar casos si ya existe material similar
+          const existing = subcategoriasMap.get(normalizedKey);
+          existing.casos += item.casos;
+        } else {
+          subcategoriasMap.set(normalizedKey, { ...item });
+        }
+      });
+
+      // Agregar subcategorías (excluir TOTAL_ROW)
+      const subcategorias = Array.from(subcategoriasMap.entries())
+        .filter(([key]) => key !== 'TOTAL_ROW')
+        .map(([_, item]) => item)
+        .sort((a, b) => b.casos - a.casos); // Ordenar por casos descendente
+
+      subcategorias.forEach(item => {
+        resultado.push({
+          categoria: '', // Vacío para subcategorías
+          tipoMaterial: item.tipoMaterial,
+          casos: item.casos,
+          porcentaje: item.porcentaje,
+          esSubcategoria: true // Flag para styling
+        });
+      });
+
+      // Total del grupo
+      const totalRow = subcategoriasMap.get('TOTAL_ROW');
+      const totalCasos = totalRow?.casos || subcategorias.reduce((sum, item) => sum + item.casos, 0);
+      
+      resultado.push({
+        categoria: '',
+        tipoMaterial: 'Total',
+        casos: totalCasos,
+        porcentaje: '100,00 %',
+        esTotalGrupo: true // Flag para styling
+      });
+    } else {
+      // Si solo hay una fila para esta categoría, mantener formato original
+      resultado.push(...items);
+    }
+  }
+
+  return resultado;
+};
+
+// ============================================================================
+ // COMPONENTE
+// ============================================================================
 
 @Component({
   standalone: true,
@@ -185,7 +345,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
 
@@ -206,6 +367,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
+    this.inicializarTablasVacias();  // Primero vacías
+    this.cargarDatosDelBackend();    // Luego llenar con backend
     this.cargarFotografias();
   }
 
@@ -222,15 +385,101 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     this.cdRef.markForCheck();
   }
 
-  // ✅ CONFIGURACIÓN DE TABLA 1: Condición de Ocupación
-  get condicionOcupacionConfig(): any {
+  // ============================================================================
+  // ✅ PATRÓN BACKEND SOLO LECTURA - MÉTODOS DE CARGA
+  // ============================================================================
+
+  /**
+   * Inicializar las tablas como arrays vacíos
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Inicializar cada tabla como array vacío CON prefijo y SIN prefijo (fallback)
+    this.projectFacade.setField(this.seccionId, null, `condicionOcupacionTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', []);
+    
+    this.projectFacade.setField(this.seccionId, null, `tiposMaterialesTabla${prefijo}`, []);
+    this.projectFacade.setField(this.seccionId, null, 'tiposMaterialesTabla', []);
+  }
+
+  /**
+   * ✅ Cargar datos del backend siguiendo el patrón de Sección 6 y 7
+   * Carga dos tablas: Condición de Ocupación y Materiales de Construcción
+   */
+  private cargarDatosDelBackend(): void {
+    // 1. Obtener los códigos de centros poblados del grupo actual
+    const codigosArray = this.getCodigosCentrosPobladosAISD();
+    const codigos = [...codigosArray]; // Copia mutable
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION9] ⚠️ No hay centros poblados en el grupo actual');
+      return;
+    }
+
+    const prefijo = this.obtenerPrefijoGrupo();
+    console.log('[SECCION9] 🔍 Cargando datos del backend con códigos:', codigos);
+
+    // 2. Cargar Condición de Ocupación desde /demograficos/condicion-ocupacion
+    this.backendApi.postCondicionOcupacion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformCondicionOcupacionDesdeBackend(datosDesenvueltos);
+          
+          console.log('[SECCION9] ✅ Datos de condición ocupación cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)
+          if (datosTransformados.length > 0) {
+            const tablaKey = `condicionOcupacionTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', datosTransformados);
+          }
+        } catch (err) {
+          console.error('[SECCION9] Error procesando condición ocupación:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION9] ❌ Error cargando condición ocupación:', err);
+      }
+    });
+
+    // 3. Cargar Materiales de Construcción desde /demograficos/materiales-construccion
+    this.backendApi.postMaterialesConstruccion(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformMaterialesConstruccionDesdeBackend(datosDesenvueltos);
+          
+          console.log('[SECCION9] ✅ Datos de materiales construcción cargados:', datosTransformados);
+          
+          // Guardar CON prefijo y SIN prefijo (fallback)  
+          if (datosTransformados.length > 0) {
+            const tablaKey = `tiposMaterialesTabla${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            this.projectFacade.setField(this.seccionId, null, 'tiposMaterialesTabla', datosTransformados);
+          }
+        } catch (err) {
+          console.error('[SECCION9] Error procesando materiales construcción:', err);
+        }
+      },
+      error: (err) => {
+        console.error('[SECCION9] ❌ Error cargando materiales construcción:', err);
+      }
+    });
+  }
+
+  // ============================================================================
+  // ✅ CONFIGURACIÓN DE TABLAS - USANDO TABLECONFIG DEL PATRÓN
+  // ============================================================================
+
+  // ✅ CONFIGURACIÓN DE TABLA 1: Condición de Ocupación (Solo Lectura)
+  get condicionOcupacionConfig(): TableConfig {
     return {
-      tablaKey: this.getTablaKeyCondicionOcupacion(),
-      totalKey: 'categoria',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      noInicializarDesdeEstructura: true,
-      calcularPorcentajes: true
+      ...SECCION9_TABLA_CONDICION_OCUPACION_CONFIG,
+      tablaKey: this.getTablaKeyCondicionOcupacion()
     };
   }
 
@@ -240,22 +489,16 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onCondicionOcupacionTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyCondicionOcupacion();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    // ✅ Actualizar datos locales - DynamicTable se encarga de persistencia
-    this.datos[tablaKey] = datos;
-    this.cdRef.detectChanges();
+    // ✅ Para tablas de solo lectura, no hay cambios manuales
+    // Los datos solo vienen del backend
+    console.log('[SECCION9] ℹ️ Tabla condición ocupación es de solo lectura');
   }
 
-  // ✅ CONFIGURACIÓN DE TABLA 2: Tipos de Materiales
-  get tiposMaterialesConfig(): any {
+  // ✅ CONFIGURACIÓN DE TABLA 2: Tipos de Materiales (Solo Lectura)
+  get tiposMaterialesConfig(): TableConfig {
     return {
-      tablaKey: this.getTablaKeyTiposMateriales(),
-      totalKey: 'tipoMaterial',
-      campoTotal: 'casos',
-      campoPorcentaje: 'porcentaje',
-      estructuraInicial: [],
-      calcularPorcentajes: true
+      ...SECCION9_TABLA_TIPOS_MATERIALES_CONFIG,
+      tablaKey: this.getTablaKeyTiposMateriales()
     };
   }
 
@@ -265,11 +508,9 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onTiposMaterialesTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyTiposMateriales();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    // ✅ Actualizar datos locales - DynamicTable se encarga de persistencia
-    this.datos[tablaKey] = datos;
-    this.cdRef.detectChanges();
+    // ✅ Para tablas de solo lectura, no hay cambios manuales
+    // Los datos solo vienen del backend
+    console.log('[SECCION9] ℹ️ Tabla tipos materiales es de solo lectura');
   }
 
   // ✅ NÚMEROS DE CUADROS DINÁMICOS (ahora usando GlobalNumberingService)
@@ -289,6 +530,13 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
    * ✅ Helper para templates - retorna prefijo de grupo para uso en HTML
    */
   obtenerPrefijo(): string {
+    return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+  }
+
+  /**
+   * ✅ Helper interno - obtener prefijo de grupo para métodos
+   */
+  protected override obtenerPrefijoGrupo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 }

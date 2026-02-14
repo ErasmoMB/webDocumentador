@@ -1,0 +1,71 @@
+/* ====================================================================
+   ESTILOS PARA TABLAS AGRUPADAS DE SECCIÓN 9
+==================================================================== */
+
+.seccion9-tabla-agrupada {
+  .dynamic-table-container {
+    .tabla-datos {
+      
+      /* Encabezados de grupo (ej: "Materiales de las paredes de las viviendas") */
+      tr.fila-encabezado-grupo {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        
+        td:first-child {
+          padding-left: 8px;
+          color: #495057;
+          font-size: 14px;
+        }
+        
+        /* Ocultar otras columnas del encabezado */
+        td:not(:first-child) {
+          color: transparent;
+          border: none;
+        }
+      }
+      
+      /* Subcategorías (filas con categoria vacía pero con tipoMaterial) */
+      tr.fila-subcategoria {
+        td:first-child {
+          padding-left: 24px; /* Indentación para subcategorías */
+        }
+        
+        td:nth-child(2) {
+          font-weight: 500; /* Tipo de material en semi-negrita */
+        }
+      }
+      
+      /* Filas de Total */
+      tr.fila-total {
+        background-color: #e9ecef;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        
+        td:first-child {
+          padding-left: 24px; /* Misma indentación que subcategorías */
+        }
+        
+        td:nth-child(2) {
+          color: #495057;
+        }
+        
+        td:nth-child(3),
+        td:nth-child(4) {
+          color: #212529;
+        }
+      }
+    }
+  }
+}
+
+/* Aplicar automáticamente a tablas de tipos de materiales */
+app-dynamic-table[ng-reflect-tabla-key*="tiposMateriales"] {
+  @extend .seccion9-tabla-agrupada;
+}
+
+/* Estilos específicos para el componente seccion9-form */
+.seccion-formulario-content {
+  .seccion9-tabla-agrupada {
+    margin-top: 15px;
+  }
+}

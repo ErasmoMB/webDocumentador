@@ -1,0 +1,79 @@
+/* ====================================================================
+   ESTILOS PARA TABLAS AGRUPADAS - COMPONENTE DE VISTA SECCIÓN 9
+==================================================================== */
+
+/* Encabezados de grupo (ej: "Materiales de las paredes de las viviendas") */
+.fila-encabezado-grupo {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  
+  .table-cell:first-child {
+    padding-left: 8px;
+    color: #495057;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  
+  /* Ocultar otras columnas del encabezado */
+  .table-cell:not(:first-child) {
+    color: transparent;
+    border: none;
+  }
+}
+
+/* Subcategorías (filas con categoria vacía pero con tipoMaterial) */
+.fila-subcategoria {
+  .table-cell:first-child {
+    display: none !important; /* No mostrar porque está fusionada */
+  }
+  
+  .table-cell:nth-child(2) {
+    padding-left: 24px; /* Indentación para subcategorías */
+    font-weight: 500; /* Tipo de material en semi-negrita */
+  }
+}
+
+/* Filas de Total */
+.fila-total {
+  background-color: #e9ecef;
+  font-weight: bold;
+  border-top: 2px solid #dee2e6;
+  
+  .table-cell:first-child {
+    display: none !important; /* No mostrar porque está fusionada */
+  }
+  
+  .table-cell:nth-child(2) {
+    padding-left: 24px; /* Misma indentación que subcategorías */
+    color: #495057;
+  }
+  
+  .table-cell:nth-child(3),
+  .table-cell:nth-child(4) {
+    color: #212529;
+  }
+}
+
+/* Celda de categoría cuando está agrupada */
+.categoria-agrupada {
+  vertical-align: top !important;
+  text-align: center !important;
+  background-color: #f8f9fa !important;
+  border-right: 2px solid #dee2e6 !important;
+}
+
+/* Tabla general con agrupación */
+.table-container {
+  border-collapse: collapse;
+  
+  td, th {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+  }
+  
+  /* Asegurar que las celdas fusionadas se vean bien */
+  td[rowspan] {
+    vertical-align: middle;
+    text-align: center;
+  }
+}

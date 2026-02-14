@@ -30,14 +30,13 @@
         [datos]="datos"
         [config]="condicionOcupacionConfig"
         [columns]="[
-          { field: 'categoria', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategoria, readonly: true },
-          { field: 'casos', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.casos, type: 'number', placeholder: '0', readonly: false },
-          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.porcentaje, type: 'text', placeholder: '0%', readonly: true }
+          { field: 'categoria', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategoria },
+          { field: 'casos', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.casos, type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.porcentaje, type: 'text', placeholder: '0%' }
         ]"
         [sectionId]="seccionId"
         [tablaKey]="getTablaKeyCondicionOcupacion()"
-        [showAddButton]="false"
-        [showDeleteButton]="false"
+        [modoVista]="false"
         (tableUpdated)="onCondicionOcupacionTableUpdated($event)">
       </app-dynamic-table>
     </div>
@@ -82,15 +81,14 @@
         [datos]="datos"
         [config]="tiposMaterialesConfig"
         [columns]="[
-          { field: 'categoria', label: SECCION9_TEMPLATES.columnasTiposMateriales.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategorias, readonly: false },
-          { field: 'tipoMaterial', label: SECCION9_TEMPLATES.columnasTiposMateriales.tipoMaterial, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderTipoMaterial, readonly: false },
-          { field: 'casos', label: SECCION9_TEMPLATES.columnasTiposMateriales.casos, type: 'number', placeholder: '0', readonly: false },
-          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasTiposMateriales.porcentaje, type: 'text', placeholder: '0%', readonly: true }
+          { field: 'categoria', label: SECCION9_TEMPLATES.columnasTiposMateriales.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategorias },
+          { field: 'tipoMaterial', label: SECCION9_TEMPLATES.columnasTiposMateriales.tipoMaterial, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderTipoMaterial },
+          { field: 'casos', label: SECCION9_TEMPLATES.columnasTiposMateriales.casos, type: 'number', placeholder: '0' },
+          { field: 'porcentaje', label: SECCION9_TEMPLATES.columnasTiposMateriales.porcentaje, type: 'text', placeholder: '0%' }
         ]"
         [sectionId]="seccionId"
         [tablaKey]="getTablaKeyTiposMateriales()"
-        [showAddButton]="true"
-        [showDeleteButton]="true"
+        [modoVista]="false"
         (tableUpdated)="onTiposMaterialesTableUpdated($event)">
       </app-dynamic-table>
     </div>

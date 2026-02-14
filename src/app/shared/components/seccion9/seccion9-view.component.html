@@ -1,7 +1,7 @@
 <h5>{{ SECCION9_TEMPLATES.seccionViviendas }}</h5>
 <p class="text-justify">{{ textoViviendasSignal() }}</p>
 
-<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroCondicionOcupacion() + ' - ' + tituloCondicionOcupacionSignal()" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroCondicionOcupacion() + ' - ' + tituloCondicionOcupacionSignal()" [hideNumber]="true" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>
@@ -11,30 +11,18 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of (condicionOcupacionConPorcentajesSignal() || [])" [class.total-row]="item.categoria === 'Total'">
+      <tr *ngFor="let item of getCondicionOcupacionData()">
         <td class="table-cell">
-          <span *ngIf="item.categoria && item.categoria !== '____'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.categoria }}</strong>
-            <span *ngIf="item.categoria !== 'Total'" [appDataSource]="'manual'" [fieldName]="'categoria'">{{ item.categoria }}</span>
-          </span>
-          <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
+          <span [appDataSource]="'backend'">{{ item.categoria }}</span>
         </td>
         <td class="table-cell">
-          <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="item.categoria === 'Total' ? 'calculated' : 'manual'" [fieldName]="'casos'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.casos }}</strong>
-            <span *ngIf="item.categoria !== 'Total'">{{ item.casos }}</span>
-          </span>
-          <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
+          <span [appDataSource]="'backend'">{{ item.casos }}</span>
         </td>
         <td class="table-cell">
-          <span *ngIf="item.porcentaje" [appDataSource]="'calculated'">
-            <strong *ngIf="item.categoria === 'Total'">{{ item.porcentaje }}</strong>
-            <span *ngIf="item.categoria !== 'Total'">{{ item.porcentaje }}</span>
-          </span>
-          <span *ngIf="!item.porcentaje">____</span>
+          <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
         </td>
       </tr>
-      <tr *ngIf="!condicionOcupacionConPorcentajesSignal() || condicionOcupacionConPorcentajesSignal().length === 0">
+      <tr *ngIf="!getCondicionOcupacionData() || getCondicionOcupacionData().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
@@ -47,7 +35,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION9_TEMPLATES.seccionEstructura }}</strong></p>
 <div class="text-justify">{{ textoEstructuraSignal() }}</div>
 
-<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroTiposMateriales() + ' - ' + tituloTiposMaterialesSignal()" sectionId="3.1.4.A.1.5">
+<app-table-wrapper [title]="'Cuadro Nº ' + obtenerNumeroCuadroTiposMateriales() + ' - ' + tituloTiposMaterialesSignal()" [hideNumber]="true" sectionId="3.1.4.A.1.5">
   <table class="table-container">
     <thead>
       <tr>
@@ -58,33 +46,24 @@
       </tr>
     </thead>
     <tbody>
-      <ng-container *ngFor="let categoria of getCategoriasMateriales(); trackBy: trackByCategoria">
-        <tr *ngFor="let item of getItemsPorCategoria(categoria); trackBy: trackByIndex">
-          <td class="table-cell">
-            <span *ngIf="item.categoria && item.categoria !== '____'" [appDataSource]="'backend'" [fieldName]="'categoria'">{{ item.categoria }}</span>
-            <span *ngIf="!item.categoria || item.categoria === '____'">____</span>
-          </td>
-          <td class="table-cell">
-            <span *ngIf="item.tipoMaterial && item.tipoMaterial !== '____'" [appDataSource]="'backend'" [fieldName]="'tipoMaterial'">{{ item.tipoMaterial }}</span>
-            <span *ngIf="!item.tipoMaterial || item.tipoMaterial === '____'">____</span>
-          </td>
-          <td class="table-cell">
-            <span *ngIf="item.casos !== undefined && item.casos !== '____'" [appDataSource]="'backend'" [fieldName]="'casos'">{{ item.casos }}</span>
-            <span *ngIf="item.casos === undefined || item.casos === '____'">____</span>
-          </td>
-          <td class="table-cell">
-            <span *ngIf="item.porcentaje" [appDataSource]="'calculated'">{{ item.porcentaje }}</span>
-            <span *ngIf="!item.porcentaje">____</span>
-          </td>
-        </tr>
-        <tr class="total-row" *ngIf="getItemsPorCategoria(categoria).length > 0">
-          <td class="table-cell"><strong>{{ SECCION9_TEMPLATES.labelFuente }}</strong></td>
-          <td class="table-cell"><strong>—</strong></td>
-          <td class="table-cell"><strong [appDataSource]="'calculated'">{{ calcularTotalPorCategoria(categoria) }}</strong></td>
-          <td class="table-cell"><strong [appDataSource]="'calculated'">100,00 %</strong></td>
-        </tr>
-      </ng-container>
-      <tr *ngIf="getCategoriasMateriales().length === 0">
+      <tr *ngFor="let item of getTiposMaterialesData(); let i = index" [class]="getRowClassesTiposMateriales(item)">
+        <td class="table-cell" 
+            [attr.rowspan]="getRowspanTiposMateriales(i)"
+            [style.display]="shouldShowCategoriaCellTiposMateriales(i) ? '' : 'none'"
+            [class.categoria-agrupada]="item?.esEncabezadoGrupo">
+          <span [appDataSource]="'backend'">{{ item.categoria }}</span>
+        </td>
+        <td class="table-cell">
+          <span [appDataSource]="'backend'">{{ item.tipoMaterial }}</span>
+        </td>
+        <td class="table-cell">
+          <span [appDataSource]="'backend'">{{ item.casos }}</span>
+        </td>
+        <td class="table-cell">
+          <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
+        </td>
+      </tr>
+      <tr *ngIf="getTiposMaterialesData().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>

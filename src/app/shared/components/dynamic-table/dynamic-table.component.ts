@@ -918,6 +918,70 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     }
     return null;
   }
+
+  // ✅ MÉTODOS PARA ROWSPAN EN TABLAS AGRUPADAS
+  
+  /**
+   * Calcula el rowspan para la primera columna (categoría) en tablas agrupadas
+   */
+  getRowspan(rowIndex: number, field: string): number {
+    if (field !== 'categoria') return 1;
+    
+    const rows = this.getEditableRows();
+    if (!rows || rowIndex >= rows.length) return 1;
+    
+    const currentRow = rows[rowIndex];
+    
+    // Si es encabezado de grupo, contar todas las filas hasta el siguiente encabezado
+    if (currentRow?.esEncabezadoGrupo) {
+      let count = 1;
+      for (let i = rowIndex + 1; i < rows.length; i++) {
+        const nextRow = rows[i];
+        // Parar si encontramos otro encabezado de grupo
+        if (nextRow?.esEncabezadoGrupo) break;
+        count++;
+      }
+      return count;
+    }
+    
+    return 1;
+  }
+
+  /**
+   * Determina si mostrar la celda de categoría (solo para encabezados de grupo)
+   */
+  shouldShowCategoriaCell(rowIndex: number, field: string): boolean {
+    if (field !== 'categoria') return true;
+    
+    const rows = this.getEditableRows();
+    if (!rows || rowIndex >= rows.length) return true;
+    
+    const currentRow = rows[rowIndex];
+    
+    // Solo mostrar celda para encabezados de grupo
+    return !!currentRow?.esEncabezadoGrupo;
+  }
+
+  /**
+   * Obtiene las clases CSS para filas agrupadas
+   */
+  getRowClasses(item: any): string {
+    const classes: string[] = [];
+    
+    if (item?.esEncabezadoGrupo) {
+      classes.push('fila-encabezado-grupo');
+    }
+    
+    if (item?.esSubcategoria) {
+      classes.push('fila-subcategoria');
+    }
+    
+    if (item?.esTotalGrupo) {
+      classes.push('fila-total');
+    }
+    
+    return classes.join(' ');
+  }
   ngDoCheck(): void {
     try {
       const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
