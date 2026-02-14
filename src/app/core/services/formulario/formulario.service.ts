@@ -134,12 +134,12 @@ export class FormularioService {
     // 🔍 Si el backend está disponible, NO guardar en localStorage
     // FormularioService solo mantiene datos en el store
     if (this.backendAvailability.shouldUseBackendOnly()) {
-      console.log('✅ [FormularioService] Backend disponible - Saltando guardado en localStorage');
+      // console.log('✅ [FormularioService] Backend disponible - Saltando guardado en localStorage');
       return;
     }
     
     // ⚠️ Backend NO disponible - Guardar en localStorage como fallback
-    console.warn('⚠️ [FormularioService] Backend no disponible - Guardando en localStorage');
+    // console.warn('⚠️ [FormularioService] Backend no disponible - Guardando en localStorage');
     this.storage.saveDatos(this.store.getDatos());
   }
 

@@ -174,17 +174,17 @@ export class PersistenceObserverService {
     // 🔍 Si el backend está disponible, NO guardar en localStorage
     // pero SÍ guardar en SessionDataService como backup para recarga
     if (this.backendAvailability.shouldUseBackendOnly()) {
-      console.log('✅ [PersistenceObserver] Backend disponible - Guardando en SessionDataService');
+      // console.log('✅ [PersistenceObserver] Backend disponible - Guardando en SessionDataService');
       
       // Guardar en SessionDataService para poder recargar luego
       const result = serializeProjectState(state);
       if (result.success && result.data) {
         const dataSize = result.data.length;
-        console.log(`📊 [PersistenceObserver] Guardando ${dataSize} bytes en SessionDataService...`);
+        // console.log(`📊 [PersistenceObserver] Guardando ${dataSize} bytes en SessionDataService...`);
         
         this.sessionDataService.saveData('projectState', result.data)
           .then(() => {
-            console.log(`✅ [PersistenceObserver] Guardado exitoso en SessionDataService (${dataSize} bytes)`);
+            // console.log(`✅ [PersistenceObserver] Guardado exitoso en SessionDataService (${dataSize} bytes)`);
           })
           .catch(err => {
             console.error('❌ [PersistenceObserver] Error guardando en SessionDataService:', err.message || err);

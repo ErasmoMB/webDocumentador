@@ -46,9 +46,9 @@ export class BackendAvailabilityService {
       const available = this._backendAvailable();
       const checking = this._checking();
       if (checking) {
-        console.log('🔄 [BackendAvailability] Verificando conexión con backend...');
+        // console.log('🔄 [BackendAvailability] Verificando conexión con backend...');
       } else if (available) {
-        console.log('✅ [BackendAvailability] Backend DISPONIBLE - Usando SOLO base de datos (SessionDataService)');
+        // console.log('✅ [BackendAvailability] Backend DISPONIBLE - Usando SOLO base de datos (SessionDataService)');
       } else {
         console.warn('⚠️ [BackendAvailability] Backend NO disponible - Activando fallback localStorage');
       }
@@ -118,7 +118,7 @@ export class BackendAvailabilityService {
       return;
     }
 
-    console.log('📊 [BackendAvailability] Iniciando monitoreo periódico (cada 30s)');
+    // console.log('📊 [BackendAvailability] Iniciando monitoreo periódico (cada 30s)');
     
     this.healthCheckInterval = setInterval(() => {
       this.checkBackendHealth();
@@ -132,7 +132,7 @@ export class BackendAvailabilityService {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
-      console.log('⏹️ [BackendAvailability] Monitoreo detenido');
+      // console.log('⏹️ [BackendAvailability] Monitoreo detenido');
     }
   }
 

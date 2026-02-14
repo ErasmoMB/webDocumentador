@@ -65,10 +65,11 @@
           </button>
         </td>
       </tr>
-      <tr *ngIf="(!tableData || tableData.length === 0) && !modoVista && showAddButton">
+      <!-- Fila vacía con botón agregar (solo cuando tabla está vacía y se permite agregar) -->
+      <tr *ngIf="(!tableData || tableData.length === 0) && !modoVista && showAddButton && (config?.permiteAgregarFilas !== false)">
         <td [attr.colspan]="columns.length + (showDeleteButton ? 1 : 0)" class="text-center p-md">
           <button type="button" class="btn btn-secondary" (click)="onAdd()">
-            Agregar Fila
+            + Agregar Fila
           </button>
         </td>
       </tr>

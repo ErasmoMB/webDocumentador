@@ -100,11 +100,11 @@ export class StateRehydrationService {
       
       // 2. Si localStorage vacío, intentar desde SessionDataService
       if (!mainResult?.success && !mainResult?.state) {
-        console.log('📊 [StateRehydration] localStorage vacío, intentando cargar desde SessionDataService...');
+        // console.log('📊 [StateRehydration] localStorage vacío, intentando cargar desde SessionDataService...');
         try {
           const sessionData = await this.sessionDataService.loadData('projectState');
           if (sessionData) {
-            console.log('✅ [StateRehydration] Estado cargado desde SessionDataService:', typeof sessionData);
+            // console.log('✅ [StateRehydration] Estado cargado desde SessionDataService:', typeof sessionData);
             
             // ⚠️ SessionDataService devuelve el dato como fue guardado
             // Si fue guardado como string JSON, NO hacer JSON.stringify de nuevo

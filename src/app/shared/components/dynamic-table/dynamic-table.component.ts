@@ -562,7 +562,7 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   }
 
   private persistirTablaConLog(tablaKey: string, tablaCopia: any[]): void {
-    // Normalizar cualquier campo que venga en formato { value: X, isCalculated: boolean }
+    // ✅ PASO 1: Normalizar datos (eliminar metadatos de cálculos)
     const tablaNormalizada = tablaCopia.map((row: any) => {
       const r: any = {};
       for (const k of Object.keys(row)) {
@@ -572,58 +572,44 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       return r;
     });
 
-    // Persistiendo tabla (normalizada) y actualizando ProjectState para notificación inmediata.
+    // ✅ PASO 2: Determinar todas las claves que necesitan sincronización
     const tablaKeyBase = this.tablaKey || this.config?.tablaKey;
-    const payload: Record<string, any> = { [tablaKey]: tablaNormalizada };
-    if (tablaKeyBase && tablaKeyBase !== tablaKey) payload[tablaKeyBase] = tablaNormalizada;
+    const keysToSync: Set<string> = new Set([tablaKey]);
+    if (tablaKeyBase && tablaKeyBase !== tablaKey) {
+      keysToSync.add(tablaKeyBase);
+    }
 
+    // ✅ PASO 3: Crear payload único con todas las claves
+    const payload: Record<string, any> = {};
+    keysToSync.forEach(key => {
+      payload[key] = tablaNormalizada;
+      // También actualizar this.datos para consistencia local
+      this.datos[key] = tablaNormalizada;
+    });
 
-
-    // Actualizar ProjectState localmente para disponibilidad inmediata
-    try {
-      if ((this as any).projectFacade && typeof (this as any).projectFacade.setTableData === 'function') {
-        try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKey, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData error', e); }
-        if (tablaKeyBase && tablaKeyBase !== tablaKey) {
-          try { (this as any).projectFacade.setTableData(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setTableData base error', e); }
-        }
-        // También establecer la clave BASE como field para que selectField(...) la lea inmediatamente
-        try {
-          if (tablaKeyBase) {
-            try { (this as any).projectFacade.setField(this.sectionId, null, tablaKeyBase, tablaNormalizada); } catch (e) { console.warn('[DynamicTable] setField base error', e); }
-            // Actualizar this.datos para evitar inconsistencias en este componente
-            try { this.datos[tablaKeyBase] = tablaNormalizada; } catch (e) { console.warn('[DynamicTable] update datos error', e); }
-          }
-        } catch (e) { console.warn('[DynamicTable] setField wrapper error', e); }
-      }
-    } catch (e) { console.warn('[DynamicTable] projectFacade update error', e); }
-
-    // Persistir y notificar (notifySync) para que SectionSync/Reactive adapters actualicen la vista
+    // ✅ PASO 4: Una sola persistencia = evita conflictos de sincronización
     try {
       this.formChange.persistFields(this.sectionId, 'table', payload, { notifySync: true });
     } catch (e) {
-      try { this.formChange.persistFields(this.sectionId, 'table', payload); } catch (err) { console.warn('[DynamicTable] persistFields error', err); }
+      console.error('[DynamicTable] persistFields error:', e);
     }
 
-    // Force an extra sync: set fields explicitly and notify ViewChildHelper to update components
+    // ✅ PASO 5: Actualizar ProjectState para disponibilidad inmediata
     try {
-      const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper;
-      try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
-    } catch (e) { /* noop */ }
-
-    try {
-      const sectionSync = (this as any).injector?.get?.(require('src/app/core/services/state/section-sync.service').SectionSyncService, null);
-      if (sectionSync) {
-        const notifyPayload: Record<string, any> = { [tablaKey]: tablaNormalizada };
-        if (tablaKeyBase && tablaKeyBase !== tablaKey) notifyPayload[tablaKeyBase] = tablaNormalizada;
-        try {
-          const prefixed = require('src/app/shared/utils/prefix-manager').PrefixManager.getFieldKey(this.sectionId, tablaKey);
-          notifyPayload[prefixed] = tablaNormalizada;
-          if (tablaKeyBase && tablaKeyBase !== prefixed) notifyPayload[tablaKeyBase] = tablaNormalizada;
-        } catch {}
-        // Notify SectionSyncService without logging here
-        sectionSync.notifyChanges(this.sectionId, notifyPayload);
+      const projectFacade = (this as any).projectFacade;
+      if (projectFacade && typeof projectFacade.setTableData === 'function') {
+        keysToSync.forEach(key => {
+          try {
+            projectFacade.setTableData(this.sectionId, null, key, tablaNormalizada);
+            projectFacade.setField(this.sectionId, null, key, tablaNormalizada);
+          } catch (e) {
+            console.warn(`[DynamicTable] setTableData/setField error for ${key}:`, e);
+          }
+        });
       }
-    } catch (e) { console.error('[DynamicTable] persistirTablaConLog error', e); }
+    } catch (e) {
+      console.warn('[DynamicTable] ProjectState update error:', e);
+    }
   }
 
   private shouldLogTabla(tablaKey: string): boolean {
