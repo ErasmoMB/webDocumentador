@@ -51,32 +51,15 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     return SECCION24_DEFAULT_TEXTS.textoIntroActividadesEconomicasAISILong.replace(/____/g, cp);
   });
 
+  // Signal que SINCRONIZA exactamente con el formulario (datos del backend sin modificar)
   readonly actividadesEconomicasSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
-    const raw = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
-                this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
-    const rows = Array.isArray(raw) ? raw : [];
-    // Excluir filas de "Total" y filas sin casos válidos (>0)
-    const filtered = rows.filter((r: any) => {
-      const key = String(r?.actividad ?? '').toLowerCase();
-      if (key.includes('total')) return false;
-      const casosRaw = r?.casos;
-      const num = Number(casosRaw);
-      return !isNaN(num) && num > 0;
-    });
-
-    const total = filtered.reduce((sum: number, r: any) => sum + (Number(r?.casos) || 0), 0);
-    const rowsWithPct = filtered.map((r: any) => ({
-      ...r,
-      porcentaje: total > 0 ? ((Number(r?.casos) || 0) / total * 100).toFixed(2).replace('.', ',') + '%' : ''
-    }));
-    // Append Total row when there is at least one row
-    if (total > 0) {
-      rowsWithPct.push({ actividad: 'Total', casos: total, porcentaje: '100,00%' });
-    }
-    return rowsWithPct;
+    // Leer exactamente los datos del backend - usar selectField como en el formulario
+    const data = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    return Array.isArray(data) ? data : [];
   });
+
 
   readonly textoAnalisisSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -200,6 +183,12 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
       if (centroPrefijado) {
         this.datos.centroPobladoAISI = centroPrefijado;
       }
+      this.cdRef.markForCheck();
+    });
+
+    effect(() => {
+      const actividades = this.actividadesEconomicasSignal();
+      console.log('[SECCION24-VIEW] Actividades cargadas:', actividades);
       this.cdRef.markForCheck();
     });
 

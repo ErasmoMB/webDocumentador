@@ -30,7 +30,7 @@
       <app-dynamic-table
         [datos]="datos"
         [sectionId]="seccionId"
-        [config]="{ tablaKey: tablaKeyActividadesSignal(), totalKey: 'actividad', campoTotal: 'casos', campoPorcentaje: 'porcentaje', calcularPorcentajes: true, noInicializarDesdeEstructura: true }"
+        [config]="actividadesEconomicasConfig"
         [columns]="[
           { field: 'actividad', label: SECCION24_TEMPLATES.labelActividadEconomica, type: 'text', placeholder: SECCION24_TEMPLATES.placeholderActividad },
           { field: 'casos', label: SECCION24_TEMPLATES.labelCasos, type: 'number', placeholder: SECCION24_TEMPLATES.placeholderCasos },

@@ -11,7 +11,28 @@ import { FormChangeService } from 'src/app/core/services/state/form-change.servi
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformActividadesEconomicas } from 'src/app/core/config/table-transforms';
 import { SECCION24_TEMPLATES, SECCION24_DEFAULT_TEXTS } from './seccion24-constants';
+
+/**
+ * ✅ Desenvuelve datos del backend
+ * El backend devuelve: [{ rows: [...], total: number, matched: [], missing: [] }]
+ */
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   imports: [CommonModule, FormsModule, CoreSharedModule, DynamicTableComponent, ImageUploadComponent, ParagraphEditorComponent],
@@ -34,15 +55,17 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   readonly globalTableNumberSignal: Signal<string>;
   readonly globalPhotoNumbersSignal: Signal<string[]>;
   
-  // ✅ TableConfig con noInicializarDesdeEstructura
+  // ✅ TableConfig para tabla de SOLO LECTURA (datos del backend)
   readonly actividadesEconomicasConfig: TableConfig = {
     tablaKey: 'actividadesEconomicasAISI',
-    totalKey: 'actividad',
-    campoTotal: 'casos',
-    campoPorcentaje: 'porcentaje',
-    noInicializarDesdeEstructura: true,
-    calcularPorcentajes: true,
-    camposParaCalcular: ['casos']
+    totalKey: '',                          // ✅ Sin fila de total
+    campoTotal: '',                        // ✅ Sin cálculo total
+    campoPorcentaje: '',                   // ✅ Sin cálculo porcentaje
+    calcularPorcentajes: false,             // ✅ No calcular automáticamente
+    camposParaCalcular: [],                // ✅ No hay campos a calcular
+    noInicializarDesdeEstructura: true,    // ✅ No inicializar vacía
+    permiteAgregarFilas: false,             // ✅ OCULTAR botón agregar
+    permiteEliminarFilas: false             // ✅ OCULTAR botón eliminar
   };
 
   override readonly PHOTO_PREFIX: string;
@@ -131,7 +154,7 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     globalTableNumber: this.globalTableNumberSignal()
   }));
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService, private globalNumbering: GlobalNumberingService) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private formChange: FormChangeService, private globalNumbering: GlobalNumberingService, private backendApi: BackendApiService) {
     super(cdRef, injector);
     
     // ✅ Crear Signal para PHOTO_PREFIX dinámico
@@ -180,6 +203,72 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    
+    // ✅ FASE 2: Inicializar tablas vacías
+    this.inicializarTablasVacias();
+    
+    // ✅ FASE 3: Cargar datos de actividades económicas desde el backend
+    this.cargarDatosDelBackend();
+  }
+
+  /**
+   * ✅ Inicializa las tablas como arrays vacíos antes de cargar datos del backend
+   */
+  private inicializarTablasVacias(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
+    
+    // Inicializar como array vacío
+    this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+    // También guardar sin prefijo para fallback
+    this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', []);
+  }
+
+  /**
+   * ✅ Carga datos de actividades económicas desde el backend
+   * Endpoint: POST /demograficos/actividad-economica
+   */
+  private cargarDatosDelBackend(): void {
+    // ✅ USAR getCodigosCentrosPobladosAISI() DEL GRUPO ACTUAL (clase base)
+    const codigosArray = this.getCodigosCentrosPobladosAISI();
+    const codigos = [...codigosArray]; // Crear copia mutable para el API
+
+    if (!codigos || codigos.length === 0) {
+      console.log('[SECCION24] ⚠️ No hay centros poblados en el grupo actual para cargar datos');
+      return;
+    }
+
+    console.log('[SECCION24] 📡 Cargando datos de actividades económicas desde backend...', { codigos });
+
+    // ✅ OBTENER PREFIJO PARA GUARDAR CON CLAVE CORRECTA
+    const prefijo = this.obtenerPrefijoGrupo();
+    
+    // Cargar actividades económicas desde /demograficos/actividad-economica
+    this.backendApi.postActividadEconomica(codigos).subscribe({
+      next: (response: any) => {
+        try {
+          const dataRaw = response?.data || [];
+          // Desenvuelver datos del backend
+          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+          const datosTransformados = transformActividadesEconomicas(datosDesenvueltos);
+          console.log('[SECCION24] ✅ Datos de actividades económicas cargados:', datosTransformados);
+          
+          // Guardar en el state CON PREFIJO
+          if (datosTransformados.length > 0) {
+            const tablaKey = `actividadesEconomicasAISI${prefijo}`;
+            this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+            // También guardar sin prefijo para fallback
+            this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', datosTransformados);
+            this.cdRef.markForCheck();
+          }
+        } catch (e) {
+          console.error('[SECCION24] ❌ Error transformando datos de actividades económicas:', e);
+        }
+      },
+      error: (err: any) => {
+        console.error('[SECCION24] ❌ Error cargando actividades económicas:', err);
+      }
+    });
   }
 
   protected override obtenerPrefijoGrupo(): string {
