@@ -6,7 +6,7 @@
     </div>
 
     <!-- SECTION:3.1.1:START -->
-    @defer (on viewport) {
+    @defer (on immediate) {
       <app-seccion1-view [seccionId]="'3.1.1'"></app-seccion1-view>
     } @placeholder {
       <div class="section-skeleton">Cargando sección 1...</div>
@@ -17,165 +17,202 @@
     <app-seccion2-view [seccionId]="'3.1.2'"></app-seccion2-view>
     <app-seccion3-view [seccionId]="'3.1.3'"></app-seccion3-view>
 
-    @defer (on viewport) {
-      <app-seccion4-view [seccionId]="'3.1.4'" [modoFormulario]="false"></app-seccion4-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 4...</div>
+    @for (g of aisdGroupNumbers; track g) {
+      @defer (on immediate) {
+        <app-seccion4-view [seccionId]="'3.1.4.A.' + g" [modoFormulario]="false"></app-seccion4-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 4...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion5-view [seccionId]="'3.1.4.A.' + g + '.1'" [modoFormulario]="false"></app-seccion5-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 5...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion6-view [seccionId]="'3.1.4.A.' + g + '.2'"></app-seccion6-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 6...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion7-view [seccionId]="'3.1.4.A.' + g + '.3'"></app-seccion7-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 7...</div>
+      }
+
+      <app-seccion8-view [seccionId]="'3.1.4.A.' + g + '.4'"></app-seccion8-view>
+
+      @defer (on immediate) {
+        <app-seccion9-view [seccionId]="'3.1.4.A.' + g + '.5'" [modoFormulario]="false"></app-seccion9-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 9...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion10-view [seccionId]="'3.1.4.A.' + g + '.6'"></app-seccion10-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 10...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion11-view [seccionId]="'3.1.4.A.' + g + '.7'"></app-seccion11-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 11...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion12-view [seccionId]="'3.1.4.A.' + g + '.8'"></app-seccion12-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 12...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion13-view [seccionId]="'3.1.4.A.' + g + '.9'"></app-seccion13-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 13...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion14-view [seccionId]="'3.1.4.A.' + g + '.10'"></app-seccion14-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 14...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion15-view [seccionId]="'3.1.4.A.' + g + '.11'"></app-seccion15-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 15...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion16-view [seccionId]="'3.1.4.A.' + g + '.12'"></app-seccion16-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 16...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion17-view [seccionId]="'3.1.4.A.' + g + '.13'" [modoFormulario]="false"></app-seccion17-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 17...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion18-view [seccionId]="'3.1.4.A.' + g + '.14'" [modoFormulario]="false"></app-seccion18-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 18...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion19-view [seccionId]="'3.1.4.A.' + g + '.15'" [modoFormulario]="false"></app-seccion19-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 19...</div>
+      }
+
+      @defer (on immediate) {
+        <app-seccion20-view [seccionId]="'3.1.4.A.' + g + '.16'" [modoFormulario]="false"></app-seccion20-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 20...</div>
+      }
     }
 
-    @defer (on viewport) {
-      <app-seccion5-view [seccionId]="'3.1.4.A.1.1'" [modoFormulario]="false"></app-seccion5-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 5...</div>
-    }
+    @for (g of aisiGroupNumbers; track g) {
+      @defer (on immediate) {
+        <app-seccion21-view [seccionId]="'3.1.4.B.' + g" [modoFormulario]="false"></app-seccion21-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 21...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion6-view [seccionId]="'3.1.4.A.1.2'"></app-seccion6-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 6...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion22-view [seccionId]="'3.1.4.B.' + g + '.1'" [modoFormulario]="false"></app-seccion22-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 22...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion7-view [seccionId]="'3.1.4.A.1.3'"></app-seccion7-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 7...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion23-view [seccionId]="'3.1.4.B.' + g + '.2'" [modoFormulario]="false"></app-seccion23-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 23...</div>
+      }
 
-    <app-seccion8-view [seccionId]="'3.1.4.A.1'"></app-seccion8-view>
+      @defer (on immediate) {
+        <app-seccion24-view [seccionId]="'3.1.4.B.' + g + '.3'" [modoFormulario]="false"></app-seccion24-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 24...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion9-view [seccionId]="'3.1.4.A.1.5'" [modoFormulario]="false"></app-seccion9-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 9...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion25-view [seccionId]="'3.1.4.B.' + g + '.4'" [modoFormulario]="false"></app-seccion25-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 25...</div>
+      }
 
-    <!-- Grupo Secciones 10-16: Solo VISTAS, no formularios -->
-    @defer (on viewport) {
-      <app-seccion10-view [seccionId]="'3.1.4.A.1.6'"></app-seccion10-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 10...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion26-view [seccionId]="'3.1.4.B.' + g + '.5'" [modoFormulario]="false"></app-seccion26-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 26...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion11-view [seccionId]="'3.1.4.A.1.7'"></app-seccion11-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 11...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion27-view [seccionId]="'3.1.4.B.' + g + '.6'" [modoFormulario]="false"></app-seccion27-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 27...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion12-view [seccionId]="'3.1.4.A.1.8'"></app-seccion12-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 12...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion28-view [seccionId]="'3.1.4.B.' + g + '.7'" [modoFormulario]="false"></app-seccion28-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 28...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion13-view [seccionId]="'3.1.4.A.1.9'"></app-seccion13-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 13...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion29-view [seccionId]="'3.1.4.B.' + g + '.8'" [modoFormulario]="false"></app-seccion29-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 29...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion14-view [seccionId]="'3.1.4.A.1.10'"></app-seccion14-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 14...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion30-view [seccionId]="'3.1.4.B.' + g + '.9'" [modoFormulario]="false"></app-seccion30-view>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 30...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion15-view [seccionId]="'3.1.4.A.1.11'"></app-seccion15-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 15...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion31 [seccionId]="'3.1.4.B.' + g + '.10'"></app-seccion31>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 31...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion16-view [seccionId]="'3.1.4.A.1.12'"></app-seccion16-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 16...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion32 [seccionId]="'3.1.4.B.' + g + '.11'"></app-seccion32>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 32...</div>
+      }
 
-    <!-- Grupo Secciones 17-20: Solo VISTAS, no formularios -->
-    @defer (on viewport) {
-      <app-seccion17-view [seccionId]="'3.1.4.A.1.13'" [modoFormulario]="false"></app-seccion17-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 17...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion33 [seccionId]="'3.1.4.B.' + g + '.12'"></app-seccion33>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 33...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion18-view [seccionId]="'3.1.4.A.1.14'" [modoFormulario]="false"></app-seccion18-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 18...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion34 [seccionId]="'3.1.4.B.' + g + '.13'"></app-seccion34>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 34...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion19-view [seccionId]="'3.1.4.A.1.15'" [modoFormulario]="false"></app-seccion19-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 19...</div>
-    }
+      @defer (on immediate) {
+        <app-seccion35 [seccionId]="'3.1.4.B.' + g + '.14'"></app-seccion35>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 35...</div>
+      }
 
-    @defer (on viewport) {
-      <app-seccion20-view [seccionId]="'3.1.4.A.1.16'" [modoFormulario]="false"></app-seccion20-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 20...</div>
-    }
-
-    <!-- Grupo Secciones 21-36: Solo VISTAS, no formularios -->
-    @defer (on viewport) {
-      <app-seccion21-view [seccionId]="'3.1.4.B.1'" [modoFormulario]="false"></app-seccion21-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 21...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion22-view [seccionId]="'3.1.4.B.1.1'" [modoFormulario]="false"></app-seccion22-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 22...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion23-view [seccionId]="'3.1.4.B.1.2'" [modoFormulario]="false"></app-seccion23-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 23...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion24-view [seccionId]="'3.1.4.B.1.3'" [modoFormulario]="false"></app-seccion24-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 24...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion25-view [seccionId]="'3.1.4.B.1.4'" [modoFormulario]="false"></app-seccion25-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 25...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion26-view [seccionId]="'3.1.4.B.1.5'" [modoFormulario]="false"></app-seccion26-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 26...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion27-view [seccionId]="'3.1.4.B.1.6'" [modoFormulario]="false"></app-seccion27-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 27...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion28-view [seccionId]="'3.1.4.B.1.7'" [modoFormulario]="false"></app-seccion28-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 28...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion29-view [seccionId]="'3.1.4.B.1.8'" [modoFormulario]="false"></app-seccion29-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 29...</div>
-    }
-
-    @defer (on viewport) {
-      <app-seccion30-view [seccionId]="'3.1.4.B.1.9'" [modoFormulario]="false"></app-seccion30-view>
-    } @placeholder {
-      <div class="section-skeleton">Cargando sección 30...</div>
+      @defer (on immediate) {
+        <app-seccion36 [seccionId]="'3.1.4.B.' + g + '.15'"></app-seccion36>
+      } @placeholder {
+        <div class="section-skeleton">Cargando sección 36...</div>
+      }
     }
     </div>
 </div>

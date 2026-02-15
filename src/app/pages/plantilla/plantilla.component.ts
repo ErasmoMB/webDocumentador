@@ -78,6 +78,10 @@ export class ResumenComponent implements OnInit, AfterViewInit {
   // ✅ Set para registrar secciones en edición
   readonly seccionesEnEdicion = new Set<string>();
 
+  // ✅ Grupos dinámicos (AISD/AISI) para renderizar plantilla completa
+  aisdGroupNumbers: number[] = [1];
+  aisiGroupNumbers: number[] = [1];
+
   @ViewChild(Seccion1FormComponent) set seccion1Form(comp: Seccion1FormComponent) {
     if (comp) this.seccionesEnEdicion.add('3.1.1');
   }
@@ -278,6 +282,16 @@ export class ResumenComponent implements OnInit, AfterViewInit {
       const datosCompletos = this.projectFacade.obtenerDatos();
       this.json = datosCompletos['centrosPobladosJSON'] || [];
       this.datos = datosCompletos as FormularioDatos;
+
+      const aisdCount = Array.isArray((datosCompletos as any)?.comunidadesCampesinas)
+        ? (datosCompletos as any).comunidadesCampesinas.length
+        : 0;
+      const aisiCount = Array.isArray((datosCompletos as any)?.distritosAISI)
+        ? (datosCompletos as any).distritosAISI.length
+        : 0;
+      this.aisdGroupNumbers = Array.from({ length: Math.max(aisdCount, 1) }, (_, i) => i + 1);
+      this.aisiGroupNumbers = Array.from({ length: Math.max(aisiCount, 1) }, (_, i) => i + 1);
+
       if (this.datos && this.datos.entrevistados) {
         this.entrevistados = this.datos.entrevistados;
         this.entrevistados2 = this.datos.entrevistados;

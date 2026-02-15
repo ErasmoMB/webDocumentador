@@ -29,6 +29,9 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit, OnDestroy 
   jsonBackup: CentroPobladoData[] | null = null;
   private resizeTimeout: any;
 
+  plantillaLista: boolean = false;
+  exportando: boolean = false;
+
   constructor(
     private projectFacade: ProjectStateFacade,
     private formularioService: FormularioService,
@@ -84,6 +87,9 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit, OnDestroy 
     
     // Asegurar que todos los componentes se actualicen
     ViewChildHelper.updateAllComponents('actualizarDatos');
+
+    // Habilitar exportación solo cuando toda la plantilla esté renderizada
+    this.recalcularPlantillaLista();
   }
 
   ngOnDestroy() {
@@ -190,12 +196,18 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit, OnDestroy 
         botonExportar.textContent = 'Exportando...';
       }
 
+      this.exportando = true;
+
       if (this.resumenComponent) {
         this.resumenComponent.actualizarDatos();
       }
       this.cdRef.detectChanges();
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await this.esperarPlantillaLista({ timeoutMs: 30000 });
+
+      // Dos frames para asegurar que el DOM esté pintado antes de capturar
+      await this.esperarFrame();
+      await this.esperarFrame();
       
       const elemento = document.querySelector(".viewport-content") as HTMLElement || 
                        document.querySelector(".preview") as HTMLElement ||
@@ -213,6 +225,7 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit, OnDestroy 
 
       const nombreArchivo = `LBS${String(this.datos?.projectName || 'Documento')}`.replace(/\s+/g, '');
       
+      await this.esperarImagenesCargadas(elemento, { timeoutMs: 30000 });
       await this.wordGeneratorService.generarDocumento(elemento, nombreArchivo);
       this.logger.info("Documento exportado correctamente");
       
@@ -230,7 +243,72 @@ export class PlantillaViewComponent implements OnInit, AfterViewInit, OnDestroy 
         botonExportar.disabled = false;
         botonExportar.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar a Word';
       }
+    } finally {
+      this.exportando = false;
     }
+  }
+
+  private recalcularPlantillaLista(): void {
+    // "Lista" significa: no quedan placeholders de @defer visibles.
+    // (Si alguna sección falla en cargar, preferimos no permitir exportación.)
+    const viewport = document.querySelector('.viewport-content');
+    const skeletons = viewport ? viewport.querySelectorAll('.section-skeleton') : document.querySelectorAll('.section-skeleton');
+    this.plantillaLista = skeletons.length === 0;
+    this.cdRef.markForCheck();
+  }
+
+  private async esperarPlantillaLista(opts: { timeoutMs: number }): Promise<void> {
+    const inicio = Date.now();
+    // Espera activa: los @defer (on immediate) van reemplazando skeletons.
+    while (true) {
+      this.recalcularPlantillaLista();
+      if (this.plantillaLista) return;
+      if (Date.now() - inicio > opts.timeoutMs) {
+        throw new Error('La plantilla aún no termina de cargar. Espera unos segundos y vuelve a intentar exportar.');
+      }
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+
+  private esperarFrame(): Promise<void> {
+    return new Promise(resolve => requestAnimationFrame(() => resolve()));
+  }
+
+  private async esperarImagenesCargadas(root: HTMLElement, opts: { timeoutMs: number }): Promise<void> {
+    const imagenes = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
+    if (imagenes.length === 0) return;
+
+    const pendientes = imagenes.filter(img => !(img.complete && img.naturalWidth > 0));
+    if (pendientes.length === 0) return;
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('Las imágenes aún no terminan de cargar. Intenta exportar nuevamente.'));
+      }, opts.timeoutMs);
+
+      let restantes = pendientes.length;
+      const onDone = () => {
+        restantes -= 1;
+        if (restantes <= 0) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        for (const img of pendientes) {
+          img.removeEventListener('load', onDone);
+          img.removeEventListener('error', onDone);
+        }
+      };
+
+      for (const img of pendientes) {
+        img.addEventListener('load', onDone, { once: true });
+        img.addEventListener('error', onDone, { once: true });
+      }
+    });
   }
 
   private hacerBackupSeguro(): boolean {

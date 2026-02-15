@@ -87,14 +87,24 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       const prefijo = this.obtenerPrefijoGrupo();
       const keyA1 = `tablaAISD1Datos${prefijo}`;
       const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA1)();
-      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
+      if (Array.isArray(conPrefijo) && conPrefijo.length > 0) {
+        return conPrefijo;
+      }
+
+      const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD1Datos')();
+      return Array.isArray(sinPrefijo) && sinPrefijo.length > 0 ? sinPrefijo : [];
     });
 
     this.tablaAISD2Signal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
       const keyA2 = `tablaAISD2Datos${prefijo}`;
       const conPrefijo = this.projectFacade.selectField(this.seccionId, null, keyA2)();
-      return Array.isArray(conPrefijo) && conPrefijo.length > 0 ? conPrefijo : [];
+      if (Array.isArray(conPrefijo) && conPrefijo.length > 0) {
+        return conPrefijo;
+      }
+
+      const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'tablaAISD2Datos')();
+      return Array.isArray(sinPrefijo) && sinPrefijo.length > 0 ? sinPrefijo : [];
     });
 
     this.photoFieldsHash = computed(() => {
