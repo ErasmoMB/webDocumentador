@@ -1,9 +1,9 @@
   <h5>{{ SECCION25_TEMPLATES.tituloSeccion }}</h5>
 
   <p class="text-justify" *ngIf="viewModel().textoVivienda && viewModel().textoVivienda !== '____'">{{ viewModel().textoVivienda }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoVivienda || viewModel().textoVivienda === '____'">Según los Censos Nacionales 2017, en el CP <span class="data-section">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span> se hallan un total de <span [appDataSource]="'section'">{{ viewModel().totalViviendas }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
+  <p class="text-justify" *ngIf="!viewModel().textoVivienda || viewModel().textoVivienda === '____'">Según los Censos Nacionales 2017, en el CP <span class="data-section">{{ viewModel().centroPobladoAISI || '____' }}</span> se hallan un total de <span [appDataSource]="'section'">{{ viewModel().totalViviendas }}</span> viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.</p>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloTiposVivienda || (SECCION25_TEMPLATES.tituloTiposViviendaDefault + ' – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="getTituloTiposVivienda()" [sectionId]="seccionId">
     <app-generic-table
       [data]="viewModel().tiposVivienda"
       [config]="{
@@ -23,7 +23,7 @@
   <p class="text-justify" *ngIf="viewModel().textoOcupacion && viewModel().textoOcupacion !== '____'">{{ viewModel().textoOcupacion }}</p>
   <p class="text-justify" *ngIf="!viewModel().textoOcupacion || viewModel().textoOcupacion === '____'">Para poder describir el acápite de estructura de las viviendas de esta localidad, así como la sección de los servicios básicos, se toma como conjunto total a las viviendas ocupadas con personas presentes que llegan a la cantidad de <span class="data-manual">{{ viewModel().totalCondicion }}</span>. A continuación, se muestra el cuadro con la información respecto a la condición de ocupación de viviendas, tal como realiza el Censo Nacional 2017. De aquí se halla que las viviendas ocupadas con personas presentes representan el <span class="data-calculated">{{ viewModel().porcentajeOcupadasPresentes }}</span> del conjunto analizado.</p>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloCondicionOcupacion || (SECCION25_TEMPLATES.tituloCondicionOcupacionDefault + ' de la Vivienda – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="getTituloCondicionOcupacion()" [sectionId]="seccionId">
     <app-generic-table
       [data]="viewModel().condicionOcupacion"
       [config]="{
@@ -42,10 +42,10 @@
 
   <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION25_TEMPLATES.labelEstructura }}</strong></p>
   <p class="text-justify" *ngIf="viewModel().textoEstructura && viewModel().textoEstructura !== '____'">{{ viewModel().textoEstructura }}</p>
-  <p class="text-justify" *ngIf="!viewModel().textoEstructura || viewModel().textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro del CP <span class="data-section">{{ viewModel().centroPobladoAISI || 'Cahuacho' }}</span>, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.</p>
+  <p class="text-justify" *ngIf="!viewModel().textoEstructura || viewModel().textoEstructura === '____'">Según la información recabada de los Censos Nacionales 2017, dentro del CP <span class="data-section">{{ viewModel().centroPobladoAISI || '____' }}</span>, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.</p>
   <p class="text-justify" *ngIf="!viewModel().textoEstructura || viewModel().textoEstructura === '____'">Finalmente, en cuanto a los pisos, la mayoría están hechos de tierra (<span class="data-calculated">{{ viewModel().porcentajePisosTierra }}</span>). El porcentaje restante, que consta del <span class="data-calculated">{{ viewModel().porcentajePisosCemento }}</span>, cuentan con pisos elaborados a base de cemento.</p>
 
-  <app-table-wrapper [title]="viewModel().cuadroTituloMaterialesVivienda || (SECCION25_TEMPLATES.tituloMaterialesViviendaDefault + ' – CP ' + (viewModel().centroPobladoAISI || 'Cahuacho') + ' (2017)')" [sectionId]="seccionId">
+  <app-table-wrapper [title]="getTituloMaterialesVivienda()" [sectionId]="seccionId">
     <table class="table-container">
       <thead>
         <tr>

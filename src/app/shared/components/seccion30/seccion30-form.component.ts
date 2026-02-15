@@ -109,7 +109,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   // ✅ TÍTULOS Y FUENTES DE TABLAS
   readonly tituloNivelEducativoSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'tituloNivelEducativo')();
-    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || this.obtenerNombreCentroPobladoActual() || '____';
     return manual && manual.trim().length > 0 ? manual : `${this.TITULO_NIVEL_EDUCATIVO_DEFAULT} – CP ${cp} (2017)`;
   });
 
@@ -120,7 +120,7 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
 
   readonly tituloTasaAnalfabetismoSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'tituloTasaAnalfabetismo')();
-    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || 'Cahuacho';
+    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || this.obtenerNombreCentroPobladoActual() || '____';
     return manual && manual.trim().length > 0 ? manual : `${this.TITULO_TASA_ANALFABETISMO_DEFAULT} – CP ${cp} (2017)`;
   });
 

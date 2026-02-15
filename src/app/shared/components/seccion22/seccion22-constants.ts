@@ -73,9 +73,9 @@ export const SECCION22_TEMPLATES = {
   // ✅ PLACEHOLDERS DE ENTRADA
   placeholderTextoDemografia: 'Editar texto de demografía',
   placeholderTextoGrupoEtario: 'Editar texto de grupo etario',
-  placeholderTituloPoblacionSexo: 'Ej: Población por sexo – CP Cahuacho (2017)',
+  placeholderTituloPoblacionSexo: 'Ej: Población por sexo – CP ____ (2017)',
   placeholderFuentePoblacionSexo: 'Ej: Censos Nacionales 2017',
-  placeholderTituloPoblacionEtario: 'Ej: Población por grupo etario – CP Cahuacho (2017)',
+  placeholderTituloPoblacionEtario: 'Ej: Población por grupo etario – CP ____ (2017)',
   placeholderFuentePoblacionEtario: 'Ej: Censos Nacionales 2017',
   
   // ✅ TEMPLATES FIJOS CON PLACEHOLDERS (reemplazar "CP ____" con el nombre real)

@@ -153,9 +153,14 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       return base.replace('CP ____', `CP ${cp}`);
     }
     
-    if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
-    if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
-    return `${base} – CP ${cp} (${year})`;
+    // ✅ Si no contiene "CP" en absoluto, agregarlo
+    if (!base.includes('CP ')) {
+      if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
+      return `${base} – CP ${cp} (${year})`;
+    }
+    
+    // ✅ Si ya tiene "CP" con algo diferente a "____", devolverlo tal cual
+    return base;
   });
 
   // ✅ CORREGIDO - Leer fuente con prefijo
@@ -183,9 +188,14 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       return base.replace('CP ____', `CP ${cp}`);
     }
     
-    if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
-    if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
-    return `${base} – CP ${cp} (${year})`;
+    // ✅ Si no contiene "CP" en absoluto, agregarlo
+    if (!base.includes('CP ')) {
+      if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
+      return `${base} – CP ${cp} (${year})`;
+    }
+    
+    // ✅ Si ya tiene "CP" con algo diferente a "____", devolverlo tal cual
+    return base;
   });
 
   // ✅ CORREGIDO - Leer fuente con prefijo
@@ -435,10 +445,10 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
 
     // ✅ Inicializar Títulos y Fuentes de cuadros CON PREFIJO (patrón Sección 21)
-    // ✅ CORREGIDO: NO guardar "CP ____" - dejar que los signals hagan el reemplazo dinámico
+    // ✅ CORREGIDO: Guardar títulos con "CP ____" para que se reemplace dinámicamente
     const tituloSexoField = prefijo ? `cuadroTituloPoblacionSexo${prefijo}` : 'cuadroTituloPoblacionSexo';
     if (!this.datos[tituloSexoField]) {
-      const valorTitulo = 'Población por sexo';
+      const valorTitulo = 'Población por sexo – CP ____ (2017)';
       this.datos[tituloSexoField] = valorTitulo;
       this.datos['cuadroTituloPoblacionSexo'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloSexoField, valorTitulo, { refresh: false });
@@ -454,7 +464,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
     const tituloEtarioField = prefijo ? `cuadroTituloPoblacionEtario${prefijo}` : 'cuadroTituloPoblacionEtario';
     if (!this.datos[tituloEtarioField]) {
-      const valorTitulo = 'Población por grupo etario';
+      const valorTitulo = 'Población por grupo etario – CP ____ (2017)';
       this.datos[tituloEtarioField] = valorTitulo;
       this.datos['cuadroTituloPoblacionEtario'] = valorTitulo; // Para compatibilidad
       this.onFieldChange(tituloEtarioField, valorTitulo, { refresh: false });

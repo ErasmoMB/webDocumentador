@@ -485,7 +485,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoServiciosAguaDefault(): string {
-    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const tabla = this.abastecimientoSignal() || [];
     const cuadro = this.globalTableNumberSignalAbastecimiento();
     const tablaCon = TablePercentageHelper.calcularPorcentajesSimple(tabla, cuadro);
@@ -495,7 +495,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoDesagueDefault(): string {
-    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const cuadro = this.globalTableNumberSignalSaneamiento();
     const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoSignal() || [], cuadro);
     const dentro = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('dentro'))?.porcentaje?.value || '____';
@@ -506,8 +506,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoDesechosDefault(): string {
-    const distrito = this.datos['distritoSeleccionado'] || this.formDataSignal()?.['distritoSeleccionado'] || 'Cahuacho';
-    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const distrito = this.obtenerNombreDistritoActual() || '____';
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const p1 = `La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de ${distrito}, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.`;
     const p2 = `Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo. Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del CP ${centro} en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.`;
     return `${p1}\n\n${p2}`;
@@ -522,7 +522,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoEnergiaCocinarDefault(): string {
-    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.datos['centroPobladoAISI'] || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const cuadro = this.globalTableNumberSignalCombustibles();
     const tabla = TablePercentageHelper.calcularPorcentajesSimple(this.combustiblesSignal()||[], cuadro);
     const lena = tabla.find((i:any)=> i.categoria && i.categoria.toString().toLowerCase().includes('leña'))?.porcentaje?.value || '____';

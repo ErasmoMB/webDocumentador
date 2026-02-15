@@ -270,9 +270,9 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
         const tituloActual = this.datos[tituloField];
         if (tituloField && (!tituloActual || this.tienePlaceholder(tituloActual))) {
           let valorTitulo = '';
-          // ✅ REFACTOR: Usar ubicacionGlobal en lugar de this.datos.distritoSeleccionado
-          const centroPoblado = this.obtenerNombreCentroPobladoActual() || this.ubicacionGlobal().distrito || '_____';
-          const distrito = this.ubicacionGlobal().distrito || '_____';
+          // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+          const centroPoblado = this.obtenerNombreCentroPobladoActual() || '____';
+          const distrito = this.obtenerNombreDistritoActual() || '____';
           
           // ✅ Usar constantes para títulos
           const tituloFieldLower = tituloField.toLowerCase();
@@ -586,7 +586,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   // Small helpers
   getPoblacionDistritalFn(): string { return this.datos.poblacionDistritalAISI || '____'; }
-  getPETDistrital(): string { return this.datos?.petDistritalAISI || ''; }
+  getPETDistrital(): string { return this.datos?.petDistritalAISI || '____'; }
 
   onFotografiasPEAChange(fotografias: FotoItem[]) {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
@@ -643,8 +643,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoIndicadoresDistritalesAISI(): string {
     const texto = this.datos.textoIndicadoresDistritalesAISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     const poblacionDistrital = this.getPoblacionDistritalFn();
     const petDistrital = this.getPETDistrital();
     return SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables
@@ -676,30 +676,30 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
 
   getPorcentajePEA(): string {
     const tabla = this.peaDistritoSexoSignal() || [];
-    if (!Array.isArray(tabla)) return '';
+    if (!Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
-    return item?.porcentaje || '';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getPorcentajeNoPEA(): string {
     const tabla = this.peaDistritoSexoSignal() || [];
-    if (!Array.isArray(tabla)) return '';
+    if (!Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentaje || '';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   getPorcentajeHombresPEA(): string {
     const tabla = this.peaDistritoSexoSignal() || [];
-    if (!Array.isArray(tabla)) return '';
+    if (!Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no'));
-    return item?.porcentajeHombres || '';
+    return item?.porcentajeHombres ? String(item.porcentajeHombres) : '____';
   }
 
   getPorcentajeMujeresNoPEA(): string {
     const tabla = this.peaDistritoSexoSignal() || [];
-    if (!Array.isArray(tabla)) return '';
+    if (!Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentajeMujeres || '';
+    return item?.porcentajeMujeres ? String(item.porcentajeMujeres) : '____';
   }
 
   getIngresoPerCapita(): string { return this.datos?.ingresoPerCapitaAISI || '391,06'; }
@@ -728,8 +728,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoPEA_AISI(): string {
     const texto = this.datos.textoPEA_AISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     // ✅ CORREGIDO: Usar obtenerNombreCentroPobladoActual()
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     return SECCION23_TEMPLATES.peaCompleteTemplateWithVariables
@@ -738,23 +738,23 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   }
 
   getPorcentajePET(): string {
-    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '0,00 %';
+    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '____';
     const totalPET = this.datos.petGruposEdadAISI.reduce((sum: number, item: any) => sum + (typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0), 0);
     const totalPoblacion = this.datos?.poblacionSexoAISI?.reduce((sum: number, item: any) => sum + (typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0), 0) || 0;
-    if (!totalPoblacion || totalPoblacion === 0) return '';
+    if (!totalPoblacion || totalPoblacion === 0) return '____';
     return ((totalPET / totalPoblacion) * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
   }
 
   getPorcentajeGrupoPET(categoria: string): string {
-    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '';
+    if (!this.datos?.petGruposEdadAISI || !Array.isArray(this.datos.petGruposEdadAISI)) return '____';
     const item = this.datos.petGruposEdadAISI.find((item: any) => item.categoria && item.categoria.toLowerCase().includes(categoria.toLowerCase()));
-    return item?.porcentaje || '';
+    return item?.porcentaje ? String(item.porcentaje) : '____';
   }
 
   obtenerTextoAnalisisPEA_AISI(): string {
     if (this.datos.textoAnalisisPEA_AISI && this.datos.textoAnalisisPEA_AISI !== '____') return this.datos.textoAnalisisPEA_AISI;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     const porcentajePEA = this.getPorcentajePEA();
     const porcentajeNoPEA = this.getPorcentajeNoPEA();
     const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
@@ -795,8 +795,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoEmpleoAISI(): string {
     const texto = this.datos.textoEmpleoAISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
   }
 
@@ -809,8 +809,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoIngresosAISI(): string {
     const texto = this.datos.textoIngresosAISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     const ingresoPerCapita = this.getIngresoPerCapita();
     const rankingIngreso = this.getRankingIngreso();
@@ -824,8 +824,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoIndiceDesempleoAISI(): string {
     const texto = this.datos.textoIndiceDesempleoAISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     return SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables
       .replace('{{distrito}}', distrito)
@@ -862,8 +862,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   obtenerTextoPEAAISI(): string {
     const texto = this.datos.textoPEAAISI;
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || '_____';
+    // ✅ Distrito derivado desde Sección 21 (tabla de ubicación) vía BaseSectionComponent
+    const distrito = this.obtenerNombreDistritoActual() || '____';
     const porcentajeDesempleo = this.getPorcentajeDesempleo();
     const porcentajeHombres = this.getPorcentajeHombresOcupados();
     const porcentajeMujeres = this.getPorcentajeMujeresOcupadas();

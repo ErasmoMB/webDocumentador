@@ -110,13 +110,13 @@ export const SECCION23_TEMPLATES = {
   labelPeaOcupadaDesocupadaAnalisis: 'Análisis PEA Ocupada y Desocupada - Texto Completo',
 
   // ===== PLACEHOLDERS (Form) =====
-  placeholderPETTitulo: 'Ej: PET según grupos de edad – CP Cahuacho (2017)',
+  placeholderPETTitulo: 'Ej: PET según grupos de edad – CP ____ (2017)',
   placeholderPETFuente: 'Ej: Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
 
-  placeholderPeaDistritoSexoTitulo: 'Ej: Conformación de la PEA y No PEA, según sexo – Distrito Cahuacho (2017)',
+  placeholderPeaDistritoSexoTitulo: 'Ej: Conformación de la PEA y No PEA, según sexo – Distrito ____ (2017)',
   placeholderPeaDistritoSexoFuente: 'Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018',
 
-  placeholderPeaOcupadaDesocupadaTitulo: 'Ej: Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito Cahuacho (2017)',
+  placeholderPeaOcupadaDesocupadaTitulo: 'Ej: Conformación de la PEA Ocupada y Desocupada, según sexo – Distrito ____ (2017)',
   placeholderPeaOcupadaDesocupadaFuente: 'Ej: Resultados Definitivos de la Población Económicamente Activa 2017 – INEI 2018',
 
   // ===== HINTS (Form) =====
@@ -145,7 +145,7 @@ export const SECCION23_TEMPLATES = {
 
   empleoDependienteDefault: 'En cuanto al empleo dependiente, este sector es reducido y está conformado principalmente por trabajadores de la municipalidad distrital, quienes cumplen funciones administrativas y operativas; el personal de las instituciones educativas que ofrecen servicios de enseñanza en la localidad; y los empleados del puesto de salud que brindan atención básica a los habitantes. Este tipo de empleo proporciona estabilidad a un pequeño grupo de la población, pero no es la fuente principal de ingresos entre los habitantes. En general, el empleo independiente predomina como el principal medio de subsistencia para la mayoría de los pobladores.',
 
-  ingresosTemplateWithVariables: 'Los ingresos de la población en la capital distrital de {{distrito}} están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. ... S/. {{ingresoPerCapita}} mensuales, ocupando el puesto N°{{rankingIngreso}} en el ranking de dicha variable.',
+  ingresosTemplateWithVariables: 'Los ingresos de la población en la capital distrital de {{distrito}} están estrechamente relacionados con las actividades agropecuarias, las cuales constituyen la base económica de la localidad. S/. {{ingresoPerCapita}} mensuales, ocupando el puesto N°{{rankingIngreso}} en el ranking de dicha variable.',
 
   indiceDesempleoTemplateWithVariables: 'El índice de desempleo es un indicador clave para evaluar la salud económica de una jurisdicción de cualquier nivel, ya que refleja la proporción de la Población Económicamente Activa (PEA) que se encuentra en busca de empleo, pero no logra obtenerlo. En este ítem, se caracteriza el índice de desempleo del distrito de {{distrito}}, el cual abarca al CP {{centroPoblado}} (capital distrital). Para ello se usa la tabla siguiente:',
 

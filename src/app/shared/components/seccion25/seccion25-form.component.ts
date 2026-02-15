@@ -823,7 +823,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   // Métodos para generar textos por defecto
   private generarTextoViviendaDefault(): string {
-    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const totalViviendas = this.getTotalViviendasEmpadronadas();
     return `Según los Censos Nacionales 2017, en el CP ${centroPoblado} se hallan un total de ${totalViviendas} viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.`;
   }
@@ -835,7 +835,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private generarTextoEstructuraDefault(): string {
-    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.datos.centroPobladoAISI || this.formDataSignal()?.['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
     const porcentajePisosTierra = this.getPorcentajePisosTierra();
     const porcentajePisosCemento = this.getPorcentajePisosCemento();
     return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;

@@ -5,6 +5,7 @@ import { GenericTableComponent } from '../generic-table/generic-table.component'
 import { ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS } from './seccion29-constants';
 
 @Component({
@@ -41,13 +42,27 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly textoAfiliacionSaludSignal = computed(() => this.getFieldValue('textoAfiliacionSalud') ?? '');
 
   // Titles and fuentes
-  readonly tituloNatalidadSignal = computed(() => this.getFieldValue('tituloNatalidadMortalidad') ?? '');
+  readonly tituloNatalidadSignal = computed(() => {
+    const cp = this.centroPobladoSignal();
+    const distrito = this.distritoSeleccionadoSignal();
+    const fallback = SECCION29_TEMPLATES.placeholderTituloNatalidadView.replace('_____', cp || SECCION29_TEMPLATES.centroPobladoDefault);
+    return normalizeTitleWithPlaceholders(this.getFieldValue('tituloNatalidadMortalidad'), fallback, cp, distrito);
+  });
   readonly fuenteNatalidadSignal = computed(() => this.getFieldValue('fuenteNatalidadMortalidad') ?? '');
 
-  readonly tituloMorbilidadSignal = computed(() => this.getFieldValue('tituloMorbilidad') ?? '');
+  readonly tituloMorbilidadSignal = computed(() => {
+    const distrito = this.distritoSeleccionadoSignal();
+    const fallback = SECCION29_TEMPLATES.placeholderTituloMorbilidadView.replace('_____', distrito || SECCION29_TEMPLATES.distritoDefault);
+    return normalizeTitleWithPlaceholders(this.getFieldValue('tituloMorbilidad'), fallback, this.centroPobladoSignal(), distrito);
+  });
   readonly fuenteMorbilidadSignal = computed(() => this.getFieldValue('fuenteMorbilidad') ?? '');
 
-  readonly tituloAfiliacionSignal = computed(() => this.getFieldValue('tituloAfiliacionSalud') ?? '');
+  readonly tituloAfiliacionSignal = computed(() => {
+    const cp = this.centroPobladoSignal();
+    const distrito = this.distritoSeleccionadoSignal();
+    const fallback = SECCION29_TEMPLATES.placeholderTituloAfiliacionView.replace('_____', cp || SECCION29_TEMPLATES.centroPobladoDefault);
+    return normalizeTitleWithPlaceholders(this.getFieldValue('tituloAfiliacionSalud'), fallback, cp, distrito);
+  });
   readonly fuenteAfiliacionSignal = computed(() => this.getFieldValue('fuenteAfiliacionSalud') ?? '');
 
   readonly centroPobladoSignal = computed(() => this.getFieldValue('centroPobladoAISI') ?? SECCION29_TEMPLATES.centroPobladoDefault);

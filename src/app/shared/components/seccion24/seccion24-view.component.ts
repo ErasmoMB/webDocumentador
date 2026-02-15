@@ -5,6 +5,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION24_TEMPLATES, SECCION24_DEFAULT_TEXTS } from './seccion24-constants';
 
@@ -33,12 +34,17 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
+  readonly centroPobladoActualSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreCentroPobladoActual();
+  });
+
   readonly textoIntroShortSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return (manual.split('\n\n')[0] || manual);
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const cp = this.centroPobladoActualSignal() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     return SECCION24_DEFAULT_TEXTS.textoIntroActividadesEconomicasAISI.replace(/____/g, cp);
   });
 
@@ -47,7 +53,7 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     const fieldKey = prefijo ? `textoIntroActividadesEconomicasAISI${prefijo}` : 'textoIntroActividadesEconomicasAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return (manual.split('\n\n')[1] || '');
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const cp = this.centroPobladoActualSignal() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     return SECCION24_DEFAULT_TEXTS.textoIntroActividadesEconomicasAISILong.replace(/____/g, cp);
   });
 
@@ -67,7 +73,7 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
 
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const cp = this.centroPobladoActualSignal() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     const actividades = this.actividadesEconomicasSignal();
     const agricultura = actividades.find((a: any) => a.actividad && String(a.actividad).toLowerCase().includes('agricultura'));
     const administracion = actividades.find((a: any) => a.actividad && String(a.actividad).toLowerCase().includes('administración'));
@@ -105,7 +111,7 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     const fieldKey = prefijo ? `textoMercadoProductos${prefijo}` : 'textoMercadoProductos';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const cp = this.centroPobladoActualSignal() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || SECCION24_DEFAULT_TEXTS.ciudadOrigenDefault;
     return SECCION24_DEFAULT_TEXTS.textoMercadoProductos
       .replace(/____/g, cp)
@@ -120,7 +126,7 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     const fieldKey = prefijo ? `textoHabitosConsumo${prefijo}` : 'textoHabitosConsumo';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
-    const cp = (this.formDataSignal() as any)?.centroPobladoAISI || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
+    const cp = this.centroPobladoActualSignal() || SECCION24_DEFAULT_TEXTS.centroPobladoDefault;
     const ciudadOrigen = (this.formDataSignal() as any)?.ciudadOrigenComercio || SECCION24_DEFAULT_TEXTS.ciudadOrigenDefault;
     return SECCION24_DEFAULT_TEXTS.textoHabitosConsumo
       .replace(/____/g, cp)
@@ -206,4 +212,13 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
   protected override actualizarValoresConPrefijo(): void { }
 
   trackByIndex(index: number): number { return index; }
+
+  getTituloActividadesEconomicas(): string {
+    const vm = this.viewModel();
+    const centroPoblado = this.obtenerNombreCentroPobladoActual() || vm.data?.['centroPobladoAISI'] || SECCION24_TEMPLATES.centroPobladoDefault;
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = SECCION24_TEMPLATES.labelCuadroPrincipal.replace('{centroPoblado}', centroPoblado || SECCION24_TEMPLATES.centroPobladoDefault);
+    const manual = vm.data?.['cuadroTituloActividadesEconomicasAISI'];
+    return normalizeTitleWithPlaceholders(manual, defaultTitle, centroPoblado, distrito);
+  }
 }

@@ -102,7 +102,7 @@ export const SECCION28_TEMPLATES = {
   placeholderFuentePuestoSalud: 'Ej: Ministerio de Salud (MINSA)',
   placeholderNombreIE: 'Ej: IE Virgen de Copacabana',
   placeholderCantidadEstudiantes: 'Ej: 28',
-  placeholderTituloEducacion: 'Ej: Infraestructura educativa – CP Cahuacho (2023)',
+  placeholderTituloEducacion: 'Ej: Infraestructura educativa – CP ____ (2023)',
   placeholderFuenteEducacion: 'Ej: Censo Educativo 2023 – ESCALE (MINEDU)',
 
   // Fotografías - Labels genéricos

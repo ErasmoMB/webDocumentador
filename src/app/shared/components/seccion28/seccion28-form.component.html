@@ -29,7 +29,7 @@
       <div class="form-field mt-sm">
         <label class="label">{{ SECCION28_TEMPLATES.labelTablaPuestoSalud }}</label>
         <app-dynamic-table
-          [datos]="getPuestoSaludTablaData()"
+          [datos]="datos"
           [sectionId]="seccionId"
           [config]="puestoSaludConfig"
           [columns]="columnasPuestoSalud"
@@ -114,7 +114,7 @@
       <div class="form-field mt-sm">
         <label class="label">{{ SECCION28_TEMPLATES.labelTablaEducacion }}</label>
         <app-dynamic-table
-          [datos]="getEducacionTablaData()"
+          [datos]="datos"
           [sectionId]="seccionId"
           [config]="educacionConfig"
           [columns]="columnasEducacion"

@@ -6,6 +6,7 @@ import { GenericTableComponent } from '../generic-table/generic-table.component'
 import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.component';
 import { AutoLoadSectionComponent } from '../auto-load-section.component';
 import { SECCION28_TEMPLATES } from './seccion28-constants';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 
 @Component({
   standalone: true,
@@ -22,6 +23,17 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
     this.projectFacade.selectSectionFields(this.seccionId, null)()
   );
+
+  readonly centroPobladoActualSignal: Signal<string> = computed(() => {
+    const data = this.formDataSignal() ?? {};
+    return this.obtenerNombreCentroPobladoActual() || data['centroPobladoAISI'] || '____';
+  });
+
+  readonly distritoActualSignal: Signal<string> = computed(() => {
+    const data = this.formDataSignal() ?? {};
+    const ubicacion = this.projectFacade.ubicacionGlobal();
+    return this.obtenerNombreDistritoActual() || data['distritoSeleccionado'] || ubicacion?.distrito || '____';
+  });
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
@@ -70,8 +82,8 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoSaludCP'] && data['textoSaludCP'] !== '____') {
       return data['textoSaludCP'];
     }
-    const distrito = data['distritoSeleccionado'] || 'Cahuacho';
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const distrito = this.distritoActualSignal();
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoSaludDefault
       .replace('____', distrito)
       .replace('____', centroPoblado);
@@ -82,7 +94,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoEducacionCP'] && data['textoEducacionCP'] !== '____') {
       return data['textoEducacionCP'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     const nombreIE = data['nombreIEMayorEstudiantes'] || 'IE Virgen de Copacabana';
     const cantidadEstudiantes = data['cantidadEstudiantesIEMayor'] || '28';
     return SECCION28_TEMPLATES.textoEducacionDefault
@@ -96,7 +108,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoRecreacionCP1'] && data['textoRecreacionCP1'] !== '____') {
       return data['textoRecreacionCP1'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoRecreacionCP1Default.replace(/____/g, centroPoblado);
   }
 
@@ -121,7 +133,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoDeporteCP1'] && data['textoDeporteCP1'] !== '____') {
       return data['textoDeporteCP1'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoDeporteCP1Default.replace(/____/g, centroPoblado);
   }
 
@@ -130,7 +142,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
     if (data['textoDeporteCP2'] && data['textoDeporteCP2'] !== '____') {
       return data['textoDeporteCP2'];
     }
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoDeporteCP2Default.replace(/____/g, centroPoblado);
   }
 
@@ -197,6 +209,22 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   getFotografiasDeporteVista(): FotoItem[] {
     const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
     return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDeporte(), groupPrefix);
+  }
+
+  getTituloPuestoSalud(): string {
+    const data = this.formDataSignal();
+    const centroPoblado = this.centroPobladoActualSignal();
+    const distrito = this.distritoActualSignal();
+    const fallback = `${SECCION28_TEMPLATES.tituloViewDefault} — ${centroPoblado}`;
+    return normalizeTitleWithPlaceholders(data['puestoSaludTitulo'], fallback, centroPoblado, distrito);
+  }
+
+  getTituloEducacion(): string {
+    const data = this.formDataSignal();
+    const centroPoblado = this.centroPobladoActualSignal();
+    const distrito = this.distritoActualSignal();
+    const fallback = `${SECCION28_TEMPLATES.tituloEducacionViewDefault} – CP ${centroPoblado} (2023)`;
+    return normalizeTitleWithPlaceholders(data['educacionTitulo'], fallback, centroPoblado, distrito);
   }
 
   override ngOnDestroy(): void {

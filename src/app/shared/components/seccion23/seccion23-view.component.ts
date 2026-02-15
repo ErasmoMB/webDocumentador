@@ -147,25 +147,55 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   getPorcentajePET(): string {
     const tabla = this.petGruposEdadSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const total = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('total'));
-    return total?.porcentaje || '';
+    return this.normalizarValor(total?.porcentaje);
   }
 
   getPorcentajeGrupoPET(grupo: string): string {
     const tabla = this.petGruposEdadSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes(grupo.toLowerCase()));
-    return item?.porcentaje || '';
+    return this.normalizarValor(item?.porcentaje);
   }
 
   obtenerTituloTabla(fieldName: string, defaultTitle: string): string {
     const valor = this.datos?.[fieldName];
-    if (!valor || typeof valor !== 'string') return defaultTitle;
-    const texto = valor.trim();
-    if (!texto || this.tienePlaceholder(texto)) return defaultTitle;
+    if (!valor || typeof valor !== 'string') {
+      return this.reemplazarPlaceholdersTitulo(defaultTitle);
+    }
+
+    const texto = this.reemplazarPlaceholdersTitulo(valor.trim());
+    if (!texto || this.tienePlaceholder(texto)) {
+      return this.reemplazarPlaceholdersTitulo(defaultTitle);
+    }
+
     const limpio = this.eliminarNumeroCuadro(texto);
-    return limpio || defaultTitle;
+    return limpio || this.reemplazarPlaceholdersTitulo(defaultTitle);
+  }
+
+  private reemplazarPlaceholdersTitulo(titulo: string | null | undefined): string {
+    if (!titulo) return '';
+    let resultado = titulo;
+
+    const cp = (this.obtenerNombreCentroPobladoActual() || '____').trim() || '____';
+    resultado = resultado
+      .replace(/\{\{\s*centroPoblado\s*\}\}/gi, cp)
+      .replace(/Centro\s+Poblado\s+_{2,}/gi, cp === '____' ? 'Centro Poblado ____' : `Centro Poblado ${cp}`)
+      .replace(/CP\s+_{2,}/gi, cp === '____' ? 'CP ____' : `CP ${cp}`);
+
+    const distrito = (this.obtenerNombreDistritoActual() || '____').trim() || '____';
+    resultado = resultado
+      .replace(/\{\{\s*distrito\s*\}\}/gi, distrito)
+      .replace(/Distrito\s+_{2,}/gi, distrito === '____' ? 'Distrito ____' : `Distrito ${distrito}`);
+
+    return resultado;
+  }
+
+  private normalizarValor(valor: any): string {
+    if (valor === null || valor === undefined) return '____';
+    const s = String(valor).trim();
+    return s ? s : '____';
   }
 
   private eliminarNumeroCuadro(titulo: string): string {
@@ -178,30 +208,30 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   getPorcentajePEA(): string {
     const tabla = this.peaDistritoSexoSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentaje || '';
+    return this.normalizarValor(item?.porcentaje);
   }
 
   getPorcentajeNoPEA(): string {
     const tabla = this.peaDistritoSexoSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentaje || '';
+    return this.normalizarValor(item?.porcentaje);
   }
 
   getPorcentajeHombresPEA(): string {
     const tabla = this.peaDistritoSexoSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('pea') && !item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentajeHombres || '';
+    return this.normalizarValor(item?.porcentajeHombres);
   }
 
   getPorcentajeMujeresNoPEA(): string {
     const tabla = this.peaDistritoSexoSignal();
-    if (!tabla || !Array.isArray(tabla)) return '';
+    if (!tabla || !Array.isArray(tabla)) return '____';
     const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes('no pea'));
-    return item?.porcentajeMujeres || '';
+    return this.normalizarValor(item?.porcentajeMujeres);
   }
 
   // Textos para template
@@ -309,22 +339,22 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   obtenerCentroPoblado(): string {
     const data = this.formDataSignal();
-    return data['centroPobladoAISI'] || 'Cahuacho';
+    return data['centroPobladoAISI'] || this.obtenerNombreCentroPobladoActual() || '____';
   }
 
   obtenerDistrito(): string {
     const data = this.formDataSignal();
-    return data['distritoSeleccionado'] || 'Cahuacho';
+    return data['distritoSeleccionado'] || this.obtenerNombreDistritoActual() || '____';
   }
 
   obtenerPoblacionDistrital(): string {
     const data = this.formDataSignal();
-    return data['poblacionDistritalAISI'] || '';
+    return data['poblacionDistritalAISI'] || '____';
   }
 
   obtenerPETDistrital(): string {
     const data = this.formDataSignal();
-    return data['petDistritalAISI'] || '';
+    return data['petDistritalAISI'] || '____';
   }
 
   override ngOnDestroy(): void { super.ngOnDestroy(); }
@@ -356,19 +386,19 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   getPorcentajeDesempleo(): string {
     const rows = this.peaOcupadaDesocupadaSignal() || [];
     const item = rows.find((r: any) => r.categoria && r.categoria.toLowerCase().includes('desocup'));
-    return item?.porcentaje || '';
+    return this.normalizarValor(item?.porcentaje);
   }
 
   getPorcentajeHombresOcupados(): string {
     const rows = this.peaOcupadaDesocupadaSignal() || [];
     const item = rows.find((r: any) => r.categoria && r.categoria.toLowerCase().includes('ocup'));
-    return item?.porcentajeHombres || '';
+    return this.normalizarValor(item?.porcentajeHombres);
   }
 
   getPorcentajeMujeresOcupadas(): string {
     const rows = this.peaOcupadaDesocupadaSignal() || [];
     const item = rows.find((r: any) => r.categoria && r.categoria.toLowerCase().includes('ocup'));
-    return item?.porcentajeMujeres || '';
+    return this.normalizarValor(item?.porcentajeMujeres);
   }
 
   getPoblacionDistritalFn(): string {
@@ -378,7 +408,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   getPETDistrital(): string {
     const data = this.formDataSignal();
-    return data?.['petDistritalAISI'] || '';
+    return data?.['petDistritalAISI'] || '____';
   }
 }
 

@@ -4,7 +4,7 @@
 <p class="text-justify">{{ obtenerTextoPETIntro() }}</p>
 <p class="text-justify">{{ obtenerTextoPET() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloTabla('petGruposEdadTitulo', SECCION23_TEMPLATES.defaultPETTableTitle.replace('{{centroPoblado}}', obtenerNombreCentroPobladoActual()))" sectionId="3.1.4.B.1.2">
+<app-table-wrapper [title]="obtenerTituloTabla('petGruposEdadTitulo', SECCION23_TEMPLATES.defaultPETTableTitle)" sectionId="3.1.4.B.1.2">
   <app-generic-table
     [data]="getPetGruposEdadAISIConPorcentajes()"
     [config]="{
@@ -26,7 +26,7 @@
 <p style="margin-top: 10px; margin-bottom: 6px;"><strong>{{ SECCION23_TEMPLATES.subsectionPEA }}</strong></p>
 <p class="text-justify">{{ obtenerTextoPEA() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloTabla('peaDistritoSexoTitulo', SECCION23_TEMPLATES.defaultPeaDistritoSexoTableTitle.replace('{{distrito}}', datos.distritoSeleccionado || 'Cahuacho'))" sectionId="3.1.4.B.1.2">
+<app-table-wrapper [title]="obtenerTituloTabla('peaDistritoSexoTitulo', SECCION23_TEMPLATES.defaultPeaDistritoSexoTableTitle)" sectionId="3.1.4.B.1.2">
   <app-generic-table
     [data]="getPeaDistritoSexoConPorcentajes()"
     [config]="{
@@ -58,7 +58,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION23_TEMPLATES.subsectionIndiceDesempleo }}</strong></p>
 <p class="text-justify">{{ obtenerTextoIndiceDesempleoAISI() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloTabla('peaOcupadaDesocupadaTitulo', SECCION23_TEMPLATES.defaultPeaOcupadaDesocupadaTableTitle.replace('{{distrito}}', datos.distritoSeleccionado || 'Cahuacho'))" sectionId="3.1.4.B.1.2">
+<app-table-wrapper [title]="obtenerTituloTabla('peaOcupadaDesocupadaTitulo', SECCION23_TEMPLATES.defaultPeaOcupadaDesocupadaTableTitle)" sectionId="3.1.4.B.1.2">
   <app-generic-table
     [data]="getPeaOcupadaDesocupadaConPorcentajes()"
     [config]="{

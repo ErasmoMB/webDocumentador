@@ -99,8 +99,8 @@ export const SECCION29_TEMPLATES = {
   placeholderFuenteAfiliacionView: 'INEI (2017)',
   
   // ============ VALORES POR DEFECTO Y FALLBACKS ============
-  centroPobladoDefault: 'Cahuacho',
-  distritoDefault: 'Cahuacho',
+  centroPobladoDefault: '____',
+  distritoDefault: '____',
   fotoTituloDefault: 'Sección 29',
   fotoFuenteDefault: 'GEADES, 2024',
   

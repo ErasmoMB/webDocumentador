@@ -5,7 +5,7 @@
 <p class="text-justify">{{ obtenerTextoSaludCP() }}</p>
 
 <app-table-wrapper 
-  [title]="(formDataSignal()['puestoSaludTitulo'] || (SECCION28_TEMPLATES.tituloViewDefault + ' — ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho')))" 
+  [title]="getTituloPuestoSalud()" 
   sectionId="3.1.4.B.1.7">
   <app-generic-table
     [data]="puestoSaludCpTablaVista"
@@ -37,7 +37,7 @@
 <p class="text-justify">{{ obtenerTextoEducacionCP() }}</p>
 
 <app-table-wrapper 
-  [title]="(formDataSignal()['educacionTitulo'] || (SECCION28_TEMPLATES.tituloEducacionViewDefault + ' – CP ' + (formDataSignal()['centroPobladoAISI'] || 'Cahuacho') + ' (2023)'))" 
+  [title]="getTituloEducacion()" 
   sectionId="3.1.4.B.1.7">
   <app-generic-table
     [data]="getEducacionCpConPorcentajes()"

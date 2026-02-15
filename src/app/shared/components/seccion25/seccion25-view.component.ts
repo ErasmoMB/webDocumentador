@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GenericTableComponent } from '../generic-table/generic-table.component';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { SECCION25_TEMPLATES } from './seccion25-constants';
 
@@ -44,6 +45,11 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  readonly centroPobladoActualSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreCentroPobladoActual();
   });
 
   readonly textoViviendaSignal = computed(() => {
@@ -143,7 +149,7 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     textoEstructura: this.textoEstructuraSignal(),
 
     // raw fields mirrored
-    centroPobladoAISI: this.formDataSignal()?.['centroPobladoAISI'] || 'Cahuacho',
+    centroPobladoAISI: this.centroPobladoActualSignal() || this.obtenerNombreCentroPobladoActual() || '____',
     cuadroTituloTiposVivienda: this.formDataSignal()?.['cuadroTituloTiposVivienda'] || '',
     cuadroFuenteTiposVivienda: this.formDataSignal()?.['cuadroFuenteTiposVivienda'] || '',
     cuadroTituloCondicionOcupacion: this.formDataSignal()?.['cuadroTituloCondicionOcupacion'] || '',
@@ -247,7 +253,7 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
   private generarTextoViviendaDefault(): string {
     const data = this.formDataSignal() || {};
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal() || this.obtenerNombreCentroPobladoActual() || '____';
     const totalViviendas = this.totalViviendasSignal();
     return `Según los Censos Nacionales 2017, en el CP ${centroPoblado} se hallan un total de ${totalViviendas} viviendas empadronadas. El único tipo de vivienda existente es la casa independiente, pues representa el 100,0 % del conjunto.`;
   }
@@ -260,7 +266,7 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
   private generarTextoEstructuraDefault(): string {
     const data = this.formDataSignal() || {};
-    const centroPoblado = data['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal() || this.obtenerNombreCentroPobladoActual() || '____';
     const porcentajePisosTierra = this.porcentajePisosTierraSignal();
     const porcentajePisosCemento = this.porcentajePisosCementoSignal();
     return `Según la información recabada de los Censos Nacionales 2017, dentro del CP ${centroPoblado}, el único material empleado para la construcción de las paredes de las viviendas es el adobe. Respecto a los techos, también se cuenta con un único material, que son las planchas de calamina, fibra de cemento o similares.\n\nFinalmente, en cuanto a los pisos, la mayoría están hechos de tierra (${porcentajePisosTierra}). El porcentaje restante, que consta del ${porcentajePisosCemento}, cuentan con pisos elaborados a base de cemento.`;
@@ -352,4 +358,28 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly fotosSignal = computed(() => this.getFotografiasVista(this.PHOTO_PREFIX));
+
+  getTituloTiposVivienda(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPobladoAISI || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = `${SECCION25_TEMPLATES.tituloTiposViviendaDefault} – CP ${centroPoblado} (2017)`;
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloTiposVivienda, defaultTitle, centroPoblado, distrito);
+  }
+
+  getTituloCondicionOcupacion(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPobladoAISI || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = `${SECCION25_TEMPLATES.tituloCondicionOcupacionDefault} de la Vivienda – CP ${centroPoblado} (2017)`;
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloCondicionOcupacion, defaultTitle, centroPoblado, distrito);
+  }
+
+  getTituloMaterialesVivienda(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPobladoAISI || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = `${SECCION25_TEMPLATES.tituloMaterialesViviendaDefault} – CP ${centroPoblado} (2017)`;
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloMaterialesVivienda, defaultTitle, centroPoblado, distrito);
+  }
 }

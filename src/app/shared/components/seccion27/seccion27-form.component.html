@@ -13,7 +13,7 @@
           [label]="SECCION27_TEMPLATES.labelParrafoTransporte1"
           [hint]="SECCION27_TEMPLATES.hintParrafo"
           [rows]="4"
-          [value]="textoTransporteCP1.value()"
+          [value]="textoTransporteCP1Display()"
           (valueChange)="textoTransporteCP1.update($event)">
         </app-paragraph-editor>
 
@@ -22,7 +22,7 @@
           [label]="SECCION27_TEMPLATES.labelParrafoTransporte2"
           [hint]="SECCION27_TEMPLATES.hintParrafo"
           [rows]="4"
-          [value]="textoTransporteCP2.value()"
+          [value]="textoTransporteCP2Display()"
           (valueChange)="textoTransporteCP2.update($event)">
         </app-paragraph-editor>
       </div>
@@ -76,7 +76,7 @@
           [label]="SECCION27_TEMPLATES.labelParrafoTelecomunicaciones1"
           [hint]="SECCION27_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="textoTelecomunicacionesCP1.value()"
+          [value]="textoTelecomunicacionesCP1Display()"
           (valueChange)="textoTelecomunicacionesCP1.update($event)">
         </app-paragraph-editor>
 
@@ -85,7 +85,7 @@
           [label]="SECCION27_TEMPLATES.labelParrafoTelecomunicaciones2"
           [hint]="SECCION27_TEMPLATES.hintParrafo"
           [rows]="3"
-          [value]="textoTelecomunicacionesCP2.value()"
+          [value]="textoTelecomunicacionesCP2Display()"
           (valueChange)="textoTelecomunicacionesCP2.update($event)">
         </app-paragraph-editor>
 
@@ -94,7 +94,7 @@
           [label]="SECCION27_TEMPLATES.labelParrafoTelecomunicaciones3"
           [hint]="SECCION27_TEMPLATES.hintParrafo"
           [rows]="5"
-          [value]="textoTelecomunicacionesCP3.value()"
+          [value]="textoTelecomunicacionesCP3Display()"
           (valueChange)="textoTelecomunicacionesCP3.update($event)">
         </app-paragraph-editor>
       </div>

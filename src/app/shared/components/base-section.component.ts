@@ -387,42 +387,40 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    */
   obtenerNombreDistritoActual(): string {
     const prefijo = this.obtenerPrefijoGrupo();
-    
-    // Usar aisiGroups() signal para obtener el nombre del grupo actual
-    if (prefijo && prefijo.startsWith('_B')) {
-      const match = prefijo.match(/_B(\d+)/);
-      if (match) {
-        const index = parseInt(match[1]) - 1; // _B1 → índice 0, _B2 → índice 1
-        const grupos = this.aisiGroups();
-        if (grupos && grupos[index]?.nombre) {
-          return grupos[index].nombre;
-        }
+
+    // ✅ Fuente única de verdad (AISI): tabla de Sección 21 "Ubicación referencial – Centro Poblado ____"
+    // Sección 21 es '3.1.4.B' y la tabla se guarda como campo 'ubicacionCpTabla' (o con sufijo por prefijo del grupo).
+    try {
+      const SECCION21_ID = '3.1.4.B';
+      const tablaKeyPref = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+
+      const fromFieldPref = this.projectFacade.selectField(SECCION21_ID, null, tablaKeyPref)();
+      const fromTablePref = this.projectFacade.selectTableData(SECCION21_ID, null, tablaKeyPref)();
+      const fromFieldBase = this.projectFacade.selectField(SECCION21_ID, null, 'ubicacionCpTabla')();
+      const fromTableBase = this.projectFacade.selectTableData(SECCION21_ID, null, 'ubicacionCpTabla')();
+
+      const rows = (Array.isArray(fromFieldPref) ? fromFieldPref
+        : Array.isArray(fromTablePref) ? fromTablePref
+        : Array.isArray(fromFieldBase) ? fromFieldBase
+        : Array.isArray(fromTableBase) ? fromTableBase
+        : []) as any[];
+
+      for (const row of rows) {
+        const distrito = String(row?.distrito ?? '').trim();
+        if (distrito) return distrito;
       }
+    } catch {
+      // no bloquear por fallos de lectura
     }
-    
-    // Fallback: buscar en datos guardados
-    const grupoAISIValor = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'grupoAISI', this.seccionId);
-    if (grupoAISIValor && grupoAISIValor.trim() !== '') {
-      return grupoAISIValor;
+
+    // Fallback razonable: ubicación global (metadata del proyecto)
+    try {
+      const d = this.projectFacade.ubicacionGlobal()?.distrito;
+      if (d && String(d).trim() !== '') return String(d).trim();
+    } catch {
+      // ignore
     }
-    
-    const grupoConSufijo = prefijo ? this.datos[`grupoAISI${prefijo}`] : null;
-    if (grupoConSufijo && grupoConSufijo.trim() !== '') {
-      return grupoConSufijo;
-    }
-    
-    if (this.datos.distritosAISI && Array.isArray(this.datos.distritosAISI) && this.datos.distritosAISI.length > 0) {
-      const primerDistrito = this.datos.distritosAISI[0];
-      if (primerDistrito && primerDistrito.nombre && primerDistrito.nombre.trim() !== '') {
-        return primerDistrito.nombre;
-      }
-    }
-    
-    const grupoAISIBase = this.datos.grupoAISI;
-    if (grupoAISIBase && grupoAISIBase.trim() !== '') {
-      return grupoAISIBase;
-    }
-    
+
     return '____';
   }
 

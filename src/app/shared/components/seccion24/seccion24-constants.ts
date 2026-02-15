@@ -76,7 +76,7 @@ export const SECCION24_TEMPLATES = {
   labelFotoImagen: 'Fotografía - Imagen',
 
   // Placeholders
-  placeholderCuadroTitulo: 'PEA Ocupada según actividad económica – CP Cahuacho (2017)',
+  placeholderCuadroTitulo: 'PEA Ocupada según actividad económica – CP ____ (2017)',
   placeholderActividad: 'Ej: Agricultura, ganadería, silvicultura y pesca',
   placeholderCasos: '0',
   placeholderPorcentaje: '0,00 %',
@@ -89,7 +89,7 @@ export const SECCION24_TEMPLATES = {
   labelImagenFoto: 'Fotografía - Imagen',
 
   // Valores por defecto
-  centroPobladoDefault: 'Cahuacho'
+  centroPobladoDefault: '____'
 };
 
 export const SECCION24_DEFAULT_TEXTS = {
@@ -107,7 +107,7 @@ export const SECCION24_DEFAULT_TEXTS = {
   fuenteActividadesEconomicasAISI: 'Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas.',
 
   // Valores por defecto
-  cuadroTituloDefault: 'PEA Ocupada según actividad económica – CP Cahuacho (2017)',
-  centroPobladoDefault: 'Cahuacho',
+  cuadroTituloDefault: 'PEA Ocupada según actividad económica – CP ____ (2017)',
+  centroPobladoDefault: '____',
   ciudadOrigenDefault: 'Caravelí'
 };

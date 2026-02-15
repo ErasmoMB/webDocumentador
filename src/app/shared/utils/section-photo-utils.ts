@@ -55,6 +55,7 @@ export function loadPhotoGroup(
   seccionId: string,
   prefix: string
 ): FotoItem[] {
+  // ✅ CORRECCIÓN: Usar loadPhotos que ya obtiene groupPrefix internamente
   return loadPhotos(imageFacade, seccionId, prefix);
 }
 

@@ -5,6 +5,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { FotoItem } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { SECCION30_TEMPLATES, SECCION30_CONFIG, SECCION30_WATCHED_FIELDS } from './seccion30-constants';
 
 @Component({
@@ -60,8 +61,10 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
 
   readonly tituloNivelEducativoSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'tituloNivelEducativo')();
-    const cp = this.centroPobladoSignal() || 'Cahuacho';
-    return manual && manual.trim().length > 0 ? manual : `${this.TITULO_NIVEL_EDUCATIVO_DEFAULT} – CP ${cp} (2017)`;
+    const cp = this.centroPobladoSignal() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const fallback = `${this.TITULO_NIVEL_EDUCATIVO_DEFAULT} – CP ${cp} (2017)`;
+    return normalizeTitleWithPlaceholders(manual, fallback, cp, distrito);
   });
 
   readonly fuenteNivelEducativoSignal: Signal<string> = computed(() => {
@@ -71,8 +74,10 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
 
   readonly tituloTasaAnalfabetismoSignal: Signal<string> = computed(() => {
     const manual = this.projectFacade.selectField(this.seccionId, null, 'tituloTasaAnalfabetismo')();
-    const cp = this.centroPobladoSignal() || 'Cahuacho';
-    return manual && manual.trim().length > 0 ? manual : `${this.TITULO_TASA_ANALFABETISMO_DEFAULT} – CP ${cp} (2017)`;
+    const cp = this.centroPobladoSignal() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const fallback = `${this.TITULO_TASA_ANALFABETISMO_DEFAULT} – CP ${cp} (2017)`;
+    return normalizeTitleWithPlaceholders(manual, fallback, cp, distrito);
   });
 
   readonly fuenteTasaAnalfabetismoSignal: Signal<string> = computed(() => {

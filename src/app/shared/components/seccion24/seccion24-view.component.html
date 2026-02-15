@@ -5,7 +5,7 @@
 
   <p class="table-title">Cuadro N° {{ viewModel().globalTableNumber }}</p>
   
-  <app-table-wrapper [title]="(viewModel().data['cuadroTituloActividadesEconomicasAISI'] || SECCION24_TEMPLATES.labelCuadroPrincipal.replace('{centroPoblado}', viewModel().data['centroPobladoAISI'] || SECCION24_TEMPLATES.centroPobladoDefault))" [sectionId]="seccionId" [hideNumber]="true">
+  <app-table-wrapper [title]="getTituloActividadesEconomicas()" [sectionId]="seccionId" [hideNumber]="true">
     <app-generic-table [data]="viewModel().actividades" [config]="{ columns: [ { key: 'actividad', header: SECCION24_TEMPLATES.labelActividadEconomica, width: '60%' }, { key: 'casos', header: SECCION24_TEMPLATES.labelCasos, width: '20%', align: 'center' }, { key: 'porcentaje', header: SECCION24_TEMPLATES.labelPorcentaje, width: '20%', align: 'center' } ], showHeader: true, showFooter: false }"></app-generic-table>
   </app-table-wrapper>
 

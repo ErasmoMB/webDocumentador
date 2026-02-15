@@ -8,6 +8,7 @@ import { GenericTableComponent } from '../generic-table/generic-table.component'
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { SECCION26_TEMPLATES } from './seccion26-constants';
 
 @Component({
@@ -35,6 +36,16 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
 
   // ✅ FormDataSignal local
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
+
+  readonly centroPobladoSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreCentroPobladoActual() || '____';
+  });
+
+  readonly distritoActualSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreDistritoActual() || '____';
+  });
 
   // ✅ Helper para obtener prefijo de grupo
   private obtenerPrefijo(): string {
@@ -95,8 +106,7 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     // Generated default using computed percentages
     const dentro = this.porcentajeAguaDentroSignal();
     const fuera = this.porcentajeAguaFueraSignal();
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.centroPobladoSignal();
     return `Respecto al servicio de agua para consumo humano en el CP ${centro}, se cuenta con cobertura de dicho recurso en las viviendas. Es así que, según los Censos Nacionales 2017, un ${dentro} de las viviendas cuenta con red pública dentro de la misma. El porcentaje restante (${fuera}) consta de red pública fuera de la vivienda, pero dentro de la edificación.`;
   });
 
@@ -105,8 +115,7 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoDesagueCP${prefijo}` : 'textoDesagueCP';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.centroPobladoSignal();
     const tabla = this.saneamientoConPorcentajes() || [];
     const dentro = tabla.find((i:any) => i.categoria && i.categoria.toString().toLowerCase().includes('dentro'))?.porcentaje?.value || tabla[0]?.porcentaje?.value || '____';
     const pozo = tabla.find((i:any) => i.categoria && (i.categoria.toString().toLowerCase().includes('pozo') || i.categoria.toString().toLowerCase().includes('tanque') || i.categoria.toString().toLowerCase().includes('biodigestor')))?.porcentaje?.value || '____';
@@ -120,9 +129,8 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoDesechosSolidosCP${prefijo}` : 'textoDesechosSolidosCP';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const distrito = data?.['distritoSeleccionado'] || 'Cahuacho';
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const distrito = this.distritoActualSignal();
+    const centro = this.centroPobladoSignal();
     const p1 = `La gestión de los desechos sólidos está a cargo de la Municipalidad Distrital de ${distrito}, aunque según los entrevistados, la recolección se realiza de manera mensual, en promedio. En ese sentido, no existe una fecha establecida en la que la municipalidad gestione los desechos sólidos. Adicional a ello, las limitaciones en cuanto a infraestructura adecuada para el tratamiento de desechos sólidos generan algunos retos en la gestión eficiente de los mismos.`;
     const p2 = `Cuando los desechos sólidos son recolectados, estos son trasladados a un botadero cercano a la capital distrital, donde se realiza su disposición final. La falta de un sistema más avanzado para el tratamiento de los residuos, como plantas de reciclaje o de tratamiento, dificulta el manejo integral de los desechos y plantea preocupaciones ambientales a largo plazo. Además, la comunidad enfrenta desafíos derivados de la acumulación de basura en ciertos puntos, especialmente en épocas en que la recolección es menos frecuente. Ante ello, la misma población acude al botadero para disponer sus residuos sólidos, puesto que está prohibida la incineración. Cabe mencionar que sí existen puntos dentro del CP ${centro} en donde la población puede disponer sus desechos plásticos como botellas, aunque estos tampoco son recolectados frecuentemente por el personal de la municipalidad.`;
     return `${p1}\n\n${p2}`;
@@ -143,8 +151,7 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoEnergiaCocinarCP${prefijo}` : 'textoEnergiaCocinarCP';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const centro = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centro = this.centroPobladoSignal();
     const totalHogares = this.totalCombustiblesSignal();
     const lena = this.porcentajeLenaSignal();
     const gas = this.porcentajeGasSignal();
@@ -319,12 +326,6 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, campoKey)() ?? '';
   });
 
-  readonly centroPobladoSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    const campoKey = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
-    return this.projectFacade.selectField(this.seccionId, null, campoKey)() ?? 'Cahuacho';
-  });
-
   readonly viewModel = computed(() => ({
     textoIntro: this.textoIntroSignal(),
     textoServiciosAgua: this.textoServiciosAguaSignal(),
@@ -393,5 +394,37 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   override ngOnDestroy(): void {
     // nothing extra
     super.ngOnDestroy();
+  }
+
+  getTituloAbastecimiento(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPoblado || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = SECCION26_TEMPLATES.cuadroTituloAbastecimientoDefault.replace('CP ____', `CP ${centroPoblado}`);
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloAbastecimiento, defaultTitle, centroPoblado, distrito);
+  }
+
+  getTituloSaneamiento(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPoblado || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = SECCION26_TEMPLATES.cuadroTituloSaneamientoDefault.replace('CP ____', `CP ${centroPoblado}`);
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloSaneamiento, defaultTitle, centroPoblado, distrito);
+  }
+
+  getTituloCobertura(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPoblado || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = SECCION26_TEMPLATES.cuadroTituloCoberturaDefault.replace('CP ____', `CP ${centroPoblado}`);
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloCobertura, defaultTitle, centroPoblado, distrito);
+  }
+
+  getTituloCombustibles(): string {
+    const vm = this.viewModel();
+    const centroPoblado = vm.centroPoblado || this.obtenerNombreCentroPobladoActual() || '____';
+    const distrito = this.obtenerNombreDistritoActual();
+    const defaultTitle = SECCION26_TEMPLATES.cuadroTituloCombustiblesDefault.replace('CP ____', `CP ${centroPoblado}`);
+    return normalizeTitleWithPlaceholders(vm.cuadroTituloCombustibles, defaultTitle, centroPoblado, distrito);
   }
 }

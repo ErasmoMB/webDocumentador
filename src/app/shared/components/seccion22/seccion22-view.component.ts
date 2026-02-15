@@ -167,16 +167,26 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const year = '2017';
     
     if (cuadro && String(cuadro).trim().length > 0) {
-      // ✅ NUEVO: Si el cuadro tiene "CP ____", reemplazar con el nombre real
-      if (String(cuadro).includes('CP ____')) {
-        return String(cuadro).replace('CP ____', `CP ${cp}`);
+      const titulo = String(cuadro);
+      if (titulo.includes('CP ____')) {
+        return titulo.replace('CP ____', `CP ${cp}`);
       }
-      return cuadro;
+      if (!titulo.includes('CP ')) {
+        return `${titulo} – CP ${cp} (${year})`;
+      }
+      return titulo;
     }
 
     const base = this.tituloPoblacionSexoSignal();
-    if (!base || base.trim() === '') return `Población por sexo – CP ${cp} (${year})`;
-    if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
+    if (!base || base.trim() === '') {
+      return `Población por sexo – CP ${cp} (${year})`;
+    }
+    if (base.includes('CP ____')) {
+      return base.replace('CP ____', `CP ${cp}`);
+    }
+    if (base.includes('CP ')) {
+      return base;
+    }
     return `${base} – CP ${cp} (${year})`;
   });
 
@@ -205,16 +215,26 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const year = '2017';
     
     if (cuadro && String(cuadro).trim().length > 0) {
-      // ✅ NUEVO: Si el cuadro tiene "CP ____", reemplazar con el nombre real
-      if (String(cuadro).includes('CP ____')) {
-        return String(cuadro).replace('CP ____', `CP ${cp}`);
+      const titulo = String(cuadro);
+      if (titulo.includes('CP ____')) {
+        return titulo.replace('CP ____', `CP ${cp}`);
       }
-      return cuadro;
+      if (!titulo.includes('CP ')) {
+        return `${titulo} – CP ${cp} (${year})`;
+      }
+      return titulo;
     }
 
     const base = this.tituloPoblacionEtarioSignal();
-    if (!base || base.trim() === '') return `Población por grupo etario – CP ${cp} (${year})`;
-    if (base.includes('– CP') || base.includes('CP ') || base.includes('(')) return base;
+    if (!base || base.trim() === '') {
+      return `Población por grupo etario – CP ${cp} (${year})`;
+    }
+    if (base.includes('CP ____')) {
+      return base.replace('CP ____', `CP ${cp}`);
+    }
+    if (base.includes('CP ')) {
+      return base;
+    }
     return `${base} – CP ${cp} (${year})`;
   })
 

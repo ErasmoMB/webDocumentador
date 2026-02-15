@@ -6,6 +6,7 @@ import { ImageUploadComponent, FotoItem } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { SECCION27_TEMPLATES } from './seccion27-constants';
 
 @Component({
@@ -31,6 +32,16 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   // ✅ FormDataSignal local
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
+  readonly centroPobladoSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreCentroPobladoActual() || '____';
+  });
+
+  readonly distritoActualSignal: Signal<string> = computed(() => {
+    this.formDataSignal();
+    return this.obtenerNombreDistritoActual() || '____';
+  });
+
   // ✅ PHOTO_PREFIX Signals dinámicos
   readonly photoPrefixSignalTransporte: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
@@ -48,8 +59,7 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoTransporteCP1${prefijo}` : 'textoTransporteCP1';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const centroPoblado = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoSignal();
     return `En el CP ${centroPoblado}, la infraestructura de transporte es limitada. Dentro de la localidad solo se encuentran trochas carrozables que permiten llegar al centro poblado. Estas vías facilitan el acceso en vehículos, pero son de tierra y no están pavimentadas, lo que dificulta el tránsito en épocas de lluvias o durante el invierno. Los demás puntos poblados dentro del distrito también son accesibles mediante trochas carrozables, aunque en condiciones más precarias que las principales que permiten el acceso al centro poblado.`;
   });
 
@@ -60,7 +70,7 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
     const data = this.formDataSignal();
     const ciudadOrigen = data?.['ciudadOrigenComercio'] || 'Caravelí';
-    const distrito = data?.['distritoSeleccionado'] || 'Cahuacho';
+    const distrito = this.distritoActualSignal();
     const costoMin = data?.[`costoTransporteMinimo${prefijo}`] || data?.['costoTransporteMinimo'] || '25';
     const costoMax = data?.[`costoTransporteMaximo${prefijo}`] || data?.['costoTransporteMaximo'] || '30';
     return `Por otro lado, no existen empresas de transporte formalmente establecidas dentro de la localidad. Sin embargo, existe un servicio de transporte frecuente que es provisto por una combi todos los días lunes. El único destino de esta movilidad es la ciudad de ${ciudadOrigen}, a la cual parte cerca de las 10:30 am desde la capital distrital de ${distrito}. El costo por este servicio varía entre S/. ${costoMin} y S/. ${costoMax} por trayecto, dependiendo de la demanda y las condiciones del viaje. Es así que esta es la única opción que tienen los habitantes para desplazarse a ciudades más grandes.`;
@@ -71,8 +81,7 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoTelecomunicacionesCP1${prefijo}` : 'textoTelecomunicacionesCP1';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const centroPoblado = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoSignal();
     return `En el CP ${centroPoblado}, la infraestructura en telecomunicaciones proporciona acceso a diversos servicios de comunicación que conectan a la población con el resto del país. Aunque existen algunas limitaciones, los servicios disponibles permiten que los habitantes se mantengan informados y comunicados.`;
   });
 
@@ -89,8 +98,7 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     const campoKey = prefijo ? `textoTelecomunicacionesCP3${prefijo}` : 'textoTelecomunicacionesCP3';
     const manual = this.projectFacade.selectField(this.seccionId, null, campoKey)();
     if (manual && manual.trim() !== '' && manual !== '____') return manual;
-    const data = this.formDataSignal();
-    const centroPoblado = data?.['centroPobladoAISI'] || 'Cahuacho';
+    const centroPoblado = this.centroPobladoSignal();
     return `Respecto a la señal de televisión, el centro poblado cuenta con acceso a América TV a través de señal abierta. Adicionalmente, algunas familias en ${centroPoblado} optan por servicios de televisión satelital como DIRECTV, lo que les permite acceder a una mayor variedad de canales y contenido.\n\nEn lo que respecta a la telefonía móvil e internet, la cobertura es proporcionada por las operadoras Movistar, Claro y Entel, lo que facilita la comunicación dentro del área y con el exterior. Para el acceso a internet, la población principalmente se conecta a través de los datos móviles proporcionados por Movistar y Entel, lo que les permite mantenerse conectados para actividades cotidianas y laborales.`;
   });
 
@@ -111,12 +119,6 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const campoKey = prefijo ? `cuadroFuenteTelecomunicaciones${prefijo}` : 'cuadroFuenteTelecomunicaciones';
     return this.projectFacade.selectField(this.seccionId, null, campoKey)() ?? '';
-  });
-
-  readonly centroPobladoSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    const campoKey = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
-    return this.projectFacade.selectField(this.seccionId, null, campoKey)() ?? 'Cahuacho';
   });
 
   constructor(
@@ -157,5 +159,12 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+  }
+
+  getTituloTelecomunicaciones(): string {
+    const centroPoblado = this.centroPobladoSignal() || '____';
+    const distrito = this.distritoActualSignal();
+    const defaultTitle = `${SECCION27_TEMPLATES.labelTablaTelecomunicaciones} – CP ${centroPoblado}`;
+    return normalizeTitleWithPlaceholders(this.cuadroTituloTelecomunicacionesSignal(), defaultTitle, centroPoblado, distrito);
   }
 }

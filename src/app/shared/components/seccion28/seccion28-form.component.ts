@@ -57,6 +57,21 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     return prefijo ? `fotografiaDeporteAISI${prefijo}` : 'fotografiaDeporteAISI';
   });
 
+  readonly datosSeccionSignal: Signal<Record<string, any>> = computed(() => {
+    return this.projectFacade.selectSectionFields(this.seccionId, null)() ?? {};
+  });
+
+  readonly centroPobladoActualSignal: Signal<string> = computed(() => {
+    const data = this.datosSeccionSignal();
+    return this.obtenerNombreCentroPobladoActual() || data?.['centroPobladoAISI'] || this.datos?.centroPobladoAISI || '____';
+  });
+
+  readonly distritoActualSignal: Signal<string> = computed(() => {
+    const data = this.datosSeccionSignal();
+    const ubicacion = this.projectFacade.ubicacionGlobal();
+    return this.obtenerNombreDistritoActual() || data?.['distritoSeleccionado'] || ubicacion?.distrito || '____';
+  });
+
   readonly tituloPuestoSaludSignal: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const campoKey = prefijo ? `puestoSaludTitulo${prefijo}` : 'puestoSaludTitulo';
@@ -199,6 +214,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     });
   }
 
+
   protected override onInitCustom(): void {
     // ✅ AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
@@ -302,7 +318,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoRecreacionCP1 && this.datos.textoRecreacionCP1 !== '____') {
       return this.datos.textoRecreacionCP1;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoRecreacionCP1Default.replace(/____/g, centroPoblado);
   }
 
@@ -324,7 +340,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoDeporteCP1 && this.datos.textoDeporteCP1 !== '____') {
       return this.datos.textoDeporteCP1;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoDeporteCP1Default.replace(/____/g, centroPoblado);
   }
 
@@ -332,7 +348,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoDeporteCP2 && this.datos.textoDeporteCP2 !== '____') {
       return this.datos.textoDeporteCP2;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoDeporteCP2Default.replace(/____/g, centroPoblado);
   }
 
@@ -360,9 +376,8 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoSaludCP && this.datos.textoSaludCP !== '____') {
       return this.datos.textoSaludCP;
     }
-    // ✅ REFACTOR: Usar ubicacionGlobal
-    const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const distrito = this.distritoActualSignal();
+    const centroPoblado = this.centroPobladoActualSignal();
     return SECCION28_TEMPLATES.textoSaludDefault
       .replace('____', distrito)
       .replace('____', centroPoblado);
@@ -372,7 +387,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
     if (this.datos.textoEducacionCP && this.datos.textoEducacionCP !== '____') {
       return this.datos.textoEducacionCP;
     }
-    const centroPoblado = this.datos.centroPobladoAISI || 'Cahuacho';
+    const centroPoblado = this.centroPobladoActualSignal();
     const nombreIE = this.datos.nombreIEMayorEstudiantes || 'IE Virgen de Copacabana';
     const cantidadEstudiantes = this.datos.cantidadEstudiantesIEMayor || '28';
     return SECCION28_TEMPLATES.textoEducacionDefault
