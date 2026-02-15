@@ -2,7 +2,7 @@
 <p class="text-justify" *ngIf="datos?.['textoNecesidadesBasicasInsatisfechas'] && datos?.['textoNecesidadesBasicasInsatisfechas'] !== '____'">{{ datos?.['textoNecesidadesBasicasInsatisfechas'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoNecesidadesBasicasInsatisfechas'] || datos?.['textoNecesidadesBasicasInsatisfechas'] === '____'">____</p>
 
-<app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.13">
+<app-table-wrapper title="Necesidades Básicas Insatisfechas (NBI) según población – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['nbiCCAyrocaTabla'] || []"
     [config]="{
@@ -19,7 +19,7 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> Censos Nacionales 2017: XII de Población, VII de Vivienda y III de Comunidades Indígenas</span></p>
 
-<app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos?.['distritoSeleccionado'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.13">
+<app-table-wrapper title="Tipos de NBI existentes – Distrito {{ datos?.['distritoSeleccionado'] || 'Cahuacho' }} (2017)" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['nbiDistritoCahuachoTabla'] || []"
     [config]="{

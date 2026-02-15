@@ -7,7 +7,7 @@
 
   <app-table-wrapper 
     [title]="obtenerValorConPrefijo('tituloPoblacionSexoAISD') || SECCION6_TEMPLATES.tituloTablaSexoDefault.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" 
-    sectionId="3.1.4.A.1.2">
+    [sectionId]="seccionId">
     <table class="table-container">
       <thead>
         <tr>
@@ -55,7 +55,7 @@
 
   <app-table-wrapper 
     [title]="obtenerValorConPrefijo('tituloPoblacionEtarioAISD') || SECCION6_TEMPLATES.tituloTablaEtarioDefault.replace('{COMUNIDAD}', obtenerNombreComunidadActual())" 
-    sectionId="3.1.4.A.1.2">
+    [sectionId]="seccionId">
     <table class="table-container">
       <thead>
         <tr>

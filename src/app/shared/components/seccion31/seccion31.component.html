@@ -6,7 +6,7 @@
 <p class="text-justify" *ngIf="datos?.['textoIdioma'] && datos?.['textoIdioma'] !== '____'">{{ datos?.['textoIdioma'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoIdioma'] || datos?.['textoIdioma'] === '____'">____</p>
 
-<app-table-wrapper title="Lenguas maternas en población de 3 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.10">
+<app-table-wrapper title="Lenguas maternas en población de 3 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['lenguasMaternasTabla'] || []"
     [config]="{
@@ -27,7 +27,7 @@
 <p class="text-justify" *ngIf="datos?.['textoReligion'] && datos?.['textoReligion'] !== '____'">{{ datos?.['textoReligion'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoReligion'] || datos?.['textoReligion'] === '____'">____</p>
 
-<app-table-wrapper title="Religiones profesadas en población de 12 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" sectionId="3.1.4.B.1.10">
+<app-table-wrapper title="Religiones profesadas en población de 12 años a más – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }} (2017)" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['religionesTabla'] || []"
     [config]="{

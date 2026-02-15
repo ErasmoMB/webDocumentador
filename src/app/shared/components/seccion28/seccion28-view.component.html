@@ -6,7 +6,7 @@
 
 <app-table-wrapper 
   [title]="getTituloPuestoSalud()" 
-  sectionId="3.1.4.B.1.7">
+  [sectionId]="seccionId">
   <app-generic-table
     [data]="puestoSaludCpTablaVista"
     [config]="{
@@ -38,7 +38,7 @@
 
 <app-table-wrapper 
   [title]="getTituloEducacion()" 
-  sectionId="3.1.4.B.1.7">
+  [sectionId]="seccionId">
   <app-generic-table
     [data]="getEducacionCpConPorcentajes()"
     [config]="{

@@ -2,7 +2,7 @@
 <p class="text-justify" *ngIf="datos?.['textoIndiceDesarrolloHumano'] && datos?.['textoIndiceDesarrolloHumano'] !== '____'">{{ datos?.['textoIndiceDesarrolloHumano'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoIndiceDesarrolloHumano'] || datos?.['textoIndiceDesarrolloHumano'] === '____'">____</p>
 
-<app-table-wrapper title="Componentes del IDH - Distrito {{ datos?.['distritoSeleccionado'] || 'Cahuacho' }} (2019)" sectionId="3.1.4.B.1.12">
+<app-table-wrapper title="Componentes del IDH - Distrito {{ datos?.['distritoSeleccionado'] || 'Cahuacho' }} (2019)" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['indiceDesarrolloHumanoTabla'] || []"
     [config]="{

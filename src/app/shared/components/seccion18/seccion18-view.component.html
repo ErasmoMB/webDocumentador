@@ -2,7 +2,7 @@
   <h5>{{ SECCION18_TEMPLATES.sectionTitle }}</h5>
   <div [innerHTML]="getTextoNBIConResaltado()"></div>
 
-  <app-table-wrapper [title]="getTituloNbiCC()" sectionId="3.1.4.A.1.14">
+  <app-table-wrapper [title]="getTituloNbiCC()" [sectionId]="seccionId">
     <app-generic-table
       [data]="getNbiCCAyrocaConPorcentajes()"
       [config]="{
@@ -19,7 +19,7 @@
   </app-table-wrapper>
   <p class="source">{{ SECCION18_TEMPLATES.sourceLabel }} {{ getFuenteNbiCC() }}</p>
 
-  <app-table-wrapper [title]="getTituloNbiDistrito()" sectionId="3.1.4.A.1.14">
+  <app-table-wrapper [title]="getTituloNbiDistrito()" [sectionId]="seccionId">
     <app-generic-table
       [data]="getNbiDistritoCahuachoConPorcentajes()"
       [config]="{

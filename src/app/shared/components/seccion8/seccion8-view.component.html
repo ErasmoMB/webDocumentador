@@ -2,7 +2,7 @@
 <p class="text-justify" [innerHTML]="obtenerTextoActividadesEconomicasConResaltado()"></p>
 <p class="text-justify">{{ obtenerTextoFuentesActividadesEconomicas() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloPEA()" sectionId="3.1.4.A.1.4">
+<app-table-wrapper [title]="obtenerTituloPEA()" [sectionId]="seccionId">
   <table class="table-container">
     <thead>
       <tr>
@@ -47,7 +47,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionGanaderia }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion8GanaderiaCompletoConResaltado()"></div>
 
-<app-table-wrapper [title]="obtenerTituloGanaderia()" sectionId="3.1.4.A.1.4">
+<app-table-wrapper [title]="obtenerTituloGanaderia()" [sectionId]="seccionId">
   <table class="table-container">
     <thead>
       <tr>
@@ -91,7 +91,7 @@
 <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION8_TEMPLATES.subseccionAgricultura }}</strong></p>
 <div class="text-justify" [innerHTML]="obtenerTextoSeccion8AgriculturaCompletoConResaltado()"></div>
 
-<app-table-wrapper [title]="obtenerTituloAgricultura()" sectionId="3.1.4.A.1.4">
+<app-table-wrapper [title]="obtenerTituloAgricultura()" [sectionId]="seccionId">
   <table class="table-container">
     <thead>
       <tr>

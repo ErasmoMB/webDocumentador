@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectStateFacade } from '../../state/project-state.facade';
 import { FormChangeService } from '../state/form-change.service';
-import { GlobalNumberingService } from './global-numbering.service';
 
 /**
  * PhotoNumberingService - Servicio para numeración de fotografías
@@ -87,10 +86,126 @@ export class PhotoNumberingService {
 
   constructor(
     private projectFacade: ProjectStateFacade,
-    private formChange: FormChangeService,
-    private globalNumbering: GlobalNumberingService
+    private formChange: FormChangeService
   ) {
     this.printConfigurationSummary();
+  }
+
+  // --- NUEVO ORDEN GLOBAL DINÁMICO (compatible con AISD/AISI multi-grupo) ---
+  private getDynamicGroupCount(): { aisd: number; aisi: number } {
+    const datos: any = this.projectFacade.obtenerDatos() || {};
+    const comunidades = Array.isArray(datos.comunidadesCampesinas) ? datos.comunidadesCampesinas.length : 0;
+    const distritos = Array.isArray(datos.distritosAISI) ? datos.distritosAISI.length : 0;
+    return {
+      aisd: comunidades > 0 ? comunidades : 1,
+      aisi: distritos > 0 ? distritos : 1
+    };
+  }
+
+  private getOrderedSectionIdsForPhotos(): string[] {
+    const { aisd, aisi } = this.getDynamicGroupCount();
+    const ordered: string[] = ['3.1.1', '3.1.2.A', '3.1.2.B', '3.1.3'];
+
+    for (let g = 1; g <= aisd; g++) {
+      ordered.push(`3.1.4.A.${g}`);
+      for (let s = 1; s <= 16; s++) ordered.push(`3.1.4.A.${g}.${s}`);
+    }
+
+    ordered.push('3.1.4.B');
+
+    for (let g = 1; g <= aisi; g++) {
+      ordered.push(`3.1.4.B.${g}`);
+      for (let s = 1; s <= 16; s++) ordered.push(`3.1.4.B.${g}.${s}`);
+    }
+
+    return ordered;
+  }
+
+  private normalizeToTemplateSectionId(sectionId: string): string {
+    if (!sectionId || typeof sectionId !== 'string') return sectionId;
+    // AISD intro: 3.1.4.A.{g} -> 3.1.4.A.1
+    if (/^3\.1\.4\.A\.\d+$/.test(sectionId)) return '3.1.4.A.1';
+    // AISD subsección: 3.1.4.A.{g}.{s} -> 3.1.4.A.1.{s}
+    const aisdSub = sectionId.match(/^3\.1\.4\.A\.(\d+)\.(\d+)$/);
+    if (aisdSub) return `3.1.4.A.1.${aisdSub[2]}`;
+    // AISI intro: 3.1.4.B.{g} -> 3.1.4.B.1
+    if (/^3\.1\.4\.B\.\d+$/.test(sectionId)) return '3.1.4.B.1';
+    // AISI subsección: 3.1.4.B.{g}.{s} -> 3.1.4.B.1.{s}
+    const aisiSub = sectionId.match(/^3\.1\.4\.B\.(\d+)\.(\d+)$/);
+    if (aisiSub) return `3.1.4.B.1.${aisiSub[2]}`;
+    return sectionId;
+  }
+
+  private stripGroupSuffixFromPrefix(prefix: string, groupSuffix: string): string {
+    if (!prefix || !groupSuffix) return prefix;
+    return prefix.endsWith(groupSuffix) ? prefix.slice(0, -groupSuffix.length) : prefix;
+  }
+
+  private getConfiguredPrefixesForSection(sectionId: string): string[] {
+    const templateId = this.normalizeToTemplateSectionId(sectionId);
+    const cfg = this.getSectionConfig(templateId);
+    return (cfg?.prefixes || []).filter(Boolean);
+  }
+
+  private discoverPrefixesFromData(sectionId: string, groupSuffix: string): string[] {
+    const datos = this.projectFacade.obtenerDatos() || {};
+    const discovered = new Set<string>();
+
+    // Detectar claves: fotografiaX{n}Imagen{_A?/_B?} o fotografiaXImagen{_A?/_B?}
+    // Limitamos al groupSuffix actual cuando aplique.
+    const suffix = groupSuffix || '';
+    const suffixPart = suffix ? `${suffix.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$` : '$';
+    const re = new RegExp(`^(fotografia[\\w]+?)(?:\\d+)?Imagen${suffixPart}`);
+    for (const k of Object.keys(datos)) {
+      const m = k.match(re);
+      if (m && m[1]) discovered.add(m[1]);
+    }
+
+    return Array.from(discovered).sort();
+  }
+
+  private isValidImage(imagen: any): boolean {
+    if (!imagen) return false;
+    if (typeof imagen === 'string') {
+      return imagen !== 'null' && imagen.trim() !== '' && (imagen.startsWith('data:image') || imagen.startsWith('http') || imagen.length > 100);
+    }
+    if (imagen instanceof File) {
+      return imagen.type.startsWith('image/');
+    }
+    return false;
+  }
+
+  private countPhotosForPrefix(prefix: string, groupSuffix: string, maxPhotos: number = 10): number {
+    const datos = this.projectFacade.obtenerDatos() || {};
+
+    // Igual que ImageStorageService: si el prefix ya incluye el groupSuffix, no se añade suffix.
+    const effectiveSuffix = groupSuffix && prefix.includes(groupSuffix) ? '' : groupSuffix;
+
+    let count = 0;
+    let numberedFound = false;
+    for (let i = 1; i <= maxPhotos; i++) {
+      const imagenKey = effectiveSuffix ? `${prefix}${i}Imagen${effectiveSuffix}` : `${prefix}${i}Imagen`;
+      if (this.isValidImage(datos[imagenKey])) {
+        count++;
+        numberedFound = true;
+      }
+    }
+
+    if (!numberedFound) {
+      const baseKey = effectiveSuffix ? `${prefix}Imagen${effectiveSuffix}` : `${prefix}Imagen`;
+      if (this.isValidImage(datos[baseKey])) count++;
+    }
+
+    return count;
+  }
+
+  private countPhotosInSection(sectionId: string, groupSuffix: string): number {
+    // Para offsets globales, contamos solo los prefijos configurados de la sección.
+    // Evita contar fotos de otras secciones que compartan el mismo sufijo de grupo.
+    const configured = this.getConfiguredPrefixesForSection(sectionId);
+    let total = 0;
+    for (const p of configured) total += this.countPhotosForPrefix(p, groupSuffix);
+    return total;
   }
 
   private printConfigurationSummary() {
@@ -138,178 +253,54 @@ export class PhotoNumberingService {
     return matches[0];
   }
 
-  private isValidImage(imagen: any): boolean {
-    if (!imagen) return false;
-    if (typeof imagen === 'string') {
-      return imagen !== 'null' && imagen.trim() !== '' && (imagen.startsWith('data:image') || imagen.length > 100);
-    }
-    if (imagen instanceof File) {
-      return imagen.type.startsWith('image/');
-    }
-    return false;
-  }
-
-  private countPhotosInSectionByPrefixes(prefixes: string[], hasGroup: boolean, specificGroupSuffix: string = ''): number {
-    const datos = this.projectFacade.obtenerDatos();
-    let count = 0;
-
-    // Include base (no numbered suffix) when searching group suffixes.
-    const groupSuffixes = specificGroupSuffix ? [specificGroupSuffix] : 
-                          hasGroup ? ['', '_A1', '_A2', '_A3', '_A4', '_A5', '_A6', '_A7', '_A8', '_A9', '_A10', '_B1', '_B2', '_B3', '_B4', '_B5', '_B6', '_B7', '_B8', '_B9', '_B10'] : [''];
-
-    for (const prefix of prefixes) {
-      for (const groupSuffix of groupSuffixes) {
-        // First, check numbered slots (preferred). If any numbered slot exists, count them.
-        let numberedFound = false;
-        for (let i = 1; i <= 10; i++) {
-          const imagenKey = `${prefix}${i}Imagen${groupSuffix}`;
-          const imagen = datos[imagenKey];
-          if (this.isValidImage(imagen)) {
-            count++;
-            numberedFound = true;
-          }
-        }
-
-        // If no numbered images, check base key (e.g., fotografiaXImagen or fotografiaXImagen_B1)
-        if (!numberedFound) {
-          const baseKey = `${prefix}Imagen${groupSuffix}`;
-          const baseImg = datos[baseKey];
-          if (this.isValidImage(baseImg)) {
-            count++;
-          }
-        }
-      }
-    }
-
-    return count;
-  }
-
-  getGlobalPhotoNumber(
+  /**
+   * ✅ Numeración global REAL para fotos
+   * - Secciones 1–3: fijas
+   * - Desde 4: dinámicas por grupo AISD/AISI (3.1.4.A.{g} / 3.1.4.B.{g})
+   * - Fotos por sección: variable (se cuenta dinámicamente)
+   *
+   * Parámetros:
+   * - photoIndexInSection: 1-basado dentro del prefijo/slot (coincide con ImageStorageService)
+   */
+  public getGlobalPhotoNumber(
     sectionId: string,
     photoIndexInSection: number,
     prefix: string,
     groupPrefix: string = ''
   ): string {
-    // ✅ NUEVO: Delegar a GlobalNumberingService para secciones AISI dinámicas (B.2, B.3, etc.)
-    if (sectionId.includes('.B.')) {
-      const prefijoGrupo = groupPrefix || this.extractGroupSuffix(sectionId);
-      console.log(`[PHOTO-NUM] Delegando a GlobalNumberingService: sectionId=${sectionId}, prefix=${prefix}, groupPrefix=${prefijoGrupo}`);
-      return this.globalNumbering.getGlobalPhotoNumber(sectionId, prefijoGrupo, photoIndexInSection);
+    if (!sectionId) return '';
+    if (!photoIndexInSection || photoIndexInSection < 1) return '';
+
+    const orderedSections = this.getOrderedSectionIdsForPhotos();
+    const currentIdx = orderedSections.indexOf(sectionId);
+    if (currentIdx === -1) return '';
+
+    const groupSuffixCurrent = groupPrefix || this.getGroupPrefix(sectionId);
+    const basePrefixCurrent = this.stripGroupSuffixFromPrefix(prefix, groupSuffixCurrent);
+
+    // 1) Sumar todas las fotos de secciones anteriores
+    let totalPrev = 0;
+    for (let i = 0; i < currentIdx; i++) {
+      const prevSectionId = orderedSections[i];
+      const prevGroupSuffix = this.getGroupPrefix(prevSectionId);
+      totalPrev += this.countPhotosInSection(prevSectionId, prevGroupSuffix);
     }
-    
-    // ✅ Lógica original para secciones no-AISI (3.1.1, 3.1.2, 3.1.3, AISD)
-    const currentSection = this.getSectionConfig(sectionId);
-    
-    if (!currentSection) {
-      return '';
-    }
 
-    let globalIndex = 0;
-    const processedSections = new Set<string>();
-    const specificGroupSuffix = groupPrefix || this.extractGroupSuffix(sectionId);
+    // 2) Dentro de la sección actual: sumar prefijos anteriores según configuración
+    const configuredCurrent = this.getConfiguredPrefixesForSection(sectionId);
+    const orderedPrefixes = basePrefixCurrent && !configuredCurrent.includes(basePrefixCurrent)
+      ? [...configuredCurrent, basePrefixCurrent]
+      : configuredCurrent;
 
-    const sortedSections = [...this.allSections].sort((a, b) => {
-      if (a.order !== b.order) {
-        return a.order - b.order;
-      }
-      return a.id.localeCompare(b.id);
-    });
-
-    for (const section of sortedSections) {
-      if (section.order < currentSection.order && !processedSections.has(section.id)) {
-        const sectionGroupSuffix = section.hasGroup ? this.extractGroupSuffix(section.id) : '';
-        const count = this.countPhotosInSectionByPrefixes(section.prefixes, section.hasGroup, sectionGroupSuffix);
-        globalIndex += count;
-        processedSections.add(section.id);
-      } 
-      else if (section.order === currentSection.order && section.id !== currentSection.id) {
-        const isSisterSection = this.isSisterSection(section.id, currentSection.id);
-        if (isSisterSection) {
-          const sectionGroupSuffix = this.extractGroupSuffix(section.id);
-          const count = this.countPhotosInSectionByPrefixes(section.prefixes, section.hasGroup, sectionGroupSuffix);
-          globalIndex += count;
-        }
-      }
-      else if (section.id === currentSection.id) {
-        if (prefix) {
-          // If the prefix is explicitly listed in section config, respect its position.
-          if (currentSection.prefixes.length > 1 && currentSection.prefixes.includes(prefix)) {
-            const currentPrefixIndex = currentSection.prefixes.indexOf(prefix);
-            if (currentPrefixIndex > 0) {
-              const previousPrefixes = currentSection.prefixes.slice(0, currentPrefixIndex);
-              for (const prevPrefix of previousPrefixes) {
-                const count = this.countPhotosInSectionByPrefixes([prevPrefix], currentSection.hasGroup, specificGroupSuffix);
-                globalIndex += count;
-              }
-            }
-          } else {
-            // Prefix is not in the config list (likely a subgroup like 'fotografiaMercado').
-            // Discover all fotografia* prefixes that belong to this section (using specificGroupSuffix).
-            const datos = this.projectFacade.obtenerDatos();
-            const discovered = new Set<string>();
-            const suffix = `Imagen${specificGroupSuffix}`;
-
-            Object.keys(datos).forEach(k => {
-              if (!k.endsWith(suffix)) return;
-
-              // Prefer configured prefixes (deterministic)
-              for (const p of currentSection.prefixes) {
-                if (k.startsWith(p)) { discovered.add(p); return; }
-              }
-
-              // Fallback: strip trailing digits immediately before 'Imagen' (slot numbers)
-              const fallbackMatch = k.match(/^(fotografia[A-Za-z0-9_]*?)(\d+)Imagen/);
-              if (fallbackMatch && fallbackMatch[1]) {
-                discovered.add(fallbackMatch[1]);
-                return;
-              }
-
-              // Last resort: capture base 'fotografiaXXX' before 'Imagen'
-              const baseMatch = k.match(/^(fotografia[A-Za-z0-9_]*?)Imagen/);
-              if (baseMatch && baseMatch[1]) discovered.add(baseMatch[1]);
-            });
-
-            // Include known prefixes from config as well for deterministic ordering
-            currentSection.prefixes.forEach(p => discovered.add(p));
-
-            // Sort deterministically (alphabetical) and accumulate counts until target prefix
-            const ordered = Array.from(discovered).sort();
-
-            for (const p of ordered) {
-              if (p === prefix) break;
-              const c = this.countPhotosInSectionByPrefixes([p], currentSection.hasGroup, specificGroupSuffix);
-              globalIndex += c;
-            }
-          }
-        }
-
-        globalIndex += photoIndexInSection + 1;
-        break;
+    const currentPrefixIdx = basePrefixCurrent ? orderedPrefixes.indexOf(basePrefixCurrent) : -1;
+    if (currentPrefixIdx > 0) {
+      for (let p = 0; p < currentPrefixIdx; p++) {
+        totalPrev += this.countPhotosForPrefix(orderedPrefixes[p], groupSuffixCurrent);
       }
     }
 
+    const globalIndex = totalPrev + photoIndexInSection;
     return `3.${globalIndex}`;
-  }
-
-  private isSisterSection(sectionId1: string, sectionId2: string): boolean {
-    const parts1 = sectionId1.split('.');
-    const parts2 = sectionId2.split('.');
-    
-    if (parts1.length !== parts2.length) {
-      return false;
-    }
-    
-    for (let i = 0; i < parts1.length - 1; i++) {
-      if (parts1[i] !== parts2[i]) {
-        return false;
-      }
-    }
-    
-    return parts1[parts1.length - 1] !== parts2[parts2.length - 1];
-  }
-
-  private extractGroupSuffix(sectionId: string): string {
-    return this.getGroupPrefix(sectionId);
   }
 
   getGroupPrefix(sectionId: string): string {

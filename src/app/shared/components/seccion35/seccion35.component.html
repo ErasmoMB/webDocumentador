@@ -2,7 +2,7 @@
 <p class="text-justify" *ngIf="datos?.['textoOrganizacionSocial'] && datos?.['textoOrganizacionSocial'] !== '____'">{{ datos?.['textoOrganizacionSocial'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoOrganizacionSocial'] || datos?.['textoOrganizacionSocial'] === '____'">____</p>
 
-<app-table-wrapper title="Autoridades políticas y sociales – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" sectionId="3.1.4.B.1.14">
+<app-table-wrapper title="Autoridades políticas y sociales – CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['autoridades'] || []"
     [config]="{

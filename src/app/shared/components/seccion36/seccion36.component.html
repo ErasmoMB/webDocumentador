@@ -2,7 +2,7 @@
 <p class="text-justify" *ngIf="datos?.['textoFestividades'] && datos?.['textoFestividades'] !== '____'">{{ datos?.['textoFestividades'] }}</p>
 <p class="text-justify" *ngIf="!datos?.['textoFestividades'] || datos?.['textoFestividades'] === '____'">Las festividades desempeñan un papel central en la vida cultural y social de una comunidad, reflejando tradiciones profundamente arraigadas que fortalecen los lazos comunitarios. En el CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}, estas celebraciones son momentos de gran importancia que unen a la población en torno a sus costumbres y creencias.</p>
 
-<app-table-wrapper title="Festividades principales - CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" sectionId="3.1.4.B.1.15">
+<app-table-wrapper title="Festividades principales - CP {{ datos?.['centroPobladoAISI'] || 'Cahuacho' }}" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['festividades'] || []"
     [config]="{
@@ -18,7 +18,7 @@
 </app-table-wrapper>
 <p class="source">FUENTE:<span [appDataSource]="'manual'"> GEADES (2024)</span></p>
 
-<app-table-wrapper title="Mapa de actores del Proyecto de Exploración Minera {{ datos?.['projectName'] || 'Paka' }}" sectionId="3.1.4.B.1.16">
+<app-table-wrapper title="Mapa de actores del Proyecto de Exploración Minera {{ datos?.['projectName'] || 'Paka' }}" [sectionId]="seccionId">
   <app-generic-table
     [data]="datos?.['mapaActores'] || []"
     [config]="{

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectStateFacade } from '../../state/project-state.facade';
+import { PhotoNumberingService } from './photo-numbering.service';
 
 /**
  * GlobalNumberingService - Servicio para numeración global de cuadros y fotografías
@@ -15,63 +16,53 @@ import { ProjectStateFacade } from '../../state/project-state.facade';
   providedIn: 'root'
 })
 export class GlobalNumberingService {
-  
-  // Tablas por tipo de sección
-  private readonly TABLAS_POR_SECCION: Record<string, number> = {
-    // AISD
-    '3.1.4.A': 1,
-    '3.1.4.A.1': 1,
-    '3.1.4.A.1.1': 1,
-    '3.1.4.A.1.2': 2,
-    '3.1.4.A.1.3': 3,
-    '3.1.4.A.1.4': 2,
-    '3.1.4.A.1.5': 4,
-    '3.1.4.A.1.6': 1,
-    '3.1.4.A.1.7': 6,
-    '3.1.4.A.1.8': 3,
-    '3.1.4.A.1.9': 2,
-    '3.1.4.A.1.10': 2,
-    '3.1.4.A.1.11': 1,
-    '3.1.4.A.1.12': 2,
-    '3.1.4.A.1.13': 1,
-    '3.1.4.A.1.14': 1,
-    '3.1.4.A.1.15': 2,
-    
-    // AISI B.1
-    '3.1.4.B.1': 1,
-    '3.1.4.B.1.1': 2,
-    '3.1.4.B.1.2': 3,
-    '3.1.4.B.1.3': 1,
-    '3.1.4.B.1.4': 3,
-    '3.1.4.B.1.5': 2,
-    '3.1.4.B.1.6': 1,
-    '3.1.4.B.1.7': 1,
-    '3.1.4.B.1.8': 1,
-    '3.1.4.B.1.9': 6,
-    
-    // AISI B.2
-    '3.1.4.B.2': 1,
-    '3.1.4.B.2.1': 2,
-    '3.1.4.B.2.2': 3,
-    '3.1.4.B.2.3': 1,
-    '3.1.4.B.2.4': 3,
-    '3.1.4.B.2.5': 2,
-    '3.1.4.B.2.6': 1,
-    '3.1.4.B.2.7': 1,
-    '3.1.4.B.2.8': 1,
-    '3.1.4.B.2.9': 6,
-    
-    // AISI B.3
-    '3.1.4.B.3': 1,
-    '3.1.4.B.3.1': 2,
-    '3.1.4.B.3.2': 3,
-    '3.1.4.B.3.3': 1,
-    '3.1.4.B.3.4': 3,
-    '3.1.4.B.3.5': 2,
-    '3.1.4.B.3.6': 1,
-    '3.1.4.B.3.7': 1,
-    '3.1.4.B.3.8': 1,
-    '3.1.4.B.3.9': 6,
+  // --- Tablas: configuración por subsección (los conteos son FIJOS) ---
+  // Nota: Sección 4 (intro AISD) tiene 2 cuadros (Ubicación + Población/Viviendas).
+  private readonly TABLAS_FIJAS_BASE: Record<string, number> = {
+    '3.1.1': 0,
+    '3.1.2': 0,
+    '3.1.2.A': 0,
+    '3.1.2.B': 0,
+    '3.1.3': 1,
+    '3.1.4.B': 0
+  };
+
+  private readonly TABLAS_AISD_SUBSECCION: Record<number, number> = {
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 3,
+    5: 2,
+    6: 4,
+    7: 1,
+    8: 6,
+    9: 3,
+    10: 2,
+    11: 2,
+    12: 2,
+    13: 0,
+    14: 1,
+    15: 2,
+    16: 1
+  };
+
+  private readonly TABLAS_AISI_SUBSECCION: Record<number, number> = {
+    1: 2,
+    2: 3,
+    3: 0,
+    4: 3,
+    5: 4,
+    6: 1,
+    7: 2,
+    8: 3,
+    9: 2,
+    10: 2,
+    11: 0,
+    12: 1,
+    13: 2,
+    14: 1,
+    15: 1,
+    16: 1
   };
   
   // Fotos base por sección (para legacy)
@@ -83,7 +74,8 @@ export class GlobalNumberingService {
   // };
   
   constructor(
-    private projectFacade: ProjectStateFacade
+    private projectFacade: ProjectStateFacade,
+    private photoNumberingService: PhotoNumberingService
   ) {}
 
   isAISISection(sectionId: string): boolean {
@@ -129,202 +121,89 @@ export class GlobalNumberingService {
     return 1;
   }
   
-  calculateTableOffset(groupType: string, groupNumber: number): number {
-    const TABLAS_POR_GRUPO_AISD = 36;
-    const TABLAS_POR_GRUPO_AISI = 22;
-    
-    if (groupType === 'AISD') {
-      let offset = 0;
-      const groups = this.getAISDGroups();
-      for (let i = 0; i < groups.length; i++) {
-        if (i + 1 >= groupNumber) break;
-        offset += TABLAS_POR_GRUPO_AISD;
+  private getDynamicGroupCount(): { aisd: number; aisi: number } {
+    const datos: any = this.projectFacade.obtenerDatos() || {};
+    const comunidades = Array.isArray(datos.comunidadesCampesinas) ? datos.comunidadesCampesinas.length : 0;
+    const distritos = Array.isArray(datos.distritosAISI) ? datos.distritosAISI.length : 0;
+    return {
+      aisd: comunidades > 0 ? comunidades : 1,
+      aisi: distritos > 0 ? distritos : 1
+    };
+  }
+
+  private getOrderedSectionIdsForTables(): string[] {
+    const { aisd, aisi } = this.getDynamicGroupCount();
+    const ordered: string[] = ['3.1.1', '3.1.2.A', '3.1.2.B', '3.1.3'];
+
+    for (let g = 1; g <= aisd; g++) {
+      ordered.push(`3.1.4.A.${g}`);
+      for (let s = 1; s <= 16; s++) {
+        ordered.push(`3.1.4.A.${g}.${s}`);
       }
-      return offset;
     }
-    
-    if (groupType === 'AISI') {
-      const aisdGroups = this.getAISDGroups();
-      const tablasAISD = aisdGroups.length * TABLAS_POR_GRUPO_AISD;
-      
-      let offset = tablasAISD;
-      const groups = this.getAISIGroups();
-      for (let i = 0; i < groups.length; i++) {
-        if (i + 1 >= groupNumber) break;
-        offset += TABLAS_POR_GRUPO_AISI;
+
+    ordered.push('3.1.4.B');
+
+    for (let g = 1; g <= aisi; g++) {
+      ordered.push(`3.1.4.B.${g}`);
+      for (let s = 1; s <= 16; s++) {
+        ordered.push(`3.1.4.B.${g}.${s}`);
       }
-      
-      return offset;
     }
-    
+
+    return ordered;
+  }
+
+  private getTableCountForSection(sectionId: string): number {
+    if (this.TABLAS_FIJAS_BASE[sectionId] !== undefined) return this.TABLAS_FIJAS_BASE[sectionId];
+
+    const aisdIntro = sectionId.match(/^3\.1\.4\.A\.(\d+)$/);
+    if (aisdIntro) return 2;
+
+    const aisdSub = sectionId.match(/^3\.1\.4\.A\.(\d+)\.(\d+)$/);
+    if (aisdSub) {
+      const s = parseInt(aisdSub[2], 10);
+      return this.TABLAS_AISD_SUBSECCION[s] ?? 0;
+    }
+
+    const aisiIntro = sectionId.match(/^3\.1\.4\.B\.(\d+)$/);
+    if (aisiIntro) return 1;
+
+    const aisiSub = sectionId.match(/^3\.1\.4\.B\.(\d+)\.(\d+)$/);
+    if (aisiSub) {
+      const s = parseInt(aisiSub[2], 10);
+      return this.TABLAS_AISI_SUBSECCION[s] ?? 0;
+    }
+
     return 0;
   }
-  
+
+  /**
+   * ✅ Numeración global REAL para tablas
+   * - Secciones 1–3: fijas
+   * - Desde sección 4: dinámicas por grupo AISD/AISI
+   * - Conteo de tablas por sección: fijo (por subsección)
+   */
   getGlobalTableNumber(sectionId: string, localTableIndex: number): string {
-    const groupNumber = this.extractGroupNumber(sectionId);
-    const isAISI = this.isAISISection(sectionId);
-    const isAISD = this.isAISDSection(sectionId);
-    const groupType = isAISI ? 'AISI' : (isAISD ? 'AISD' : null);
-    
-    const groupOffset = this.calculateTableOffset(groupType || 'AISI', groupNumber);
-    const base = 2;
-    const globalNumber = base + groupOffset + localTableIndex;
-    return `3.${globalNumber}`;
-  }
-  
-  /**
-   * Cuenta las imágenes existentes en una sección específica
-   */
-  private countImagesInSection(sectionId: string, prefix: string): number {
-    const datos = this.projectFacade.obtenerDatos();
-    let count = 0;
-    for (let i = 1; i <= 10; i++) {
-      const key = `${prefix}${i}Imagen`;
-      const img = datos[key];
-      const hasImage = img && img !== 'null' && img.trim() !== '' && (img.startsWith('data:image') || img.length > 100);
-      if (hasImage) {
-        count++;
-      }
+    const ordered = this.getOrderedSectionIdsForTables();
+    const idx = ordered.indexOf(sectionId);
+    if (idx === -1) return '';
+
+    let totalPrev = 0;
+    for (let i = 0; i < idx; i++) {
+      totalPrev += this.getTableCountForSection(ordered[i]);
     }
-    return count;
+
+    const globalIndex = totalPrev + localTableIndex + 1;
+    return `3.${globalIndex}`;
   }
-  
+
   /**
-   * Genera el prefijo de fotos para una sección
-   * 
-   * Sistema unificado:
-   * - Secciones fijas: fotografia1, fotografia2, fotografia3
-   * - AISD: fotografiaA
-   * - AISI: fotografiaB1, fotografiaB2, fotografiaB3
+   * ✅ Numeración global para fotos
+   * API usada en componentes: (sectionId, photoPrefix, photoIndex0Based)
    */
-  getPhotoPrefix(sectionId: string, prefijoGrupo: string): string {
-    if (prefijoGrupo) {
-      // AISI: fotografiaB1, fotografiaB2, fotografiaB3
-      // Elimina el underscore y usa el patrón fotografia{prefijo}
-      const cleanPrefix = prefijoGrupo.replace('_', '');
-      return `fotografia${cleanPrefix}`;
-    }
-    if (sectionId.startsWith('3.1.1')) return 'fotografia1';
-    if (sectionId.startsWith('3.1.2')) return 'fotografia2';
-    if (sectionId.startsWith('3.1.3')) return 'fotografia3';
-    if (sectionId.startsWith('3.1.4.A')) return 'fotografiaA';
-    return 'fotografia';
+  getGlobalPhotoNumber(sectionId: string, photoPrefix: string, photoIndex: number): string {
+    return this.photoNumberingService.getGlobalPhotoNumber(sectionId, photoIndex + 1, photoPrefix);
   }
-  
-  /**
-   * Calcula el offset total de imágenes en grupos/secciones anteriores
-   * 
-   * LÓGICA:
-   * 1. Secciones fijas (1-3): contar fotos en 3.1.1, 3.1.2, 3.1.3
-   * 2. Grupos AISD: contar fotos en sección base de cada grupo A.1, A.2, etc.
-   * 3. Grupos AISI: contar fotos en sección base de B.1, B.2 (hasta el grupo actual - 1)
-   * 4. Secciones del grupo actual: contar fotos en subsecciones anteriores
-   */
-  private calculatePhotoOffset(sectionId: string, prefijoGrupo: string): number {
-    let totalImages = 0;
-    const currentGroupNum = this.extractGroupNumber(sectionId);
-    const currentSectionNum = this.extractSectionNumber(sectionId);
-    
-    // 1. Secciones fijas (1-3) - fotos unificadas con prefijos fotografia1, 2, 3
-    totalImages += this.countImagesInSection('3.1.1', 'fotografia1');
-    totalImages += this.countImagesInSection('3.1.2', 'fotografia2');
-    totalImages += this.countImagesInSection('3.1.3', 'fotografia3');
-    
-    // 2. Grupos AISD - sección base (3.1.4.A) con prefijo fotografiaA
-    const aisdGroups = this.getAISDGroups();
-    for (const group of aisdGroups) {
-      const groupNum = this.extractGroupNumber(group.id);
-      // Para AISD, la sección base usa prefijo fotografiaA
-      const prefix = 'fotografiaA';
-      const sectionBaseId = '3.1.4.A'; // Sección base de AISD
-      const count = this.countImagesInSection(sectionBaseId, prefix);
-      totalImages += count;
-    }
-    
-    // 3. Grupos AISI - solo sección base de cada grupo (B.1, B.2, etc.)
-    const aisiGroups = this.getAISIGroups();
-    
-    for (const group of aisiGroups) {
-      const groupNum = this.extractGroupNumber(group.id);
-      const groupPrefix = `_B${groupNum}`;
-      
-      // Si es un grupo anterior al actual, contar fotos en sección base
-      if (groupNum < currentGroupNum) {
-        const sectionBaseId = `3.1.4.B.${groupNum}`;
-        const prefix = this.getPhotoPrefix(sectionBaseId, groupPrefix);
-        const count = this.countImagesInSection(sectionBaseId, prefix);
-        totalImages += count;
-      }
-      
-      // Si es el grupo actual, contar fotos en subsecciones anteriores
-      if (groupNum === currentGroupNum && currentSectionNum > 1) {
-        for (let secNum = 1; secNum < currentSectionNum; secNum++) {
-          const subSectionId = `3.1.4.B.${groupNum}.${secNum}`;
-          const prefix = this.getPhotoPrefix(subSectionId, prefijoGrupo);
-          const count = this.countImagesInSection(subSectionId, prefix);
-          totalImages += count;
-        }
-        break;
-      }
-    }
-    
-    return totalImages;
-  }
-  
-  /**
-   * Extrae el número de subsección del sectionId
-   * 
-   * Funciona para:
-   * - 3.1.4.B.1 → 1 (grupo B.1, sección base)
-   * - 3.1.4.B.1.1 → 1 (subsección 1 del grupo B.1)
-   * - 3.1.4.B.1.2 → 2 (subsección 2 del grupo B.1)
-   * - 3.1.4.B.2 → 1 (grupo B.2, sección base)
-   * - 3.1.4.B.2.1 → 1 (subsección 1 del grupo B.2)
-   */
-  private extractSectionNumber(sectionId: string): number {
-    // Extraer el número de grupo: B.1, B.2, B.3
-    const groupMatch = sectionId.match(/\.B\.(\d+)/);
-    if (!groupMatch) return 1;
-    
-    const groupNum = groupMatch[1];
-    // Buscar la subsección después del grupo: .1, .2, etc.
-    const sectionMatch = sectionId.match(new RegExp(`\\.B\\.${groupNum}\\.(\\d+)`));
-    if (sectionMatch) {
-      return parseInt(sectionMatch[1], 10);
-    }
-    
-    // Si no hay subsección, es la sección base del grupo (ej: 3.1.4.B.1 o 3.1.4.B.2)
-    return 1;
-  }
-  
-  /**
-   * Obtiene el número global de una fotografía
-   * 
-   * FÓRMULA: numero = fotosAnteriores + photoIndex + 1
-   * 
-   * DONDE:
-   * - fotosAnteriores = fotos de secciones 1-3 + AISD + AISI anteriores
-   * - photoIndex = posición de la foto dentro del grupo (0, 1, 2...)
-   * 
-   * @param sectionId - ID de la sección
-   * @param prefijoGrupo - Prefijo del grupo (ej: '_B1')
-   * @param photoIndex - Posición de la foto dentro del grupo (0, 1, 2...)
-   */
-  getGlobalPhotoNumber(sectionId: string, prefijoGrupo: string, photoIndex: number): string {
-    const fotosAnteriores = this.calculatePhotoOffset(sectionId, prefijoGrupo);
-    
-    // Generar clave correcta basada en el prefijo unificado
-    // Si prefijoGrupo es '_B1', el prefijo de foto es 'fotografiaB1'
-    const fotoPrefix = this.getPhotoPrefix(sectionId, prefijoGrupo);
-    const key = `${fotoPrefix}${photoIndex + 1}Imagen`;
-    
-    const datos = this.projectFacade.obtenerDatos();
-    const imagen = datos[key];
-    const hayImagen = imagen && imagen !== 'null' && imagen.trim() !== '' && (imagen.startsWith('data:image') || imagen.length > 100);
-    
-    // La fórmula: numero = fotosAnteriores + photoIndex + 1
-    const globalNumber = fotosAnteriores + photoIndex + 1;
-    
-    return `3.${globalNumber}`;
-  }
+  // Nota: La numeración de fotos ya NO se calcula aquí; se delega a PhotoNumberingService.
 }
