@@ -134,7 +134,8 @@
     
     // Mobile: Touch-friendly
     @include mobile-only {
-      padding: var(--spacing-md);
+      /* Más compacto: reduce padding para ver más contenido */
+      padding: var(--spacing-sm) var(--spacing-xs);
       font-size: 16px; // Evita zoom en iOS (mínimo 16px)
       min-height: 44px; // Touch target mínimo
       width: 100%;
@@ -167,6 +168,20 @@
     
     @include mobile-only {
       min-height: 80px;
+    }
+  }
+
+  // Mobile: permitir que los encabezados partan línea
+  // (evita columnas demasiado angostas y mejora la legibilidad del input)
+  @include mobile-only {
+    th {
+      white-space: normal;
+    }
+
+    th, td {
+      /* Más compacto: menos padding en celdas */
+      padding: var(--spacing-xs);
+      max-width: none;
     }
   }
   
