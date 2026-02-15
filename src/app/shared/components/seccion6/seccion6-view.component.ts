@@ -73,12 +73,12 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+    const prefix = this.PHOTO_PREFIX;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo`;
-      const fuenteKey = `${prefix}${i}Fuente`;
-      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo${prefijo}`;
+      const fuenteKey = `${prefix}${i}Fuente${prefijo}`;
+      const imagenKey = `${prefix}${i}Imagen${prefijo}`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -284,17 +284,16 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   override cargarFotografias(): void {
     const formData = this.vistDataSignal();
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
     
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${prefix}${i}Imagen`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
       const imagen = formData[imagenKey];
       
       if (imagen) {
-        const tituloKey = `${prefix}${i}Titulo`;
-        const fuenteKey = `${prefix}${i}Fuente`;
-        const numeroKey = `${prefix}${i}Numero`;
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
         
         fotos.push({
           imagen: imagen,

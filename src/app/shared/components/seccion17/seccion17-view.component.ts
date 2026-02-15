@@ -48,18 +48,16 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
 
     // Signal de prefijo de foto para aislamiento AISD
     readonly photoPrefixSignal: Signal<string> = computed(() => {
-        const prefijo = this.obtenerPrefijoGrupo();
-        return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+        return this.PHOTO_PREFIX;
     });
 
     readonly photoFieldsHash: Signal<string> = computed(() => {
         let hash = '';
         const prefijo = this.obtenerPrefijoGrupo();
-        const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
         for (let i = 1; i <= 10; i++) {
-            const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-            const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-            const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+            const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+            const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+            const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
             hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
         }
         return hash;
@@ -118,7 +116,7 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
     obtenerTextoIDHCompleto(): string {
         const fieldId = this.getFieldIdTextoIDH();
         const data = this.allSectionData();
-        const textoPersonalizado = data[fieldId] || data['textoIndiceDesarrolloHumano'];
+        const textoPersonalizado = data[fieldId];
 
         // ✅ REFACTOR: Usar ubicacionGlobal
         const distrito = this.ubicacionGlobal().distrito || 'Cahuacho';
@@ -212,7 +210,7 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         
         // ✅ PRIMERO: Intentar leer el título personalizado guardado en el formulario
         const tituloFieldId = prefijo ? `tituloIDH${prefijo}` : 'tituloIDH';
-        const tituloPersonalizado = data[tituloFieldId] || data['tituloIDH'];
+        const tituloPersonalizado = data[tituloFieldId];
         
         // Si hay un título personalizado, retornarlo
         if (tituloPersonalizado && tituloPersonalizado.trim() !== '') {
@@ -233,7 +231,7 @@ export class Seccion17ViewComponent extends BaseSectionComponent implements OnDe
         const data = this.allSectionData();
         const prefijo = this.obtenerPrefijoGrupo();
         const fuenteField = prefijo ? `fuenteIDH${prefijo}` : 'fuenteIDH';
-        const fuente = data[fuenteField] || data['fuenteIDH'] || '';
+        const fuente = data[fuenteField] || '';
         return fuente && fuente.trim() !== '' ? fuente : SECCION17_TEMPLATES.fuenteIDHDefault;
     }
 

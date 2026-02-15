@@ -56,12 +56,12 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+    const prefix = this.PHOTO_PREFIX;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -96,7 +96,7 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
-      { prefix: `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`, label: 'PEA' }
+      { prefix: this.PHOTO_PREFIX, label: 'PEA' }
     ];
 
     effect(() => {

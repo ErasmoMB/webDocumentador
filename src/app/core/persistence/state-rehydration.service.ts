@@ -26,6 +26,9 @@ import {
   DeserializationResult 
 } from './state-serializer';
 import { STORAGE_KEYS } from './persistence.contract';
+import { applySection4PrefixMigration } from './migrations/section4-prefix.migration';
+import { applyGroupedPrefixMigration } from './migrations/grouped-prefix.migration';
+import { applyPhotoKeySuffixMigration } from './migrations/photo-key-suffix.migration';
 
 // ============================================================================
 // REHYDRATION RESULT
@@ -127,17 +130,50 @@ export class StateRehydrationService {
         if (mainResult.validation.warnings.length > 0) {
           warnings.push(...mainResult.validation.warnings);
         }
+
+        // ✅ Migración incremental (Sección 4): legacy → campos prefijados por grupo
+        const section4 = applySection4PrefixMigration(mainResult.state);
+        const afterSection4 = section4.changed ? section4.state : mainResult.state;
+        if (section4.changed) {
+          warnings.push('Se aplicó migración automática de Sección 4 (legacy → prefijo)');
+          migrationsApplied = [...migrationsApplied, 'Sección 4 legacy → prefijo'];
+        }
+
+        // ✅ Migración grouped (Secciones 5–20 y 21–36): legacy → campos prefijados por grupo
+        const grouped = applyGroupedPrefixMigration(afterSection4);
+        const afterGrouped = grouped.changed ? grouped.state : afterSection4;
+        if (grouped.changed) {
+          warnings.push('Se aplicó migración automática grouped (5–20 AISD / 21–36 AISI)');
+          migrationsApplied = [...migrationsApplied, ...grouped.notes];
+        }
+
+        // ✅ Normalización de claves de fotos: esquema antiguo (…_A11Imagen) → canónico (…1Imagen_A1)
+        const photoKeys = applyPhotoKeySuffixMigration(afterGrouped);
+        const finalState = photoKeys.changed ? photoKeys.state : afterGrouped;
+        if (photoKeys.changed) {
+          warnings.push('Se normalizaron claves de fotos a esquema canónico (sufijo al final)');
+          migrationsApplied = [...migrationsApplied, ...photoKeys.notes];
+        }
         
         const result: RehydrationResult = {
           success: true,
           source: 'storage',
-          state: mainResult.state,
+          state: finalState,
           warnings,
           migrationsApplied,
           error: null
         };
         
-        this.applyState(mainResult.state);
+        this.applyState(finalState);
+
+        // ✅ Persistir inmediatamente si migramos (para que el siguiente load ya sea “limpio”)
+        if (section4.changed || grouped.changed || photoKeys.changed) {
+          try {
+            this.persistence.saveNow();
+          } catch {
+            // No bloquear rehidratación si falla persistencia
+          }
+        }
         this._rehydrationResult.set(result);
         this._isRehydrating.set(false);
         return result;

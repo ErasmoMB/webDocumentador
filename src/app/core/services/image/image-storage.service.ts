@@ -35,18 +35,12 @@ export class ImageStorageService {
     // ✅ Usar projectFacade.obtenerDatos() que ya lee de localStorage primero
     const datos = this.projectFacade.obtenerDatos();
     
-    // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
-    // Si prefix ya tiene el grupo (ej: "fotografia_B1") y groupPrefix es "_B1",
-    // no añadir groupPrefix de nuevo para evitar "fotografia_B11Imagen_B1"
-    const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
-    const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
-    
     for (let i = 1; i <= maxPhotos; i++) {
-      // ✅ CLAVE CORREGIDA: {prefix}{i}Imagen{finalGroupPrefix}
-      // Ej: "fotografia1Imagen_B1" o "fotografia_B11Imagen" (si prefix ya tiene grupo)
-      const imagenKey = finalGroupPrefix ? `${prefix}${i}Imagen${finalGroupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = finalGroupPrefix ? `${prefix}${i}Titulo${finalGroupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = finalGroupPrefix ? `${prefix}${i}Fuente${finalGroupPrefix}` : `${prefix}${i}Fuente`;
+      // ✅ ESQUEMA CANÓNICO: {prefix}{i}Imagen{groupPrefix}
+      // Ej: "fotografiaDemografia1Imagen_A1"
+      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
       
       const imagen = datos[imagenKey];
       
@@ -60,7 +54,7 @@ export class ImageStorageService {
           sectionId,
           i,
           prefix,
-          finalGroupPrefix
+          groupPrefix
         );
         fotografias.push({
           numero: numeroGlobal,
@@ -83,25 +77,21 @@ export class ImageStorageService {
   ): void {
     const updates: Record<string, any> = {};
     
-    // ✅ CORREGIR DUPLICADO: Verificar si prefix ya contiene groupPrefix
-    const prefixHasGroup = groupPrefix && prefix.includes(groupPrefix);
-    const finalGroupPrefix = prefixHasGroup ? '' : groupPrefix;
-    
     for (let i = 1; i <= maxPhotos; i++) {
-      // ✅ CLAVES CORREGIDAS: {prefix}{i}Imagen{finalGroupPrefix}
-      const imagenKey = finalGroupPrefix ? `${prefix}${i}Imagen${finalGroupPrefix}` : `${prefix}${i}Imagen`;
-      const tituloKey = finalGroupPrefix ? `${prefix}${i}Titulo${finalGroupPrefix}` : `${prefix}${i}Titulo`;
-      const fuenteKey = finalGroupPrefix ? `${prefix}${i}Fuente${finalGroupPrefix}` : `${prefix}${i}Fuente`;
-      const numeroKey = finalGroupPrefix ? `${prefix}${i}Numero${finalGroupPrefix}` : `${prefix}${i}Numero`;
+      // ✅ ESQUEMA CANÓNICO: {prefix}{i}Imagen{groupPrefix}
+      const imagenKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const tituloKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      const numeroKey = groupPrefix ? `${prefix}${i}Numero${groupPrefix}` : `${prefix}${i}Numero`;
       updates[imagenKey] = '';
       updates[tituloKey] = '';
       updates[fuenteKey] = '';
       updates[numeroKey] = '';
     }
 
-    const imagenBaseKey = finalGroupPrefix ? `${prefix}Imagen${finalGroupPrefix}` : `${prefix}Imagen`;
-    const tituloBaseKey = finalGroupPrefix ? `${prefix}Titulo${finalGroupPrefix}` : `${prefix}Titulo`;
-    const fuenteBaseKey = finalGroupPrefix ? `${prefix}Fuente${finalGroupPrefix}` : `${prefix}Fuente`;
+    const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
+    const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
+    const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
     updates[imagenBaseKey] = '';
     updates[tituloBaseKey] = '';
     updates[fuenteBaseKey] = '';
@@ -111,16 +101,16 @@ export class ImageStorageService {
       if (this.imageLogic.isValidImage(foto.imagen)) {
         validIndex++;
         const num = validIndex;
-        const imagenKey = finalGroupPrefix ? `${prefix}${num}Imagen${finalGroupPrefix}` : `${prefix}${num}Imagen`;
-        const tituloKey = finalGroupPrefix ? `${prefix}${num}Titulo${finalGroupPrefix}` : `${prefix}${num}Titulo`;
-        const fuenteKey = finalGroupPrefix ? `${prefix}${num}Fuente${finalGroupPrefix}` : `${prefix}${num}Fuente`;
-        const numeroKey = finalGroupPrefix ? `${prefix}${num}Numero${finalGroupPrefix}` : `${prefix}${num}Numero`;
+        const imagenKey = groupPrefix ? `${prefix}${num}Imagen${groupPrefix}` : `${prefix}${num}Imagen`;
+        const tituloKey = groupPrefix ? `${prefix}${num}Titulo${groupPrefix}` : `${prefix}${num}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${num}Fuente${groupPrefix}` : `${prefix}${num}Fuente`;
+        const numeroKey = groupPrefix ? `${prefix}${num}Numero${groupPrefix}` : `${prefix}${num}Numero`;
 
         const numeroGlobal = foto.numero || this.photoNumberingService.getGlobalPhotoNumber(
           sectionId,
           num,
           prefix,
-          finalGroupPrefix
+          groupPrefix
         );
         
         const imagenValue = foto.imagen 
@@ -133,9 +123,9 @@ export class ImageStorageService {
         updates[fuenteKey] = foto.fuente || '';
 
         if (num === 1) {
-          const imagenBaseKey = finalGroupPrefix ? `${prefix}Imagen${finalGroupPrefix}` : `${prefix}Imagen`;
-          const tituloBaseKey = finalGroupPrefix ? `${prefix}Titulo${finalGroupPrefix}` : `${prefix}Titulo`;
-          const fuenteBaseKey = finalGroupPrefix ? `${prefix}Fuente${finalGroupPrefix}` : `${prefix}Fuente`;
+          const imagenBaseKey = groupPrefix ? `${prefix}Imagen${groupPrefix}` : `${prefix}Imagen`;
+          const tituloBaseKey = groupPrefix ? `${prefix}Titulo${groupPrefix}` : `${prefix}Titulo`;
+          const fuenteBaseKey = groupPrefix ? `${prefix}Fuente${groupPrefix}` : `${prefix}Fuente`;
 
           updates[imagenBaseKey] = imagenValue;
           updates[tituloBaseKey] = foto.titulo || '';

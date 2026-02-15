@@ -204,7 +204,7 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    this.PHOTO_PREFIX = 'fotografiaCahuacho';
 
     // ✅ CRÍTICO: Escuchar cambios en signals de tabla y forzar detección de cambios
     effect(() => {

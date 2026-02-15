@@ -43,7 +43,7 @@ export class Seccion31Component implements OnInit, OnChanges, DoCheck {
 
   ngDoCheck() {
     const datosActuales = this.projectFacade.obtenerDatos() as FormularioDatos;
-    const centroPobladoAISIActual = PrefijoHelper.obtenerValorConPrefijo(datosActuales, 'centroPobladoAISI', this.seccionId);
+    const centroPobladoAISIActual = (datosActuales as any)?.centroPobladoAISI || null;
     const centroPobladoAISIAnterior = this.datosAnteriores.centroPobladoAISI || null;
     const centroPobladoAISIEnDatos = (this.datos as any)?.centroPobladoAISI || null;
     
@@ -62,9 +62,9 @@ export class Seccion31Component implements OnInit, OnChanges, DoCheck {
 
   actualizarValoresConPrefijo() {
     if (this.datos) {
-      const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-      (this.datos as any).centroPobladoAISI = centroPobladoAISI || null;
-      this.datosAnteriores.centroPobladoAISI = centroPobladoAISI || null;
+      const centroPobladoAISI = (this.datos as any)?.centroPobladoAISI || null;
+      (this.datos as any).centroPobladoAISI = centroPobladoAISI;
+      this.datosAnteriores.centroPobladoAISI = centroPobladoAISI;
     }
   }
 

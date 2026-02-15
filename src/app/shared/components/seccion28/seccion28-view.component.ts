@@ -67,7 +67,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    this.PHOTO_PREFIX = 'fotografiaCahuacho';
 
     // ✅ Effect para sincronizar cambios en tiempo real
     effect(() => {
@@ -149,7 +149,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   getEducacionCpConPorcentajes(): any[] {
     const data = this.formDataSignal();
     const tablaKey = this.getTablaKeyEducacion();
-    const tabla = data[tablaKey] || data['educacionCpTabla'] || [];
+    const tabla = data[tablaKey] || [];
     return tabla;
   }
 
@@ -166,7 +166,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   getPuestoSaludTabla(): any[] {
     const data = this.formDataSignal();
     const tablaKey = this.getTablaKeyPuestoSalud();
-    return data[tablaKey] || data['puestoSaludCpTabla'] || [];
+    return data[tablaKey] || [];
   }
 
   get puestoSaludCpTablaVista(): any[] {
@@ -176,7 +176,7 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
   get educacionCpTablaVista(): any[] {
     const data = this.formDataSignal();
     const tablaKey = this.getTablaKeyEducacion();
-    return data[tablaKey] || data['educacionCpTabla'] || [];
+    return data[tablaKey] || [];
   }
 
   // Implement abstract methods from AutoLoadSectionComponent

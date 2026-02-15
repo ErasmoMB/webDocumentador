@@ -450,14 +450,9 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
     }
     
     // ✅ PASO 2: Fallback a datos guardados
-    const centroPobladoAISI = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
+    const centroPobladoAISI = (this.datos as any)?.centroPobladoAISI;
     if (centroPobladoAISI && centroPobladoAISI.trim() !== '') {
       return centroPobladoAISI;
-    }
-    
-    const centroPobladoConSufijo = prefijo ? this.datos[`centroPobladoAISI${prefijo}`] : null;
-    if (centroPobladoConSufijo && centroPobladoConSufijo.trim() !== '') {
-      return centroPobladoConSufijo;
     }
     
     // ✅ PASO 3: Fallback a centros poblados

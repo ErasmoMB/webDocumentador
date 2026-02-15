@@ -73,14 +73,14 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
     const tablaKey = `poblacionSexoAISD${prefijo}`;
-    return data[tablaKey] || data['poblacionSexoAISD'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
     const data = this.sectionDataSignal();
     const tablaKey = `poblacionEtarioAISD${prefijo}`;
-    return data[tablaKey] || data['poblacionEtarioAISD'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly textoPoblacionSexoSignal: Signal<string> = computed(() => {
@@ -146,12 +146,12 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
+    const prefix = this.PHOTO_PREFIX;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo`;
-      const fuenteKey = `${prefix}${i}Fuente`;
-      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo${prefijo}`;
+      const fuenteKey = `${prefix}${i}Fuente${prefijo}`;
+      const imagenKey = `${prefix}${i}Imagen${prefijo}`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -173,10 +173,9 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   
   // ✅ NUMERACIÓN GLOBAL - Fotos
   readonly photoNumbersSignal: Signal<string[]> = computed(() => {
-    const prefix = `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`;
     const fotos = this.fotografiasCache || [];
     return fotos.map((_, index) => 
-      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, this.PHOTO_PREFIX, index)
     );
   });
 
@@ -190,7 +189,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
-      { prefix: `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`, label: 'Demografía' }
+      { prefix: this.PHOTO_PREFIX, label: 'Demografía' }
     ];
     // Configs ya inicializadas como propiedades de clase
     
@@ -468,19 +467,18 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   override cargarFotografias(): void {
     const formData = this.sectionDataSignal();  // ✅ LEER DEL SIGNAL REACTIVO
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
     
     // ✅ Reconstruir array de fotografías leyendo directamente del state reactivo
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${prefix}${i}Imagen`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
       const imagen = formData[imagenKey];
       
       // Si hay imagen, agregar a array
       if (imagen) {
-        const tituloKey = `${prefix}${i}Titulo`;
-        const fuenteKey = `${prefix}${i}Fuente`;
-        const numeroKey = `${prefix}${i}Numero`;
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
         
         fotos.push({
           imagen: imagen,

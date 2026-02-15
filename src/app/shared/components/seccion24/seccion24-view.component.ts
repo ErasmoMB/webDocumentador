@@ -185,10 +185,7 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
         this.datos = { ...this.datos, ...data };
       }
       // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
-      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-      if (centroPrefijado) {
-        this.datos.centroPobladoAISI = centroPrefijado;
-      }
+      this.datos.centroPobladoAISI = data?.['centroPobladoAISI'] || this.datos.centroPobladoAISI;
       this.cdRef.markForCheck();
     });
 

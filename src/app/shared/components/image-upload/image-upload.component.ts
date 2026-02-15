@@ -555,21 +555,9 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       /* calculateGlobalPhotoNumber error */
     }
 
-    // Fallback: conservative local computation (handles older formats without group suffixes)
-    const datos = this.projectFacade.obtenerDatos();
-    const prefix = this.photoPrefix;
-    let count = 0;
-    for (let i = 1; i <= index; i++) {
-      if (datos[`${prefix}${i}Imagen`] && String(datos[`${prefix}${i}Imagen`]).length > 5) count++;
-      // also try with common group suffixes as fallback
-      const suffixes = ['_A1','_A2','_A3','_A4','_A5','_A6','_A7','_A8','_A9','_A10','_B1','_B2','_B3','_B4','_B5','_B6','_B7','_B8','_B9','_B10'];
-      for (const suf of suffixes) {
-        if (datos[`${prefix}${i}Imagen${suf}`] && String(datos[`${prefix}${i}Imagen${suf}`]).length > 5) {
-          count++;
-          break;
-        }
-      }
-    }
+    // Fallback: conteo local (no depende de claves legacy en estado)
+    const fotos = Array.isArray(this._fotografias) ? this._fotografias : [];
+    const count = fotos.slice(0, Math.max(0, index)).filter(f => !!f && !!f.imagen).length;
     return `3.${count + 1}`;
   }
 

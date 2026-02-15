@@ -65,12 +65,11 @@ export class Seccion13ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijo();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;

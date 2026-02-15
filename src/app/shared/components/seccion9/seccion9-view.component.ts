@@ -92,7 +92,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   readonly textoViviendasSignal: Signal<string> = computed(() => {
     const data = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const guardado = data[`textoViviendas${prefijo}`] || data['textoViviendas'];
+    const key = prefijo ? `textoViviendas${prefijo}` : 'textoViviendas';
+    const guardado = data[key];
     if (guardado && guardado.trim().length > 0) {
       return guardado;
     }
@@ -103,7 +104,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   readonly textoEstructuraSignal: Signal<string> = computed(() => {
     const data = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    const guardado = data[`textoEstructura${prefijo}`] || data['textoEstructura'];
+    const key = prefijo ? `textoEstructura${prefijo}` : 'textoEstructura';
+    const guardado = data[key];
     if (guardado && guardado.trim().length > 0) {
       return guardado;
     }
@@ -115,30 +117,16 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   readonly condicionOcupacionConPorcentajesSignal: Signal<any[]> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
-    
-    // Intentar con prefijo primero, luego fallback sin prefijo
-    const datosConPrefijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, tablaKey)() : null;
-    if (datosConPrefijo && this.tieneContenidoReal(datosConPrefijo)) {
-      return datosConPrefijo;
-    }
-    
-    // Fallback a versión sin prefijo
-    return this.projectFacade.selectField(this.seccionId, null, 'condicionOcupacionTabla')() || [];
+
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
   });
 
   // ✅ TABLAS DE SOLO LECTURA - DATOS DEL BACKEND SIN MODIFICACIÓN
   readonly tiposMaterialesSignal: Signal<any[]> = computed(() => {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
-    
-    // Intentar con prefijo primero, luego fallback sin prefijo  
-    const datosConPrefijo = prefijo ? this.projectFacade.selectField(this.seccionId, null, tablaKey)() : null;
-    if (datosConPrefijo && this.tieneContenidoReal(datosConPrefijo)) {
-      return datosConPrefijo;
-    }
-    
-    // Fallback a versión sin prefijo
-    return this.projectFacade.selectField(this.seccionId, null, 'tiposMaterialesTabla')() || [];
+
+    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
   });
 
   // ✅ TÍTULOS Y FUENTES: Con fallback a defaults
@@ -250,11 +238,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
    */
   getCondicionOcupacionData(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tablaConPrefijo = prefijo ? this.datos[`condicionOcupacionTabla${prefijo}`] : null;
-    if (tablaConPrefijo && this.tieneContenidoReal(tablaConPrefijo)) {
-      return tablaConPrefijo;
-    }
-    return this.datos.condicionOcupacionTabla || [];
+    const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
+    return this.datos[tablaKey] || [];
   }
 
   /**
@@ -262,18 +247,8 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
    */
   getTiposMaterialesData(): any[] {
     const prefijo = this.obtenerPrefijoGrupo();
-    const tablaConPrefijo = prefijo ? this.datos[`tiposMaterialesTabla${prefijo}`] : null;
-    if (tablaConPrefijo && this.tieneContenidoReal(tablaConPrefijo)) {
-      console.log('[SECCION9-VIEW] 📊 Tabla con prefijo encontrada:', tablaConPrefijo);
-      console.log('[SECCION9-VIEW] 📊 Primer item:', tablaConPrefijo[0]);
-      return tablaConPrefijo;
-    }
-    const tabla = this.datos.tiposMaterialesTabla || [];
-    console.log('[SECCION9-VIEW] 📊 Tabla SIN prefijo (fallback):', tabla);
-    if (tabla.length > 0) {
-      console.log('[SECCION9-VIEW] 📊 Primer item:', tabla[0]);
-    }
-    return tabla;
+    const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
+    return this.datos[tablaKey] || [];
   }
 
   /**

@@ -342,7 +342,7 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
       tablas['poblacionSexoAISI'] = tablas[tablaKeySexo]; // Para compatibilidad
       tablas[tablaKeyEtario] = this.poblacionEtarioSignal();
       tablas['poblacionEtarioAISI'] = tablas[tablaKeyEtario]; // Para compatibilidad
-      tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
+      tablas[centroConPrefijo] = data['centroPobladoAISI'] || '____';
       tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
       
       this.datos = { ...data, ...tablas };
@@ -385,9 +385,7 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override actualizarValoresConPrefijo(): void {
-    // Restaurar centroPobladoAISI con el prefijo correcto
-    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-    this.datos.centroPobladoAISI = centro || null;
+    this.datos.centroPobladoAISI = (this.datos as any)?.centroPobladoAISI || null;
   }
 
   trackByIndex(index: number): number { return index; }

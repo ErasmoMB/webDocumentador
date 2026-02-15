@@ -166,7 +166,7 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    this.PHOTO_PREFIX = 'fotografiaCahuacho';
 
     effect(() => {
       const data = this.formDataSignal();
@@ -175,10 +175,7 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
         this.datos = { ...this.datos, ...data };
       }
       // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
-      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-      if (centroPrefijado) {
-        this.datos.centroPobladoAISI = centroPrefijado;
-      }
+      this.datos.centroPobladoAISI = data?.['centroPobladoAISI'] || this.datos.centroPobladoAISI;
       this.cdRef.markForCheck();
     });
 

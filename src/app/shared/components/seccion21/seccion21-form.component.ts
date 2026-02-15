@@ -98,8 +98,8 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     // Si no, generar automáticamente usando template y valores dinámicos
     const data = this.formDataSignal();
     const centro = this.obtenerNombreCentroPobladoActual();
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const provincia = data['provinciaSeleccionada'] || '____';
+    const departamento = data['departamentoSeleccionado'] || '____';
     
     return SECCION21_TEMPLATES.parrafoAISITemplate
       .replace(/{CENTRO}/g, centro)
@@ -224,8 +224,8 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     // Si no, generar automáticamente usando template y valores dinámicos
     const data = this.formDataSignal();
     const centro = this.obtenerNombreCentroPobladoActual();
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const provincia = data['provinciaSeleccionada'] || '____';
+    const departamento = data['departamentoSeleccionado'] || '____';
     const ley = PrefijoHelper.obtenerValorConPrefijo(data, 'leyCreacionDistrito', this.seccionId) || '____';
     const fecha = PrefijoHelper.obtenerValorConPrefijo(data, 'fechaCreacionDistrito', this.seccionId) || '____';
     const distrito = PrefijoHelper.obtenerValorConPrefijo(data, 'distritoSeleccionado', this.seccionId) || '____';

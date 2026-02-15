@@ -158,7 +158,7 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    this.PHOTO_PREFIX = 'fotografiaCahuacho';
 
     // Sync legacy data object for backward compatibility
     effect(() => {

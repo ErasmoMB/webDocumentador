@@ -167,12 +167,11 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo`;
-      const fuenteKey = `${prefix}${i}Fuente`;
-      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
 
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -198,10 +197,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   
   // ✅ NUMERACIÓN GLOBAL - Fotos
   readonly photoNumbersSignal: Signal<string[]> = computed(() => {
-    const prefix = `${this.PHOTO_PREFIX}${this.prefijoGrupoSignal()}`;
     const fotos = this.fotografiasSeccion7 || [];
     return fotos.map((_, index) => 
-      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, this.PHOTO_PREFIX, index)
     );
   });
 
@@ -501,17 +499,16 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   override cargarFotografias(): void {
     const formData = this.formDataSignal();
     const prefijo = this.obtenerPrefijoGrupo();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     const fotos: FotoItem[] = [];
 
     for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${prefix}${i}Imagen`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
       const imagen = formData[imagenKey];
 
       if (imagen) {
-        const tituloKey = `${prefix}${i}Titulo`;
-        const fuenteKey = `${prefix}${i}Fuente`;
-        const numeroKey = `${prefix}${i}Numero`;
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
 
         fotos.push({
           imagen: imagen,

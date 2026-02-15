@@ -106,7 +106,7 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
       const tablas: Record<string, any> = {};
       tablas[tablaKey] = this.ubicacionCpSignal();
       tablas['ubicacionCpTabla'] = tablas[tablaKey]; // Para compatibilidad
-      tablas[centroConPrefijo] = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId) || '____';
+      tablas[centroConPrefijo] = data['centroPobladoAISI'] || '____';
       tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
       tablas[tituloTablaKey] = PrefijoHelper.obtenerValorConPrefijo(data, 'cuadroTituloUbicacionCp', this.seccionId) || `Ubicación referencial – Centro Poblado ${tablas[centroConPrefijo]}`;
       
@@ -131,8 +131,8 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     
     const data = this.formDataSignal();
     const centro = this.obtenerNombreCentroPobladoActual();
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const provincia = data['provinciaSeleccionada'] || '____';
+    const departamento = data['departamentoSeleccionado'] || '____';
     
     return SECCION21_TEMPLATES.parrafoAISITemplate
       .replace(/{CENTRO}/g, centro)
@@ -146,8 +146,8 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     
     const data = this.formDataSignal();
     const centro = this.obtenerNombreCentroPobladoActual();
-    const provincia = PrefijoHelper.obtenerValorConPrefijo(data, 'provinciaSeleccionada', this.seccionId) || '____';
-    const departamento = PrefijoHelper.obtenerValorConPrefijo(data, 'departamentoSeleccionado', this.seccionId) || '____';
+    const provincia = data['provinciaSeleccionada'] || '____';
+    const departamento = data['departamentoSeleccionado'] || '____';
     const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '____';
     const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaCreacionDistrito')() || '____';
     const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';

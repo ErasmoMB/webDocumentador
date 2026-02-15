@@ -31,8 +31,7 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
   readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
 
   readonly photoPrefixSignal: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+    return this.PHOTO_PREFIX;
   });
 
   readonly formularioDataSignal: Signal<Record<string, any>> = computed(() => {
@@ -78,12 +77,12 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
   // Este Signal dispara un effect() que sincroniza cargarFotografias() reactivamente
   // Siguiendo el patrón de Sección 4 (referencia)
   readonly photoFieldsHash: Signal<string> = computed(() => {
-    const prefix = this.photoPrefixSignal();
+    const prefijo = this.prefijoGrupoSignal();
     let hash = '';
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo`;
-      const fuenteKey = `${prefix}${i}Fuente`;
-      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
       
       const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
@@ -101,10 +100,9 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
   
   // ✅ NUMERACIÓN GLOBAL - Fotos
   readonly photoNumbersSignal: Signal<string[]> = computed(() => {
-    const prefix = this.photoPrefixSignal();
     const fotos = this.fotografiasCache || [];
     return fotos.map((_, index) => 
-      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, prefix, index)
+      this.globalNumbering.getGlobalPhotoNumber(this.seccionId, this.PHOTO_PREFIX, index)
     );
   });
 

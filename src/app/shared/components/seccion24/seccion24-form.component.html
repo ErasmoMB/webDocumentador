@@ -62,7 +62,7 @@
       <app-image-upload
           [fotografias]="fotosActividadesSignal()"
           [sectionId]="seccionId"
-          [photoPrefix]="'fotografiaActividadesEconomicas' + obtenerPrefijoGrupo()"
+          [photoPrefix]="'fotografiaActividadesEconomicas'"
           [permitirMultiples]="true"
           [labelTitulo]="SECCION24_TEMPLATES.labelFotoTitulo"
           [labelFuente]="SECCION24_TEMPLATES.labelFotoFuente"
@@ -91,7 +91,7 @@
         <app-image-upload
           [fotografias]="fotosMercadoSignal()"
           [sectionId]="seccionId"
-          [photoPrefix]="'fotografiaMercado' + obtenerPrefijoGrupo()"
+          [photoPrefix]="'fotografiaMercado'"
           [permitirMultiples]="true"
           (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaMercado')">
         </app-image-upload>

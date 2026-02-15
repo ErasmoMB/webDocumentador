@@ -191,7 +191,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     super(cdRef, injector);
     // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaPEA${prefijo}` : 'fotografiaPEA';
+    this.PHOTO_PREFIX = 'fotografiaPEA';
 
     // Sync this.datos for compatibility - usar claves con prefijo
     effect(() => {

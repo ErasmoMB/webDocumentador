@@ -55,18 +55,17 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
       const prefijo = this.obtenerPrefijoGrupo();
       const tablaKey = `institucionesSeccion5${prefijo}`;
       const data = this.formDataSignal();
-      const instituciones = data[tablaKey] || data['institucionesSeccion5'];
+      const instituciones = data[tablaKey];
       return Array.isArray(instituciones) ? instituciones : [];
     });
 
     this.photoFieldsHash = computed(() => {
       let hash = '';
       const prefijo = this.obtenerPrefijoGrupo();
-      const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
       for (let i = 1; i <= 10; i++) {
-        const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-        const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-        const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+        const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
         hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
       }
       return hash;
@@ -77,10 +76,9 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
       const prefijo = this.obtenerPrefijoGrupo();
       const nombreComunidad = this.obtenerNombreComunidadActual();
       
-      // Obtener párrafo - con prefijo primero, sin prefijo después
+      // Obtener párrafo
       const fieldKey = `parrafoSeccion5_institucionalidad${prefijo}`;
-      const fieldKeyNoPrefix = 'parrafoSeccion5_institucionalidad';
-      let parrafo = data[fieldKey] || data[fieldKeyNoPrefix];
+      let parrafo = data[fieldKey];
       if (!parrafo || parrafo.trim().length === 0) {
         parrafo = this.obtenerTextoInstitucionalidad(data, nombreComunidad);
       }
@@ -89,8 +87,8 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
         data,
         parrafo,
         instituciones: this.institucionesSignal(),
-        titulo: data[`tituloInstituciones${prefijo}`] || data['tituloInstituciones'] || '',
-        fuente: data[`fuenteInstituciones${prefijo}`] || data['fuenteInstituciones'] || ''
+        titulo: data[`tituloInstituciones${prefijo}`] || '',
+        fuente: data[`fuenteInstituciones${prefijo}`] || ''
       };
     });
 
@@ -127,13 +125,11 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
   }
 
   getPhotoPrefixActual(): string {
-    const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+    return this.PHOTO_PREFIX;
   }
 
   protected override cargarFotografias(): void {
-    const prefix = this.getPhotoPrefixActual();
-    const fotos = this.getFotografiasVista(prefix);
+    const fotos = this.getFotografiasVista(this.PHOTO_PREFIX);
     this.fotografiasVistaCache = [...fotos];
     this.fotografiasVista = [...fotos];
     this.cdRef.markForCheck();

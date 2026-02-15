@@ -124,10 +124,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
         this.datos = { ...this.datos, ...data };
       }
       // Aplicar valores con prefijo después del merge (leer del signal, no de this.datos)
-      const centroPrefijado = PrefijoHelper.obtenerValorConPrefijo(data, 'centroPobladoAISI', this.seccionId);
-      if (centroPrefijado) {
-        this.datos.centroPobladoAISI = centroPrefijado;
-      }
+      this.datos.centroPobladoAISI = data?.['centroPobladoAISI'] || this.datos.centroPobladoAISI;
       this.cdRef.markForCheck();
     });
 
@@ -141,8 +138,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void {
-    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-    this.datos.centroPobladoAISI = centro || null;
+    this.datos.centroPobladoAISI = (this.datos as any)?.centroPobladoAISI || null;
   }
 
   getPorcentajePET(): string {

@@ -56,8 +56,7 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
 
     // Signal de prefijo de foto para aislamiento AISD
     readonly photoPrefixSignal: Signal<string> = computed(() => {
-        const prefijo = this.obtenerPrefijo();
-        return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+        return this.PHOTO_PREFIX;
     });
 
     // ✅ REFACTOR: Usar ubicacionGlobal

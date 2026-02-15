@@ -73,19 +73,17 @@ export class Seccion20ViewComponent extends BaseSectionComponent {
 
   // Signal de prefijo de foto para aislamiento AISD
   readonly photoPrefixSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    return prefijo ? `${this.PHOTO_PREFIX}${prefijo}` : this.PHOTO_PREFIX;
+    return this.PHOTO_PREFIX;
   });
 
   // photoFieldsHash con prefijo para reactividad de fotos
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
     const prefijo = this.obtenerPrefijoGrupo();
-    const prefix = `${this.PHOTO_PREFIX}${prefijo}`;
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;

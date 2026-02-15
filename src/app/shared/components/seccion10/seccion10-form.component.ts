@@ -277,20 +277,15 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     
     // Inicializar cada tabla como array vacío
     this.projectFacade.setField(this.seccionId, null, `abastecimientoAguaTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'abastecimientoAguaTabla', []);
     
     this.projectFacade.setField(this.seccionId, null, `tiposSaneamientoTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'tiposSaneamientoTabla', []);
     
     this.projectFacade.setField(this.seccionId, null, `alumbradoElectricoTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'alumbradoElectricoTabla', []);
     
     this.projectFacade.setField(this.seccionId, null, `energiaCocinarTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'energiaCocinarTabla', []);
     
     // Tecnología de comunicaciones - solo inicializar vacía (sin endpoint disponible)
     this.projectFacade.setField(this.seccionId, null, `tecnologiaComunicacionesTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'tecnologiaComunicacionesTabla', []);
   }
 
   /**
@@ -322,7 +317,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
           // Guardar CON prefijo y SIN prefijo (fallback)
           const tablaKey = `abastecimientoAguaTabla${prefijo}`;
           this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-          this.projectFacade.setField(this.seccionId, null, 'abastecimientoAguaTabla', datosTransformados);
         } catch (err) {
           console.error('[SECCION10] ❌ Error procesando abastecimiento de agua:', err);
         }
@@ -344,7 +338,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
           // Guardar CON prefijo y SIN prefijo (fallback)
           const tablaKey = `tiposSaneamientoTabla${prefijo}`;
           this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-          this.projectFacade.setField(this.seccionId, null, 'tiposSaneamientoTabla', datosTransformados);
         } catch (err) {
           console.error('[SECCION10] ❌ Error procesando saneamiento:', err);
         }
@@ -366,7 +359,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
           // Guardar CON prefijo y SIN prefijo (fallback)
           const tablaKey = `alumbradoElectricoTabla${prefijo}`;
           this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-          this.projectFacade.setField(this.seccionId, null, 'alumbradoElectricoTabla', datosTransformados);
         } catch (err) {
           console.error('[SECCION10] ❌ Error procesando alumbrado eléctrico:', err);
         }
@@ -388,7 +380,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
           // Guardar CON prefijo y SIN prefijo (fallback)
           const tablaKey = `energiaCocinarTabla${prefijo}`;
           this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-          this.projectFacade.setField(this.seccionId, null, 'energiaCocinarTabla', datosTransformados);
         } catch (err) {
           console.error('[SECCION10] ❌ Error procesando energía para cocinar:', err);
         }
@@ -410,35 +401,35 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `abastecimientoAguaTabla${prefijo}`;
-    return data[tablaKey] || data['abastecimientoAguaTabla'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly tiposSaneamientoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `tiposSaneamientoTabla${prefijo}`;
-    return data[tablaKey] || data['tiposSaneamientoTabla'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly alumbradoElectricoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `alumbradoElectricoTabla${prefijo}`;
-    return data[tablaKey] || data['alumbradoElectricoTabla'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly energiaCocinarSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `energiaCocinarTabla${prefijo}`;
-    return data[tablaKey] || data['energiaCocinarTabla'] || [];
+    return data[tablaKey] || [];
   });
 
   readonly tecnologiaComunicacionesSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `tecnologiaComunicacionesTabla${prefijo}`;
-    return data[tablaKey] || data['tecnologiaComunicacionesTabla'] || [];
+    return data[tablaKey] || [];
   });
 
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {

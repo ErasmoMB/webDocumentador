@@ -487,9 +487,7 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void {
-    // Restaurar centroPobladoAISI con el prefijo correcto
-    const centro = PrefijoHelper.obtenerValorConPrefijo(this.datos, 'centroPobladoAISI', this.seccionId);
-    this.datos.centroPobladoAISI = centro || null;
+    this.datos.centroPobladoAISI = (this.datos as any)?.centroPobladoAISI || null;
   }
 
   // ✅ CORREGIDO - Handler con prefijo

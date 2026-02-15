@@ -109,7 +109,7 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
     const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+    this.PHOTO_PREFIX = 'fotografiaCahuacho';
 
     // ✅ Effect para sincronizar cambios en tiempo real
     effect(() => {
