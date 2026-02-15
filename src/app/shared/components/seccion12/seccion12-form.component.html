@@ -224,14 +224,14 @@
            (ngModelChange)="onFieldChange('alumnosIE40270Fuente', $event)"
            [placeholder]="SECCION12_TEMPLATES.placeholderFuenteAlumnos40270">
 
-    <app-image-upload [permitirMultiples]="true"
+        <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosIEAyrocaSignal()"
                       [sectionId]="seccionId"
                       [photoPrefix]="photoPrefixIEAyrocaSignal()"
                       (fotografiasChange)="onFotografiasIEAyrocaChange($event)">
     </app-image-upload>
 
-    <app-image-upload [permitirMultiples]="true"
+        <app-image-upload [permitirMultiples]="true"
                       [fotografias]="fotosIE40270Signal()"
                       [sectionId]="seccionId"
                       [photoPrefix]="photoPrefixIE40270Signal()"

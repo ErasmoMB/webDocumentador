@@ -595,7 +595,6 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   override onFotografiasChange(fotografias: FotoItem[]): void {
     const prefix = this.photoPrefixSignal();
     this.onGrupoFotografiasChange(prefix, fotografias);
-    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
   }
 

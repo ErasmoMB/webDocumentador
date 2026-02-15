@@ -2072,8 +2072,6 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
               try { this.formChange.persistFields(this.seccionId, 'images', persistPayload, { notifySync: true }); } catch (e) { /* noop */ }
               try { this.projectFacade.setFields(this.seccionId, null, persistPayload); } catch (e) { /* noop */ }
 
-              try { ViewChildHelper.updateAllComponents('actualizarDatos'); ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) { /* ignore */ }
-
               Object.keys(persistPayload).forEach(k => { if (!fieldsConDatos.includes(k)) fieldsConDatos.push(k); });
             } catch (e) {
             }

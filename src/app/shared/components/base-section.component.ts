@@ -823,10 +823,11 @@ export abstract class BaseSectionComponent implements OnInit, OnChanges, DoCheck
    * @returns Nombre del grupo AISI (ej: DISTRITO1) o '____' si no hay datos
    */
   protected obtenerCentroPobladoAISI(): string {
-    // Primero intentar obtener el nombre del grupo AISI actual
-    const nombreGrupo = this.obtenerNombreDistritoActual();
-    if (nombreGrupo && nombreGrupo !== '____') {
-      return nombreGrupo;
+    // Primero intentar obtener el nombre del centro poblado del grupo AISI actual
+    // (el nombre del grupo AISI corresponde al CP en este proyecto)
+    const nombreCentro = this.obtenerNombreCentroPobladoActual();
+    if (nombreCentro && nombreCentro !== '____') {
+      return nombreCentro;
     }
     
     // Fallback: buscar el primer CCPP del grupo

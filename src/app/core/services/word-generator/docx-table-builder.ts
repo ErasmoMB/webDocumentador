@@ -18,6 +18,27 @@ export type ExtractTextWithHighlight = (
 export class DocxTableBuilder {
   private static readonly SKIP = Symbol('SKIP_CELL');
 
+  private esCeldaVisible(cell: HTMLElement): boolean {
+    try {
+      if (!cell) return false;
+      if (cell.hasAttribute('hidden')) return false;
+      if ((cell.getAttribute('aria-hidden') || '').toLowerCase() === 'true') return false;
+
+      const style = (cell as HTMLElement).style;
+      if (style?.display === 'none') return false;
+      if (style?.visibility === 'hidden') return false;
+
+      const computed = (globalThis as any).getComputedStyle?.(cell);
+      if (computed) {
+        if (computed.display === 'none') return false;
+        if (computed.visibility === 'hidden') return false;
+      }
+    } catch {
+      // Si falla getComputedStyle, asumimos visible.
+    }
+    return true;
+  }
+
   private crearTableCellDesdeHtml(
     cell: HTMLElement,
     asegurarString: EnsureString,
@@ -139,8 +160,13 @@ export class DocxTableBuilder {
 
     for (let rowIndex = 0; rowIndex < trList.length; rowIndex++) {
       const rowElem = trList[rowIndex];
-      const rowCells = Array.from(rowElem.querySelectorAll('th, td')) as HTMLElement[];
+      const rowCells = (Array.from(rowElem.querySelectorAll('th, td')) as HTMLElement[]).filter((c) =>
+        this.esCeldaVisible(c)
+      );
       const outRow: Array<HTMLElement | typeof DocxTableBuilder.SKIP> = Array(maxCols).fill(null as any);
+
+      // Track de columnas donde se aplicó prefill (CONTINUE) en esta fila.
+      const prefilleadas: boolean[] = Array(maxCols).fill(false);
 
       // 1) Prellenar continuaciones de merge vertical
       for (let col = 0; col < maxCols; col++) {
@@ -150,6 +176,7 @@ export class DocxTableBuilder {
 
           // La celda master ocupa el col actual. Columnas subsiguientes dentro del span se marcan como SKIP.
           outRow[col] = master;
+          prefilleadas[col] = true;
           for (let s = 1; s < span; s++) {
             if (col + s < maxCols) outRow[col + s] = DocxTableBuilder.SKIP;
           }
@@ -189,9 +216,10 @@ export class DocxTableBuilder {
         colCursor += Math.max(1, colspan);
       }
 
-      // 3) Decrementar contadores de merge vertical
+      // 3) Consumir exactamente 1 fila de rowspan SOLO cuando fue usada como CONTINUE en esta fila.
+      // Esto evita el off-by-one que cortaba el merge una fila antes (típicamente en la fila "Total").
       for (let col = 0; col < maxCols; col++) {
-        if (vMergeRemaining[col] > 0) {
+        if (prefilleadas[col] && vMergeRemaining[col] > 0) {
           vMergeRemaining[col]--;
           if (vMergeRemaining[col] === 0) {
             vMergeMasterCellAtCol[col] = null;
@@ -219,7 +247,7 @@ export class DocxTableBuilder {
     const rows = Array.from(elem.querySelectorAll('tr'));
     let maxCells = 0;
     for (const row of rows) {
-      const cells = Array.from(row.querySelectorAll('th, td')) as HTMLElement[];
+      const cells = (Array.from(row.querySelectorAll('th, td')) as HTMLElement[]).filter((c) => this.esCeldaVisible(c));
       let totalColumns = 0;
       cells.forEach((cell) => {
         const colspan = parseInt(cell.getAttribute('colspan') || '1');

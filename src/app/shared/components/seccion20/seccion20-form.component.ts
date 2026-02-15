@@ -240,7 +240,6 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
   override onFotografiasChange(fotografias: FotoItem[]): void {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.cdRef.detectChanges();
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
   override ngOnDestroy(): void {

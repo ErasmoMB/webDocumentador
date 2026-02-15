@@ -37,7 +37,9 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
 
   readonly centroPobladoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
+    return this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || '____';
   });
 
   readonly parrafoSignal: Signal<string> = computed(() => {

@@ -91,7 +91,9 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const campo = `textoNivelEducativo${prefijo}`;
     const manual = this.projectFacade.selectField(this.seccionId, null, campo)();
-    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
+    const cp = this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || '____';
     if (manual && manual.trim().length > 0) return manual;
     return SECCION30_TEMPLATES.textoNivelEducativoDefault(cp);
   });
@@ -101,7 +103,9 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const campo = `textoTasaAnalfabetismo${prefijo}`;
     const manual = this.projectFacade.selectField(this.seccionId, null, campo)();
-    const cp = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
+    const cp = this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || '____';
     if (manual && manual.trim().length > 0) return manual;
     return SECCION30_TEMPLATES.textoTasaAnalfabetismoDefault(cp);
   });
@@ -131,7 +135,9 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ CENTRO POBLADO
   readonly centroPobladoSignal: Signal<string> = computed(() => {
-    return this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '____';
+    return this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || '____';
   });
 
   readonly nivelEducativoSignal: Signal<any[]> = computed(() => {
@@ -388,7 +394,6 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   override onFotografiasChange(fotografias: FotoItem[]): void {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
     this.cdRef.markForCheck();
-    try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 
   onNivelEducativoTableUpdated(tabla: any[]): void {

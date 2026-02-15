@@ -91,12 +91,6 @@ export class SectionPhotoCoordinator {
       host.actualizarDatos?.();
       host.onPhotoSaveComplete?.(fotografias, prefix);
       this.cdRef.detectChanges();
-
-      // Forzar actualización en todos los componentes registrados
-      try {
-        const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
-        ViewChildHelper.updateAllComponents('actualizarDatos');
-      } catch (e) {}
     } catch (error) {
       try { const { debugError } = require('src/app/shared/utils/debug'); debugError(`Error guardando fotografías en ${host.seccionId}:`, error); } catch {}
     }

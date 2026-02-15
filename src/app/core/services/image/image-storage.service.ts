@@ -151,16 +151,5 @@ export class ImageStorageService {
 
     // ✅ Notificar al ReactiveStateAdapter para actualizar la vista inmediatamente
     this.stateAdapter.refreshFromStorage();
-
-    // ✅ Forzar actualización en todos los componentes registrados (preview y formularios)
-    try {
-      const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
-      if (ViewChildHelper && typeof ViewChildHelper.updateAllComponents === 'function') {
-        ViewChildHelper.updateAllComponents('actualizarDatos');
-        setTimeout(() => {
-          ViewChildHelper.updateAllComponents('actualizarDatos');
-        });
-      }
-    } catch (e) { /* ViewChildHelper not available */ }
   }
 }

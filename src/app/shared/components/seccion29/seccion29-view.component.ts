@@ -45,14 +45,14 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly tituloNatalidadSignal = computed(() => {
     const cp = this.centroPobladoSignal();
     const distrito = this.distritoSeleccionadoSignal();
-    const fallback = SECCION29_TEMPLATES.placeholderTituloNatalidadView.replace('_____', cp || SECCION29_TEMPLATES.centroPobladoDefault);
+    const fallback = SECCION29_TEMPLATES.placeholderTituloNatalidadView;
     return normalizeTitleWithPlaceholders(this.getFieldValue('tituloNatalidadMortalidad'), fallback, cp, distrito);
   });
   readonly fuenteNatalidadSignal = computed(() => this.getFieldValue('fuenteNatalidadMortalidad') ?? '');
 
   readonly tituloMorbilidadSignal = computed(() => {
     const distrito = this.distritoSeleccionadoSignal();
-    const fallback = SECCION29_TEMPLATES.placeholderTituloMorbilidadView.replace('_____', distrito || SECCION29_TEMPLATES.distritoDefault);
+    const fallback = SECCION29_TEMPLATES.placeholderTituloMorbilidadView;
     return normalizeTitleWithPlaceholders(this.getFieldValue('tituloMorbilidad'), fallback, this.centroPobladoSignal(), distrito);
   });
   readonly fuenteMorbilidadSignal = computed(() => this.getFieldValue('fuenteMorbilidad') ?? '');
@@ -60,13 +60,30 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly tituloAfiliacionSignal = computed(() => {
     const cp = this.centroPobladoSignal();
     const distrito = this.distritoSeleccionadoSignal();
-    const fallback = SECCION29_TEMPLATES.placeholderTituloAfiliacionView.replace('_____', cp || SECCION29_TEMPLATES.centroPobladoDefault);
+    const fallback = SECCION29_TEMPLATES.placeholderTituloAfiliacionView;
     return normalizeTitleWithPlaceholders(this.getFieldValue('tituloAfiliacionSalud'), fallback, cp, distrito);
   });
   readonly fuenteAfiliacionSignal = computed(() => this.getFieldValue('fuenteAfiliacionSalud') ?? '');
 
-  readonly centroPobladoSignal = computed(() => this.getFieldValue('centroPobladoAISI') ?? SECCION29_TEMPLATES.centroPobladoDefault);
-  readonly distritoSeleccionadoSignal = computed(() => this.getFieldValue('distritoSeleccionado') ?? SECCION29_TEMPLATES.distritoDefault);
+  readonly centroPobladoSignal = computed(() => {
+    // Priorizar el nombre del CP del grupo AISI actual (como en secciones previas)
+    const fromGroup = this.obtenerNombreCentroPobladoActual();
+    if (fromGroup && fromGroup.trim() !== '' && fromGroup.trim() !== '____') {
+      return fromGroup;
+    }
+
+    const fromField = this.getFieldValue('centroPobladoAISI');
+    if (fromField && String(fromField).trim() !== '') {
+      return String(fromField);
+    }
+
+    return SECCION29_TEMPLATES.centroPobladoDefault;
+  });
+  readonly distritoSeleccionadoSignal = computed(() => {
+    return this.obtenerNombreDistritoActual()
+      || this.getFieldValue('distritoSeleccionado')
+      || SECCION29_TEMPLATES.distritoDefault;
+  });
 
   readonly natalidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();

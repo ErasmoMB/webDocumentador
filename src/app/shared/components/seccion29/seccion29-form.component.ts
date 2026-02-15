@@ -71,7 +71,11 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
       ?? this.projectFacade.selectField(this.seccionId, null, field)();
   }
 
-  readonly centroPobladoSignal: Signal<string> = computed(() => this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || '');
+  readonly centroPobladoSignal: Signal<string> = computed(() => {
+    return this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || '';
+  });
 
   readonly textoNatalidadCP1Signal: Signal<string> = computed(() => {
     const manual = this.getFieldValue('textoNatalidadCP1');
@@ -178,7 +182,9 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
 
   // Helper methods to generate fallback paragraph texts
   generarTextoNatalidadCP1(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const centro = this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || SECCION29_TEMPLATES.centroPobladoDefault;
     const natalidad2023 = this.getNatalidad2023();
     const natalidad2024 = this.getNatalidad2024();
     return SECCION29_DEFAULT_TEXTS.natalidadCP1(centro, natalidad2023, natalidad2024);
@@ -193,14 +199,18 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   generarTextoMorbilidadCP(): string {
     // ✅ REFACTOR: Usar ubicacionGlobal
     const distrito = this.ubicacionGlobal().distrito || SECCION29_TEMPLATES.distritoDefault;
-    const centroPoblado = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const centroPoblado = this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || SECCION29_TEMPLATES.centroPobladoDefault;
     const infecciones = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('infecciones'))?.casos || 0;
     const obesidad = (this.morbilidadTablaSignal() || []).find((it:any)=> it.grupo?.toString?.().toLowerCase?.().includes('obesidad'))?.casos || 0;
     return SECCION29_DEFAULT_TEXTS.morbilidadCP(distrito, centroPoblado, infecciones, obesidad);
   }
 
   generarTextoAfiliacionSalud(): string {
-    const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
+    const centro = this.obtenerNombreCentroPobladoActual()
+      || this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')()
+      || SECCION29_TEMPLATES.centroPobladoDefault;
     const sis = this.afiliacionTablaSignal()
       .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
     const essalud = this.afiliacionTablaSignal()
