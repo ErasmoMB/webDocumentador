@@ -31,6 +31,9 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly globalTableNumberSignal: Signal<string>;
   readonly globalPhotoNumbersSignal: Signal<string[]>;
 
+  // Centro Poblado actual (derivado del grupo AISI)
+  readonly centroPobladoAisiSignal: Signal<string>;
+
   constructor(
     cdRef: ChangeDetectorRef, 
     injector: Injector, 
@@ -38,6 +41,11 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
+
+    this.centroPobladoAisiSignal = computed(() => {
+      const nombre = this.obtenerNombreCentroPobladoActual();
+      return nombre && nombre.trim() !== '' ? nombre : '____';
+    });
     
     // Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
@@ -106,7 +114,11 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
       const tablas: Record<string, any> = {};
       tablas[tablaKey] = this.ubicacionCpSignal();
       tablas['ubicacionCpTabla'] = tablas[tablaKey]; // Para compatibilidad
-      tablas[centroConPrefijo] = data['centroPobladoAISI'] || '____';
+      // Asegurar que el nombre del CP se derive del grupo AISI (evita placeholder vacío)
+      const centroDerivado = this.centroPobladoAisiSignal();
+      tablas[centroConPrefijo] = (data['centroPobladoAISI'] && String(data['centroPobladoAISI']).trim() !== '')
+        ? data['centroPobladoAISI']
+        : centroDerivado;
       tablas['centroPobladoAISI'] = tablas[centroConPrefijo]; // Para compatibilidad
       tablas[tituloTablaKey] = PrefijoHelper.obtenerValorConPrefijo(data, 'cuadroTituloUbicacionCp', this.seccionId) || `Ubicación referencial – Centro Poblado ${tablas[centroConPrefijo]}`;
       

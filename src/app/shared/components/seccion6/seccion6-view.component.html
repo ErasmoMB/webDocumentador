@@ -17,7 +17,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of getPoblacionSexoConPorcentajes()">
+        <ng-container *ngIf="poblacionSexoRowsSignal() as rowsSexo">
+        <tr *ngFor="let item of rowsSexo">
           <td class="table-cell">
             <span *ngIf="item.sexo && item.sexo !== '____'" appDataHighlight="database">{{ item.sexo }}</span>
             <span *ngIf="!item.sexo || item.sexo === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
@@ -31,11 +32,12 @@
             <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
         </tr>
-        <tr *ngIf="getPoblacionSexoConPorcentajes().length === 0">
+        <tr *ngIf="rowsSexo.length === 0">
           <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
           <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
           <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
         </tr>
+        </ng-container>
       </tbody>
     </table>
   </app-table-wrapper>
@@ -65,7 +67,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of getPoblacionEtarioConPorcentajes()">
+        <ng-container *ngIf="poblacionEtarioRowsSignal() as rowsEtario">
+        <tr *ngFor="let item of rowsEtario">
           <td class="table-cell">
             <span *ngIf="item.categoria && item.categoria !== '____'" appDataHighlight="database">{{ item.categoria }}</span>
             <span *ngIf="!item.categoria || item.categoria === '____'">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
@@ -79,6 +82,12 @@
             <span *ngIf="!item.porcentaje">{{ SECCION6_TEMPLATES.placeholderVacio }}</span>
           </td>
         </tr>
+        <tr *ngIf="rowsEtario.length === 0">
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+          <td class="table-cell">{{ SECCION6_TEMPLATES.placeholderVacio }}</td>
+        </tr>
+        </ng-container>
       </tbody>
     </table>
   </app-table-wrapper>

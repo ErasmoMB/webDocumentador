@@ -6,6 +6,7 @@ import {
   TableCell,
   TableRow,
   TextRun,
+  VerticalMergeType,
   WidthType,
 } from 'docx';
 
@@ -15,99 +16,284 @@ export type ExtractTextWithHighlight = (
 ) => Array<{ texto: string; esHighlight: boolean }>;
 
 export class DocxTableBuilder {
+  private static readonly SKIP = Symbol('SKIP_CELL');
+
+  private crearTableCellDesdeHtml(
+    cell: HTMLElement,
+    asegurarString: EnsureString,
+    extraerTextoConHighlight: ExtractTextWithHighlight,
+    opts?: {
+      forceVerticalMerge?: (typeof VerticalMergeType)[keyof typeof VerticalMergeType];
+      isHeaderOverride?: boolean;
+      columnSpanOverride?: number;
+      empty?: boolean;
+    }
+  ): TableCell {
+    const isHeader =
+      opts?.isHeaderOverride ??
+      (cell.tagName === 'TH' || cell.classList.contains('table-header'));
+
+    const cellHTMLElem = cell as HTMLElement;
+    const isCentered =
+      isHeader ||
+      cell.classList.contains('table-cell-center') ||
+      cell.classList.contains('header-centrado') ||
+      cell.classList.contains('table-header') ||
+      cellHTMLElem.style?.textAlign === 'center';
+
+    const tieneHighlight = cellHTMLElem.querySelector('.highlight');
+    const children: TextRun[] = [];
+
+    if (opts?.empty) {
+      children.push(
+        new TextRun({
+          text: ' ',
+          bold: isHeader,
+          font: 'Arial',
+          size: 22,
+        })
+      );
+    } else if (tieneHighlight) {
+      const partes = extraerTextoConHighlight(cellHTMLElem);
+      partes.forEach((parte) => {
+        const textoStr = asegurarString(parte.texto);
+        children.push(
+          new TextRun({
+            text: textoStr,
+            bold: parte.esHighlight || isHeader,
+            font: 'Arial',
+            size: 22,
+          })
+        );
+      });
+    } else {
+      const texto = asegurarString(cellHTMLElem.textContent?.trim());
+      children.push(
+        new TextRun({
+          text: asegurarString(texto),
+          bold: isHeader,
+          font: 'Arial',
+          size: 22,
+        })
+      );
+    }
+
+    const paragraphOptions: any = {
+      alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+      children,
+      spacing: {
+        before: 50,
+        after: 50,
+        line: 360,
+      },
+    };
+
+    const cellOptions: any = {
+      children: [new Paragraph(paragraphOptions)],
+      shading: isHeader ? { fill: 'E6E6E6' } : undefined,
+      margins: {
+        top: 100,
+        bottom: 100,
+        left: 100,
+        right: 100,
+      },
+      verticalAlign: 'center' as any,
+      borders: {
+        top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+        bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+        left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+        right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+      },
+    };
+
+    const colspan = opts?.columnSpanOverride ?? parseInt(cellHTMLElem.getAttribute('colspan') || '1');
+    if (colspan > 1) {
+      cellOptions.columnSpan = colspan;
+      cellOptions.width = {
+        size: colspan * 10,
+        type: WidthType.PERCENTAGE,
+      };
+    }
+
+    if (opts?.forceVerticalMerge) {
+      cellOptions.verticalMerge = opts.forceVerticalMerge;
+    }
+
+    return new TableCell(cellOptions);
+  }
+
+  private construirGridCeldas(elem: HTMLElement): {
+    grid: Array<Array<HTMLElement | typeof DocxTableBuilder.SKIP>>;
+    maxCols: number;
+  } {
+    const trList = Array.from(elem.querySelectorAll('tr')) as HTMLElement[];
+    const maxCols = this.calcularMaxColumnas(elem);
+
+    // Estado de merges verticales por columna: si hay un merge activo, guardamos la celda "master"
+    // para crear celdas CONTINUE en filas siguientes.
+    const vMergeRemaining: Array<number> = Array(maxCols).fill(0);
+    const vMergeMasterCellAtCol: Array<HTMLElement | null> = Array(maxCols).fill(null);
+    const vMergeMasterSpan: Array<number> = Array(maxCols).fill(1);
+
+    const grid: Array<Array<HTMLElement | typeof DocxTableBuilder.SKIP>> = [];
+
+    for (let rowIndex = 0; rowIndex < trList.length; rowIndex++) {
+      const rowElem = trList[rowIndex];
+      const rowCells = Array.from(rowElem.querySelectorAll('th, td')) as HTMLElement[];
+      const outRow: Array<HTMLElement | typeof DocxTableBuilder.SKIP> = Array(maxCols).fill(null as any);
+
+      // 1) Prellenar continuaciones de merge vertical
+      for (let col = 0; col < maxCols; col++) {
+        if (vMergeRemaining[col] > 0 && vMergeMasterCellAtCol[col]) {
+          const master = vMergeMasterCellAtCol[col] as HTMLElement;
+          const span = vMergeMasterSpan[col] || 1;
+
+          // La celda master ocupa el col actual. Columnas subsiguientes dentro del span se marcan como SKIP.
+          outRow[col] = master;
+          for (let s = 1; s < span; s++) {
+            if (col + s < maxCols) outRow[col + s] = DocxTableBuilder.SKIP;
+          }
+        }
+      }
+
+      // 2) Colocar celdas reales de HTML en los siguientes huecos libres
+      let cellCursor = 0;
+      let colCursor = 0;
+      while (cellCursor < rowCells.length && colCursor < maxCols) {
+        // saltar posiciones ya ocupadas por continuaciones o SKIP
+        while (colCursor < maxCols && outRow[colCursor] !== null && outRow[colCursor] !== undefined) {
+          colCursor++;
+        }
+        if (colCursor >= maxCols) break;
+
+        const cell = rowCells[cellCursor++];
+        outRow[colCursor] = cell;
+
+        const colspan = parseInt(cell.getAttribute('colspan') || '1');
+        const rowspan = parseInt(cell.getAttribute('rowspan') || '1');
+
+        // Marcar SKIP por colspan
+        if (colspan > 1) {
+          for (let s = 1; s < colspan; s++) {
+            if (colCursor + s < maxCols) outRow[colCursor + s] = DocxTableBuilder.SKIP;
+          }
+        }
+
+        // Registrar merge vertical para filas siguientes.
+        if (rowspan > 1) {
+          vMergeRemaining[colCursor] = rowspan - 1;
+          vMergeMasterCellAtCol[colCursor] = cell;
+          vMergeMasterSpan[colCursor] = Math.max(1, colspan);
+        }
+
+        colCursor += Math.max(1, colspan);
+      }
+
+      // 3) Decrementar contadores de merge vertical
+      for (let col = 0; col < maxCols; col++) {
+        if (vMergeRemaining[col] > 0) {
+          vMergeRemaining[col]--;
+          if (vMergeRemaining[col] === 0) {
+            vMergeMasterCellAtCol[col] = null;
+            vMergeMasterSpan[col] = 1;
+          }
+        }
+      }
+
+      // 4) Rellenar nulos con celdas vacías (para estabilidad en DOCX)
+      for (let col = 0; col < maxCols; col++) {
+        if (outRow[col] === null || outRow[col] === undefined) {
+          const empty = document.createElement('td');
+          empty.textContent = '';
+          outRow[col] = empty;
+        }
+      }
+
+      grid.push(outRow);
+    }
+
+    return { grid, maxCols };
+  }
+
+  private calcularMaxColumnas(elem: HTMLElement): number {
+    const rows = Array.from(elem.querySelectorAll('tr'));
+    let maxCells = 0;
+    for (const row of rows) {
+      const cells = Array.from(row.querySelectorAll('th, td')) as HTMLElement[];
+      let totalColumns = 0;
+      cells.forEach((cell) => {
+        const colspan = parseInt(cell.getAttribute('colspan') || '1');
+        totalColumns += colspan;
+      });
+      if (totalColumns > maxCells) {
+        maxCells = totalColumns;
+      }
+    }
+    return maxCells;
+  }
+
   crearTabla(
     elem: HTMLElement,
     asegurarString: EnsureString,
     extraerTextoConHighlight: ExtractTextWithHighlight
   ): Table {
-    const rows = Array.from(elem.querySelectorAll('tr')).map((row) => {
-      const cells = Array.from(row.querySelectorAll('th, td')).map((cell) => {
-        const isHeader = cell.tagName === 'TH' || cell.classList.contains('table-header');
-        const cellHTMLElem = cell as HTMLElement;
+    const { grid, maxCols } = this.construirGridCeldas(elem);
 
-        const isCentered =
-          isHeader ||
-          cell.classList.contains('table-cell-center') ||
-          cell.classList.contains('header-centrado') ||
-          cell.classList.contains('table-header') ||
-          cellHTMLElem.style?.textAlign === 'center';
+    // Detectar merges verticales desde HTML para marcar RESTART/CONTINUE
+    // Nota: Docx requiere verticalMerge; el HTML usa rowspan.
+    const activeVmerge: Array<{ remaining: number; span: number } | null> = Array(maxCols).fill(null);
 
-        const texto = asegurarString((cell as HTMLElement).textContent?.trim());
-        const cellElem = cell as HTMLElement;
-        const tieneHighlight = cellElem.querySelector('.highlight');
+    const rows = grid.map((rowCells) => {
+      const cells: TableCell[] = [];
 
-        const colspan = parseInt(cellHTMLElem.getAttribute('colspan') || '1');
-        const rowspan = parseInt(cellHTMLElem.getAttribute('rowspan') || '1');
+      for (let col = 0; col < maxCols; col++) {
+        const cellLike = rowCells[col];
+        if (cellLike === DocxTableBuilder.SKIP) continue;
 
-        const children: TextRun[] = [];
-        if (tieneHighlight) {
-          const partes = extraerTextoConHighlight(cellElem);
-          partes.forEach((parte) => {
-            const textoStr = asegurarString(parte.texto);
-            children.push(
-              new TextRun({
-                text: textoStr,
-                bold: parte.esHighlight || isHeader,
-                font: 'Arial',
-                size: 22,
-              })
-            );
-          });
-        } else {
-          const textoStr = asegurarString(texto);
-          children.push(
-            new TextRun({
-              text: textoStr,
-              bold: isHeader,
-              font: 'Arial',
-              size: 22,
+        const htmlCell = cellLike as HTMLElement;
+        const colspan = parseInt(htmlCell.getAttribute('colspan') || '1');
+        const rowspan = parseInt(htmlCell.getAttribute('rowspan') || '1');
+
+        // Determinar verticalMerge
+        let vMerge: (typeof VerticalMergeType)[keyof typeof VerticalMergeType] | undefined;
+
+        if (activeVmerge[col]?.remaining && activeVmerge[col]!.remaining > 0) {
+          vMerge = VerticalMergeType.CONTINUE;
+          activeVmerge[col]!.remaining--;
+          // Si hay span por colspan, consumir también en columnas siguientes como SKIP
+          const span = activeVmerge[col]!.span || 1;
+          for (let s = 1; s < span; s++) {
+            // Las columnas skip ya vienen marcadas, no hacemos nada
+          }
+          // Celdas CONTINUE deben ir vacías (contenido en la celda RESTART)
+          cells.push(
+            this.crearTableCellDesdeHtml(htmlCell, asegurarString, extraerTextoConHighlight, {
+              forceVerticalMerge: vMerge,
+              columnSpanOverride: colspan,
+              empty: true,
             })
           );
-        }
-
-        const paragraphOptions: any = {
-          alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-          children,
-          spacing: {
-            before: 50,
-            after: 50,
-            line: 360,
-          },
-        };
-
-        const cellOptions: any = {
-          children: [new Paragraph(paragraphOptions)],
-          shading: isHeader ? { fill: 'E6E6E6' } : undefined,
-          margins: {
-            top: 100,
-            bottom: 100,
-            left: 100,
-            right: 100,
-          },
-          verticalAlign: 'center' as any,
-          borders: {
-            top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-          },
-        };
-
-        if (colspan > 1) {
-          cellOptions.columnSpan = colspan;
-          cellOptions.width = {
-            size: colspan * 10,
-            type: WidthType.PERCENTAGE,
-          };
+          // Saltar columnas del colspan
+          col += Math.max(1, colspan) - 1;
+          continue;
         }
 
         if (rowspan > 1) {
-          cellOptions.rowSpan = rowspan;
-          cellOptions.verticalAlign = 'center' as any;
+          vMerge = VerticalMergeType.RESTART;
+          activeVmerge[col] = { remaining: rowspan - 1, span: Math.max(1, colspan) };
+        } else {
+          activeVmerge[col] = null;
         }
 
-        return new TableCell(cellOptions);
-      });
+        cells.push(
+          this.crearTableCellDesdeHtml(htmlCell, asegurarString, extraerTextoConHighlight, {
+            forceVerticalMerge: vMerge,
+            columnSpanOverride: colspan,
+          })
+        );
+
+        col += Math.max(1, colspan) - 1;
+      }
 
       return new TableRow({
         children: cells,
@@ -147,7 +333,8 @@ export class DocxTableBuilder {
         maxCells = totalColumns;
       }
 
-      if (!dataRow && cells.length === totalColumns && cells.some((c) => c.tagName === 'TD')) {
+      // Elegir una fila de datos con el máximo de columnas para evitar sesgos cuando hay rowspan
+      if (!dataRow && totalColumns === maxCells && cells.some((c) => c.tagName === 'TD')) {
         dataRow = row;
       }
     }

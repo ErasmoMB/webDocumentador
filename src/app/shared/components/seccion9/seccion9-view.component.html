@@ -47,9 +47,9 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of getTiposMaterialesData(); let i = index" [class]="getRowClassesTiposMateriales(item)">
-        <td class="table-cell" 
+        <td *ngIf="shouldShowCategoriaCellTiposMateriales(i)"
+            class="table-cell" 
             [attr.rowspan]="getRowspanTiposMateriales(i)"
-            [style.display]="shouldShowCategoriaCellTiposMateriales(i) ? '' : 'none'"
             [class.categoria-agrupada]="isFirstRowOfGroup(i)">
           <span [appDataSource]="'backend'">{{ item.categoria }}</span>
         </td>

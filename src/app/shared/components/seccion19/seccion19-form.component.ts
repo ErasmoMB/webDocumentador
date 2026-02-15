@@ -135,13 +135,10 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     
     const tabla = fromField ?? fromTable ?? [];
-    
-    // Validar que tenga contenido real
-    if (Array.isArray(tabla) && tabla.length > 0) {
+    if (Array.isArray(tabla)) {
       return tabla;
     }
-    
-    return [{ organizacion: '', cargo: '', nombre: '' }];
+    return [];
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -280,8 +277,26 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   private inicializarTablasVacias(): void {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `autoridades${prefijo}` : 'autoridades';
-    
-    if (!Array.isArray(this.datos[tablaKey])) {
+
+    const current = this.datos[tablaKey];
+    const esTabla = Array.isArray(current);
+    const tieneColumnasAutoridades = (rows: any[]): boolean => {
+      return rows.some(r => {
+        if (!r || typeof r !== 'object') return false;
+        return 'organizacion' in r || 'cargo' in r || 'nombre' in r;
+      });
+    };
+
+    // ✅ Normalizar: si no es array, inicializar como vacío
+    if (!esTabla) {
+      this.datos[tablaKey] = [];
+      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+      this.projectFacade.setField(this.seccionId, null, 'autoridades', []);
+      return;
+    }
+
+    // ✅ Limpieza defensiva: si hay datos con forma incompatible (p.ej. legado/placeholder), vaciar.
+    if (current.length > 0 && !tieneColumnasAutoridades(current)) {
       this.datos[tablaKey] = [];
       this.projectFacade.setField(this.seccionId, null, tablaKey, []);
       this.projectFacade.setField(this.seccionId, null, 'autoridades', []);
@@ -303,10 +318,19 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
 
     const prefijo = this.obtenerPrefijoGrupo();
 
-    // ✅ Cargar datos de autoridades - NOTA: Aquí puedes usar el endpoint específico
-    // Por ahora usa postReligionPorCpp como ejemplo (devuelve el formato estándar)
-    // Cambiar a: this.backendApi.postAutoridadesPorCpp(codigos) cuando esté disponible
-    this.backendApi.postReligionPorCpp(codigos).subscribe({
+    // ✅ IMPORTANTE
+    // Esta sección es principalmente manual. Antes se usaba `postReligionPorCpp(...)` como
+    // placeholder para “probar” el llenado; eso provoca que la tabla se llene con datos que
+    // NO corresponden (y da la impresión de que “se llena aunque el backend no tenga data”).
+    //
+    // Si en el futuro existe un endpoint real, úsalo aquí:
+    //   (this.backendApi as any).postAutoridadesPorCpp(codigos)
+    const backendAny = this.backendApi as any;
+    if (typeof backendAny.postAutoridadesPorCpp !== 'function') {
+      return;
+    }
+
+    backendAny.postAutoridadesPorCpp(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformAutoridadesDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
@@ -316,7 +340,7 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
         this.projectFacade.setField(this.seccionId, null, 'autoridades', datosTransformados);
         this.cdRef.markForCheck();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('[SECCION19] Error cargando autoridades del backend:', err);
       }
     });

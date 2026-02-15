@@ -366,8 +366,9 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     console.log(`Tabla A1 actual:`, tablaA1Actual);
     console.log(`¿Esta vacia A1?: ${estaVaciaA1}, ¿Tiene datos validos A1?: ${tieneDatosValidosA1}`);
     
-    if (!estaVaciaA1 && !tieneDatosValidosA1) {
-      // La tabla tiene filas pero ninguna con datos válidos, buscar capital
+    // ✅ CORREGIDO: si está vacía o sin datos válidos, se debe auto-llenar
+    if ((estaVaciaA1 || !tieneDatosValidosA1) && centrosDelGrupo.length > 0) {
+      // Buscar capital
       let capital = centrosDelGrupo.find(cp => {
         const cat = (cp.categoria || '').toLowerCase();
         return cat.includes('capital');
@@ -398,8 +399,10 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       }
     } else if (tieneDatosValidosA1) {
       console.log('✅ La tabla A1 ya tiene datos válidos');
+    } else if (centrosDelGrupo.length === 0) {
+      console.log('⚠️ No hay centros poblados en el grupo (no se puede auto-llenar A1)');
     } else {
-      console.log('⚠️ La tabla A1 está vacía');
+      console.log('⚠️ La tabla A1 está vacía y no se auto-llenó (condición no cumplida)');
     }
 
     // === TABLA A2: Llenar con todos los centros poblados del grupo ===

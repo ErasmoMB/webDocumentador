@@ -47,6 +47,12 @@ export class ImageUploadComponent implements OnInit, OnChanges {
   @Input() sectionId: string = '3.1.1';
   @Input() photoPrefix: string = '';
   @Input() key: number = 0;
+  /**
+   * Cuando es true, este componente NO persiste imágenes/metadata por su cuenta.
+   * Solo actualiza su estado local y emite `fotografiasChange` para que el contenedor
+   * (p. ej. una sección) sea la única capa que persiste usando ImageFacade.
+   */
+  @Input() externalPersistence: boolean = false;
 
   @Output() tituloChange = new EventEmitter<string>();
   @Output() fuenteChange = new EventEmitter<string>();
@@ -184,23 +190,25 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
 
-      // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
-      try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
-        const fotosParaGuardar = this._fotografias.map(f => ({
-          ...f,
-          imagen: this.extractImageId(f.imagen) || f.imagen
-        }));
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-      } catch (e) { /* noop */ }
+      if (!this.externalPersistence) {
+        // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+          const fotosParaGuardar = this._fotografias.map(f => ({
+            ...f,
+            imagen: this.extractImageId(f.imagen) || f.imagen
+          }));
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+        } catch (e) { /* noop */ }
+      }
 
-      // Debounce persistence y emit
-      this.scheduleMetaPersist(i);
+      // Debounce: persistencia interna o solo emitir cambios
+      this.scheduleMetaUpdate(i);
     } else {
       this.titulo = val;
       this.tituloChange.emit(val);
-      // Debounce persist for single image
-      this.scheduleMetaPersist();
+      // Debounce persist for single image (o emitir cambios)
+      this.scheduleMetaUpdate();
     }
   }
 
@@ -211,23 +219,25 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       this._fotografias = [...this._fotografias];
       this.cdRef.detectChanges();
 
-      // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
-      try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
-        const fotosParaGuardar = this._fotografias.map(f => ({
-          ...f,
-          imagen: this.extractImageId(f.imagen) || f.imagen
-        }));
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-      } catch (e) { /* noop */ }
+      if (!this.externalPersistence) {
+        // Guardar inmediatamente vía facade para soportar flujos que esperan persistencia sin debounce
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
+          const fotosParaGuardar = this._fotografias.map(f => ({
+            ...f,
+            imagen: this.extractImageId(f.imagen) || f.imagen
+          }));
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+        } catch (e) { /* noop */ }
+      }
 
-      // Debounce persistence and emit
-      this.scheduleMetaPersist(i);
+      // Debounce: persistencia interna o solo emitir cambios
+      this.scheduleMetaUpdate(i);
     } else {
       this.fuente = val;
       this.fuenteChange.emit(val);
-      // Debounce persist for single image
-      this.scheduleMetaPersist();
+      // Debounce persist for single image (o emitir cambios)
+      this.scheduleMetaUpdate();
     }
   }
 
@@ -270,68 +280,85 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       
       const foto = this._fotografias[index];
       
-      // 🔑 Obtener groupPrefix para aislar por grupos dinámicos
-      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      
-      // 🔑 Construir claves CON groupPrefix: fotografia1Imagen_A1 (no fotografia1Imagen)
-      const imagenKey = groupPrefix ? `${this.photoPrefix}${index + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${index + 1}Imagen`;
-      const numeroKey = groupPrefix ? `${this.photoPrefix}${index + 1}Numero${groupPrefix}` : `${this.photoPrefix}${index + 1}Numero`;
-      const tituloKey = groupPrefix ? `${this.photoPrefix}${index + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${index + 1}Titulo`;
-      const fuenteKey = groupPrefix ? `${this.photoPrefix}${index + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${index + 1}Fuente`;
-      
-      // Persistir imagen y metadatos e indicar notifySync para actualizar vista inmediatamente
-      try { this.formChange.persistFields(this.sectionId, 'images', {
-        [imagenKey]: persistValue,
-        [numeroKey]: numGlobal,
-        [tituloKey]: foto.titulo || this.tituloDefault,
-        [fuenteKey]: foto.fuente || this.fuenteDefault
-      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields error', e); }
-
       this._fotografias = [...this._fotografias];
       this.emitirCambios();
 
-      try {
-        const fotosParaGuardar = this._fotografias.map(f => ({
-          ...f,
-          imagen: this.extractImageId(f.imagen) || f.imagen
-        }));
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-        try { ViewChildHelper.updateAllComponents('actualizarDatos'); ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
-      } catch (e) {
-        /* saveImages multi error */
-        console.warn('[ImageUpload] saveImages error', e);
+      if (!this.externalPersistence) {
+        // Persistencia interna (legacy)
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+          const imagenKey = groupPrefix ? `${this.photoPrefix}${index + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${index + 1}Imagen`;
+          const numeroKey = groupPrefix ? `${this.photoPrefix}${index + 1}Numero${groupPrefix}` : `${this.photoPrefix}${index + 1}Numero`;
+          const tituloKey = groupPrefix ? `${this.photoPrefix}${index + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${index + 1}Titulo`;
+          const fuenteKey = groupPrefix ? `${this.photoPrefix}${index + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${index + 1}Fuente`;
+
+          try {
+            this.formChange.persistFields(this.sectionId, 'images', {
+              [imagenKey]: persistValue,
+              [numeroKey]: numGlobal,
+              [tituloKey]: foto.titulo || this.tituloDefault,
+              [fuenteKey]: foto.fuente || this.fuenteDefault
+            }, { notifySync: true });
+          } catch (e) { console.warn('[ImageUpload] persistFields error', e); }
+
+          const fotosParaGuardar = this._fotografias.map(f => ({
+            ...f,
+            imagen: this.extractImageId(f.imagen) || f.imagen
+          }));
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+          try {
+            ViewChildHelper.updateAllComponents('actualizarDatos');
+            ViewChildHelper.updateAllComponents('cargarFotografias');
+          } catch (e) { console.warn('[ImageUpload] ViewChildHelper update error', e); }
+        } catch (e) {
+          console.warn('[ImageUpload] saveImages error', e);
+        }
       }
     } else {
       this.preview = imgData;
       this.imagenChange.emit(imgData);
       
-      // 🔑 Obtener groupPrefix para aislar por grupos dinámicos
-      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      
-      // 🔑 Construir claves CON groupPrefix: fotografiaImagen_A1 (no fotografiaImagen)
-      const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
-      const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
-      const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
-      const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
-      
-      // Persistir imagen y metadatos (single) e indicar notifySync para actualizar vista inmediatamente
-      try { this.formChange.persistFields(this.sectionId, 'images', {
-        [imagenKey]: persistValue,
-        [numeroKey]: numGlobal,
-        [tituloKey]: this.titulo || this.tituloDefault,
-        [fuenteKey]: this.fuente || this.fuenteDefault
-      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(single) error', e); }
-
+      // Mantener estado local consistente también en single
       try {
-        const fotosParaGuardar = [{
-          numero: numGlobal,
-          titulo: this.titulo || this.tituloDefault,
-          fuente: this.fuente || this.fuenteDefault,
-          imagen: persistValue
-        }];
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-        try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* ViewChildHelper error */ }
-      } catch (e) {
+        if (this._fotografias && this._fotografias[0]) {
+          this._fotografias[0].imagen = imgData;
+          this._fotografias[0].numero = numGlobal;
+          this._fotografias = [...this._fotografias];
+          this.emitirCambios();
+        }
+      } catch {}
+
+      if (!this.externalPersistence) {
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+          const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
+          const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
+          const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
+          const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
+
+          try {
+            this.formChange.persistFields(this.sectionId, 'images', {
+              [imagenKey]: persistValue,
+              [numeroKey]: numGlobal,
+              [tituloKey]: this.titulo || this.tituloDefault,
+              [fuenteKey]: this.fuente || this.fuenteDefault
+            }, { notifySync: true });
+          } catch (e) { console.warn('[ImageUpload] persistFields(single) error', e); }
+
+          const fotosParaGuardar = [{
+            numero: numGlobal,
+            titulo: this.titulo || this.tituloDefault,
+            fuente: this.fuente || this.fuenteDefault,
+            imagen: persistValue
+          }];
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+          try {
+            const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper');
+            ViewChildHelper.updateAllComponents('actualizarDatos');
+          } catch (e) { /* ViewChildHelper error */ }
+        } catch (e) {
+          /* noop */
+        }
       }
     }
     
@@ -368,60 +395,76 @@ export class ImageUploadComponent implements OnInit, OnChanges {
     if (this.permitirMultiples && i !== undefined) {
       this._fotografias.splice(i, 1);
       if (this._fotografias.length === 0) this._fotografias = [this.createEmptyFoto()];
-      
-      // ✅ CRÍTICO: Usar groupPrefix al eliminar (como se hace al guardar)
-      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      const imagenKey = groupPrefix ? `${this.photoPrefix}${i + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${i + 1}Imagen`;
-      const numeroKey = groupPrefix ? `${this.photoPrefix}${i + 1}Numero${groupPrefix}` : `${this.photoPrefix}${i + 1}Numero`;
-      const tituloKey = groupPrefix ? `${this.photoPrefix}${i + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${i + 1}Titulo`;
-      const fuenteKey = groupPrefix ? `${this.photoPrefix}${i + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${i + 1}Fuente`;
-      
-      try { this.formChange.persistFields(this.sectionId, 'images', {
-        [imagenKey]: '',
-        [numeroKey]: '',
-        [tituloKey]: '',
-        [fuenteKey]: ''
-      }, { notifySync: true }); } catch (e) { console.warn('[ImageUpload] persistFields(remove) error', e); }
-      
       this.emitirCambios();
 
-      try {
-        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId);
-        const fotosParaGuardar = this._fotografias.map(f => ({
-          ...f,
-          imagen: this.extractImageId(f.imagen) || f.imagen
-        }));
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
-        // ✅ Forzar actualización en todos los componentes (including seccion3-view) para reflejar eliminación inmediata
-        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
-        try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
-      } catch (e) {
+      if (!this.externalPersistence) {
+        // Persistencia interna (legacy)
+        try {
+          const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+          const imagenKey = groupPrefix ? `${this.photoPrefix}${i + 1}Imagen${groupPrefix}` : `${this.photoPrefix}${i + 1}Imagen`;
+          const numeroKey = groupPrefix ? `${this.photoPrefix}${i + 1}Numero${groupPrefix}` : `${this.photoPrefix}${i + 1}Numero`;
+          const tituloKey = groupPrefix ? `${this.photoPrefix}${i + 1}Titulo${groupPrefix}` : `${this.photoPrefix}${i + 1}Titulo`;
+          const fuenteKey = groupPrefix ? `${this.photoPrefix}${i + 1}Fuente${groupPrefix}` : `${this.photoPrefix}${i + 1}Fuente`;
+
+          try {
+            this.formChange.persistFields(this.sectionId, 'images', {
+              [imagenKey]: '',
+              [numeroKey]: '',
+              [tituloKey]: '',
+              [fuenteKey]: ''
+            }, { notifySync: true });
+          } catch (e) { console.warn('[ImageUpload] persistFields(remove) error', e); }
+
+          const fotosParaGuardar = this._fotografias.map(f => ({
+            ...f,
+            imagen: this.extractImageId(f.imagen) || f.imagen
+          }));
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, fotosParaGuardar, groupPrefix);
+          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+          try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
+        } catch (e) {
+          /* noop */
+        }
       }
     } else {
       // single mode
       this.preview = null;
       this.imagenChange.emit('');
       
-      // ✅ CRÍTICO: Usar groupPrefix al eliminar (como se hace al guardar)
-      const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
-      const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
-      const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
-      const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
-      const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
-      
-      this.formChange.persistFields(this.sectionId, 'images', {
-        [imagenKey]: '',
-        [numeroKey]: '',
-        [tituloKey]: '',
-        [fuenteKey]: ''
-      }, { notifySync: true });
+      if (!this.externalPersistence) {
+        // Persistencia interna (legacy)
+        const groupPrefix = this.imageFacade.getGroupPrefix(this.sectionId) || '';
+        const imagenKey = groupPrefix ? `${this.photoPrefix}Imagen${groupPrefix}` : `${this.photoPrefix}Imagen`;
+        const numeroKey = groupPrefix ? `${this.photoPrefix}Numero${groupPrefix}` : `${this.photoPrefix}Numero`;
+        const tituloKey = groupPrefix ? `${this.photoPrefix}Titulo${groupPrefix}` : `${this.photoPrefix}Titulo`;
+        const fuenteKey = groupPrefix ? `${this.photoPrefix}Fuente${groupPrefix}` : `${this.photoPrefix}Fuente`;
+        
+        try {
+          this.formChange.persistFields(this.sectionId, 'images', {
+            [imagenKey]: '',
+            [numeroKey]: '',
+            [tituloKey]: '',
+            [fuenteKey]: ''
+          }, { notifySync: true });
+        } catch {}
 
-      try {
-        this.imageFacade.saveImages(this.sectionId, this.photoPrefix, [], groupPrefix);
-        // ✅ Forzar actualización en todos los componentes para reflejar eliminación inmediata
-        try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
-        try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
-      } catch (e) {
+        try {
+          this.imageFacade.saveImages(this.sectionId, this.photoPrefix, [], groupPrefix);
+          try { ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+          try { ViewChildHelper.updateAllComponents('cargarFotografias'); } catch (e) {}
+        } catch (e) {
+          /* noop */
+        }
+      } else {
+        // Mantener array local consistente
+        try {
+          if (this._fotografias && this._fotografias[0]) {
+            this._fotografias[0].imagen = null;
+            this._fotografias[0].numero = '';
+            this._fotografias = [...this._fotografias];
+            this.emitirCambios();
+          }
+        } catch {}
       }
     }
     this.cdRef.detectChanges();
@@ -439,6 +482,33 @@ export class ImageUploadComponent implements OnInit, OnChanges {
       imagen: this.extractImageId(f.imagen) || f.imagen
     }));
     this.fotografiasChange.emit(payload);
+  }
+
+  private scheduleMetaUpdate(index?: number) {
+    if (this.externalPersistence) {
+      this.scheduleMetaEmit(index);
+      return;
+    }
+    this.scheduleMetaPersist(index);
+  }
+
+  private scheduleMetaEmit(index?: number) {
+    const key = (index !== undefined) ? `meta_${index}` : 'meta_single';
+
+    if (this.metaDebounceTimers.has(key)) {
+      clearTimeout(this.metaDebounceTimers.get(key));
+    }
+
+    const timeout = setTimeout(() => {
+      try {
+        // En modo externo, solo emitir cambios para que el contenedor persista.
+        this.emitirCambios();
+      } catch {}
+      this.metaDebounceTimers.delete(key);
+      this.cdRef.detectChanges();
+    }, this.META_DEBOUNCE_MS);
+
+    this.metaDebounceTimers.set(key, timeout);
   }
 
   private scheduleMetaPersist(index?: number) {

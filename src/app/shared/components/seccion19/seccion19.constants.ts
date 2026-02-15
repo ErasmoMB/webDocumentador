@@ -95,7 +95,8 @@ export const SECCION19_CONSTANTS = {
   TABLA_AUTORIDADES: 'autoridades',
   TITULO_DEFAULT: SECCION19_TEMPLATES.tituloAutoridadesDefault,
   FUENTE_DEFAULT: SECCION19_TEMPLATES.fuenteAutoridadesDefault,
-  TABLA_CONFIG_INICIAL: [{ organizacion: '', cargo: '', nombre: '' }],
+  // ✅ Sin filas por defecto: la tabla inicia vacía.
+  TABLA_CONFIG_INICIAL: [],
 };
 
 // ✅ PATRÓN IDEAL - Prefijos de fotos específicos por tema

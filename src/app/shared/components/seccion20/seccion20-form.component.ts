@@ -38,7 +38,7 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
 
   festividadesConfig: TableConfig = {
     tablaKey: 'festividades',
-    totalKey: 'festividad',
+      totalKey: '', // Se agregó totalKey vacío para desactivar lógica de 'columna identificadora'
     estructuraInicial: SECCION20_TEMPLATES.tablaEstructuraInicial
     // ✅ NO incluir campoTotal porque festividad es texto, no número
   };

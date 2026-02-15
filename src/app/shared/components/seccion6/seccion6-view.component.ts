@@ -8,6 +8,24 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { debugLog } from 'src/app/shared/utils/debug';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
+import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { transformPoblacionSexoDesdeDemograficos, transformPoblacionEtarioDesdeDemograficos } from 'src/app/core/config/table-transforms';
+
+// Helper para desenvuelver datos del backend (misma idea que en el form)
+const unwrapDemograficoData = (responseData: any): any[] => {
+  if (!responseData) return [];
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    return responseData[0]?.rows || responseData;
+  }
+  if (responseData.data) {
+    const data = responseData.data;
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0]?.rows || data;
+    }
+    return data;
+  }
+  return [];
+};
 
 @Component({
   standalone: true,
@@ -38,6 +56,46 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
   readonly vistDataSignal: Signal<Record<string, any>> = computed(() => {
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
+  });
+
+  // ✅ Códigos AISD del grupo actual (pueden llegar después de montar la vista)
+  private readonly codigosAISDSignal: Signal<readonly string[]> = computed(() => {
+    return this.getCodigosCentrosPobladosAISD();
+  });
+
+  private backendLoadRequested = false;
+
+  // ✅ Tablas reactivas (evita vacíos intermitentes en vista OnPush)
+  readonly poblacionSexoRowsSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const data = this.vistDataSignal();
+    const tablaConPrefijo = prefijo ? data[`poblacionSexoAISD${prefijo}`] : null;
+    if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    if (data['poblacionSexoAISD'] && this.tieneContenidoRealDemografia(data['poblacionSexoAISD'])) {
+      return data['poblacionSexoAISD'];
+    }
+    if (data['poblacionSexoTabla'] && this.tieneContenidoRealDemografia(data['poblacionSexoTabla'])) {
+      return data['poblacionSexoTabla'];
+    }
+    return [];
+  });
+
+  readonly poblacionEtarioRowsSignal: Signal<any[]> = computed(() => {
+    const prefijo = this.prefijoGrupoSignal();
+    const data = this.vistDataSignal();
+    const tablaConPrefijo = prefijo ? data[`poblacionEtarioAISD${prefijo}`] : null;
+    if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
+      return tablaConPrefijo;
+    }
+    if (data['poblacionEtarioAISD'] && this.tieneContenidoRealDemografia(data['poblacionEtarioAISD'])) {
+      return data['poblacionEtarioAISD'];
+    }
+    if (data['poblacionEtarioTabla'] && this.tieneContenidoRealDemografia(data['poblacionEtarioTabla'])) {
+      return data['poblacionEtarioTabla'];
+    }
+    return [];
   });
 
   readonly vistTextoPoblacionSexoSignal: Signal<string> = computed(() => {
@@ -93,7 +151,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     cdRef: ChangeDetectorRef,
     injector: Injector,
     // Seccion6TableConfigService eliminado - configs ahora son constantes
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private backendApi: BackendApiService
   ) {
     super(cdRef, injector);
     // Configs ya inicializadas como propiedades de clase
@@ -111,11 +170,100 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       this.fotografiasVista = [...this.fotografiasCache];
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
+
+    // ✅ EFFECT 3: En vista/plantilla, cargar backend si faltan datos (evita “se llena recién al recargar”)
+    effect(() => {
+      const codigos = this.codigosAISDSignal();
+      const rowsSexo = this.poblacionSexoRowsSignal();
+      const rowsEtario = this.poblacionEtarioRowsSignal();
+
+      const necesitaSexo = !rowsSexo || rowsSexo.length === 0;
+      const necesitaEtario = !rowsEtario || rowsEtario.length === 0;
+
+      if (!necesitaSexo && !necesitaEtario) return;
+      if (this.backendLoadRequested) return;
+      if (!codigos || codigos.length === 0) return;
+
+      this.backendLoadRequested = true;
+      this.cargarDatosDelBackendVista(codigos, { sexo: necesitaSexo, etario: necesitaEtario });
+    }, { allowSignalWrites: true });
   }
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
     this.fotografiasVista = [...this.fotografiasCache];
+  }
+
+  private cargarDatosDelBackendVista(
+    codigos: readonly string[],
+    flags: { sexo: boolean; etario: boolean }
+  ): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    debugLog('[SECCION6:VIEW] 📡 Cargando demografía desde backend (vista)...', {
+      seccionId: this.seccionId,
+      prefijo,
+      codigos,
+      flags
+    });
+
+    if (flags.sexo) {
+      this.backendApi.postDatosDemograficos([...codigos]).subscribe({
+        next: (response: any) => {
+          try {
+            // Guardas: no sobre-escribir si ya se llenó mientras esperábamos
+            if (this.poblacionSexoRowsSignal().length > 0) return;
+
+            const dataRaw = response?.data ?? response;
+            const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+            const datosTransformados = transformPoblacionSexoDesdeDemograficos(datosDesenvueltos);
+
+            if (datosTransformados.length > 0) {
+              const tablaKey = `poblacionSexoAISD${prefijo}`;
+              this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+              this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISD', datosTransformados);
+              this.cdRef.markForCheck();
+              debugLog('[SECCION6:VIEW] ✅ Tabla sexo cargada', { tablaKey, rows: datosTransformados.length });
+            } else {
+              debugLog('[SECCION6:VIEW] ⚠️ Tabla sexo sin datos transformados', { prefijo });
+            }
+          } catch (e) {
+            debugLog('[SECCION6:VIEW] ❌ Error transformando datos de sexo:', e);
+          }
+        },
+        error: (err: any) => {
+          debugLog('[SECCION6:VIEW] ❌ Error cargando población por sexo:', err);
+        }
+      });
+    }
+
+    if (flags.etario) {
+      this.backendApi.postEtario([...codigos]).subscribe({
+        next: (response: any) => {
+          try {
+            if (this.poblacionEtarioRowsSignal().length > 0) return;
+
+            const dataRaw = response?.data ?? response;
+            const datosDesenvueltos = unwrapDemograficoData(dataRaw);
+            const datosTransformados = transformPoblacionEtarioDesdeDemograficos(datosDesenvueltos);
+
+            if (datosTransformados.length > 0) {
+              const tablaKey = `poblacionEtarioAISD${prefijo}`;
+              this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+              this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISD', datosTransformados);
+              this.cdRef.markForCheck();
+              debugLog('[SECCION6:VIEW] ✅ Tabla etario cargada', { tablaKey, rows: datosTransformados.length });
+            } else {
+              debugLog('[SECCION6:VIEW] ⚠️ Tabla etario sin datos transformados', { prefijo });
+            }
+          } catch (e) {
+            debugLog('[SECCION6:VIEW] ❌ Error transformando datos etario:', e);
+          }
+        },
+        error: (err: any) => {
+          debugLog('[SECCION6:VIEW] ❌ Error cargando población etario:', err);
+        }
+      });
+    }
   }
 
   override ngOnDestroy(): void {
@@ -191,49 +339,19 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   getPoblacionSexoConPorcentajes(): any[] {
-    return this.getTablaSexo();
+    return this.poblacionSexoRowsSignal();
   }
 
   getPoblacionEtarioConPorcentajes(): any[] {
-    return this.getTablaEtario();
+    return this.poblacionEtarioRowsSignal();
   }
 
   private getTablaSexo(): any[] {
-    const prefijo = this.obtenerPrefijoGrupo();
-    
-    const tablaConPrefijo = prefijo ? this.datos[`poblacionSexoAISD${prefijo}`] : null;
-    if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
-      return tablaConPrefijo;
-    }
-    
-    if (this.datos.poblacionSexoAISD && this.tieneContenidoRealDemografia(this.datos.poblacionSexoAISD)) {
-      return this.datos.poblacionSexoAISD;
-    }
-    
-    if (this.datos.poblacionSexoTabla && this.tieneContenidoRealDemografia(this.datos.poblacionSexoTabla)) {
-      return this.datos.poblacionSexoTabla;
-    }
-    
-    return [];
+    return this.poblacionSexoRowsSignal();
   }
 
   private getTablaEtario(): any[] {
-    const prefijo = this.obtenerPrefijoGrupo();
-    
-    const tablaConPrefijo = prefijo ? this.datos[`poblacionEtarioAISD${prefijo}`] : null;
-    if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
-      return tablaConPrefijo;
-    }
-    
-    if (this.datos.poblacionEtarioAISD && this.tieneContenidoRealDemografia(this.datos.poblacionEtarioAISD)) {
-      return this.datos.poblacionEtarioAISD;
-    }
-    
-    if (this.datos.poblacionEtarioTabla && this.tieneContenidoRealDemografia(this.datos.poblacionEtarioTabla)) {
-      return this.datos.poblacionEtarioTabla;
-    }
-    
-    return [];
+    return this.poblacionEtarioRowsSignal();
   }
 
   private tieneContenidoRealDemografia(tabla: any[]): boolean {
