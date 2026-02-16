@@ -17,45 +17,77 @@ export class SessionDataService {
 
   async saveData(key: string, data: any): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.post(
+      const sessionId = this.getOrCreateSessionId();
+      const headers = new HttpHeaders({
+        'x-session-id': sessionId,
+        'Content-Type': 'application/json',
+      });
+
+      console.log(`[SessionData] 💾 Guardando: key=${key}, sessionId=${sessionId}`);
+
+      const response = await firstValueFrom(
+        this.http.post<any>(
           `${this.apiUrl}/session-data/save`,
           { key, data },
-          { headers: this.buildHeaders() },
+          { headers }
         ),
       );
-    } catch {
+
+      console.log(`[SessionData] ✅ Guardado exitoso:`, response);
+    } catch (error) {
+      console.error(`[SessionData] ❌ Error guardando ${key}:`, error);
+      // Fallback a localStorage
       this.storageFacade.setItemStringified(this.localKey(key), data);
     }
   }
 
   async loadData(key: string): Promise<any> {
     try {
+      const sessionId = this.getOrCreateSessionId();
+      const headers = new HttpHeaders({
+        'x-session-id': sessionId,
+      });
+
+      console.log(`[SessionData] 📥 Cargando: key=${key}, sessionId=${sessionId}`);
+
       const response: any = await firstValueFrom(
         this.http.get(`${this.apiUrl}/session-data/load/${encodeURIComponent(key)}`, {
-          headers: this.buildHeaders(),
+          headers,
         }),
       );
 
       const value = response?.data ?? null;
+      console.log(`[SessionData] ✅ Cargado:`, { key, value });
+      
       if (value !== null) {
         this.storageFacade.setItemStringified(this.localKey(key), value);
       }
       return value;
-    } catch {
+    } catch (error) {
+      console.error(`[SessionData] ⚠️ Error cargando ${key}:`, error);
       return this.storageFacade.getItemParsed<any>(this.localKey(key));
     }
   }
 
   async clearAll(): Promise<void> {
     try {
+      const sessionId = this.getOrCreateSessionId();
+      const headers = new HttpHeaders({
+        'x-session-id': sessionId,
+      });
+
+      console.log(`[SessionData] 🗑️ Limpiando sesión: ${sessionId}`);
+
       await firstValueFrom(
         this.http.delete(`${this.apiUrl}/session-data/clear`, {
-          headers: this.buildHeaders(),
+          headers,
           body: {},
         }),
       );
-    } catch {
+
+      console.log(`[SessionData] ✅ Sesión limpiada`);
+    } catch (error) {
+      console.error(`[SessionData] ⚠️ Error limpiando sesión:`, error);
     }
 
     const keys = this.storageFacade.keys();
@@ -71,33 +103,38 @@ export class SessionDataService {
     formData.append('file', file);
 
     try {
+      const sessionId = this.getOrCreateSessionId();
+      const headers = new HttpHeaders({
+        'x-session-id': sessionId,
+      });
+
+      console.log(`[SessionData] 📤 Subiendo imagen: ${file.name}`);
+
       const response: any = await firstValueFrom(
         this.http.post(`${this.apiUrl}/session-data/upload-image`, formData, {
-          headers: this.buildHeaders(),
+          headers,
         }),
       );
 
       if (typeof response === 'string') {
+        console.log(`[SessionData] ✅ Imagen subida:`, response);
         return response;
       }
       if (typeof response?.url === 'string') {
+        console.log(`[SessionData] ✅ Imagen subida:`, response.url);
         return response.url;
       }
       if (typeof response?.data === 'string') {
+        console.log(`[SessionData] ✅ Imagen subida:`, response.data);
         return response.data;
       }
       return '';
-    } catch {
+    } catch (error) {
+      console.error(`[SessionData] ⚠️ Error subiendo imagen:`, error);
       const base64 = await this.fileToBase64(file);
       await this.saveData(`image:${Date.now()}`, base64);
       return base64;
     }
-  }
-
-  private buildHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'x-session-id': this.getOrCreateSessionId(),
-    });
   }
 
   private getOrCreateSessionId(): string {
