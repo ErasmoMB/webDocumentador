@@ -14,8 +14,8 @@
           [label]="SECCION6_TEMPLATES.labelTextoPoblacionSexo"
           [hint]="SECCION6_TEMPLATES.hintTextoPoblacionSexo"
           [rows]="4"
-          [value]="obtenerTextoPoblacionSexo(datos, obtenerNombreComunidadActual())"
-          (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoPoblacionSexoSignal()"
+          (valueChange)="onFieldChange('textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -25,14 +25,13 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionSexoAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
+            [ngModel]="sectionDataSignal()['tituloPoblacionSexoAISD' + obtenerPrefijoGrupo()] || ''"
+            (ngModelChange)="onFieldChange('tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaSexo">
         </div>
 
         <label class="label">{{ SECCION6_TEMPLATES.labelTablaPoblacionSexo }}</label>
         <app-dynamic-table
-          [datos]="datos"
           [config]="poblacionSexoConfig"
           [columns]="poblacionSexoColumns"
           [sectionId]="seccionId"
@@ -46,8 +45,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionSexoAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
+            [ngModel]="sectionDataSignal()['fuentePoblacionSexoAISD' + obtenerPrefijoGrupo()] || ''"
+            (ngModelChange)="onFieldChange('fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaSexo">
         </div>
       </div>
@@ -65,8 +64,8 @@
           [label]="SECCION6_TEMPLATES.labelTextoPoblacionEtario"
           [hint]="SECCION6_TEMPLATES.hintTextoPoblacionEtario"
           [rows]="4"
-          [value]="obtenerTextoPoblacionEtario(datos, obtenerNombreComunidadActual())"
-          (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
+          [value]="textoPoblacionEtarioSignal()"
+          (valueChange)="onFieldChange('textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -76,14 +75,13 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
+            [ngModel]="sectionDataSignal()['tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo()] || ''"
+            (ngModelChange)="onFieldChange('tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaEtario">
         </div>
 
         <label class="label">{{ SECCION6_TEMPLATES.labelTablaEtario }}</label>
         <app-dynamic-table
-          [datos]="datos"
           [config]="poblacionEtarioConfig"
           [columns]="poblacionEtarioColumns"
           [sectionId]="seccionId"
@@ -97,8 +95,8 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
-            (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
+            [ngModel]="sectionDataSignal()['fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo()] || ''"
+            (ngModelChange)="onFieldChange('fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaEtario">
         </div>
       </div>

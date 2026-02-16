@@ -400,31 +400,17 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
   // ✅ OVERRIDE CRÍTICO: cargarFotografias() DEBE LEER DEL SIGNAL REACTIVO (vistDataSignal)
   override cargarFotografias(): void {
-    const formData = this.vistDataSignal();
-    const prefijo = this.prefijoGrupoSignal();
-    const fotos: FotoItem[] = [];
-    
-    for (let i = 1; i <= 10; i++) {
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
-      const imagen = formData[imagenKey];
-      
-      if (imagen) {
-        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
-        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
-        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
-        
-        fotos.push({
-          imagen: imagen,
-          titulo: formData[tituloKey] || '',
-          fuente: formData[fuenteKey] || '',
-          numero: formData[numeroKey] || i
-        });
-      }
+    try {
+      const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId) || '';
+      const fotos = this.imageFacade.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix, 10);
+      this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
+      this.fotografiasVista = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    } catch {
+      this.fotografiasCache = [];
+      this.fotografiasVista = [];
+      this.cdRef.markForCheck();
     }
-    
-    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
-    this.fotografiasVista = [...this.fotografiasCache];
-    this.cdRef.markForCheck();
   }
 
   // ✅ MÉTODOS INLINE DE TEXTO (usando TEMPLATES)

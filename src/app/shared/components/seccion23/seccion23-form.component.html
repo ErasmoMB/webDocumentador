@@ -29,7 +29,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['petGruposEdadTitulo'] || ''" (input)="onFieldChange('petGruposEdadTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETTitulo">
+        <input type="text" class="input" [value]="formDataSignal()['petGruposEdadTitulo'] || ''" (input)="onFieldChange('petGruposEdadTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -54,7 +54,7 @@
 
         <div class="form-field" style="margin-top: 10px;">
           <label class="label">{{ SECCION23_TEMPLATES.labelPETFuente }}</label>
-          <input type="text" class="input" [value]="datos['petGruposEdadFuente'] || ''" (input)="onFieldChange('petGruposEdadFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETFuente">
+          <input type="text" class="input" [value]="formDataSignal()['petGruposEdadFuente'] || ''" (input)="onFieldChange('petGruposEdadFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPETFuente">
         </div>
       </div>
 
@@ -90,7 +90,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['peaDistritoSexoTitulo'] || ''" (input)="onFieldChange('peaDistritoSexoTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoTitulo">
+        <input type="text" class="input" [value]="formDataSignal()['peaDistritoSexoTitulo'] || ''" (input)="onFieldChange('peaDistritoSexoTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -119,7 +119,7 @@
 
         <div class="form-field" style="margin-top: 10px;">
           <label class="label">{{ SECCION23_TEMPLATES.labelPeaDistritoSexoFuente }}</label>
-          <input type="text" class="input" [value]="datos['peaDistritoSexoFuente'] || ''" (input)="onFieldChange('peaDistritoSexoFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoFuente">
+          <input type="text" class="input" [value]="formDataSignal()['peaDistritoSexoFuente'] || ''" (input)="onFieldChange('peaDistritoSexoFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaDistritoSexoFuente">
         </div>
       </div>
 
@@ -198,7 +198,7 @@
 
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">Título de la tabla</label>
-        <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaTitulo'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaTitulo">
+        <input type="text" class="input" [value]="formDataSignal()['peaOcupadaDesocupadaTitulo'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaTitulo', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaTitulo">
       </div>
 
       <div class="form-field" style="margin-top: 10px;">
@@ -227,7 +227,7 @@
 
         <div class="form-field" style="margin-top: 10px;">
           <label class="label">{{ SECCION23_TEMPLATES.labelPeaOcupadaDesocupadaFuente }}</label>
-          <input type="text" class="input" [value]="datos['peaOcupadaDesocupadaFuente'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaFuente">
+          <input type="text" class="input" [value]="formDataSignal()['peaOcupadaDesocupadaFuente'] || ''" (input)="onFieldChange('peaOcupadaDesocupadaFuente', $any($event.target).value)" [placeholder]="SECCION23_TEMPLATES.placeholderPeaOcupadaDesocupadaFuente">
         </div>
       </div>
 

@@ -117,7 +117,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   });
 
   readonly totalPoblacionSexoSignal: Signal<number> = computed(() => {
-    const poblacion = this.sectionDataSignal()['poblacionSexoAISD'] || [];
+    const poblacion = this.poblacionSexoSignal() || [];
     const sinTotal = Array.isArray(poblacion) 
       ? poblacion.filter((item: any) => item['sexo'] && item['sexo'] !== 'Total')
       : [];
@@ -128,7 +128,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   });
 
   readonly totalPoblacionEtarioSignal: Signal<number> = computed(() => {
-    const poblacion = this.sectionDataSignal()['poblacionEtarioAISD'] || [];
+    const poblacion = this.poblacionEtarioSignal() || [];
     const sinTotal = Array.isArray(poblacion)
       ? poblacion.filter((item: any) => item['categoria'] && item['categoria'] !== 'Total')
       : [];
@@ -200,10 +200,12 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       calcularPorcentajes: this.poblacionSexoConfig.calcularPorcentajes
     });
 
-    // ✅ EFFECT 1: Auto-sync datos reactivamente
+    // ✅ EFFECT 1: Auto-sync datos reactivamente (MERGE para no pisar ediciones en curso)
     effect(() => {
       const sectionData = this.sectionDataSignal();
-      this.datos = { ...sectionData };
+      if (sectionData && Object.keys(sectionData).length > 0) {
+        this.datos = { ...this.datos, ...sectionData };
+      }
       this.cdRef.markForCheck();
     });
 
@@ -432,13 +434,13 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   }
 
   onTablaSexoActualizada(): void {
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    // No llamar actualizarDatos(): lee de legacy (obtenerDatos/FormularioService)
+    this.cdRef.markForCheck();
   }
 
   onTablaEtarioActualizada(): void {
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    // No llamar actualizarDatos(): lee de legacy (obtenerDatos/FormularioService)
+    this.cdRef.markForCheck();
   }
 
   // ✅ Override: PhotoCoordinator maneja TODO la persistencia de imágenes

@@ -1,14 +1,10 @@
 /*
- * Fase 3 guardrail: evita reintroducir escrituras legacy directas a FormularioService
+ * Guardrail (SSOT / Fase 0): evita reintroducir escrituras legacy directas a FormularioService
  * desde el código de aplicación (fuera de coordinadores permitidos).
  *
  * Regla:
- * - Prohibido: (this.)formularioService.actualizarDato(...) / actualizarDatos(...)
- * - Permitido solo en:
- *   - src/app/shared/utils/section-persistence-coordinator.ts
- *   - src/app/shared/utils/section-reactive-sync-coordinator.ts
- *   - src/app/core/services/state/form-change.service.ts
- *   - src/app/core/services/formulario.service.ts
+ * - Prohibido: invocar métodos mutantes de FormularioService desde componentes/servicios de UI.
+ * - Permitido solo en coordinadores/puentes autorizados.
  */
 
 const fs = require('fs');
@@ -21,7 +17,7 @@ const allowlist = new Set([
   path.normalize(path.join(appRoot, 'shared', 'utils', 'section-persistence-coordinator.ts')),
   path.normalize(path.join(appRoot, 'shared', 'utils', 'section-reactive-sync-coordinator.ts')),
   path.normalize(path.join(appRoot, 'core', 'services', 'state', 'form-change.service.ts')),
-  path.normalize(path.join(appRoot, 'core', 'services', 'formulario.service.ts')),
+  path.normalize(path.join(appRoot, 'core', 'services', 'formulario', 'formulario.service.ts')),
   // ✅ ReactiveStateAdapter es un puente autorizado para sincronizar con localStorage
   path.normalize(path.join(appRoot, 'core', 'services', 'state-adapters', 'reactive-state-adapter.service.ts')),
   // ✅ Componentes coordinadores de plantilla (nivel alto)
@@ -29,10 +25,47 @@ const allowlist = new Set([
   path.normalize(path.join(appRoot, 'pages', 'plantilla', 'plantilla-view.component.ts')),
 ]);
 
-const forbiddenMatchers = [
-  { label: 'formularioService.actualizarDato', regex: /\bformularioService\s*\.\s*actualizarDato\s*\(/g },
-  { label: 'formularioService.actualizarDatos', regex: /\bformularioService\s*\.\s*actualizarDatos\s*\(/g },
+const forbiddenMethods = [
+  'actualizarDato',
+  'actualizarDatos',
+  'reemplazarDatos',
+  'guardarJSON',
+  'guardarFilasActivasTablaAISD2',
+  'limpiarDatos',
+  'guardarTablesTemporal',
+  // Cargar mock también muta y persiste datos legacy
+  'cargarMockCapitulo3',
 ];
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function findFormularioServiceIdentifiers(content) {
+  const ids = new Set();
+
+  // Propiedades / params con modificador: private fs: FormularioService
+  const withModifier = /\b(?:private|public|protected|readonly)\s+([A-Za-z_$][\w$]*)\s*:\s*FormularioService\b/g;
+  let match;
+  while ((match = withModifier.exec(content)) !== null) {
+    ids.add(match[1]);
+  }
+
+  // Params sin modificador: constructor(fs: FormularioService)
+  const simpleTyped = /\b([A-Za-z_$][\w$]*)\s*:\s*FormularioService\b/g;
+  while ((match = simpleTyped.exec(content)) !== null) {
+    const id = match[1];
+    if (id !== 'FormularioService') ids.add(id);
+  }
+
+  // Asignación desde injector.get(FormularioService)
+  const injectorGet = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*[^;\n]*\binjector\s*\.\s*get\s*\(\s*FormularioService\b/g;
+  while ((match = injectorGet.exec(content)) !== null) {
+    ids.add(match[1]);
+  }
+
+  return [...ids];
+}
 
 function walkDir(dirPath, acc) {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -70,6 +103,7 @@ function main() {
 
   const files = walkDir(appRoot, []);
   const violations = [];
+  const seen = new Set();
 
   for (const filePath of files) {
     const normalized = path.normalize(filePath);
@@ -77,12 +111,21 @@ function main() {
 
     const content = fs.readFileSync(filePath, 'utf8');
 
-    for (const matcher of forbiddenMatchers) {
-      matcher.regex.lastIndex = 0;
-      let match;
-      while ((match = matcher.regex.exec(content)) !== null) {
-        const loc = indexToLineCol(content, match.index);
-        violations.push({ filePath, label: matcher.label, line: loc.line, col: loc.col });
+    const ids = findFormularioServiceIdentifiers(content);
+    if (ids.length === 0) continue;
+
+    for (const id of ids) {
+      for (const method of forbiddenMethods) {
+        const regex = new RegExp(`\\b${escapeRegExp(id)}\\s*\\.\\s*${method}\\s*\\(`, 'g');
+        regex.lastIndex = 0;
+        let match;
+        while ((match = regex.exec(content)) !== null) {
+          const loc = indexToLineCol(content, match.index);
+          const key = `${filePath}:${loc.line}:${loc.col}:${id}.${method}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          violations.push({ filePath, label: `${id}.${method}`, line: loc.line, col: loc.col });
+        }
       }
     }
   }

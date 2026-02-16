@@ -43,20 +43,29 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   readonly petGruposEdadSignal: Signal<any[]> = computed(() => {
     const pref = this.obtenerPrefijoGrupo();
     const key = pref ? `petGruposEdadAISI${pref}` : 'petGruposEdadAISI';
-    const v = this.projectFacade.selectField(this.seccionId, null, key)() ?? this.projectFacade.selectTableData(this.seccionId, null, 'petGruposEdadAISI')() ?? this.datos.petGruposEdadAISI ?? [];
+    const v = this.projectFacade.selectField(this.seccionId, null, key)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, 'petGruposEdadAISI')()
+      ?? (this.formDataSignal()?.['petGruposEdadAISI'] as any[] | undefined)
+      ?? [];
     return v as any[];
   });
 
   readonly peaDistritoSexoSignal: Signal<any[]> = computed(() => {
     const pref = this.obtenerPrefijoGrupo();
     const key = pref ? `peaDistritoSexoTabla${pref}` : 'peaDistritoSexoTabla';
-    return (this.projectFacade.selectField(this.seccionId, null, key)() ?? this.projectFacade.selectTableData(this.seccionId, null, 'peaDistritoSexoTabla')() ?? this.datos.peaDistritoSexoTabla ?? []) as any[];
+    return (this.projectFacade.selectField(this.seccionId, null, key)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, 'peaDistritoSexoTabla')()
+      ?? (this.formDataSignal()?.['peaDistritoSexoTabla'] as any[] | undefined)
+      ?? []) as any[];
   });
 
   readonly peaOcupadaDesocupadaSignal: Signal<any[]> = computed(() => {
     const pref = this.obtenerPrefijoGrupo();
     const key = pref ? `peaOcupadaDesocupadaTabla${pref}` : 'peaOcupadaDesocupadaTabla';
-    return (this.projectFacade.selectField(this.seccionId, null, key)() ?? this.projectFacade.selectTableData(this.seccionId, null, 'peaOcupadaDesocupadaTabla')() ?? this.datos.peaOcupadaDesocupadaTabla ?? []) as any[];
+    return (this.projectFacade.selectField(this.seccionId, null, key)()
+      ?? this.projectFacade.selectTableData(this.seccionId, null, 'peaOcupadaDesocupadaTabla')()
+      ?? (this.formDataSignal()?.['peaOcupadaDesocupadaTabla'] as any[] | undefined)
+      ?? []) as any[];
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -156,7 +165,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTituloTabla(fieldName: string, defaultTitle: string): string {
-    const valor = this.datos?.[fieldName];
+    const valor = this.formDataSignal()?.[fieldName];
     if (!valor || typeof valor !== 'string') {
       return this.reemplazarPlaceholdersTitulo(defaultTitle);
     }
@@ -232,13 +241,13 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   // Textos para template
   obtenerTextoPETIntro(): string {
-    const texto = this.datos.textoPETIntro_AISI;
+    const texto = this.formDataSignal()?.['textoPETIntro_AISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     return SECCION23_TEMPLATES.petIntroDefault;
   }
 
   obtenerTextoPET(): string {
-    const texto = this.datos.textoPET_AISI;
+    const texto = this.formDataSignal()?.['textoPET_AISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     const porcentajePET = this.getPorcentajePET();
@@ -252,7 +261,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoIndicadoresDistritales(): string {
-    const texto = this.datos.textoIndicadoresDistritalesAISI;
+    const texto = this.formDataSignal()?.['textoIndicadoresDistritalesAISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const poblacionDistrital = this.getPoblacionDistritalFn();
@@ -264,7 +273,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoPEA(): string {
-    const texto = this.datos.textoPEA_AISI;
+    const texto = this.formDataSignal()?.['textoPEA_AISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -274,7 +283,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoAnalisisPEA_AISI(): string {
-    const texto = this.datos.textoAnalisisPEA_AISI;
+    const texto = this.formDataSignal()?.['textoAnalisisPEA_AISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables
@@ -286,20 +295,20 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoEmpleoAISI(): string {
-    const texto = this.datos.textoEmpleoAISI;
+    const texto = this.formDataSignal()?.['textoEmpleoAISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
   }
 
   obtenerTextoEmpleoDependiente_AISI(): string {
-    const texto = this.datos.textoEmpleoDependiente_AISI;
+    const texto = this.formDataSignal()?.['textoEmpleoDependiente_AISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     return SECCION23_TEMPLATES.empleoDependienteDefault;
   }
 
   obtenerTextoIngresosAISI(): string {
-    const texto = this.datos.textoIngresosAISI;
+    const texto = this.formDataSignal()?.['textoIngresosAISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -313,7 +322,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoIndiceDesempleoAISI(): string {
-    const texto = this.datos.textoIndiceDesempleoAISI;
+    const texto = this.formDataSignal()?.['textoIndiceDesempleoAISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -323,7 +332,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoPEAAISI(): string {
-    const texto = this.datos.textoPEAAISI;
+    const texto = this.formDataSignal()?.['textoPEAAISI'];
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables
