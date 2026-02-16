@@ -3,7 +3,7 @@ services:
     name: frontend-lbs
     env: node
     buildCommand: npm ci && npm run build:prod && cp serve.json dist/lbs/serve.json
-    startCommand: npx serve dist/lbs -c serve.json -l $PORT
+    startCommand: npx serve dist/lbs -s -l $PORT
     envVars:
       - key: NODE_VERSION
         value: "22"
