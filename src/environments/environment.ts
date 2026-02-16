@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  useMockData: true,
-  apiUrl: 'http://localhost:3000',
+  useMockData: false,
+  apiUrl: 'https://backend-api-lbs.onrender.com',
   mockDataPath: 'assets/mockData',
   mockDataFiles: {
     shared: {
