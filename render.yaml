@@ -10,6 +10,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: API_URL
-        sync: false
+        value: "https://backend-api-lbs.onrender.com"
       - key: USE_MOCK_DATA
         value: "false"

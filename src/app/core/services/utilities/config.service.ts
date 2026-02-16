@@ -13,9 +13,9 @@ export interface AppConfig {
 export class ConfigService {
   private config: AppConfig = {
     useMockData: this.getEnvBoolean('USE_MOCK_DATA', false),
-    apiUrl: this.getEnvString('API_URL', 'http://localhost:8000'),
+    apiUrl: this.getEnvString('API_URL', 'https://backend-api-lbs.onrender.com'),
     mockDataPath: this.getEnvString('MOCK_DATA_PATH', 'assets/mockData'),
-    nodeEnv: this.getEnvString('NODE_ENV', 'development')
+    nodeEnv: this.getEnvString('NODE_ENV', 'production')
   };
 
   constructor() {
@@ -45,7 +45,7 @@ export class ConfigService {
     }
 
     if (!this.config.apiUrl) {
-      this.config.apiUrl = 'http://localhost:8000';
+      this.config.apiUrl = 'https://backend-api-lbs.onrender.com';
     }
   }
 

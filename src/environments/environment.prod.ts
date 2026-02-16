@@ -10,7 +10,7 @@ const getEnvVar = (key: string, defaultValue: string): string => {
 export const environment = {
   production: true,
   useMockData: getEnvVar('USE_MOCK_DATA', 'false') === 'true',
-  apiUrl: getEnvVar('API_URL', 'https://api.proyectopaka.com/api'),
+  apiUrl: getEnvVar('API_URL', 'https://backend-api-lbs.onrender.com'),
   mockDataPath: getEnvVar('MOCK_DATA_PATH', 'assets/mockData'),
   mockDataFiles: {
     shared: {

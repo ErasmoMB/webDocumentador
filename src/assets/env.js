@@ -1,8 +1,8 @@
 (function() {
   window.__ENV__ = {
     USE_MOCK_DATA: "false",
-    API_URL: "http://localhost:3000/api",
+    API_URL: "https://backend-api-lbs.onrender.com",
     MOCK_DATA_PATH: "assets/mockData",
-    NODE_ENV: "development"
+    NODE_ENV: "production"
   };
 })();
