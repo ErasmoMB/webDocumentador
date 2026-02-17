@@ -113,20 +113,22 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
     return SECCION9_PLANTILLAS_DINAMICAS.textoEstructuraTemplate.replace('__COMUNIDAD__', comunidad);
   });
 
-  // ✅ TABLAS DE SOLO LECTURA - DATOS DEL BACKEND SIN MODIFICACIÓN
+  // ✅ TABLAS DE SOLO LECTURA - Lee desde formDataSignal (patrón Seccion8)
   readonly condicionOcupacionConPorcentajesSignal: Signal<any[]> = computed(() => {
+    const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
 
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
-  // ✅ TABLAS DE SOLO LECTURA - DATOS DEL BACKEND SIN MODIFICACIÓN
+  // ✅ TABLAS DE SOLO LECTURA - Lee desde formDataSignal (patrón Seccion8)
   readonly tiposMaterialesSignal: Signal<any[]> = computed(() => {
+    const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
 
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
+    return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
   // ✅ TÍTULOS Y FUENTES: Con fallback a defaults
@@ -272,7 +274,7 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
    * Determina si una fila es la primera de su grupo de categoría
    */
   isFirstRowOfGroup(rowIndex: number): boolean {
-    const data = this.getTiposMaterialesData();
+    const data = this.tiposMaterialesSignal();
     if (!data || rowIndex >= data.length || rowIndex < 0) return false;
     
     // Primera fila siempre es primera del grupo
@@ -290,7 +292,7 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
    * Cuenta cuántas filas consecutivas tienen la misma categoría
    */
   getRowspanTiposMateriales(rowIndex: number): number {
-    const data = this.getTiposMaterialesData();
+    const data = this.tiposMaterialesSignal();
     if (!data || rowIndex >= data.length || rowIndex < 0) return 1;
     
     // Solo calcular rowspan si es la primera fila del grupo

@@ -95,8 +95,8 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         calcularPorcentajes: true,
         camposParaCalcular: ['casos'],
         noInicializarDesdeEstructura: true,
-        permiteAgregarFilas: false,
-        permiteEliminarFilas: false
+        permiteAgregarFilas: true,
+        permiteEliminarFilas: true
     }));
 
     readonly nbiDistritoCahuachoConfigSignal: Signal<TableConfig> = computed(() => ({
@@ -107,8 +107,8 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         calcularPorcentajes: true,
         camposParaCalcular: ['casos'],
         noInicializarDesdeEstructura: true,
-        permiteAgregarFilas: false,
-        permiteEliminarFilas: false
+        permiteAgregarFilas: true,
+        permiteEliminarFilas: true
     }));
 
     constructor(cdRef: ChangeDetectorRef, injector: Injector) {

@@ -181,8 +181,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   condicionOcupacionConfig: TableConfig = {
@@ -193,8 +193,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   materialesViviendaConfig: TableConfig = {
@@ -205,8 +205,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   // viewModel

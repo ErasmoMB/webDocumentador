@@ -36,8 +36,6 @@
         { field: 'porcentaje', label: SECCION18_TEMPLATES.tableHeader.porcentaje, type: 'text', placeholder: '', readonly: true }
       ]"
       [totalKey]="'categoria'"
-      [showAddButton]="false"
-      [showDeleteButton]="false"
       (tableUpdated)="onNbiCCTableUpdated($event)">
     </app-dynamic-table>
   </div>
@@ -75,8 +73,6 @@
         { field: 'porcentaje', label: SECCION18_TEMPLATES.tableHeader.porcentaje, type: 'text', placeholder: '', readonly: true }
       ]"
       [totalKey]="'categoria'"
-      [showAddButton]="false"
-      [showDeleteButton]="false"
       (tableUpdated)="onNbiDistritoTableUpdated($event)">
     </app-dynamic-table>
   </div>

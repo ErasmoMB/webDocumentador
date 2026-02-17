@@ -124,8 +124,8 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
       calcularPorcentajes: false,          // ✅ Los datos vienen del backend
       camposParaCalcular: [],              // ✅ NO procesar nada - datos puros del backend
       noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
-      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
     console.log('[SECCION8] 🔍 Config generado:', config);
     return config;

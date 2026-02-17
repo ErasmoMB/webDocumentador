@@ -64,8 +64,8 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,             // ✅ No calcular automáticamente
     camposParaCalcular: [],                // ✅ No hay campos a calcular
     noInicializarDesdeEstructura: true,    // ✅ No inicializar vacía
-    permiteAgregarFilas: false,             // ✅ OCULTAR botón agregar
-    permiteEliminarFilas: false             // ✅ OCULTAR botón eliminar
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   override readonly PHOTO_PREFIX: string;

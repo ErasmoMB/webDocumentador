@@ -138,8 +138,8 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     totalKey: '',
     campoTotal: '',
     campoPorcentaje: 'porcentaje',
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false
   }));
@@ -149,8 +149,8 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     totalKey: '',
     campoTotal: '',
     campoPorcentaje: 'porcentaje',
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false
   }));

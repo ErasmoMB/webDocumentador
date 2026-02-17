@@ -92,6 +92,14 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
 
   private applyNoAddDeleteForEstructuraInicial(): void {
     try {
+      // En modo formulario (modoVista=false) no ocultar botones automáticamente.
+      // Si el padre pasó explícitamente false, se respeta; caso contrario se mantienen visibles.
+      if (!this.modoVista) {
+        if (this.showAddButton !== false) this.showAddButton = true;
+        if (this.showDeleteButton !== false) this.showDeleteButton = true;
+        return;
+      }
+
       if (this.config && Array.isArray((this.config as any).estructuraInicial) && (this.config as any).estructuraInicial.length > 0) {
         // If there is an initial structure, hide add/delete only when the table is empty
         // or not yet initialized. If the table already has rows (initialized or filled), allow add/delete
@@ -871,29 +879,28 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       return col.formatter(value);
     }
 
-    // Ocultar ceros y valores placeholder como '0%' para mostrar celdas vacías
-    if (value === 0) return '';
+    // Mostrar ceros y porcentajes '0,00 %' como en la vista
+    if (value === 0) return '0';
     if (typeof value === 'string') {
       const v = value.trim();
-      if (v === '0' || v === '0%' || v === '0,00 %' || v === '0.00 %') return '';
+      // Mostrar todos los valores, incluso '0', '0%' y '0,00 %'
       return v;
     }
     return value != null ? String(value) : '';
   }
 
   isFieldReadonly(col: TableColumn, rowIndex?: number): boolean {
+    // En modo formulario (modoVista=false) todas las celdas deben ser editables.
+    // Esto evita inputs readonly/disabled dentro de tablas del formulario.
+    if (!this.modoVista) {
+      return false;
+    }
+
+    // Fallback conservador en modo vista (aunque en modoVista normalmente no se usan inputs)
     if (col.readonly) return true;
     if (this.config?.camposNoEditables && this.config.camposNoEditables.includes(col.field)) {
       return true;
     }
-    // Si la tabla tiene estructura inicial fija, solo la columna identificadora (totalKey) es no editable en esas filas
-    try {
-      if (typeof rowIndex === 'number' && Array.isArray(this.config?.estructuraInicial) && this.config.estructuraInicial.length > 0) {
-        const estructuraLen = this.config.estructuraInicial.length;
-        const totalKey = this.config?.totalKey || this.totalKey;
-        if (rowIndex < estructuraLen && col.field === totalKey) return true;
-      }
-    } catch (e) { /* noop */ }
     return false;
   }
 

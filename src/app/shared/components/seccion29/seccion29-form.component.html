@@ -104,17 +104,18 @@
         <input type="text" class="form-control" [value]="viewModel().tituloAfiliacion" (input)="actualizarTexto('tituloAfiliacionSalud', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderTituloAfiliacion">
 
         <label class="label">{{ SECCION29_TEMPLATES.labelTablaAfiliacion }}</label>
-        <app-dynamic-table
-          [datos]="getAfiliacionTablaData()"
-          [sectionId]="seccionId"
-          [config]="afiliacionConfig"
-          [columns]="afiliacionColumns"
-          [tablaKey]="getAfiliacionTablaKey()"
-          [totalKey]="'categoria'"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
-          (tableUpdated)="onTablaUpdated(getAfiliacionTablaKey(), $event)">
-        </app-dynamic-table>
+        
+        <app-table-wrapper [title]="viewModel().tituloAfiliacion || SECCION29_TEMPLATES.placeholderTituloAfiliacion" [sectionId]="seccionId">
+          <app-dynamic-table
+            [datos]="getAfiliacionTablaData()"
+            [sectionId]="seccionId"
+            [config]="afiliacionConfig"
+            [columns]="afiliacionColumns"
+            [tablaKey]="getAfiliacionTablaKey()"
+            [totalKey]="'categoria'"
+            (tableUpdated)="onTablaUpdated(getAfiliacionTablaKey(), $event)">
+          </app-dynamic-table>
+        </app-table-wrapper>
 
         <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteAfiliacion }}</label>
         <input type="text" class="form-control" [value]="viewModel().fuenteAfiliacion" (input)="actualizarTexto('fuenteAfiliacionSalud', $any($event.target).value)" [placeholder]="SECCION29_TEMPLATES.placeholderFuenteAfiliacion">

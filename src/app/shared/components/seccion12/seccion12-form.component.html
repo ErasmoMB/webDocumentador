@@ -22,8 +22,6 @@
                        [columns]="columnasSalud"
                        [sectionId]="seccionId"
                        [tablaKey]="'caracteristicasSaludTabla' + obtenerPrefijo()"
-                       [showAddButton]="false"
-                       [showDeleteButton]="false"
                        (tableUpdated)="onCaracteristicasSaludTableUpdated($event)">
     </app-dynamic-table>
     <label class="label">{{ SECCION12_TEMPLATES.labelFuenteCaracteristicasSalud }}</label>
@@ -87,8 +85,6 @@
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"
                        [tablaKey]="'ieAyrocaTabla' + obtenerPrefijo()"
-                       [showAddButton]="false"
-                       [showDeleteButton]="false"
                        (tableUpdated)="onIEAyrocaTableUpdated($event)">
     </app-dynamic-table>
     <label class="label">{{ SECCION12_TEMPLATES.labelFuenteIEAyroca }}</label>
@@ -108,8 +104,6 @@
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"
                        [tablaKey]="'ie40270Tabla' + obtenerPrefijo()"
-                       [showAddButton]="false"
-                       [showDeleteButton]="false"
                        (tableUpdated)="onIE40270TableUpdated($event)">
     </app-dynamic-table>
     <label class="label">{{ SECCION12_TEMPLATES.labelFuenteIE40270 }}</label>
@@ -134,6 +128,7 @@
           <th colspan="2">3 años</th>
           <th colspan="2">4 años</th>
           <th colspan="2">5 años</th>
+          <th rowspan="2"></th>
         </tr>
         <tr>
           <th>H</th><th>M</th>
@@ -154,10 +149,13 @@
           <td><input class="table-input" type="number" [ngModel]="item.cuatroM" (blur)="actualizarAlumnoAyroca(i, 'cuatroM', $event)"></td>
           <td><input class="table-input" type="number" [ngModel]="item.cincoH" (blur)="actualizarAlumnoAyroca(i, 'cincoH', $event)"></td>
           <td><input class="table-input" type="number" [ngModel]="item.cincoM" (blur)="actualizarAlumnoAyroca(i, 'cincoM', $event)"></td>
+          <td class="table-actions" data-label="">
+            <button type="button" class="btn-icon" (click)="eliminarAlumnoAyroca(i)" title="Eliminar fila">×</button>
+          </td>
         </tr>
       </tbody>
     </table>
-    <!-- Botón eliminado: tabla de Alumnos IE Ayroca usa UNA fila -->
+    <button type="button" class="btn btn-secondary mt-sm" (click)="agregarAlumnoAyroca()">+ Agregar Fila</button>
 
     <label class="label">{{ SECCION12_TEMPLATES.labelFuenteAlumnosAyroca }}</label>
     <input class="form-control" type="text"
@@ -184,6 +182,7 @@
           <th colspan="2">4º</th>
           <th colspan="2">5º</th>
           <th colspan="2">6º</th>
+          <th rowspan="2"></th>
         </tr>
         <tr>
           <th>H</th><th>M</th>
@@ -213,10 +212,13 @@
           <td><input class="table-input" type="number" [ngModel]="item.quintoM" (blur)="actualizarAlumno40270(i, 'quintoM', $event)"></td>
           <td><input class="table-input" type="number" [ngModel]="item.sextoH" (blur)="actualizarAlumno40270(i, 'sextoH', $event)"></td>
           <td><input class="table-input" type="number" [ngModel]="item.sextoM" (blur)="actualizarAlumno40270(i, 'sextoM', $event)"></td>
+          <td class="table-actions" data-label="">
+            <button type="button" class="btn-icon" (click)="eliminarAlumno40270(i)" title="Eliminar fila">×</button>
+          </td>
         </tr>
       </tbody>
     </table>
-    <!-- Botón eliminado: tabla de Alumnos IE N°40270 usa UNA fila -->
+    <button type="button" class="btn btn-secondary mt-sm" (click)="agregarAlumno40270()">+ Agregar Fila</button>
 
     <label class="label">{{ SECCION12_TEMPLATES.labelFuenteAlumnos40270 }}</label>
     <input class="form-control" type="text"

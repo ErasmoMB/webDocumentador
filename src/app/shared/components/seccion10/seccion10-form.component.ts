@@ -453,8 +453,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       calcularPorcentajes: false,      // ✅ No calcular automáticamente
       camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
       noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -467,8 +467,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       calcularPorcentajes: false,      // ✅ No calcular automáticamente
       camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
       noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -481,8 +481,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       calcularPorcentajes: false,      // ✅ No calcular automáticamente
       camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
       noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -495,8 +495,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       calcularPorcentajes: false,      // ✅ No calcular automáticamente
       camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
       noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -509,8 +509,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       calcularPorcentajes: false,      // ✅ No calcular automáticamente
       camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
       noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-      permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 

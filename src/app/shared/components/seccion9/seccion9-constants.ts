@@ -129,8 +129,8 @@ export const SECCION9_TABLA_CONDICION_OCUPACION_CONFIG: TableConfig = {
   calcularPorcentajes: false,      // ✅ No calcular automáticamente
   camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
   noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-  permiteEliminarFilas: false      // ✅ Ocultar botón eliminar  
+  permiteAgregarFilas: true,       // ✅ Permitir agregar
+  permiteEliminarFilas: true       // ✅ Permitir eliminar
 };
 
 /**
@@ -144,6 +144,6 @@ export const SECCION9_TABLA_TIPOS_MATERIALES_CONFIG: TableConfig = {
   calcularPorcentajes: false,      // ✅ No calcular automáticamente
   camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
   noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-  permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+  permiteAgregarFilas: true,       // ✅ Permitir agregar
+  permiteEliminarFilas: true       // ✅ Permitir eliminar
 };

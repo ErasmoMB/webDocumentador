@@ -132,7 +132,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   // ✅ CONFIGURACIONES DE TABLAS - Patrón MODO IDEAL
   readonly natalidadMortalidadConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `natalidadMortalidadTabla${this.obtenerPrefijo()}`,
-    totalKey: 'anio',
+    totalKey: '',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
     noInicializarDesdeEstructura: false,
@@ -160,8 +160,8 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,      // ✅ No calcular automáticamente
     camposParaCalcular: ['casos', 'porcentaje'],  // Los campos ya vienen calculados del backend
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-    permiteAgregarFilas: false,      // ✅ Ocultar botón agregar
-    permiteEliminarFilas: false      // ✅ Ocultar botón eliminar
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   }));
 
   // ✅ REFACTOR: Usar ubicacionGlobal

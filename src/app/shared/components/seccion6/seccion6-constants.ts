@@ -150,8 +150,8 @@ export const SECCION6_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
   calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: false,
-  permiteEliminarFilas: false
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
 };
 
 /**
@@ -190,8 +190,8 @@ export const SECCION6_TABLA_POBLACION_ETARIO_CONFIG: TableConfig = {
   calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: false,
-  permiteEliminarFilas: false
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
 };
 
 /**

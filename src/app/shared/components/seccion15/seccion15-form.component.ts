@@ -131,8 +131,8 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
       campoPorcentaje: '',
       calcularPorcentajes: false,
       camposParaCalcular: [],
-      permiteAgregarFilas: false,
-      permiteEliminarFilas: false,
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true,
       noInicializarDesdeEstructura: true
     };
   });
@@ -147,8 +147,8 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
       campoPorcentaje: '',
       calcularPorcentajes: false,
       camposParaCalcular: [],
-      permiteAgregarFilas: false,
-      permiteEliminarFilas: false,
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true,
       noInicializarDesdeEstructura: true
     };
   });

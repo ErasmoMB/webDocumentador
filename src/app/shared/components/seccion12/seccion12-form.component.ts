@@ -160,8 +160,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   readonly caracteristicasSaludConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `caracteristicasSaludTabla${this.obtenerPrefijo()}`,
     totalKey: 'categoria',
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { categoria: 'Nombre', descripcion: '' },
@@ -201,8 +201,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   readonly ieAyrocaConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `ieAyrocaTabla${this.obtenerPrefijo()}`,
     totalKey: 'categoria',
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { categoria: 'Tipo de I.E.', descripcion: '' },
@@ -214,8 +214,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   readonly ie40270ConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `ie40270Tabla${this.obtenerPrefijo()}`,
     totalKey: 'categoria',
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { categoria: 'Tipo de I.E.', descripcion: '' },
@@ -846,12 +846,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   }
 
   agregarAlumnoAyroca(): void {
-    const tablaActual = this.tablaAlumnosIEAyrocaSignal() || [];
-    // Esta tabla usa UNA sola fila. Si ya existe una fila, no agregar más.
-    if (tablaActual.length > 0) {
-      return;
-    }
-
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIEAyrocaTabla${prefijo}`;
     const nuevoAlumno = {
@@ -866,8 +860,21 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       cincoH: 0,
       cincoM: 0
     };
-    
-    const tablaActualizada = [nuevoAlumno];
+
+    const tablaActual = this.tablaAlumnosIEAyrocaSignal() || [];
+    const tablaActualizada = [...tablaActual, nuevoAlumno];
+    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
+    this.cdRef.markForCheck();
+  }
+
+  eliminarAlumnoAyroca(index: number): void {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `alumnosIEAyrocaTabla${prefijo}`;
+    const tablaActual = this.tablaAlumnosIEAyrocaSignal() || [];
+    if (index < 0 || index >= tablaActual.length) {
+      return;
+    }
+    const tablaActualizada = tablaActual.filter((_, i) => i !== index);
     this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
@@ -891,12 +898,6 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   }
 
   agregarAlumno40270(): void {
-    const tablaActual = this.tablaAlumnosIE40270Signal() || [];
-    // Esta tabla usa UNA sola fila. Si ya existe una fila, no agregar más.
-    if (tablaActual.length > 0) {
-      return;
-    }
-
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIE40270Tabla${prefijo}`;
     const nuevoAlumno = {
@@ -917,8 +918,21 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       sextoH: 0,
       sextoM: 0
     };
-    
-    const tablaActualizada = [nuevoAlumno];
+
+    const tablaActual = this.tablaAlumnosIE40270Signal() || [];
+    const tablaActualizada = [...tablaActual, nuevoAlumno];
+    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
+    this.cdRef.markForCheck();
+  }
+
+  eliminarAlumno40270(index: number): void {
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `alumnosIE40270Tabla${prefijo}`;
+    const tablaActual = this.tablaAlumnosIE40270Signal() || [];
+    if (index < 0 || index >= tablaActual.length) {
+      return;
+    }
+    const tablaActualizada = tablaActual.filter((_, i) => i !== index);
     this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }

@@ -132,8 +132,8 @@ export const SECCION8_TABLA_PEA_OCUPACIONES_CONFIG: TableConfig = {
   calcularPorcentajes: false,          // ✅ Los porcentajes vienen del backend
   camposParaCalcular: [],              // ✅ No calcular nada - datos puros del backend
   noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
-  permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+  permiteAgregarFilas: true,           // ✅ Permitir agregar
+  permiteEliminarFilas: true           // ✅ Permitir eliminar
 };
 
 /**

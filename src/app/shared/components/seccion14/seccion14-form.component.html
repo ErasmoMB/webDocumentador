@@ -56,8 +56,6 @@
           ]"
           [sectionId]="seccionId"
           [tablaKey]="'nivelEducativoTabla' + obtenerPrefijo()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onNivelEducativoTableUpdated($event)">
         </app-dynamic-table>
         <p class="source" style="margin-top:8px;">
@@ -128,8 +126,6 @@
           ]"
           [sectionId]="seccionId"
           [tablaKey]="'tasaAnalfabetismoTabla' + obtenerPrefijo()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
         </app-dynamic-table>
         <p class="source" style="margin-top:8px;">

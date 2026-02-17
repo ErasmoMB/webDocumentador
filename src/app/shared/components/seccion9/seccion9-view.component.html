@@ -46,7 +46,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of getTiposMaterialesData(); let i = index" [class]="getRowClassesTiposMateriales(item)">
+      <tr *ngFor="let item of tiposMaterialesSignal(); let i = index" [class]="getRowClassesTiposMateriales(item)">
         <td *ngIf="shouldShowCategoriaCellTiposMateriales(i)"
             class="table-cell" 
             [attr.rowspan]="getRowspanTiposMateriales(i)"
@@ -63,7 +63,7 @@
           <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
         </td>
       </tr>
-      <tr *ngIf="getTiposMaterialesData().length === 0">
+      <tr *ngIf="tiposMaterialesSignal().length === 0">
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>
         <td class="table-cell">____</td>

@@ -100,8 +100,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   readonly peaDistritoSexoConfig: TableConfig = {
@@ -112,8 +112,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   readonly peaOcupadaDesocupadaConfig: TableConfig = {
@@ -124,8 +124,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   // Signals

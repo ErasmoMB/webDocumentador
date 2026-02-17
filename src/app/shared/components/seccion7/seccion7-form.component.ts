@@ -303,8 +303,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       calcularPorcentajes: false,          // ✅ Los datos vienen del backend
       camposParaCalcular: [],
       noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
-      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -318,8 +318,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       calcularPorcentajes: false,          // ✅ Los datos vienen del backend
       camposParaCalcular: [],
       noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
-      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
@@ -333,8 +333,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       calcularPorcentajes: false,          // ✅ Los datos vienen del backend
       camposParaCalcular: [],
       noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
-      permiteAgregarFilas: false,          // ✅ Ocultar botón agregar
-      permiteEliminarFilas: false          // ✅ Ocultar botón eliminar
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 

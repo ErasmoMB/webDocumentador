@@ -37,8 +37,6 @@
           [columns]="columnasTableaPET"
           [sectionId]="seccionId"
           [tablaKey]="'petTabla' + obtenerPrefijo()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTablaPETActualizada()">
         </app-dynamic-table>
 
@@ -115,8 +113,6 @@
           [columns]="columnasTableaPEA"
           [sectionId]="seccionId"
           [tablaKey]="'peaTabla' + obtenerPrefijo()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAActualizada()">
         </app-dynamic-table>
 
@@ -203,8 +199,6 @@
           [columns]="columnasTableaPEAOcupada"
           [sectionId]="seccionId"
           [tablaKey]="'peaOcupadaTabla' + obtenerPrefijo()"
-          [showAddButton]="false"
-          [showDeleteButton]="false"
           (tableUpdated)="onTablaPEAOcupadaActualizada()">
         </app-dynamic-table>
 

@@ -90,3 +90,19 @@ table {
     font-size: 13px;
   }
 }
+
+@media (min-width: 1920px) {
+  .main-content {
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .preview-document {
+    max-width: 90%;
+    margin: 0 auto;
+    padding-bottom: 100px;
+    min-height: calc(100% + 100px);
+    box-sizing: border-box;
+  }
+}

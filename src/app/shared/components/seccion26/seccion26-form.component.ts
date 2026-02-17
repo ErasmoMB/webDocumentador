@@ -117,8 +117,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   saneamientoConfig: TableConfig = {
@@ -129,8 +129,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   coberturaConfig: TableConfig = {
@@ -141,8 +141,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   combustiblesConfig: TableConfig = {
@@ -153,8 +153,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   // ✅ Campos con prefijos dinámicos

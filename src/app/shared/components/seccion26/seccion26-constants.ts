@@ -145,8 +145,8 @@ export const SECCION26_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   saneamiento: {
     tablaKey: 'saneamientoCpTabla',
@@ -156,8 +156,8 @@ export const SECCION26_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   coberturaElectrica: {
     tablaKey: 'coberturaElectricaCpTabla',
@@ -167,8 +167,8 @@ export const SECCION26_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   combustiblesCocinar: {
     tablaKey: 'combustiblesCocinarCpTabla',
@@ -178,8 +178,8 @@ export const SECCION26_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   }
 };
 

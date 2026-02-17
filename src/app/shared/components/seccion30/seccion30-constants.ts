@@ -143,8 +143,8 @@ export const SECCION30_TABLE_CONFIG = {
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,      // ✅ Sin botón agregar
-    permiteEliminarFilas: false      // ✅ Sin botón eliminar
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   tasaAnalfabetismo: {
     tablaKey: 'tasaAnalfabetismoTabla',
@@ -154,8 +154,8 @@ export const SECCION30_TABLE_CONFIG = {
     calcularPorcentajes: false,
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,      // ✅ Sin botón agregar
-    permiteEliminarFilas: false      // ✅ Sin botón eliminar
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
 };
 

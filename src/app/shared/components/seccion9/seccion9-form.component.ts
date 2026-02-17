@@ -76,6 +76,171 @@ const transformMaterialesConstruccionDesdeBackend = (data: any[]): any[] => {
   }));
 };
 
+/**
+ * ✅ Normaliza una etiqueta de material removiendo tildes, espacios extra, etc.
+ */
+const normalizeMaterialLabel = (raw: string): string => {
+  if (!raw) return '';
+  let s = String(raw).toLowerCase().trim();
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');  // Remover tildes
+  return s;
+};
+
+/**
+ * ✅ Extrae palabras significativas (removiendo stopwords y caracteres especiales)
+ * Retorna array ordenado de palabras clave
+ */
+const extractSignificantWords = (raw: string): string[] => {
+  const normalized = normalizeMaterialLabel(raw);
+  
+  // Stopwords comunes en construcción (español)
+  const stopwords = new Set([
+    'el', 'la', 'los', 'las', 'de', 'del', 'con', 'sin', 'en', 'o', 'y', 'e',
+    'es', 'son', 'un', 'una', 'por', 'para', 'a', 'al', 'que', 'o', 'u'
+  ]);
+
+  // Remover caracteres especiales, separar por espacios/puntuación
+  const words = normalized
+    .replace(/[\/\\\-,;().]/g, ' ')  // Reemplazar separadores por espacio
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopwords.has(w))  // Filtrar stopwords y palabras muy cortas
+    .sort();  // Ordenar alfabéticamente
+
+  return words;
+};
+
+/**
+ * ✅ Crea clave de búsqueda uniendo palabras ordenadas
+ */
+const createMaterialSearchKey = (raw: string): string => {
+  const words = extractSignificantWords(raw);
+  return words.join(' ');
+};
+
+/**
+ * ✅ Calcula similitud entre dos sets de palabras (0-1)
+ * Si coinciden >= 80% de las palabras, son el mismo material
+ */
+const calculateWordSimilarity = (words1: string[], words2: string[]): number => {
+  if (words1.length === 0 && words2.length === 0) return 1;
+  if (words1.length === 0 || words2.length === 0) return 0;
+
+  // Contar palabras en común
+  const set1 = new Set(words1);
+  const set2 = new Set(words2);
+  const common = [...set1].filter(w => set2.has(w)).length;
+
+  // Similitud = palabras en común / máximo de palabras
+  const maxLen = Math.max(set1.size, set2.size);
+  return maxLen > 0 ? common / maxLen : 0;
+};
+
+/**
+ * ✅ Elige la etiqueta más legible entre dos variantes
+ * Preferir versiones con comas sobre "/" (ej: "Triplay, calamina, estera" vs "Triplay/Calamina/Estera")
+ */
+const choosePreferredMaterialLabel = (current: string, incoming: string): string => {
+  const a = String(current || '').trim();
+  const b = String(incoming || '').trim();
+  if (!a) return b;
+  if (!b) return a;
+
+  const aHasSlash = a.includes('/');
+  const bHasSlash = b.includes('/');
+  const aHasComma = a.includes(',');
+  const bHasComma = b.includes(',');
+
+  // Preferir versiones con comas frente a versiones con "/" (más legible)
+  if (aHasSlash && bHasComma && !bHasSlash) return b;
+  if (bHasSlash && aHasComma && !aHasSlash) return a;
+
+  // Si uno es más descriptivo (más largo), mantenerlo
+  if (b.length > a.length && a.length < 20) return b;
+  return a;
+};
+
+/**
+ * ✅ Deduplica materiales comparando similitud de palabras clave
+ * Agrupa + suma casos + recalcula porcentajes + filas Total
+ */
+const deduplicateMateriales = (data: any[]): any[] => {
+  if (!Array.isArray(data) || data.length === 0) return data;
+
+  // Estructura: categoría → array de materiales deduplicados
+  const byCategory = new Map<string, Array<{ display: string; casos: number; words: string[] }>>();
+
+  for (const item of data) {
+    const categoria = item.categoria?.trim();
+    const tipoMaterial = item.tipoMaterial?.trim();
+    
+    if (!categoria || !tipoMaterial) continue;
+    
+    // Ignorar filas Total
+    if (tipoMaterial.toLowerCase() === 'total') continue;
+
+    // Extraer palabras clave
+    const words = extractSignificantWords(tipoMaterial);
+    if (words.length === 0) continue;
+
+    // Inicializar bucket de categoría
+    if (!byCategory.has(categoria)) {
+      byCategory.set(categoria, []);
+    }
+    const bucket = byCategory.get(categoria)!;
+
+    // Buscar si ya existe un material similar (similitud >= 80%)
+    let found = false;
+    for (const existing of bucket) {
+      const similarity = calculateWordSimilarity(existing.words, words);
+      if (similarity >= 0.8) {
+        // Duplicado encontrado: sumar casos + elegir mejor etiqueta
+        existing.casos += (item.casos || 0);
+        existing.display = choosePreferredMaterialLabel(existing.display, tipoMaterial);
+        found = true;
+        break;
+      }
+    }
+
+    // Si no encontró duplicado, agregar como nuevo
+    if (!found) {
+      bucket.push({
+        display: tipoMaterial,
+        casos: item.casos || 0,
+        words
+      });
+    }
+  }
+
+  // Reconstruir array de salida: datos deduplicados + recalcular porcentajes y totales
+  const result: any[] = [];
+  
+  for (const [categoria, materialesArray] of byCategory.entries()) {
+    const totalCategoria = materialesArray.reduce((sum, it) => sum + (it.casos || 0), 0);
+
+    // Agregar cada material deduplicado
+    for (const item of materialesArray) {
+      result.push({
+        categoria,
+        tipoMaterial: item.display,
+        casos: item.casos || 0,
+        porcentaje: totalCategoria > 0 
+          ? `${((100 * (item.casos || 0)) / totalCategoria).toFixed(2)} %`
+          : '0.00 %'
+      });
+    }
+
+    // Agregar fila Total recalculada
+    result.push({
+      categoria,
+      tipoMaterial: 'Total',
+      casos: totalCategoria,
+      porcentaje: totalCategoria > 0 ? '100.00 %' : '0.00 %'
+    });
+  }
+
+  return result;
+};
+
 // ============================================================================
  // COMPONENTE
 // ============================================================================
@@ -354,7 +519,10 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
         try {
           const dataRaw = response?.data || [];
           const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformMaterialesConstruccionDesdeBackend(datosDesenvueltos);
+          let datosTransformados = transformMaterialesConstruccionDesdeBackend(datosDesenvueltos);
+          
+          // ✅ Aplicar deduplicación para agrupar variantes semánticas
+          datosTransformados = deduplicateMateriales(datosTransformados);
           
           console.log('[SECCION9] 🔍 RAW DATA:', dataRaw);
           console.log('[SECCION9] 🔍 DATOS DESENVUELTOS:', datosDesenvueltos);

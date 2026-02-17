@@ -105,8 +105,8 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         campoPorcentaje: '',
         calcularPorcentajes: false,
         camposParaCalcular: [],
-        permiteAgregarFilas: false,
-        permiteEliminarFilas: false,
+        permiteAgregarFilas: true,
+        permiteEliminarFilas: true,
         noInicializarDesdeEstructura: true,
         estructuraInicial: []
     }));

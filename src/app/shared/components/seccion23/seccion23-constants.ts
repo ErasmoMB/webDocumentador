@@ -40,8 +40,8 @@ export const SECCION23_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   peaDistritoSexo: {
     tablaKey: 'peaDistritoSexoTabla',
@@ -51,8 +51,8 @@ export const SECCION23_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   peaOcupadaDesocupada: {
     tablaKey: 'peaOcupadaDesocupadaTabla',
@@ -62,8 +62,8 @@ export const SECCION23_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,
     calcularPorcentajes: false,
     camposParaCalcular: [],
-    permiteAgregarFilas: false,
-    permiteEliminarFilas: false
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   }
 };
 

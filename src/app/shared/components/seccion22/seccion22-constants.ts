@@ -131,8 +131,8 @@ export const SECCION22_TABLA_POBLACION_SEXO_CONFIG: TableConfig = {
   calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: false,
-  permiteEliminarFilas: false
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
 };
 
 // Configuración para tabla: Población por Grupo Etario
@@ -144,8 +144,8 @@ export const SECCION22_TABLA_POBLACION_ETARIO_CONFIG: TableConfig = {
   calcularPorcentajes: false,
   camposParaCalcular: ['casos'],
   noInicializarDesdeEstructura: true,
-  permiteAgregarFilas: false,
-  permiteEliminarFilas: false
+  permiteAgregarFilas: true,
+  permiteEliminarFilas: true
 };
 
 // Columnas para tabla: Población por Sexo

@@ -368,8 +368,8 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     calcularPorcentajes: false,    // ✅ No calcular (viene del backend)
     camposParaCalcular: ['casos'],
     noInicializarDesdeEstructura: true,
-    permiteAgregarFilas: false,    // ✅ Solo lectura - no agregar
-    permiteEliminarFilas: false    // ✅ Solo lectura - no eliminar
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   };
 
   // ✅ Columnas para tables (evita problemas con caracteres especiales en templates)
@@ -392,7 +392,7 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   readonly afiliacionColumns: any[] = [
     { field: 'categoria', label: SECCION29_TEMPLATES.columnCategoriaAfiliacionLabel, type: 'text' as const },
     { field: 'casos', label: SECCION29_TEMPLATES.columnPoblacionLabel, type: 'number' as const },
-    { field: 'porcentaje', label: SECCION29_TEMPLATES.columnPorcentajeLabel, type: 'text' as const, readonly: true }
+    { field: 'porcentaje', label: SECCION29_TEMPLATES.columnPorcentajeLabel, type: 'text' as const }
   ];
 
   actualizarTexto(field: string, valor: string) {

@@ -76,15 +76,7 @@
       <!-- Fila de Total (readonly) -->
       <tr *ngIf="getTotalRow() && !modoVista" class="total-row">
         <td *ngFor="let col of columns" [attr.data-label]="col.label">
-          <span *ngIf="modoVista">{{ getFormattedValue(getTotalRow(), col) }}</span>
-          <ng-container *ngIf="!modoVista">
-            <input 
-              [type]="col.type || 'text'"
-              class="table-input"
-              [value]="getFormattedValue(getTotalRow(), col)"
-              readonly
-              style="background-color: #f5f5f5; cursor: not-allowed;">
-          </ng-container>
+          <span>{{ getFormattedValue(getTotalRow(), col) }}</span>
         </td>
         <td *ngIf="showDeleteButton && !modoVista" class="table-actions" data-label="">
           <!-- No hay botón de eliminar para la fila Total -->

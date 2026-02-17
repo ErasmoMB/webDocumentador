@@ -36,7 +36,7 @@ export function transformAfiliacionSaludTabla(data: any): any[] {
   return datosArray.map((item: any) => ({
     categoria: item.categoria || 'Sin categoría',
     casos: Number(item.casos) || 0,
-    porcentaje: item.porcentaje || 0
+    porcentaje: item.porcentaje ?? ''  // ✅ Usar cadena vacía en lugar de 0 para el "Total referencial"
   }));
 }
 

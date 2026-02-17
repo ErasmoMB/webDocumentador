@@ -92,8 +92,8 @@ export const SECCION25_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   condicionOcupacion: {
     tablaKey: 'condicionOcupacionAISI',
@@ -103,8 +103,8 @@ export const SECCION25_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   },
   materialesVivienda: {
     tablaKey: 'materialesViviendaAISI',
@@ -114,7 +114,7 @@ export const SECCION25_TABLE_CONFIGS = {
     noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
     calcularPorcentajes: false,          // ✅ Backend ya calcula
     camposParaCalcular: [],
-    permiteAgregarFilas: false,          // ✅ Solo lectura
-    permiteEliminarFilas: false          // ✅ Solo lectura
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true
   }
 };
