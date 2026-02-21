@@ -100,31 +100,12 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     const data = this.sectionDataSignal();
     const tablaKey = prefijo ? `poblacionSexoAISD${prefijo}` : 'poblacionSexoAISD';
     
-    // ✅ DEBUG: Log todos los keys disponibles
-    const allKeys = Object.keys(data);
-    const sexoKeys = allKeys.filter(k => k.includes('poblacionSexo'));
-    console.log(`[SECCION6:SIGNAL] 📊 poblacionSexoSignal:`, {
-      prefijo,
-      tablaKey,
-      allSexoKeys: sexoKeys,
-      tieneData: !!data,
-      tienePrefijo: !!prefijo
-    });
-    
-    const tablaConPrefijo = prefijo ? data[`poblacionSexoAISD${prefijo}`] : null;
-    console.log(`[SECCION6:SIGNAL] 📊 poblacionSexoSignal reading:`, {
-      prefijo,
-      tablaKey,
-      tieneConPrefijo: !!tablaConPrefijo,
-      rowCountConPrefijo: tablaConPrefijo?.length
-    });
-    
     // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
+    const tablaConPrefijo = prefijo ? data[`poblacionSexoAISD${prefijo}`] : null;
+    
     if (tablaConPrefijo && this.tieneContenidoRealTablaDemografia(tablaConPrefijo)) {
-      console.log(`[SECCION6:SIGNAL] ✅ Using data WITH prefix: ${tablaKey}, rows:`, tablaConPrefijo.map((r: any) => ({sexo: r.sexo, casos: r.casos})));
       return tablaConPrefijo;
     }
-    console.log(`[SECCION6:SIGNAL] ❌ No data found with prefix, returning empty array`);
     return [];
   });
 
@@ -134,19 +115,11 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     const tablaKey = prefijo ? `poblacionEtarioAISD${prefijo}` : 'poblacionEtarioAISD';
     
     const tablaConPrefijo = prefijo ? data[`poblacionEtarioAISD${prefijo}`] : null;
-    console.log(`[SECCION6:SIGNAL] 📊 poblacionEtarioSignal reading:`, {
-      prefijo,
-      tablaKey,
-      tieneConPrefijo: !!tablaConPrefijo,
-      rowCountConPrefijo: tablaConPrefijo?.length
-    });
     
     // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
     if (tablaConPrefijo && this.tieneContenidoRealTablaDemografia(tablaConPrefijo)) {
-      console.log(`[SECCION6:SIGNAL] ✅ Using etario data WITH prefix: ${tablaKey}, rows:`, tablaConPrefijo.map((r: any) => ({categoria: r.categoria, casos: r.casos})));
       return tablaConPrefijo;
     }
-    console.log(`[SECCION6:SIGNAL] ❌ No etario data found with prefix, returning empty array`);
     return [];
   });
 
@@ -272,26 +245,31 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     super(cdRef, injector);
     
     // ✅ FLUJO UNICA_VERDAD - Logging para pruebas
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('[SECCION6:FLUJO] 🎯 INICIO - Componente Form cargado');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log(`[SECCION6:FLUJO] 📋 Sección ID: ${this.seccionId}`);
-    console.log(`[SECCION6:FLUJO] 🏷️ Prefijo inicial: ${this.obtenerPrefijoGrupo()}`);
+    console.clear();
+    console.log('');
+    console.log('╔════════════════════════════════════════════════════════════════════════╗');
+    console.log('║  🎯 SECCIÓN 6 - FLUJO UNICA_VERDAD - MODO DEBUG                    ║');
+    console.log('╠════════════════════════════════════════════════════════════════════════╣');
+    console.log('║  Escenarios:                                                           ║');
+    console.log('║    #1: Primera carga    → Backend + Session-Data                     ║');
+    console.log('║    #2: Recarga F5       → Session-Data (sin Backend)                  ║');
+    console.log('║    #3: Edita datos      → Actualizar Session-Data                    ║');
+    console.log('║    #4: Recarga después  → Session-Data (recupera edits)               ║');
+    console.log('║    #5: Cambia CPP      → Limpiar Session-Data + Backend nuevo        ║');
+    console.log('║    #6: TTL expira      → Backend + Session-Data nueva                ║');
+    console.log('╚════════════════════════════════════════════════════════════════════════╝');
+    console.log('');
+    console.log(`[SECCION6:INIT] 📋 Sección ID: ${this.seccionId}`);
+    console.log(`[SECCION6:INIT] 🏷️ Prefijo inicial: ${this.obtenerPrefijoGrupo()}`);
+    console.log('[SECCION6:INIT] ⏳ Esperando carga de datos...');
+    console.log('');
     
     this.photoGroupsConfig = [
       { prefix: this.PHOTO_PREFIX, label: 'Demografía' }
     ];
     // Configs ya inicializadas como propiedades de clase
     
-    debugLog('[PORCENTAJES] 🔧 Seccion6FormComponent - Config creada:', {
-      poblacionSexoConfig: this.poblacionSexoConfig,
-      tieneCampoTotal: !!this.poblacionSexoConfig.campoTotal,
-      tieneCampoPorcentaje: !!this.poblacionSexoConfig.campoPorcentaje,
-      calcularPorcentajes: this.poblacionSexoConfig.calcularPorcentajes
-    });
-
     // ✅ EFFECT 1: NO USAR - Los signals leen directamente de ProjectStateFacade
-    // Eliminado: effect que copiaba a this.datos (legacy)
     // Los signals como poblacionSexoSignal ya leen de ProjectStateFacade correctamente
 
     // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
@@ -315,7 +293,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       
       // Verificar si necesita cálculo de porcentajes
       if (sexoData.length > 0 && !this.tienePorcentajesCalculados(sexoData)) {
-        debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla sexo...');
+        console.log(`[SECCION6:CALCULO] ⚡ Calculando porcentajes para tabla sexo...`);
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
           { ...SECCION6_TABLA_POBLACION_SEXO_CONFIG, tablaKey: `poblacionSexoAISD${prefijo}` }
@@ -323,7 +301,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       }
 
       if (etarioData.length > 0 && !this.tienePorcentajesCalculados(etarioData)) {
-        debugLog('[PORCENTAJES] ⚡ Calculando porcentajes para tabla etario...');
+        console.log(`[SECCION6:CALCULO] ⚡ Calculando porcentajes para tabla etario...`);
         this.tableFacade.calcularTotalesYPorcentajes(
           this.sectionDataSignal(),
           { ...SECCION6_TABLA_POBLACION_ETARIO_CONFIG, tablaKey: `poblacionEtarioAISD${prefijo}` }
@@ -333,7 +311,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 4: Monitoreo de grupos AISD removido
+    // ✅ EFFECT 4: Monitoreo de grupos AISD
     effect(() => {
       const gruposAISD = this.aisdGroupsSignal();
       this.cdRef.markForCheck();
@@ -342,8 +320,6 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     // ✅ EFFECT 5: Detectar cambio de CPP/grupo y limpiar session-data
     effect(() => {
       const prefijoActual = this.prefijoGrupoSignal();
-      
-      console.log(`[SECCION6:EFFECT] 🔍 Effect triggered, prefijoActual: ${prefijoActual}, prefijoAnterior: ${this._prefijoAnterior}`);
       
       // Si no hay prefijo (aún no se inicializó), ignorar
       if (!prefijoActual) return;

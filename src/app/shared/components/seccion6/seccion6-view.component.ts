@@ -96,23 +96,11 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     const data = this.vistDataSignal();
     
-    // ✅ DEBUG: Log todos los keys disponibles
-    const allKeys = Object.keys(data);
-    const sexoKeys = allKeys.filter(k => k.includes('poblacionSexo'));
-    console.log(`[SECCION6:VIEW] 📊 poblacionSexoRowsSignal:`, {
-      prefijo,
-      tieneData: !!data,
-      tienePrefijo: !!prefijo,
-      allSexoKeys: sexoKeys
-    });
-    
     // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
     const tablaConPrefijo = prefijo ? data[`poblacionSexoAISD${prefijo}`] : null;
     if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
-      console.log(`[SECCION6:VIEW] ✅ Using sexo data WITH prefix: poblacionSexoAISD${prefijo}`);
       return tablaConPrefijo;
     }
-    console.log(`[SECCION6:VIEW] ❌ No sexo data found with prefix, returning empty`);
     return [];
   });
 
@@ -123,10 +111,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
     const tablaConPrefijo = prefijo ? data[`poblacionEtarioAISD${prefijo}`] : null;
     if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
-      console.log(`[SECCION6:VIEW] ✅ Using etario data WITH prefix: poblacionEtarioAISD${prefijo}`);
       return tablaConPrefijo;
     }
-    console.log(`[SECCION6:VIEW] ❌ No etario data found with prefix, returning empty`);
     return [];
   });
 
@@ -192,20 +178,17 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     // Configs ya inicializadas como propiedades de clase
     
     // ✅ FLUJO UNICA_VERDAD - Logging para pruebas en Vista
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('[SECCION6:VIEW:FLUJO] 🎯 INICIO - Componente Vista cargado');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log(`[SECCION6:VIEW:FLUJO] 📋 Sección ID: ${this.seccionId}`);
-    console.log(`[SECCION6:VIEW:FLUJO] 🏷️ Prefijo inicial: ${this.obtenerPrefijoGrupo()}`);
+    // ✅ FLUJO UNICA_VERDAD - Logging para pruebas
+    console.log('');
+    console.log('╔════════════════════════════════════════════════════════════════════════╗');
+    console.log('║  🎯 SECCIÓN 6 (VIEW) - FLUJO UNICA_VERDAD - MODO DEBUG         ║');
+    console.log('╚════════════════════════════════════════════════════════════════════════╝');
+    console.log(`[SECCION6:VIEW:INIT] 📋 Sección ID: ${this.seccionId}`);
+    console.log(`[SECCION6:VIEW:INIT] 🏷️ Prefijo inicial: ${this.obtenerPrefijoGrupo()}`);
     
     // ✅ Cargar fotos al inicio
     this.cargarFotografias();
-    console.log('[SECCION6:VIEW:FLUJO] ✅ Fotos cargadas en constructor');
     
-    // ✅ EFFECT 1: NO USAR - Los signals leen directamente de ProjectStateFacade
-    // Eliminado: effect que copiaba a this.datos (legacy)
-    // Los signals como poblacionSexoRowsSignal ya leen de ProjectStateFacade correctamente
-
     // ✅ EFFECT 2: Monitorear SOLO photoFieldsHash para recargar fotografías
     // Se ejecuta cuando el hash cambia (cuando se agregan/editan fotos en el Form)
     // IMPORTANTE: El flag debe estar FUERA del effect para persistir entre ejecuciones
@@ -215,19 +198,14 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       // Solo monitorear el hash
       const hash = fotogramasView.photoFieldsHash();
       
-      //DEBUG
-      console.log(`[SECCION6:VIEW:EFFECT] 🔄 Effect ejecutado, hash: ${hash?.substring(0, 30)}...`);
-      
       // Skip first execution - photos will be loaded by constructor
       if (!inicializadoView) {
         inicializadoView = true;
-        console.log(`[SECCION6:VIEW:EFFECT] ⏭️ Skip primer inicio, fotos ya cargadas`);
         return;
       }
       
       // Recargar fotografías solo si el hash indica que hay fotos
       if (hash && hash.includes('|1|')) {
-        console.log(`[SECCION6:VIEW:EFFECT] 📷 Hash indica fotos, recargando...`);
         fotogramasView.cargarFotografias();
         fotogramasView.fotografiasVista = [...fotogramasView.fotografiasCache];
         fotogramasView.cdRef.markForCheck();

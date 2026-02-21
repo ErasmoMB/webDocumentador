@@ -32,7 +32,7 @@
 
         <label class="label">Tabla PET - Editable</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="petConfig"
           [columns]="columnasTableaPET"
           [sectionId]="seccionId"
@@ -108,7 +108,7 @@
 
         <label class="label">Tabla PEA - Editable</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="peaConfig"
           [columns]="columnasTableaPEA"
           [sectionId]="seccionId"
@@ -194,7 +194,7 @@
 
         <label class="label">Tabla PEA Ocupada - Editable</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="peaOcupadaConfig"
           [columns]="columnasTableaPEAOcupada"
           [sectionId]="seccionId"

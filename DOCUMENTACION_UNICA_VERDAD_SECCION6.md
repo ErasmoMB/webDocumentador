@@ -376,3 +376,18 @@ Form.sectionDataSignal() ◄──── View.vistDataSignal()
 - **BaseSectionComponent**: `src/app/shared/components/base-section.component.ts`
 - **Sección 6 Form**: `src/app/shared/components/seccion6/seccion6-form.component.ts`
 - **Sección 6 View**: `src/app/shared/components/seccion6/seccion6-view.component.ts`
+- **Sección 7 Form**: `src/app/shared/components/seccion7/seccion7-form.component.ts`
+- **Sección 7 View**: `src/app/shared/components/seccion7/seccion7-view.component.ts`
+
+## 8. Diferencias con Otras Secciones
+
+### Sección 7 (PEA - Población Económicamente Activa)
+La Sección 7 usa un sistema de grupos de fotos más complejo (`photoGroupsConfig`), pero sigue el mismo patrón UNICA_VERDAD:
+- **Form**: `formDataSignal()` + effect con skip + `cargarFotografias()` override
+- **View**: `viewDataSignal()` + effect con skip + `cargarFotografias()` con protección
+- **Fotos**: Usa `fotografiaPEA` como prefijo (definido en `SECCION7_PHOTO_PREFIX.PEA`)
+
+Las diferencias principales:
+- Sección 7 tiene 3 tablas (PET, PEA, PEA Ocupada) vs Sección 6 que tiene 2 (Sexo, Etario)
+- Sección 7 usa `cargarTodosLosGrupos()` del base component para el sistema de grupos de fotos
+- La lógica de protección en View es la misma (verificar cantidad y títulos)

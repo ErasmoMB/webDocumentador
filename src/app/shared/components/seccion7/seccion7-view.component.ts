@@ -6,6 +6,7 @@ import { FotoItem } from '../image-upload/image-upload.component';
 import { SECCION7_WATCHED_FIELDS, SECCION7_PHOTO_PREFIX, SECCION7_SECTION_ID, SECCION7_TEMPLATES } from './seccion7-constants';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   standalone: true,
@@ -92,7 +93,8 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private formChange: FormChangeService
   ) {
     super(cdRef, injector);
     this.photoGroupsConfig = [
@@ -105,11 +107,47 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
       this.cdRef.markForCheck();
     });
 
+    // ✅ EFFECT: Monitorear cambios en tablas PET, PEA, PEA Ocupada
+    const seccion7ViewTablas = this;
+    let inicializadoTablas = false;
+    
     effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasVista = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
+      // Leer los signals de tablas para detectar cambios
+      const petTabla = this.petTablaSignal();
+      const peaTabla = this.peaTablaSignal();
+      const peaOcupadaTabla = this.peaOcupadaTablaSignal();
+      
+      // Skip primer inicio
+      if (!inicializadoTablas) {
+        inicializadoTablas = true;
+        console.log(`[SECCION7:VIEW:EFFECT:TABLAS] ⏭️ Skip primer inicio`);
+        return;
+      }
+      
+      console.log(`[SECCION7:VIEW:EFFECT:TABLAS] 🔄 Tablas cambiaron, actualizando vista...`);
+      seccion7ViewTablas.cdRef.markForCheck();
+    }, { allowSignalWrites: true });
+
+    // ✅ EFFECT: Monitorear cambios de fotos
+    // IMPORTANTE: Flag para evitar loop infinito (igual que Sección 6)
+    const seccion7ViewFotos = this;
+    let inicializadoView = false;
+    
+    effect(() => {
+      const hash = this.photoFieldsHash();
+      console.log(`[SECCION7:VIEW:EFFECT] Hash actual: ${hash?.substring(0, 50)}...`);
+      
+      // Skip primer inicio - fotos ya cargadas en constructor/onInitCustom
+      if (!inicializadoView) {
+        inicializadoView = true;
+        console.log(`[SECCION7:VIEW:EFFECT] ⏭️ Skip primer inicio`);
+        return;
+      }
+      
+      console.log(`[SECCION7:VIEW:EFFECT] 📷 Hash cambió, recargando fotos...`);
+      seccion7ViewFotos.cargarFotografias();
+      seccion7ViewFotos.fotografiasVista = [...seccion7ViewFotos.fotografiasCache];
+      seccion7ViewFotos.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
 
@@ -119,13 +157,83 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override cargarFotografias(): void {
-    if (this.photoGroupsConfig.length > 0) {
-      this.cargarTodosLosGrupos();
-      this.fotografiasVista = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
-    } else {
-      super.cargarFotografias();
+    // ✅ LEER DEL SIGNAL REACTIVO (igual que Sección 6)
+    const formData = this.viewDataSignal();
+    const prefijo = this.prefijoGrupoSignal();
+    
+    // ✅ Contar fotos reales en formData
+    const fotoKeys = Object.keys(formData || {}).filter(k => 
+      k.includes('fotografia') && k.includes('Imagen') && !k.includes('Titulo') && !k.includes('Fuente') && !k.includes('Numero')
+    );
+    
+    let fotosReales = 0;
+    for (const key of fotoKeys) {
+      const valor = formData[key];
+      if (valor && typeof valor === 'string' && valor.length > 0 && valor.startsWith('data:')) {
+        fotosReales++;
+      }
     }
+    
+    console.log(`[SECCION7:VIEW:FOTOS] 🔍 Cargando fotos:`, {
+      prefijo,
+      fotosReales,
+      fotografiasCacheActual: this.fotografiasCache?.length || 0
+    });
+    
+    // ✅ SOLO mantener cache si la cantidad de fotos es EXACTAMENTE IGUAL (igual que Sección 6)
+    const cacheCount = this.fotografiasCache?.length || 0;
+    if (cacheCount > 0 && cacheCount === fotosReales) {
+      // Misma cantidad, verificar si títulos/fuentes cambiaron
+      let necesitaRecarga = false;
+      for (let i = 0; i < cacheCount; i++) {
+        const foto = this.fotografiasCache[i];
+        const titKey = `${this.PHOTO_PREFIX}${i + 1}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i + 1}Fuente${prefijo}`;
+        if (formData[titKey] !== foto.titulo || formData[fuenteKey] !== foto.fuente) {
+          console.log(`[SECCION7:VIEW:FOTOS] 🔄 Título/Fuente cambió para foto ${i + 1}, recargando`);
+          necesitaRecarga = true;
+          break;
+        }
+      }
+      if (!necesitaRecarga) {
+        console.log(`[SECCION7:VIEW:FOTOS] ✅ Títulos sin cambios, manteniendo cache`);
+        this.fotografiasVista = [...this.fotografiasCache];
+        this.cdRef.markForCheck();
+        return;
+      }
+    } else {
+      console.log(`[SECCION7:VIEW:FOTOS] ℹ️ Cache(${cacheCount}) != Reales(${fotosReales}), recargando`);
+    }
+    
+    // ✅ Ahora cargar las fotos directamente del signal (igual que Sección 6)
+    const fotos: FotoItem[] = [];
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
+      const imagen = formData[imagenKey];
+      
+      // Verificar que la imagen sea un data URL válido
+      const esValida = imagen && typeof imagen === 'string' && imagen.length > 0 && imagen.startsWith('data:');
+      
+      if (esValida) {
+        const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
+        const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
+        
+        fotos.push({
+          imagen: imagen,
+          titulo: formData[tituloKey] || '',
+          fuente: formData[fuenteKey] || '',
+          numero: formData[numeroKey] || i
+        });
+      }
+    }
+    
+    console.log(`[SECCION7:VIEW:FOTOS] ✅ Fotos cargadas del signal: ${fotos.length}`);
+    
+    this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
+    this.fotografiasVista = [...this.fotografiasCache];
+    this.cdRef.markForCheck();
   }
 
   protected override detectarCambios(): boolean {

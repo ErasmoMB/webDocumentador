@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, Signal, computed, effect } from '@angular/core';
+import { Component, ChangeDetectorRef, Input, OnDestroy, ChangeDetectionStrategy, Injector, Signal, computed, effect, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,9 @@ import { CoreSharedModule } from 'src/app/shared/modules/core-shared.module';
 import { TableColumn } from '../dynamic-table/dynamic-table.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import {
   SECCION7_WATCHED_FIELDS,
   SECCION7_SECTION_ID,
@@ -235,10 +238,25 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     injector: Injector,
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private tableFacade: TableManagementFacade,
+    private formChange: FormChangeService
   ) {
     super(cdRef, injector);
-
+    
+    // ✅ DEBUG: Banner de inicio
+    console.clear();
+    console.log('');
+    console.log('╔════════════════════════════════════════════════════════════════════════╗');
+    console.log('║  🎯 SECCIÓN 7 - FLUJO UNICA_VERDAD - MODO DEBUG                 ║');
+    console.log('╠════════════════════════════════════════════════════════════════════════╣');
+    console.log('║  Tablas: PET, PEA, PEA Ocupada                                     ║');
+    console.log('║  Problemas a depurar:                                                ║');
+    console.log('║    - Persistencia de datos                                           ║');
+    console.log('║    - Cálculo de totales y porcentajes                               ║');
+    console.log('╚════════════════════════════════════════════════════════════════════════╝');
+    console.log('');
+    
     effect(() => {
       const formData = this.formDataSignal();
       this.datos = { ...formData };
@@ -252,8 +270,11 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
       const datosActuales = this.datos[petTablaKey];
       
+      console.log(`[SECCION7:EFFECT:PET] 🔄 Signal actualizado, tiene datos:`, !!tabla, 'length:', tabla?.length);
+      
       // Solo actualizar si la tabla en Signal es diferente a la en datos legacy
       if (JSON.stringify(tabla) !== JSON.stringify(datosActuales)) {
+        console.log(`[SECCION7:EFFECT:PET] 📥 Copiando datos al formulario`);
         this.datos[petTablaKey] = tabla;
       }
       this.cdRef.markForCheck();
@@ -266,7 +287,10 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
       const datosActuales = this.datos[peaTablaKey];
       
+      console.log(`[SECCION7:EFFECT:PEA] 🔄 Signal actualizado, tiene datos:`, !!tabla, 'length:', tabla?.length);
+      
       if (JSON.stringify(tabla) !== JSON.stringify(datosActuales)) {
+        console.log(`[SECCION7:EFFECT:PEA] 📥 Copiando datos al formulario`);
         this.datos[peaTablaKey] = tabla;
       }
       this.cdRef.markForCheck();
@@ -279,17 +303,32 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
       const datosActuales = this.datos[peaOcupadaTablaKey];
       
+      console.log(`[SECCION7:EFFECT:PEA_O] 🔄 Signal actualizado, tiene datos:`, !!tabla, 'length:', tabla?.length);
+      
       if (JSON.stringify(tabla) !== JSON.stringify(datosActuales)) {
+        console.log(`[SECCION7:EFFECT:PEA_O] 📥 Copiando datos al formulario`);
         this.datos[peaOcupadaTablaKey] = tabla;
       }
       this.cdRef.markForCheck();
     });
 
+    // ✅ EFFECT: Monitorear cambios de fotos
+    // IMPORTANTE: Flag para evitar loop infinito (igual que Sección 6)
+    const seccion7Form = this;
+    let inicializadoForm = false;
+    
     effect(() => {
       this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasSeccion7 = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
+      
+      // Skip primer inicio - fotos ya cargadas en onInitCustom
+      if (!inicializadoForm) {
+        inicializadoForm = true;
+        return;
+      }
+      
+      seccion7Form.cargarFotografias();
+      seccion7Form.fotografiasSeccion7 = [...seccion7Form.fotografiasCache];
+      seccion7Form.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
 
@@ -297,12 +336,12 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `petTabla${prefijo}`,
-      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
-      campoTotal: '',                      // ✅ NO calcular total
-      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
-      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
-      camposParaCalcular: [],
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      totalKey: 'categoria',                    // ✅ La fila "Total" se identifica por categoria === 'Total'
+      campoTotal: 'casos',                      // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
+      calcularPorcentajes: true,                // ✅ Recalcular cuando usuario edite
+      camposParaCalcular: ['casos'],           // ✅ Campos a considerar
+      noInicializarDesdeEstructura: true,      // ✅ No inicializar desde estructura
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -312,12 +351,12 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `peaTabla${prefijo}`,
-      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
-      campoTotal: '',                      // ✅ NO calcular total
-      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
-      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
-      camposParaCalcular: [],
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      totalKey: 'categoria',                   // ✅ La fila "Total" se identifica por categoria === 'Total'
+      campoTotal: 'casos',                      // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
+      calcularPorcentajes: true,                // ✅ Recalcular cuando usuario edite
+      camposParaCalcular: ['casos'],            // ✅ Campos a considerar
+      noInicializarDesdeEstructura: true,      // ✅ No inicializar desde estructura
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -327,22 +366,31 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     const prefijo = this.prefijoGrupoSignal();
     return {
       tablaKey: `peaOcupadaTabla${prefijo}`,
-      totalKey: '',                        // ✅ NO agregar fila de total (viene del backend)
-      campoTotal: '',                      // ✅ NO calcular total
-      campoPorcentaje: '',                 // ✅ NO calcular porcentaje
-      calcularPorcentajes: false,          // ✅ Los datos vienen del backend
-      camposParaCalcular: [],
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar desde estructura
+      totalKey: 'categoria',                   // ✅ La fila "Total" se identifica por categoria === 'Total'
+      campoTotal: 'casos',                      // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
+      calcularPorcentajes: true,                // ✅ Recalcular cuando usuario edite
+      camposParaCalcular: ['casos'],            // ✅ Campos a considerar
+      noInicializarDesdeEstructura: true,      // ✅ No inicializar desde estructura
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
   }
 
   protected override onInitCustom(): void {
-    // ✅ PRIMERO: Asegurar que las tablas estén completamente vacías
-    this.inicializarTablasVacias();
-    // ✅ SEGUNDO: Cargar datos del backend
-    this.cargarDatosDelBackend();
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const prefijo = this.obtenerPrefijoGrupo();
+    const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
+    const existingPetData = this.formDataSignal()[petTablaKey];
+    
+    // Solo cargar del backend si no hay datos persistidos
+    if (!existingPetData || !Array.isArray(existingPetData) || existingPetData.length === 0) {
+      console.log('[SECCION7] No hay datos persistidos, cargando del backend...');
+      this.cargarDatosDelBackend();
+    } else {
+      console.log('[SECCION7] Datos persistidos encontrados, no se carga del backend');
+    }
+    
     this.cargarFotografias();
     this.fotografiasSeccion7 = [...this.fotografiasCache];
   }
@@ -369,8 +417,22 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
           unwrapDemograficoData(response?.data || [])
         );
         const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-        this.projectFacade.setField(this.seccionId, null, petTablaKey, datosTransformados);
-        this.projectFacade.setField(this.seccionId, null, 'petTabla', datosTransformados);
+        
+        // ✅ Calcular totales y porcentajes antes de guardar
+        const tmp: Record<string, any> = { [petTablaKey]: structuredClone(datosTransformados) };
+        this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...this.petConfig, tablaKey: petTablaKey });
+        const tablaFinal = tmp[petTablaKey] || datosTransformados;
+        
+        this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaFinal);
+        this.projectFacade.setField(this.seccionId, null, 'petTabla', tablaFinal);
+        
+        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+        try {
+          this.formChange.persistFields(this.seccionId, 'table', { [petTablaKey]: tablaFinal }, { notifySync: true });
+          console.log(`[SECCION7:BACKEND] ✅ PET data saved to session-data with prefix: ${petTablaKey}`);
+        } catch (e) {
+          console.error(`[SECCION7:BACKEND] ⚠️ Could not save PET to session-data:`, e);
+        }
       },
       error: (err) => {
         console.error('[SECCION7] Error cargando PET:', err);
@@ -384,8 +446,20 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
           unwrapDemograficoData(response?.data || [])
         );
         const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-        this.projectFacade.setField(this.seccionId, null, peaTablaKey, datosTransformados);
-        this.projectFacade.setField(this.seccionId, null, 'peaTabla', datosTransformados);
+        
+        // ✅ Calcular totales y porcentajes antes de guardar
+        const tablaConPorcentajes = this.calcularPorcentajesPEA(datosTransformados);
+        
+        this.projectFacade.setField(this.seccionId, null, peaTablaKey, tablaConPorcentajes);
+        this.projectFacade.setField(this.seccionId, null, 'peaTabla', tablaConPorcentajes);
+        
+        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+        try {
+          this.formChange.persistFields(this.seccionId, 'table', { [peaTablaKey]: tablaConPorcentajes }, { notifySync: true });
+          console.log(`[SECCION7:BACKEND] ✅ PEA data saved to session-data with prefix: ${peaTablaKey}`);
+        } catch (e) {
+          console.error(`[SECCION7:BACKEND] ⚠️ Could not save PEA to session-data:`, e);
+        }
       },
       error: (err) => {
         console.error('[SECCION7] Error cargando PEA:', err);
@@ -399,8 +473,20 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
           unwrapDemograficoData(response?.data || [])
         );
         const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-        this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, datosTransformados);
-        this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', datosTransformados);
+        
+        // ✅ Calcular totales y porcentajes antes de guardar
+        const tablaConPorcentajes = this.calcularPorcentajesPEA(datosTransformados);
+        
+        this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, tablaConPorcentajes);
+        this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', tablaConPorcentajes);
+        
+        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+        try {
+          this.formChange.persistFields(this.seccionId, 'table', { [peaOcupadaTablaKey]: tablaConPorcentajes }, { notifySync: true });
+          console.log(`[SECCION7:BACKEND] ✅ PEA Ocupada data saved to session-data with prefix: ${peaOcupadaTablaKey}`);
+        } catch (e) {
+          console.error(`[SECCION7:BACKEND] ⚠️ Could not save PEA Ocupada to session-data:`, e);
+        }
       },
       error: (err) => {
         console.error('[SECCION7] Error cargando PEA Ocupada:', err);
@@ -499,6 +585,19 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   override cargarFotografias(): void {
     const formData = this.formDataSignal();
     const prefijo = this.obtenerPrefijoGrupo();
+    
+    // ✅ Debug: contar fotos reales
+    let fotosReales = 0;
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
+      const imagen = formData[imagenKey];
+      if (imagen && imagen.startsWith('data:')) {
+        fotosReales++;
+      }
+    }
+    
+    console.log(`[SECCION7:FORM:FOTOS] 🔍 Cargando fotos: cache=${this.fotografiasCache?.length || 0}, reales=${fotosReales}`);
+    
     const fotos: FotoItem[] = [];
 
     for (let i = 1; i <= 10; i++) {
@@ -518,6 +617,8 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
         });
       }
     }
+    
+    console.log(`[SECCION7:FORM:FOTOS] ✅ Fotos cargadas: ${fotos.length}`);
 
     this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
   }
@@ -772,37 +873,184 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onTablaPETActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada
+    // ✅ MODO IDEAL: Persistir tabla actualizada usando el signal reactivo
+    const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-    const tablaActual = this.datos[petTablaKey] || [];
+    let tablaActual = formData[petTablaKey] || [];
     
-    // Persistir cambios al projectFacade
+    console.log(`[SECCION7:FORM:TABLA] 💾 Guardando PET tabla (antes de calcular):`, tablaActual);
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.petConfig;
+    const tmp: Record<string, any> = { [petTablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: petTablaKey });
+    tablaActual = tmp[petTablaKey] || tablaActual;
+    
+    console.log(`[SECCION7:FORM:TABLA] 💾 Guardando PET tabla (después de calcular):`, tablaActual);
+    
+    // Persistir cambios al projectFacade en ambas claves (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'petTabla', tablaActual);
+    
+    // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [petTablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION7:FORM:TABLA] ✅ PET data saved to session-data with prefix: ${petTablaKey}`);
+    } catch (e) {
+      console.error(`[SECCION7:FORM:TABLA] ⚠️ Could not save to session-data:`, e);
+    }
     
     this.cdRef.markForCheck();
   }
 
   onTablaPEAActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada
+    // ✅ MODO IDEAL: Persistir tabla actualizada usando el signal reactivo
+    const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-    const tablaActual = this.datos[peaTablaKey] || [];
+    let tablaActual = formData[peaTablaKey] || [];
+    
+    console.log(`[SECCION7:FORM:PEA] 🔄 onTablaPEAActualizada()`);
+    console.log(`[SECCION7:FORM:PEA] 📊 Tabla antes de calcular:`, JSON.parse(JSON.stringify(tablaActual)));
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES PARA TABLA PEA
+    tablaActual = this.calcularPorcentajesPEA(tablaActual);
+    
+    console.log(`[SECCION7:FORM:PEA] 📊 Tabla después de calcular:`, JSON.parse(JSON.stringify(tablaActual)));
     
     // Persistir cambios al projectFacade
+    console.log(`[SECCION7:FORM:PEA] 💾 Guardando en ProjectStateFacade...`);
     this.projectFacade.setField(this.seccionId, null, peaTablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'peaTabla', tablaActual);
+    
+    // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [peaTablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION7:FORM:PEA] ✅ PEA data saved to session-data with prefix: ${peaTablaKey}`);
+    } catch (e) {
+      console.error(`[SECCION7:FORM:PEA] ⚠️ Could not save to session-data:`, e);
+    }
     
     this.cdRef.markForCheck();
   }
 
+  /**
+   * Calcula totales y porcentajes para tabla PEA
+   * Estructura: Categoria, Hombres, %H, Mujeres, %M, Casos, %
+   * La fila Total se identifica por categoria === 'Total'
+   */
+  private calcularPorcentajesPEA(tabla: any[]): any[] {
+    console.log(`[SECCION7:CALCULO] 🔄 calcularPorcentajesPEA llamado`);
+    console.log(`[SECCION7:CALCULO] 📊 Input tabla:`, JSON.parse(JSON.stringify(tabla)));
+    
+    if (!tabla || tabla.length === 0) {
+      console.log(`[SECCION7:CALCULO] ⚠️ Tabla vacía, retornando`);
+      return tabla;
+    }
+    
+    // Clonar para no mutar el original
+    const tablaClon = JSON.parse(JSON.stringify(tabla));
+    
+    // Separar la fila Total de las filas de datos
+    const filaTotalIndex = tablaClon.findIndex((row: any) => 
+      row.categoria && row.categoria.toString().toLowerCase() === 'total'
+    );
+    
+    console.log(`[SECCION7:CALCULO] 🔍 Fila Total encontrada en índice:`, filaTotalIndex);
+    
+    const filasDatos = filaTotalIndex >= 0
+      ? tablaClon.filter((_: any, i: number) => i !== filaTotalIndex)
+      : tablaClon;
+    const filaTotal = filaTotalIndex >= 0 ? tablaClon[filaTotalIndex] : null;
+
+    console.log(`[SECCION7:CALCULO] 📊 Filas de datos:`, filasDatos.length);
+    console.log(`[SECCION7:CALCULO] 📊 Hay fila Total:`, !!filaTotal);
+
+    // Normalizar valores y calcular casos por fila (solo filas de datos)
+    let totalHombres = 0;
+    let totalMujeres = 0;
+    let totalCasos = 0;
+    
+    filasDatos.forEach((row: any) => {
+      const hombres = Number(row.hombres) || 0;
+      const mujeres = Number(row.mujeres) || 0;
+      
+      // Calcular casos = hombres + mujeres
+      row.casos = hombres + mujeres;
+      
+      totalHombres += hombres;
+      totalMujeres += mujeres;
+      totalCasos += row.casos;
+    });
+
+    // Calcular porcentajes para cada fila de datos
+    filasDatos.forEach((row: any) => {
+      const h = Number(row.hombres) || 0;
+      const m = Number(row.mujeres) || 0;
+      const c = Number(row.casos) || 0;
+
+      // % Hombres = (hombres / totalHombres) * 100
+      row.porcentajeHombres = totalHombres > 0 
+        ? this.formatPorcentaje((h / totalHombres) * 100) 
+        : '0,00 %';
+      
+      // % Mujeres = (mujeres / totalMujeres) * 100
+      row.porcentajeMujeres = totalMujeres > 0 
+        ? this.formatPorcentaje((m / totalMujeres) * 100) 
+        : '0,00 %';
+      
+      // % Casos = (casos / totalCasos) * 100
+      row.porcentaje = totalCasos > 0 
+        ? this.formatPorcentaje((c / totalCasos) * 100) 
+        : '0,00 %';
+    });
+
+    // Actualizar la fila Total con los totales y porcentajes
+    if (filaTotal) {
+      filaTotal.hombres = totalHombres;
+      filaTotal.mujeres = totalMujeres;
+      filaTotal.casos = totalCasos;
+      filaTotal.porcentajeHombres = '100,00 %';
+      filaTotal.porcentajeMujeres = '100,00 %';
+      filaTotal.porcentaje = '100,00 %';
+    }
+
+    return tablaClon;
+  }
+
+  /**
+   * Formatea un número como porcentaje con 2 decimales
+   */
+  private formatPorcentaje(value: number): string {
+    return value.toFixed(2).replace('.', ',') + ' %';
+  }
+
   onTablaPEAOcupadaActualizada(): void {
-    // ✅ MODO IDEAL: Persistir tabla actualizada
+    // ✅ MODO IDEAL: Persistir tabla actualizada usando el signal reactivo
+    const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-    const tablaActual = this.datos[peaOcupadaTablaKey] || [];
+    let tablaActual = formData[peaOcupadaTablaKey] || [];
     
-    // Persistir cambios al projectFacade
+    console.log(`[SECCION7:FORM:TABLA] 💾 Guardando PEA Ocupada tabla (antes de calcular):`, tablaActual);
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES PARA TABLA PEA OCUPADA (igual que PEA)
+    tablaActual = this.calcularPorcentajesPEA(tablaActual);
+    
+    console.log(`[SECCION7:FORM:TABLA] 💾 Guardando PEA Ocupada tabla (después de calcular):`, tablaActual);
+    
+    // Persistir cambios al projectFacade en ambas claves (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', tablaActual);
+    
+    // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [peaOcupadaTablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION7:FORM:TABLA] ✅ PEA Ocupada data saved to session-data with prefix: ${peaOcupadaTablaKey}`);
+    } catch (e) {
+      console.error(`[SECCION7:FORM:TABLA] ⚠️ Could not save to session-data:`, e);
+    }
     
     this.cdRef.markForCheck();
   }
