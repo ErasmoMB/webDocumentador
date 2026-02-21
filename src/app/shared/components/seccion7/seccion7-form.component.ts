@@ -522,8 +522,36 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
   }
 
+  // ✅ Override: UNICA_VERDAD - Solo guardar en ProjectStateFacade
+  // ELIMINADO: super.onFotografiasChange() que escribía en PhotoCoordinator (legacy)
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
-    super.onFotografiasChange(fotografias, customPrefix);
+    console.log(`[SECCION7:FORM:FOTOS] 📝 onFotografiasChange llamado con ${fotografias.length} fotos`);
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE - ÚNICA FUENTE DE VERDAD
+    const prefijo = this.prefijoGrupoSignal();
+    console.log(`[SECCION7:FORM:FOTOS] 📝 Prefijo: ${prefijo}, guardando ${fotografias.length} fotos`);
+    
+    for (let i = 0; i < fotografias.length; i++) {
+      const foto = fotografias[i];
+      const idx = i + 1;
+      
+      // ✅ Usar PHOTO_PREFIX consistente
+      const imgKey = `${this.PHOTO_PREFIX}${idx}Imagen${prefijo}`;
+      const titKey = `${this.PHOTO_PREFIX}${idx}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
+      const numeroKey = `${this.PHOTO_PREFIX}${idx}Numero${prefijo}`;
+      
+      console.log(`[SECCION7:FORM:FOTOS] 💾 Guardando: ${imgKey}`);
+      
+      this.projectFacade.setField(this.seccionId, null, imgKey, foto.imagen);
+      this.projectFacade.setField(this.seccionId, null, titKey, foto.titulo);
+      this.projectFacade.setField(this.seccionId, null, fuenteKey, foto.fuente);
+      this.projectFacade.setField(this.seccionId, null, numeroKey, idx);
+    }
+    
+    console.log(`[SECCION7:FORM:FOTOS] ✅ Guardado completado en UNICA_VERDAD`);
+    
+    // Actualizar referencia local
     this.fotografiasSeccion7 = fotografias;
     this.cdRef.markForCheck();
   }

@@ -776,6 +776,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
   // ELIMINADO: super.onFotografiasChange() que escribía en PhotoCoordinator (legacy)
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
     console.log(`[SECCION6:FORM:FOTOS] 📝 onFotografiasChange llamado con ${fotografias.length} fotos`);
+    console.log(`[SECCION6:FORM:FOTOS] 📝 Detalle fotos:`, fotografias.map(f => ({ titulo: f.titulo, fuente: f.fuente, tieneImagen: !!f.imagen })));
     
     // ✅ GUARDAR EN PROJECTSTATEFACADE - ÚNICA FUENTE DE VERDAD
     const prefijo = this.prefijoGrupoSignal();
@@ -791,7 +792,14 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
       const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
       const numeroKey = `${this.PHOTO_PREFIX}${idx}Numero${prefijo}`;
       
-      console.log(`[SECCION6:FORM:FOTOS] 💾 Guardando: ${imgKey}, tieneImagen=${!!foto.imagen}, titulo=${foto.titulo}`);
+      console.log(`[SECCION6:FORM:FOTOS] 💾 Guardando foto ${idx}:`, {
+        imgKey,
+        titKey,
+        fuenteKey,
+        tieneImagen: !!foto.imagen,
+        titulo: foto.titulo,
+        fuente: foto.fuente
+      });
       
       this.projectFacade.setField(this.seccionId, null, imgKey, foto.imagen);
       this.projectFacade.setField(this.seccionId, null, titKey, foto.titulo);

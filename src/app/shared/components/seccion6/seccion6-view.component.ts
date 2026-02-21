@@ -616,13 +616,33 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       fotografiasCacheActual: this.fotografiasCache?.length || 0
     });
     
-    // ✅ SI YA TENEMOS FOTOS CARGADAS Y HAY DATOS, NO RECARGAR
-    // Esto evita que se borren las fotos por efectos secundarios
-    if (this.fotografiasCache && this.fotografiasCache.length > 0 && fotosReales > 0) {
-      console.log(`[SECCION6:VIEW:FOTOS] ✅ Ya tenemos ${this.fotografiasCache.length} fotos, manteniendo`);
-      this.fotografiasVista = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
-      return;
+    // ✅ SOLO mantener cache si la cantidad de fotos es EXACTAMENTE IGUAL
+    // Si fotosReales > cache, hay nuevas fotos que deben cargarse
+    const cacheCount = this.fotografiasCache?.length || 0;
+    if (cacheCount > 0 && cacheCount === fotosReales) {
+      console.log(`[SECCION6:VIEW:FOTOS] ✅ Misma cantidad (${cacheCount}), verificando títulos...`);
+      // Aquí verificamos si los títulos/fuentes cambiaron comparando con formData
+      // Si hay discrepancia, recargamos
+      let necesitaRecarga = false;
+      for (let i = 0; i < cacheCount; i++) {
+        const foto = this.fotografiasCache[i];
+        const titKey = `${this.PHOTO_PREFIX}${i + 1}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${i + 1}Fuente${prefijo}`;
+        if (formData[titKey] !== foto.titulo || formData[fuenteKey] !== foto.fuente) {
+          console.log(`[SECCION6:VIEW:FOTOS] 🔄 Título/Fuente cambió para foto ${i + 1}, recargando`);
+          necesitaRecarga = true;
+          break;
+        }
+      }
+      if (!necesitaRecarga) {
+        console.log(`[SECCION6:VIEW:FOTOS] ✅ Títulos sin cambios, manteniendo cache`);
+        this.fotografiasVista = [...this.fotografiasCache];
+        this.cdRef.markForCheck();
+        return;
+      }
+      // Si necesita recarga, continúa el procesamiento normal
+    } else {
+      console.log(`[SECCION6:VIEW:FOTOS] ℹ️ Cache(${cacheCount}) != Reales(${fotosReales}), recargando`);
     }
     
     // ✅ SOLO procesar si hay datos reales

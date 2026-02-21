@@ -173,7 +173,7 @@ readonly poblacionSexoRowsSignal = computed(() => {
 });
 ```
 
-### 3.2 Cargar fotos (con protección contra loop)
+### 3.2 Cargar fotos (con protección contra loop - CORREGIDO)
 
 ```typescript
 // ✅ OVERRIDE: Leer DEL SIGNAL REACTIVO (vistDataSignal)
@@ -181,18 +181,35 @@ override cargarFotografias(): void {
   const formData = this.vistDataSignal();
   const prefijo = this.prefijoGrupoSignal();
   
-  // ✅ Protección: Si ya tenemos fotos cargadas y hay datos, mantener
+  // ✅ Protección: Contar fotos reales en formData
   const fotoKeys = Object.keys(formData).filter(k => k.includes('Fotografia') && k.includes('Imagen'));
   let fotosReales = 0;
   for (const key of fotoKeys) {
     if (formData[key]?.startsWith('data:')) fotosReales++;
   }
   
-  if (this.fotografiasCache?.length > 0 && fotosReales > 0) {
-    // Ya tenemos fotos, mantener
-    this.fotografiasVista = [...this.fotografiasCache];
-    this.cdRef.markForCheck();
-    return;
+  // ✅ SOLO mantener cache si la cantidad de fotos es EXACTAMENTE IGUAL
+  // Si fotosReales > cache, hay nuevas fotos que deben cargarse
+  const cacheCount = this.fotografiasCache?.length || 0;
+  if (cacheCount > 0 && cacheCount === fotosReales) {
+    // Misma cantidad, verificar si títulos/fuentes cambiaron
+    let necesitaRecarga = false;
+    for (let i = 0; i < cacheCount; i++) {
+      const foto = this.fotografiasCache[i];
+      const titKey = `${this.PHOTO_PREFIX}${i + 1}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${i + 1}Fuente${prefijo}`;
+      if (formData[titKey] !== foto.titulo || formData[fuenteKey] !== foto.fuente) {
+        necesitaRecarga = true;
+        break;
+      }
+    }
+    if (!necesitaRecarga) {
+      // Títulos sin cambios, mantener cache
+      this.fotografiasVista = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+      return;
+    }
+    // Si necesita recarga, continúa el procesamiento normal
   }
   
   const fotos: FotoItem[] = [];
@@ -219,6 +236,8 @@ override cargarFotografias(): void {
   this.cdRef.markForCheck();
 }
 ```
+
+**Nota**: Esta lógica sustituye a la versión anterior que tenía el bug de mantener cache cuando `cache.length > 0 && fotosReales > 0`. El bug causaba que cuando `cache=1` y `fotosReales=4`, el sistema mantenía datos anticuados sin detectar que había más fotos.
 
 ### 3.3 Effect para cargar fotos al inicio (sin loop infinito)
 
@@ -322,6 +341,13 @@ Para implementar UNICA_VERDAD en otra sección, sigue esta checklist:
 ### 5.4 Datos no persisten
 **Problema**: Se guarda en localStorage o memoria temporal.
 **Solución**: Siempre guardar en `projectFacade.setField()`.
+
+### 5.5 Fotos/títulos no se actualizan en View después de editar
+**Problema**: La lógica de protección mantenía cache cuando `cache.length > 0 && fotosReales > 0`, pero si había más fotos reales que en cache (ej: cache=1, reales=4), mantenía datos anticuados.
+**Solución**: La protección ahora verifica:
+1. Solo mantiene cache si `cacheCount === fotosReales` (misma cantidad)
+2. Verifica si los títulos/fuentes cambiaron comparando con formData
+3. Si hay discrepancia, recarga correctamente los datos.
 
 ## 6. Flujo de Datos
 
