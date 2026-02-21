@@ -376,8 +376,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
       return;
     }
 
-    // ✅ 1. CARGAR DATOS DE ABASTECIMIENTO DE AGUA
-    this.backendApi.postAbastecimientoAgua(codigos).subscribe({
+    // ✅ 1. CARGAR DATOS DE ABASTECIMIENTO DE AGUA (viviendas -> usa sp_abastecimiento_agua_por_cpp)
+    this.backendApi.postAbastecimientoAguaViviendas(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformAbastecimientoAguaDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
@@ -407,7 +407,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     });
 
     // ✅ 3. CARGAR DATOS DE COBERTURA ELÉCTRICA
-    this.backendApi.postAlumbrado(codigos).subscribe({
+    this.backendApi.postAlumbradoPorCpp(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformCoberturaElectricaDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])

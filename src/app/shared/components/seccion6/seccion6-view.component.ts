@@ -10,6 +10,8 @@ import { debugLog } from 'src/app/shared/utils/debug';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { transformPoblacionSexoDesdeDemograficos, transformPoblacionEtarioDesdeDemograficos } from 'src/app/core/config/table-transforms';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { FormPersistenceService } from 'src/app/core/services/state/form-persistence.service';
 
 // Helper para desenvuelver datos del backend (misma idea que en el form)
 const unwrapDemograficoData = (responseData: any): any[] => {
@@ -46,6 +48,30 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   override watchedFields: string[] = SECCION6_WATCHED_FIELDS;
   fotografiasVista: FotoItem[] = [];
 
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefix = this.PHOTO_PREFIX;
+    const prefijo = this.prefijoGrupoSignal();
+    const data = this.vistDataSignal();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${prefix}${i}Imagen${prefijo}`;
+      const tituloKey = `${prefix}${i}Titulo${prefijo}`;
+      const fuenteKey = `${prefix}${i}Fuente${prefijo}`;
+      
+      const imagen = data[imagenKey];
+      if (imagen) {
+        fotos.push({
+          imagen: imagen,
+          titulo: data[tituloKey] || `Fotografía ${i}`,
+          fuente: data[fuenteKey] || 'GEADES, 2024'
+        } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
   // ✅ Signal de prefijo de grupo AISD
   readonly prefijoGrupoSignal: Signal<string> = computed(() => this.obtenerPrefijoGrupo());
 
@@ -63,38 +89,44 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     return this.getCodigosCentrosPobladosAISD();
   });
 
-  private backendLoadRequested = false;
+  private backendLoadInFlight = false;
 
   // ✅ Tablas reactivas (evita vacíos intermitentes en vista OnPush)
   readonly poblacionSexoRowsSignal: Signal<any[]> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
     const data = this.vistDataSignal();
+    
+    // ✅ DEBUG: Log todos los keys disponibles
+    const allKeys = Object.keys(data);
+    const sexoKeys = allKeys.filter(k => k.includes('poblacionSexo'));
+    console.log(`[SECCION6:VIEW] 📊 poblacionSexoRowsSignal:`, {
+      prefijo,
+      tieneData: !!data,
+      tienePrefijo: !!prefijo,
+      allSexoKeys: sexoKeys
+    });
+    
+    // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
     const tablaConPrefijo = prefijo ? data[`poblacionSexoAISD${prefijo}`] : null;
     if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
+      console.log(`[SECCION6:VIEW] ✅ Using sexo data WITH prefix: poblacionSexoAISD${prefijo}`);
       return tablaConPrefijo;
     }
-    if (data['poblacionSexoAISD'] && this.tieneContenidoRealDemografia(data['poblacionSexoAISD'])) {
-      return data['poblacionSexoAISD'];
-    }
-    if (data['poblacionSexoTabla'] && this.tieneContenidoRealDemografia(data['poblacionSexoTabla'])) {
-      return data['poblacionSexoTabla'];
-    }
+    console.log(`[SECCION6:VIEW] ❌ No sexo data found with prefix, returning empty`);
     return [];
   });
 
   readonly poblacionEtarioRowsSignal: Signal<any[]> = computed(() => {
     const prefijo = this.prefijoGrupoSignal();
     const data = this.vistDataSignal();
+    
+    // ✅ SOLO buscar con prefijo - no fallback a sin prefijo para evitar confusión
     const tablaConPrefijo = prefijo ? data[`poblacionEtarioAISD${prefijo}`] : null;
     if (tablaConPrefijo && this.tieneContenidoRealDemografia(tablaConPrefijo)) {
+      console.log(`[SECCION6:VIEW] ✅ Using etario data WITH prefix: poblacionEtarioAISD${prefijo}`);
       return tablaConPrefijo;
     }
-    if (data['poblacionEtarioAISD'] && this.tieneContenidoRealDemografia(data['poblacionEtarioAISD'])) {
-      return data['poblacionEtarioAISD'];
-    }
-    if (data['poblacionEtarioTabla'] && this.tieneContenidoRealDemografia(data['poblacionEtarioTabla'])) {
-      return data['poblacionEtarioTabla'];
-    }
+    console.log(`[SECCION6:VIEW] ❌ No etario data found with prefix, returning empty`);
     return [];
   });
 
@@ -152,27 +184,58 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     injector: Injector,
     // Seccion6TableConfigService eliminado - configs ahora son constantes
     private sanitizer: DomSanitizer,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private formChange: FormChangeService,
+    private formPersistence: FormPersistenceService
   ) {
     super(cdRef, injector);
     // Configs ya inicializadas como propiedades de clase
+    
+    // ✅ FLUJO UNICA_VERDAD - Logging para pruebas en Vista
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('[SECCION6:VIEW:FLUJO] 🎯 INICIO - Componente Vista cargado');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`[SECCION6:VIEW:FLUJO] 📋 Sección ID: ${this.seccionId}`);
+    console.log(`[SECCION6:VIEW:FLUJO] 🏷️ Prefijo inicial: ${this.obtenerPrefijoGrupo()}`);
+    
+    // ✅ Cargar fotos al inicio
+    this.cargarFotografias();
+    console.log('[SECCION6:VIEW:FLUJO] ✅ Fotos cargadas en constructor');
+    
+    // ✅ EFFECT 1: NO USAR - Los signals leen directamente de ProjectStateFacade
+    // Eliminado: effect que copiaba a this.datos (legacy)
+    // Los signals como poblacionSexoRowsSignal ya leen de ProjectStateFacade correctamente
 
+    // ✅ EFFECT 2: Monitorear SOLO photoFieldsHash para recargar fotografías
+    // Se ejecuta cuando el hash cambia (cuando se agregan/editan fotos en el Form)
+    // IMPORTANTE: El flag debe estar FUERA del effect para persistir entre ejecuciones
+    const fotogramasView = this;
+    let inicializadoView = false;
     effect(() => {
-      const vistData = this.vistDataSignal();
-      this.datos = { ...vistData };
-      this.cdRef.markForCheck();
-    });
-
-    // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
-    effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasVista = [...this.fotografiasCache];
-      this.cdRef.markForCheck();
+      // Solo monitorear el hash
+      const hash = fotogramasView.photoFieldsHash();
+      
+      //DEBUG
+      console.log(`[SECCION6:VIEW:EFFECT] 🔄 Effect ejecutado, hash: ${hash?.substring(0, 30)}...`);
+      
+      // Skip first execution - photos will be loaded by constructor
+      if (!inicializadoView) {
+        inicializadoView = true;
+        console.log(`[SECCION6:VIEW:EFFECT] ⏭️ Skip primer inicio, fotos ya cargadas`);
+        return;
+      }
+      
+      // Recargar fotografías solo si el hash indica que hay fotos
+      if (hash && hash.includes('|1|')) {
+        console.log(`[SECCION6:VIEW:EFFECT] 📷 Hash indica fotos, recargando...`);
+        fotogramasView.cargarFotografias();
+        fotogramasView.fotografiasVista = [...fotogramasView.fotografiasCache];
+        fotogramasView.cdRef.markForCheck();
+      }
     }, { allowSignalWrites: true });
 
     // ✅ EFFECT 3: En vista/plantilla, cargar backend si faltan datos (evita “se llena recién al recargar”)
-    effect(() => {
+    effect(async () => {
       const codigos = this.codigosAISDSignal();
       const rowsSexo = this.poblacionSexoRowsSignal();
       const rowsEtario = this.poblacionEtarioRowsSignal();
@@ -181,13 +244,87 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
       const necesitaEtario = !rowsEtario || rowsEtario.length === 0;
 
       if (!necesitaSexo && !necesitaEtario) return;
-      if (this.backendLoadRequested) return;
+      if (this.backendLoadInFlight) return;
       if (!codigos || codigos.length === 0) return;
 
-      this.backendLoadRequested = true;
+      // ✅ PRIMERO: Verificar si hay datos en Session-Data
+      const prefijo = this.prefijoGrupoSignal();
+      const tablaKeySexo = `poblacionSexoAISD${prefijo}`;
+      const tablaKeyEtario = `poblacionEtarioAISD${prefijo}`;
+      
+      try {
+        const sessionState = await this.formPersistence.loadSectionState(this.seccionId);
+        const tableGroup = sessionState?.['table'];
+        const sexoData = tableGroup?.[tablaKeySexo]?.value;
+        const etarioData = tableGroup?.[tablaKeyEtario]?.value;
+        
+        if (sexoData || etarioData) {
+          debugLog('[SECCION6:VIEW] 📦 DATOS ENCONTRADOS EN SESSION-DATA! Restaurando...');
+          
+          // Restaurar en ProjectStateFacade
+          if (sexoData) {
+            this.projectFacade.setField(this.seccionId, null, tablaKeySexo, sexoData);
+            this.projectFacade.setTableData(this.seccionId, null, tablaKeySexo, sexoData);
+          }
+          if (etarioData) {
+            this.projectFacade.setField(this.seccionId, null, tablaKeyEtario, etarioData);
+            this.projectFacade.setTableData(this.seccionId, null, tablaKeyEtario, etarioData);
+          }
+          
+          this.backendLoadInFlight = false;
+          this.cdRef.markForCheck();
+          return;
+        }
+      } catch (e) {
+        debugLog('[SECCION6:VIEW] ⚠️ Error cargando session-data:', e);
+      }
+
+      // ✅ Si no hay en Session-Data, llamar al backend
+      this.backendLoadInFlight = true;
       this.cargarDatosDelBackendVista(codigos, { sexo: necesitaSexo, etario: necesitaEtario });
     }, { allowSignalWrites: true });
+
+    // ✅ EFFECT 4: Detectar cambio de CPP/grupo y limpiar session-data
+    effect(() => {
+      const prefijoActual = this.prefijoGrupoSignal();
+      
+      // Si no hay prefijo (aún no se inicializó), ignorar
+      if (!prefijoActual) return;
+      
+      // Comparar con el prefijo anterior
+      const prefijoAnterior = this._prefijoAnterior;
+      if (prefijoAnterior === undefined) {
+        // Primera vez que cargamos el prefijo, solo guardar
+        this._prefijoAnterior = prefijoActual;
+        return;
+      }
+      
+      // Si el prefijo cambió, significa que el usuario cambió de CPP/grupo
+      if (prefijoAnterior !== prefijoActual) {
+        debugLog('[SECCION6:VIEW] 🔄 CAMBIO DE CPP DETECTADO', { 
+          prefijoAnterior, 
+          prefijoNuevo: prefijoActual 
+        });
+        
+        // Limpiar session-data de Sección 6
+        try {
+          this.formPersistence.clearSectionState(this.seccionId);
+          debugLog('[SECCION6:VIEW] ✅ Session-data limpiada para preparar nuevo CPP');
+        } catch (e) {
+          debugLog('[SECCION6:VIEW] ⚠️ Error limpiando session-data:', e);
+        }
+        
+        // Actualizar el prefijo anterior
+        this._prefijoAnterior = prefijoActual;
+        
+        // Resetear la bandera para que recargue
+        this.backendLoadInFlight = false;
+      }
+    });
   }
+  
+  // ✅ Variable privada para rastrear el prefijo anterior (para detectar cambios)
+  private _prefijoAnterior: string | undefined;
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
@@ -208,7 +345,7 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
     if (flags.sexo) {
       this.backendApi.postDatosDemograficos([...codigos]).subscribe({
-        next: (response: any) => {
+        next: async (response: any) => {
           try {
             // Guardas: no sobre-escribir si ya se llenó mientras esperábamos
             if (this.poblacionSexoRowsSignal().length > 0) return;
@@ -219,8 +356,19 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
             if (datosTransformados.length > 0) {
               const tablaKey = `poblacionSexoAISD${prefijo}`;
+              
+              // ✅ GUARDAR SOLO CON PREFIJO (aislamiento correcto)
+              try {
+                this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosTransformados }, { notifySync: true });
+                debugLog('[SECCION6:VIEW] 💾 Datos de sexo guardados en session-data SOLO con prefijo: ' + tablaKey);
+              } catch (e) {
+                debugLog('[SECCION6:VIEW] ⚠️ No se pudo guardar en session-data:', e);
+              }
+              
+              // ✅ Solo guardar CON prefijo - no sin prefijo para evitar confusión
               this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-              this.projectFacade.setField(this.seccionId, null, 'poblacionSexoAISD', datosTransformados);
+              this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+
               this.cdRef.markForCheck();
               debugLog('[SECCION6:VIEW] ✅ Tabla sexo cargada', { tablaKey, rows: datosTransformados.length });
             } else {
@@ -238,7 +386,7 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
     if (flags.etario) {
       this.backendApi.postEtario([...codigos]).subscribe({
-        next: (response: any) => {
+        next: async (response: any) => {
           try {
             if (this.poblacionEtarioRowsSignal().length > 0) return;
 
@@ -248,8 +396,19 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
 
             if (datosTransformados.length > 0) {
               const tablaKey = `poblacionEtarioAISD${prefijo}`;
+              
+              // ✅ GUARDAR SOLO CON PREFIJO (aislamiento correcto)
+              try {
+                this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosTransformados }, { notifySync: true });
+                debugLog('[SECCION6:VIEW] 💾 Datos de etario guardados en session-data SOLO con prefijo: ' + tablaKey);
+              } catch (e) {
+                debugLog('[SECCION6:VIEW] ⚠️ No se pudo guardar en session-data:', e);
+              }
+              
+              // ✅ Solo guardar CON prefijo - no sin prefijo para evitar confusión
               this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-              this.projectFacade.setField(this.seccionId, null, 'poblacionEtarioAISD', datosTransformados);
+              this.projectFacade.setTableData(this.seccionId, null, tablaKey, datosTransformados);
+
               this.cdRef.markForCheck();
               debugLog('[SECCION6:VIEW] ✅ Tabla etario cargada', { tablaKey, rows: datosTransformados.length });
             } else {
@@ -264,6 +423,40 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
         }
       });
     }
+
+    // ✅ Liberar guard en el siguiente tick; si algo deja la tabla vacía, el effect podrá intentar de nuevo.
+    setTimeout(() => {
+      this.backendLoadInFlight = false;
+      this.cdRef.markForCheck();
+    }, 0);
+  }
+
+  /**
+   * ✅ Aplica los edits del usuario (desde session-data) sobre los datos del backend
+   * Hace un merge por índice de fila: si el usuario editó una fila, se usa su versión
+   */
+  private aplicarEditsATabla(datosBackend: any[], editsUsuario: any[]): any[] {
+    if (!Array.isArray(datosBackend) || !Array.isArray(editsUsuario)) {
+      return datosBackend;
+    }
+
+    // Crear un mapa de edits por índice
+    const editMap = new Map<number, any>();
+    editsUsuario.forEach((edit, index) => {
+      editMap.set(index, edit);
+    });
+
+    // Aplicar edits: si el usuario editó la fila en ese índice, usar su versión
+    const resultado = datosBackend.map((datosRow, index) => {
+      if (editMap.has(index)) {
+        // El usuario editó esta fila
+        return editMap.get(index);
+      }
+      // No fue editada, mantener datos del backend
+      return datosRow;
+    });
+
+    return resultado;
   }
 
   override ngOnDestroy(): void {
@@ -402,13 +595,57 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
   override cargarFotografias(): void {
     const formData = this.vistDataSignal();
     const prefijo = this.prefijoGrupoSignal();
+    
+    // DEBUG: Log qué datos tiene
+    const allKeys = Object.keys(formData || {});
+    const fotoKeys = allKeys.filter(k => k.includes('fotografia') && k.includes('Imagen') && !k.includes('Titulo') && !k.includes('Fuente') && !k.includes('Numero'));
+    
+    // Contar fotos reales (con imagen no vacía)
+    let fotosReales = 0;
+    for (const key of fotoKeys) {
+      const valor = formData[key];
+      if (valor && typeof valor === 'string' && valor.length > 0 && valor.startsWith('data:')) {
+        fotosReales++;
+      }
+    }
+    
+    console.log(`[SECCION6:VIEW:FOTOS] 🔍 Cargando fotos:`, {
+      prefijo,
+      fotoKeys: fotoKeys.slice(0, 5),
+      fotosReales,
+      fotografiasCacheActual: this.fotografiasCache?.length || 0
+    });
+    
+    // ✅ SI YA TENEMOS FOTOS CARGADAS Y HAY DATOS, NO RECARGAR
+    // Esto evita que se borren las fotos por efectos secundarios
+    if (this.fotografiasCache && this.fotografiasCache.length > 0 && fotosReales > 0) {
+      console.log(`[SECCION6:VIEW:FOTOS] ✅ Ya tenemos ${this.fotografiasCache.length} fotos, manteniendo`);
+      this.fotografiasVista = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+      return;
+    }
+    
+    // ✅ SOLO procesar si hay datos reales
+    if (!formData || Object.keys(formData).length === 0) {
+      console.log(`[SECCION6:VIEW:FOTOS] ⚠️ No hay datos, saltando`);
+      this.fotografiasCache = [];
+      this.fotografiasVista = [];
+      this.cdRef.markForCheck();
+      return;
+    }
+    
     const fotos: FotoItem[] = [];
     
     for (let i = 1; i <= 10; i++) {
       const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`;
       const imagen = formData[imagenKey];
       
-      if (imagen) {
+      // Verificar que la imagen sea un data URL válido
+      const esValida = imagen && typeof imagen === 'string' && imagen.length > 0 && imagen.startsWith('data:');
+      
+      console.log(`[SECCION6:VIEW:FOTOS] 📷 Foto ${i}: key=${imagenKey}, esValida=${esValida}, longitud=${imagen?.length || 0}`);
+      
+      if (esValida) {
         const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
         const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
         const numeroKey = `${this.PHOTO_PREFIX}${i}Numero${prefijo}`;
@@ -421,6 +658,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
         });
       }
     }
+    
+    console.log(`[SECCION6:VIEW:FOTOS] ✅ Fotos cargadas: ${fotos.length}`);
     
     this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
     this.fotografiasVista = [...this.fotografiasCache];

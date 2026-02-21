@@ -63,10 +63,12 @@ function stripBlobsFromState(state: SectionFormState): SectionFormState {
 
 @Injectable({ providedIn: 'root' })
 export class FormPersistenceService {
-  constructor(private sessionData: SessionDataService) {}
+  constructor(
+    private sessionData: SessionDataService,
+  ) {}
 
   saveSectionState(sectionId: string, state: SectionFormState, ttl = DEFAULT_TTL_MS): void {
-    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    // ✅ Única verdad: session-data (Redis/TTL) para datos temporales
     const dataToPersist = stripBlobsFromState(state);
     const payload: PersistedState = {
       savedAt: Date.now(),
@@ -74,38 +76,62 @@ export class FormPersistenceService {
       data: dataToPersist,
     };
     const key = this.getKey(sectionId);
-    
+
     this.sessionData.saveData(key, payload).catch(err => {
       console.warn('[FormPersistence] Error saving section state:', err);
     });
   }
 
   async loadSectionState(sectionId: string): Promise<SectionFormState | null> {
-    // ✅ UNIFICADO: Backend primero, fallback a localStorage automático
+    // ✅ Única verdad: session-data (Redis/TTL)
     const key = this.getKey(sectionId);
+    console.log(`[PERSISTENCE] 📥 loadSectionState called for sectionId: ${sectionId}, key: ${key}`);
     
     try {
       const payload = await this.sessionData.loadData(key);
-      if (!payload) return null;
+      console.log(`[PERSISTENCE] 📥 Raw payload from sessionData:`, payload ? 'EXISTS' : 'NULL');
+      
+      if (!payload) {
+        console.log(`[PERSISTENCE] ❌ No payload found for key: ${key}`);
+        return null;
+      }
 
       const parsed = payload as PersistedState;
-      if (Date.now() - parsed.savedAt > parsed.ttl) {
+      const age = Date.now() - parsed.savedAt;
+      console.log(`[PERSISTENCE] 📊 State age: ${age}ms (${(age/1000/60/60).toFixed(1)} hours), TTL: ${parsed.ttl}ms`);
+      
+      if (age > parsed.ttl) {
+        console.log(`[PERSISTENCE] ⏱️ State EXPIRED (age > TTL), clearing...`);
         this.clearSectionState(sectionId);
         return null;
       }
+      
+      // Ver las keys que se restauran
+      const data = parsed.data;
+      if (data) {
+        console.log(`[PERSISTENCE] 📦 Restored section has keys:`, Object.keys(data));
+        if (data['table']) {
+          console.log(`[PERSISTENCE] 📦 table has keys:`, Object.keys(data['table']));
+        }
+        if (data['form']) {
+          console.log(`[PERSISTENCE] 📦 form has keys:`, Object.keys(data['form']));
+        }
+      }
+      
+      console.log(`[PERSISTENCE] ✅ State VALID, returning data with ${Object.keys(parsed.data || {}).length} groups`);
       return parsed.data;
-    } catch {
+    } catch (e) {
+      console.error(`[PERSISTENCE] ❌ Error loading section state:`, e);
       this.clearSectionState(sectionId);
       return null;
     }
   }
 
   clearSectionState(sectionId: string): void {
-    // ✅ UNIFICADO: Limpia tanto backend como localStorage
+    // Limpia session-data
     const key = this.getKey(sectionId);
-    this.sessionData.saveData(key, null).catch(() => {
-      // Ignorar errores al limpiar
-    });
+    console.log(`[PERSISTENCE] 🗑️ clearSectionState called for sectionId: ${sectionId}, key: ${key}`);
+    this.sessionData.saveData(key, null).catch(() => {});
   }
 
   clearAll(): void {

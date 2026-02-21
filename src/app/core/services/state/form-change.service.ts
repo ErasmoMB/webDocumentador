@@ -163,7 +163,17 @@ export class FormChangeService {
         const snapshot = this.formState.getFormSnapshot();
         const sectionStateNow = snapshot[sectionIdToSave];
         if (sectionStateNow) {
+          console.log(`[PERSISTENCE] 🔥 saveSectionState called for: ${sectionIdToSave}, keys:`, Object.keys(sectionStateNow));
+          // Ver qué hay dentro de table y form
+          if (sectionStateNow['table']) {
+            console.log(`[PERSISTENCE] 📦 table keys:`, Object.keys(sectionStateNow['table']));
+          }
+          if (sectionStateNow['form']) {
+            console.log(`[PERSISTENCE] 📦 form keys:`, Object.keys(sectionStateNow['form']));
+          }
           this.formPersistence.saveSectionState(sectionIdToSave, sectionStateNow);
+        } else {
+          console.log(`[PERSISTENCE] ⚠️ No sectionState found for: ${sectionIdToSave}`);
         }
         this.saveTimeouts.delete(sectionIdToSave);
       }, this.saveDebounceMs));

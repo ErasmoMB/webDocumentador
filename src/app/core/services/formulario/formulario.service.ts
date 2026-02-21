@@ -43,6 +43,7 @@ import { BackendAvailabilityService } from '../infrastructure/backend-availabili
 })
 export class FormularioService {
   private saveDebounceSubject = new Subject<void>();
+  private _datosLoaded = false;
 
   get datos(): FormularioDatos {
     return this.store.getDatos();
@@ -62,8 +63,14 @@ export class FormularioService {
     private sessionDataService: SessionDataService,
     private backendAvailability: BackendAvailabilityService
   ) {
-    // ✅ UNIFICADO: Carga inicial ahora es asíncrona
-    void this.cargarDesdeLocalStorage();
+    // ✅ LAZY LOADING: No bloquear el constructor
+    // Cargar datos en background sin esperar (permitir que UI renderice primero)
+    setTimeout(() => {
+      if (!this._datosLoaded) {
+        void this.cargarDesdeLocalStorage();
+      }
+    }, 100); // 100ms delay allows UI to render first
+    
     this.ejecutarMigracionImagenes();
     this.inicializarDebounceGuardado();
   }
@@ -138,7 +145,8 @@ export class FormularioService {
   }
 
   private async cargarDesdeLocalStorage(): Promise<void> {
-    // ✅ UNIFICADO: Ahora carga desde backend primero, fallback a localStorage automático
+    // ✅ LAZY LOADING: No bloquear el constructor regular
+    // Cargar datos del backend/localStorage
     const datosCargados = await this.storage.loadDatos();
     if (datosCargados) {
       this.store.mergeDatos(datosCargados);
@@ -147,6 +155,7 @@ export class FormularioService {
     if (jsonGuardado) {
       this.store.setJson(jsonGuardado);
     }
+    this._datosLoaded = true;
   }
 
   guardarFilasActivasTablaAISD2(codigosActivos: string[], prefijo: string = ''): void {

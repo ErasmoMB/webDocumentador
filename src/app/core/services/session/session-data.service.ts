@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { timeout, catchError, defaultIfEmpty } from 'rxjs/operators';
+import { of, EMPTY } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { StorageFacade } from '../infrastructure/storage-facade.service';
 
@@ -30,8 +32,21 @@ export class SessionDataService {
           `${this.apiUrl}/session-data/save`,
           { key, data },
           { headers }
-        ),
+        ).pipe(
+          timeout(1000), // ⚡ Timeout de 1s para no bloquear
+          catchError((error: any) => {
+            console.warn(`[SessionData] ⚠️ Error guardando en backend, usando localStorage (catch)`);
+            return of(null);
+          }),
+          defaultIfEmpty(null)
+        )
       );
+
+      if (!response) {
+        console.warn(`[SessionData] ⚠️ Backend no devolvió respuesta — usando localStorage como fallback`);
+        this.storageFacade.setItemStringified(this.localKey(key), data);
+        return;
+      }
 
       console.log(`[SessionData] ✅ Guardado exitoso:`, response);
     } catch (error) {
@@ -53,7 +68,14 @@ export class SessionDataService {
       const response: any = await firstValueFrom(
         this.http.get(`${this.apiUrl}/session-data/load/${encodeURIComponent(key)}`, {
           headers,
-        }),
+        }).pipe(
+          timeout(1000), // ⚡ Timeout de 1s para no bloquear UI
+          catchError((error: any) => {
+            console.warn(`[SessionData] ⚠️ Error cargando de backend, usando localStorage`);
+            return of(null);
+          }),
+          defaultIfEmpty(null)
+        )
       );
 
       const value = response?.data ?? null;
@@ -82,7 +104,14 @@ export class SessionDataService {
         this.http.delete(`${this.apiUrl}/session-data/clear`, {
           headers,
           body: {},
-        }),
+        }).pipe(
+          timeout(1000), // ⚡ Timeout de 1s
+          catchError((error: any) => {
+            console.warn(`[SessionData] ⚠️ Error limpiando sesión en backend`);
+            return of(null);
+          }),
+          defaultIfEmpty(null)
+        )
       );
 
       console.log(`[SessionData] ✅ Sesión limpiada`);

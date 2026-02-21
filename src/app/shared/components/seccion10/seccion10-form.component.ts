@@ -327,14 +327,14 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     });
 
     // 3. Cargar Saneamiento desde /demograficos/saneamiento-por-cpp
-    this.backendApi.postSaneamientoPorCpp(codigos).subscribe({
+    this.backendApi.postSaneamiento(codigos).subscribe({
       next: (response: any) => {
         try {
           const dataRaw = response?.data || [];
           const datosDesenvueltos = unwrapDemograficoData(dataRaw);
           const datosTransformados = transformSaneamientoDesdeDemograficos(datosDesenvueltos);
           console.log('[SECCION10] ✅ Datos de saneamiento cargados:', datosTransformados);
-          
+
           // Guardar CON prefijo y SIN prefijo (fallback)
           const tablaKey = `tiposSaneamientoTabla${prefijo}`;
           this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
@@ -347,8 +347,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       }
     });
 
-    // 4. Cargar Alumbrado Eléctrico desde /demograficos/alumbrado-por-cpp
-    this.backendApi.postAlumbradoPorCpp(codigos).subscribe({
+    // 4. Cargar Alumbrado Eléctrico desde /demograficos/alumbrado
+    this.backendApi.postAlumbrado(codigos).subscribe({
       next: (response: any) => {
         try {
           const dataRaw = response?.data || [];

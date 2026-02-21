@@ -41,6 +41,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
 
   private autoLlenarTablasExecuted = false;
   private isProcessingPipeline = false;
+  private lastAutoFillKey: string | null = null;
 
   private getPrefixedFieldKey(baseField: string): string {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -199,33 +200,31 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
 
     // ✅ Effect para esperar a que grupos AISD y centros poblados estén disponibles
     effect(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
       const gruposAISD = this.aisdGroups();
       const centrosPoblados = this.allPopulatedCenters();
-      
-      // Solo ejecutar si hay grupos AISD y centros poblados cargados
-      if (gruposAISD && gruposAISD.length > 0 && centrosPoblados && centrosPoblados.length > 0) {
-        if (!this.autoLlenarTablasExecuted) {
-          this.autoLlenarTablasExecuted = true;
-          setTimeout(() => {
-            this.autoLlenarTablas();
-          }, 100);
-        }
-      }
-    }, { allowSignalWrites: true });
 
-    effect(() => {
-      if (this.autoLlenarTablasExecuted) return;
-      const tablaA1 = this.tablaAISD1Signal();
-      const tablaA2 = this.tablaAISD2Signal();
-      const datos = this.datos;
-      const tieneDatosCompletos = datos && Object.keys(datos).length > 0;
-      
-      if (tieneDatosCompletos && this.modoFormulario === false) {
-        this.autoLlenarTablasExecuted = true;
-        setTimeout(() => {
-          this.autoLlenarTablas();
-        }, 0);
-      }
+      // Solo aplica a AISD
+      if (!prefijo || !prefijo.startsWith('_A')) return;
+      // Solo ejecutar si hay grupos AISD y centros poblados cargados
+      if (!gruposAISD || gruposAISD.length === 0) return;
+      if (!centrosPoblados || centrosPoblados.length === 0) return;
+
+      const match = prefijo.match(/_A(\d+)/);
+      const index = match ? parseInt(match[1], 10) - 1 : -1;
+      const grupoActual = index >= 0 && index < gruposAISD.length ? gruposAISD[index] : null;
+      if (!grupoActual) return;
+
+      // Key reactiva: si cambia el set de centros poblados del grupo, recalcular
+      const ccppKey = (grupoActual.ccppIds || []).join('|');
+      const autoFillKey = `${prefijo}::${ccppKey}`;
+      if (this.lastAutoFillKey === autoFillKey) return;
+      this.lastAutoFillKey = autoFillKey;
+
+      // No bloquear por la bandera legacy: este fill debe responder a cambios en Sección 2
+      setTimeout(() => {
+        this.autoLlenarTablas();
+      }, 0);
     }, { allowSignalWrites: true });
   }
 
@@ -409,19 +408,52 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     const tablaA2Actual = this.projectFacade.selectField(this.seccionId, null, dataKeyA2)();
     const estaVaciaA2 = !tablaA2Actual || tablaA2Actual.length === 0;
     const tieneDatosValidosA2 = this.tablaTieneDatosValidos(tablaA2Actual);
+
+    const expectedCodigos = centrosDelGrupo.map(cp => String(cp.codigo)).filter(c => c && c.trim() !== '').sort();
+    const existingCodigos = (Array.isArray(tablaA2Actual) ? tablaA2Actual : [])
+      .map((r: any) => String(r?.codigo ?? '').trim())
+      .filter((c: string) => c && c !== '____')
+      .sort();
+    const codigosCoinciden = expectedCodigos.length === existingCodigos.length
+      && expectedCodigos.every((c, i) => c === existingCodigos[i]);
     
     console.log(`Tabla A2 actual:`, tablaA2Actual);
     console.log(`¿Esta vacia A2?: ${estaVaciaA2}, ¿Tiene datos validos A2?: ${tieneDatosValidosA2}`);
     
-    if ((estaVaciaA2 || !tieneDatosValidosA2) && centrosDelGrupo.length > 0) {
-      console.log(`Llenando tabla A2 con ${centrosDelGrupo.length} centros poblados`);
-      const filas = centrosDelGrupo.map(cp => ({
-        punto: cp.nombre || '____',
-        codigo: String(cp.codigo) || '____',
-        poblacion: String(cp.poblacion ?? ''),
-        viviendasEmpadronadas: String(cp.viviendas_empadronadas ?? ''),
-        viviendasOcupadas: String(cp.viviendas_ocupadas ?? '')
-      }));
+    // ✅ NUEVO CRITERIO: si cambia el set de códigos (Sección 2), debe re-sincronizar la tabla
+    // Incluso si tiene datos válidos.
+    if (((estaVaciaA2 || !tieneDatosValidosA2) || !codigosCoinciden) && centrosDelGrupo.length > 0) {
+      console.log(`Llenando/actualizando tabla A2 con ${centrosDelGrupo.length} centros poblados`);
+
+      // Merge suave: si una fila existe (mismo código), preservar valores editados cuando estén presentes
+      const existingByCodigo = new Map<string, any>();
+      if (Array.isArray(tablaA2Actual)) {
+        for (const row of tablaA2Actual) {
+          const codigo = String((row as any)?.codigo ?? '').trim();
+          if (codigo) existingByCodigo.set(codigo, row);
+        }
+      }
+
+      const filas = centrosDelGrupo.map(cp => {
+        const codigo = String(cp.codigo || '').trim() || '____';
+        const existing = existingByCodigo.get(codigo);
+        const poblacionExisting = existing?.poblacion;
+        const vivEmpExisting = existing?.viviendasEmpadronadas;
+        const vivOcupExisting = existing?.viviendasOcupadas;
+        return {
+          punto: cp.nombre || existing?.punto || '____',
+          codigo,
+          poblacion: (poblacionExisting !== undefined && poblacionExisting !== null && String(poblacionExisting).trim() !== '' && String(poblacionExisting).trim() !== '____')
+            ? String(poblacionExisting)
+            : String(cp.poblacion ?? ''),
+          viviendasEmpadronadas: (vivEmpExisting !== undefined && vivEmpExisting !== null && String(vivEmpExisting).trim() !== '' && String(vivEmpExisting).trim() !== '____')
+            ? String(vivEmpExisting)
+            : String(cp.viviendas_empadronadas ?? ''),
+          viviendasOcupadas: (vivOcupExisting !== undefined && vivOcupExisting !== null && String(vivOcupExisting).trim() !== '' && String(vivOcupExisting).trim() !== '____')
+            ? String(vivOcupExisting)
+            : String(cp.viviendas_ocupadas ?? '')
+        };
+      });
       
       console.log(`Guardando datos en campo: ${dataKeyA2}`);
       console.log(`Datos a guardar:`, filas);

@@ -226,6 +226,19 @@ export class BackendApiService {
   }
 
   /**
+   * PET por grupo etario usando agrupación 14-29
+   * POST /demograficos/pet-grupo-14
+   */
+  postPetGrupo14(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/pet-grupo-14`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * PEA por sexo
    * POST /demograficos/pea
    */
@@ -257,6 +270,19 @@ export class BackendApiService {
    */
   postEtario(codigos: string[]): Observable<BackendResponse<any>> {
     const url = `${this.baseUrl}/demograficos/etario`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Población por edad (grupo 14-29 como categoría combinada)
+   * POST /demograficos/etario14
+   */
+  postEtario14(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/etario14`;
     const payload = { codigos };
     return this.http.post<any>(url, payload).pipe(
       map(data => this.transformResponse(data)),
@@ -439,6 +465,19 @@ export class BackendApiService {
    */
   postAbastecimientoAgua(codigos: string[]): Observable<BackendResponse<any>> {
     const url = `${this.baseUrl}/demograficos/abastecimiento-agua`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Abastecimiento de agua (viviendas) - usa el SP sp_abastecimiento_agua_por_cpp
+   * POST /demograficos/abastecimiento-agua-viviendas
+   */
+  postAbastecimientoAguaViviendas(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/abastecimiento-agua-viviendas`;
     const payload = { codigos };
     return this.http.post<any>(url, payload).pipe(
       map(data => this.transformResponse(data)),

@@ -20,7 +20,8 @@ const isRender = !!process.env.RENDER ||
                  process.env.NODE_ENV === 'production' ||
                  process.cwd().includes('/opt/render') ||
                  !!process.env.PORT;
-const defaultApiUrl = isRender ? 'https://backend-api-lbs.onrender.com' : 'http://localhost:8000';
+// En local, el backend Nest suele correr en :3000 (ver backend-api-lbs/.env.example)
+const defaultApiUrl = isRender ? 'https://backend-api-lbs.onrender.com' : 'http://localhost:3000';
 
 console.log('🔍 Detección de entorno:');
 console.log('  isRender:', isRender);

@@ -14,7 +14,7 @@
           [label]="SECCION6_TEMPLATES.labelTextoPoblacionSexo"
           [hint]="SECCION6_TEMPLATES.hintTextoPoblacionSexo"
           [rows]="4"
-          [value]="obtenerTextoPoblacionSexo(datos, obtenerNombreComunidadActual())"
+          [value]="textoPoblacionSexoSignal()"
           (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
@@ -25,19 +25,19 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionSexoAISD' + obtenerPrefijoGrupo()]"
+            [ngModel]="obtenerValorConPrefijo('tituloPoblacionSexoAISD')"
             (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaSexo">
         </div>
 
         <label class="label">{{ SECCION6_TEMPLATES.labelTablaPoblacionSexo }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="sectionDataSignal()"
           [config]="poblacionSexoConfig"
           [columns]="poblacionSexoColumns"
           [sectionId]="seccionId"
           [tablaKey]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
-          [fieldName]="'poblacionSexoAISD' + obtenerPrefijoGrupo()"
+          [fieldName]="'poblacionSexoAISD'"
           (tableUpdated)="onTablaSexoActualizada()">
         </app-dynamic-table>
 
@@ -46,7 +46,7 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionSexoAISD' + obtenerPrefijoGrupo()]"
+            [ngModel]="obtenerValorConPrefijo('fuentePoblacionSexoAISD')"
             (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionSexoAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaSexo">
         </div>
@@ -65,7 +65,7 @@
           [label]="SECCION6_TEMPLATES.labelTextoPoblacionEtario"
           [hint]="SECCION6_TEMPLATES.hintTextoPoblacionEtario"
           [rows]="4"
-          [value]="obtenerTextoPoblacionEtario(datos, obtenerNombreComunidadActual())"
+          [value]="textoPoblacionEtarioSignal()"
           (valueChange)="projectFacade.setField(seccionId, null, 'textoPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
@@ -76,19 +76,19 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
+            [ngModel]="obtenerValorConPrefijo('tituloPoblacionEtarioAISD')"
             (ngModelChange)="projectFacade.setField(seccionId, null, 'tituloPoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderTituloTablaEtario">
         </div>
 
         <label class="label">{{ SECCION6_TEMPLATES.labelTablaEtario }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="sectionDataSignal()"
           [config]="poblacionEtarioConfig"
           [columns]="poblacionEtarioColumns"
           [sectionId]="seccionId"
           [tablaKey]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"
-          [fieldName]="'poblacionEtarioAISD' + obtenerPrefijoGrupo()"
+          [fieldName]="'poblacionEtarioAISD'"
           (tableUpdated)="onTablaEtarioActualizada()">
         </app-dynamic-table>
 
@@ -97,7 +97,7 @@
           <input 
             type="text" 
             class="form-control"
-            [(ngModel)]="datos['fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo()]"
+            [ngModel]="obtenerValorConPrefijo('fuentePoblacionEtarioAISD')"
             (ngModelChange)="projectFacade.setField(seccionId, null, 'fuentePoblacionEtarioAISD' + obtenerPrefijoGrupo(), $event)"
             [placeholder]="SECCION6_TEMPLATES.placeholderFuenteTablaEtario">
         </div>

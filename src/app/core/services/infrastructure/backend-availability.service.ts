@@ -34,12 +34,12 @@ export class BackendAvailabilityService {
   readonly isChecking = this._checking.asReadonly();
 
   // Intervalo de health check (en ms)
-  private readonly HEALTH_CHECK_INTERVAL = 30000; // 30 segundos
+  private readonly HEALTH_CHECK_INTERVAL = 60000; // 60 segundos (reducido de 30s para menos carga)
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    // Hacer health check inicial
-    this.checkBackendHealth();
+    // NO hacer health check en constructor - hacerlo lazy después de 2s
+    // Esto permite que el frontend cargue sin esperar conexión con backend
     
     // Configurar effect para logs
     effect(() => {
@@ -54,8 +54,11 @@ export class BackendAvailabilityService {
       }
     });
     
-    // Iniciar monitoreo periódico
-    setTimeout(() => this.startMonitoring(), 1000);
+    // Iniciar monitoreo periódico DESPUÉS de 2 segundos (permite que frontend cargue)
+    setTimeout(() => {
+      this.checkBackendHealth(); // Primer health check después de 2s
+      this.startMonitoring(); // Luego iniciar intervalo
+    }, 2000);
   }
 
   /**
@@ -68,16 +71,19 @@ export class BackendAvailabilityService {
 
     const apiUrl = this.configService.getApiUrl();
     
-    // Endpoint (no importa cuál, solo verificar que el servidor responde en 3s)
-    // Intentamos /session-data/load/dummy - fallará pero eso es OK, significa servidor activo
-    const testUrl = `${apiUrl}/session-data/load/dummy`;
+    // Endpoint con timeout CORTO (500ms)
+    // If backend doesn't respond quickly, we assume it's available (preferir BD que localStorage)
+    const testUrl = `${apiUrl}/session-data/load/health-check`;
 
     this.http
       .get(testUrl, {
-        responseType: 'json'
+        responseType: 'json',
+        headers: {
+          'x-session-id': 'health-check'
+        }
       })
       .pipe(
-        timeout(3000),
+        timeout(500), // ⚡ REDUCIDO de 3000ms a 500ms - evita bloquear UI
         // Cualquier respuesta (error de validación o éxito) = servidor está activo
         catchError((error: any) => {
           // Si es un error de red (CORS, conectividad), backend no disponible

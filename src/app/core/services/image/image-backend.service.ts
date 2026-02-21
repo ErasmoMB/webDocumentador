@@ -42,7 +42,7 @@ export class ImageBackendService {
       this.baseUrl = apiUrl;
     }
     if (!this.baseUrl) {
-      this.baseUrl = 'http://localhost:8000';
+      this.baseUrl = 'http://localhost:3000';
     }
   }
 

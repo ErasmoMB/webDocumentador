@@ -84,6 +84,12 @@ export function createAutoPostEndpointHandlers(backendApi: BackendApiService): R
         catchError(() => of([]))
       ),
 
+    '/demograficos/pet-grupo-14': (codigos: string[]) =>
+      backendApi.postPetGrupo14(codigos).pipe(
+        map(response => unwrapDemograficoData(response.data)),
+        catchError(() => of([]))
+      ),
+
     /**
      * PEA por sexo
      * POST /demograficos/pea
@@ -110,6 +116,12 @@ export function createAutoPostEndpointHandlers(backendApi: BackendApiService): R
      */
     '/demograficos/etario': (codigos: string[]) =>
       backendApi.postEtario(codigos).pipe(
+        map(response => unwrapDemograficoData(response.data)),
+        catchError(() => of([]))
+      ),
+
+    '/demograficos/etario14': (codigos: string[]) =>
+      backendApi.postEtario14(codigos).pipe(
         map(response => unwrapDemograficoData(response.data)),
         catchError(() => of([]))
       ),

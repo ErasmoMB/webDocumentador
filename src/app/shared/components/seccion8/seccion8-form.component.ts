@@ -290,27 +290,10 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
 
     const prefijo = this.obtenerPrefijoGrupo();
 
-    // Cargar PEA Actividades Ocupadas
-    this.backendApi.postCondicionOcupacion(codigos).subscribe({
-      next: (response: any) => {
-        const datosTransformados = transformPEAOcupacionesDesdePEA(
-          unwrapData(response?.data || [])
-        );
-        
-        console.log('[SECCION8] 🔍 Backend response:', response);
-        console.log('[SECCION8] 🔍 Datos transformados:', datosTransformados);
-        
-        // Guardar con prefijo del grupo y sin prefijo (fallback)
-        const tablaKey = `peaOcupacionesTabla${prefijo}`;
-        this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-        this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', datosTransformados);
-        
-        console.log('[SECCION8] ✅ Datos PEA Ocupaciones cargados y guardados');
-      },
-      error: (err) => {
-        console.error('[SECCION8] Error cargando PEA Ocupaciones:', err);
-      }
-    });
+    // ❌ ELIMINADO: postCondicionOcupacion no retorna datos válidos
+    // La tabla PEA Ocupaciones no se llena desde el backend
+    // Se deja vacía para que sea rellenada manualmente por el usuario
+    console.log('[SECCION8] ⚠️ Tabla PEA Ocupaciones se mantiene vacía (sin carga del backend)');
   }
 
   protected override detectarCambios(): boolean {

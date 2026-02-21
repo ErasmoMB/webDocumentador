@@ -19,7 +19,7 @@
   <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionB }}</strong></p>
   <div *ngIf="viewModel().textoDesague && viewModel().textoDesague !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoDesague)"></div>
   <app-table-wrapper [title]="getTituloSaneamiento()" [sectionId]="seccionId">
-    <app-generic-table [data]="viewModel().saneamiento" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
+    <app-generic-table [data]="viewModel().saneamientoDetallado" [config]="{ columns: [ { key: 'categoria', header: 'Categoría', align: 'left' }, { key: 'casos', header: 'Casos', align: 'right' }, { key: 'porcentaje', header: 'Porcentaje', align: 'right' } ], showFooter: false, striped: true, hover: true }"></app-generic-table>
   </app-table-wrapper>
   <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteSaneamiento && viewModel().cuadroFuenteSaneamiento !== '____'"> {{ viewModel().cuadroFuenteSaneamiento }}</span><span *ngIf="!viewModel().cuadroFuenteSaneamiento || viewModel().cuadroFuenteSaneamiento === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 

@@ -168,9 +168,8 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly saneamientoSignal = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    const tablaKey = prefijo ? `saneamientoCpTabla${prefijo}` : 'saneamientoCpTabla';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
+    const tablaKey = 'saneamientoDetalladoTabla';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly coberturaSignal = computed(() => {
@@ -193,7 +192,7 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly saneamientoConPorcentajes = computed(() => {
     const cuadroNumero = this.globalTableNumberSignalSaneamiento();
-    return TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoSignal(), cuadroNumero);
+    return TablePercentageHelper.calcularPorcentajesSimple(this.saneamientoDetalladoSignal(), cuadroNumero);
   });
 
   readonly coberturaConPorcentajes = computed(() => {
@@ -348,7 +347,8 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     cuadroFuenteCobertura: this.cuadroFuenteCoberturaSignal(),
     cuadroTituloCombustibles: this.cuadroTituloCombustiblesSignal(),
     cuadroFuenteCombustibles: this.cuadroFuenteCombustiblesSignal(),
-    centroPoblado: this.centroPobladoSignal()
+    centroPoblado: this.centroPobladoSignal(),
+    saneamientoDetallado: this.saneamientoDetalladoSignal()
   }));
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector) {
@@ -426,5 +426,16 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     const distrito = this.obtenerNombreDistritoActual();
     const defaultTitle = SECCION26_TEMPLATES.cuadroTituloCombustiblesDefault.replace('CP ____', `CP ${centroPoblado}`);
     return normalizeTitleWithPlaceholders(vm.cuadroTituloCombustibles, defaultTitle, centroPoblado, distrito);
+  }
+
+  // ✅ Signal para saneamiento detallado
+  readonly saneamientoDetalladoSignal: Signal<any[]> = computed(() => {
+    const tablaKey = 'saneamientoDetalladoTabla';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+  });
+
+  // ✅ Propiedad para el template
+  get saneamientoDetallado(): any[] {
+    return this.saneamientoDetalladoSignal();
   }
 }

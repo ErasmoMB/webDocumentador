@@ -226,7 +226,7 @@ export function transformPoblacionSexoDesdeDemograficos(data: any): any[] {
   return [
     { sexo: 'Hombre', casos: item.hombres || 0, porcentaje: item.porcentaje_hombres || '0 %' },
     { sexo: 'Mujer', casos: item.mujeres || 0, porcentaje: item.porcentaje_mujeres || '0 %' },
-    { sexo: 'Total', casos: item.total || 0, porcentaje: '100.00 %' }
+    { sexo: 'Total', casos: item.total || 0, porcentaje: '100,00 %' }
   ].filter(row => (row.casos || 0) > 0);
 }
 

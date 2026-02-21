@@ -132,10 +132,13 @@ export class TableHandlerFactoryService {
       datos[tablaKeyConPrefijo] = [...tabla];
       updateData(datos);
 
-      // Persistir cambios
+      // Persistir cambios - GUARDAR EN SESSION-DATA DE LA SECCIÓN
+      console.log(`[SECCION6:EDIT] 💾 GUARDANDO TABLA EDITADA: seccionId=${seccionId}, tablaKey=${tablaKeyConPrefijo}, rows=${tabla.length}`);
+      console.log(`[SECCION6:EDIT] 📋 Datos guardados:`, tabla.map((r: any) => ({ sexo: r.sexo, casos: r.casos })));
       this.formChange.persistFields(seccionId, 'table', { 
         [tablaKeyConPrefijo]: tabla 
       });
+      console.log(`[SECCION6:EDIT] ✅ persistFields completado`);
 
       // Callback personalizado (si existe)
       if (afterChange) {

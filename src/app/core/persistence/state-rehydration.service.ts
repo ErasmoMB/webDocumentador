@@ -16,7 +16,7 @@
  * - Siempre notifica resultado al usuario
  */
 
-import { Injectable, inject, APP_INITIALIZER, Provider, signal } from '@angular/core';
+import { Injectable, inject, APP_INITIALIZER, Provider, signal, ApplicationRef, NgZone } from '@angular/core';
 import { ProjectState, INITIAL_PROJECT_STATE } from '../state/project-state.model';
 import { UIStoreService } from '../state/ui-store.contract';
 import { PersistenceObserverService } from './persistence-observer.service';
@@ -74,6 +74,8 @@ export class StateRehydrationService {
   private readonly store = inject(UIStoreService);
   private readonly persistence = inject(PersistenceObserverService);
   private readonly sessionDataService = inject(SessionDataService);
+  private readonly appRef = inject(ApplicationRef);
+  private readonly ngZone = inject(NgZone);
   
   // Estado de rehidratación
   private _rehydrationResult = signal<RehydrationResult | null>(null);
@@ -312,6 +314,12 @@ export class StateRehydrationService {
     } else {
       console.warn('[Rehydration] Store does not expose hydrate nor loadState method');
     }
+    
+    // ✅ FUERZA CHANGE DETECTION INMEDIATAMENTE
+    // Esto resuelve el problema donde OnPush components no se renderean hasta que se fuerza un evento
+    this.ngZone.run(() => {
+      this.appRef.tick();
+    });
   }
   
   // ============================================================================
