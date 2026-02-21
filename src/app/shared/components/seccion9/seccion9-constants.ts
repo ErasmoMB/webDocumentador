@@ -119,31 +119,33 @@ export const SECCION9_TEMPLATES = {
 // ============================================================================
 
 /**
- * Configuración para Tabla 1: Condición de Ocupación (Solo Lectura - Backend)
+ * Configuración para Tabla 1: Condición de Ocupación
+ * ✅ CORREGIDO: Habilitado cálculo de totales y porcentajes
  */
 export const SECCION9_TABLA_CONDICION_OCUPACION_CONFIG: TableConfig = {
   tablaKey: 'condicionOcupacionTabla',
-  totalKey: '',                    // ✅ Sin fila de total - backend la envía
-  campoTotal: '',                  // ✅ Sin cálculo total  
-  campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-  calcularPorcentajes: false,      // ✅ No calcular automáticamente
-  camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: true,       // ✅ Permitir agregar
-  permiteEliminarFilas: true       // ✅ Permitir eliminar
+  totalKey: 'categoria',                    // ✅ Fila "Total" se identifica por categoria === 'Total'
+  campoTotal: 'casos',                      // ✅ Campo para total
+  campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
+  calcularPorcentajes: true,                 // ✅ Habilitar cálculo automático
+  camposParaCalcular: ['casos'],            // ✅ Campos a considerar para cálculo
+  noInicializarDesdeEstructura: true,       // ✅ No inicializar vacía
+  permiteAgregarFilas: true,                // ✅ Permitir agregar
+  permiteEliminarFilas: true                // ✅ Permitir eliminar
 };
 
 /**
- * Configuración para Tabla 2: Tipos de Materiales (Solo Lectura - Backend)
+ * Configuración para Tabla 2: Tipos de Materiales
+ * ✅ CORREGIDO: Habilitado cálculo de totales y porcentajes
  */
 export const SECCION9_TABLA_TIPOS_MATERIALES_CONFIG: TableConfig = {
   tablaKey: 'tiposMaterialesTabla',
-  totalKey: '',                    // ✅ Sin fila de total - backend la envía
-  campoTotal: '',                  // ✅ Sin cálculo total
-  campoPorcentaje: '',             // ✅ Sin cálculo porcentaje  
-  calcularPorcentajes: false,      // ✅ No calcular automáticamente
-  camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: true,       // ✅ Permitir agregar
-  permiteEliminarFilas: true       // ✅ Permitir eliminar
+  totalKey: 'categoria',                    // ✅ Fila "Total" se identifica por categoria === 'Total'
+  campoTotal: 'casos',                      // ✅ Campo para total
+  campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
+  calcularPorcentajes: true,                 // ✅ Habilitar cálculo automático
+  camposParaCalcular: ['casos'],            // ✅ Campos a considerar para cálculo
+  noInicializarDesdeEstructura: true,       // ✅ No inicializar vacía
+  permiteAgregarFilas: true,                // ✅ Permitir agregar
+  permiteEliminarFilas: true                // ✅ Permitir eliminar
 };

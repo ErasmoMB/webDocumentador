@@ -12,6 +12,7 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import {
   SECCION9_WATCHED_FIELDS,
   SECCION9_SECTION_ID,
@@ -416,7 +417,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
     private backendApi: BackendApiService,
-    private formChange: FormChangeService  // ✅ Para persistencia en Redis
+    private formChange: FormChangeService,  // ✅ Para persistencia en Redis
+    private tableFacade: TableManagementFacade  // ✅ Para cálculo de totales y porcentajes
   ) {
     super(cdRef, injector);
 
@@ -437,8 +439,31 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
-    this.inicializarTablasVacias();  // Primero vacías
-    this.cargarDatosDelBackend();    // Luego llenar con backend
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const prefijo = this.obtenerPrefijoGrupo();
+    const formData = this.formDataSignal();
+    
+    // Verificar condición de ocupación
+    const condicionOcupacionKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
+    const existingCondicionData = formData[condicionOcupacionKey];
+    
+    // Verificar tipos de materiales
+    const tiposMaterialesKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
+    const existingMaterialesData = formData[tiposMaterialesKey];
+    
+    // Solo cargar del backend si no hay datos persistidos
+    const tieneDatosPersistidos = 
+      (existingCondicionData && Array.isArray(existingCondicionData) && existingCondicionData.length > 0) ||
+      (existingMaterialesData && Array.isArray(existingMaterialesData) && existingMaterialesData.length > 0);
+    
+    if (!tieneDatosPersistidos) {
+      console.log('[SECCION9] No hay datos persistidos, cargando del backend...');
+      this.inicializarTablasVacias();
+      this.cargarDatosDelBackend();
+    } else {
+      console.log('[SECCION9] Datos persistidos encontrados, no se carga del backend');
+    }
+    
     this.cargarFotografias();
   }
 
@@ -496,15 +521,28 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
         try {
           const dataRaw = response?.data || [];
           const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformCondicionOcupacionDesdeBackend(datosDesenvueltos);
+          let datosTransformados = transformCondicionOcupacionDesdeBackend(datosDesenvueltos);
           
           console.log('[SECCION9] ✅ Datos de condición ocupación cargados:', datosTransformados);
           
           // Guardar CON prefijo y SIN prefijo (fallback)
           if (datosTransformados.length > 0) {
-            const tablaKey = `condicionOcupacionTabla${prefijo}`;
+            const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+            const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
+            
+            // ✅ CALCULAR TOTALES Y PORCENTAJES
+            const config = this.condicionOcupacionConfig;
+            const tmp: Record<string, any> = { [tablaKey]: structuredClone(datosTransformados) };
+            this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+            datosTransformados = tmp[tablaKey] || datosTransformados;
+            
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS
+            try {
+              this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosTransformados }, { notifySync: true });
+            } catch (e) { console.error(e); }
           }
         } catch (err) {
           console.error('[SECCION9] Error procesando condición ocupación:', err);
@@ -532,11 +570,21 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
           
           // Guardar CON prefijo y SIN prefijo (fallback)  
           if (datosTransformados.length > 0) {
-            const tablaKey = `tiposMaterialesTabla${prefijo}`;
+            const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+            const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
+            
+            // ✅ CALCULAR TOTALES Y PORCENTAJES POR CATEGORÍA
+            datosTransformados = this.calcularTotalesYPorcentajesPorCategoria(datosTransformados);
+            
             console.log('[SECCION9] 💾 Guardando en clave:', tablaKey);
             console.log('[SECCION9] 💾 Primer item guardado:', datosTransformados[0]);
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'tiposMaterialesTabla', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS
+            try {
+              this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datosTransformados }, { notifySync: true });
+            } catch (e) { console.error(e); }
           }
         } catch (err) {
           console.error('[SECCION9] Error procesando materiales construcción:', err);
@@ -568,8 +616,17 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   onCondicionOcupacionTableUpdated(updatedData?: any[]): void {
     // ✅ LEER DEL SIGNAL REACTIVO
     const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyCondicionOcupacion();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.condicionOcupacionConfig;
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    tablaActual = tmp[tablaKey] || tablaActual;
+    
+    console.log(`[SECCION9] 💾 Guardando CondicionOcupacion (después de calcular):`, tablaActual);
     
     // ✅ GUARDAR EN PROJECTSTATEFACADE
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
@@ -602,8 +659,14 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   onTiposMaterialesTableUpdated(updatedData?: any[]): void {
     // ✅ LEER DEL SIGNAL REACTIVO
     const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyTiposMateriales();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `tiposMaterialesTabla${prefijo}` : 'tiposMaterialesTabla';
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES POR CATEGORÍA
+    tablaActual = this.calcularTotalesYPorcentajesPorCategoria(tablaActual);
+    
+    console.log(`[SECCION9] 💾 Guardando TiposMateriales (después de calcular por categoría):`, tablaActual);
     
     // ✅ GUARDAR EN PROJECTSTATEFACADE
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
@@ -618,6 +681,64 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     }
     
     this.cdRef.markForCheck();
+  }
+  
+  /**
+   * ✅ Calcula totales y porcentajes POR CATEGORÍA para la tabla de Tipos de Materiales
+   * Cada categoría (Paredes, Techos, Pisos) tiene su propio Total y sus propios porcentajes
+   */
+  private calcularTotalesYPorcentajesPorCategoria(tabla: any[]): any[] {
+    if (!tabla || tabla.length === 0) return tabla;
+    
+    const tablaClon = JSON.parse(JSON.stringify(tabla));
+    
+    // Agrupar filas por categoría (excluyendo las filas de Total)
+    const categorias = new Map<string, any[]>();
+    
+    tablaClon.forEach((row: any) => {
+      const tipoMat = row.tipoMaterial || '';
+      const isTotal = tipoMat.toString().toLowerCase() === 'total';
+      
+      if (!isTotal) {
+        const cat = row.categoria || '';
+        if (!categorias.has(cat)) {
+          categorias.set(cat, []);
+        }
+        categorias.get(cat)!.push(row);
+      }
+    });
+    
+    // Para cada categoría, calcular total y porcentajes
+    categorias.forEach((filas, categoria) => {
+      // Calcular el total de la categoría
+      const totalCategoria = filas.reduce((sum: number, row: any) => {
+        return sum + (parseFloat(row.casos) || 0);
+      }, 0);
+      
+      // Calcular porcentaje para cada fila de la categoría
+      filas.forEach((row: any) => {
+        const casos = parseFloat(row.casos) || 0;
+        if (totalCategoria > 0) {
+          const pct = (casos / totalCategoria) * 100;
+          row.porcentaje = pct.toFixed(2).replace('.', ',') + ' %';
+        } else {
+          row.porcentaje = '0,00 %';
+        }
+      });
+      
+      // Buscar y actualizar la fila Total de esta categoría (buscar por tipoMaterial === 'Total')
+      const filaTotal = tablaClon.find((row: any) => 
+        row.categoria === categoria && 
+        (row.tipoMaterial || '').toString().toLowerCase() === 'total'
+      );
+      
+      if (filaTotal) {
+        filaTotal.casos = totalCategoria;
+        filaTotal.porcentaje = '100,00 %';
+      }
+    });
+    
+    return tablaClon;
   }
 
   // ✅ NÚMEROS DE CUADROS DINÁMICOS (ahora usando GlobalNumberingService)
