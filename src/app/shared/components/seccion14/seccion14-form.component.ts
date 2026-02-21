@@ -237,8 +237,8 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
       }
     });
 
-    // Cargar tasa de analfabetismo
-    this.backendApi.postAlfabetizacion(codigos).subscribe({
+    // Cargar tasa de analfabetismo desde /demograficos/alfabetizacion-15plus
+    this.backendApi.postAlfabetizacion15Plus(codigos).subscribe({
       next: (response: any) => {
         try {
           const dataRaw = response?.data || [];

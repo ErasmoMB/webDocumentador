@@ -50,8 +50,8 @@ export class SimpleEndpointDataLoaderService {
           })
         );
 
-      case '/demograficos/pet-grupo-14':
-        return this.backendApi.postPetGrupo14(codigos).pipe(
+      case '/demograficos/pet-grupo-14-29':
+        return this.backendApi.postPetGrupo1429(codigos).pipe(
           map(response => {
             const data = response?.data?.[0]?.rows || response?.data || [];
             return mapping.transform ? mapping.transform(data) : data;
@@ -108,6 +108,14 @@ export class SimpleEndpointDataLoaderService {
 
       case '/demograficos/saneamiento':
         return this.backendApi.postSaneamiento(codigos).pipe(
+          map(response => {
+            const data = response?.data?.[0]?.rows || response?.data || [];
+            return mapping.transform ? mapping.transform(data) : data;
+          })
+        );
+
+      case '/demograficos/saneamiento-detallado':
+        return this.backendApi.postSaneamientoDetallado(codigos).pipe(
           map(response => {
             const data = response?.data?.[0]?.rows || response?.data || [];
             return mapping.transform ? mapping.transform(data) : data;

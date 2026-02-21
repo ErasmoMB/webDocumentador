@@ -445,7 +445,7 @@ export function initializeTablesRegistry(): void {
       sectionKey: 'seccion23_aisi',
       fieldName: 'petGruposEdadAISI',
       tablaKey: 'petGruposEdadAISI',
-      endpoint: '/demograficos/datos',
+      endpoint: '/demograficos/pet-grupo-14-29',
       method: 'POST',
       paramType: 'id_ubigeo',
       aggregatable: true,

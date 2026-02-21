@@ -561,10 +561,11 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
         typeof item === 'object' && item !== null ? { ...item } : item
       );
       this.persistirTablaConLog(tablaKeyActual, tablaCopia2);
+      // ✅ EMITIR tableUpdated DESPUÉS de cálculos para que el padre reciba datos con porcentajes
+      this.dataChange.emit(this.datos[tablaKeyActual]);
+      this.tableUpdated.emit(tablaCopia2);
       this.calcTimeouts.delete(debounceKey);
     }, this.calcDebounceMs));
-    this.dataChange.emit(this.datos[tablaKeyActual]);
-    this.tableUpdated.emit(tablaCopia);
     try { this.cdRef.detectChanges(); } catch (e) {}
     try { this.cdRef.markForCheck(); } catch (e) {}
   }
@@ -604,12 +605,12 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
 
     // ✅ PASO 5: Actualizar ProjectState para disponibilidad inmediata
     try {
-      const projectFacade = (this as any).projectFacade;
-      if (projectFacade && typeof projectFacade.setTableData === 'function') {
+      // ✅ CORREGIDO: Usar this.projectFacade directamente (ya está inyectado en el constructor)
+      if (this.projectFacade && typeof this.projectFacade.setTableData === 'function') {
         keysToSync.forEach(key => {
           try {
-            projectFacade.setTableData(this.sectionId, null, key, tablaNormalizada);
-            projectFacade.setField(this.sectionId, null, key, tablaNormalizada);
+            this.projectFacade.setTableData(this.sectionId, null, key, tablaNormalizada);
+            this.projectFacade.setField(this.sectionId, null, key, tablaNormalizada);
           } catch (e) {
             console.warn(`[DynamicTable] setTableData/setField error for ${key}:`, e);
           }

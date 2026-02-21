@@ -307,8 +307,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     console.log('[SECCION10] 🔍 Cargando datos del backend con códigos:', codigos);
     const prefijo = this.obtenerPrefijoGrupo();
 
-    // 2. Cargar Abastecimiento de Agua desde /demograficos/abastecimiento-agua-por-cpp
-    this.backendApi.postAbastecimientoAguaPorCpp(codigos).subscribe({
+    // 2. Cargar Abastecimiento de Agua desde /demograficos/abastecimiento-agua
+    this.backendApi.postAbastecimientoAgua(codigos).subscribe({
       next: (response: any) => {
         try {
           const dataRaw = response?.data || [];

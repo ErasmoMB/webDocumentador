@@ -226,11 +226,11 @@ export class BackendApiService {
   }
 
   /**
-   * PET por grupo etario usando agrupación 14-29
-   * POST /demograficos/pet-grupo-14
+   * PET grupo 14-29 años
+   * POST /demograficos/pet-grupo-14-29
    */
-  postPetGrupo14(codigos: string[]): Observable<BackendResponse<any>> {
-    const url = `${this.baseUrl}/demograficos/pet-grupo-14`;
+  postPetGrupo1429(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/pet-grupo-14-29`;
     const payload = { codigos };
     return this.http.post<any>(url, payload).pipe(
       map(data => this.transformResponse(data)),
@@ -330,6 +330,19 @@ export class BackendApiService {
   }
 
   /**
+   * Saneamiento detallado
+   * POST /demograficos/saneamiento-detallado
+   */
+  postSaneamientoDetallado(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/saneamiento-detallado`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Alumbrado
    * POST /demograficos/alumbrado
    */
@@ -369,11 +382,24 @@ export class BackendApiService {
   }
 
   /**
-   * Alfabetización
-   * POST /demograficos/alfabetizacion
+   * Lengua/Alfabetización
+   * POST /demograficos/lengua
    */
   postAlfabetizacion(codigos: string[]): Observable<BackendResponse<any>> {
-    const url = `${this.baseUrl}/demograficos/alfabetizacion`;
+    const url = `${this.baseUrl}/demograficos/lengua`;
+    const payload = { codigos };
+    return this.http.post<any>(url, payload).pipe(
+      map(data => this.transformResponse(data)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Alfabetización 15 Plus (Alfabetismo en población de 15 años a más)
+   * POST /demograficos/alfabetizacion-15plus
+   */
+  postAlfabetizacion15Plus(codigos: string[]): Observable<BackendResponse<any>> {
+    const url = `${this.baseUrl}/demograficos/alfabetizacion-15plus`;
     const payload = { codigos };
     return this.http.post<any>(url, payload).pipe(
       map(data => this.transformResponse(data)),

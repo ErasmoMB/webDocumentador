@@ -12,6 +12,7 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { SECCION26_TEMPLATES, transformAbastecimientoAguaDesdeDemograficos, transformSaneamientoDesdeDemograficos, transformCoberturaElectricaDesdeDemograficos, transformCombustiblesCocinarDesdeDemograficos, unwrapDemograficoData } from './seccion26-constants';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   standalone: true,
@@ -23,6 +24,9 @@ import { SECCION26_TEMPLATES, transformAbastecimientoAguaDesdeDemograficos, tran
 export class Seccion26FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
+
+  // enable reactive signal sync (UNICA VERDAD)
+  override useReactiveSync: boolean = true;
 
   // ✅ Exportar TEMPLATES para el template
   readonly SECCION26_TEMPLATES = SECCION26_TEMPLATES;
@@ -73,7 +77,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   });
 
   // ✅ Helper para obtener prefijo de grupo
-  private obtenerPrefijo(): string {
+  // Se expone como public para poder invocarlo desde la plantilla
+  public obtenerPrefijo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
@@ -314,30 +319,24 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef, 
     injector: Injector,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private formChange: FormChangeService // used for Redis persistence
   ) {
     super(cdRef, injector);
 
+    // simple effect to trigger change detection when data updates
     effect(() => {
-      const data = this.formDataSignal();
-      const abastecimiento = this.abastecimientoSignal();
-      const saneamiento = this.saneamientoSignal();
-      const cobertura = this.coberturaSignal();
-      const combustibles = this.combustiblesSignal();
-      
-      this.datos = { 
-        ...data,
-        abastecimientoAguaCpTabla: abastecimiento,
-        saneamientoCpTabla: saneamiento,
-        coberturaElectricaCpTabla: cobertura,
-        combustiblesCocinarCpTabla: combustibles
-      };
+      this.formDataSignal();
+      // also touch table signals so template re-renders automatically
+      this.abastecimientoSignal();
+      this.saneamientoSignal();
+      this.coberturaSignal();
+      this.combustiblesSignal();
       this.cdRef.markForCheck();
     });
 
     effect(() => {
       this.viewModel();
-      // sync image caches for the form
       this.actualizarFotografiasFormMulti();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
@@ -391,8 +390,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
       error: (error: any) => console.error('[SECCION26] Error cargando abastecimiento de agua:', error)
     });
 
-    // ✅ 2. CARGAR DATOS DE SANEAMIENTO
-    this.backendApi.postSaneamiento(codigos).subscribe({
+    // ✅ 2. CARGAR DATOS DE SANEAMIENTO DETALLADO
+    this.backendApi.postSaneamientoDetallado(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformSaneamientoDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
@@ -438,15 +437,21 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    // ✅ 1. Inicializar tablas como vacías primero
-    this.inicializarTablasVacias();
+    const prefijo = this.obtenerPrefijo();
+    const tablaAbasKey = prefijo ? `abastecimientoAguaCpTabla${prefijo}` : 'abastecimientoAguaCpTabla';
+    const existing = this.formDataSignal()[tablaAbasKey];
 
-    // ✅ 2. Cargar datos del backend (Métodos POST demográficos)
-    this.cargarDatosDelBackend();
+    // Solo inicializar y cargar si no hay datos persistidos
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      // 1. Inicializar tablas vacías y cargar backend
+      this.inicializarTablasVacias();
+      this.cargarDatosDelBackend();
+    } else {
+      console.log('[SECCION26] datos persistidos encontrados, no se cargan del backend');
+    }
 
     // ✅ 3. AUTO-LLENAR centroPobladoAISI con el nombre del grupo AISI actual
     const centroPobladoAISI = this.obtenerCentroPobladoAISI();
-    const prefijo = this.obtenerPrefijo();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
     
     // Actualizar tanto el objeto local como el store
@@ -618,7 +623,9 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private handleTableFieldChange(tablaKey: string, index: number, field: string, value: any) {
-    const tabla = this.datos[tablaKey] || [];
+    // working directly against the live table stored in projectFacade
+    const formData = this.formDataSignal();
+    const tabla = formData[tablaKey] || [];
     if (!Array.isArray(tabla) || index < 0 || index >= tabla.length) {
       return;
     }
@@ -654,50 +661,44 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
       }
     }
 
-    // Write back to the actual key used
-    this.datos[tablaKey] = [...tabla];
-
-    // Ensure ProjectState is updated
-    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { }
+// Write back to project state (both prefixed and unprefixed keys)
+    const prefijo = this.obtenerPrefijo();
+    const claveConPrefijo = tablaKey;
+    const claveSinPrefijo = prefijo ? tablaKey.replace(prefijo, '') : tablaKey;
 
     try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) {
-        const textPayload: any = {};
-        const textKey = this.getParrafoKeyForTabla(tablaKey);
-        if (textKey && this.datos[textKey] !== undefined) textPayload[textKey] = this.datos[textKey];
-        const payload: any = { [tablaKey]: this.datos[tablaKey], ...textPayload };
-        formChange.persistFields(this.seccionId, 'table', payload, { notifySync: true });
+      this.projectFacade.setField(this.seccionId, null, claveConPrefijo, tabla);
+      this.projectFacade.setField(this.seccionId, null, claveSinPrefijo, tabla);
+    } catch (e) {}
 
-        try { const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper; ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
-      }
-    } catch (e) { }
+    // persist to Redis via FormChangeService
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [claveConPrefijo]: tabla, [claveSinPrefijo]: tabla }, { notifySync: true });
+    } catch (e) {}
 
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    // let view update automatically through signals
+    this.cdRef.markForCheck();
   }
 
   private genericTablePersist(tablaKey: string, updated?: any[]) {
-    const tabla = updated || this.datos[tablaKey] || [];
-    this.datos[tablaKey] = [...tabla];
-    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
-    try {
-      const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-      const formChange = this.injector.get(FormChangeServiceToken, null);
-      if (formChange) {
-        const textPayload: any = {};
-        const textKey = this.getParrafoKeyForTabla(tablaKey);
-        if (textKey && this.datos[textKey] !== undefined) textPayload[textKey] = this.datos[textKey];
-        const payload = { [tablaKey]: this.datos[tablaKey], ...textPayload };
-        formChange.persistFields(this.seccionId, 'table', payload, { notifySync: true });
+    const tabla = updated || this.formDataSignal()[tablaKey] || [];
+    const prefijo = this.obtenerPrefijo();
+    const claveConPrefijo = tablaKey;
+    const claveSinPrefijo = prefijo ? tablaKey.replace(prefijo, '') : tablaKey;
 
-        try { this.projectFacade.setField(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) { }
-        try { const ViewChildHelper = require('src/app/shared/utils/view-child-helper').ViewChildHelper; ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) { /* noop */ }
-      }
-    } catch (e) { }
-    this.actualizarDatos();
-    this.cdRef.detectChanges();
+    // update project state
+    try {
+      this.projectFacade.setField(this.seccionId, null, claveConPrefijo, tabla);
+      this.projectFacade.setField(this.seccionId, null, claveSinPrefijo, tabla);
+    } catch (e) {}
+
+    // persist
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [claveConPrefijo]: tabla, [claveSinPrefijo]: tabla }, { notifySync: true });
+    } catch (e) {}
+
+    // mark for CD so form updates
+    this.cdRef.markForCheck();
   }
 
   private getParrafoKeyForTabla(tablaKey: string): string | null {
@@ -729,6 +730,33 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   getTotalCombustiblesCocinar(): number {
     const tabla = this.combustiblesSignal() || [];
     return (tabla || []).filter((item:any) => !(item.nombre && item.nombre.toString().toLowerCase().includes('total'))).reduce((s:number,i:any)=>s + (Number(i.casos)||0),0);
+  }
+
+  // override generic handler so we don't call legacy PhotoCoordinator
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    const prefijo = this.obtenerPrefijo();
+    const prefix = customPrefix || '';
+
+    for (let i = 0; i < fotografias.length; i++) {
+      const foto = fotografias[i];
+      const idx = i + 1;
+      const imgKey = `${prefix}Imagen${prefijo}`;
+      const titKey = `${prefix}Titulo${prefijo}`;
+      const fuenteKey = `${prefix}Fuente${prefijo}`;
+      this.projectFacade.setField(this.seccionId, null, imgKey, foto.imagen);
+      this.projectFacade.setField(this.seccionId, null, titKey, foto.titulo);
+      this.projectFacade.setField(this.seccionId, null, fuenteKey, foto.fuente);
+    }
+
+    // update local cache arrays based on the prefix
+    if (prefix.startsWith('fotografiaDesechos')) {
+      this.fotografiasDesechosFormMulti = fotografias;
+    } else if (prefix.startsWith('fotografiaElectricidad')) {
+      this.fotografiasElectricidadFormMulti = fotografias;
+    } else if (prefix.startsWith('fotografiaEnergiaCocinar')) {
+      this.fotografiasCocinarFormMulti = fotografias;
+    }
+    this.cdRef.markForCheck();
   }
 
   onFotografiasDesechosChange(fotografias: FotoItem[]): void { 

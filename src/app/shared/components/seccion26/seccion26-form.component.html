@@ -27,11 +27,11 @@
       <div class="form-field" style="margin-top: 10px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelTablaAbastecimiento }}</label>
         <app-dynamic-table 
-          [datos]="datos" 
+          [datos]="formDataSignal()" 
           [sectionId]="seccionId" 
           [config]="abastecimientoConfig" 
           [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
-          [tablaKey]="'abastecimientoAguaCpTabla'" 
+          [tablaKey]="'abastecimientoAguaCpTabla' + obtenerPrefijo()" 
           [totalKey]="'categoria'" 
           [customFieldChangeHandler]="onAbastecimientoAguaFieldChange.bind(this)" 
           (tableUpdated)="onAbastecimientoAguaTableUpdated()" 
@@ -61,11 +61,11 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelTablaSaneamiento }}</label>
         <app-dynamic-table 
-          [datos]="datos" 
+          [datos]="formDataSignal()" 
           [sectionId]="seccionId" 
           [config]="saneamientoConfig" 
           [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
-          [tablaKey]="'saneamientoCpTabla'" 
+          [tablaKey]="'saneamientoCpTabla' + obtenerPrefijo()" 
           [totalKey]="'categoria'" 
           [customFieldChangeHandler]="onSaneamientoFieldChange.bind(this)" 
           (tableUpdated)="onSaneamientoTableUpdated()" 
@@ -123,11 +123,11 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelTablaCobertura }}</label>
         <app-dynamic-table 
-          [datos]="datos" 
+          [datos]="formDataSignal()" 
           [sectionId]="seccionId" 
           [config]="coberturaConfig" 
           [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
-          [tablaKey]="'coberturaElectricaCpTabla'" 
+          [tablaKey]="'coberturaElectricaCpTabla' + obtenerPrefijo()" 
           [totalKey]="'categoria'" 
           [customFieldChangeHandler]="onCoberturaElectricaFieldChange.bind(this)" 
           (tableUpdated)="onCoberturaElectricaTableUpdated()" 
@@ -176,11 +176,11 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelTablaCombustibles }}</label>
         <app-dynamic-table 
-          [datos]="datos" 
+          [datos]="formDataSignal()" 
           [sectionId]="seccionId" 
           [config]="combustiblesConfig" 
           [columns]="[ { field: 'categoria', label: 'Categoría', type: 'text' }, { field: 'casos', label: 'Casos', type: 'number' }, { field: 'porcentaje', label: 'Porcentaje', type: 'text', readonly: true } ]" 
-          [tablaKey]="'combustiblesCocinarCpTabla'" 
+          [tablaKey]="'combustiblesCocinarCpTabla' + obtenerPrefijo()" 
           [totalKey]="'categoria'" 
           [customFieldChangeHandler]="onCombustiblesCocinarFieldChange.bind(this)" 
           (tableUpdated)="onCombustiblesCocinarTableUpdated()" 

@@ -84,8 +84,12 @@ export function createAutoPostEndpointHandlers(backendApi: BackendApiService): R
         catchError(() => of([]))
       ),
 
-    '/demograficos/pet-grupo-14': (codigos: string[]) =>
-      backendApi.postPetGrupo14(codigos).pipe(
+    /**
+     * PET grupo 14-29 años
+     * POST /demograficos/pet-grupo-14-29
+     */
+    '/demograficos/pet-grupo-14-29': (codigos: string[]) =>
+      backendApi.postPetGrupo1429(codigos).pipe(
         map(response => unwrapDemograficoData(response.data)),
         catchError(() => of([]))
       ),
@@ -152,6 +156,16 @@ export function createAutoPostEndpointHandlers(backendApi: BackendApiService): R
      */
     '/demograficos/saneamiento': (codigos: string[]) =>
       backendApi.postSaneamiento(codigos).pipe(
+        map(response => unwrapDemograficoData(response.data)),
+        catchError(() => of([]))
+      ),
+
+    /**
+     * Saneamiento detallado
+     * POST /demograficos/saneamiento-detallado
+     */
+    '/demograficos/saneamiento-detallado': (codigos: string[]) =>
+      backendApi.postSaneamientoDetallado(codigos).pipe(
         map(response => unwrapDemograficoData(response.data)),
         catchError(() => of([]))
       ),

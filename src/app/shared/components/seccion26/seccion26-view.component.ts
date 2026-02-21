@@ -168,8 +168,10 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly saneamientoSignal = computed(() => {
-    const tablaKey = 'saneamientoDetalladoTabla';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `saneamientoCpTabla${prefijo}` : 'saneamientoCpTabla';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? 
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
   readonly coberturaSignal = computed(() => {
@@ -428,13 +430,15 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     return normalizeTitleWithPlaceholders(vm.cuadroTituloCombustibles, defaultTitle, centroPoblado, distrito);
   }
 
-  // ✅ Signal para saneamiento detallado
+  // ✅ Signal para saneamiento (misma clave que el formulario, con prefijo)
   readonly saneamientoDetalladoSignal: Signal<any[]> = computed(() => {
-    const tablaKey = 'saneamientoDetalladoTabla';
-    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = prefijo ? `saneamientoCpTabla${prefijo}` : 'saneamientoCpTabla';
+    return this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ??
+           this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? [];
   });
 
-  // ✅ Propiedad para el template
+  // ✅ Propiedad para el template (renombrada semanticamente)
   get saneamientoDetallado(): any[] {
     return this.saneamientoDetalladoSignal();
   }

@@ -537,7 +537,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
 
     // Usar endpoint PET agrupado 14-29 (sp_pet_por_grupo_14_29)
-    this.backendApi.postPetGrupo14(codigos).subscribe({
+    this.backendApi.postPetGrupo1429(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPETDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])

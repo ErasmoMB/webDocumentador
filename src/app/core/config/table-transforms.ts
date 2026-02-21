@@ -259,7 +259,7 @@ export function transformPETDesdeAisdPet(data: any): any[] {
 export function transformActividadesEconomicas(data: any): any[] {
   const arr = Array.isArray(data) ? data : [];
   return arr.map((item: any) => ({
-    actividad: item.actividad || '',
+    actividad: item.categoria || item.actividad || '',
     casos: item.casos || 0,
     porcentaje: item.porcentaje || null
   }));
