@@ -8,6 +8,7 @@ import { ImageManagementFacade } from 'src/app/core/services/image/image-managem
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { transformNbiV2TablaSegunPoblacion, transformNbiV2TiposExistentes } from 'src/app/core/config/table-transforms';
 import { SECCION18_PHOTO_PREFIX, SECCION18_DEFAULT_TEXTS, SECCION18_TEMPLATES } from './seccion18-constants';
 
@@ -87,6 +88,11 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         return hash;
     });
 
+    // ✅ NUEVO: formDataSignal para UNICA_VERDAD
+    readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
+        this.projectFacade.selectSectionFields(this.seccionId, null)()
+    );
+
     readonly nbiCCAyrocaConfigSignal: Signal<TableConfig> = computed(() => ({
         tablaKey: this.getTablaKeyNbiCC(),
         totalKey: 'categoria',
@@ -111,7 +117,11 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         permiteEliminarFilas: true
     }));
 
-    constructor(cdRef: ChangeDetectorRef, injector: Injector) {
+    constructor(
+        cdRef: ChangeDetectorRef,
+        injector: Injector,
+        private formChange: FormChangeService  // ✅ Para persistencia en Redis
+    ) {
         super(cdRef, injector);
         this.backendApi = injector.get(BackendApiService);
         this.inicializarCamposDesdeStore();
@@ -418,12 +428,28 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     onNbiCCTableUpdated(tablaData: any[]): void {
         const tablaKey = this.getTablaKeyNbiCC();
         this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        
+        // ✅ Persistir en Redis via FormChangeService
+        try {
+            this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaData }, { notifySync: true });
+        } catch (error) {
+            console.warn(`⚠️ [SECCION18] Error guardando tabla en Redis:`, error);
+        }
+        
         this.cdRef.markForCheck();
     }
 
     onNbiDistritoTableUpdated(tablaData: any[]): void {
         const tablaKey = this.getTablaKeyNbiDistrito();
         this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        
+        // ✅ Persistir en Redis via FormChangeService
+        try {
+            this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaData }, { notifySync: true });
+        } catch (error) {
+            console.warn(`⚠️ [SECCION18] Error guardando tabla en Redis:`, error);
+        }
+        
         this.cdRef.markForCheck();
     }
 

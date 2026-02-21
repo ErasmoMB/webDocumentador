@@ -27,7 +27,7 @@
     <div class="form-group-section" style="margin-top: 15px;">
       <label class="label">{{ SECCION9_TEMPLATES.labelTablaCondicionOcupacion }}</label>
       <app-dynamic-table
-        [datos]="datos"
+        [datos]="formDataSignal()"
         [config]="condicionOcupacionConfig"
         [columns]="[
           { field: 'categoria', label: SECCION9_TEMPLATES.columnasCondicionOcupacion.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategoria },
@@ -78,7 +78,7 @@
     <div class="form-group-section" style="margin-top: 15px;">
       <label class="label">{{ SECCION9_TEMPLATES.labelTablaTiposMateriales }}</label>
       <app-dynamic-table
-        [datos]="datos"
+        [datos]="formDataSignal()"
         [config]="tiposMaterialesConfig"
         [columns]="[
           { field: 'categoria', label: SECCION9_TEMPLATES.columnasTiposMateriales.categoria, type: 'text', placeholder: SECCION9_TEMPLATES.placeholderCategorias },

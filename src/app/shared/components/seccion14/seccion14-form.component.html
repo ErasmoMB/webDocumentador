@@ -47,7 +47,7 @@
       <div class="form-field mt-lg">
         <label class="label">{{ SECCION14_TEMPLATES.labelTablaNivelEducativo }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="nivelEducativoConfigSignal()"
           [columns]="[
             { field: 'categoria', label: SECCION14_TEMPLATES.columnaCategoriaLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderCategoria },
@@ -117,7 +117,7 @@
       <div class="form-field mt-lg">
         <label class="label">{{ SECCION14_TEMPLATES.labelTablaTasaAnalfabetismo }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="tasaAnalfabetismoConfigSignal()"
           [columns]="[
             { field: 'indicador', label: SECCION14_TEMPLATES.columnaIndicadorLabel, type: 'text', placeholder: SECCION14_TEMPLATES.placeholderIndicador },

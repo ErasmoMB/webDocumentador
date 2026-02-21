@@ -205,6 +205,21 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
             fotografias,
             groupPrefix
         );
+        
+        // ✅ PERSISTIR EN REDIS usando onFieldChange (automáticamente persiste)
+        const prefijo = this.obtenerPrefijo();
+        for (let i = 0; i < fotografias.length; i++) {
+            const foto = fotografias[i];
+            const idx = i + 1;
+            const imgKey = `${this.PHOTO_PREFIX}${idx}Imagen${prefijo}`;
+            const titKey = `${this.PHOTO_PREFIX}${idx}Titulo${prefijo}`;
+            const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
+            
+            this.onFieldChange(imgKey, foto.imagen);
+            this.onFieldChange(titKey, foto.titulo);
+            this.onFieldChange(fuenteKey, foto.fuente);
+        }
+        
         this.cdRef.detectChanges();
     }
 
@@ -322,10 +337,10 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         // ✅ Usar el mismo patrón exacto que sección 15
         const dataToPersist = tablaData || this.indiceDesarrolloHumanoTablaSignal();
         
-        // 1. Usar FormChangeService como sección 15
+        // ✅ CORREGIDO: persist: true para guardar en Redis
         this.formChangeService.persistFields(this.seccionId, 'table', {
             [tablaKey]: dataToPersist
-        }, { updateState: true, notifySync: true, persist: false });
+        }, { updateState: true, notifySync: true, persist: true });
 
         // 2. Obtener datos persistidos y actualizar this.datos
         const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || dataToPersist || [];

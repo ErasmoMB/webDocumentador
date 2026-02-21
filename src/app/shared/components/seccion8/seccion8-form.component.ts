@@ -8,6 +8,7 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { 
   SECCION8_TABLA_PEA_OCUPACIONES_CONFIG, 
   SECCION8_TABLA_POBLACION_PECUARIA_CONFIG, 
@@ -223,7 +224,8 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     injector: Injector,
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private formChange: FormChangeService  // ✅ Para persistencia en Redis
   ) {
     super(cdRef, injector);
 
@@ -243,15 +245,69 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onPEATableUpdated(updatedData?: any[]): void {
-    this.cdRef.detectChanges();
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `peaOcupacionesTabla${prefijo}` : 'peaOcupacionesTabla';
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION8] ✅ PEA data saved to session-data`);
+    } catch (e) {
+      console.error(`[SECCION8] ⚠️ Could not save to session-data:`, e);
+    }
+    
+    this.cdRef.markForCheck();
   }
 
   onPoblacionPecuariaTableUpdated(updatedData?: any[]): void {
-    this.cdRef.detectChanges();
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `poblacionPecuariaTabla${prefijo}` : 'poblacionPecuariaTabla';
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'poblacionPecuariaTabla', tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION8] ✅ Pecuaria data saved to session-data`);
+    } catch (e) {
+      console.error(`[SECCION8] ⚠️ Could not save to session-data:`, e);
+    }
+    
+    this.cdRef.markForCheck();
   }
 
   onCaracteristicasAgriculturaTableUpdated(updatedData?: any[]): void {
-    this.cdRef.detectChanges();
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `caracteristicasAgriculturaTabla${prefijo}` : 'caracteristicasAgriculturaTabla';
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'caracteristicasAgriculturaTabla', tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION8] ✅ Agricultura data saved to session-data`);
+    } catch (e) {
+      console.error(`[SECCION8] ⚠️ Could not save to session-data:`, e);
+    }
+    
+    this.cdRef.markForCheck();
   }
 
   protected override onInitCustom(): void {
@@ -264,14 +320,21 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
   }
 
   /**
-   * Inicializa las tablas como arrays vacíos con prefijo de grupo
+   * ✅ CORREGIDO: Solo inicializar tablas si NO existen datos persistidos
    */
   private inicializarTablasVacias(): void {
     const prefijo = this.obtenerPrefijoGrupo();
+    const formData = this.formDataSignal();
     
-    // Solo la primera tabla (PEA Ocupaciones) sigue el patrón
-    this.projectFacade.setField(this.seccionId, null, `peaOcupacionesTabla${prefijo}`, []);
-    this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', []);
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de inicializar
+    const peaTablaKey = prefijo ? `peaOcupacionesTabla${prefijo}` : 'peaOcupacionesTabla';
+    const existingPeaData = formData[peaTablaKey];
+    
+    // Solo inicializar como vacío si no hay datos persistidos
+    if (!existingPeaData || !Array.isArray(existingPeaData) || existingPeaData.length === 0) {
+      this.projectFacade.setField(this.seccionId, null, `peaOcupacionesTabla${prefijo}`, []);
+      this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', []);
+    }
   }
 
   /**

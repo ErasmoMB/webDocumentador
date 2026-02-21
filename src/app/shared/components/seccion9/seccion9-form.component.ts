@@ -10,6 +10,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import {
   SECCION9_WATCHED_FIELDS,
@@ -414,7 +415,8 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     injector: Injector,
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private formChange: FormChangeService  // ✅ Para persistencia en Redis
   ) {
     super(cdRef, injector);
 
@@ -564,9 +566,24 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onCondicionOcupacionTableUpdated(updatedData?: any[]): void {
-    // ✅ Para tablas de solo lectura, no hay cambios manuales
-    // Los datos solo vienen del backend
-    console.log('[SECCION9] ℹ️ Tabla condición ocupación es de solo lectura');
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION9] ✅ CondicionOcupacion data saved to session-data`);
+    } catch (e) {
+      console.error(`[SECCION9] ⚠️ Could not save to session-data:`, e);
+    }
+    
+    this.cdRef.markForCheck();
   }
 
   // ✅ CONFIGURACIÓN DE TABLA 2: Tipos de Materiales (Solo Lectura)
@@ -583,9 +600,24 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   onTiposMaterialesTableUpdated(updatedData?: any[]): void {
-    // ✅ Para tablas de solo lectura, no hay cambios manuales
-    // Los datos solo vienen del backend
-    console.log('[SECCION9] ℹ️ Tabla tipos materiales es de solo lectura');
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
+    const tablaKey = this.getTablaKeyTiposMateriales();
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, 'tiposMaterialesTabla', tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+      console.log(`[SECCION9] ✅ TiposMateriales data saved to session-data`);
+    } catch (e) {
+      console.error(`[SECCION9] ⚠️ Could not save to session-data:`, e);
+    }
+    
+    this.cdRef.markForCheck();
   }
 
   // ✅ NÚMEROS DE CUADROS DINÁMICOS (ahora usando GlobalNumberingService)

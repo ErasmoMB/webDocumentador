@@ -27,7 +27,7 @@
         (change)="onTituloAutoridadesChange($event)"
         [placeholder]="SECCION19_TEMPLATES.placeholderTituloAutoridades">
       <app-dynamic-table
-        [datos]="projectFacade.obtenerDatos()"
+        [datos]="formDataSignal()"
         [sectionId]="seccionId"
         [config]="SECCION19_TABLA_AUTORIDADES_CONFIG"
         [columns]="[

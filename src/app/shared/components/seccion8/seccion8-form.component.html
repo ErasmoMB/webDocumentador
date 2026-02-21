@@ -38,7 +38,7 @@
       
       <label class="label">{{ SECCION8_TEMPLATES.labelTablaPEA }}</label>
       <app-dynamic-table
-        [datos]="datos"
+        [datos]="formDataSignal()"
         [config]="peaOcupacionesConfig"
         [columns]="peaOcupacionesColumns"
         [sectionId]="seccionId"
@@ -101,7 +101,7 @@
         
         <label class="label">{{ SECCION8_TEMPLATES.labelTablaPoblacionPecuaria }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="poblacionPecuariaConfig"
           [columns]="poblacionPecuariaColumns"
           [sectionId]="seccionId"
@@ -171,7 +171,7 @@
         
         <label class="label">{{ SECCION8_TEMPLATES.labelTablaCaracteristicasAgricultura }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="caracteristicasAgriculturaConfig"
           [columns]="caracteristicasAgriculturaColumns"
           [sectionId]="seccionId"

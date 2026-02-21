@@ -11,6 +11,7 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { SECCION29_SECTION_ID, SECCION29_TEMPLATES, SECCION29_DEFAULT_TEXTS, SECCION29_WATCHED_FIELDS } from './seccion29-constants';
 import { transformAfiliacionSaludTabla } from 'src/app/core/config/table-transforms';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   selector: 'app-seccion29-form',
@@ -157,7 +158,7 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-  constructor(cdRef: ChangeDetectorRef, injector: Injector, private backendApi: BackendApiService) {
+  constructor(cdRef: ChangeDetectorRef, injector: Injector, private backendApi: BackendApiService, private formChangeService: FormChangeService) {
     super(cdRef, injector);
 
     // ✅ Inicializar PHOTO_PREFIX dinámicamente
@@ -400,11 +401,18 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTablaUpdated(tablaKey: string, tabla: any[]) {
-    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
     const tablaKeyBase = tablaKey.replace(/Grupo\d+$/, ''); // Remover sufijo de grupo para tener la clave base
     
     this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
     this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    // ✅ PERSISTIR EN REDIS explícitamente
+    try {
+      this.formChangeService.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
+    } catch (e) {
+      console.error('[SECCION29] ⚠️ Error persistiendo tabla:', e);
+    }
     
     this.onFieldChange(tablaKey, tabla, { refresh: false });
     if (tablaKeyBase !== tablaKey) {
@@ -415,7 +423,22 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: any[]) {
+    // ✅ Llamar al método base primero
     super.onFotografiasChange(fotografias);
+    
+    // ✅ PERSISTIR EN REDIS usando onFieldChange (automáticamente persiste)
+    const prefijo = this.obtenerPrefijoGrupo();
+    for (let i = 0; i < fotografias.length; i++) {
+        const foto = fotografias[i];
+        const idx = i + 1;
+        const imgKey = `${this.PHOTO_PREFIX}${idx}Imagen${prefijo}`;
+        const titKey = `${this.PHOTO_PREFIX}${idx}Titulo${prefijo}`;
+        const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
+        
+        this.onFieldChange(imgKey, foto.imagen);
+        this.onFieldChange(titKey, foto.titulo);
+        this.onFieldChange(fuenteKey, foto.fuente);
+    }
   }
 
   // ✅ Métodos para retornar datos de tabla formateados para binding

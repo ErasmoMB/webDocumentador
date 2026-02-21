@@ -28,7 +28,7 @@
 
         <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaNatalidadMortalidad }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="natalidadMortalidadConfigSignal()"
           [columns]="columnasNatalidadMortalidad"
           [sectionId]="seccionId"
@@ -72,7 +72,7 @@
 
         <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaMorbilidad }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="morbilidadConfigSignal()"
           [columns]="columnasMorbilidad"
           [sectionId]="seccionId"
@@ -116,7 +116,7 @@
 
         <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaAfiliacionSalud }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="afiliacionSaludConfigSignal()"
           [columns]="columnasAfiliacionSalud"
           [sectionId]="seccionId"

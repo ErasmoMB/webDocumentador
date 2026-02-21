@@ -623,12 +623,10 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.fotografiasCache = fotos && fotos.length > 0 ? [...fotos] : [];
   }
 
-  // ✅ Override: UNICA_VERDAD - Solo guardar en ProjectStateFacade
-  // ELIMINADO: super.onFotografiasChange() que escribía en PhotoCoordinator (legacy)
+  // ✅ Override: UNICA_VERDAD - Guardar en ProjectStateFacade Y persistir en Redis
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
     console.log(`[SECCION7:FORM:FOTOS] 📝 onFotografiasChange llamado con ${fotografias.length} fotos`);
     
-    // ✅ GUARDAR EN PROJECTSTATEFACADE - ÚNICA FUENTE DE VERDAD
     const prefijo = this.prefijoGrupoSignal();
     console.log(`[SECCION7:FORM:FOTOS] 📝 Prefijo: ${prefijo}, guardando ${fotografias.length} fotos`);
     
@@ -644,13 +642,20 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       
       console.log(`[SECCION7:FORM:FOTOS] 💾 Guardando: ${imgKey}`);
       
+      // ✅ GUARDAR EN PROJECTSTATEFACADE - ÚNICA FUENTE DE VERDAD
       this.projectFacade.setField(this.seccionId, null, imgKey, foto.imagen);
       this.projectFacade.setField(this.seccionId, null, titKey, foto.titulo);
       this.projectFacade.setField(this.seccionId, null, fuenteKey, foto.fuente);
       this.projectFacade.setField(this.seccionId, null, numeroKey, idx);
+      
+      // ✅ PERSISTIR EN REDIS usando onFieldChange (automáticamente persiste)
+      this.onFieldChange(imgKey, foto.imagen);
+      this.onFieldChange(titKey, foto.titulo);
+      this.onFieldChange(fuenteKey, foto.fuente);
+      this.onFieldChange(numeroKey, idx);
     }
     
-    console.log(`[SECCION7:FORM:FOTOS] ✅ Guardado completado en UNICA_VERDAD`);
+    console.log(`[SECCION7:FORM:FOTOS] ✅ Guardado completado en UNICA_VERDAD con persistencia Redis`);
     
     // Actualizar referencia local
     this.fotografiasSeccion7 = fotografias;
@@ -894,8 +899,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.projectFacade.setField(this.seccionId, null, 'petTabla', tablaActual);
     
     // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    // ✅ CORREGIDO: agregado persist: true
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [petTablaKey]: tablaActual }, { notifySync: true });
+      this.formChange.persistFields(this.seccionId, 'table', { [petTablaKey]: tablaActual }, { notifySync: true, persist: true });
       console.log(`[SECCION7:FORM:TABLA] ✅ PET data saved to session-data with prefix: ${petTablaKey}`);
     } catch (e) {
       console.error(`[SECCION7:FORM:TABLA] ⚠️ Could not save to session-data:`, e);
@@ -925,8 +931,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.projectFacade.setField(this.seccionId, null, 'peaTabla', tablaActual);
     
     // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    // ✅ CORREGIDO: agregado persist: true
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [peaTablaKey]: tablaActual }, { notifySync: true });
+      this.formChange.persistFields(this.seccionId, 'table', { [peaTablaKey]: tablaActual }, { notifySync: true, persist: true });
       console.log(`[SECCION7:FORM:PEA] ✅ PEA data saved to session-data with prefix: ${peaTablaKey}`);
     } catch (e) {
       console.error(`[SECCION7:FORM:PEA] ⚠️ Could not save to session-data:`, e);
@@ -1045,8 +1052,9 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', tablaActual);
     
     // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
+    // ✅ CORREGIDO: agregado persist: true
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [peaOcupadaTablaKey]: tablaActual }, { notifySync: true });
+      this.formChange.persistFields(this.seccionId, 'table', { [peaOcupadaTablaKey]: tablaActual }, { notifySync: true, persist: true });
       console.log(`[SECCION7:FORM:TABLA] ✅ PEA Ocupada data saved to session-data with prefix: ${peaOcupadaTablaKey}`);
     } catch (e) {
       console.error(`[SECCION7:FORM:TABLA] ⚠️ Could not save to session-data:`, e);

@@ -10,6 +10,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -231,7 +232,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     injector: Injector,
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private formChange: FormChangeService  // ✅ Para persistencia en Redis
   ) {
     super(cdRef, injector);
 
@@ -540,35 +542,64 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
   }
 
-  // ✅ HANDLERS PARA CAMBIOS DE TABLA (delegados automáticamente por signals)
+  // ✅ HANDLERS PARA CAMBIOS DE TABLA (UNICA_VERDAD con persistencia)
   onAbastecimientoAguaTableUpdated(updatedData?: any[]): void {
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyAbastecimientoAgua();
-    const datos = updatedData || this.datos[tablaKey] || [];
-    // El cambio se sincroniza automáticamente via createAutoSyncField si es necesario
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 
   onTiposSaneamientoTableUpdated(updatedData?: any[]): void {
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyTiposSaneamiento();
-    const datos = updatedData || this.datos[tablaKey] || [];
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 
   onCoberturaElectricaTableUpdated(updatedData?: any[]): void {
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyCoberturaElectrica();
-    const datos = updatedData || this.datos[tablaKey] || [];
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 
   onEnergiaCocinarTableUpdated(updatedData?: any[]): void {
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyEnergiaCocinar();
-    const datos = updatedData || this.datos[tablaKey] || [];
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 
   onTecnologiaComunicacionesTableUpdated(updatedData?: any[]): void {
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyTecnologiaComunicaciones();
-    const datos = updatedData || this.datos[tablaKey] || [];
+    const tablaActual = updatedData || formData[tablaKey] || [];
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 

@@ -379,8 +379,19 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onAutoridadesTableUpdated(tablaData: any[]): void {
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyAutoridades();
-    this.onFieldChange(tablaKey, tablaData, { refresh: false });
+    const tablaActual = tablaData || formData[tablaKey] || [];
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
+    
     this.cdRef.markForCheck();
   }
 

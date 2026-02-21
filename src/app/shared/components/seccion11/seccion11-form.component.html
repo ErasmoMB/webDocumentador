@@ -84,7 +84,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION11_TEMPLATES.labelTablaTelecomunicaciones }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="telecomunicacionesConfig"
           [columns]="[
             { field: 'medio', label: SECCION11_TEMPLATES.labelMedioComunicacion, type: 'text', placeholder: SECCION11_TEMPLATES.placeholderMedioComunicacion },

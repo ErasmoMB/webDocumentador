@@ -27,7 +27,7 @@
   <div class="form-field mt-lg">
     <label class="label">{{ SECCION18_TEMPLATES.labelTableNbiCC }}</label>
     <app-dynamic-table
-      [datos]="projectFacade.obtenerDatos()"
+      [datos]="formDataSignal()"
       [sectionId]="seccionId"
       [config]="nbiCCAyrocaConfigSignal()"
       [columns]="[
@@ -64,7 +64,7 @@
   <div class="form-field mt-lg">
     <label class="label">{{ SECCION18_TEMPLATES.labelTableNbiDistrito }}</label>
     <app-dynamic-table
-      [datos]="projectFacade.obtenerDatos()"
+      [datos]="formDataSignal()"
       [sectionId]="seccionId"
       [config]="nbiDistritoCahuachoConfigSignal()"
       [columns]="[

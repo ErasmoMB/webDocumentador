@@ -17,7 +17,7 @@
            (ngModelChange)="onFieldChange('caracteristicasSaludTitulo', $event)"
            [placeholder]="SECCION12_TEMPLATES.placeholderTituloCaracteristicasSalud">
 
-    <app-dynamic-table [datos]="datos"
+    <app-dynamic-table [datos]="formDataSignal()"
                        [config]="caracteristicasSaludConfigSignal()"
                        [columns]="columnasSalud"
                        [sectionId]="seccionId"
@@ -54,7 +54,7 @@
            (ngModelChange)="onFieldChange('cantidadEstudiantesEducacionTitulo', $event)"
            [placeholder]="SECCION12_TEMPLATES.placeholderTituloEstudiantes">
 
-    <app-dynamic-table [datos]="datos"
+    <app-dynamic-table [datos]="formDataSignal()"
                        [config]="cantidadEstudiantesEducacionConfigSignal()"
                        [columns]="columnasEstudiantes"
                        [sectionId]="seccionId"
@@ -80,7 +80,7 @@
            (ngModelChange)="onFieldChange('ieAyrocaTitulo', $event)"
            [placeholder]="SECCION12_TEMPLATES.placeholderTituloIEAyroca">
 
-    <app-dynamic-table [datos]="datos"
+    <app-dynamic-table [datos]="formDataSignal()"
                        [config]="ieAyrocaConfigSignal()"
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"
@@ -99,7 +99,7 @@
            (ngModelChange)="onFieldChange('ie40270Titulo', $event)"
            [placeholder]="SECCION12_TEMPLATES.placeholderTituloIE40270">
 
-    <app-dynamic-table [datos]="datos"
+    <app-dynamic-table [datos]="formDataSignal()"
                        [config]="ie40270ConfigSignal()"
                        [columns]="columnasIECategoria"
                        [sectionId]="seccionId"

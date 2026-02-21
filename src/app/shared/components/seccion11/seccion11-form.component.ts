@@ -10,6 +10,7 @@ import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component'
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { SessionDataService } from 'src/app/core/services/session/session-data.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { 
   SECCION11_WATCHED_FIELDS, 
   SECCION11_PHOTO_PREFIX_TRANSPORTE, 
@@ -123,7 +124,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private formChange: FormChangeService  // ✅ Para persistencia en Redis
   ) {
     super(cdRef, injector);
 
@@ -263,33 +265,27 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
     this.cdRef.detectChanges();
   }
 
-  // ✅ MANEJADOR DE TABLA DE TELECOMUNICACIONES
+  // ✅ MANEJADOR DE TABLA DE TELECOMUNICACIONES (UNICA_VERDAD)
   onTelecomunicacionesTableUpdated(updatedData?: any[]): void {
-    console.log('🔵 [SECCION11] onTelecomunicacionesTableUpdated LLAMADO');
-    
+    // ✅ LEER DEL SIGNAL REACTIVO
+    const formData = this.formDataSignal();
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `telecomunicacionesTabla${prefijo}`;
+    const tablaActual = updatedData || formData[tablaKey] || [];
     
-    console.log(`🔵 [SECCION11] Prefijo: "${prefijo}", Tabla Key: ${tablaKey}`);
-    console.log(`🔵 [SECCION11] Tabla actualizada - ${tablaKey}:`, updatedData);
-
-    const tablaDelState = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    const datos = tablaDelState || updatedData || [];
-    this.datos[tablaKey] = datos;
+    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
     
-    console.log(`🔵 [SECCION11] Datos finales:`, datos);
+    // ✅ PERSISTIR EN REDIS (además del SessionDataService existente)
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
+    } catch (e) { console.error(e); }
     
-    // Guardar en backend
-    void this.sessionDataService.saveData(`seccion-11:${tablaKey}`, datos)
-      .then(() => {
-        console.log(`✅ [SECCION11] Tabla guardada en backend: ${tablaKey}`);
-      })
-      .catch((error) => {
-        console.warn(`⚠️ [SECCION11] Error guardando tabla en backend:`, error);
-      });
-
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    // Mantener también el guardado en SessionDataService
+    void this.sessionDataService.saveData(`seccion-11:${tablaKey}`, tablaActual)
+      .catch((error) => { console.warn(error); });
+    
+    this.cdRef.markForCheck();
   }
 
   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {

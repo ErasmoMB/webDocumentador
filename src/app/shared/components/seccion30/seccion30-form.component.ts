@@ -393,16 +393,38 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
     this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    
+    // ✅ PERSISTIR EN REDIS usando onFieldChange (automáticamente persiste)
+    const prefijo = this.obtenerPrefijoGrupo();
+    for (let i = 0; i < fotografias.length; i++) {
+      const foto = fotografias[i];
+      const idx = i + 1;
+      const imgKey = `${this.PHOTO_PREFIX}${idx}Imagen${prefijo}`;
+      const titKey = `${this.PHOTO_PREFIX}${idx}Titulo${prefijo}`;
+      const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
+      
+      this.onFieldChange(imgKey, foto.imagen);
+      this.onFieldChange(titKey, foto.titulo);
+      this.onFieldChange(fuenteKey, foto.fuente);
+    }
+    
     this.cdRef.markForCheck();
   }
 
   onNivelEducativoTableUpdated(tabla: any[]): void {
-    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
     const tablaKey = this.getNivelEducativoTablaKey();
     const tablaKeyBase = 'nivelEducativoTabla';
     
     this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
     this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    // ✅ PERSISTIR EN REDIS explícitamente
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
+    } catch (e) {
+      console.error('[SECCION30] ⚠️ Error persistiendo nivel educativo:', e);
+    }
     
     this.onFieldChange(tablaKey, tabla, { refresh: false });
     if (tablaKeyBase !== tablaKey) {
@@ -413,12 +435,19 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTasaAnalfabetismoTableUpdated(tabla: any[]): void {
-    // ✅ PATRÓN SECCION 28: Crear nuevas referencias para forzar cambio de referencia en binding
+    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
     const tablaKey = this.getTasaAnalfabetismoTablaKey();
     const tablaKeyBase = 'tasaAnalfabetismoTabla';
     
     this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
     this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    
+    // ✅ PERSISTIR EN REDIS explícitamente
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
+    } catch (e) {
+      console.error('[SECCION30] ⚠️ Error persistiendo tasa analfabetismo:', e);
+    }
     
     this.onFieldChange(tablaKey, tabla, { refresh: false });
     if (tablaKeyBase !== tablaKey) {

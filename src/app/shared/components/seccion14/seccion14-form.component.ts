@@ -314,7 +314,7 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     this.datos[tablaKey] = datos;
 
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
 
     // Leer inmediatamente desde el store para validar que el cambio quedó
     const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
@@ -333,7 +333,7 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     this.datos[tablaKey] = datos;
 
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true, persist: false } as any);
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
 
     const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
 

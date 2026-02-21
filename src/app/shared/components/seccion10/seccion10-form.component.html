@@ -44,7 +44,7 @@
       <div class="form-group-section" style="margin-top: 15px;">
         <label class="label">{{ SECCION10_TEMPLATES.labelTablaAbastecimientoAgua }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="abastecimientoAguaConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
@@ -110,7 +110,7 @@
       <div class="form-group-section" style="margin-top: 15px;">
         <label class="label">{{ SECCION10_TEMPLATES.labelTablaTiposSaneamiento }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="tiposSaneamientoConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
@@ -220,7 +220,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION10_TEMPLATES.labelTablaCoberturaElectrica }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="coberturaElectricaConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
@@ -286,7 +286,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION10_TEMPLATES.labelTablaEnergiaCocinar }}</label>
         <app-dynamic-table
-          [datos]="datos"
+          [datos]="formDataSignal()"
           [config]="energiaCocinarConfig"
           [columns]="[
             { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
