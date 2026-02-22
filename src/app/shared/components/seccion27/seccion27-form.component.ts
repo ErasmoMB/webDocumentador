@@ -10,6 +10,7 @@ import { TableConfig } from 'src/app/core/services/tables/table-management.servi
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION27_TEMPLATES, SECCION27_WATCHED_FIELDS, SECCION27_SECTION_ID } from './seccion27-constants';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   standalone: true,
@@ -22,10 +23,18 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = SECCION27_SECTION_ID;
   @Input() override modoFormulario: boolean = true;
 
+  // ✅ Inyección de servicios
+  private globalNumberingService = inject(GlobalNumberingService);
+
   // ✅ Exportar TEMPLATES para el HTML
   readonly SECCION27_TEMPLATES = SECCION27_TEMPLATES;
   override readonly watchedFields: string[] = SECCION27_WATCHED_FIELDS;
   override useReactiveSync: boolean = true;
+
+  // ✅ NUMERACIÓN GLOBAL - Tablas (una tabla: telecomunicaciones)
+  readonly globalTableNumberSignalTelecomunicaciones: Signal<string> = computed(() => {
+    return this.globalNumberingService.getGlobalTableNumber(this.seccionId, 0);
+  });
 
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos - SEGUIR PATRON SECCION 21/23
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {

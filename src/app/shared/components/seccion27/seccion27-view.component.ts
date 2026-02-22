@@ -8,6 +8,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { normalizeTitleWithPlaceholders } from '../../utils/placeholder-text.helper';
 import { SECCION27_TEMPLATES } from './seccion27-constants';
+import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 
 @Component({
   standalone: true,
@@ -130,7 +131,13 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, campoKey)() ?? '';
   });
 
+  // ✅ NUMERACIÓN GLOBAL - Tabla de telecomunicaciones
+  readonly globalTableNumberSignalTelecomunicaciones: Signal<string> = computed(() => {
+    return this.globalNumberingService.getGlobalTableNumber(this.seccionId, 0);
+  });
+
   constructor(
+    private globalNumberingService: GlobalNumberingService,
     cdRef: ChangeDetectorRef,
     injector: Injector
   ) {
@@ -197,7 +204,8 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   getTituloTelecomunicaciones(): string {
     const centroPoblado = this.centroPobladoSignal() || '____';
     const distrito = this.distritoActualSignal();
-    const defaultTitle = `${SECCION27_TEMPLATES.labelTablaTelecomunicaciones} – CP ${centroPoblado}`;
+    const tableNum = this.globalTableNumberSignalTelecomunicaciones();
+    const defaultTitle = `${tableNum}. ${SECCION27_TEMPLATES.labelTablaTelecomunicaciones} – CP ${centroPoblado}`;
     return normalizeTitleWithPlaceholders(this.cuadroTituloTelecomunicacionesSignal(), defaultTitle, centroPoblado, distrito);
   }
 }
