@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { TablePercentageHelper } from '../../utils/table-percentage-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
@@ -420,6 +421,9 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     return SECCION9_TEMPLATES.fuenteDefaultTiposMateriales;
   });
 
+  // ⚠️ Cuando esta bandera es true, no se solicita condición ocupación al backend
+  private skipCondicionBackend: boolean = true;
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -448,6 +452,9 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
   }
 
   protected override onInitCustom(): void {
+    // ✅ LIMPIAR POSIBLE FILA LEGADA DE CEROS (que confunde al usuario)
+    this.limpiarFilaLegadaCondicion();
+
     // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
     const prefijo = this.obtenerPrefijoGrupo();
     const formData = this.formDataSignal();
@@ -468,6 +475,7 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     if (!tieneDatosPersistidos) {
       console.log('[SECCION9] No hay datos persistidos, cargando del backend...');
       this.inicializarTablasVacias();
+      // 📝 NO crear fila inicial manual - dejar que esté vacía para que aparezca el botón "Agregar Fila"
       this.cargarDatosDelBackend();
     } else {
       console.log('[SECCION9] Datos persistidos encontrados, no se carga del backend');
@@ -487,6 +495,38 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     super.onFotografiasChange(fotografias, customPrefix);
     this.fotografiasSeccion9 = fotografias;
     this.cdRef.markForCheck();
+  }
+
+  // ============================================================================
+  // ➕ MÉTODOS AUXILIARES PARA MODO MANUAL
+  // ============================================================================
+
+  /**
+   * Determina si un objeto representa la fila legacy de ceros/valores vacíos.
+   * Si el formulario viene de versiones antiguas, esta es la única fila que aparece
+   * y bloquea la capacidad de agregar nuevas filas. La removemos de inmediato.
+   */
+  private esFilaLegada(item: any): boolean {
+    if (!item || typeof item !== 'object') return false;
+    const cat = item.categoria ?? item.condicion ?? '';
+    const casos = parseFloat(item.casos) || 0;
+    const pct = item.porcentaje || '';
+    const categoriaVacia = cat === '' || cat === '0';
+    const porcentajeCero = pct.toString().includes('0');
+    return categoriaVacia && casos === 0 && porcentajeCero;
+  }
+
+  /**
+   * Si detecta una única fila legacy en el campo correspondiente, la borra.
+   */
+  private limpiarFilaLegadaCondicion(): void {
+    const tablaKey = this.getTablaKeyCondicionOcupacion();
+    const datos: any[] = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
+    if (datos.length === 1 && this.esFilaLegada(datos[0])) {
+      console.log('[SECCION9] 🧹 Eliminando fila legacy de condición ocupación');
+      this.projectFacade.setField(this.seccionId, null, tablaKey, []);
+      this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', []);
+    }
   }
 
   // ============================================================================
@@ -523,8 +563,15 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
 
     const prefijo = this.obtenerPrefijoGrupo();
     console.log('[SECCION9] 🔍 Cargando datos del backend con códigos:', codigos);
+    if (this.skipCondicionBackend) {
+      console.log('[SECCION9] ⚠️ skipCondicionBackend está activado, no se solicitará condición ocupación');
+    }
 
     // 2. Cargar Condición de Ocupación desde /demograficos/condicion-ocupacion
+    // ✅ DESHABILITADO temporalmente: la tabla de condición de ocupación se llenará manualmente
+    //    Por ahora no se hace la llamada al endpoint y el usuario puede ingresar los datos
+    //    directamente en el formulario. Esto satisface la petición de no depender del backend.
+    /*
     this.backendApi.postCondicionOcupacion(codigos).subscribe({
       next: (response: any) => {
         try {
@@ -561,8 +608,10 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
         console.error('[SECCION9] ❌ Error cargando condición ocupación:', err);
       }
     });
+    */
 
     // 3. Cargar Materiales de Construcción desde /demograficos/materiales-construccion
+    // (se carga siempre, incluso si se omite condición ocupación)
     this.backendApi.postMaterialesConstruccion(codigos).subscribe({
       next: (response: any) => {
         try {
@@ -627,24 +676,33 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `condicionOcupacionTabla${prefijo}` : 'condicionOcupacionTabla';
+    const tablaKeyBase = 'condicionOcupacionTabla';
+    
+    // Obtener datos actuales o usar los proporcionados
     let tablaActual = updatedData || formData[tablaKey] || [];
     
-    // ✅ CALCULAR TOTALES Y PORCENTAJES
-    const config = this.condicionOcupacionConfig;
-    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
-    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
-    tablaActual = tmp[tablaKey] || tablaActual;
+    // ✅ CALCULAR PORCENTAJES Y TOTAL (Patrón Única Verdad - igual a sección 8)
+    if (tablaActual.length > 0) {
+      // Clonar para no mutar la referencia original
+      const tablaClon = JSON.parse(JSON.stringify(tablaActual));
+      
+      // Calcular con fila Total (automática)
+      tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaClon, tablaKey) || tablaActual;
+    }
     
     console.log(`[SECCION9] 💾 Guardando CondicionOcupacion (después de calcular):`, tablaActual);
     
-    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
-    this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionTabla', tablaActual);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, tablaActual);
     
-    // ✅ PERSISTIR EN REDIS
+    // ✅ PERSISTIR EN REDIS (con y sin prefijo)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-      console.log(`[SECCION9] ✅ CondicionOcupacion data saved to session-data`);
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: tablaActual, [tablaKeyBase]: tablaActual }, 
+        { notifySync: true }
+      );
+      console.log(`[SECCION9] ✅ Condicion data saved with percentages`);
     } catch (e) {
       console.error(`[SECCION9] ⚠️ Could not save to session-data:`, e);
     }

@@ -152,6 +152,16 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     return index;
   }
 
+  // ✅ FORMATEAR VALORES DE TABLA - Extrae strings desde objetos calculados
+  formatearValorTabla(valor: any): string {
+    // Si es un objeto con propiedad 'value', extraer el string
+    if (valor && typeof valor === 'object' && 'value' in valor) {
+      return String(valor.value || '');
+    }
+    // Si ya es un string o número, retornarlo directamente
+    return String(valor || '');
+  }
+
   override obtenerNombreComunidadActual(): string {
     const prefijo = this.obtenerPrefijoGrupo();
     

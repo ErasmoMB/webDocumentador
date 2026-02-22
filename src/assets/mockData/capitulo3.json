@@ -87,12 +87,19 @@
     ],
     "condicionOcupacionTabla": [
       {
-        "categoria": "Ocupada",
-        "casos": 165
+        "categoria": "Viviendas ocupadas",
+        "casos": 141,
+        "porcentaje": "85,98 %"
       },
       {
-        "categoria": "Desocupada",
-        "casos": 15
+        "categoria": "Viviendas con otra condición",
+        "casos": 23,
+        "porcentaje": "14,02 %"
+      },
+      {
+        "categoria": "Total",
+        "casos": 164,
+        "porcentaje": "100,00 %"
       }
     ],
     "tiposMaterialesTabla": [

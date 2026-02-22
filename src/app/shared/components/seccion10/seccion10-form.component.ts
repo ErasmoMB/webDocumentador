@@ -13,6 +13,7 @@ import { BackendApiService } from 'src/app/core/services/infrastructure/backend-
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
+import { TablePercentageHelper } from '../../utils/table-percentage-helper';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -266,7 +267,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    // ✅ TABLAS MANUALES - NO cargar del backend (3.15, 3.16, 3.17)
+    // ✅ TABLA 3.18 - SÍ CARGAR DEL BACKEND (Energía para cocinar)
     const prefijo = this.obtenerPrefijoGrupo();
     const formData = this.formDataSignal();
     
@@ -274,17 +276,19 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const aguaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
     const existingAguaData = formData[aguaKey];
     
-    // Solo cargar del backend si no hay datos persistidos
+    // Inicializar tablas vacías para entrada manual
     if (!existingAguaData || !Array.isArray(existingAguaData) || existingAguaData.length === 0) {
-      console.log('[SECCION10] No hay datos persistidos, cargando del backend...');
+      console.log('[SECCION10] Inicializando tablas de entrada manual (3.15, 3.16, 3.17)');
       this.inicializarTablasVacias();
+      // 🔧 SÍ CARGAR ENERGÍA PARA COCINAR DEL BACKEND (tabla 3.18)
       this.cargarDatosDelBackend();
     } else {
-      console.log('[SECCION10] Datos persistidos encontrados, no se carga del backend');
+      console.log('[SECCION10] Datos persistidos encontrados');
     }
     
     this.cargarFotografias();
   }
+
 
   protected override detectarCambios(): boolean {
     return false;
@@ -319,7 +323,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
 
   /**
    * 😨 PATRÓN SOLO LECTURA - Carga datos del backend
-   * Se ejecuta DESPUÉS de inicializar tablas vacías
+   * ✅ MODIFICADO: Carga SOLO tabla 3.18 (Energía para cocinar)
+   * Las otras tablas (3.15, 3.16, 3.17) quedan vacías para entrada manual
    */
   private cargarDatosDelBackend(): void {
     // 1. Obtener los códigos de centros poblados del grupo actual
@@ -331,73 +336,16 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       return;
     }
 
-    console.log('[SECCION10] 🔍 Cargando datos del backend con códigos:', codigos);
+    console.log('[SECCION10] 🔍 Cargando tabla 3.18 (Energía para cocinar) del backend');
     const prefijo = this.obtenerPrefijoGrupo();
 
-    // 2. Cargar Abastecimiento de Agua desde /demograficos/abastecimiento-agua
-    this.backendApi.postAbastecimientoAgua(codigos).subscribe({
-      next: (response: any) => {
-        try {
-          const dataRaw = response?.data || [];
-          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformAbastecimientoAguaDesdeDemograficos(datosDesenvueltos);
-          console.log('[SECCION10] ✅ Datos de abastecimiento de agua cargados:', datosTransformados);
-          
-          // Guardar CON prefijo y SIN prefijo (fallback)
-          const tablaKey = `abastecimientoAguaTabla${prefijo}`;
-          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-        } catch (err) {
-          console.error('[SECCION10] ❌ Error procesando abastecimiento de agua:', err);
-        }
-      },
-      error: (err) => {
-        console.error('[SECCION10] ❌ Error cargando abastecimiento de agua:', err);
-      }
-    });
+    // ❌ TABLAS MANUALES - NO CARGAR (comentadas)
+    // - 3.15 Abastecimiento de Agua
+    // - 3.16 Tipos de Saneamiento  
+    // - 3.17 Alumbrado Eléctrico
+    // Se inicializan vacías en inicializarTablasVacias() para entrada manual
 
-    // 3. Cargar Saneamiento desde /demograficos/saneamiento-por-cpp
-    this.backendApi.postSaneamiento(codigos).subscribe({
-      next: (response: any) => {
-        try {
-          const dataRaw = response?.data || [];
-          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformSaneamientoDesdeDemograficos(datosDesenvueltos);
-          console.log('[SECCION10] ✅ Datos de saneamiento cargados:', datosTransformados);
-
-          // Guardar CON prefijo y SIN prefijo (fallback)
-          const tablaKey = `tiposSaneamientoTabla${prefijo}`;
-          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-        } catch (err) {
-          console.error('[SECCION10] ❌ Error procesando saneamiento:', err);
-        }
-      },
-      error: (err) => {
-        console.error('[SECCION10] ❌ Error cargando saneamiento:', err);
-      }
-    });
-
-    // 4. Cargar Alumbrado Eléctrico desde /demograficos/alumbrado
-    this.backendApi.postAlumbrado(codigos).subscribe({
-      next: (response: any) => {
-        try {
-          const dataRaw = response?.data || [];
-          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformAlumbradoElectricoDesdeDemograficos(datosDesenvueltos);
-          console.log('[SECCION10] ✅ Datos de alumbrado eléctrico cargados:', datosTransformados);
-          
-          // Guardar CON prefijo y SIN prefijo (fallback)
-          const tablaKey = `alumbradoElectricoTabla${prefijo}`;
-          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-        } catch (err) {
-          console.error('[SECCION10] ❌ Error procesando alumbrado eléctrico:', err);
-        }
-      },
-      error: (err) => {
-        console.error('[SECCION10] ❌ Error cargando alumbrado eléctrico:', err);
-      }
-    });
-
-    // 5. Cargar Energía para Cocinar desde /demograficos/combustibles-cocina-por-cpp
+    // ✅ TABLA 3.18 - Cargar Energía para Cocinar desde /demograficos/combustibles-cocina-por-cpp
     this.backendApi.postCombustiblesCocinaPorCpp(codigos).subscribe({
       next: (response: any) => {
         try {
@@ -476,9 +424,9 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get abastecimientoAguaConfig(): any {
     return {
       tablaKey: this.getTablaKeyAbastecimientoAgua(),
-      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
-      campoTotal: 'casos',              // ✅ Campo para total
-      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      totalKey: '',                      // 🔧 MANUAL - Sin fila de Total
+      campoTotal: '',                    // 🔧 MANUAL - Sin cálculo de total
+      campoPorcentaje: 'porcentaje',    // ✅ Porcentaje se calcula manualmente
       calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],
       noInicializarDesdeEstructura: true,
@@ -490,9 +438,9 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get tiposSaneamientoConfig(): any {
     return {
       tablaKey: this.getTablaKeyTiposSaneamiento(),
-      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
-      campoTotal: 'casos',              // ✅ Campo para total
-      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      totalKey: '',                      // 🔧 MANUAL - Sin fila de Total
+      campoTotal: '',                    // 🔧 MANUAL - Sin cálculo de total
+      campoPorcentaje: 'porcentaje',    // ✅ Porcentaje se calcula manualmente
       calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],
       noInicializarDesdeEstructura: true,
@@ -504,9 +452,9 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get coberturaElectricaConfig(): any {
     return {
       tablaKey: this.getTablaKeyCoberturaElectrica(),
-      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
-      campoTotal: 'casos',              // ✅ Campo para total
-      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      totalKey: '',                      // 🔧 MANUAL - Sin fila de Total
+      campoTotal: '',                    // 🔧 MANUAL - Sin cálculo de total
+      campoPorcentaje: 'porcentaje',    // ✅ Porcentaje se calcula manualmente
       calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
       camposParaCalcular: ['casos'],
       noInicializarDesdeEstructura: true,
@@ -571,56 +519,101 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
 
   // ✅ HANDLERS PARA CAMBIOS DE TABLA (UNICA_VERDAD con cálculo y persistencia)
   onAbastecimientoAguaTableUpdated(updatedData?: any[]): void {
+    // 🔧 MANUAL TABLE - Calcular porcentajes sin endpoint
     const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyAbastecimientoAgua();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
+    const tablaKeyBase = 'abastecimientoAguaTabla';
+    
+    // Obtener datos actuales o usar los proporcionados
     let tablaActual = updatedData || formData[tablaKey] || [];
     
-    // ✅ CALCULAR TOTALES Y PORCENTAJES
-    const config = this.abastecimientoAguaConfig;
-    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
-    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
-    tablaActual = tmp[tablaKey] || tablaActual;
+    // ✅ CALCULAR PORCENTAJES Y TOTAL (Patrón Única Verdad)
+    if (tablaActual.length > 0) {
+      const tablaClon = JSON.parse(JSON.stringify(tablaActual));
+      tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaClon, tablaKey) || tablaActual;
+    }
     
+    console.log(`[SECCION10] 💾 Guardando AbastecimientoAgua:`, tablaActual);
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS (con y sin prefijo)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-    } catch (e) { console.error(e); }
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: tablaActual, [tablaKeyBase]: tablaActual }, 
+        { notifySync: true });
+    } catch (e) { 
+      console.error('[SECCION10] Error persistiendo AbastecimientoAgua:', e); 
+    }
     this.cdRef.markForCheck();
   }
 
   onTiposSaneamientoTableUpdated(updatedData?: any[]): void {
+    // 🔧 MANUAL TABLE - Calcular porcentajes sin endpoint
     const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyTiposSaneamiento();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `tiposSaneamientoTabla${prefijo}` : 'tiposSaneamientoTabla';
+    const tablaKeyBase = 'tiposSaneamientoTabla';
+    
+    // Obtener datos actuales o usar los proporcionados
     let tablaActual = updatedData || formData[tablaKey] || [];
     
-    // ✅ CALCULAR TOTALES Y PORCENTAJES
-    const config = this.tiposSaneamientoConfig;
-    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
-    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
-    tablaActual = tmp[tablaKey] || tablaActual;
+    // ✅ CALCULAR PORCENTAJES Y TOTAL (Patrón Única Verdad)
+    if (tablaActual.length > 0) {
+      const tablaClon = JSON.parse(JSON.stringify(tablaActual));
+      tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaClon, tablaKey) || tablaActual;
+    }
     
+    console.log(`[SECCION10] 💾 Guardando TiposSaneamiento:`, tablaActual);
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS (con y sin prefijo)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-    } catch (e) { console.error(e); }
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: tablaActual, [tablaKeyBase]: tablaActual }, 
+        { notifySync: true });
+    } catch (e) { 
+      console.error('[SECCION10] Error persistiendo TiposSaneamiento:', e); 
+    }
     this.cdRef.markForCheck();
   }
 
   onCoberturaElectricaTableUpdated(updatedData?: any[]): void {
+    // 🔧 MANUAL TABLE - Calcular porcentajes sin endpoint
     const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyCoberturaElectrica();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla';
+    const tablaKeyBase = 'alumbradoElectricoTabla';
+    
+    // Obtener datos actuales o usar los proporcionados
     let tablaActual = updatedData || formData[tablaKey] || [];
     
-    // ✅ CALCULAR TOTALES Y PORCENTAJES
-    const config = this.coberturaElectricaConfig;
-    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
-    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
-    tablaActual = tmp[tablaKey] || tablaActual;
+    // ✅ CALCULAR PORCENTAJES Y TOTAL (Patrón Única Verdad)
+    if (tablaActual.length > 0) {
+      const tablaClon = JSON.parse(JSON.stringify(tablaActual));
+      tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaClon, tablaKey) || tablaActual;
+    }
     
+    console.log(`[SECCION10] 💾 Guardando AlumbradoElectrico:`, tablaActual);
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, tablaActual);
+    
+    // ✅ PERSISTIR EN REDIS (con y sin prefijo)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-    } catch (e) { console.error(e); }
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: tablaActual, [tablaKeyBase]: tablaActual }, 
+        { notifySync: true });
+    } catch (e) { 
+      console.error('[SECCION10] Error persistiendo AlumbradoElectrico:', e); 
+    }
     this.cdRef.markForCheck();
   }
 

@@ -120,18 +120,19 @@ export const SECCION9_TEMPLATES = {
 
 /**
  * Configuración para Tabla 1: Condición de Ocupación
- * ✅ CORREGIDO: Habilitado cálculo de totales y porcentajes
+ * ✅ SIN fila Total especial (totalKey vacío) - igual a sección 8
+ * 📝 Datos ingresados manualmente; el endpoint está deshabilitado temporalmente
  */
 export const SECCION9_TABLA_CONDICION_OCUPACION_CONFIG: TableConfig = {
   tablaKey: 'condicionOcupacionTabla',
-  totalKey: 'categoria',                    // ✅ Fila "Total" se identifica por categoria === 'Total'
-  campoTotal: 'casos',                      // ✅ Campo para total
-  campoPorcentaje: 'porcentaje',            // ✅ Campo para porcentaje
-  calcularPorcentajes: true,                 // ✅ Habilitar cálculo automático
-  camposParaCalcular: ['casos'],            // ✅ Campos a considerar para cálculo
-  noInicializarDesdeEstructura: true,       // ✅ No inicializar vacía
-  permiteAgregarFilas: true,                // ✅ Permitir agregar
-  permiteEliminarFilas: true                // ✅ Permitir eliminar
+  totalKey: '',                            // ✅ Vacío como en sección 8 - NO hay fila Total especial
+  campoTotal: 'casos',                     // ✅ Campo para calcular total
+  campoPorcentaje: 'porcentaje',           // ✅ Campo para porcentaje
+  calcularPorcentajes: true,               // ✅ Habilitar cálculo automático
+  camposParaCalcular: ['casos'],           // ✅ Campos a considerar para cálculo
+  noInicializarDesdeEstructura: true,      // ✅ No inicializar vacía
+  permiteAgregarFilas: true,               // ✅ Permitir agregar
+  permiteEliminarFilas: true               // ✅ Permitir eliminar
 };
 
 /**

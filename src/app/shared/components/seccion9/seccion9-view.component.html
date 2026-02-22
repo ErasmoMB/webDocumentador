@@ -13,13 +13,13 @@
     <tbody>
       <tr *ngFor="let item of getCondicionOcupacionData()">
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.categoria }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.categoria) }}</span>
         </td>
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.casos }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.casos) }}</span>
         </td>
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.porcentaje) }}</span>
         </td>
       </tr>
       <tr *ngIf="!getCondicionOcupacionData() || getCondicionOcupacionData().length === 0">
@@ -51,16 +51,16 @@
             class="table-cell" 
             [attr.rowspan]="getRowspanTiposMateriales(i)"
             [class.categoria-agrupada]="isFirstRowOfGroup(i)">
-          <span [appDataSource]="'backend'">{{ item.categoria }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.categoria) }}</span>
         </td>
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.tipoMaterial }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.tipoMaterial) }}</span>
         </td>
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.casos }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.casos) }}</span>
         </td>
         <td class="table-cell">
-          <span [appDataSource]="'backend'">{{ item.porcentaje }}</span>
+          <span [appDataSource]="'backend'">{{ formatearValorTabla(item.porcentaje) }}</span>
         </td>
       </tr>
       <tr *ngIf="tiposMaterialesSignal().length === 0">

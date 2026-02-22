@@ -263,6 +263,23 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   /**
+   * Formatea valores de tabla que pueden ser objetos { value: '...', isCalculated: true }
+   * o strings simples. Extrae el valor correcto para mostrar en la vista.
+   */
+  formatearValorTabla(valor: any): string {
+    // Si es un objeto con propiedad 'value', extraer el valor
+    if (valor && typeof valor === 'object' && valor.value !== undefined) {
+      return String(valor.value);
+    }
+    // Si es un string o número, convertir a string
+    if (valor !== null && valor !== undefined) {
+      return String(valor);
+    }
+    // Valor vacío
+    return '';
+  }
+
+  /**
    * Helper para verificar si una tabla tiene contenido real (no datos de ejemplo)
    */
   private tieneContenidoReal(tabla: any[]): boolean {
