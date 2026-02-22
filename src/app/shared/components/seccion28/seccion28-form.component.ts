@@ -287,27 +287,63 @@ export class Seccion28FormComponent extends BaseSectionComponent implements OnDe
   protected actualizarValoresConPrefijo(): void { }
 
   protected override actualizarFotografiasFormMulti(): void {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    this.fotografiasSaludFormMulti = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_SALUD,
-      groupPrefix
-    );
-    this.fotografiasEducacionFormMulti = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_EDUCACION,
-      groupPrefix
-    );
-    this.fotografiasRecreacionFormMulti = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_RECREACION,
-      groupPrefix
-    );
-    this.fotografiasDeporteFormMulti = this.imageService.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_DEPORTE,
-      groupPrefix
-    );
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    // Fotos Salud
+    const fotosSalud: FotoItem[] = [];
+    const basePrefixSalud = 'fotografiaSaludAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixSalud}${i}Imagen${groupPrefix}` : `${basePrefixSalud}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixSalud}${i}Titulo${groupPrefix}` : `${basePrefixSalud}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixSalud}${i}Fuente${groupPrefix}` : `${basePrefixSalud}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotosSalud.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    this.fotografiasSaludFormMulti = fotosSalud;
+    
+    // Fotos Educación
+    const fotosEducacion: FotoItem[] = [];
+    const basePrefixEducacion = 'fotografiaEducacionAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixEducacion}${i}Imagen${groupPrefix}` : `${basePrefixEducacion}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixEducacion}${i}Titulo${groupPrefix}` : `${basePrefixEducacion}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixEducacion}${i}Fuente${groupPrefix}` : `${basePrefixEducacion}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotosEducacion.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    this.fotografiasEducacionFormMulti = fotosEducacion;
+    
+    // Fotos Recreación
+    const fotosRecreacion: FotoItem[] = [];
+    const basePrefixRecreacion = 'fotografiaRecreacionAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixRecreacion}${i}Imagen${groupPrefix}` : `${basePrefixRecreacion}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixRecreacion}${i}Titulo${groupPrefix}` : `${basePrefixRecreacion}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixRecreacion}${i}Fuente${groupPrefix}` : `${basePrefixRecreacion}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotosRecreacion.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    this.fotografiasRecreacionFormMulti = fotosRecreacion;
+    
+    // Fotos Deporte
+    const fotosDeporte: FotoItem[] = [];
+    const basePrefixDeporte = 'fotografiaDeporteAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixDeporte}${i}Imagen${groupPrefix}` : `${basePrefixDeporte}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixDeporte}${i}Titulo${groupPrefix}` : `${basePrefixDeporte}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixDeporte}${i}Fuente${groupPrefix}` : `${basePrefixDeporte}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotosDeporte.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    this.fotografiasDeporteFormMulti = fotosDeporte;
   }
 
   // Small helpers and handlers

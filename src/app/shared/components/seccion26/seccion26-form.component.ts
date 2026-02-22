@@ -31,13 +31,27 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const grupo = this.obtenerPrefijo();
     // Cargar fotos de Desechos
-    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos());
+    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos(), grupo);
     // Cargar fotos de Electricidad
-    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad());
+    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad(), grupo);
     // Cargar fotos de Cocinar
-    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar());
+    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), grupo);
     return [...fotosDesechos, ...fotosElectricidad, ...fotosCocinar];
+  });
+
+  // ✅ Signals individuales para cada grupo de fotos (para usar en el form)
+  readonly fotosDesechosSignal: Signal<FotoItem[]> = computed(() => {
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos(), this.obtenerPrefijo());
+  });
+
+  readonly fotosElectricidadSignal: Signal<FotoItem[]> = computed(() => {
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad(), this.obtenerPrefijo());
+  });
+
+  readonly fotosCocinarSignal: Signal<FotoItem[]> = computed(() => {
+    return this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), this.obtenerPrefijo());
   });
 
   // ✅ Exportar TEMPLATES para el template
@@ -46,20 +60,17 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   // ✅ Inyección de GlobalNumberingService
   private globalNumberingService = inject(GlobalNumberingService);
 
-  // ✅ PHOTO_PREFIX Signals dinámicos
+  // ✅ PHOTO_PREFIX Signals dinámicos (solo base, sin grupo - el grupo se agrega en onFotografiasChange)
   readonly photoPrefixSignalDesechos: Signal<string> = computed(() => {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    return prefijo ? `fotografiaDesechosSolidosAISI${prefijo}` : 'fotografiaDesechosSolidosAISI';
+    return 'fotografiaDesechosSolidosAISI';
   });
 
   readonly photoPrefixSignalElectricidad: Signal<string> = computed(() => {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    return prefijo ? `fotografiaElectricidadAISI${prefijo}` : 'fotografiaElectricidadAISI';
+    return 'fotografiaElectricidadAISI';
   });
 
   readonly photoPrefixSignalCocinar: Signal<string> = computed(() => {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    return prefijo ? `fotografiaEnergiaCocinarAISI${prefijo}` : 'fotografiaEnergiaCocinarAISI';
+    return 'fotografiaEnergiaCocinarAISI';
   });
 
   // ✅ Global Table Numbers Signals
@@ -320,9 +331,52 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     saneamiento: this.saneamientoSignal(),
     cobertura: this.coberturaSignal(),
     combustibles: this.combustiblesSignal(),
-    fotosDesechos: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalDesechos(), this.imageFacade.getGroupPrefix(this.seccionId)),
-    fotosElectricidad: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalElectricidad(), this.imageFacade.getGroupPrefix(this.seccionId)),
-    fotosCocinar: this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), this.imageFacade.getGroupPrefix(this.seccionId))
+    // Fotos con patron correcto
+    fotosDesechos: (() => {
+      const fotos: FotoItem[] = [];
+      const basePrefix = 'fotografiaDesechosSolidosAISI';
+      const groupPrefix = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      for (let i = 1; i <= 10; i++) {
+        const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+        const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+        const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+        const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+        if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+      return fotos;
+    })(),
+    fotosElectricidad: (() => {
+      const fotos: FotoItem[] = [];
+      const basePrefix = 'fotografiaElectricidadAISI';
+      const groupPrefix = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      for (let i = 1; i <= 10; i++) {
+        const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+        const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+        const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+        const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+        if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+      return fotos;
+    })(),
+    fotosCocinar: (() => {
+      const fotos: FotoItem[] = [];
+      const basePrefix = 'fotografiaEnergiaCocinarAISI';
+      const groupPrefix = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+      for (let i = 1; i <= 10; i++) {
+        const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+        const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+        const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+        const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+        if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+      return fotos;
+    })()
   }));
 
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
@@ -803,22 +857,45 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     return (tabla || []).filter((item:any) => !(item.nombre && item.nombre.toString().toLowerCase().includes('total'))).reduce((s:number,i:any)=>s + (Number(i.casos)||0),0);
   }
 
-  // override generic handler so we don't call legacy PhotoCoordinator
+  // ✅ PATRÓN SECCIÓN 24: Override de onFotografiasChange para persistencia correcta
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
-    const prefijo = this.obtenerPrefijo();
     const prefix = customPrefix || '';
-
-    for (let i = 0; i < fotografias.length; i++) {
-      const foto = fotografias[i];
-      const idx = i + 1;
-      const imgKey = `${prefix}Imagen${prefijo}`;
-      const titKey = `${prefix}Titulo${prefijo}`;
-      const fuenteKey = `${prefix}Fuente${prefijo}`;
-      this.projectFacade.setField(this.seccionId, null, imgKey, foto.imagen);
-      this.projectFacade.setField(this.seccionId, null, titKey, foto.titulo);
-      this.projectFacade.setField(this.seccionId, null, fuenteKey, foto.fuente);
+    const groupPrefix = this.obtenerPrefijo();
+    const updates: Record<string, any> = {};
+    
+    // Paso 1: Limpiar slots anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
     }
-
+    
+    // Paso 2: Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = groupPrefix ? `${prefix}${idx}Imagen${groupPrefix}` : `${prefix}${idx}Imagen`;
+        const titKey = groupPrefix ? `${prefix}${idx}Titulo${groupPrefix}` : `${prefix}${idx}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${idx}Fuente${groupPrefix}` : `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Paso 3: Persistir en ProjectFacade (capa 1)
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Paso 4: Persistir en Backend (capa 2)
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {
+      console.error('[SECCION26] ⚠️ Error persistiendo imágenes:', e);
+    }
+    
     // update local cache arrays based on the prefix
     if (prefix.startsWith('fotografiaDesechos')) {
       this.fotografiasDesechosFormMulti = fotografias;

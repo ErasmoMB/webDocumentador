@@ -32,12 +32,13 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const grupo = this.obtenerPrefijo();
     // Cargar fotos de Desechos
-    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos());
+    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos(), grupo);
     // Cargar fotos de Electricidad
-    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad());
+    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad(), grupo);
     // Cargar fotos de Cocinar
-    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar());
+    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), grupo);
     return [...fotosDesechos, ...fotosElectricidad, ...fotosCocinar];
   });
 
@@ -64,20 +65,17 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
 
-  // ✅ PHOTO_PREFIX Signals dinámicos
+  // ✅ PHOTO_PREFIX Signals dinámicos (solo base, sin grupo - el grupo se pasa por separado a loadImages)
   readonly photoPrefixSignalDesechos: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaDesechosSolidosAISI${prefijo}` : 'fotografiaDesechosSolidosAISI';
+    return 'fotografiaDesechosSolidosAISI';
   });
 
   readonly photoPrefixSignalElectricidad: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaElectricidadAISI${prefijo}` : 'fotografiaElectricidadAISI';
+    return 'fotografiaElectricidadAISI';
   });
 
   readonly photoPrefixSignalCocinar: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaEnergiaCocinarAISI${prefijo}` : 'fotografiaEnergiaCocinarAISI';
+    return 'fotografiaEnergiaCocinarAISI';
   });
 
   // ✅ Global Table Numbers Signals
@@ -285,10 +283,69 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     return item?.porcentaje?.value ?? item?.porcentaje ?? '____';
   });
 
-  // ✅ Fotos con prefijos
-  readonly fotosDesechosSignal = computed(() => this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalDesechos(), this.imageFacade.getGroupPrefix(this.seccionId)));
-  readonly fotosElectricidadSignal = computed(() => this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalElectricidad(), this.imageFacade.getGroupPrefix(this.seccionId)));
-  readonly fotosCocinarSignal = computed(() => this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalCocinar(), this.imageFacade.getGroupPrefix(this.seccionId)));
+  // ✅ Fotos con prefijos - SEGUIR PATRON SECCION 21/23: leer directamente desde ProjectStateFacade
+  readonly fotosDesechosSignal = computed(() => {
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaDesechosSolidosAISI';
+    const groupPrefix = this.obtenerPrefijo();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
+  readonly fotosElectricidadSignal = computed(() => {
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaElectricidadAISI';
+    const groupPrefix = this.obtenerPrefijo();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
+  readonly fotosCocinarSignal = computed(() => {
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaEnergiaCocinarAISI';
+    const groupPrefix = this.obtenerPrefijo();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    return fotos;
+  });
 
   // ✅ Campos de títulos y fuentes con prefijos
   readonly cuadroTituloAbastecimientoSignal: Signal<string> = computed(() => {

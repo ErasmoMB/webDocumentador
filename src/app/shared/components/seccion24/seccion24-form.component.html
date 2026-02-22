@@ -113,9 +113,9 @@
         <app-image-upload
           [fotografias]="fotosCacheSignal()"
           [sectionId]="seccionId"
-          [photoPrefix]="photoPrefixSignal()"
+          [photoPrefix]="'fotografiaHabitosConsumo'"
           [permitirMultiples]="true"
-          (fotografiasChange)="onFotografiasChangeHandler($event)">
+          (fotografiasChange)="onFotografiasChangeHandler($event, 'fotografiaHabitosConsumo')">
         </app-image-upload>
       </div>
     </div>

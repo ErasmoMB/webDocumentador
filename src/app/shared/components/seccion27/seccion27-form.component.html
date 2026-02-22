@@ -48,7 +48,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION27_TEMPLATES.labelFotosTransporte }}</label>
         <app-image-upload
-          [fotografias]="fotografiasTransporteFormMulti"
+          [fotografias]="fotosTransporteSignal()"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalTransporte()"
           [permitirMultiples]="true"
@@ -136,7 +136,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION27_TEMPLATES.labelFotosTelecomunicaciones }}</label>
         <app-image-upload
-          [fotografias]="fotografiasTelecomunicacionesFormMulti"
+          [fotografias]="fotosTelecomunicacionesSignal()"
           [sectionId]="seccionId"
           [photoPrefix]="photoPrefixSignalTelecomunicaciones()"
           [permitirMultiples]="true"

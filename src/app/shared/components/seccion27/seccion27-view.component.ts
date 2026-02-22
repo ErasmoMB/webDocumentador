@@ -24,10 +24,11 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
+    const grupo = this.obtenerPrefijo();
     // Cargar fotos de Transporte
-    const fotosTransporte = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTransporte());
+    const fotosTransporte = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTransporte(), grupo);
     // Cargar fotos de Telecomunicaciones
-    const fotosTelecomunicaciones = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones());
+    const fotosTelecomunicaciones = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones(), grupo);
     return [...fotosTransporte, ...fotosTelecomunicaciones];
   });
 
@@ -52,15 +53,13 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
     return this.obtenerNombreDistritoActual() || '____';
   });
 
-  // ✅ PHOTO_PREFIX Signals dinámicos
+  // ✅ PHOTO_PREFIX Signals dinámicos (solo base, sin grupo - el grupo se pasa por separado a loadImages)
   readonly photoPrefixSignalTransporte: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaTransporteAISI${prefijo}` : 'fotografiaTransporteAISI';
+    return 'fotografiaTransporteAISI';
   });
 
   readonly photoPrefixSignalTelecomunicaciones: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaTelecomunicacionesAISI${prefijo}` : 'fotografiaTelecomunicacionesAISI';
+    return 'fotografiaTelecomunicacionesAISI';
   });
 
   // ✅ Campos con prefijos
@@ -160,11 +159,35 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   protected override actualizarValoresConPrefijo(): void { }
 
   getFotosTransporteSignal(): FotoItem[] {
-    return this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalTransporte(), this.imageFacade.getGroupPrefix(this.seccionId));
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaTransporteAISI';
+    const groupPrefix = this.obtenerPrefijo();
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    return fotos;
   }
 
   getFotosTelecomunicacionesSignal(): FotoItem[] {
-    return this.imageFacade.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones(), this.imageFacade.getGroupPrefix(this.seccionId));
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaTelecomunicacionesAISI';
+    const groupPrefix = this.obtenerPrefijo();
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    return fotos;
   }
 
   override ngOnDestroy(): void {

@@ -86,24 +86,74 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
       .replace(/____/g, porcentajeAdministracion);
   });
 
+  // Photos - SEGUIR PATRON SECCION 21/23: leer directamente desde ProjectStateFacade
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
-    const prefix = this.photoPrefixSignal();
-    const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaHabitosConsumo';
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    for (let i = 1; i <= 10; i++) {
+      // Esquema correcto: {prefix}{i}{suffix}{group} → fotografiaHabitosConsumo1Imagen_B1
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    console.log('[SECCION24-VIEW] fotosCacheSignal - fotos encontradas:', fotos.length);
+    return fotos;
   });
 
+  // Photos - SEGUIR PATRON SECCION 21/23: leer directamente desde ProjectStateFacade
   readonly fotosActividadesSignal: Signal<FotoItem[]> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const prefix = prefijo ? `fotografiaActividadesEconomicas${prefijo}` : 'fotografiaActividadesEconomicas';
-    const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaActividadesEconomicas';
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    console.log('[SECCION24-VIEW] fotosActividadesSignal - fotos encontradas:', fotos.length);
+    return fotos;
   });
 
+  // Photos - SEGUIR PATRON SECCION 21/23: leer directamente desde ProjectStateFacade
   readonly fotosMercadoSignal: Signal<FotoItem[]> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const prefix = prefijo ? `fotografiaMercado${prefijo}` : 'fotografiaMercado';
-    const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-    return this.imageFacade.loadImages(this.seccionId, prefix, groupPrefix);
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografiaMercado';
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    console.log('[SECCION24-VIEW] fotosMercadoSignal - fotos encontradas:', fotos.length);
+    return fotos;
   });
 
   readonly mercadoSignal: Signal<string> = computed(() => {
@@ -158,9 +208,10 @@ export class Seccion24ViewComponent extends BaseSectionComponent implements OnDe
     super(cdRef, injector);
     
     // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    // CAMBIADO: Usar prefijo único para evitar conflicto con sección 25
     this.photoPrefixSignal = computed(() => {
       const prefijo = this.obtenerPrefijoGrupo();
-      return prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
+      return prefijo ? `fotografiaHabitosConsumo${prefijo}` : 'fotografiaHabitosConsumo';
     });
     
     // Inicializar PHOTO_PREFIX para compatibilidad

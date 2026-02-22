@@ -9,9 +9,10 @@
 export const SECCION24_SECTION_ID = '3.1.4.B.1.3';
 
 export const SECCION24_PHOTO_PREFIXES = {
-  centroPoblado: 'fotografiaCahuacho',
+  // ❌ ELIMINADO: fotografiaCahuacho causaba conflictos con secciones 22, 25, 29
   actividades: 'fotografiaActividadesEconomicas',
-  mercado: 'fotografiaMercado'
+  mercado: 'fotografiaMercado',
+  habitosConsumo: 'fotografiaHabitosConsumo'  // ✅ UNICO para sección 24
 };
 
 export const SECCION24_WATCHED_FIELDS = [
@@ -30,15 +31,16 @@ export const SECCION24_WATCHED_FIELDS = [
   ...Array.from({ length: 10 }, (_, i) => `fotografiaMercado${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaMercado${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaMercado${i + 1}Imagen`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Titulo`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Imagen`)
+  // ✅ CAMBIADO: fotografiaCahuacho → fotografiaHabitosConsumo
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaHabitosConsumo${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaHabitosConsumo${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaHabitosConsumo${i + 1}Imagen`)
 ];
 
 export const SECCION24_CONFIG = {
   sectionId: SECCION24_SECTION_ID,
   title: 'Actividades económicas de la población',
-  photoPrefix: 'fotografiaCahuacho',
+  photoPrefix: 'fotografiaHabitosConsumo',  // ✅ UNICO para sección 24
   maxPhotos: 10
 };
 

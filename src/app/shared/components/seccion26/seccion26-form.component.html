@@ -81,7 +81,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelFotosDesechos }}</label>
         <app-image-upload 
-          [fotografias]="fotografiasDesechosFormMulti" 
+          [fotografias]="fotosDesechosSignal()" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalDesechos()" 
           [permitirMultiples]="true" 
@@ -143,7 +143,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelFotosElectricidad }}</label>
         <app-image-upload 
-          [fotografias]="fotografiasElectricidadFormMulti" 
+          [fotografias]="fotosElectricidadSignal()" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalElectricidad()" 
           [permitirMultiples]="true" 
@@ -196,7 +196,7 @@
       <div class="form-field" style="margin-top: 20px;">
         <label class="label">{{ SECCION26_TEMPLATES.labelFotosCocinar }}</label>
         <app-image-upload 
-          [fotografias]="fotografiasCocinarFormMulti" 
+          [fotografias]="fotosCocinarSignal()" 
           [sectionId]="seccionId" 
           [photoPrefix]="photoPrefixSignalCocinar()" 
           [permitirMultiples]="true" 

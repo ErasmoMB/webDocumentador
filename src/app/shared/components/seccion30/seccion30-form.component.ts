@@ -391,21 +391,43 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     this.actualizarTexto('fuenteTasaAnalfabetismo', valor);
   }
 
+  // ✅ PATRÓN SECCIÓN 24: Override de onFotografiasChange para persistencia correcta
   override onFotografiasChange(fotografias: FotoItem[]): void {
-    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    const prefix = this.PHOTO_PREFIX;
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    const updates: Record<string, any> = {};
     
-    // ✅ PERSISTIR EN REDIS usando onFieldChange (automáticamente persiste)
-    const prefijo = this.obtenerPrefijoGrupo();
-    for (let i = 0; i < fotografias.length; i++) {
-      const foto = fotografias[i];
-      const idx = i + 1;
-      const imgKey = `${this.PHOTO_PREFIX}${idx}Imagen${prefijo}`;
-      const titKey = `${this.PHOTO_PREFIX}${idx}Titulo${prefijo}`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${idx}Fuente${prefijo}`;
-      
-      this.onFieldChange(imgKey, foto.imagen);
-      this.onFieldChange(titKey, foto.titulo);
-      this.onFieldChange(fuenteKey, foto.fuente);
+    // Paso 1: Limpiar slots anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
+    }
+    
+    // Paso 2: Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = groupPrefix ? `${prefix}${idx}Imagen${groupPrefix}` : `${prefix}${idx}Imagen`;
+        const titKey = groupPrefix ? `${prefix}${idx}Titulo${groupPrefix}` : `${prefix}${idx}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${idx}Fuente${groupPrefix}` : `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Paso 3: Persistir en ProjectFacade (capa 1)
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Paso 4: Persistir en Backend (capa 2)
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {
+      console.error('[SECCION30] ⚠️ Error persistiendo imágenes:', e);
     }
     
     this.cdRef.markForCheck();

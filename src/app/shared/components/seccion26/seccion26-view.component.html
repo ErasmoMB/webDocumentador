@@ -23,7 +23,7 @@
   </app-table-wrapper>
   <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteSaneamiento && viewModel().cuadroFuenteSaneamiento !== '____'"> {{ viewModel().cuadroFuenteSaneamiento }}</span><span *ngIf="!viewModel().cuadroFuenteSaneamiento || viewModel().cuadroFuenteSaneamiento === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
-  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosDesechos" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_DESECHOS"></app-image-upload>
+  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosDesechos" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_DESECHOS" [mostrarTitulo]="true" [mostrarFuente]="true"></app-image-upload>
 
   <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionC }}</strong></p>
   <div *ngIf="viewModel().textoDesechos && viewModel().textoDesechos !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoDesechos)"></div>
@@ -36,7 +36,7 @@
   </app-table-wrapper>
   <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCobertura && viewModel().cuadroFuenteCobertura !== '____'"> {{ viewModel().cuadroFuenteCobertura }}</span><span *ngIf="!viewModel().cuadroFuenteCobertura || viewModel().cuadroFuenteCobertura === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
-  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosElectricidad" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD"></app-image-upload>
+  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosElectricidad" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_ELECTRICIDAD" [mostrarTitulo]="true" [mostrarFuente]="true"></app-image-upload>
 
   <p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION26_TEMPLATES.titulSeccionE }}</strong></p>
   <div *ngIf="viewModel().textoCocinar && viewModel().textoCocinar !== '____'" class="text-justify" [innerHTML]="formatearParrafo(viewModel().textoCocinar)"></div>
@@ -46,5 +46,5 @@
   </app-table-wrapper>
   <p class="source">FUENTE:<span *ngIf="viewModel().cuadroFuenteCombustibles && viewModel().cuadroFuenteCombustibles !== '____'"> {{ viewModel().cuadroFuenteCombustibles }}</span><span *ngIf="!viewModel().cuadroFuenteCombustibles || viewModel().cuadroFuenteCombustibles === '____'"> {{ SECCION26_TEMPLATES.cuadroFuenteDefault }}</span></p>
 
-  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosCocinar" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_COCINAR"></app-image-upload>
+  <app-image-upload [modoVista]="true" [permitirMultiples]="true" [fotografias]="viewModel().fotosCocinar" [sectionId]="seccionId" [photoPrefix]="PHOTO_PREFIX_COCINAR" [mostrarTitulo]="true" [mostrarFuente]="true"></app-image-upload>
 </div>

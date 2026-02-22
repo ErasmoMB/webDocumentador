@@ -9,6 +9,7 @@ import { BaseSectionComponent } from '../base-section.component';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
 import { SECCION27_TEMPLATES, SECCION27_WATCHED_FIELDS, SECCION27_SECTION_ID } from './seccion27-constants';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   standalone: true,
@@ -26,15 +27,53 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   override readonly watchedFields: string[] = SECCION27_WATCHED_FIELDS;
   override useReactiveSync: boolean = true;
 
-  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos - SEGUIR PATRON SECCION 21/23
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
-    const fotos: FotoItem[] = [];
-    // Cargar fotos de Transporte
-    const fotosTransporte = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTransporte());
-    // Cargar fotos de Telecomunicaciones
-    const fotosTelecomunicaciones = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones());
-    return [...fotosTransporte, ...fotosTelecomunicaciones];
+    return [...this.getFotosTransporteSignal(), ...this.getFotosTelecomunicacionesSignal()];
   });
+
+  // ✅ Signals individuales para cada grupo de fotos
+  readonly fotosTransporteSignal: Signal<FotoItem[]> = computed(() => {
+    return this.getFotosTransporteSignal();
+  });
+
+  readonly fotosTelecomunicacionesSignal: Signal<FotoItem[]> = computed(() => {
+    return this.getFotosTelecomunicacionesSignal();
+  });
+
+  // Helper para cargar fotos de Transporte
+  private getFotosTransporteSignal(): FotoItem[] {
+    const fotos: FotoItem[] = [];
+    const groupPrefix = this.obtenerPrefijo();
+    const basePrefixTransporte = 'fotografiaTransporteAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixTransporte}${i}Imagen${groupPrefix}` : `${basePrefixTransporte}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixTransporte}${i}Titulo${groupPrefix}` : `${basePrefixTransporte}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixTransporte}${i}Fuente${groupPrefix}` : `${basePrefixTransporte}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    return fotos;
+  }
+
+  // Helper para cargar fotos de Telecomunicaciones
+  private getFotosTelecomunicacionesSignal(): FotoItem[] {
+    const fotos: FotoItem[] = [];
+    const groupPrefix = this.obtenerPrefijo();
+    const basePrefixTelecom = 'fotografiaTelecomunicacionesAISI';
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${basePrefixTelecom}${i}Imagen${groupPrefix}` : `${basePrefixTelecom}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefixTelecom}${i}Titulo${groupPrefix}` : `${basePrefixTelecom}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefixTelecom}${i}Fuente${groupPrefix}` : `${basePrefixTelecom}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      if (imagen) fotos.push({ titulo: titulo || `Foto ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+    }
+    return fotos;
+  }
 
   private obtenerPrefijo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
@@ -66,15 +105,13 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
     return prefijo ? `textoTelecomunicacionesCP3${prefijo}` : 'textoTelecomunicacionesCP3';
   }
 
-  // ✅ PHOTO_PREFIX Signals dinámicos
+  // ✅ PHOTO_PREFIX Signals dinámicos (solo base, sin grupo - el grupo se agrega en onFotografiasChange)
   readonly photoPrefixSignalTransporte: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaTransporteAISI${prefijo}` : 'fotografiaTransporteAISI';
+    return 'fotografiaTransporteAISI';
   });
 
   readonly photoPrefixSignalTelecomunicaciones: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijo();
-    return prefijo ? `fotografiaTelecomunicacionesAISI${prefijo}` : 'fotografiaTelecomunicacionesAISI';
+    return 'fotografiaTelecomunicacionesAISI';
   });
 
   fotografiasTransporteFormMulti: FotoItem[] = [];
@@ -147,11 +184,15 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
+  // ✅ Inyección de FormChangeService
+  private formChange: FormChangeService;
+
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector
   ) {
     super(cdRef, injector);
+    this.formChange = injector.get(FormChangeService);
 
     effect(() => {
       this.actualizarFotografiasFormMulti();
@@ -233,13 +274,55 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   protected override detectarCambios(): boolean { return false; }
   protected override actualizarValoresConPrefijo(): void { }
 
+  // ✅ PATRÓN SECCIÓN 24: Override de onFotografiasChange para persistencia correcta
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    const prefix = customPrefix || '';
+    const groupPrefix = this.obtenerPrefijo();
+    const updates: Record<string, any> = {};
+    
+    // Paso 1: Limpiar slots anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
+    }
+    
+    // Paso 2: Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = groupPrefix ? `${prefix}${idx}Imagen${groupPrefix}` : `${prefix}${idx}Imagen`;
+        const titKey = groupPrefix ? `${prefix}${idx}Titulo${groupPrefix}` : `${prefix}${idx}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${idx}Fuente${groupPrefix}` : `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Paso 3: Persistir en ProjectFacade (capa 1)
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Paso 4: Persistir en Backend (capa 2)
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {
+      console.error('[SECCION27] ⚠️ Error persistiendo imágenes:', e);
+    }
+    
+    this.cdRef.markForCheck();
+  }
+
   onFotografiasTransporteChange(fotografias: FotoItem[]) {
-    this.onGrupoFotografiasChange(this.photoPrefixSignalTransporte(), fotografias);
+    this.onFotografiasChange(fotografias, this.photoPrefixSignalTransporte());
     this.fotografiasTransporteFormMulti = [...fotografias];
   }
 
   onFotografiasTelecomunicacionesChange(fotografias: FotoItem[]) {
-    this.onGrupoFotografiasChange(this.photoPrefixSignalTelecomunicaciones(), fotografias);
+    this.onFotografiasChange(fotografias, this.photoPrefixSignalTelecomunicaciones());
     this.fotografiasTelecomunicacionesFormMulti = [...fotografias];
   }
 
