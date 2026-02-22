@@ -55,17 +55,26 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     return Array.isArray(viewData[peaOcupadaTablaKey]) ? viewData[peaOcupadaTablaKey] : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.prefijoGrupoSignal();
     const prefix = this.PHOTO_PREFIX;
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ SIGNAL: Extraer el DISTRITO de la tabla de Sección 4 (Ubicación referencial)
@@ -134,8 +143,8 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
     let inicializadoView = false;
     
     effect(() => {
-      const hash = this.photoFieldsHash();
-      console.log(`[SECCION7:VIEW:EFFECT] Hash actual: ${hash?.substring(0, 50)}...`);
+      const fotos = this.fotosCacheSignal();
+      console.log(`[SECCION7:VIEW:EFFECT] Fotos actualizadas: ${fotos.length} fotos`);
       
       // Skip primer inicio - fotos ya cargadas en constructor/onInitCustom
       if (!inicializadoView) {
@@ -144,7 +153,7 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
         return;
       }
       
-      console.log(`[SECCION7:VIEW:EFFECT] 📷 Hash cambió, recargando fotos...`);
+      console.log(`[SECCION7:VIEW:EFFECT] 📷 Fotos cambió, recargando...`);
       seccion7ViewFotos.cargarFotografias();
       seccion7ViewFotos.fotografiasVista = [...seccion7ViewFotos.fotografiasCache];
       seccion7ViewFotos.cdRef.markForCheck();

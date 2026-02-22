@@ -97,15 +97,24 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
     return Array.isArray(data) ? data : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // computed preview signals (MODO IDEAL)
@@ -229,7 +238,7 @@ export class Seccion25ViewComponent extends BaseSectionComponent implements OnDe
 
     effect(() => {
       // Recompute fotos when photo fields change
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
 
       // Leer y loguear tablas para diagnóstico (prefer table store signals)
       const tipos = this.tiposViviendaSignal();

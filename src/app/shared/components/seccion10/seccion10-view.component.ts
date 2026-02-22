@@ -88,16 +88,25 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   constructor(
@@ -115,9 +124,9 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 2: Monitor photoFieldsHash (Sincronización automática de fotos)
+    // ✅ EFFECT 2: Monitor fotosCacheSignal (Sincronización automática de fotos)
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     });

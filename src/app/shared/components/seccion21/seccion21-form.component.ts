@@ -28,6 +28,10 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   // PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
   
+  // ✅ PHOTO_PREFIX como string para compatibilidad con SectionPhotoCoordinator
+  // Se actualiza en el constructor cuando cambia el grupo
+  override PHOTO_PREFIX: string = '';
+  
   // NUMERACIÓN GLOBAL
   readonly globalTableNumberSignal: Signal<string>;
   readonly globalPhotoNumbersSignal: Signal<string[]>;
@@ -45,6 +49,12 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       const prefijo = this.obtenerPrefijoGrupo();
       const prefix = prefijo ? `fotografia${prefijo}` : 'fotografia';
       return prefix;
+    });
+    
+    // ✅ Sincronizar PHOTO_PREFIX (string) con photoPrefixSignal para compatibilidad
+    // con SectionPhotoCoordinator
+    effect(() => {
+      this.PHOTO_PREFIX = this.photoPrefixSignal();
     });
     
     // Signal para número global de tabla
@@ -75,7 +85,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     });
 
     effect(() => {
-      this.photoFieldsHash();
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });
@@ -255,18 +264,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       }
     }
     return fotos;
-  });
-
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
-    const prefix = this.photoPrefixSignal();
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
   });
 
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
@@ -450,7 +447,18 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
-    this.onGrupoFotografiasChange(this.PHOTO_PREFIX, fotografias);
+    // ✅ Usar photoPrefixSignal() para obtener el prefijo dinámico
+    this.onGrupoFotografiasChange(this.photoPrefixSignal(), fotografias);
+    
+    // ✅ También guardar en ProjectStateFacade para persistencia inmediata
+    const prefix = this.photoPrefixSignal();
+    for (let i = 0; i < fotografias.length; i++) {
+      const foto = fotografias[i];
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Titulo`, foto.titulo);
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Fuente`, foto.fuente);
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Imagen`, foto.imagen);
+    }
+    
     this.cdRef.markForCheck();
   }
 

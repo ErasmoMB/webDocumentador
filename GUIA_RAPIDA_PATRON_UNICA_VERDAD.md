@@ -16,33 +16,41 @@ Antes de programar, analizar cómo funciona la tabla:
 - ¿La tabla tiene una fila "Total"?
 - ¿Tiene múltiples categorías (como Paredes, Techos, Pisos)?
 - ¿Los porcentajes son globales (toda la tabla) o por categoría?
+- ¿Qué campo identifica la fila "Total"? (ej: 'categoria', 'indicador')
+- ¿Qué campo contiene los números a sumar? (ej: 'casos')
 
 **Estructuras posibles:**
 
 | Tipo | Ejemplo | Cálculo |
 |------|---------|---------|
-| **Simple** | PET, PEA | Una fila Total global |
+| **Simple** | PET, PEA, Nivel Educativo | Una fila Total global |
 | **Por Categoría** | Materiales (Paredes/Techo/Piso) | Total por cada categoría |
 | **Por Sexo** | Población Hombre/Mujer | Casos = H + M, % por género |
 
 ---
 
-### Paso 2: Configurar la Tabla (Constants)
+### Paso 2: Configurar la Tabla (TableConfig)
 
-En `seccionX-constants.ts`:
+⚠️ **IMPORTANTE**: Los campos `totalKey` y `campoTotal` son **OBLIGATORIOS** para que funcione el cálculo de porcentajes. Si están vacíos, el cálculo falla silenciosamente.
 
 ```typescript
-export const SECCIONX_TABLA_CONFIG: TableConfig = {
-  tablaKey: 'miTabla',
-  totalKey: 'categoria',           // Campo que identifica la fila Total
-  campoTotal: 'casos',            // Campo a sumar
+// En el componente (no en constants)
+readonly miTablaConfigSignal: Signal<TableConfig> = computed(() => ({
+  tablaKey: `miTabla${this.obtenerPrefijo()}`,
+  totalKey: 'categoria',           // ✅ OBLIGATORIO: Campo que identifica la fila Total
+  campoTotal: 'casos',             // ✅ OBLIGATORIO: Campo numérico a sumar
   campoPorcentaje: 'porcentaje',  // Campo de porcentaje
-  calcularPorcentajes: true,      // Habilitar cálculo
-  camposParaCalcular: ['casos'],
   permiteAgregarFilas: true,
-  permiteEliminarFilas: true
-};
+  permiteEliminarFilas: true,
+  noInicializarDesdeEstructura: true,
+  calcularPorcentajes: true        // ✅ IMPORTANTE: Habilitar cálculo
+}));
 ```
+
+**Valores comunes para `totalKey`:**
+- `categoria` - para tablas de nivel educativo, materiales, etc.
+- `indicador` - para tablas de indicadores como analfabetismo
+- `tipoMaterial` - para tablas de construcción
 
 ---
 
@@ -52,8 +60,6 @@ export const SECCIONX_TABLA_CONFIG: TableConfig = {
 constructor(
   cdRef: ChangeDetectorRef,
   injector: Injector,
-  private sanitizer: DomSanitizer,
-  private globalNumbering: GlobalNumberingService,
   private backendApi: BackendApiService,
   private formChange: FormChangeService,        // ✅ Para persistencia
   private tableFacade: TableManagementFacade    // ✅ Para cálculos
@@ -71,23 +77,25 @@ import { TableManagementFacade } from 'src/app/core/services/tables/table-manage
 
 ### Paso 4: Método de Carga Condicional (onInitCustom)
 
+⚠️ **CRÍTICO**: Siempre verificar si hay datos persistidos ANTES de cargar del backend. Si no se hace, los datos siempre se sobrescribirán.
+
 ```typescript
 protected override onInitCustom(): void {
+  this.cargarFotografias();
+  
+  // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
   const prefijo = this.obtenerPrefijoGrupo();
   const formData = this.formDataSignal();
   
-  const tablaKey = prefijo ? `miTabla${prefijo}` : 'miTabla';
+  const tablaKey = `miTabla${prefijo}`;
   const existingData = formData[tablaKey];
   
   if (!existingData || !Array.isArray(existingData) || existingData.length === 0) {
     console.log('[SECCIONX] No hay datos persistidos, cargando del backend...');
-    this.inicializarTablasVacias();
     this.cargarDatosDelBackend();
   } else {
-    console.log('[SECCIONX] Datos persistidos encontrados');
+    console.log('[SECCIONX] Datos persistidos encontrados, no se carga del backend');
   }
-  
-  this.cargarFotografias();
 }
 ```
 
@@ -95,42 +103,55 @@ protected override onInitCustom(): void {
 
 ### Paso 5: Cargar Datos del Backend con Cálculo
 
+> **⚠️ IMPORTANTE**: Hay DOS formas de calcular totales/porcentajes. Debes elegir la correcta según tu tabla:
+>
+> - **`tableFacade.calcularTotalesYPorcentajes()`**: Calcula porcentajes pero **NO agrega fila Total**
+> - **`TablePercentageHelper.calcularPorcentajesSimple()`**: Calcula porcentajes **Y AGREGA la fila Total automáticamente**
+>
+> **Usa el segundo método si quieres que la fila Total sea visible en el formulario (igual que en la vista).**
+
 ```typescript
+import { TablePercentageHelper } from 'src/app/core/services/data/table-percentage.helper';
+
 private cargarDatosDelBackend(): void {
   const codigos = [...this.getCodigosCentrosPobladosAISD()];
+  const prefijo = this.obtenerPrefijoGrupo();
   
   this.backendApi.postMiEndpoint(codigos).subscribe({
     next: (response: any) => {
       let datosTransformados = this.transformarDatos(response?.data || []);
       
-      // ✅ CALCULAR TOTALES Y PORCENTAJES
       if (datosTransformados.length > 0) {
-        const prefijo = this.obtenerPrefijoGrupo();
-        const tablaKey = prefijo ? `miTabla${prefijo}` : 'miTabla';
+        const tablaKey = `miTabla${prefijo}`;
         
-        // Opción A: Cálculo simple
+        // ✅ OPCIÓN A: Calcular SIN fila Total (tableFacade)
+        // Úsalo si la fila Total ya existe en los datos o no la necesitas
+        const config = this.miTablaConfigSignal();
         const tmp: Record<string, any> = { [tablaKey]: structuredClone(datosTransformados) };
         this.tableFacade.calcularTotalesYPorcentajes(tmp, { 
-          ...this.miConfig, 
+          ...config, 
           tablaKey: tablaKey 
         });
         datosTransformados = tmp[tablaKey] || datosTransformados;
         
-        // Opción B: Cálculo por categoría (si aplica)
-        // datosTransformados = this.calcularTotalesYPorcentajesPorCategoria(datosTransformados);
+        // ✅ OPCIÓN B: Calcular CON fila Total (TablePercentageHelper)
+        // Úsalo si quieres que el formulario muestre la fila Total como la vista
+        // datosTransformados = TablePercentageHelper.calcularPorcentajesSimple(datosTransformados, '1');
         
         // ✅ GUARDAR EN PROJECTSTATEFACADE
         this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
         
-        // ✅ PERSISTIR EN REDIS
+        // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
         try {
           this.formChange.persistFields(
             this.seccionId, 
             'table', 
-            { [tablaKey]: datosTransformados }, 
+            { [tablaKey]: datosTransformados, 'miTabla': datosTransformados }, 
             { notifySync: true }
           );
         } catch (e) { console.error(e); }
+        
+        this.cdRef.markForCheck();
       }
     }
   });
@@ -141,38 +162,43 @@ private cargarDatosDelBackend(): void {
 
 ### Paso 6: Método de Actualización (onTableUpdated)
 
+> **⚠️ IMPORTANTE**: Aplica lo mismo que en Paso 5 - usa el método correcto según si necesitas la fila Total visible.
+
 ```typescript
+import { TablePercentageHelper } from 'src/app/core/services/data/table-percentage.helper';
+
 onMiTablaUpdated(updatedData?: any[]): void {
   // ✅ LEER DEL SIGNAL REACTIVO
   const formData = this.formDataSignal();
   const prefijo = this.obtenerPrefijoGrupo();
-  const tablaKey = prefijo ? `miTabla${prefijo}` : 'miTabla';
+  const tablaKey = `miTabla${prefijo}`;
   let tablaActual = updatedData || formData[tablaKey] || [];
   
-  // ✅ CALCULAR TOTALES Y PORCENTAJES
-  // Opción A: Cálculo simple
+  // ✅ OPCIÓN A: Calcular SIN fila Total (tableFacade)
+  const config = this.miTablaConfigSignal();
   const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
   this.tableFacade.calcularTotalesYPorcentajes(tmp, { 
-    ...this.miConfig, 
+    ...config, 
     tablaKey: tablaKey 
   });
   tablaActual = tmp[tablaKey] || tablaActual;
   
-  // Opción B: Cálculo por categoría (si aplica)
-  // tablaActual = this.calcularTotalesYPorcentajesPorCategoria(tablaActual);
+  // ✅ OPCIÓN B: Calcular CON fila Total (TablePercentageHelper)
+  // Úsalo si quieres que el formulario muestre la fila Total como la vista
+  // tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaActual, '1');
   
-  // ✅ GUARDAR EN PROJECTSTATEFACADE
+  // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
   this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+  this.projectFacade.setField(this.seccionId, null, 'miTabla', tablaActual);
   
-  // ✅ PERSISTIR EN REDIS
+  // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
   try {
     this.formChange.persistFields(
       this.seccionId, 
       'table', 
-      { [tablaKey]: tablaActual }, 
+      { [tablaKey]: tablaActual, 'miTabla': tablaActual }, 
       { notifySync: true }
     );
-    console.log(`[SECCIONX] ✅ Data saved to session-data`);
   } catch (e) {
     console.error(`[SECCIONX] ⚠️ Could not save:`, e);
   }
@@ -244,25 +270,49 @@ private calcularTotalesYPorcentajesPorCategoria(tabla: any[]): any[] {
 
 Antes de terminar, verificar:
 
+- [ ] `totalKey` tiene el nombre correcto del campo que identifica la fila Total
+- [ ] `campoTotal` tiene el nombre correcto del campo numérico
+- [ ] `calcularPorcentajes: true` en la config
 - [ ] `formDataSignal()` lee de ProjectStateFacade
 - [ ] `projectFacade.setField()` guarda en memoria
 - [ ] `formChange.persistFields()` con `{ notifySync: true }` persiste en Redis
+- [ ] **Persiste con ambas claves**: `[tablaKey]: datos, 'nombreTabla': datos`
 - [ ] Cálculo de totales/porcentajes se ejecuta:
   - [ ] Al cargar datos del backend
   - [ ] Al editar la tabla (onTableUpdated)
 - [ ] `onInitCustom()` verifica datos existentes antes de cargar del backend
+- [ ] **Método de cálculo correcto**:
+  - [ ] `tableFacade.calcularTotalesYPorcentajes()` → Si NO necesitas fila Total
+  - [ ] `TablePercentageHelper.calcularPorcentajesSimple()` → Si SÍ necesitas fila Total visible (igual que View)
 
 ---
 
-## Errores Comunes
+## Errores Comunes y Soluciones
 
 | Error | Solución |
 |-------|----------|
-| No calcula porcentajes | Verificar `calcularPorcentajes: true` en config |
-| Total incorrecto | Verificar `totalKey` y `campoTotal` en config |
-| No persiste | Agregar `formChange.persistFields()` con `notifySync: true` |
+| No calcula porcentajes | Verificar `totalKey` y `campoTotal` NO estén vacíos en la config |
+| Total incorrecto | Verificar que `totalKey` coincida con el campo que tiene "Total" |
+| No persiste | Agregar persistencia con **ambas claves** (con y sin prefijo) |
+| Datos siempre se sobrescriben | Verificar `onInitCustom()` verifica datos persistidos primero |
 | Tabla por categorías no funciona | Usar método personalizado `calcularTotalesYPorcentajesPorCategoria()` |
 | Error "tableFacade not found" | Inyectar `TableManagementFacade` en constructor |
+| Cálculo falla silenciosamente | Revisar consola - puede haber warning pero no error visible |
+| **Fila Total no aparece en Form** | Usar `TablePercentageHelper.calcularPorcentajesSimple()` en lugar de `tableFacade` |
+
+---
+
+## Cómo Debugear
+
+Para verificar si la persistencia funciona, revisa la consola del navegador:
+
+```javascript
+// Deberías ver estos mensajes:
+[SessionData] 💾 Guardando: key=formulario_datos
+[SessionData] ✅ Guardado exitoso: {ok: true, ...}
+[PERSISTENCE] 🔥 saveSectionState called for: 3.1.4.A.1.X
+[PERSISTENCE] 📦 table keys: ['miTabla_A1', 'miTabla']
+```
 
 ---
 
@@ -271,3 +321,5 @@ Antes de terminar, verificar:
 - Sección 6 (Referencia): `seccion6-form.component.ts`
 - Sección 7 (Referencia): `seccion7-form.component.ts`
 - Sección 9 (Ejemplo con categorías): `seccion9-form.component.ts`
+- Sección 14 (Ejemplo completo): `seccion14-form.component.ts`
+- Sección 15 (Ejemplo con TablePercentageHelper): `seccion15-form.component.ts`

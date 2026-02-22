@@ -7,6 +7,7 @@ import { CoreSharedModule } from '../../modules/core-shared.module';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { transformNivelEducativoTabla, transformTasaAnalfabetismoTabla } from 'src/app/core/config/table-transforms';
@@ -120,45 +121,56 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     return dataSinPrefijo || [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.obtenerPrefijo();
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ CONFIGURACIONES DE TABLAS - Solo lectura, datos del backend
   readonly nivelEducativoConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `nivelEducativoTabla${this.obtenerPrefijo()}`,
-    totalKey: '',
-    campoTotal: '',
-    campoPorcentaje: 'porcentaje',
+    totalKey: 'categoria',           // Campo que identifica la fila Total
+    campoTotal: 'casos',             // Campo numérico a sumar
+    campoPorcentaje: 'porcentaje',   // Campo de porcentaje
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: false
+    calcularPorcentajes: true
   }));
 
   readonly tasaAnalfabetismoConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `tasaAnalfabetismoTabla${this.obtenerPrefijo()}`,
-    totalKey: '',
-    campoTotal: '',
-    campoPorcentaje: 'porcentaje',
+    totalKey: 'indicador',           // Campo que identifica la fila Total
+    campoTotal: 'casos',             // Campo numérico a sumar
+    campoPorcentaje: 'porcentaje',   // Campo de porcentaje
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
-    calcularPorcentajes: false
+    calcularPorcentajes: true
   }));
 
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
-    private backendApi: BackendApiService
+    private backendApi: BackendApiService,
+    private tableFacade: TableManagementFacade,
+    private formChange: FormChangeService
   ) {
     super(cdRef, injector);
 
@@ -169,7 +181,7 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
@@ -177,9 +189,35 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
 
   protected override onInitCustom(): void {
     this.cargarFotografias();
-    // ✅ Inicializar tablas vacías y luego cargar datos del backend
-    this.inicializarTablasVacias();
-    this.cargarDatosDelBackend();
+    
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const prefijo = this.obtenerPrefijoGrupo();
+    const formData = this.formDataSignal();
+    
+    const nivelEducativoKey = `nivelEducativoTabla${prefijo}`;
+    const tasaAnalfabetismoKey = `tasaAnalfabetismoTabla${prefijo}`;
+    
+    const existingNivelEducativo = formData[nivelEducativoKey];
+    const existingTasaAnalfabetismo = formData[tasaAnalfabetismoKey];
+    
+    const hasNivelEducativo = existingNivelEducativo && Array.isArray(existingNivelEducativo) && existingNivelEducativo.length > 0;
+    const hasTasaAnalfabetismo = existingTasaAnalfabetismo && Array.isArray(existingTasaAnalfabetismo) && existingTasaAnalfabetismo.length > 0;
+    
+    if (!hasNivelEducativo || !hasTasaAnalfabetismo) {
+      debugLog('[SECCION14] No hay datos persistidos, cargando del backend...');
+      // Solo inicializar vacías las que no tienen datos
+      if (!hasNivelEducativo) {
+        this.projectFacade.setField(this.seccionId, null, nivelEducativoKey, []);
+        this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', []);
+      }
+      if (!hasTasaAnalfabetismo) {
+        this.projectFacade.setField(this.seccionId, null, tasaAnalfabetismoKey, []);
+        this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', []);
+      }
+      this.cargarDatosDelBackend();
+    } else {
+      debugLog('[SECCION14] Datos persistidos encontrados, no se carga del backend');
+    }
   }
 
   /**
@@ -198,7 +236,7 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   }
 
   /**
-   * ✅ Carga datos educativos desde el backend
+   * ✅ Carga datos educativos desde el backend con cálculo de totales y porcentajes
    */
   private cargarDatosDelBackend(): void {
     const codigosArray = this.getCodigosCentrosPobladosAISD();
@@ -219,13 +257,32 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
         try {
           const dataRaw = response?.data || [];
           const datosDesenvueltos = unwrapEducacionData(dataRaw);
-          const datosTransformados = transformNivelEducativoTabla(datosDesenvueltos);
+          let datosTransformados = transformNivelEducativoTabla(datosDesenvueltos);
           debugLog('[SECCION14] ✅ Nivel educativo cargado:', datosTransformados);
 
           if (datosTransformados.length > 0) {
             const tablaKey = `nivelEducativoTabla${prefijo}`;
+            
+            // ✅ CALCULAR TOTALES Y PORCENTAJES
+            const config = this.nivelEducativoConfigSignal();
+            const tmp: Record<string, any> = { [tablaKey]: structuredClone(datosTransformados) };
+            this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+            datosTransformados = tmp[tablaKey] || datosTransformados;
+            
+            // ✅ GUARDAR EN PROJECTSTATEFACADE
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS (con y sin prefijo)
+            debugLog('[SECCION14] 💾 Persistiendo nivel educativo desde backend');
+            try {
+              this.formChange.persistFields(this.seccionId, 'table', 
+                { [tablaKey]: datosTransformados, 'nivelEducativoTabla': datosTransformados }, 
+                { notifySync: true }
+              );
+              debugLog('[SECCION14] ✅ Persistencia exitosa desde backend');
+            } catch (e) { debugLog('[SECCION14] ❌ Error persistencia:', e); }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -243,13 +300,32 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
         try {
           const dataRaw = response?.data || [];
           const datosDesenvueltos = unwrapEducacionData(dataRaw);
-          const datosTransformados = transformTasaAnalfabetismoTabla(datosDesenvueltos);
+          let datosTransformados = transformTasaAnalfabetismoTabla(datosDesenvueltos);
           debugLog('[SECCION14] ✅ Tasa analfabetismo cargada:', datosTransformados);
 
           if (datosTransformados.length > 0) {
             const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
+            
+            // ✅ CALCULAR TOTALES Y PORCENTAJES
+            const config = this.tasaAnalfabetismoConfigSignal();
+            const tmp: Record<string, any> = { [tablaKey]: structuredClone(datosTransformados) };
+            this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+            datosTransformados = tmp[tablaKey] || datosTransformados;
+            
+            // ✅ GUARDAR EN PROJECTSTATEFACADE
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS (con y sin prefijo)
+            debugLog('[SECCION14] 💾 Persistiendo tasa analfabetismo desde backend');
+            try {
+              this.formChange.persistFields(this.seccionId, 'table', 
+                { [tablaKey]: datosTransformados, 'tasaAnalfabetismoTabla': datosTransformados }, 
+                { notifySync: true }
+              );
+              debugLog('[SECCION14] ✅ Persistencia exitosa desde backend');
+            } catch (e) { debugLog('[SECCION14] ❌ Error persistencia:', e); }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -309,18 +385,30 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   onNivelEducativoTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `nivelEducativoTabla${prefijo}`;
-    // Priorizar los datos emitidos por el dynamic-table para evitar race conditions
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    let datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.nivelEducativoConfigSignal();
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(datos) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    datos = tmp[tablaKey] || datos;
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
+    this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', datos);
     this.datos[tablaKey] = datos;
 
-    const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
-
-    // Leer inmediatamente desde el store para validar que el cambio quedó
-    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
-
-    // Alineado con Sección 13: actualizar this.datos con la tabla persistida para evitar inconsistencias
-    this.datos[tablaKey] = tablaPersistida;
+    // ✅ Persistir en Redis (sin prefijo también)
+    debugLog('[SECCION14] 💾 Persistiendo nivel educativo:', tablaKey);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: datos, 'nivelEducativoTabla': datos }, 
+        { notifySync: true }
+      );
+      debugLog('[SECCION14] ✅ Persistencia exitosa');
+    } catch (e) { 
+      debugLog('[SECCION14] ❌ Error persistencia:', e); 
+    }
 
     this.cdRef.detectChanges();
   }
@@ -328,17 +416,30 @@ export class Seccion14FormComponent extends BaseSectionComponent implements OnDe
   onTasaAnalfabetismoTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `tasaAnalfabetismoTabla${prefijo}`;
-    // Priorizar los datos emitidos por el dynamic-table para evitar race conditions
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    let datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.tasaAnalfabetismoConfigSignal();
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(datos) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    datos = tmp[tablaKey] || datos;
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
+    this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', datos);
     this.datos[tablaKey] = datos;
 
-    const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
-
-    const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || [];
-
-    // Alineado con Sección 13: actualizar this.datos con la tabla persistida para evitar inconsistencias
-    this.datos[tablaKey] = tablaPersistida;
+    // ✅ Persistir en Redis (sin prefijo también)
+    debugLog('[SECCION14] 💾 Persistiendo tasa analfabetismo:', tablaKey);
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: datos, 'tasaAnalfabetismoTabla': datos }, 
+        { notifySync: true }
+      );
+      debugLog('[SECCION14] ✅ Persistencia exitosa');
+    } catch (e) { 
+      debugLog('[SECCION14] ❌ Error persistencia:', e); 
+    }
 
     this.cdRef.detectChanges();
   }

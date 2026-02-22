@@ -23,10 +23,13 @@ export const SECCION11_PHOTO_PREFIXES = {
 };
 
 // ✅ Todos los campos persistentes
+// Incluyendo versiones SIN prefijo Y CON prefijo para AISD/AISI
 export const SECCION11_WATCHED_FIELDS: string[] = [
   'grupoAISD',
   'provinciaSeleccionada',
   'distritoSeleccionado',
+  
+  // Campos SIN prefijo (versión legacy)
   'parrafoSeccion11_transporte_completo',
   'parrafoSeccion11_telecomunicaciones_completo',
   'costoTransporteMinimo',
@@ -34,6 +37,25 @@ export const SECCION11_WATCHED_FIELDS: string[] = [
   'telecomunicacionesTabla',
   'tituloTelecomunicaciones',
   'fuenteTelecomunicaciones',
+  
+  // Campos CON prefijo AISD (_A1)
+  'parrafoSeccion11_transporte_completo_A1',
+  'parrafoSeccion11_telecomunicaciones_completo_A1',
+  'costoTransporteMinimo_A1',
+  'costoTransporteMaximo_A1',
+  'telecomunicacionesTabla_A1',
+  'tituloTelecomunicaciones_A1',
+  'fuenteTelecomunicaciones_A1',
+  
+  // Campos CON prefijo AISI (_B1)
+  'parrafoSeccion11_transporte_completo_B1',
+  'parrafoSeccion11_telecomunicaciones_completo_B1',
+  'costoTransporteMinimo_B1',
+  'costoTransporteMaximo_B1',
+  'telecomunicacionesTabla_B1',
+  'tituloTelecomunicaciones_B1',
+  'fuenteTelecomunicaciones_B1',
+  
   // Fotos Transporte (10 máximo)
   ...Array.from({ length: 10 }, (_, i) => `fotografiaTransporte${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaTransporte${i + 1}Fuente`),

@@ -196,25 +196,6 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     return this.projectFacade.groupsByType('AISD')();
   });
 
-  // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    const prefix = this.PHOTO_PREFIX;
-    let hash = '';
-    for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo${prefijo}`;
-      const fuenteKey = `${prefix}${i}Fuente${prefijo}`;
-      const imagenKey = `${prefix}${i}Imagen${prefijo}`;
-      
-      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
-      
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
-  });
-
   // ✅ NUMERACIÓN GLOBAL - Tablas (dos tablas: sexo y etario)
   readonly globalTableNumberSignalSexo: Signal<string> = computed(() => {
     return this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
@@ -276,7 +257,7 @@ export class Seccion6FormComponent extends BaseSectionComponent implements OnIni
     // Este efecto replica el patrón de Sección 5 (MODO IDEAL)
     // allowSignalWrites: true permite escribir a fotografiasFormMulti después de cargarFotografias()
     effect(() => {
-      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
+      this.fotosCacheSignal();  // ✅ ÚNICA VERDAD: Monitorea cambios en CUALQUIER campo de fotografía
       this.cargarFotografias();  // Recarga fotografías reactivamente
       
       // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasFormMulti

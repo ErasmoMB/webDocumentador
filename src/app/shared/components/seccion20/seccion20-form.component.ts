@@ -73,17 +73,25 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
     return this.PHOTO_PREFIX;
   });
 
-  // photoFieldsHash con prefijo para reactividad de fotos
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.obtenerPrefijo();
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ Obtener texto con template y reemplazos dinámicos
@@ -124,7 +132,24 @@ export class Seccion20FormComponent extends BaseSectionComponent implements OnDe
       this.tablasSignal();
       this.cdRef.markForCheck();
     });
+
+    // ✅ EFFECT: Monitorear cambios de fotos (PATRÓN UNICA_VERDAD)
+    const seccion20Form = this;
+    effect(() => {
+      seccion20Form.fotosCacheSignal(); // ← Se suscribe al signal
+      
+      // Skip primer inicio - fotos ya cargadas en onInitCustom
+      if (!seccion20Form._fotoInicializado) {
+        seccion20Form._fotoInicializado = true;
+        return;
+      }
+      
+      seccion20Form.cargarFotografias();
+      seccion20Form.cdRef.markForCheck();
+    });
   }
+
+  private _fotoInicializado = false;
 
   protected override onInitCustom(): void {
     // Asegurar initialización de tabla y parrafo (evitar inputs inactivos)

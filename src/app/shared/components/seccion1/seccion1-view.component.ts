@@ -115,6 +115,27 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
     return this.obtenerTextoIntroduccionObjetivos();
   });
 
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefix = this.PHOTO_PREFIX;
+    
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
   // ✅ SIGNAL DERIVADO: Indicador de completitud
   readonly datosCompletadosSignal: Signal<boolean> = computed(() => {
     return (
@@ -141,6 +162,26 @@ export class Seccion1ViewComponent extends BaseSectionComponent implements OnDes
     },
     { allowSignalWrites: true }
   );
+
+  // ✅ EFFECT: Monitorear cambios de fotos (PATRÓN UNICA_VERDAD)
+  private readonly fotoEffect = effect(
+    () => {
+      this.fotosCacheSignal(); // ← Se suscribe al signal
+      
+      // Skip primer inicio - fotos ya cargadas en onInitCustom
+      if (!this._fotoInicializado) {
+        this._fotoInicializado = true;
+        return;
+      }
+      
+      this.cargarFotografias();
+      this.fotografiasSeccion1 = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    },
+    { allowSignalWrites: true }
+  );
+  
+  private _fotoInicializado = false;
 
   constructor(
     private textNormalization: TextNormalizationService,

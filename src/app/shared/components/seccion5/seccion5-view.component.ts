@@ -26,7 +26,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
 
   readonly formDataSignal: Signal<Record<string, any>>;
   readonly institucionesSignal: Signal<any[]>;
-  readonly photoFieldsHash: Signal<string>;
+  readonly fotosCacheSignal: Signal<FotoItem[]>;
   readonly viewModel: Signal<any>;
   readonly columnasInstituciones: any[] = SECCION5_COLUMNAS_INSTITUCIONES;
   readonly institucionesConfig: any = {};
@@ -59,16 +59,24 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
       return Array.isArray(instituciones) ? instituciones : [];
     });
 
-    this.photoFieldsHash = computed(() => {
-      let hash = '';
+    this.fotosCacheSignal = computed(() => {
+      const fotos: FotoItem[] = [];
       const prefijo = this.obtenerPrefijoGrupo();
+      
       for (let i = 1; i <= 10; i++) {
         const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
         const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
         const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-        hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+        
+        if (imagen) {
+          fotos.push({
+            titulo: titulo || `Fotografía ${i}`,
+            fuente: fuente || 'GEADES, 2024',
+            imagen: imagen
+          } as FotoItem);
+        }
       }
-      return hash;
+      return fotos;
     });
 
     this.viewModel = computed(() => {
@@ -100,7 +108,7 @@ export class Seccion5ViewComponent extends BaseSectionComponent implements OnIni
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });

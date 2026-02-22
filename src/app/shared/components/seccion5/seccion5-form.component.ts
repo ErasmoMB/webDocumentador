@@ -73,12 +73,12 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     return this.obtenerValorConPrefijo('fuenteInstituciones') || '';
   });
 
-  // ✅ PATRÓN MODO IDEAL: photoFieldsHash Signal para monitorear cambios de imágenes
-  // Este Signal dispara un effect() que sincroniza cargarFotografias() reactivamente
-  // Siguiendo el patrón de Sección 4 (referencia)
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  // Este Signal retorna directamente FotoItem[] para uso reactivo
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.prefijoGrupoSignal();
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
       const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
@@ -88,9 +88,15 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
       
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ NUMERACIÓN GLOBAL - Tabla
@@ -135,7 +141,7 @@ export class Seccion5FormComponent extends BaseSectionComponent implements OnIni
     // ✅ EFFECT 2: Monitorear cambios de fotografías y sincronizar
     // Este efecto replica el patrón de Sección 4 (MODO IDEAL)
     effect(() => {
-      this.photoFieldsHash();  // Monitorea cambios en CUALQUIER campo de fotografía
+      this.fotosCacheSignal();  // Monitorea cambios en CUALQUIER campo de fotografía
       this.cargarFotografias();  // Recarga fotografías reactivamente
       
       // ✅ CRÍTICO: Después de cargarFotografias(), actualizar fotografiasFormMulti

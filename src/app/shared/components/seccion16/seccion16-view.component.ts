@@ -44,33 +44,47 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
   }
 
-  // ✅ SIGNAL REACTIVO PARA DATOS (Punto 1: formDataSignal)
+  // ✅ SIGNAL REACTIVO PARA DATOS
   readonly formDataSignal: Signal<Record<string, any>> = computed(() =>
     this.projectFacade.selectSectionFields(this.seccionId, null)()
   );
 
-  // ✅ PHOTO FIELDS HASH CON PREFIJOS
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.obtenerPrefijo();
-    let hash = '';
-
-    // Reservorio photos
+    
+    // Fotografías de Reservorio
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-
-    // UsoSuelos photos
+    
+    // Fotografías de Uso de Suelos
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-
-    return hash;
+    
+    return fotos;
   });
 
   constructor(
@@ -83,7 +97,7 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Punto 4: Effect para sincronización
     effect(() => {
       this.formDataSignal();  // Depende del signal
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();  // ← CRÍTICO: fuerza re-render
     });
@@ -105,6 +119,14 @@ export class Seccion16ViewComponent extends BaseSectionComponent implements OnDe
     this.cargarFotografias();
     this.fotografiasReservorio = this.getFotografiasVista(this.PHOTO_PREFIX_RESERVORIO);
     this.fotografiasUsoSuelos = this.getFotografiasVista(this.PHOTO_PREFIX_USO_SUELOS);
+  }
+
+  // ✅ Override: Usar fotosCacheSignal para cargar fotografías
+  override cargarFotografias(): void {
+    const fotos = this.fotosCacheSignal();
+    this.fotografiasReservorio = fotos.filter(f => f.imagen && f.imagen.includes(this.PHOTO_PREFIX_RESERVORIO));
+    this.fotografiasUsoSuelos = fotos.filter(f => f.imagen && f.imagen.includes(this.PHOTO_PREFIX_USO_SUELOS));
+    this.cdRef.markForCheck();
   }
 
   getFotografiasReservorioVista(): FotoItem[] {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BaseSectionComponent } from '../base-section.component';
 import { PrefijoHelper } from '../../utils/prefijo-helper';
+import { TablePercentageHelper } from '../../utils/table-percentage-helper';
 import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.component';
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
@@ -161,9 +162,11 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     return Array.isArray(formData[tablaKey]) ? formData[tablaKey] : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
       const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
@@ -173,9 +176,15 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
       
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ NUMERACIÓN GLOBAL - Tablas (tres tablas: PEA_Ocupaciones, Pecuaria, Agricultura)
@@ -238,7 +247,7 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
@@ -249,16 +258,31 @@ export class Seccion8FormComponent extends BaseSectionComponent implements OnDes
     const formData = this.formDataSignal();
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     const tablaKey = prefijo ? `peaOcupacionesTabla${prefijo}` : 'peaOcupacionesTabla';
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    const tablaKeyBase = 'peaOcupacionesTabla';
     
-    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    // Obtener datos actuales o usar los proporcionados
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR PORCENTAJES Y TOTAL (Patrón Única Verdad)
+    if (tablaActual.length > 0) {
+      // Clonar para no mutar la referencia original
+      const tablaClon = JSON.parse(JSON.stringify(tablaActual));
+      
+      // Calcular con fila Total
+      tablaActual = TablePercentageHelper.calcularPorcentajesSimple(tablaClon, tablaKey) || tablaActual;
+    }
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (con y sin prefijo)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
-    this.projectFacade.setField(this.seccionId, null, 'peaOcupacionesTabla', tablaActual);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, tablaActual);
     
-    // ✅ PERSISTIR EN REDIS
+    // ✅ PERSISTIR EN REDIS (con y sin prefijo)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-      console.log(`[SECCION8] ✅ PEA data saved to session-data`);
+      this.formChange.persistFields(this.seccionId, 'table', 
+        { [tablaKey]: tablaActual, [tablaKeyBase]: tablaActual }, 
+        { notifySync: true }
+      );
+      console.log(`[SECCION8] ✅ PEA data saved with percentages`);
     } catch (e) {
       console.error(`[SECCION8] ⚠️ Could not save to session-data:`, e);
     }

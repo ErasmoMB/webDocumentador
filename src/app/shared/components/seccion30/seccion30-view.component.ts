@@ -108,22 +108,44 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
     showFooter: false
   }));
 
+  /**
+   * ✅ Procesa los datos de Nivel Educativo para mostrar 100% en filas Total
+   */
   readonly nivelEducativoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
       ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = Array.isArray(v) ? v : [];
-    return datos;
+    
+    // ✅ Procesar para mostrar 100% en filas Total
+    return datos.map(fila => {
+      const nivel = (fila.nivel || '').toString().toLowerCase();
+      if (nivel.includes('total')) {
+        return { ...fila, porcentaje: '100.00 %' };
+      }
+      return fila;
+    });
   });
 
+  /**
+   * ✅ Procesa los datos de Tasa Analfabetismo para mostrar 100% en filas Total
+   */
   readonly tasaAnalfabetismoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
       ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = Array.isArray(v) ? v : [];
-    return datos;
+    
+    // ✅ Procesar para mostrar 100% en filas Total
+    return datos.map(fila => {
+      const indicador = (fila.indicador || '').toString().toLowerCase();
+      if (indicador.includes('total')) {
+        return { ...fila, porcentaje: '100.00 %' };
+      }
+      return fila;
+    });
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {

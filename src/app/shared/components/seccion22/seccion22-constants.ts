@@ -31,10 +31,25 @@ export const SECCION22_WATCHED_FIELDS = [
   // Datos base (sin prefijo, compartidos)
   'centroPobladoAISI',
   
-  // Fotografías
+  // Fotografías base (sin prefijo de grupo)
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22${i + 1}Fuente`),
-  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22${i + 1}Imagen`)
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22${i + 1}Imagen`),
+  
+  // Fotografías con prefijo AISI (_B1, _B2, etc.)
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22_B1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22_B1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaSeccion22_B1${i + 1}Imagen`),
+  
+  // Fotografías con prefijo fotografiaCahuacho (usado en la sección)
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho${i + 1}Imagen`),
+  
+  // Fotografías con prefijo fotografiaCahuacho + _B1, _B2, etc.
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho_B1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho_B1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografiaCahuacho_B1${i + 1}Imagen`),
 ];
 
 export const SECCION22_PHOTO_PREFIX = 'fotografiaSeccion22';

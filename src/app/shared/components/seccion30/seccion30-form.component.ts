@@ -411,50 +411,154 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
     this.cdRef.markForCheck();
   }
 
-  onNivelEducativoTableUpdated(tabla: any[]): void {
-    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
-    const tablaKey = this.getNivelEducativoTablaKey();
-    const tablaKeyBase = 'nivelEducativoTabla';
+  /**
+   * ✅ Reordena la tabla para mantener la fila Total al final
+   * Las filas que contienen "total" (case-insensitive) van al final
+   */
+  private reordenarTablaConTotal(tabla: any[], campoCategoria: string = 'nivel'): any[] {
+    if (!Array.isArray(tabla)) return [];
     
-    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
-    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    const filasNormales: any[] = [];
+    const filasTotal: any[] = [];
     
-    // ✅ PERSISTIR EN REDIS explícitamente
-    try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
-    } catch (e) {
-      console.error('[SECCION30] ⚠️ Error persistiendo nivel educativo:', e);
-    }
+    tabla.forEach(fila => {
+      const categoria = (fila[campoCategoria] || '').toString().toLowerCase();
+      if (categoria.includes('total')) {
+        filasTotal.push(fila);
+      } else {
+        filasNormales.push(fila);
+      }
+    });
     
-    this.onFieldChange(tablaKey, tabla, { refresh: false });
-    if (tablaKeyBase !== tablaKey) {
-      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
-    }
-    
-    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
+    return [...filasNormales, ...filasTotal];
   }
 
-  onTasaAnalfabetismoTableUpdated(tabla: any[]): void {
-    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
-    const tablaKey = this.getTasaAnalfabetismoTablaKey();
-    const tablaKeyBase = 'tasaAnalfabetismoTabla';
+  /**
+   * ✅ Calcula el total de casos y ajusta porcentajes para Nivel Educativo
+   * La fila Total debe mostrar 100% en el porcentaje
+   */
+  private calcularTotalYNivelEducativo(tabla: any[]): any[] {
+    if (!Array.isArray(tabla)) return [];
     
-    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
-    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    let totalCasos = 0;
     
-    // ✅ PERSISTIR EN REDIS explícitamente
+    // Calcular suma de casos de filas normales (sin "total")
+    tabla.forEach(fila => {
+      const nivel = (fila.nivel || '').toString().toLowerCase();
+      if (!nivel.includes('total')) {
+        const casos = parseFloat(fila.casos) || 0;
+        totalCasos += casos;
+      }
+    });
+    
+    // Actualizar filas: calcular porcentajes y poner 100% en el de Total
+    return tabla.map(fila => {
+      const nivel = (fila.nivel || '').toString().toLowerCase();
+      const casos = parseFloat(fila.casos) || 0;
+      
+      if (nivel.includes('total')) {
+        // Para fila Total: usar el total calculado y mostrar 100%
+        return { ...fila, casos: totalCasos, porcentaje: '100.00 %' };
+      } else {
+        // Para filas normales: calcular porcentaje
+        const porcentaje = totalCasos > 0 ? ((casos / totalCasos) * 100).toFixed(2) + ' %' : '0.00 %';
+        return { ...fila, porcentaje };
+      }
+    });
+  }
+
+  /**
+   * ✅ Calcula el total de casos y ajusta porcentajes para Tasa Analfabetismo
+   * La fila Total debe mostrar 100% en el porcentaje
+   */
+  private calcularTotalYTasaAnalfabetismo(tabla: any[]): any[] {
+    if (!Array.isArray(tabla)) return [];
+    
+    let totalCasos = 0;
+    
+    // Calcular suma de casos de filas normales (sin "total")
+    tabla.forEach(fila => {
+      const indicador = (fila.indicador || '').toString().toLowerCase();
+      if (!indicador.includes('total')) {
+        const casos = parseFloat(fila.casos) || 0;
+        totalCasos += casos;
+      }
+    });
+    
+    // Actualizar filas: calcular porcentajes y poner 100% en el de Total
+    return tabla.map(fila => {
+      const indicador = (fila.indicador || '').toString().toLowerCase();
+      const casos = parseFloat(fila.casos) || 0;
+      
+      if (indicador.includes('total')) {
+        // Para fila Total: usar el total calculado y mostrar 100%
+        return { ...fila, casos: totalCasos, porcentaje: '100.00 %' };
+      } else {
+        // Para filas normales: calcular porcentaje
+        const porcentaje = totalCasos > 0 ? ((casos / totalCasos) * 100).toFixed(2) + ' %' : '0.00 %';
+        return { ...fila, porcentaje };
+      }
+    });
+  }
+
+  onNivelEducativoTableUpdated(): void {
+    // ✅ Igual que Sección 26
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `nivelEducativoTabla${prefijo}` : 'nivelEducativoTabla';
+    
+    // ✅ Leer datos del formDataSignal
+    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    
+    // ✅ CLON PROFUNDO para evitar compartir referencias
+    tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // ✅ Reordenar para mantener Total al final
+    tabla = this.reordenarTablaConTotal(tabla, 'nivel');
+    
+    // ✅ Calcular totales y porcentajes
+    tabla = this.calcularTotalYNivelEducativo(tabla);
+    
+    // ✅ Guardar en projectFacade y persistir (igual que Sección 26)
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
-    } catch (e) {
-      console.error('[SECCION30] ⚠️ Error persistiendo tasa analfabetismo:', e);
-    }
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      this.projectFacade.setField(this.seccionId, null, 'nivelEducativoTabla', tabla);
+    } catch (e) {}
+
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'nivelEducativoTabla': tabla }, { notifySync: true });
+    } catch (e) {}
     
-    this.onFieldChange(tablaKey, tabla, { refresh: false });
-    if (tablaKeyBase !== tablaKey) {
-      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
-    }
+    this.cdRef.markForCheck();
+  }
+
+  onTasaAnalfabetismoTableUpdated(): void {
+    // ✅ Igual que Sección 26
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `tasaAnalfabetismoTabla${prefijo}` : 'tasaAnalfabetismoTabla';
     
-    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
+    // ✅ Leer datos del formDataSignal
+    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    
+    // ✅ CLON PROFUNDO para evitar compartir referencias
+    tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // ✅ Reordenar para mantener Total al final
+    tabla = this.reordenarTablaConTotal(tabla, 'indicador');
+    
+    // ✅ Calcular totales y porcentajes
+    tabla = this.calcularTotalYTasaAnalfabetismo(tabla);
+    
+    // ✅ Guardar en projectFacade y persistir (igual que Sección 26)
+    try {
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      this.projectFacade.setField(this.seccionId, null, 'tasaAnalfabetismoTabla', tabla);
+    } catch (e) {}
+
+    try {
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'tasaAnalfabetismoTabla': tabla }, { notifySync: true });
+    } catch (e) {}
+    
+    this.cdRef.markForCheck();
   }
 
   trackByIndex(index: number): number { return index; }

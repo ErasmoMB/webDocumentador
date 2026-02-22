@@ -121,19 +121,22 @@ export const SECCION8_TEMPLATES = {
  */
 
 /**
- * ✅ Configuración para tabla PEA Ocupaciones - PATRÓN SOLO LECTURA
- * Los datos vienen del backend automáticamente
+ * ✅ Configuración para tabla PEA Ocupaciones - PATRÓN MANUAL CON CÁLCULO
+ * El usuario puede agregar/edita datos y se calculan porcentajes automáticamente
  */
 export const SECCION8_TABLA_PEA_OCUPACIONES_CONFIG: TableConfig = {
   tablaKey: 'peaOcupacionesTabla',
-  totalKey: '',                        // ✅ Sin total automático - datos vienen del backend
-  campoTotal: '',                      // ✅ Sin cálculo de total
-  campoPorcentaje: '',                 // ✅ Sin cálculo de porcentaje
-  calcularPorcentajes: false,          // ✅ Los porcentajes vienen del backend
-  camposParaCalcular: [],              // ✅ No calcular nada - datos puros del backend
-  noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
-  permiteAgregarFilas: true,           // ✅ Permitir agregar
-  permiteEliminarFilas: true           // ✅ Permitir eliminar
+  totalKey: 'categoria',                    // ✅ Campo que identifica la fila Total
+  campoTotal: 'casos',                      // ✅ Campo numérico para calcular total
+  campoPorcentaje: 'porcentaje',           // ✅ Campo donde se guarda el porcentaje
+  calcularPorcentajes: true,                // ✅ Calcular porcentajes automáticamente
+  camposParaCalcular: ['casos'],            // ✅ Calcular desde casos
+  noInicializarDesdeEstructura: false,      // ✅ Inicializar con estructura vacía
+  permiteAgregarFilas: true,                 // ✅ Permitir agregar filas
+  permiteEliminarFilas: true,                // ✅ Permitir eliminar filas
+  estructuraInicial: [
+    { categoria: '', casos: 0, porcentaje: '0,00 %' }
+  ]
 };
 
 /**
@@ -162,11 +165,20 @@ export const SECCION8_COLUMNAS_PEA_OCUPACIONES: TableColumn[] = [
 
 /**
  * Configuración para tabla de población pecuaria
+ * Permite agregar/editarr y calcular totales
  */
 export const SECCION8_TABLA_POBLACION_PECUARIA_CONFIG: TableConfig = {
   tablaKey: 'poblacionPecuariaTabla',
-  totalKey: '',
-  estructuraInicial: []
+  totalKey: 'especie',                   // ✅ Campo que identifica la fila Total
+  campoTotal: 'cantidadPromedio',         // ✅ Campo numérico para calcular total
+  campoPorcentaje: '',                   // Sin porcentaje en esta tabla
+  calcularPorcentajes: false,             // No calcula porcentajes
+  camposParaCalcular: ['cantidadPromedio'],
+  permiteAgregarFilas: true,             // ✅ Permitir agregar filas
+  permiteEliminarFilas: true,             // ✅ Permitir eliminar filas
+  estructuraInicial: [
+    { especie: '', cantidadPromedio: '', ventaUnidad: '' }
+  ]
 };
 
 /**
@@ -195,11 +207,19 @@ export const SECCION8_COLUMNAS_POBLACION_PECUARIA: TableColumn[] = [
 
 /**
  * Configuración para tabla de características de agricultura
+ * Permite agregar/editar filas (solo texto, sin cálculos)
  */
 export const SECCION8_TABLA_CARACTERISTICAS_AGRICULTURA_CONFIG: TableConfig = {
   tablaKey: 'caracteristicasAgriculturaTabla',
-  totalKey: '',
-  estructuraInicial: []
+  totalKey: '',                          // No hay fila Total en esta tabla
+  campoTotal: '',                        // No hay cálculo numérico
+  campoPorcentaje: '',                   // No hay porcentajes
+  calcularPorcentajes: false,            // No calcula nada
+  permiteAgregarFilas: true,             // ✅ Permitir agregar filas
+  permiteEliminarFilas: true,             // ✅ Permitir eliminar filas
+  estructuraInicial: [
+    { categoria: '', detalle: '' }
+  ]
 };
 
 /**

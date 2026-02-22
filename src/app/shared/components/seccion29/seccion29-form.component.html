@@ -33,13 +33,13 @@
 
         <label class="label mt-sm">{{ SECCION29_TEMPLATES.labelTabdlaNatalidad }}</label>
         <app-dynamic-table
-          [datos]="getNatalidadTablaData()"
+          [datos]="formDataSignal()"
           [sectionId]="seccionId"
           [config]="natalidadConfig"
           [columns]="natalidadColumns"
           [tablaKey]="getNatalidadTablaKey()"
           [totalKey]="'anio'"
-          (tableUpdated)="onTablaUpdated(getNatalidadTablaKey(), $event)">
+          (tableUpdated)="onNatalidadTableUpdated()">
         </app-dynamic-table>
 
         <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteNatalidad }}</label>
@@ -69,13 +69,13 @@
 
         <label class="label">{{ SECCION29_TEMPLATES.labelTablaMorbilidad }}</label>
         <app-dynamic-table
-          [datos]="getMorbilidadTablaData()"
+          [datos]="formDataSignal()"
           [sectionId]="seccionId"
           [config]="morbilidadConfig"
           [columns]="morbilidadColumns"
           [tablaKey]="getMorbilidadTablaKey()"
           [totalKey]="'grupo'"
-          (tableUpdated)="onTablaUpdated(getMorbilidadTablaKey(), $event)">
+          (tableUpdated)="onMorbilidadTableUpdated()">
         </app-dynamic-table>
 
         <label class="label mt-md">{{ SECCION29_TEMPLATES.labelFuenteMorbilidad }}</label>
@@ -107,13 +107,13 @@
         
         <app-table-wrapper [title]="viewModel().tituloAfiliacion || SECCION29_TEMPLATES.placeholderTituloAfiliacion" [sectionId]="seccionId">
           <app-dynamic-table
-            [datos]="getAfiliacionTablaData()"
+            [datos]="formDataSignal()"
             [sectionId]="seccionId"
             [config]="afiliacionConfig"
             [columns]="afiliacionColumns"
             [tablaKey]="getAfiliacionTablaKey()"
             [totalKey]="'categoria'"
-            (tableUpdated)="onTablaUpdated(getAfiliacionTablaKey(), $event)">
+            (tableUpdated)="onAfiliacionTableUpdated()">
           </app-dynamic-table>
         </app-table-wrapper>
 

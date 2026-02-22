@@ -11,6 +11,8 @@ import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.c
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
+import { TableConfig } from 'src/app/core/services/tables/table-management.service';
+import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { 
   SECCION10_WATCHED_FIELDS, 
   SECCION10_PHOTO_PREFIX,
@@ -191,16 +193,25 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ NUMERACIÓN GLOBAL - Tablas (cinco tablas: agua, saneamiento, electrica, energia, comunicaciones)
@@ -233,7 +244,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     private sanitizer: DomSanitizer,
     private globalNumbering: GlobalNumberingService,
     private backendApi: BackendApiService,
-    private formChange: FormChangeService  // ✅ Para persistencia en Redis
+    private formChange: FormChangeService,  // ✅ Para persistencia en Redis
+    private tableFacade: TableManagementFacade  // ✅ Para cálculo de totales y porcentajes
   ) {
     super(cdRef, injector);
 
@@ -244,9 +256,9 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 2: Monitor photoFieldsHash (Sincronización automática de fotos)
+    // ✅ EFFECT 2: Monitor fotosCacheSignal (Sincronización automática de fotos)
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.fotografiasSeccion10 = [...this.fotografiasFormMulti];
       this.cdRef.markForCheck();
@@ -254,8 +266,23 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    this.inicializarTablasVacias();  // ✅ Primero vacías
-    this.cargarDatosDelBackend();    // ✅ Luego llenar con backend
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const prefijo = this.obtenerPrefijoGrupo();
+    const formData = this.formDataSignal();
+    
+    // Verificar tablas
+    const aguaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
+    const existingAguaData = formData[aguaKey];
+    
+    // Solo cargar del backend si no hay datos persistidos
+    if (!existingAguaData || !Array.isArray(existingAguaData) || existingAguaData.length === 0) {
+      console.log('[SECCION10] No hay datos persistidos, cargando del backend...');
+      this.inicializarTablasVacias();
+      this.cargarDatosDelBackend();
+    } else {
+      console.log('[SECCION10] Datos persistidos encontrados, no se carga del backend');
+    }
+    
     this.cargarFotografias();
   }
 
@@ -445,16 +472,16 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return index;
   }
 
-  // ✅ CONFIGURACIONES DE TABLAS - PATRÓN SOLO LECTURA BACKEND
+  // ✅ CONFIGURACIONES DE TABLAS - PATRÓN UNICA_VERDAD CON CÁLCULO
   get abastecimientoAguaConfig(): any {
     return {
       tablaKey: this.getTablaKeyAbastecimientoAgua(),
-      totalKey: '',                    // ✅ Sin fila de total
-      campoTotal: '',                  // ✅ Sin cálculo total
-      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-      calcularPorcentajes: false,      // ✅ No calcular automáticamente
-      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
+      campoTotal: 'casos',              // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
+      camposParaCalcular: ['casos'],
+      noInicializarDesdeEstructura: true,
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -463,12 +490,12 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get tiposSaneamientoConfig(): any {
     return {
       tablaKey: this.getTablaKeyTiposSaneamiento(),
-      totalKey: '',                    // ✅ Sin fila de total
-      campoTotal: '',                  // ✅ Sin cálculo total
-      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-      calcularPorcentajes: false,      // ✅ No calcular automáticamente
-      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
+      campoTotal: 'casos',              // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
+      camposParaCalcular: ['casos'],
+      noInicializarDesdeEstructura: true,
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -477,12 +504,12 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get coberturaElectricaConfig(): any {
     return {
       tablaKey: this.getTablaKeyCoberturaElectrica(),
-      totalKey: '',                    // ✅ Sin fila de total
-      campoTotal: '',                  // ✅ Sin cálculo total
-      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-      calcularPorcentajes: false,      // ✅ No calcular automáticamente
-      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
+      campoTotal: 'casos',              // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
+      camposParaCalcular: ['casos'],
+      noInicializarDesdeEstructura: true,
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -491,12 +518,12 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   get energiaCocinarConfig(): any {
     return {
       tablaKey: this.getTablaKeyEnergiaCocinar(),
-      totalKey: '',                    // ✅ Sin fila de total
-      campoTotal: '',                  // ✅ Sin cálculo total
-      campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-      calcularPorcentajes: false,      // ✅ No calcular automáticamente
-      camposParaCalcular: ['casos'],   // Los campos que ya vienen calculados
-      noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
+      campoTotal: 'casos',              // ✅ Campo para total
+      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
+      calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
+      camposParaCalcular: ['casos'],
+      noInicializarDesdeEstructura: true,
       permiteAgregarFilas: true,
       permiteEliminarFilas: true
     };
@@ -542,11 +569,17 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return prefijo ? `tecnologiaComunicacionesTabla${prefijo}` : 'tecnologiaComunicacionesTabla';
   }
 
-  // ✅ HANDLERS PARA CAMBIOS DE TABLA (UNICA_VERDAD con persistencia)
+  // ✅ HANDLERS PARA CAMBIOS DE TABLA (UNICA_VERDAD con cálculo y persistencia)
   onAbastecimientoAguaTableUpdated(updatedData?: any[]): void {
     const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyAbastecimientoAgua();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.abastecimientoAguaConfig;
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    tablaActual = tmp[tablaKey] || tablaActual;
     
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
     try {
@@ -558,7 +591,13 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   onTiposSaneamientoTableUpdated(updatedData?: any[]): void {
     const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyTiposSaneamiento();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.tiposSaneamientoConfig;
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    tablaActual = tmp[tablaKey] || tablaActual;
     
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
     try {
@@ -570,7 +609,13 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   onCoberturaElectricaTableUpdated(updatedData?: any[]): void {
     const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyCoberturaElectrica();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.coberturaElectricaConfig;
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    tablaActual = tmp[tablaKey] || tablaActual;
     
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
     try {
@@ -582,7 +627,13 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   onEnergiaCocinarTableUpdated(updatedData?: any[]): void {
     const formData = this.formDataSignal();
     const tablaKey = this.getTablaKeyEnergiaCocinar();
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    let tablaActual = updatedData || formData[tablaKey] || [];
+    
+    // ✅ CALCULAR TOTALES Y PORCENTAJES
+    const config = this.energiaCocinarConfig;
+    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
+    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
+    tablaActual = tmp[tablaKey] || tablaActual;
     
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
     try {

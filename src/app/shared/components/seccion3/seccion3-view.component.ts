@@ -35,6 +35,29 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefix = this.PHOTO_PREFIX;
+    const data = this.formDataSignal();
+    
+    for (let i = 1; i <= 10; i++) {
+      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      
+      const imagen = data[imagenKey];
+      if (imagen) {
+        fotos.push({
+          imagen: imagen,
+          titulo: data[tituloKey] || `Fotografía ${i}`,
+          fuente: data[fuenteKey] || 'GEADES, 2024'
+        } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
   readonly fuentesSecundariasListaSignal: Signal<string[]> = computed(() => {
     const value = this.formDataSignal()['fuentesSecundariasLista'];
     return Array.isArray(value) ? value : [];
@@ -94,22 +117,6 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
-    for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
-      
-      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
-      
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
-  });
-
   private readonly dataHighlightService = this.injector.get(DataHighlightService);
   private readonly sanitizer = this.injector.get(DomSanitizer);
 
@@ -129,7 +136,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     });
@@ -217,7 +224,7 @@ export class Seccion3ViewComponent extends BaseSectionComponent implements OnDes
   }
 
   override getFotografiasVista(): FotoItem[] {
-    return this.fotografiasCache;
+    return this.fotosCacheSignal();
   }
 
   get key(): number {

@@ -346,16 +346,25 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
     return Array.isArray(data[tablaKey]) ? data[tablaKey] : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ PLANTILLAS DINÁMICAS: Con sustitución de comunidad
@@ -431,7 +440,7 @@ export class Seccion9FormComponent extends BaseSectionComponent implements OnDes
 
     // ✅ EFFECT: Monitorear fotos y actualizar
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.fotografiasSeccion9 = [...this.fotografiasFormMulti];
       this.cdRef.markForCheck();

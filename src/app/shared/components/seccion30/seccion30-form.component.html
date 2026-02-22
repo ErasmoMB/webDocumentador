@@ -38,12 +38,12 @@
 
         <label class="label mt-md">{{ SECCION30_TEMPLATES.labelTablatNivelEducativo }}</label>
         <app-dynamic-table
-          [datos]="getNivelEducativoTablaData()"
+          [datos]="formDataSignal()"
           [sectionId]="seccionId"
           [config]="nivelEducativoDynamicConfig"
           [columns]="nivelEducativoColumnasSignal()"
           [tablaKey]="getNivelEducativoTablaKey()"
-          (tableUpdated)="onNivelEducativoTableUpdated($event)">
+          (tableUpdated)="onNivelEducativoTableUpdated()">
         </app-dynamic-table>
 
         <label class="label mt-md">{{ SECCION30_TEMPLATES.labelFuenteNivelEducativo }}</label>
@@ -76,12 +76,12 @@
 
         <label class="label mt-md">{{ SECCION30_TEMPLATES.labelTablatTasaAnalfabetismo }}</label>
         <app-dynamic-table
-          [datos]="getTasaAnalfabetismoTablaData()"
+          [datos]="formDataSignal()"
           [sectionId]="seccionId"
           [config]="tasaAnalfabetismoDynamicConfig"
           [columns]="tasaAnalfabetismoColumnasSignal()"
           [tablaKey]="getTasaAnalfabetismoTablaKey()"
-          (tableUpdated)="onTasaAnalfabetismoTableUpdated($event)">
+          (tableUpdated)="onTasaAnalfabetismoTableUpdated()">
         </app-dynamic-table>
 
         <label class="label mt-md">{{ SECCION30_TEMPLATES.labelFuenteTasaAnalfabetismo }}</label>

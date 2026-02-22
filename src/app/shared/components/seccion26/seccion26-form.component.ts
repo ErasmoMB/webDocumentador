@@ -625,7 +625,7 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   private handleTableFieldChange(tablaKey: string, index: number, field: string, value: any) {
     // working directly against the live table stored in projectFacade
     const formData = this.formDataSignal();
-    const tabla = formData[tablaKey] || [];
+    const tabla = formData[tablaKey] ? [...formData[tablaKey]] : [];
     if (!Array.isArray(tabla) || index < 0 || index >= tabla.length) {
       return;
     }
@@ -634,30 +634,48 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
 
     // If 'casos' changed, recalculate percentages for the table
     if (field === 'casos') {
-      const rows = tabla.filter((item: any) => !(item.categoria && item.categoria.toString().toLowerCase().includes('total')));
-      const total = rows.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+      // ✅ Separar filas normales de la fila Total
+      const filasNormales = tabla.filter((item: any) => !item.categoria || !item.categoria.toString().toLowerCase().includes('total'));
+      const filaTotal = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('total'));
+      
+      const total = filasNormales.reduce((sum: number, item: any) => sum + (Number(item.casos?.value || item.casos) || 0), 0);
+      
       if (total > 0) {
-        rows.forEach((item: any) => {
-          if (!item.categoria || !item.categoria.toString().toLowerCase().includes('total')) {
-            const casos = Number(item.casos) || 0;
-            const formatted = (casos / total * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
-            item.porcentaje = { value: formatted, isCalculated: true };
-          }
+        // Calcular porcentajes para filas normales
+        filasNormales.forEach((item: any) => {
+          const casos = Number(item.casos?.value || item.casos) || 0;
+          const formatted = (casos / total * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+          item.porcentaje = { value: formatted, isCalculated: true };
         });
-        // Update or add Total row
-        const totalRowIndex = tabla.findIndex((r:any)=> r.categoria && r.categoria.toString().toLowerCase().includes('total'));
+        
+        // Crear o actualizar fila Total
         const totalObj = { categoria: 'Total', casos: { value: total, isCalculated: true }, porcentaje: { value: '100,00 %', isCalculated: true } };
-        if (totalRowIndex >= 0) {
-          tabla[totalRowIndex] = { ...tabla[totalRowIndex], ...totalObj };
+        
+        // ✅ REORDENAR: filas normales primero, Total al final
+        if (filaTotal) {
+          Object.assign(filaTotal, totalObj);
+          tabla.splice(0, tabla.length, ...filasNormales, filaTotal);
         } else {
-          tabla.push(totalObj);
+          tabla.splice(0, tabla.length, ...filasNormales, totalObj);
         }
       } else {
-        rows.forEach((item: any) => {
-          if (!item.categoria || !item.categoria.toString().toLowerCase().includes('total')) {
-            item.porcentaje = { value: '0,00 %', isCalculated: true };
-          }
+        filasNormales.forEach((item: any) => {
+          item.porcentaje = { value: '0,00 %', isCalculated: true };
         });
+        // ✅ REORDENAR también cuando total es 0
+        if (filaTotal) {
+          Object.assign(filaTotal, { categoria: 'Total', casos: { value: 0, isCalculated: true }, porcentaje: { value: '0,00 %', isCalculated: true } });
+          tabla.splice(0, tabla.length, ...filasNormales, filaTotal);
+        } else {
+          tabla.splice(0, tabla.length, ...filasNormales);
+        }
+      }
+    } else {
+      // ✅ Si no es 'casos', también reordenar para mantener Total al final
+      const filasNormales = tabla.filter((item: any) => !item.categoria || !item.categoria.toString().toLowerCase().includes('total'));
+      const filaTotal = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('total'));
+      if (filaTotal) {
+        tabla.splice(0, tabla.length, ...filasNormales, filaTotal);
       }
     }
 
@@ -681,18 +699,57 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   }
 
   private genericTablePersist(tablaKey: string, updated?: any[]) {
-    const tabla = updated || this.formDataSignal()[tablaKey] || [];
+    let tabla = updated ? [...updated] : (this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : []);
     const prefijo = this.obtenerPrefijo();
     const claveConPrefijo = tablaKey;
     const claveSinPrefijo = prefijo ? tablaKey.replace(prefijo, '') : tablaKey;
+    
+    // ✅ CLON PROFUNDO para evitar compartir referencias
+    tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // ✅ REORDENAR: filas normales primero, Total al final
+    const filasNormales = tabla.filter((item: any) => !item.categoria || !item.categoria.toString().toLowerCase().includes('total'));
+    const filaTotal = tabla.find((item: any) => item.categoria && item.categoria.toString().toLowerCase().includes('total'));
+    
+    // Recalcular totales y porcentajes
+    const total = filasNormales.reduce((sum: number, item: any) => sum + (Number(item.casos?.value || item.casos) || 0), 0);
+    
+    if (total > 0) {
+      // Calcular porcentajes para filas normales
+      filasNormales.forEach((item: any) => {
+        const casos = Number(item.casos?.value || item.casos) || 0;
+        const formatted = (casos / total * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+        item.porcentaje = { value: formatted, isCalculated: true };
+      });
+      
+      // Actualizar o agregar fila Total
+      const totalObj = { categoria: 'Total', casos: { value: total, isCalculated: true }, porcentaje: { value: '100,00 %', isCalculated: true } };
+      if (filaTotal) {
+        Object.assign(filaTotal, totalObj);
+        tabla = [...filasNormales, filaTotal];
+      } else {
+        tabla = [...filasNormales, totalObj];
+      }
+    } else {
+      // Total es 0
+      filasNormales.forEach((item: any) => {
+        item.porcentaje = { value: '0,00 %', isCalculated: true };
+      });
+      if (filaTotal) {
+        Object.assign(filaTotal, { categoria: 'Total', casos: { value: 0, isCalculated: true }, porcentaje: { value: '0,00 %', isCalculated: true } });
+        tabla = [...filasNormales, filaTotal];
+      } else {
+        tabla = [...filasNormales];
+      }
+    }
 
-    // update project state
+    // ✅ Guardar en projectFacade (state interno)
     try {
       this.projectFacade.setField(this.seccionId, null, claveConPrefijo, tabla);
       this.projectFacade.setField(this.seccionId, null, claveSinPrefijo, tabla);
     } catch (e) {}
 
-    // persist
+    // ✅ PERSISTIR EN REDIS (solo notifySync)
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [claveConPrefijo]: tabla, [claveSinPrefijo]: tabla }, { notifySync: true });
     } catch (e) {}

@@ -297,7 +297,14 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   getTotalMorbilidadCasos(): number { return 0; }
 
   getAfiliacionSaludAISIConPorcentajes(): any[] {
-    return (this.afiliacionTablaSignal() || []).map((item: any) => ({ ...item, porcentaje: item.porcentaje || '0,00 %' }));
+    return (this.afiliacionTablaSignal() || []).map((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      // ✅ Para "Total referencial" o filas con "total", dejar porcentaje vacío o como venga
+      if (categoria.includes('total')) {
+        return { ...item, porcentaje: '' };
+      }
+      return { ...item, porcentaje: item.porcentaje || '0,00 %' };
+    });
   }
 
   getPorcentajeSIS(): string {

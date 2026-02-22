@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed } from '@angular/core';
+import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, ChangeDetectorRef, Signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FotoItem } from '../image-upload/image-upload.component';
@@ -75,17 +75,25 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     // ✅ REFACTOR: Usar ubicacionGlobal
     readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-    // photoFieldsHash con prefijo para reactividad de fotos
-    readonly photoFieldsHash: Signal<string> = computed(() => {
-        let hash = '';
+    // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+    readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+        const fotos: FotoItem[] = [];
         const prefijo = this.obtenerPrefijo();
+        
         for (let i = 1; i <= 10; i++) {
             const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
             const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
             const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-            hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+            
+            if (imagen) {
+                fotos.push({
+                    titulo: titulo || `Fotografía ${i}`,
+                    fuente: fuente || 'GEADES, 2024',
+                    imagen: imagen
+                } as FotoItem);
+            }
         }
-        return hash;
+        return fotos;
     });
 
     // ✅ NUEVO: formDataSignal para UNICA_VERDAD
@@ -125,7 +133,24 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         super(cdRef, injector);
         this.backendApi = injector.get(BackendApiService);
         this.inicializarCamposDesdeStore();
+        
+        // ✅ EFFECT: Monitorear cambios de fotos (PATRÓN UNICA_VERDAD)
+        const seccion18Form = this;
+        effect(() => {
+            seccion18Form.fotosCacheSignal(); // ← Se suscribe al signal
+            
+            // Skip primer inicio - fotos ya cargadas en onInitCustom
+            if (!seccion18Form._fotoInicializado) {
+                seccion18Form._fotoInicializado = true;
+                return;
+            }
+            
+            seccion18Form.cargarFotografias();
+            seccion18Form.cdRef.markForCheck();
+        });
     }
+    
+    private _fotoInicializado = false;
 
     /**
      * ✅ onInitCustom: Inicializar y cargar datos del backend
@@ -133,8 +158,27 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
      */
     protected override onInitCustom(): void {
         super.onInitCustom();
-        this.inicializarTablasVacias();
-        this.cargarDatosDelBackend();
+        
+        // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+        const prefijo = this.obtenerPrefijoGrupo();
+        const formData = this.formDataSignal();
+        
+        const tablaKeyCC = `nbiCCAyrocaTabla${prefijo}`;
+        const tablaKeyDistrito = `nbiDistritoCahuachoTabla${prefijo}`;
+        
+        const existingCCData = formData[tablaKeyCC];
+        const existingDistritoData = formData[tablaKeyDistrito];
+        
+        // Solo cargar del backend si no hay datos persistidos en ninguna tabla
+        const hasCCData = existingCCData && Array.isArray(existingCCData) && existingCCData.length > 0;
+        const hasDistritoData = existingDistritoData && Array.isArray(existingDistritoData) && existingDistritoData.length > 0;
+        
+        if (!hasCCData || !hasDistritoData) {
+            console.log('[SECCION18] No hay datos persistidos, cargando del backend...');
+            this.cargarDatosDelBackend();
+        } else {
+            console.log('[SECCION18] Datos persistidos encontrados, no se carga del backend');
+        }
     }
 
     /**
@@ -184,12 +228,19 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
                     // Guardar en el state CON PREFIJO
                     if (datosTransformados.length > 0) {
                         const tablaKey = `nbiCCAyrocaTabla${prefijo}`;
+                        const tablaKeySinPrefijo = 'nbiCCAyrocaTabla';
                         
-                        // Guardar con prefijo
+                        // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
                         this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                        this.projectFacade.setField(this.seccionId, null, tablaKeySinPrefijo, datosTransformados);
                         
-                        // También guardar sin prefijo para fallback
-                        this.projectFacade.setField(this.seccionId, null, 'nbiCCAyrocaTabla', datosTransformados);
+                        // ✅ PERSISTIR EN REDIS
+                        try {
+                            this.formChange.persistFields(this.seccionId, 'table', {
+                                [tablaKey]: datosTransformados,
+                                [tablaKeySinPrefijo]: datosTransformados
+                            }, { notifySync: true });
+                        } catch (e) { console.error(e); }
                         
                         this.cdRef.markForCheck();
                     }
@@ -215,12 +266,19 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
                     // Guardar en el state CON PREFIJO
                     if (datosTransformados.length > 0) {
                         const tablaKey = `nbiDistritoCahuachoTabla${prefijo}`;
+                        const tablaKeySinPrefijo = 'nbiDistritoCahuachoTabla';
                         
-                        // Guardar con prefijo
+                        // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
                         this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
+                        this.projectFacade.setField(this.seccionId, null, tablaKeySinPrefijo, datosTransformados);
                         
-                        // También guardar sin prefijo para fallback
-                        this.projectFacade.setField(this.seccionId, null, 'nbiDistritoCahuachoTabla', datosTransformados);
+                        // ✅ PERSISTIR EN REDIS
+                        try {
+                            this.formChange.persistFields(this.seccionId, 'table', {
+                                [tablaKey]: datosTransformados,
+                                [tablaKeySinPrefijo]: datosTransformados
+                            }, { notifySync: true });
+                        } catch (e) { console.error(e); }
                         
                         this.cdRef.markForCheck();
                     }
@@ -426,12 +484,26 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     onNbiCCTableUpdated(tablaData: any[]): void {
+        // ✅ LEER DEL SIGNAL REACTIVO
+        const formData = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
         const tablaKey = this.getTablaKeyNbiCC();
-        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        const tablaKeySinPrefijo = 'nbiCCAyrocaTabla';
         
-        // ✅ Persistir en Redis via FormChangeService
+        // ✅ LEER DATOS ACTUALES DEL SIGNAL
+        let tablaActual = tablaData || formData[tablaKey] || [];
+        
+        // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD) - con ambas claves
+        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+        this.projectFacade.setField(this.seccionId, null, tablaKeySinPrefijo, tablaActual);
+        
+        // ✅ PERSISTIR EN REDIS (con Y sin prefijo) - CRÍTICO PARA PERSISTENCIA
         try {
-            this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaData }, { notifySync: true });
+            this.formChange.persistFields(this.seccionId, 'table', {
+                [tablaKey]: tablaActual,
+                [tablaKeySinPrefijo]: tablaActual
+            }, { notifySync: true });
+            console.log('[SECCION18] ✅ Tabla NBI CC guardada en session-data');
         } catch (error) {
             console.warn(`⚠️ [SECCION18] Error guardando tabla en Redis:`, error);
         }
@@ -440,12 +512,26 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
     }
 
     onNbiDistritoTableUpdated(tablaData: any[]): void {
+        // ✅ LEER DEL SIGNAL REACTIVO
+        const formData = this.formDataSignal();
+        const prefijo = this.obtenerPrefijoGrupo();
         const tablaKey = this.getTablaKeyNbiDistrito();
-        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaData);
+        const tablaKeySinPrefijo = 'nbiDistritoCahuachoTabla';
         
-        // ✅ Persistir en Redis via FormChangeService
+        // ✅ LEER DATOS ACTUALES DEL SIGNAL
+        let tablaActual = tablaData || formData[tablaKey] || [];
+        
+        // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD) - con ambas claves
+        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+        this.projectFacade.setField(this.seccionId, null, tablaKeySinPrefijo, tablaActual);
+        
+        // ✅ PERSISTIR EN REDIS (con Y sin prefijo) - CRÍTICO PARA PERSISTENCIA
         try {
-            this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaData }, { notifySync: true });
+            this.formChange.persistFields(this.seccionId, 'table', {
+                [tablaKey]: tablaActual,
+                [tablaKeySinPrefijo]: tablaActual
+            }, { notifySync: true });
+            console.log('[SECCION18] ✅ Tabla NBI Distrito guardada en session-data');
         } catch (error) {
             console.warn(`⚠️ [SECCION18] Error guardando tabla en Redis:`, error);
         }

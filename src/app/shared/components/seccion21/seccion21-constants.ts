@@ -35,10 +35,20 @@ export const SECCION21_WATCHED_FIELDS = [
   'provinciaSeleccionada',
   'departamentoSeleccionado',
   
-  // Fotografías (pueden tener prefijo)
+  // Fotografías base (sin prefijo de grupo)
   ...Array.from({ length: 10 }, (_, i) => `fotografia${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografia${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografia${i + 1}Imagen`),
+  
+  // Fotografías con prefijo AISD (_A1, _A2, etc.)
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_A1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_A1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_A1${i + 1}Imagen`),
+  
+  // Fotografías con prefijo AISI (_B1, _B2, etc.)
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_B1${i + 1}Titulo`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_B1${i + 1}Fuente`),
+  ...Array.from({ length: 10 }, (_, i) => `fotografia_B1${i + 1}Imagen`),
 ];
 
 export const SECCION21_SECTION_ID = '3.1.4.B';

@@ -94,20 +94,27 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
     return this.entrevistados.value();
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefix = this.PHOTO_PREFIX;
+    const data = this.formDataSignal();
+    
     for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo`;
-      const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente`;
-      const imagenKey = `${this.PHOTO_PREFIX}${i}Imagen`;
+      const imagenKey = `${prefix}${i}Imagen`;
+      const tituloKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
       
-      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
-      
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      const imagen = data[imagenKey];
+      if (imagen) {
+        fotos.push({
+          imagen: imagen,
+          titulo: data[tituloKey] || `Fotografía ${i}`,
+          fuente: data[fuenteKey] || 'GEADES, 2024'
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   readonly textoMetodologiaFormateado: Signal<SafeHtml> = computed(() => {
@@ -134,7 +141,7 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
   }
 
   get fotografias(): FotoItem[] {
-    return this.fotografiasCache;
+    return this.fotosCacheSignal();
   }
 
   get photoPrefix(): string {
@@ -156,7 +163,24 @@ export class Seccion3FormComponent extends BaseSectionComponent implements OnDes
       const entrevistados = this.entrevistadosSignal();
       this.cdRef.markForCheck();
     });
+
+    // ✅ EFFECT: Monitorear cambios de fotos (PATRÓN UNICA_VERDAD)
+    const seccion3Form = this;
+    effect(() => {
+      seccion3Form.fotosCacheSignal(); // ← Se suscribe al signal
+      
+      // Skip primer inicio - fotos ya cargadas en onInitCustom
+      if (!seccion3Form._fotoInicializado) {
+        seccion3Form._fotoInicializado = true;
+        return;
+      }
+      
+      seccion3Form.cargarFotografias();
+      seccion3Form.cdRef.markForCheck();
+    });
   }
+
+  private _fotoInicializado = false;
 
   /**
    * ✅ Inicializa campos desde el store O usa valores por defecto

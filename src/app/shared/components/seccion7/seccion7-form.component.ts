@@ -168,9 +168,11 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     return Array.isArray(formData[peaOcupadaTablaKey]) ? formData[peaOcupadaTablaKey] : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.prefijoGrupoSignal();
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const tituloKey = `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`;
       const fuenteKey = `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`;
@@ -180,9 +182,15 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
 
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ NUMERACIÓN GLOBAL - Tablas (tres tablas: PET, PEA, PEA Ocupada)
@@ -318,7 +326,7 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
     let inicializadoForm = false;
     
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       
       // Skip primer inicio - fotos ya cargadas en onInitCustom
       if (!inicializadoForm) {

@@ -20,10 +20,17 @@ export class TablePercentageHelper {
       return [];
     }
 
-    // Filtrar filas Total si existen
+    // Filtrar filas Total si existen (buscar en categoria, actividad u otros campos comunes)
     const tablaSinTotal = tabla.filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
-      return !categoria.includes('total');
+      const actividad = item.actividad?.toString().toLowerCase() || '';
+      const indicador = item.indicador?.toString().toLowerCase() || '';
+      const nombreIE = item.nombreIE?.toString().toLowerCase() || '';
+      // Filtrar si cualquiera de los campos contiene "total"
+      return !categoria.includes('total') && 
+             !actividad.includes('total') && 
+             !indicador.includes('total') && 
+             !nombreIE.includes('total');
     });
 
     // Calcular total dinámicamente como suma de casos en la tabla
@@ -41,6 +48,13 @@ export class TablePercentageHelper {
     }
 
     // Calcular porcentajes basados en el total de la tabla
+    // Detectar qué campo de categoría usa la tabla (categoria, actividad, indicador, etc.)
+    const primerItem = tablaSinTotal[0] || {};
+    const campoCategoria = primerItem.categoria !== undefined ? 'categoria' :
+                           primerItem.actividad !== undefined ? 'actividad' :
+                           primerItem.indicador !== undefined ? 'indicador' :
+                           primerItem.nombreIE !== undefined ? 'nombreIE' : 'categoria';
+    
     const tablaConPorcentajes = tablaSinTotal.map((item: any) => {
       const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
       const porcentaje = (casos / total) * 100;
@@ -49,7 +63,7 @@ export class TablePercentageHelper {
         .replace('.', ',') + ' %';
 
       if (cuadroNumero) {
-        debugLog(`📊 Cálculo porcentaje Cuadro ${cuadroNumero} ${item.categoria}: ${casos} / ${total} = ${porcentaje.toFixed(2)}%`);
+        debugLog(`📊 Cálculo porcentaje Cuadro ${cuadroNumero} ${item[campoCategoria]}: ${casos} / ${total} = ${porcentaje.toFixed(2)}%`);
       }
 
       return {
@@ -59,12 +73,12 @@ export class TablePercentageHelper {
       };
     });
 
-    // Agregar fila de total
-    const filaTotal = {
-      categoria: 'Total',
+    // Agregar fila de total usando el mismo campo de categoría detectado
+    const filaTotal: any = {
       casos: { value: total, isCalculated: true },
       porcentaje: { value: '100,00 %', isCalculated: true }
     };
+    filaTotal[campoCategoria] = 'Total';
     tablaConPorcentajes.push(filaTotal);
 
     if (cuadroNumero) {

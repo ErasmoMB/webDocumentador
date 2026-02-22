@@ -123,19 +123,6 @@ export class Seccion19ViewComponent extends BaseSectionComponent implements OnDe
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
-    const prefijo = this.obtenerPrefijoGrupo();
-    for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
-  });
-
   // ✅ VIEWMODEL: AGRUPA TODOS LOS DATOS
   // ViewModel sin resaltado para el texto del párrafo
   readonly viewModel: Signal<{
@@ -177,9 +164,8 @@ export class Seccion19ViewComponent extends BaseSectionComponent implements OnDe
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 2: Monitorear cambios en fotos
+    // ✅ EFFECT 2: Monitorear cambios en fotos (ÚNICA VERDAD)
     effect(() => {
-      this.photoFieldsHash();
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });

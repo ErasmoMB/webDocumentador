@@ -92,6 +92,11 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
         return data['indiceDesarrolloHumanoTabla'] || [];
     });
 
+    // ✅ NUEVO: Signal principal para datos del formulario (UNICA_VERDAD)
+    readonly formDataSignal: Signal<Record<string, any>> = computed(() => {
+        return this.projectFacade.selectSectionFields(this.seccionId, null)();
+    });
+
     // ✅ Signal para la tabla IDH - USANDO EL MISMO QUE LA VISTA
     readonly indiceDesarrolloHumanoTablaSignal: Signal<any[]> = computed(() => {
         return this.indiceDesarrolloHumanoSignal();
@@ -332,26 +337,34 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     }
 
     onTablaActualizada(tablaData: any[]): void {
+        // ✅ LEER DEL SIGNAL REACTIVO
+        const formData = this.formDataSignal();
+        const prefijo = this.obtenerPrefijo();
         const tablaKey = this.getTablaKeyIDH();
+        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
         
-        // ✅ Usar el mismo patrón exacto que sección 15
-        const dataToPersist = tablaData || this.indiceDesarrolloHumanoTablaSignal();
+        // ✅ LEER DATOS ACTUALES DEL SIGNAL
+        let tablaActual = tablaData || this.indiceDesarrolloHumanoSignal() || [];
         
-        // ✅ CORREGIDO: persist: true para guardar en Redis
-        this.formChangeService.persistFields(this.seccionId, 'table', {
-            [tablaKey]: dataToPersist
-        }, { updateState: true, notifySync: true, persist: true });
-
-        // 2. Obtener datos persistidos y actualizar this.datos
-        const tablaPersistida = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || dataToPersist || [];
-        this.datos[tablaKey] = tablaPersistida;
+        // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD) - con ambas claves
+        this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+        this.projectFacade.setField(this.seccionId, null, tablaKeyPrefijoHelper, tablaActual);
+        this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', tablaActual);
         
-        // 3. Llamar a onFieldChange para sincronización completa
-        this.onFieldChange(tablaKey, tablaPersistida, { refresh: false });
+        // ✅ PERSISTIR EN REDIS (con Y sin prefijo) - CRÍTICO PARA PERSISTENCIA
+        try {
+            this.formChangeService.persistFields(this.seccionId, 'table', {
+                [tablaKey]: tablaActual,
+                [tablaKeyPrefijoHelper]: tablaActual,
+                'indiceDesarrolloHumanoTabla': tablaActual
+            }, { notifySync: true });
+            console.log('[SECCION17] ✅ Tabla IDH guardada en session-data');
+        } catch (e) {
+            console.error('[SECCION17] ⚠️ Could not save to session-data:', e);
+        }
         
-        // 4. Forzar detección de cambios
+        // ✅ Forzar detección de cambios
         this.cdRef.markForCheck();
-        this.cdRef.detectChanges();
     }
 
     /**
@@ -437,23 +450,6 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     }
 
     /**
-     * ✅ PATRÓN: Inicializar tabla vacía
-     * Se llama primero para limpiar la tabla antes de cargar del backend
-     */
-    private inicializarTablaVacia(): void {
-        const prefijo = this.obtenerPrefijo();
-        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
-        const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
-        
-        // Inicializar con PrefijoHelper
-        this.projectFacade.setField(this.seccionId, null, tablaKeyPrefijoHelper, []);
-        this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', []);
-        
-        // Inicializar con PrefixManager  
-        this.projectFacade.setField(this.seccionId, null, tablaKeyPrefixManager, []);
-    }
-
-    /**
      * ✅ PATRÓN: Cargar datos del backend
      * 1. Obtiene centros poblados del grupo actual
      * 2. Llama al endpoint /demograficos/idh
@@ -505,17 +501,22 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
                     const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
                     const tablaKeyPrefixManager = PrefixManager.getFieldKey(this.seccionId, 'indiceDesarrolloHumanoTabla');
                     
-                    // Guardar con PrefijoHelper (usado por vista)
+                    // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
                     this.projectFacade.setField(this.seccionId, null, tablaKeyPrefijoHelper, datosTransformados);
                     this.projectFacade.setField(this.seccionId, null, 'indiceDesarrolloHumanoTabla', datosTransformados);
-                    
-                    // Guardar con PrefixManager (usado por app-dynamic-table)
                     this.projectFacade.setField(this.seccionId, null, tablaKeyPrefixManager, datosTransformados);
                     
-                    // También actualizar this.datos directamente para ambas claves
-                    this.datos[tablaKeyPrefijoHelper] = datosTransformados;
-                    this.datos[tablaKeyPrefixManager] = datosTransformados;
-                    this.datos['indiceDesarrolloHumanoTabla'] = datosTransformados;
+                    // ✅ PERSISTIR EN REDIS (con Y sin prefijo) - CRÍTICO PARA PERSISTENCIA
+                    try {
+                        this.formChangeService.persistFields(this.seccionId, 'table', {
+                            [tablaKeyPrefijoHelper]: datosTransformados,
+                            'indiceDesarrolloHumanoTabla': datosTransformados,
+                            [tablaKeyPrefixManager]: datosTransformados
+                        }, { notifySync: true });
+                        console.log('[SECCION17] ✅ Datos IDH guardados en session-data');
+                    } catch (e) {
+                        console.error('[SECCION17] ⚠️ Could not save to session-data:', e);
+                    }
                 }
 
                 this.cdRef.markForCheck();
@@ -529,14 +530,24 @@ export class Seccion17FormComponent extends BaseSectionComponent implements OnDe
     /**
      * ✅ PATRÓN: Inicialización personalizada
      * Se llama en onInitCustom para limpiar y cargar datos
-     * Sigue el patrón de Sección 9: 1) inicializar tabla vacía, 2) cargar del backend
+     * Sigue el patrón de Sección 9: 1) verificar datos existentes, 2) cargar del backend si no hay
      */
     protected override onInitCustom(): void {
         super.onInitCustom();
         
-        // ✅ PATRÓN SECCIÓN 9: Primero inicializar tabla vacía, luego cargar del backend
-        this.inicializarTablaVacia();
-        this.cargarDatosDelBackend();
+        // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+        const prefijo = this.obtenerPrefijo();
+        const tablaKeyPrefijoHelper = prefijo ? `indiceDesarrolloHumanoTabla${prefijo}` : 'indiceDesarrolloHumanoTabla';
+        const formData = this.formDataSignal();
+        const existingData = formData[tablaKeyPrefijoHelper];
+        
+        // Solo cargar del backend si no hay datos persistidos
+        if (!existingData || !Array.isArray(existingData) || existingData.length === 0) {
+            console.log('[SECCION17] No hay datos persistidos, cargando del backend...');
+            this.cargarDatosDelBackend();
+        } else {
+            console.log('[SECCION17] Datos persistidos encontrados, no se carga del backend');
+        }
     }
 
     /**

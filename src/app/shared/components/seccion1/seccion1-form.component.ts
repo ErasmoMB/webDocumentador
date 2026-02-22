@@ -119,6 +119,27 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   readonly parrafoIntroduccion = this.createAutoSyncField('parrafoSeccion1_4', '');
   readonly objetivosSeccion1 = this.createAutoSyncField('objetivosSeccion1', [] as string[]);
 
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefix = this.PHOTO_PREFIX;
+    
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
   // ✅ JSON Processing fields
   readonly centrosPobladosJSON = this.createAutoSyncField<any[]>('centrosPobladosJSON', [] as any[]);
   readonly jsonCompleto = this.createAutoSyncField<Record<string, any>>('jsonCompleto', {} as Record<string, any>);
@@ -177,6 +198,26 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
     },
     { allowSignalWrites: true }
   );
+
+  // ✅ EFFECT: Monitorear cambios de fotos (PATRÓN UNICA_VERDAD)
+  private readonly fotoEffect = effect(
+    () => {
+      this.fotosCacheSignal(); // ← Se suscribe al signal
+      
+      // Skip primer inicio - fotos ya cargadas en onInitCustom
+      if (!this._fotoInicializado) {
+        this._fotoInicializado = true;
+        return;
+      }
+      
+      this.cargarFotografias();
+      this.fotografiasFormMulti = [...this.fotografiasCache];
+      this.cdRef.markForCheck();
+    },
+    { allowSignalWrites: true }
+  );
+  
+  private _fotoInicializado = false;
 
   // ✅ EFFECT: Auto-seleccionar primer distrito y actualizar párrafo
   private readonly autoSelectDistrictEffect = effect(

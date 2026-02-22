@@ -53,11 +53,12 @@ const transformCondicionOcupacionDesdeDemograficos = (data: any[]): any[] => {
 };
 
 // ✅ Función de transformación para Materiales de Vivienda
+// Mapea subcategoria → tipoMaterial (igual que Sección 9) para que isFilaTotal() funcione correctamente
 const transformMaterialesViviendaDesdeDemograficos = (data: any[]): any[] => {
   if (!Array.isArray(data)) return [];
   return data.map(item => ({
     categoria: item.categoria || item.f0 || '',
-    subcategoria: item.subcategoria || '',  // ✅ Incluir subcategoria del backend
+    tipoMaterial: item.subcategoria || item.tipoMaterial || item.material || item.tipo_material || '',  // ✅ Mapear subcategoria → tipoMaterial
     casos: typeof item.casos === 'number' ? item.casos : parseInt(item.casos) || 0,
     porcentaje: item.porcentaje || item.f2 || ''
   }));
@@ -73,6 +74,9 @@ const transformMaterialesViviendaDesdeDemograficos = (data: any[]): any[] => {
 export class Seccion25FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.4';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Flag para evitar ejecuciones múltiples del effect de carga
+  private seccion25DatosCargados: boolean = false;
 
   // ✅ PHOTO_PREFIX como Signal para que se actualice cuando cambie el grupo
   readonly photoPrefixSignal: Signal<string>;
@@ -154,15 +158,24 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     return Array.isArray(data[key]) ? data[key] : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    let hash = '';
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // Fotos computed directly from imageFacade like other sections (Seccion24 pattern)
@@ -285,7 +298,7 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
     // EFFECT: photos - watch foto fields hash and imageFacade group (ensures form updates when images or metas change)
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       // Read fotosSignal so the effect depends on image store
       const fotos = this.fotosSignal() || [];
       // synchronize local caches
@@ -315,13 +328,13 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       const datos = this.datos || {};
 
       // Auto-fill table titles and sources when tables are present but title/source fields are empty
-      const prefijo = this.obtenerPrefijoGrupo();
-      const tituloTiposKey = prefijo ? `cuadroTituloTiposVivienda${prefijo}` : 'cuadroTituloTiposVivienda';
-      const fuenteTiposKey = prefijo ? `cuadroFuenteTiposVivienda${prefijo}` : 'cuadroFuenteTiposVivienda';
-      const tituloCondKey = prefijo ? `cuadroTituloCondicionOcupacion${prefijo}` : 'cuadroTituloCondicionOcupacion';
-      const fuenteCondKey = prefijo ? `cuadroFuenteCondicionOcupacion${prefijo}` : 'cuadroFuenteCondicionOcupacion';
-      const tituloMatKey = prefijo ? `cuadroTituloMaterialesVivienda${prefijo}` : 'cuadroTituloMaterialesVivienda';
-      const fuenteMatKey = prefijo ? `cuadroFuenteMaterialesVivienda${prefijo}` : 'cuadroFuenteMaterialesVivienda';
+      const prefijoLocal = this.obtenerPrefijoGrupo();
+      const tituloTiposKey = prefijoLocal ? `cuadroTituloTiposVivienda${prefijoLocal}` : 'cuadroTituloTiposVivienda';
+      const fuenteTiposKey = prefijoLocal ? `cuadroFuenteTiposVivienda${prefijoLocal}` : 'cuadroFuenteTiposVivienda';
+      const tituloCondKey = prefijoLocal ? `cuadroTituloCondicionOcupacion${prefijoLocal}` : 'cuadroTituloCondicionOcupacion';
+      const fuenteCondKey = prefijoLocal ? `cuadroFuenteCondicionOcupacion${prefijoLocal}` : 'cuadroFuenteCondicionOcupacion';
+      const tituloMatKey = prefijoLocal ? `cuadroTituloMaterialesVivienda${prefijoLocal}` : 'cuadroTituloMaterialesVivienda';
+      const fuenteMatKey = prefijoLocal ? `cuadroFuenteMaterialesVivienda${prefijoLocal}` : 'cuadroFuenteMaterialesVivienda';
       
       if (Array.isArray(datos[this.getTablaKeyTiposVivienda()]) && (datos[tituloTiposKey] === undefined || datos[tituloTiposKey] === '' || datos[tituloTiposKey] === '____')) {
         this.cuadroTituloTiposVivienda.update(SECCION25_TEMPLATES.tituloTiposViviendaDefault);
@@ -345,9 +358,9 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       }
 
       // ✅ CORREGIDO - Usar campos con prefijo para párrafos
-      const textoViviendaKey = prefijo ? `textoViviendaAISI${prefijo}` : 'textoViviendaAISI';
-      const textoOcupacionKey = prefijo ? `textoOcupacionViviendaAISI${prefijo}` : 'textoOcupacionViviendaAISI';
-      const textoEstructuraKey = prefijo ? `textoEstructuraAISI${prefijo}` : 'textoEstructuraAISI';
+      const textoViviendaKey = prefijoLocal ? `textoViviendaAISI${prefijoLocal}` : 'textoViviendaAISI';
+      const textoOcupacionKey = prefijoLocal ? `textoOcupacionViviendaAISI${prefijoLocal}` : 'textoOcupacionViviendaAISI';
+      const textoEstructuraKey = prefijoLocal ? `textoEstructuraAISI${prefijoLocal}` : 'textoEstructuraAISI';
       
       const textoViviendaField = this.projectFacade.selectField(this.seccionId, null, textoViviendaKey)();
       if (textoViviendaField === undefined || textoViviendaField === null || textoViviendaField === '') {
@@ -367,9 +380,44 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       // NOTE: Tablas se llenan con datos del backend (no hay estructura inicial)
       // La configuración `noInicializarDesdeEstructura: true` en los TableConfigs asegura esto
       
-      // ✅ FASE 3: Cargar datos demográficos desde el backend
-      this.inicializarTablasVacias();  // Primero vacías
-      this.cargarDatosDelBackend();    // Luego llenar con backend
+      // ✅ Usar effect para esperar a que los datos de Redis se restauren
+      // Esto evita el problema de timing donde los datos aún no están disponibles
+      effect(() => {
+        const formData = this.formDataSignal();
+        // Usar un flag para evitar ejecuciones múltiples
+        if (this.seccion25DatosCargados) return;
+        
+        // Obtener prefijo dentro del effect para asegurar que está actualizado
+        const prefijoEffect = this.obtenerPrefijoGrupo();
+        
+        // Verificar las 3 tablas
+        const tablaKeyTipos = prefijoEffect ? `tiposViviendaAISI${prefijoEffect}` : 'tiposViviendaAISI';
+        const tablaKeyCond = prefijoEffect ? `condicionOcupacionAISI${prefijoEffect}` : 'condicionOcupacionAISI';
+        const tablaKeyMat = prefijoEffect ? `materialesViviendaAISI${prefijoEffect}` : 'materialesViviendaAISI';
+        
+        const existingTipos = formData[tablaKeyTipos];
+        const existingCond = formData[tablaKeyCond];
+        const existingMat = formData[tablaKeyMat];
+        
+        const hasTiposData = existingTipos && Array.isArray(existingTipos) && existingTipos.length > 0;
+        const hasCondData = existingCond && Array.isArray(existingCond) && existingCond.length > 0;
+        const hasMatData = existingMat && Array.isArray(existingMat) && existingMat.length > 0;
+        
+        // Solo cargar del backend si NO hay datos en ninguna tabla
+        if (!hasTiposData || !hasCondData || !hasMatData) {
+          debugLog('[SECCION25] No hay datos persistidos, inicializando y cargando del backend...');
+          this.inicializarTablasVacias();
+          this.cargarDatosDelBackend();
+          this.seccion25DatosCargados = true;
+        } else {
+          debugLog('[SECCION25] Datos persistidos encontrados, no se carga del backend');
+          // ✅ MIGRAR datos persistidos: subcategoria → tipoMaterial (compatibilidad con datos viejos)
+          this.migrarSubcategoriaATipoMaterial(tablaKeyMat, existingMat);
+          this.seccion25DatosCargados = true;
+        }
+        
+        this.cdRef.markForCheck();
+      }, { injector: this.injector });
     } catch (e) {
       /* no bloquear inicio por este auto-fill */
     }
@@ -432,6 +480,19 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
             const tablaKey = `tiposViviendaAISI${prefijo}`;
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'tiposViviendaAISI', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
+            try {
+              this.formChange.persistFields(
+                this.seccionId, 
+                'table', 
+                { [tablaKey]: datosTransformados, 'tiposViviendaAISI': datosTransformados }, 
+                { notifySync: true }
+              );
+            } catch (e) {
+              debugLog('[SECCION25] ⚠️ Could not persist tiposVivienda to Redis:', e);
+            }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -456,6 +517,19 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
             const tablaKey = `condicionOcupacionAISI${prefijo}`;
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'condicionOcupacionAISI', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
+            try {
+              this.formChange.persistFields(
+                this.seccionId, 
+                'table', 
+                { [tablaKey]: datosTransformados, 'condicionOcupacionAISI': datosTransformados }, 
+                { notifySync: true }
+              );
+            } catch (e) {
+              debugLog('[SECCION25] ⚠️ Could not persist condicionOcupacion to Redis:', e);
+            }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -480,6 +554,24 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
             const tablaKey = `materialesViviendaAISI${prefijo}`;
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             this.projectFacade.setField(this.seccionId, null, 'materialesViviendaAISI', datosTransformados);
+            
+            // ✅ RECALCULAR TOTALES Y PORCENTAJES DESPUÉS DE CARGAR DEL BACKEND
+            this.datos[tablaKey] = datosTransformados;
+            this.datos['materialesViviendaAISI'] = datosTransformados;
+            this.calcularPorcentajesMaterialesViviendaAISI();
+            
+            // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
+            try {
+              this.formChange.persistFields(
+                this.seccionId,
+                'table',
+                { [tablaKey]: this.datos[tablaKey], 'materialesViviendaAISI': this.datos[tablaKey] },
+                { notifySync: true }
+              );
+            } catch (e) {
+              debugLog('[SECCION25] ⚠️ Could not persist materialesVivienda to Redis:', e);
+            }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -523,6 +615,10 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
                 .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 .replace('.', ',') + ' %';
               item.porcentaje = porcentaje;
+            } else {
+              // ✅ ACTUALIZAR LA FILA TOTAL
+              item.casos = total;
+              item.porcentaje = '100,00 %';
             }
           });
         }
@@ -532,9 +628,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       // Persistir correctamente como tabla (store y formulario) y notificar sync
       try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
       try {
-        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-        const formChange = this.injector.get(FormChangeServiceToken, null);
-        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+        // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+        this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], 'tiposViviendaAISI': this.datos[tablaKey] }, { notifySync: true });
       } catch (e) {}
 
       this.actualizarDatos();
@@ -544,8 +639,31 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   onTiposViviendaTableUpdated(updated?: any[]): void {
     const key = this.getTablaKeyTiposVivienda();
-    const datos = updated || this.datos[key] || [];
-    this.datos[key] = [...datos];
+    let tabla = updated || this.datos[key] || [];
+    
+    // ✅ REORDENAR: filas de datos primero, Total al final
+    tabla = this.reordenarTablaConTotal(tabla);
+    
+    // ✅ RECALCULAR porcentajes y total
+    const total = tabla.reduce((sum: number, item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      if (categoria.includes('total')) return sum;
+      return sum + (parseFloat(item.casos) || 0);
+    }, 0);
+    
+    if (total > 0) {
+      tabla = tabla.map((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (categoria.includes('total')) {
+          return { ...item, casos: total, porcentaje: '100,00 %' };
+        }
+        const casos = parseFloat(item.casos) || 0;
+        const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
+        return { ...item, porcentaje };
+      });
+    }
+    
+    this.datos[key] = [...tabla];
     try { this.projectFacade.setTableData(this.seccionId, null, key, this.datos[key]); } catch (e) {}
     try {
       // ✅ CORREGIDO - Usar prefijos para párrafos
@@ -558,7 +676,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
       if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-      this.formChange.persistFields(this.seccionId, 'table', { [key]: this.datos[key], ...textPayload }, { notifySync: true });
+      // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+      this.formChange.persistFields(this.seccionId, 'table', { [key]: this.datos[key], 'tiposViviendaAISI': this.datos[key], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -585,6 +704,10 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
                 .toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 .replace('.', ',') + ' %';
               item.porcentaje = porcentaje;
+            } else {
+              // ✅ ACTUALIZAR LA FILA TOTAL
+              item.casos = total;
+              item.porcentaje = '100,00 %';
             }
           });
         }
@@ -592,9 +715,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       this.datos[tablaKey] = [...tabla];
       try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
       try {
-        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-        const formChange = this.injector.get(FormChangeServiceToken, null);
-        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+        // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+        this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], 'condicionOcupacionAISI': this.datos[tablaKey] }, { notifySync: true });
       } catch (e) {}
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -603,7 +725,30 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   onCondicionOcupacionTableUpdated() {
     const tablaKey = this.getTablaKeyCondicionOcupacion();
-    const tabla = this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
+    let tabla = this.datos[tablaKey] || this.datos.condicionOcupacionAISI || [];
+    
+    // ✅ REORDENAR: filas de datos primero, Total al final
+    tabla = this.reordenarTablaConTotal(tabla);
+    
+    // ✅ RECALCULAR porcentajes y total
+    const total = tabla.reduce((sum: number, item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      if (categoria.includes('total')) return sum;
+      return sum + (parseFloat(item.casos) || 0);
+    }, 0);
+    
+    if (total > 0) {
+      tabla = tabla.map((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        if (categoria.includes('total')) {
+          return { ...item, casos: total, porcentaje: '100,00 %' };
+        }
+        const casos = parseFloat(item.casos) || 0;
+        const porcentaje = ((casos / total) * 100).toFixed(2).replace('.', ',') + ' %';
+        return { ...item, porcentaje };
+      });
+    }
+    
     this.datos[tablaKey] = [...tabla];
     try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
     try {
@@ -617,7 +762,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
       if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
+      // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], 'condicionOcupacionAISI': this.datos[tablaKey], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -629,17 +775,17 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     
     if (index >= 0 && index < tabla.length) {
       tabla[index][field] = value;
+      this.datos[tablaKey] = [...tabla];
       
       if (field === 'casos') {
+        // ✅ LLAMAR DESPUÉS de actualizar this.datos[tablaKey]
         this.calcularPorcentajesMaterialesViviendaAISI();
       }
       
-      this.datos[tablaKey] = [...tabla];
       try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
       try {
-        const FormChangeServiceToken = require('src/app/core/services/state/form-change.service').FormChangeService;
-        const formChange = this.injector.get(FormChangeServiceToken, null);
-        if (formChange) formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }, { notifySync: true });
+        // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+        this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], 'materialesViviendaAISI': this.datos[tablaKey] }, { notifySync: true });
       } catch (e) {}
       this.actualizarDatos();
       this.cdRef.detectChanges();
@@ -648,8 +794,15 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
 
   onMaterialesViviendaTableUpdated() {
     const tablaKey = this.getTablaKeyMaterialesVivienda();
-    const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    let tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
+    
+    // ✅ REORDENAR: filas de datos primero, Total al final (por categoría)
+    tabla = this.reordenarTablaMaterialesConTotal(tabla);
+    
+    // ✅ RECALCULAR porcentajes y total
     this.calcularPorcentajesMaterialesViviendaAISI();
+    // ✅ Usar tabla recalculada desde datos (evita sobrescribir con valores viejos)
+    tabla = this.datos[tablaKey] || tabla;
     this.datos[tablaKey] = [...tabla];
     try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, this.datos[tablaKey]); } catch (e) {}
     try {
@@ -663,7 +816,8 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       if (this.datos[textoOcupacionKey] !== undefined) textPayload[textoOcupacionKey] = this.datos[textoOcupacionKey];
       if (this.datos[textoEstructuraKey] !== undefined) textPayload[textoEstructuraKey] = this.datos[textoEstructuraKey];
 
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], ...textPayload }, { notifySync: true });
+      // ✅ PERSISTIR CON AMBAS CLAVES (con y sin prefijo)
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey], 'materialesViviendaAISI': this.datos[tablaKey], ...textPayload }, { notifySync: true });
     } catch (e) {}
     this.actualizarDatos();
     this.cdRef.detectChanges();
@@ -777,6 +931,15 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     return filtered.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
   }
 
+  /**
+   * ✅ Helper para verificar si una fila es la fila Total
+   * Busca en tipoMaterial (campo normalizado desde subcategoria del backend)
+   */
+  private isFilaTotal(item: any): boolean {
+    const tipoMat = item.tipoMaterial?.toString().toLowerCase() || '';
+    return tipoMat === 'total';
+  }
+
   calcularPorcentajesMaterialesViviendaAISI() {
     const tablaKey = this.getTablaKeyMaterialesVivienda();
     const tabla = this.datos[tablaKey] || this.datos['materialesViviendaAISI'] || [];
@@ -785,31 +948,102 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
       return;
     }
     
-    const categorias = ['paredes', 'techos', 'pisos'];
-    categorias.forEach(categoria => {
-      const itemsCategoria = tabla.filter((item: any) => 
-        item.categoria && item.categoria.toLowerCase().includes(categoria)
-      );
-      if (itemsCategoria.length > 0) {
-        const totalItem = itemsCategoria.find((item: any) => 
-          item.categoria && item.categoria.toLowerCase().includes('total')
-        );
-        const total = totalItem ? parseFloat(totalItem.casos) || 0 : 0;
-        
-        if (total > 0) {
-          itemsCategoria.forEach((item: any) => {
-            if (!item.categoria || !item.categoria.toLowerCase().includes('total')) {
-              const casos = parseFloat(item.casos) || 0;
-              const porcentaje = ((casos / total) * 100).toFixed(2);
-              item.porcentaje = porcentaje + ' %';
-            }
-          });
+    // ✅ PATRÓN SECCIÓN 9: Agrupar dinámicamente por categoría (no hardcodear strings)
+    const tablaClon = JSON.parse(JSON.stringify(tabla));
+    
+    // Agrupar filas por categoría (excluyendo las filas de Total)
+    const categoriasMap = new Map<string, any[]>();
+    
+    tablaClon.forEach((row: any) => {
+      const tipoMat = row.tipoMaterial || '';
+      const isTotal = tipoMat.toString().toLowerCase() === 'total';
+      
+      if (!isTotal) {
+        const cat = row.categoria || '';
+        if (!categoriasMap.has(cat)) {
+          categoriasMap.set(cat, []);
         }
+        categoriasMap.get(cat)!.push(row);
       }
     });
     
+    // Para cada categoría, calcular total y porcentajes
+    categoriasMap.forEach((filas, categoria) => {
+      const totalCategoria = filas.reduce((sum: number, row: any) => {
+        return sum + (parseFloat(row.casos) || 0);
+      }, 0);
+      
+      // Calcular porcentaje para cada fila de la categoría
+      filas.forEach((row: any) => {
+        const casos = parseFloat(row.casos) || 0;
+        if (totalCategoria > 0) {
+          const pct = (casos / totalCategoria) * 100;
+          row.porcentaje = pct.toFixed(2).replace('.', ',') + ' %';
+        } else {
+          row.porcentaje = '0,00 %';
+        }
+      });
+      
+      // ✅ Buscar y actualizar la fila Total de esta categoría
+      // Usar comparación más flexible: buscar si la categoría contiene las mismas palabras clave
+      const filaTotal = tablaClon.find((row: any) => {
+        const rowTipoMat = (row.tipoMaterial || '').toString().toLowerCase();
+        if (rowTipoMat !== 'total') return false;
+        
+        // Comparar categorías de manera más flexible
+        const rowCatNorm = (row.categoria || '').toLowerCase().trim();
+        const catNorm = categoria.toLowerCase().trim();
+        
+        // Si son exactamente iguales, retornar true
+        if (rowCatNorm === catNorm) return true;
+        
+        // O si una contiene a la otra, retornar true
+        return rowCatNorm.includes(catNorm) || catNorm.includes(rowCatNorm);
+      });
+      
+      if (filaTotal) {
+        filaTotal.casos = totalCategoria;
+        filaTotal.porcentaje = '100,00 %';
+      }
+    });
+
     // Actualizar la tabla en datos
-    this.datos[tablaKey] = [...tabla];
+    this.datos[tablaKey] = tablaClon;
+  }
+
+  /**
+   * ✅ Migra datos persistidos con subcategoria → tipoMaterial
+   * Necesario para compatibilidad con datos guardados antes del fix
+   */
+  private migrarSubcategoriaATipoMaterial(tablaKey: string, tabla: any[]): void {
+    if (!tabla || !Array.isArray(tabla)) return;
+    
+    let necesitaActualizacion = false;
+    const tablaMigrada = tabla.map((item: any) => {
+      if (item.subcategoria && !item.tipoMaterial) {
+        necesitaActualizacion = true;
+        return { ...item, tipoMaterial: item.subcategoria };
+      }
+      return item;
+    });
+    
+    if (necesitaActualizacion) {
+      debugLog('[SECCION25] 🔄 Migrando subcategoria → tipoMaterial en datos persistidos');
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tablaMigrada);
+      this.projectFacade.setField(this.seccionId, null, 'materialesViviendaAISI', tablaMigrada);
+      try {
+        this.formChange.persistFields(
+          this.seccionId,
+          'table',
+          { [tablaKey]: tablaMigrada, 'materialesViviendaAISI': tablaMigrada },
+          { notifySync: true }
+        );
+      } catch (e) {
+        debugLog('[SECCION25] ⚠️ Error persistiendo migración:', e);
+      }
+      this.datos[tablaKey] = tablaMigrada;
+      this.cdRef.markForCheck();
+    }
   }
 
   // Image handler
@@ -819,6 +1053,62 @@ export class Seccion25FormComponent extends BaseSectionComponent implements OnDe
     // Also update the BaseSection cache used by other uploads
     this.fotografiasFormMulti = [...(fotografias || [])];
     this.cdRef.markForCheck();
+  }
+
+  /**
+   * ✅ Helper para reordenar tabla: filas de datos primero, Total al final
+   */
+  private reordenarTablaConTotal(tabla: any[]): any[] {
+    if (!tabla || tabla.length === 0) return tabla;
+    
+    const filasNormales = tabla.filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total');
+    });
+    
+    const filaTotal = tabla.find((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return categoria.includes('total');
+    });
+    
+    return filaTotal ? [...filasNormales, filaTotal] : [...filasNormales];
+  }
+
+  /**
+   * ✅ Helper para reordenar tabla de materiales (con subcategorías: paredes, techos, pisos)
+   * Las filas de cada categoría primero, luego la fila Total de cada categoría
+   */
+  private reordenarTablaMaterialesConTotal(tabla: any[]): any[] {
+    if (!tabla || tabla.length === 0) return tabla;
+    
+    const categorias = ['paredes', 'techos', 'pisos'];
+    let resultado: any[] = [];
+    
+    categorias.forEach(cat => {
+      const itemsCategoria = tabla.filter((item: any) => {
+        const categoria = item.categoria?.toString().toLowerCase() || '';
+        return categoria.includes(cat);
+      });
+      
+      // Separar filas normales de la fila Total (buscar en tipoMaterial)
+      const filasNormales = itemsCategoria.filter((item: any) => {
+        const tipoMat = item.tipoMaterial?.toString().toLowerCase() || '';
+        return !tipoMat.includes('total');
+      });
+      
+      const filaTotal = itemsCategoria.find((item: any) => {
+        const tipoMat = item.tipoMaterial?.toString().toLowerCase() || '';
+        return tipoMat.includes('total');
+      });
+      
+      if (filaTotal) {
+        resultado = [...resultado, ...filasNormales, filaTotal];
+      } else {
+        resultado = [...resultado, ...filasNormales];
+      }
+    });
+    
+    return resultado;
   }
 
   // Métodos para generar textos por defecto

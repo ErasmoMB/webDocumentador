@@ -54,28 +54,42 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
     super.onFieldChange(campoConPrefijo, value, options);
   }
 
-  // ✅ SIGNAL PARA TODAS LAS FOTOS (ambos prefijos) CON PREFIJO DE GRUPO
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.obtenerPrefijo();
-    let hash = '';
-
-    // Reservorio photos
+    
+    // Fotografías de Reservorio
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_RESERVORIO}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-
-    // UsoSuelos photos
+    
+    // Fotografías de Uso de Suelos
     for (let i = 1; i <= 10; i++) {
       const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Titulo${prefijo}`)();
       const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Fuente${prefijo}`)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_USO_SUELOS}${i}Imagen${prefijo}`)();
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-
-    return hash;
+    
+    return fotos;
   });
 
   // ✅ SIGNAL PARA DATOS DE SECCIÓN CON EFECTO AUTO-SYNC
@@ -99,7 +113,7 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });
   }
@@ -121,23 +135,10 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
 
   // Sobrescribir cargarFotografias para manejar DOS grupos
   override cargarFotografias(): void {
-    const groupPrefix = this.imageFacade.getGroupPrefix(this.seccionId);
-
-    // Cargar grupo Reservorio
-    this.fotografiasReservorio = this.imageFacade.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_RESERVORIO,
-      groupPrefix
-    );
-
-    // Cargar grupo UsoSuelos
-    this.fotografiasUsoSuelos = this.imageFacade.loadImages(
-      this.seccionId,
-      this.PHOTO_PREFIX_USO_SUELOS,
-      groupPrefix
-    );
-
-    this.cdRef.detectChanges();
+    const fotos = this.fotosCacheSignal();
+    this.fotografiasReservorio = fotos.filter(f => f.imagen && f.imagen.includes(this.PHOTO_PREFIX_RESERVORIO));
+    this.fotografiasUsoSuelos = fotos.filter(f => f.imagen && f.imagen.includes(this.PHOTO_PREFIX_USO_SUELOS));
+    this.cdRef.markForCheck();
   }
 
   getFieldIdAguaCompleto(): string {
@@ -159,7 +160,7 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
       groupPrefix
     );
     this.fotografiasReservorio = [...fotografias];
-    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   onFotografiasUsoSuelosChange(fotografias: FotoItem[]): void {
@@ -171,7 +172,7 @@ export class Seccion16FormComponent extends BaseSectionComponent implements OnDe
       groupPrefix
     );
     this.fotografiasUsoSuelos = [...fotografias];
-    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   obtenerTextoAguaCompleto(): string {

@@ -119,12 +119,13 @@
       [config]="materialesViviendaConfig"
       [columns]="[
         { field: 'categoria', label: SECCION25_TEMPLATES.columnCategoria, type: 'text', placeholder: 'Ej: Materiales de las paredes de las viviendas' },
-        { field: 'subcategoria', label: SECCION25_TEMPLATES.columnTipoMaterial, type: 'text', placeholder: 'Ej: Adobe' },
+        { field: 'tipoMaterial', label: SECCION25_TEMPLATES.columnTipoMaterial, type: 'text', placeholder: 'Ej: Adobe' },
         { field: 'casos', label: SECCION25_TEMPLATES.columnCasos, type: 'number', placeholder: SECCION25_TEMPLATES.placeholderCasos },
         { field: 'porcentaje', label: SECCION25_TEMPLATES.columnPorcentaje, type: 'text', placeholder: SECCION25_TEMPLATES.placeholderPorcentaje, readonly: true }
       ]"
       [tablaKey]="'materialesViviendaAISI'"
       [modoVista]="false"
+      [customFieldChangeHandler]="onMaterialesViviendaFieldChange.bind(this)"
       (tableUpdated)="onMaterialesViviendaTableUpdated()">
     </app-dynamic-table>
 

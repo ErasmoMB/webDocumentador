@@ -48,6 +48,10 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.1';
   @Input() override modoFormulario: boolean = false;
 
+  // ✅ PHOTO_PREFIX como string para compatibilidad con SectionPhotoCoordinator
+  // Se actualiza cuando cambia el grupo
+  override PHOTO_PREFIX: string = '';
+  
   // ✅ EXPORTAR TEMPLATES PARA EL HTML
   readonly SECCION22_TEMPLATES = SECCION22_TEMPLATES;
   
@@ -267,6 +271,12 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       return prefix;
     });
     
+    // ✅ Sincronizar PHOTO_PREFIX (string) con photoPrefixSignal para compatibilidad
+    // con SectionPhotoCoordinator
+    effect(() => {
+      this.PHOTO_PREFIX = this.photoPrefixSignal();
+    });
+    
     // ✅ Signal para número global de tabla (primera tabla: poblacionSexoAISI)
     this.globalTableNumberSignal = computed(() => {
       const globalNum = this.globalNumbering.getGlobalTableNumber(this.seccionId, 0);
@@ -478,11 +488,25 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
       this.onFieldChange(fuenteEtarioField, valorFuente, { refresh: false });
     }
 
-    // ✅ CARGAR DATOS DEL BACKEND
-    // Primero inicializar vacías para evitar errores
-    this.inicializarTablasVacias();
-    // Luego llenar con datos del backend
-    this.cargarDatosDelBackend();
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const formData = this.formDataSignal();
+    const poblacionSexoKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
+    const poblacionEtarioKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
+    
+    const existingSexoData = formData[poblacionSexoKey];
+    const existingEtarioData = formData[poblacionEtarioKey];
+    
+    const hasSexoData = existingSexoData && Array.isArray(existingSexoData) && existingSexoData.length > 0;
+    const hasEtarioData = existingEtarioData && Array.isArray(existingEtarioData) && existingEtarioData.length > 0;
+    
+    // Solo cargar del backend si no hay datos persistidos en ninguna tabla
+    if (!hasSexoData || !hasEtarioData) {
+      debugLog('[SECCION22] No hay datos persistidos, cargando del backend...');
+      this.inicializarTablasVacias();
+      this.cargarDatosDelBackend();
+    } else {
+      debugLog('[SECCION22] Datos persistidos encontrados, no se carga del backend');
+    }
   }
 
   protected override detectarCambios(): boolean { return false; }
@@ -593,8 +617,18 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
+    // ✅ Usar photoPrefixSignal() para obtener el prefijo dinámico
     const prefix = this.photoPrefixSignal();
     this.onGrupoFotografiasChange(prefix, fotografias);
+    
+    // ✅ También guardar en ProjectStateFacade para persistencia inmediata
+    for (let i = 0; i < fotografias.length; i++) {
+      const foto = fotografias[i];
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Titulo`, foto.titulo);
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Fuente`, foto.fuente);
+      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Imagen`, foto.imagen);
+    }
+    
     this.cdRef.markForCheck();
   }
 

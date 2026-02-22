@@ -127,7 +127,6 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
     });
 
     effect(() => {
-      this.photoFieldsHash();
       this.fotosCacheSignal();
       this.cdRef.markForCheck();
     });

@@ -14,6 +14,7 @@ import { GlobalNumberingService } from 'src/app/core/services/numbering/global-n
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { transformActividadesEconomicas } from 'src/app/core/config/table-transforms';
 import { SECCION24_TEMPLATES, SECCION24_DEFAULT_TEXTS } from './seccion24-constants';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 
 /**
  * ✅ Desenvuelve datos del backend
@@ -44,6 +45,9 @@ const unwrapDemograficoData = (responseData: any): any[] => {
 export class Seccion24FormComponent extends BaseSectionComponent implements OnDestroy {
   @Input() override seccionId: string = '3.1.4.B.1.3';
   @Input() override modoFormulario: boolean = false;
+
+  // ✅ Flag para evitar ejecuciones múltiples del effect de carga
+  private seccion24DatosCargados: boolean = false;
 
   // ✅ Exportar TEMPLATES para el HTML
   readonly SECCION24_TEMPLATES = SECCION24_TEMPLATES;
@@ -202,13 +206,32 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
     this.datos['centroPobladoAISI'] = centroPobladoAISI;
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
-    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }, { notifySync: true }); } catch (e) {}
     
-    // ✅ FASE 2: Inicializar tablas vacías
-    this.inicializarTablasVacias();
-    
-    // ✅ FASE 3: Cargar datos de actividades económicas desde el backend
-    this.cargarDatosDelBackend();
+    // ✅ Usar effect para esperar a que los datos de Redis se restauren
+    // Esto evita el problema de timing donde los datos aún no están disponibles
+    effect(() => {
+      const formData = this.formDataSignal();
+      // Usar un flag para evitar ejecuciones múltiples
+      if (this.seccion24DatosCargados) return;
+      
+      // Obtener prefijo dentro del effect para asegurar que está actualizado
+      const prefijoLocal = this.obtenerPrefijoGrupo();
+      const tablaKey = prefijoLocal ? `actividadesEconomicasAISI${prefijoLocal}` : 'actividadesEconomicasAISI';
+      const existingData = formData[tablaKey];
+      
+      if (!existingData || !Array.isArray(existingData) || existingData.length === 0) {
+        console.log('[SECCION24] No hay datos persistidos, inicializando y cargando del backend...');
+        this.inicializarTablasVacias();
+        this.cargarDatosDelBackend();
+        this.seccion24DatosCargados = true;
+      } else {
+        console.log('[SECCION24] Datos persistidos encontrados, no se carga del backend');
+        this.seccion24DatosCargados = true;
+      }
+      
+      this.cdRef.markForCheck();
+    }, { injector: this.injector });
   }
 
   /**
@@ -259,6 +282,19 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
             this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
             // También guardar sin prefijo para fallback
             this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', datosTransformados);
+            
+            // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
+            try {
+              this.formChange.persistFields(
+                this.seccionId, 
+                'table', 
+                { [tablaKey]: datosTransformados, 'actividadesEconomicasAISI': datosTransformados }, 
+                { notifySync: true }
+              );
+            } catch (e) {
+              console.error('[SECCION24] ⚠️ Could not persist to Redis:', e);
+            }
+            
             this.cdRef.markForCheck();
           }
         } catch (e) {
@@ -284,20 +320,30 @@ export class Seccion24FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onActividadesEconomicasChange(tabla: any[]): void {
-    // Persist primarily as TABLE and mirror to legacy field for compatibility
-    try { this.projectFacade.setTableData(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { }
+    // ✅ CALCULAR TOTALES Y PORCENTAJES para tabla simple (actividad, casos, porcentaje)
+    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(tabla, '3.45');
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (UNICA VERDAD)
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `actividadesEconomicasAISI${prefijo}` : 'actividadesEconomicasAISI';
+    
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaConPorcentajes);
+    this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', tablaConPorcentajes);
+    try { this.projectFacade.setTableData(this.seccionId, null, tablaKey, tablaConPorcentajes); } catch (e) { }
+    
+    // ✅ GUARDAR EN SESSION-DATA (Redis) - CRÍTICO PARA PERSISTENCIA
     try {
-      const payload: any = { actividadesEconomicasAISI: tabla };
-      const prefijo = this.obtenerPrefijoGrupo();
-      if (prefijo) payload[`actividadesEconomicasAISI${prefijo}`] = tabla;
-      this.formChange.persistFields(this.seccionId, 'table', payload);
-    } catch (e) { }
-    // Mirror to legacy field so components reading fields see the update immediately
-    try { const prefijo = this.obtenerPrefijoGrupo(); if (prefijo) this.projectFacade.setField(this.seccionId, null, `actividadesEconomicasAISI${prefijo}`, tabla); } catch (e) { }
-    try { this.projectFacade.setField(this.seccionId, null, 'actividadesEconomicasAISI', tabla); } catch (e) { }
-    // Notify section about the change (updates this.datos and triggers persistence)
-    this.onFieldChange('actividadesEconomicasAISI', tabla);
-    try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
+      const payload: any = { actividadesEconomicasAISI: tablaConPorcentajes };
+      if (prefijo) payload[tablaKey] = tablaConPorcentajes;
+      this.formChange.persistFields(this.seccionId, 'table', payload, { notifySync: true });
+      console.log('[SECCION24] ✅ Actividades Economicas data saved to session-data');
+    } catch (e) {
+      console.error('[SECCION24] ⚠️ Could not save to session-data:', e);
+    }
+    
+    // Notify section about the change
+    this.onFieldChange('actividadesEconomicasAISI', tablaConPorcentajes);
+    this.cdRef.markForCheck();
   }
 
   actualizarCiudadOrigenComercio(valor: string): void {

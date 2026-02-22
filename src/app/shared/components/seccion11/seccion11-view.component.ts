@@ -42,22 +42,42 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
+    // Fotografías de Transporte
     for (let i = 1; i <= 10; i++) {
-      const tituloTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo${prefijo}`)();
-      const fuenteTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente${prefijo}`)();
-      const imagenTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen${prefijo}`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen${prefijo}`)();
       
-      const tituloTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo${prefijo}`)();
-      const fuenteTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente${prefijo}`)();
-      const imagenTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen${prefijo}`)();
-      
-      hash += `${tituloTransporte || ''}|${fuenteTransporte || ''}|${imagenTransporte ? '1' : '0'}|`;
-      hash += `${tituloTele || ''}|${fuenteTele || ''}|${imagenTele ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    
+    // Fotografías de Telecomunicaciones
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen${prefijo}`)();
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
+    }
+    
+    return fotos;
   });
 
   readonly grupoAISDSignal: Signal<string> = computed(() => {
@@ -78,7 +98,8 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly telecomunicacionesTablaSignal: Signal<any[]> = computed(() => {
-    const tablaKey = this.getTablaKeyTelecomunicaciones();
+    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const tablaKey = prefijo ? `telecomunicacionesTabla${prefijo}` : 'telecomunicacionesTabla';
     const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
     return Array.isArray(tabla) ? tabla : [];
   });
@@ -116,10 +137,9 @@ export class Seccion11ViewComponent extends BaseSectionComponent implements OnDe
 
     // ✅ EFFECT 2: Monitoreo de cambios en fotografías para recarga automática
     effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasTransporteCache = [...this.fotografiasTransporteCache];
-      this.fotografiasTelecomunicacionesCache = [...this.fotografiasTelecomunicacionesCache];
+      const fotos = this.fotosCacheSignal();
+      this.fotografiasTransporteCache = fotos.filter(f => f.imagen);
+      this.fotografiasTelecomunicacionesCache = fotos.filter(f => f.imagen);
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }

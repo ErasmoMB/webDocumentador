@@ -79,7 +79,13 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
       return [];
     }
 
-    const total = tablaPEA.reduce((sum, item) => {
+    // ✅ EXCLUIR FILA TOTAL DEL CÁLCULO (buscar por categoria)
+    const filasNormales = tablaPEA.filter((item: any) => {
+      const cat = (item.categoria || '').toString().toLowerCase();
+      return !cat.includes('total');
+    });
+
+    const total = filasNormales.reduce((sum, item) => {
       const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
       return sum + casos;
     }, 0);
@@ -89,6 +95,18 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     }
 
     const tablaConPorcentajes = tablaPEA.map((item: any) => {
+      const cat = (item.categoria || '').toString().toLowerCase();
+      
+      // Si es fila Total, usar 100%
+      if (cat.includes('total')) {
+        return {
+          ...item,
+          casos: total,  // ✅ Mostrar el total calculado
+          porcentaje: '100,00 %'
+        };
+      }
+
+      // Para filas normales, calcular porcentaje
       const casos = typeof item?.casos === 'number' ? item.casos : parseInt(item?.casos) || 0;
       const porcentaje = (casos / total) * 100;
       const porcentajeFormateado = porcentaje
@@ -102,13 +120,14 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
       };
     });
 
-    // No agregar fila Total manualmente, el backend ya la envía
     return tablaConPorcentajes;
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+    
     for (let i = 1; i <= 10; i++) {
       const tituloKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Titulo${prefijo}`;
       const fuenteKey = `${this.PHOTO_PREFIX_GANADERIA}${i}Fuente${prefijo}`;
@@ -118,9 +137,15 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
       const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
       const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
       
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    return fotos;
   });
 
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
@@ -144,7 +169,7 @@ export class Seccion8ViewComponent extends BaseSectionComponent implements OnDes
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     });

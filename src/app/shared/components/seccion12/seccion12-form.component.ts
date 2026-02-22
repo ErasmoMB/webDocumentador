@@ -557,10 +557,10 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     return tablaConPorcentajes;
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
     const prefijo = this.obtenerPrefijo();
-    const data = this.allSectionData();
-    let hash = '';
     const prefixes = [
       this.PHOTO_PREFIX_SALUD,
       this.PHOTO_PREFIX_IE_AYROCA,
@@ -568,15 +568,24 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       this.PHOTO_PREFIX_RECREACION,
       this.PHOTO_PREFIX_DEPORTE
     ];
+    
     for (const prefix of prefixes) {
       for (let i = 1; i <= 10; i++) {
-        const titulo = data[`${prefix}${i}Titulo${prefijo}`] || '';
-        const fuente = data[`${prefix}${i}Fuente${prefijo}`] || '';
-        const imagen = data[`${prefix}${i}Imagen${prefijo}`] ? '1' : '0';
-        hash += `${titulo}|${fuente}|${imagen}|`;
+        const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo${prefijo}`)();
+        const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente${prefijo}`)();
+        const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen${prefijo}`)();
+        
+        if (imagen) {
+          fotos.push({
+            titulo: titulo || `Fotografía ${i}`,
+            fuente: fuente || 'GEADES, 2024',
+            imagen: imagen
+          } as FotoItem);
+        }
       }
     }
-    return hash;
+    
+    return fotos;
   });
 
   readonly columnasSalud = [
@@ -638,9 +647,9 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
   ) {
     super(cdRef, injector);
 
-    // ✅ EFECTO PARA FOTOS: Solo depende de photoFieldsHash (NO CAUSAR BUCLES)
+    // ✅ EFECTO PARA FOTOS: Solo depende de fotosCacheSignal (ÚNICA VERDAD)
     effect(() => {
-      this.photoFieldsHash();
+      const fotos = this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     });

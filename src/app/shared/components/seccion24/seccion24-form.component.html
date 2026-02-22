@@ -28,7 +28,7 @@
       </div>
       <label class="label">{{ SECCION24_TEMPLATES.labelCuadroPrincipal.replace('{centroPoblado}', viewModel().centroPoblado || SECCION24_TEMPLATES.centroPobladoDefault) }}</label>
       <app-dynamic-table
-        [datos]="datos"
+        [datos]="formDataSignal()"
         [sectionId]="seccionId"
         [config]="actividadesEconomicasConfig"
         [columns]="[

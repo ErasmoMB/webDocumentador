@@ -302,6 +302,16 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     
+    // ✅ VERIFICAR DATOS PERSISTIDOS antes de cargar del backend (igual que Sección 30)
+    const formData = this.formDataSignal();
+    const natalidadKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
+    const morbilidadKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
+    const afiliacionKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+    
+    const natalidadData = formData[natalidadKey];
+    const morbilidadData = formData[morbilidadKey];
+    const afiliacionData = formData[afiliacionKey];
+    
     // Initialize empty tables if missing
     if (!Array.isArray(this.natalidadTablaSignal())) {
       this.onFieldChange('natalidadMortalidadCpTabla', []);
@@ -313,8 +323,19 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
       this.onFieldChange('afiliacionSaludTabla', []);
     }
 
-    // ✅ CARGAR datos de afiliación del backend (tabla de solo lectura)
-    this.cargarAfiliacionDelBackend();
+    // ✅ SÓLO CARGAR DEL BACKEND si no hay datos persistidos
+    if (!natalidadData || !Array.isArray(natalidadData) || natalidadData.length === 0) {
+      console.log('[SECCION29] No hay datos persistidos de natalidad, cargando del backend...');
+    }
+    if (!morbilidadData || !Array.isArray(morbilidadData) || morbilidadData.length === 0) {
+      console.log('[SECCION29] No hay datos persistidos de morbilidad, cargando del backend...');
+    }
+    if (!afiliacionData || !Array.isArray(afiliacionData) || afiliacionData.length === 0) {
+      console.log('[SECCION29] No hay datos persistidos de afiliación, cargando del backend...');
+      this.cargarAfiliacionDelBackend();
+    } else {
+      console.log('[SECCION29] ✅ Datos persistidos encontrados, no se carga del backend');
+    }
 
     // Ensure paragraph fields exist so editor shows current value (empty string if not set)
     ['textoNatalidadCP1', 'textoNatalidadCP2', 'textoMorbilidadCP', 'textoAfiliacionSalud'].forEach(field => {
@@ -349,7 +370,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     campoTotal: 'natalidad',
     camposParaCalcular: ['natalidad', 'mortalidad'],
     calcularPorcentajes: false,
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
+    estructuraInicial: []
   };
 
   readonly morbilidadConfig: TableConfig = {
@@ -358,7 +382,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     campoTotal: 'casos',
     camposParaCalcular: ['casos'],
     calcularPorcentajes: false,
-    noInicializarDesdeEstructura: true
+    noInicializarDesdeEstructura: true,
+    permiteAgregarFilas: true,
+    permiteEliminarFilas: true,
+    estructuraInicial: []
   };
 
   readonly afiliacionConfig: TableConfig = {
@@ -401,25 +428,156 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTablaUpdated(tablaKey: string, tabla: any[]) {
-    // ✅ PATRÓN SECCION 7: Crear nuevas referencias para forzar cambio de referencia en binding
-    const tablaKeyBase = tablaKey.replace(/Grupo\d+$/, ''); // Remover sufijo de grupo para tener la clave base
+    // Ya no se usa - ahora cada tabla tiene su propio método
+  }
+  
+  // ✅ Métodos específicos para cada tabla (igual que Sección 30)
+  onNatalidadTableUpdated(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
     
-    this.datos[tablaKey] = [...tabla]; // Nueva referencia con spread
-    this.datos[tablaKeyBase] = [...tabla]; // Nueva referencia en clave base también
+    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    tabla = JSON.parse(JSON.stringify(tabla));
     
-    // ✅ PERSISTIR EN REDIS explícitamente
+    // ✅ REORDENAR: filas de datos primero, Total al final
+    tabla = this.reordenarTablaConTotal(tabla);
+    
+    // ✅ Guardar en projectFacade
     try {
-      this.formChangeService.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, [tablaKeyBase]: tabla }, { notifySync: true, persist: true });
-    } catch (e) {
-      console.error('[SECCION29] ⚠️ Error persistiendo tabla:', e);
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      this.projectFacade.setField(this.seccionId, null, 'natalidadMortalidadCpTabla', tabla);
+    } catch (e) {}
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChangeService.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'natalidadMortalidadCpTabla': tabla }, { notifySync: true });
+    } catch (e) {}
+    
+    this.cdRef.markForCheck();
+  }
+  
+  onMorbilidadTableUpdated(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
+    
+    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // ✅ REORDENAR: filas de datos primero, Total al final
+    tabla = this.reordenarTablaConTotal(tabla);
+    
+    // ✅ Guardar en projectFacade
+    try {
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      this.projectFacade.setField(this.seccionId, null, 'morbilidadCpTabla', tabla);
+    } catch (e) {}
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChangeService.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'morbilidadCpTabla': tabla }, { notifySync: true });
+    } catch (e) {}
+    
+    this.cdRef.markForCheck();
+  }
+  
+  onAfiliacionTableUpdated(): void {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
+    
+    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // ✅ Ajustar Total referencial
+    tabla = this.ajustarTotalReferencialAfiliacion(tablaKey, tabla);
+    
+    // ✅ REORDENAR: filas de datos primero, Total al final
+    tabla = this.reordenarTablaConTotal(tabla);
+    
+    // ✅ Guardar en projectFacade
+    try {
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      this.projectFacade.setField(this.seccionId, null, 'afiliacionSaludTabla', tabla);
+    } catch (e) {}
+    
+    // ✅ PERSISTIR EN REDIS
+    try {
+      this.formChangeService.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'afiliacionSaludTabla': tabla }, { notifySync: true });
+    } catch (e) {}
+    
+    this.cdRef.markForCheck();
+  }
+  
+  /**
+   * ✅ Helper para reordenar tabla: filas de datos primero, Total al final
+   * Detecta la fila Total buscando en diferentes campos según el tipo de tabla
+   */
+  private reordenarTablaConTotal(tabla: any[]): any[] {
+    if (!tabla || tabla.length === 0) return tabla;
+    
+    // Clonar para no mutar el original
+    const tablaClon = JSON.parse(JSON.stringify(tabla));
+    
+    // Buscar la fila Total en diferentes campos posibles
+    const filaTotalIndex = tablaClon.findIndex((item: any) => {
+      const anio = item.anio?.toString().toLowerCase() || '';
+      const grupo = item.grupo?.toString().toLowerCase() || '';
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return anio.includes('total') || grupo.includes('total') || categoria.includes('total');
+    });
+    
+    // Filtrar filas normales (excluir Total)
+    const filasNormales = tablaClon.filter((item: any) => {
+      const anio = item.anio?.toString().toLowerCase() || '';
+      const grupo = item.grupo?.toString().toLowerCase() || '';
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !anio.includes('total') && !grupo.includes('total') && !categoria.includes('total');
+    });
+    
+    let filaTotal = null;
+    if (filaTotalIndex >= 0) {
+      filaTotal = tablaClon[filaTotalIndex];
+      
+      // ✅ Para "Total referencial" o filas similares, NO calcular porcentaje (dejar vacío)
+      const cat = filaTotal.categoria?.toString().toLowerCase() || '';
+      if (cat.includes('referencial')) {
+        filaTotal.porcentaje = '';
+      }
     }
     
-    this.onFieldChange(tablaKey, tabla, { refresh: false });
-    if (tablaKeyBase !== tablaKey) {
-      this.onFieldChange(tablaKeyBase, tabla, { refresh: false });
+    // Recombinar: filas normales + Total al final
+    return filaTotal ? [...filasNormales, filaTotal] : [...filasNormales];
+  }
+
+  /**
+   * ✅ Ajusta la fila "Total referencial" en la tabla de afiliación
+   * - Casos = suma de filas normales
+   * - Porcentaje = 100%
+   */
+  private ajustarTotalReferencialAfiliacion(tablaKeyBase: string, tabla: any[]): any[] {
+    if (!tabla || tabla.length === 0) return tabla;
+    if (!tablaKeyBase.includes('afiliacionSaludTabla')) return tabla;
+    
+    const tablaClon = JSON.parse(JSON.stringify(tabla));
+    const filasNormales = tablaClon.filter((item: any) => !item.categoria?.toString().toLowerCase().includes('total'));
+    const total = filasNormales.reduce((sum: number, item: any) => sum + (Number(item.casos) || 0), 0);
+    
+    // Calcular porcentajes para filas normales
+    filasNormales.forEach((item: any) => {
+      const casos = Number(item.casos) || 0;
+      if (total > 0) {
+        item.porcentaje = (casos / total * 100).toFixed(2).replace('.', ',') + ' %';
+      } else {
+        item.porcentaje = '0,00 %';
+      }
+    });
+    
+    const filaTotal = tablaClon.find((item: any) => item.categoria?.toString().toLowerCase().includes('total'));
+    if (filaTotal) {
+      filaTotal.casos = total;
+      filaTotal.porcentaje = '100,00 %';
     }
     
-    this.cdRef.detectChanges(); // ✅ Forzar detección de cambios inmediatamente
+    return tablaClon;
   }
 
   override onFotografiasChange(fotografias: any[]) {

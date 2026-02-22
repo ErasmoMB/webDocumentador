@@ -55,7 +55,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   readonly formDataSignal: Signal<Record<string, any>>;
   readonly tablaAISD1Signal: Signal<any[]>;
   readonly tablaAISD2Signal: Signal<any[]>;
-  readonly photoFieldsHash: Signal<string>;
+  readonly fotosCacheSignal: Signal<FotoItem[]>;
   readonly viewModel: Signal<any>;
   
   // ✅ NUMERACIÓN GLOBAL - Tablas
@@ -108,19 +108,27 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       return Array.isArray(sinPrefijo) && sinPrefijo.length > 0 ? sinPrefijo : [];
     });
 
-    this.photoFieldsHash = computed(() => {
-      let hash = '';
+    // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+    this.fotosCacheSignal = computed(() => {
+      const fotos: FotoItem[] = [];
       const prefijo = this.obtenerPrefijoGrupo();
+      
       for (const basePrefix of [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION]) {
-        const prefix = basePrefix + prefijo;
         for (let i = 1; i <= 10; i++) {
-          const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-          const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-          const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
-          hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
+          const titulo = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Titulo${prefijo}`)();
+          const fuente = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Fuente${prefijo}`)();
+          const imagen = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Imagen${prefijo}`)();
+          
+          if (imagen) {
+            fotos.push({
+              titulo: titulo || `Fotografía ${i}`,
+              fuente: fuente || 'GEADES, 2024',
+              imagen: imagen
+            } as FotoItem);
+          }
         }
       }
-      return hash;
+      return fotos;
     });
 
     // ✅ NUMERACIÓN GLOBAL - Tablas AISD
@@ -193,7 +201,7 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     });
 
     effect(() => {
-      this.photoFieldsHash();
+      this.fotosCacheSignal();
       this.cargarFotografias();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });

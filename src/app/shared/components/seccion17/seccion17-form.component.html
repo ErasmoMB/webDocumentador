@@ -27,8 +27,8 @@
   <!-- Tabla IDH con estructura agrupada -->
   <app-table-wrapper [title]="''" [sectionId]="seccionId" [hideNumber]="true">
     <app-dynamic-table
-      [datos]="datos"
-      [data]="getIndiceDesarrolloHumanoTabla()"
+      [datos]="indiceDesarrolloHumanoSignal()"
+      [data]="indiceDesarrolloHumanoSignal()"
       [config]="indiceDesarrolloHumanoConfigSignal()"
       [tablaKey]="getTablaKeyIDH()"
       [columns]="columnasIDH"

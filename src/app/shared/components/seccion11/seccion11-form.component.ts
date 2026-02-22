@@ -83,41 +83,61 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
   readonly telecomunicacionesTablaSignal: Signal<any[]> = computed(() => {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
+    const prefijo = this.obtenerPrefijo();
     const tablaKey = prefijo ? `telecomunicacionesTabla${prefijo}` : 'telecomunicacionesTabla';
     const tabla = this.projectFacade.selectField(this.seccionId, null, tablaKey)() || [];
     return Array.isArray(tabla) ? tabla : [];
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    let hash = '';
+  // ✅ SIGNAL PARA FOTOGRAFÍAS - ÚNICA VERDAD (PATRÓN OBLIGATORIO)
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    const prefijo = this.obtenerPrefijo();
+    
+    // Fotografías de Transporte
     for (let i = 1; i <= 10; i++) {
-      const tituloTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo${prefijo}`)();
-      const fuenteTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente${prefijo}`)();
-      const imagenTransporte = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen${prefijo}`)();
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TRANSPORTE}${i}Imagen${prefijo}`)();
       
-      const tituloTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo${prefijo}`)();
-      const fuenteTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente${prefijo}`)();
-      const imagenTele = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen${prefijo}`)();
-      
-      hash += `${tituloTransporte || ''}|${fuenteTransporte || ''}|${imagenTransporte ? '1' : '0'}|`;
-      hash += `${tituloTele || ''}|${fuenteTele || ''}|${imagenTele ? '1' : '0'}|`;
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
     }
-    return hash;
+    
+    // Fotografías de Telecomunicaciones
+    for (let i = 1; i <= 10; i++) {
+      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Titulo${prefijo}`)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Fuente${prefijo}`)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX_TELECOMUNICACIONES}${i}Imagen${prefijo}`)();
+      
+      if (imagen) {
+        fotos.push({
+          titulo: titulo || `Fotografía ${i}`,
+          fuente: fuente || 'GEADES, 2024',
+          imagen: imagen
+        } as FotoItem);
+      }
+    }
+    
+    return fotos;
   });
 
-  // ✅ CONFIGURACIÓN DE TABLA
+  // ✅ CONFIGURACIÓN DE TABLA (para tablas de texto puro, sin cálculos)
   get telecomunicacionesConfig(): TableConfig {
     return {
       tablaKey: this.getTablaKeyTelecomunicaciones(),
-      totalKey: 'medio',
-      campoTotal: 'medio',
-      campoPorcentaje: 'descripcion',
+      totalKey: '',  // ✅ VACÍO: tabla de texto puro, sin totales
+      campoTotal: '',  // ✅ VACÍO: no hay campo de total numérico
+      campoPorcentaje: '',  // ✅ VACÍO: no hay cálculos de porcentaje
       estructuraInicial: [
         { medio: '', descripcion: '' }
       ],
-      calcularPorcentajes: false
+      calcularPorcentajes: false  // ✅ NO calcular porcentajes
     };
   }
 
@@ -130,18 +150,30 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
     super(cdRef, injector);
 
     // ✅ EFFECT 1: Auto-sync formDataSignal (Sincronización automática con ProjectState)
+    // IMPORTANTE: Hacer merge para no sobrescribir datos locales de tablas
     effect(() => {
       const data = this.formDataSignal();
-      this.datos = { ...data };
+      if (!data || typeof data !== 'object') return;
+      
+      // Preservar datos existentes de tablas que pueden haber sido editados localmente
+      const tablasPreservar = ['telecomunicacionesTabla', 'telecomunicacionesTabla_A1', 'telecomunicacionesTabla_B1'];
+      const tablasExistentes: Record<string, any[]> = {};
+      for (const key of tablasPreservar) {
+        if (this.datos[key] && Array.isArray(this.datos[key]) && this.datos[key].length > 0) {
+          tablasExistentes[key] = this.datos[key];
+        }
+      }
+      
+      // Merge: nuevos datos + datos locales preservados
+      this.datos = { ...data, ...tablasExistentes };
       this.cdRef.markForCheck();
     });
 
-    // ✅ EFFECT 2: Monitor photoFieldsHash (Sincronización automática de fotos)
+    // ✅ EFFECT 2: Monitor fotosCacheSignal (Sincronización automática de fotos)
     effect(() => {
-      this.photoFieldsHash();
-      this.cargarFotografias();
-      this.fotografiasTransporteFormMulti = [...this.fotografiasTransporteFormMulti];
-      this.fotografiasTelecomunicacionesFormMulti = [...this.fotografiasTelecomunicacionesFormMulti];
+      const fotos = this.fotosCacheSignal();
+      this.fotografiasTransporteFormMulti = fotos.filter(f => f.imagen);
+      this.fotografiasTelecomunicacionesFormMulti = fotos.filter(f => f.imagen);
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
@@ -268,13 +300,24 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
   // ✅ MANEJADOR DE TABLA DE TELECOMUNICACIONES (UNICA_VERDAD)
   onTelecomunicacionesTableUpdated(updatedData?: any[]): void {
     // ✅ LEER DEL SIGNAL REACTIVO
-    const formData = this.formDataSignal();
     const prefijo = this.obtenerPrefijo();
-    const tablaKey = `telecomunicacionesTabla${prefijo}`;
-    const tablaActual = updatedData || formData[tablaKey] || [];
+    const tablaKey = prefijo ? `telecomunicacionesTabla${prefijo}` : 'telecomunicacionesTabla';
     
-    // ✅ GUARDAR EN PROJECTSTATEFACADE
+    // Obtener datos actuales de la tabla
+    let tablaActual: any[] = updatedData || [];
+    if (tablaActual.length === 0) {
+      const datos = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+      if (Array.isArray(datos)) {
+        tablaActual = datos;
+      }
+    }
+    
+    // ✅ ACTUALIZAR this.datos LOCAL para que el UI se actualice inmediatamente
+    this.datos[tablaKey] = tablaActual;
+    
+    // ✅ GUARDAR EN PROJECTSTATEFACADE (tanto setField como setTableData)
     this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
+    this.projectFacade.setTableData(this.seccionId, null, tablaKey, tablaActual);
     
     // ✅ PERSISTIR EN REDIS (además del SessionDataService existente)
     try {
@@ -285,7 +328,12 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
     void this.sessionDataService.saveData(`seccion-11:${tablaKey}`, tablaActual)
       .catch((error) => { console.warn(error); });
     
+    // ✅ ACTUALIZAR EL SIGNAL REACTIVO
+    this.telecomunicacionesTablaSignal();
+    
+    // ✅ FORZAR DETECCIÓN DE CAMBIOS PARA ACTUALIZAR LA VISTA
     this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
   }
 
   override onFieldChange(fieldId: string, value: any, options?: { refresh?: boolean }): void {
@@ -310,6 +358,9 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
         console.warn(`⚠️ [SECCION11] Error guardando en backend, usando fallback localStorage:`, error);
       });
 
+    // ✅ GUARDAR EN PROJECTSTATEFACADE CON PREFIJO CORRECTO
+    this.projectFacade.setField(this.seccionId, null, campoConPrefijo, value);
+    
     super.onFieldChange(campoConPrefijo, value, options);
   }
   obtenerTextoSeccion11TransporteCompleto(): string {

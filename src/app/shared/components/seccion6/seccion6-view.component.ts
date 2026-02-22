@@ -147,24 +147,6 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     return this.obtenerTextoPoblacionEtario(data, nombreComunidad);
   });
 
-  readonly photoFieldsHash: Signal<string> = computed(() => {
-    const prefijo = this.prefijoGrupoSignal();
-    const prefix = this.PHOTO_PREFIX;
-    let hash = '';
-    for (let i = 1; i <= 10; i++) {
-      const tituloKey = `${prefix}${i}Titulo${prefijo}`;
-      const fuenteKey = `${prefix}${i}Fuente${prefijo}`;
-      const imagenKey = `${prefix}${i}Imagen${prefijo}`;
-      
-      const titulo = this.projectFacade.selectField(this.seccionId, null, tituloKey)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, imagenKey)();
-      
-      hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
-    }
-    return hash;
-  });
-
   constructor(
     cdRef: ChangeDetectorRef,
     injector: Injector,
@@ -189,14 +171,14 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
     // ✅ Cargar fotos al inicio
     this.cargarFotografias();
     
-    // ✅ EFFECT 2: Monitorear SOLO photoFieldsHash para recargar fotografías
-    // Se ejecuta cuando el hash cambia (cuando se agregan/editan fotos en el Form)
+    // ✅ EFFECT 2: Monitorear fotosCacheSignal para recargar fotografías (ÚNICA VERDAD)
+    // Se ejecuta cuando las fotos cambian (cuando se agregan/editan fotos en el Form)
     // IMPORTANTE: El flag debe estar FUERA del effect para persistir entre ejecuciones
     const fotogramasView = this;
     let inicializadoView = false;
     effect(() => {
-      // Solo monitorear el hash
-      const hash = fotogramasView.photoFieldsHash();
+      // ✅ ÚNICA VERDAD: Monitorear fotosCacheSignal
+      const fotos = fotogramasView.fotosCacheSignal();
       
       // Skip first execution - photos will be loaded by constructor
       if (!inicializadoView) {
@@ -204,8 +186,8 @@ export class Seccion6ViewComponent extends BaseSectionComponent implements OnDes
         return;
       }
       
-      // Recargar fotografías solo si el hash indica que hay fotos
-      if (hash && hash.includes('|1|')) {
+      // Recargar fotografías solo si hay fotos con imagen
+      if (fotos && fotos.length > 0) {
         fotogramasView.cargarFotografias();
         fotogramasView.fotografiasVista = [...fotogramasView.fotografiasCache];
         fotogramasView.cdRef.markForCheck();

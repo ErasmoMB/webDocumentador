@@ -131,6 +131,13 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // ✅ DEBUG: Log de cambios recibidos
+    if (changes['datos']) {
+      console.log('[DynamicTable] 🔵 ngOnChanges - datos recibidos:', this.datos);
+      const tablaKey = this.obtenerTablaKeyConPrefijo();
+      console.log('[DynamicTable] 🔵 tablaKey:', tablaKey, '| datos[tablaKey]:', this.datos?.[tablaKey]);
+    }
+    
     if (this.isCleaningLegacy || this.isInitializing) {
       return;
     }
@@ -149,7 +156,16 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       }
       // Aplicar regla de botones en cada cambio relevante
       this.applyNoAddDeleteForEstructuraInicial();
-      this.verificarEInicializarTabla();
+      
+      // ✅ CORREGIDO: Usar la clave con prefijo para verificar datos existentes
+      const tablaKeyActual = this.obtenerTablaKeyConPrefijo();
+      const datosTabla = tablaKeyActual ? (this.datos?.[tablaKeyActual] ?? (this.tablaKey ? this.datos?.[this.tablaKey] : undefined)) : undefined;
+      
+      // Solo inicializar la tabla si no hay datos existentes
+      if (!datosTabla || !Array.isArray(datosTabla) || datosTabla.length === 0) {
+        this.verificarEInicializarTabla();
+      }
+      
       this.actualizarTableData();
     }
   }
@@ -235,10 +251,18 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
             if (String(tablaKeyActual).toLowerCase().includes('puestosalud')) {
               console.info('[DynamicTable] cargar desde store ->', tablaKeyActual, 'len', fromStore.length);
             }
+          } else {
+            // Si no hay datos en el store, intentar cargar desde el campo directo
+            const fromField = (this.projectFacade && typeof this.projectFacade.selectField === 'function') ? (this.projectFacade.selectField(this.sectionId, null, tablaKeyActual)() || (tablaKeyBase ? this.projectFacade.selectField(this.sectionId, null, tablaKeyBase)() : undefined)) : undefined;
+            if (Array.isArray(fromField) && fromField.length > 0) {
+              this.datos[tablaKeyActual] = structuredClone(fromField);
+              datosTabla = this.datos[tablaKeyActual];
+              try { this.cdRef.detectChanges(); } catch (e) {}
+            }
           }
-        } catch (e) { /* noop */ }
+        } catch (e) { console.error('Error cargando datos desde store:', e); }
       }
-    } catch (e) { /* noop */ }
+    } catch (e) { console.error('Error general en carga de datos:', e); }
 
     // ✅ MERGE INTELIGENTE: Si hay datos del mock con casos pero sin porcentajes,
     // combinar con la estructura inicial manteniendo las categorías y calculando porcentajes
@@ -515,8 +539,6 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     const columna = this.columns.find(col => col.field === field);
     const valorValidado = this.validarYNormalizarValor(columna, value);
 
-
-
     this.cachedTableData = [];
     this.lastTablaKey = '';
 
@@ -566,8 +588,15 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       this.tableUpdated.emit(tablaCopia2);
       this.calcTimeouts.delete(debounceKey);
     }, this.calcDebounceMs));
-    try { this.cdRef.detectChanges(); } catch (e) {}
-    try { this.cdRef.markForCheck(); } catch (e) {}
+    
+    // ✅ ACTUALIZAR tableData inmediatamente para reflejar cambios en el UI
+    this.tableData = this.datos[tablaKeyActual];
+    
+    // ✅ FORZAR actualización del UI inmediatamente
+    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
+    this.cdRef.detectChanges();
+    this.cdRef.markForCheck();
   }
 
   private persistirTablaConLog(tablaKey: string, tablaCopia: any[]): void {
@@ -880,7 +909,13 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       return col.formatter(value);
     }
 
-    // Mostrar ceros y porcentajes '0,00 %' como en la vista
+    // Para campos de tipo texto, mostrar cadena vacía cuando el valor es 0
+    // Esto evita que se muestre '0' en campos de texto como 'medio' o 'descripcion'
+    if (col.type === 'text' || col.type === 'textarea') {
+      if (value === 0 || value === '0') return '';
+    }
+    
+    // Mostrar ceros y porcentajes '0,00 %' como en la vista (solo para campos numéricos)
     if (value === 0) return '0';
     if (typeof value === 'string') {
       const v = value.trim();
@@ -906,6 +941,9 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
   }
 
   getEditableRows(): any[] {
+    // ✅ DEBUG: Log de tableData
+    console.log('[DynamicTable] 📋 getEditableRows - tableData:', JSON.stringify(this.tableData), '| length:', this.tableData?.length);
+    
     if (!this.tableData || this.tableData.length === 0) return [];
     
     // ✅ Para sección 8: Si totalKey es vacío, devolver TODO sin procesar

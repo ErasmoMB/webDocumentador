@@ -11,6 +11,7 @@ import { BackendApiService } from 'src/app/core/services/infrastructure/backend-
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { TableManagementFacade } from 'src/app/core/services/tables/table-management.facade';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, SECCION23_TABLE_CONFIGS, SECCION23_SECTION_ID } from './seccion23-constants';
 
 // ============================================================================
@@ -252,8 +253,31 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
     
     this.actualizarFotografiasFormMulti();
-    this.inicializarTablasVacias();
-    this.cargarDatosDelBackend();
+    
+    // ✅ VERIFICAR SI YA EXISTEN DATOS PERSISTIDOS antes de cargar del backend
+    const formData = this.formDataSignal();
+    
+    // Claves de las tablas
+    const petKey = prefijo ? `petGruposEdadAISI${prefijo}` : 'petGruposEdadAISI';
+    const peaKey = prefijo ? `peaDistritoSexoTabla${prefijo}` : 'peaDistritoSexoTabla';
+    const peaOcupKey = prefijo ? `peaOcupadaDesocupadaTabla${prefijo}` : 'peaOcupadaDesocupadaTabla';
+    
+    const existingPetData = formData[petKey];
+    const existingPeaData = formData[peaKey];
+    const existingPeaOcupData = formData[peaOcupKey];
+    
+    const hasPetData = existingPetData && Array.isArray(existingPetData) && existingPetData.length > 0;
+    const hasPeaData = existingPeaData && Array.isArray(existingPeaData) && existingPeaData.length > 0;
+    const hasPeaOcupData = existingPeaOcupData && Array.isArray(existingPeaOcupData) && existingPeaOcupData.length > 0;
+    
+    // Solo cargar del backend si no hay datos persistidos en ninguna tabla
+    if (!hasPetData || !hasPeaData || !hasPeaOcupData) {
+      console.log('[SECCION23] No hay datos persistidos, cargando del backend...');
+      this.inicializarTablasVacias();
+      this.cargarDatosDelBackend();
+    } else {
+      console.log('[SECCION23] Datos persistidos encontrados, no se carga del backend');
+    }
 
     // Inicializar titulos y fuentes
     try {
@@ -371,7 +395,10 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
     if (!Array.isArray(tabla)) return;
 
-    const tablaNormalizada = this.normalizarTabla(tabla);
+    // ✅ CALCULAR TOTALES Y PORCENTAJES (incluye fila Total)
+    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(tabla, '1');
+    
+    const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
 
     const pref = this.obtenerPrefijoGrupo();
     const keyBase = this.petGruposEdadConfig.tablaKey;
@@ -400,7 +427,10 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
     if (!Array.isArray(tabla)) return;
 
-    const tablaNormalizada = this.normalizarTabla(tabla);
+    // ✅ CALCULAR TOTALES Y PORCENTAJES para tabla con Hombres/Mujeres/Casos
+    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesMultiples(tabla, '2');
+    
+    const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
     const keyBase = this.peaDistritoSexoConfig.tablaKey;
     const pref = this.obtenerPrefijoGrupo();
     const keyPref = pref ? `${keyBase}${pref}` : null;
@@ -423,7 +453,10 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     const tabla = Array.isArray(eventOrTabla) ? eventOrTabla : (eventOrTabla?.detail ?? eventOrTabla);
     if (!Array.isArray(tabla)) return;
 
-    const tablaNormalizada = this.normalizarTabla(tabla);
+    // ✅ CALCULAR TOTALES Y PORCENTAJES para tabla con Hombres/Mujeres/Casos
+    const tablaConPorcentajes = TablePercentageHelper.calcularPorcentajesMultiples(tabla, '3');
+    
+    const tablaNormalizada = this.normalizarTabla(tablaConPorcentajes);
     const keyBase = this.peaOcupadaDesocupadaConfig.tablaKey;
     const pref = this.obtenerPrefijoGrupo();
     const keyPref = pref ? `${keyBase}${pref}` : null;
