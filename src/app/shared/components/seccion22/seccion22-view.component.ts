@@ -58,12 +58,19 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
-    const prefix = this.photoPrefixSignal();
+    // ✅ CORREGIDO: Usar prefijo base y grupo separados para el esquema correcto
+    const basePrefix = 'fotografiaCahuacho'; // Prefijo base sin grupo
+    const groupPrefix = this.obtenerPrefijoGrupo(); // _B1, _A1, etc.
     
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      // Esquema correcto: {prefix}{i}{suffix}{group} → fotografiaCahuacho1Imagen_B1
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
@@ -74,11 +81,11 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
-    const prefix = this.photoPrefixSignal();
+    const basePrefix = 'fotografiaCahuacho';
+    const groupPrefix = this.obtenerPrefijoGrupo();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       hash += `${i}:${!!imagen}:`;
     }
     return hash;

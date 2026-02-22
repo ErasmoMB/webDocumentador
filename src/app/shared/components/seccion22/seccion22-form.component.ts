@@ -96,12 +96,19 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
-    const prefix = this.photoPrefixSignal();
+    // ✅ CORREGIDO: Usar prefijo base y grupo separados para el esquema correcto
+    const basePrefix = 'fotografiaCahuacho'; // Prefijo base sin grupo
+    const groupPrefix = this.obtenerPrefijoGrupo(); // _B1, _A1, etc.
     
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      // Esquema correcto: {prefix}{i}{suffix}{group} → fotografiaCahuacho1Imagen_B1
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       
       if (imagen) {
         fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
@@ -112,11 +119,16 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
     let hash = '';
-    const prefix = this.photoPrefixSignal();
+    const basePrefix = 'fotografiaCahuacho';
+    const groupPrefix = this.obtenerPrefijoGrupo();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Titulo`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Fuente`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${prefix}${i}Imagen`)();
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       hash += `${titulo || ''}|${fuente || ''}|${imagen ? '1' : '0'}|`;
     }
     return hash;
@@ -266,9 +278,9 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
     
     // ✅ Crear Signal para PHOTO_PREFIX dinámico
     this.photoPrefixSignal = computed(() => {
+      // Mantener el prefijo con grupo para compatibilidad con el sistema
       const prefijo = this.obtenerPrefijoGrupo();
-      const prefix = prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
-      return prefix;
+      return prefijo ? `fotografiaCahuacho${prefijo}` : 'fotografiaCahuacho';
     });
     
     // ✅ Sincronizar PHOTO_PREFIX (string) con photoPrefixSignal para compatibilidad
@@ -617,17 +629,44 @@ export class Seccion22FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: FotoItem[]): void {
-    // ✅ Usar photoPrefixSignal() para obtener el prefijo dinámico
-    const prefix = this.photoPrefixSignal();
-    this.onGrupoFotografiasChange(prefix, fotografias);
+    // ✅ Usar prefijo base y grupo separados para el esquema correcto
+    const prefix = 'fotografiaCahuacho'; // Prefijo base
+    const groupPrefix = this.obtenerPrefijoGrupo(); // _B1, _A1, etc.
     
-    // ✅ También guardar en ProjectStateFacade para persistencia inmediata
-    for (let i = 0; i < fotografias.length; i++) {
-      const foto = fotografias[i];
-      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Titulo`, foto.titulo);
-      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Fuente`, foto.fuente);
-      this.projectFacade.setField(this.seccionId, null, `${prefix}${i + 1}Imagen`, foto.imagen);
+    // NO llamar a onGrupoFotografiasChange porque usa el esquema incorrecto
+    // En su lugar, guardar directamente en ProjectStateFacade y persistir
+    const updates: Record<string, any> = {};
+    
+    // Limpiar fotos anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
     }
+    
+    // Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = groupPrefix ? `${prefix}${idx}Imagen${groupPrefix}` : `${prefix}${idx}Imagen`;
+        const titKey = groupPrefix ? `${prefix}${idx}Titulo${groupPrefix}` : `${prefix}${idx}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${idx}Fuente${groupPrefix}` : `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Guardar en ProjectStateFacade
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Persistir al backend
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {}
     
     this.cdRef.markForCheck();
   }
