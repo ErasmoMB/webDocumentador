@@ -26,6 +26,16 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
   override readonly watchedFields: string[] = SECCION27_WATCHED_FIELDS;
   override useReactiveSync: boolean = true;
 
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    // Cargar fotos de Transporte
+    const fotosTransporte = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTransporte());
+    // Cargar fotos de Telecomunicaciones
+    const fotosTelecomunicaciones = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalTelecomunicaciones());
+    return [...fotosTransporte, ...fotosTelecomunicaciones];
+  });
+
   private obtenerPrefijo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
   }
@@ -145,6 +155,8 @@ export class Seccion27FormComponent extends BaseSectionComponent implements OnDe
 
     effect(() => {
       this.actualizarFotografiasFormMulti();
+      // ✅ PATRÓN UNICA_VERDAD: tocar fotosCacheSignal para recarga reactiva
+      this.fotosCacheSignal();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }

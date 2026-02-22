@@ -76,14 +76,10 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
 
 
-    effect(() => {
-      const data = this.formDataSignal();
-      const tablas: Record<string, any> = {};
-      tablas['ubicacionCpTabla'] = this.ubicacionCpSignal();
-      this.datos = { ...data, ...tablas };
-      this.cdRef.markForCheck();
-    });
-
+    // ✅ 0% LEGACY: Eliminado this.datos - usar solo Signals
+    // Los datos se leen directamente desde formDataSignal y se renderizan en el template
+    
+    // Effect para fotos - se mantiene para Change Detection
     effect(() => {
       this.fotosCacheSignal();
       this.cdRef.markForCheck();

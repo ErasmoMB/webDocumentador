@@ -29,6 +29,18 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
 
   override useReactiveSync: boolean = true;
 
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    // Cargar fotos de Desechos
+    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos());
+    // Cargar fotos de Electricidad
+    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad());
+    // Cargar fotos de Cocinar
+    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar());
+    return [...fotosDesechos, ...fotosElectricidad, ...fotosCocinar];
+  });
+
   // ✅ PHOTO_PREFIX para compatibilidad con template
   readonly PHOTO_PREFIX_DESECHOS = 'fotografiaDesechosSolidosAISI';
   readonly PHOTO_PREFIX_ELECTRICIDAD = 'fotografiaElectricidadAISI';

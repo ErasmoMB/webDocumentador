@@ -6,6 +6,7 @@ import { FotoItem, ImageUploadComponent } from '../image-upload/image-upload.com
 import { CoreSharedModule } from '../../modules/core-shared.module';
 import { TableConfig } from 'src/app/core/services/tables/table-management.service';
 import { ParagraphEditorComponent } from '../paragraph-editor/paragraph-editor.component';
+import { DynamicTableComponent } from '../dynamic-table/dynamic-table.component';
 import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { BackendApiService } from 'src/app/core/services/infrastructure/backend-api.service';
 import { FormChangeService } from 'src/app/core/services/state/form-change.service';
@@ -13,6 +14,7 @@ import { TableManagementFacade } from 'src/app/core/services/tables/table-manage
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
 import { TablePercentageHelper } from 'src/app/shared/utils/table-percentage-helper';
 import { SECCION23_TEMPLATES, SECCION23_PHOTO_PREFIX, SECCION23_WATCHED_FIELDS, SECCION23_TABLE_CONFIGS, SECCION23_SECTION_ID } from './seccion23-constants';
+import { debugLog } from 'src/app/shared/utils/debug';
 
 // ============================================================================
 // FUNCIONES TRANSFORMADORAS - Convertir datos del backend al formato de tabla
@@ -73,7 +75,7 @@ const transformPEAOcupadaDesdeDemograficos = (data: any[]): any[] => {
 };
 
 @Component({
-    imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent],
+    imports: [CommonModule, FormsModule, CoreSharedModule, ParagraphEditorComponent, ImageUploadComponent, DynamicTableComponent],
     selector: 'app-seccion23-form',
     templateUrl: './seccion23-form.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,7 +92,9 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   override watchedFields: string[] = SECCION23_WATCHED_FIELDS;
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
-  override readonly PHOTO_PREFIX: string;
+  override PHOTO_PREFIX: string = '';
+  // Signal para PHOTO_PREFIX dinámico
+  readonly photoPrefixSignal: Signal<string>;
   override useReactiveSync: boolean = true;
 
   readonly petGruposEdadConfig: TableConfig = {
@@ -152,12 +156,27 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     return (this.projectFacade.selectField(this.seccionId, null, key)() ?? this.projectFacade.selectTableData(this.seccionId, null, this.peaOcupadaDesocupadaConfig.tablaKey)() ?? []) as any[];
   });
 
-  // Photos
+  // Photos - SEGUIR PATRON SECCION 21: leer directamente desde ProjectStateFacade
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    const loaded = this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix) || [];
-    return loaded;
+    const basePrefix = 'fotografia';
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    for (let i = 1; i <= 10; i++) {
+      // Esquema correcto: {prefix}{i}{suffix}{group} → fotografia1Imagen_B1
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    return fotos;
   });
 
   readonly photoFieldsHash: Signal<string> = computed(() => {
@@ -174,13 +193,128 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   // ✅ NUEVO: Signal para ubicación global (desde metadata)
   readonly ubicacionGlobal = computed(() => this.projectFacade.ubicacionGlobal());
 
-  readonly viewModel: Signal<any> = computed(() => ({
-    ...this.formDataSignal(),
-    petGruposEdad: this.petGruposEdadSignal(),
-    peaDistritoSexo: this.peaDistritoSexoSignal(),
-    peaOcupadaDesocupada: this.peaOcupadaDesocupadaSignal(),
-    fotos: this.fotosCacheSignal()
-  }));
+  // ✅ PARAGRAPH SIGNALS - SEGUIR PATRON SECCION 21: leer directamente desde ProjectStateFacade
+  readonly textoPETIntroSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoPETIntro${prefijo}` : 'textoPETIntro_AISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template por defecto
+    return SECCION23_TEMPLATES.petIntroDefault;
+  });
+
+  readonly textoPETSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoPET${prefijo}` : 'textoPET_AISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template por defecto con variables
+    return SECCION23_TEMPLATES.petCompleteTemplateWithVariables;
+  });
+
+  readonly textoIndicadoresDistritalesSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoIndicadoresDistritales${prefijo}` : 'textoIndicadoresDistritalesAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template por defecto con variables
+    return SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables;
+  });
+
+  readonly textoPEASignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoPEA${prefijo}` : 'textoPEA_AISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template completo
+    return SECCION23_TEMPLATES.peaCompleteTemplateWithVariables;
+  });
+
+  readonly textoEmpleoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoEmpleo${prefijo}` : 'textoEmpleoAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    return SECCION23_TEMPLATES.empleoSituacionDefault;
+  });
+
+  readonly textoEmpleoDependienteSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoEmpleoDependiente${prefijo}` : 'textoEmpleoDependiente_AISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template por defecto
+    return SECCION23_TEMPLATES.empleoSituacionDependiente;
+  });
+
+  readonly textoIngresosSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoIngresos${prefijo}` : 'textoIngresosAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template completo con variables
+    return SECCION23_TEMPLATES.ingresosTemplateWithVariables;
+  });
+
+  readonly textoIndiceDesempleoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoIndiceDesempleo${prefijo}` : 'textoIndiceDesempleoAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template completo con variables
+    return SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables;
+  });
+
+  readonly textoPEASignalFull: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoPEA${prefijo}` : 'textoPEAAISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template de análisis de PEA Ocupada y Desocupada
+    return SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables;
+  });
+
+  readonly textoAnalisisPEASignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldKey = prefijo ? `textoAnalisisPEA${prefijo}` : 'textoAnalisisPEA_AISI';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)() || '';
+    if (manual && manual.trim().length > 0) return manual;
+    // Si vacío → usar template de análisis de PEA
+    return SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables;
+  });
+
+  readonly viewModel: Signal<any> = computed(() => {
+    const petIntro = this.textoPETIntroSignal();
+    const pet = this.textoPETSignal();
+    const indicadores = this.textoIndicadoresDistritalesSignal();
+    const pea = this.textoPEASignal();
+    const empleo = this.textoEmpleoSignal();
+    const empleoDep = this.textoEmpleoDependienteSignal();
+    const ingresos = this.textoIngresosSignal();
+    const desempleo = this.textoIndiceDesempleoSignal();
+    const peaFull = this.textoPEASignalFull();
+    const analisisPEA = this.textoAnalisisPEASignal();
+
+    return {
+      ...this.formDataSignal(),
+      petGruposEdad: this.petGruposEdadSignal(),
+      peaDistritoSexo: this.peaDistritoSexoSignal(),
+      peaOcupadaDesocupada: this.peaOcupadaDesocupadaSignal(),
+      fotos: this.fotosCacheSignal(),
+      textos: {
+        petIntro: petIntro,
+        pet: pet,
+        indicadoresDistritales: indicadores,
+        pea: pea,
+        empleo: empleo,
+        empleoDependiente: empleoDep,
+        ingresos: ingresos,
+        indiceDesempleo: desempleo,
+        peaFull: peaFull,
+        analisisPEA: analisisPEA
+      }
+    };
+  });
 
   constructor(
     cdRef: ChangeDetectorRef,
@@ -190,9 +324,18 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     private globalNumbering: GlobalNumberingService
   ) {
     super(cdRef, injector);
-    // Inicializar PHOTO_PREFIX dinámicamente basado en el grupo actual
-    const prefijo = this.obtenerPrefijoGrupo();
-    this.PHOTO_PREFIX = 'fotografiaPEA';
+    debugLog('[SECCION23] Constructor: Inicializando componente Seccion23FormComponent');
+    
+    // ✅ Crear Signal para PHOTO_PREFIX dinámico
+    this.photoPrefixSignal = computed(() => {
+      const prefijo = this.obtenerPrefijoGrupo();
+      return prefijo ? `fotografia${prefijo}` : 'fotografia';
+    });
+    
+    // ✅ Sincronizar PHOTO_PREFIX (string) con photoPrefixSignal para compatibilidad
+    effect(() => {
+      this.PHOTO_PREFIX = this.photoPrefixSignal();
+    });
 
     // Sync this.datos for compatibility - usar claves con prefijo
     effect(() => {
@@ -221,6 +364,22 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       this.photoFieldsHash();
       this.fotosCacheSignal();
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ Watch all paragraph signals for reactive sync
+    effect(() => {
+      // Read all paragraph signals to establish dependency
+      this.textoPETIntroSignal();
+      this.textoPETSignal();
+      this.textoIndicadoresDistritalesSignal();
+      this.textoPEASignal();
+      this.textoEmpleoSignal();
+      this.textoEmpleoDependienteSignal();
+      this.textoIngresosSignal();
+      this.textoIndiceDesempleoSignal();
+      this.textoPEASignalFull();
+      this.textoAnalisisPEASignal();
       this.cdRef.markForCheck();
     });
 
@@ -272,11 +431,8 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
     
     // Solo cargar del backend si no hay datos persistidos en ninguna tabla
     if (!hasPetData || !hasPeaData || !hasPeaOcupData) {
-      console.log('[SECCION23] No hay datos persistidos, cargando del backend...');
       this.inicializarTablasVacias();
       this.cargarDatosDelBackend();
-    } else {
-      console.log('[SECCION23] Datos persistidos encontrados, no se carga del backend');
     }
 
     // Inicializar titulos y fuentes
@@ -909,7 +1065,45 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   }
 
   override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
-    super.onFotografiasChange(fotografias, customPrefix);
+    // ✅ Usar prefijo base y grupo separados para el esquema correcto
+    const prefix = 'fotografia'; // Prefijo base (DEBE coincidir con fotosCacheSignal)
+    const groupPrefix = this.obtenerPrefijoGrupo(); // _B1, _A1, etc.
+    
+    // NO llamar a super porque usa el esquema incorrecto
+    // En su lugar, guardar directamente en ProjectStateFacade y persistir
+    const updates: Record<string, any> = {};
+    
+    // Limpiar fotos anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = groupPrefix ? `${prefix}${i}Imagen${groupPrefix}` : `${prefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${prefix}${i}Titulo${groupPrefix}` : `${prefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${prefix}${i}Fuente${groupPrefix}` : `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
+    }
+    
+    // Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = groupPrefix ? `${prefix}${idx}Imagen${groupPrefix}` : `${prefix}${idx}Imagen`;
+        const titKey = groupPrefix ? `${prefix}${idx}Titulo${groupPrefix}` : `${prefix}${idx}Titulo`;
+        const fuenteKey = groupPrefix ? `${prefix}${idx}Fuente${groupPrefix}` : `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Guardar en ProjectStateFacade
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Persistir al backend
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {}
+    
     // Sync the editable array used by the form UI
     this.fotografiasFormMulti = fotografias;
     this.cdRef.markForCheck();

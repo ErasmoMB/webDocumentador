@@ -18,7 +18,7 @@
           <p class="foto-numero" *ngIf="mostrarNumero" style="font-weight: 600; margin: 0 0 6px;">Fotografía N° {{ getFormattedPhotoNumber(0) }}</p>
           <p class="foto-titulo" *ngIf="mostrarTitulo" style="margin: 0 0 10px;">{{ _fotografias[0].titulo || tituloDefault }}</p>
           <div class="foto-container" style="margin-bottom: 8px;">
-            <img [src]="_fotografias[0].imagen" [alt]="_fotografias[0].titulo" class="foto-imagen" style="max-width: 100%; height: auto;">
+            <img [src]="_fotografias[0].imagen" [alt]="_fotografias[0].titulo" loading="lazy" class="foto-imagen" style="max-width: 100%; height: auto;">
           </div>
           <p class="foto-fuente" *ngIf="mostrarFuente" style="margin: 0;">FUENTE: {{ _fotografias[0].fuente || fuenteDefault }}</p>
         </div>

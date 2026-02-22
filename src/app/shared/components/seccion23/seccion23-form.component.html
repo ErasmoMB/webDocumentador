@@ -9,21 +9,21 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoPETIntro_AISI"
+          [fieldId]="obtenerPrefijoGrupo() ? 'textoPETIntro' + obtenerPrefijoGrupo() : 'textoPETIntro_AISI'"
           [label]="SECCION23_TEMPLATES.labelPETIntro"
           [hint]="SECCION23_TEMPLATES.hintPETIntro"
           [rows]="3"
-          [value]="$any(this).obtenerTextoPETIntro_AISI()"
-          (valueChange)="onFieldChange('textoPETIntro_AISI', $event)">
+          [value]="viewModel().textos.petIntro"
+          (valueChange)="onFieldChange(obtenerPrefijoGrupo() ? 'textoPETIntro' + obtenerPrefijoGrupo() : 'textoPETIntro_AISI', $event)">
         </app-paragraph-editor>
 
         <app-paragraph-editor
-          fieldId="textoPET_AISI"
+          [fieldId]="obtenerPrefijoGrupo() ? 'textoPET' + obtenerPrefijoGrupo() : 'textoPET_AISI'"
           [label]="SECCION23_TEMPLATES.labelPETCompleto"
           [hint]="SECCION23_TEMPLATES.hintPETCompleto"
           [rows]="4"
-          [value]="$any(this).obtenerTextoPET_AISI()"
-          (valueChange)="onFieldChange('textoPET_AISI', $event)">
+          [value]="viewModel().textos.pet"
+          (valueChange)="onFieldChange(obtenerPrefijoGrupo() ? 'textoPET' + obtenerPrefijoGrupo() : 'textoPET_AISI', $event)">
         </app-paragraph-editor>
       </div>
 
@@ -62,12 +62,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoIndicadoresDistritalesAISI"
+          [fieldId]="obtenerPrefijoGrupo() ? 'textoIndicadoresDistritales' + obtenerPrefijoGrupo() : 'textoIndicadoresDistritalesAISI'"
           [label]="SECCION23_TEMPLATES.labelIndicadoresDistritalesAnalisisSecundario"
           [hint]="SECCION23_TEMPLATES.hintIndicadoresDistritales"
           [rows]="4"
-          [value]="obtenerTextoIndicadoresDistritalesAISI()"
-          (valueChange)="onFieldChange('textoIndicadoresDistritalesAISI', $event)">
+          [value]="viewModel().textos.indicadoresDistritales"
+          (valueChange)="onFieldChange(obtenerPrefijoGrupo() ? 'textoIndicadoresDistritales' + obtenerPrefijoGrupo() : 'textoIndicadoresDistritalesAISI', $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -79,12 +79,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoPEA_AISI"
+          [fieldId]="obtenerPrefijoGrupo() ? 'textoPEA' + obtenerPrefijoGrupo() : 'textoPEA_AISI'"
           [label]="SECCION23_TEMPLATES.labelPeaTextCompletoSecundario"
           [hint]="SECCION23_TEMPLATES.hintPeaAnalisis"
           [rows]="4"
-          [value]="obtenerTextoPEA_AISI()"
-          (valueChange)="onFieldChange('textoPEA_AISI', $event)">
+          [value]="viewModel().textos.pea"
+          (valueChange)="onFieldChange(obtenerPrefijoGrupo() ? 'textoPEA' + obtenerPrefijoGrupo() : 'textoPEA_AISI', $event)">
         </app-paragraph-editor>
       </div>
 
@@ -127,12 +127,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoAnalisisPEA_AISI"
+          [fieldId]="obtenerPrefijoGrupo() ? 'textoAnalisisPEA' + obtenerPrefijoGrupo() : 'textoAnalisisPEA_AISI'"
           [label]="SECCION23_TEMPLATES.labelAnalisisPEASecundario"
           [hint]="SECCION23_TEMPLATES.hintPeaAnalisis"
           [rows]="4"
-          [value]="obtenerTextoAnalisisPEA_AISI()"
-          (valueChange)="onFieldChange('textoAnalisisPEA_AISI', $event)">
+          [value]="viewModel().textos.analisisPEA"
+          (valueChange)="onFieldChange(obtenerPrefijoGrupo() ? 'textoAnalisisPEA' + obtenerPrefijoGrupo() : 'textoAnalisisPEA_AISI', $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -144,21 +144,21 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoEmpleoAISI"
+          [fieldId]="'textoEmpleo' + obtenerPrefijoGrupo()"
           [label]="SECCION23_TEMPLATES.labelEmpleoSituacionCompletoSecundario"
           [hint]="SECCION23_TEMPLATES.hintEmpleoSituacion"
           [rows]="6"
-          [value]="obtenerTextoEmpleoAISI()"
-          (valueChange)="onFieldChange('textoEmpleoAISI', $event)">
+          [value]="viewModel().textos.empleo"
+          (valueChange)="onFieldChange('textoEmpleo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
 
         <app-paragraph-editor
-          fieldId="textoEmpleoDependiente_AISI"
+          [fieldId]="'textoEmpleoDependiente' + obtenerPrefijoGrupo()"
           [label]="SECCION23_TEMPLATES.labelEmpleoDependienteTextoSecundario"
           [hint]="SECCION23_TEMPLATES.hintEmpleoDependiente"
           [rows]="4"
-          [value]="obtenerTextoEmpleoDependiente_AISI()"
-          (valueChange)="onFieldChange('textoEmpleoDependiente_AISI', $event)">
+          [value]="viewModel().textos.empleoDependiente"
+          (valueChange)="onFieldChange('textoEmpleoDependiente' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -170,12 +170,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoIngresosAISI"
+          [fieldId]="'textoIngresos' + obtenerPrefijoGrupo()"
           [label]="SECCION23_TEMPLATES.labelIngresosCompletoSecundario"
           [hint]="SECCION23_TEMPLATES.hintIngresos"
           [rows]="8"
-          [value]="obtenerTextoIngresosAISI()"
-          (valueChange)="onFieldChange('textoIngresosAISI', $event)">
+          [value]="viewModel().textos.ingresos"
+          (valueChange)="onFieldChange('textoIngresos' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -187,12 +187,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoIndiceDesempleoAISI"
+          [fieldId]="'textoIndiceDesempleo' + obtenerPrefijoGrupo()"
           [label]="SECCION23_TEMPLATES.labelIndiceDesempleoCompletoSecundario"
           [hint]="SECCION23_TEMPLATES.hintIndiceDesempleo"
           [rows]="4"
-          [value]="obtenerTextoIndiceDesempleoAISI()"
-          (valueChange)="onFieldChange('textoIndiceDesempleoAISI', $event)">
+          [value]="viewModel().textos.indiceDesempleo"
+          (valueChange)="onFieldChange('textoIndiceDesempleo' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
 
@@ -235,12 +235,12 @@
         <h4 class="section-title">{{ SECCION23_TEMPLATES.subsectionEditarParrafos }}</h4>
         
         <app-paragraph-editor
-          fieldId="textoPEAAISI"
+          [fieldId]="'textoPEAFull' + obtenerPrefijoGrupo()"
           [label]="SECCION23_TEMPLATES.labelPeaOcupadaDesocupadaAnalisisSecundario"
           [hint]="SECCION23_TEMPLATES.hintPeaOcupadaDesocupada"
           [rows]="4"
-          [value]="obtenerTextoPEAAISI()"
-          (valueChange)="onFieldChange('textoPEAAISI', $event)">
+          [value]="viewModel().textos.peaFull"
+          (valueChange)="onFieldChange('textoPEAFull' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
     </div>
@@ -251,8 +251,8 @@
       <div style="margin-top: 15px;">
         <app-image-upload
           [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX"
-          [fotografias]="fotografiasFormMulti"
+          [photoPrefix]="photoPrefixSignal()"
+          [fotografias]="fotosCacheSignal()"
           (fotografiasChange)="onFotografiasChange($event)">
         </app-image-upload>
       </div>

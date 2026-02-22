@@ -37,6 +37,9 @@ export class Seccion28ViewComponent extends AutoLoadSectionComponent implements 
 
   // ✅ PHOTO_PREFIX dinámico basado en el prefijo del grupo AISI
   override readonly PHOTO_PREFIX: string;
+  
+  // ✅ enable reactive signal sync (UNICA VERDAD)
+  override useReactiveSync: boolean = true;
 
   // ✅ Signals de prefijos para fotos
   readonly photoPrefixSignalSalud: Signal<string> = computed(() => {

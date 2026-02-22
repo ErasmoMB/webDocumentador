@@ -21,6 +21,9 @@ import { SECCION28_TEMPLATES } from './seccion28-constants';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion28FormComponent extends BaseSectionComponent implements OnDestroy {
+  // ✅ enable reactive signal sync (UNICA VERDAD)
+  override useReactiveSync: boolean = true;
+
   // NOTE: renamed to avoid overriding BaseSectionComponent 'tables' coordinator
   @ViewChildren(DynamicTableComponent) dynamicTables?: QueryList<DynamicTableComponent>;
   @Input() override seccionId: string = '3.1.4.B.1.7';

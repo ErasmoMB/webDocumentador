@@ -35,7 +35,7 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   readonly globalTableNumberSignal3: Signal<string>;
   readonly globalPhotoNumbersSignal: Signal<string[]>;
   
-  override readonly PHOTO_PREFIX: string;
+  override PHOTO_PREFIX: string = '';
   override useReactiveSync: boolean = true;
 
   readonly formDataSignal: Signal<Record<string, any>> = computed(() => this.projectFacade.selectSectionFields(this.seccionId, null)());
@@ -59,9 +59,88 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     return (this.projectFacade.selectField(this.seccionId, null, key)() ?? this.projectFacade.selectTableData(this.seccionId, null, 'peaOcupadaDesocupadaTabla')() ?? this.datos.peaOcupadaDesocupadaTabla ?? []) as any[];
   });
 
+  // Photos - SEGUIR PATRON SECCION 21: leer directamente desde ProjectStateFacade
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
-    const groupPrefix = this.imageService.getGroupPrefix(this.seccionId);
-    return this.imageService.loadImages(this.seccionId, this.PHOTO_PREFIX, groupPrefix) || [];
+    const fotos: FotoItem[] = [];
+    const basePrefix = 'fotografia';
+    const groupPrefix = this.obtenerPrefijoGrupo();
+    
+    for (let i = 1; i <= 10; i++) {
+      // Esquema correcto: {prefix}{i}{suffix}{group} → fotografia1Imagen_B1
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
+      
+      if (imagen) {
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
+      }
+    }
+    return fotos;
+  });
+
+  // ✅ PARAGRAPH SIGNALS - patrón UNICA_VERDAD
+  readonly textoPETIntroSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoPETIntro${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoPETSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoPET${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoIndicadoresDistritalesSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoIndicadoresDistritales${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoPEASignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoPEA${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoEmpleoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoEmpleo${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoEmpleoDependienteSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoEmpleoDependiente${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoIngresosSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoIngresos${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoIndiceDesempleoSignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoIndiceDesempleo${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoPEASignalFull: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoPEAFull${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
+  });
+
+  readonly textoAnalisisPEASignal: Signal<string> = computed(() => {
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldName = `textoAnalisisPEA${prefijo}`;
+    return this.projectFacade.selectField(this.seccionId, null, fieldName)() || '';
   });
 
   readonly viewModel: Signal<any> = computed(() => ({
@@ -69,7 +148,18 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     petGruposEdad: this.petGruposEdadSignal(),
     peaDistritoSexo: this.peaDistritoSexoSignal(),
     peaOcupadaDesocupada: this.peaOcupadaDesocupadaSignal(),
-    fotos: this.fotosCacheSignal()
+    fotos: this.fotosCacheSignal(),
+    // ✅ Párrafos - señales reactivas
+    textoPETIntro: this.textoPETIntroSignal(),
+    textoPET: this.textoPETSignal(),
+    textoIndicadoresDistritales: this.textoIndicadoresDistritalesSignal(),
+    textoPEA: this.textoPEASignal(),
+    textoEmpleo: this.textoEmpleoSignal(),
+    textoEmpleoDependiente: this.textoEmpleoDependienteSignal(),
+    textoIngresos: this.textoIngresosSignal(),
+    textoIndiceDesempleo: this.textoIndiceDesempleoSignal(),
+    textoPEAFull: this.textoPEASignalFull(),
+    textoAnalisisPEA: this.textoAnalisisPEASignal()
   }));
 
   constructor(cdRef: ChangeDetectorRef, injector: Injector, private globalNumbering: GlobalNumberingService) {
@@ -85,6 +175,11 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     // Inicializar PHOTO_PREFIX para compatibilidad (usar el valor del signal)
     const prefijoInit = this.photoPrefixSignal();
     this.PHOTO_PREFIX = prefijoInit;
+    
+    // ✅ Sincronizar PHOTO_PREFIX cuando cambie el grupo
+    effect(() => {
+      this.PHOTO_PREFIX = this.photoPrefixSignal();
+    });
     
     // ✅ Signal para número global de tabla (primera tabla: petGruposEdadAISI)
     this.globalTableNumberSignal = computed(() => {
@@ -130,6 +225,22 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
     effect(() => {
       this.fotosCacheSignal();
+      this.cdRef.markForCheck();
+    });
+
+    // ✅ Watch all paragraph signals for reactive sync
+    effect(() => {
+      // Read all paragraph signals to establish dependency
+      this.textoPETIntroSignal();
+      this.textoPETSignal();
+      this.textoIndicadoresDistritalesSignal();
+      this.textoPEASignal();
+      this.textoEmpleoSignal();
+      this.textoEmpleoDependienteSignal();
+      this.textoIngresosSignal();
+      this.textoIndiceDesempleoSignal();
+      this.textoPEASignalFull();
+      this.textoAnalisisPEASignal();
       this.cdRef.markForCheck();
     });
   }
@@ -232,13 +343,15 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   // Textos para template
   obtenerTextoPETIntro(): string {
-    const texto = this.datos.textoPETIntro_AISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoPETIntroSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     return SECCION23_TEMPLATES.petIntroDefault;
   }
 
   obtenerTextoPET(): string {
-    const texto = this.datos.textoPET_AISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoPETSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     const porcentajePET = this.getPorcentajePET();
@@ -252,7 +365,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoIndicadoresDistritales(): string {
-    const texto = this.datos.textoIndicadoresDistritalesAISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoIndicadoresDistritalesSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const poblacionDistrital = this.getPoblacionDistritalFn();
@@ -264,7 +378,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoPEA(): string {
-    const texto = this.datos.textoPEA_AISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoPEASignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -274,7 +389,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoAnalisisPEA_AISI(): string {
-    const texto = this.datos.textoAnalisisPEA_AISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoAnalisisPEASignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables
@@ -286,20 +402,23 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoEmpleoAISI(): string {
-    const texto = this.datos.textoEmpleoAISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoEmpleoSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
   }
 
   obtenerTextoEmpleoDependiente_AISI(): string {
-    const texto = this.datos.textoEmpleoDependiente_AISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoEmpleoDependienteSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     return SECCION23_TEMPLATES.empleoDependienteDefault;
   }
 
   obtenerTextoIngresosAISI(): string {
-    const texto = this.datos.textoIngresosAISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoIngresosSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -313,7 +432,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoIndiceDesempleoAISI(): string {
-    const texto = this.datos.textoIndiceDesempleoAISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoIndiceDesempleoSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
@@ -323,7 +443,8 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   }
 
   obtenerTextoPEAAISI(): string {
-    const texto = this.datos.textoPEAAISI;
+    // ✅ Leer del signal (UNICA_VERDAD)
+    const texto = this.textoPEASignalFull();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
     const distrito = this.obtenerNombreDistritoActual();
     return SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables

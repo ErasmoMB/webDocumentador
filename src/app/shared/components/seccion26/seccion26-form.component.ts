@@ -25,8 +25,20 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
   @Input() override seccionId: string = '3.1.4.B.1.5';
   @Input() override modoFormulario: boolean = false;
 
-  // enable reactive signal sync (UNICA VERDAD)
+  // ✅ enable reactive signal sync (UNICA VERDAD)
   override useReactiveSync: boolean = true;
+
+  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal que combina todos los grupos de fotos
+  readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
+    const fotos: FotoItem[] = [];
+    // Cargar fotos de Desechos
+    const fotosDesechos = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalDesechos());
+    // Cargar fotos de Electricidad
+    const fotosElectricidad = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalElectricidad());
+    // Cargar fotos de Cocinar
+    const fotosCocinar = this.imageService.loadImages(this.seccionId, this.photoPrefixSignalCocinar());
+    return [...fotosDesechos, ...fotosElectricidad, ...fotosCocinar];
+  });
 
   // ✅ Exportar TEMPLATES para el template
   readonly SECCION26_TEMPLATES = SECCION26_TEMPLATES;
@@ -338,6 +350,8 @@ export class Seccion26FormComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       this.viewModel();
       this.actualizarFotografiasFormMulti();
+      // ✅ PATRÓN UNICA_VERDAD: tocar fotosCacheSignal para recarga reactiva
+      this.fotosCacheSignal();
       this.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
