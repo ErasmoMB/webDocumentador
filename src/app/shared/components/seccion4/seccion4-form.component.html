@@ -80,7 +80,7 @@
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX_UBICACION"
         [permitirMultiples]="true"
-        (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_UBICACION, $event)">
+        (fotografiasChange)="onFotografiasChange($event, PHOTO_PREFIX_UBICACION)">
       </app-image-upload>
     </div>
 
@@ -91,7 +91,7 @@
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX_POBLACION"
         [permitirMultiples]="true"
-        (fotografiasChange)="onGrupoFotografiasChange(PHOTO_PREFIX_POBLACION, $event)">
+        (fotografiasChange)="onFotografiasChange($event, PHOTO_PREFIX_POBLACION)">
       </app-image-upload>
     </div>
 

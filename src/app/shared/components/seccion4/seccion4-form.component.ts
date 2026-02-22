@@ -11,6 +11,7 @@ import { PrefijoHelper } from 'src/app/shared/utils/prefijo-helper';
 import { SECCION4_WATCHED_FIELDS, SECCION4_PHOTO_PREFIXES, SECCION4_TABLA_AISD1_CONFIG, SECCION4_TABLA_AISD2_CONFIG, SECCION4_COLUMNAS_AISD1, SECCION4_COLUMNAS_AISD2, SECCION4_TEMPLATES, SECCION4_CONFIG } from './seccion4-constants';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { GlobalNumberingService } from 'src/app/core/services/numbering/global-numbering.service';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 
 @Component({
   standalone: true,
@@ -69,7 +70,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     cdRef: ChangeDetectorRef,
     injector: Injector,
     private sanitizer: DomSanitizer,
-    private globalNumbering: GlobalNumberingService
+    private globalNumbering: GlobalNumberingService,
+    private formChange: FormChangeService
   ) {
     super(cdRef, injector);
 
@@ -115,10 +117,18 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       
       for (const basePrefix of [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION]) {
         for (let i = 1; i <= 10; i++) {
-          const titulo = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Titulo${prefijo}`)();
-          const fuente = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Fuente${prefijo}`)();
-          const imagen = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Imagen${prefijo}`)();
-          
+          // intentar versión con prefijo; si no hay imagen, hacer fallback a clave base
+          let titulo = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Titulo${prefijo}`)();
+          let fuente = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Fuente${prefijo}`)();
+          let imagen = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Imagen${prefijo}`)();
+
+          if (!imagen && prefijo) {
+            // no se encontró en clave con prefijo; revisar clave sin sufijo
+            titulo = titulo || this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Titulo`)();
+            fuente = fuente || this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Fuente`)();
+            imagen = this.projectFacade.selectField(this.seccionId, null, `${basePrefix}${i}Imagen`)();
+          }
+
           if (imagen) {
             fotos.push({
               titulo: titulo || `Fotografía ${i}`,
@@ -542,6 +552,77 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
     } else {
       super.cargarFotografias();
     }
+  }
+
+  // ✅ Override: Persistir fotografías directamente al backend (patrón secciones 21-22)
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    const groupPrefix = this.obtenerPrefijoGrupo(); // '_B1' o '_A1'
+    const updates: Record<string, any> = {};
+    
+    // Determinar qué prefijo usar basándose en customPrefix o usar el primero por defecto
+    const prefixes = customPrefix 
+      ? [customPrefix] 
+      : [this.PHOTO_PREFIX_UBICACION, this.PHOTO_PREFIX_POBLACION];
+    
+    for (const basePrefix of prefixes) {
+      // Limpiar fotos anteriores (todas las 10 posiciones para este grupo)
+      for (let i = 1; i <= 10; i++) {
+        const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+        const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+        const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+        updates[imgKey] = '';
+        updates[titKey] = '';
+        updates[fuenteKey] = '';
+
+        // también borrar versión sin prefijo para mantener consistencia
+        if (groupPrefix) {
+          updates[`${basePrefix}${i}Imagen`] = '';
+          updates[`${basePrefix}${i}Titulo`] = '';
+          updates[`${basePrefix}${i}Fuente`] = '';
+        }
+      }
+      
+      // Guardar nuevas fotos para este grupo (asumiendo que las fotos vienen en orden del grupo)
+      fotografias.forEach((foto, index) => {
+        if (foto.imagen) {
+          const idx = index + 1;
+          const imgKey = groupPrefix ? `${basePrefix}${idx}Imagen${groupPrefix}` : `${basePrefix}${idx}Imagen`;
+          const titKey = groupPrefix ? `${basePrefix}${idx}Titulo${groupPrefix}` : `${basePrefix}${idx}Titulo`;
+          const fuenteKey = groupPrefix ? `${basePrefix}${idx}Fuente${groupPrefix}` : `${basePrefix}${idx}Fuente`;
+          const valorImagen = foto.imagen;
+
+          updates[imgKey] = valorImagen;
+          updates[titKey] = foto.titulo || '';
+          updates[fuenteKey] = foto.fuente || '';
+
+          // duplicar a clave base cuando exista prefijo para soportar cambio de seccionId
+          if (groupPrefix) {
+            updates[`${basePrefix}${idx}Imagen`] = valorImagen;
+            updates[`${basePrefix}${idx}Titulo`] = foto.titulo || '';
+            updates[`${basePrefix}${idx}Fuente`] = foto.fuente || '';
+          }
+        }
+      });
+    }
+    
+    // Guardar en ProjectStateFacade
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Persistir al backend
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {}
+    
+    this.cdRef.markForCheck();
+  }
+
+  // antiguo handler que ya no se invoca desde el HTML; mantenido solo
+  // por si alguna otra parte del código lo llama. Redirige al nuevo método
+  // genérico (`onFotografiasChange`) que soporta múltiples grupos.
+  onGrupoFotosChange(prefix: string, fotografias: FotoItem[]): void {
+    // delegar al método principal pasando `customPrefix` para que solo procese
+    // el grupo indicado.
+    this.onFotografiasChange(fotografias, prefix);
   }
 
   protected override detectarCambios(): boolean {

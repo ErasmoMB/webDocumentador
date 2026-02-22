@@ -19,12 +19,22 @@ export const SECCION4_WATCHED_FIELDS = [
   'cuadroTituloAISD1',
   'cuadroTituloAISD2',
   // Fotos con prefijos (10 máximo por tipo)
+  // campos base (sin prefijo de grupo)
   ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Imagen`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Titulo`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Imagen`),
+  // también vigilar variantes con sufijos de grupo (_A1, _B1) para sincronización reactiva
+  ...['','_A1','_B1'].flatMap(sufijo => [
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Titulo${sufijo}`),
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Fuente${sufijo}`),
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Imagen${sufijo}`),
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Titulo${sufijo}`),
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Fuente${sufijo}`),
+    ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Imagen${sufijo}`)
+  ]).flat(),
 ];
 
 export const SECCION4_PHOTO_PREFIXES = {
