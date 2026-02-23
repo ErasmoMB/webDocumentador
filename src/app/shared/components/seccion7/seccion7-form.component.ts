@@ -339,6 +339,52 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       seccion7Form.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
+  /**
+   * Fallback: obtiene el código de distrito desde la tablaAISD1 de sección 4 (igual que el nombre)
+   */
+  private obtenerCodigoCPPDesdeSeccion4(): string | null {
+    const prefijo = this.prefijoGrupoSignal();
+    const seccion4Id = '3.1.4.A.1';
+    const tablaKey = `tablaAISD1Datos${prefijo}`;
+    const seccion4Data = this.projectFacade.selectSectionFields(seccion4Id, null)();
+    const tabla = seccion4Data[tablaKey] || seccion4Data['tablaAISD1Datos'];
+    console.log('[SECCION7:DEBUG] tablaAISD1 obtenida en obtenerCodigoCPPDesdeSeccion4:', tabla);
+    if (tabla && Array.isArray(tabla) && tabla.length > 0) {
+      const primerRegistro = tabla[0];
+      console.log('[SECCION7:DEBUG] primerRegistro tablaAISD1:', primerRegistro);
+      if (primerRegistro) {
+        if (primerRegistro.codigo && primerRegistro.codigo.trim() !== '') {
+          console.log('[SECCION7:DEBUG] Código encontrado:', primerRegistro.codigo);
+          return primerRegistro.codigo;
+        } else if (primerRegistro.distrito && primerRegistro.distrito.trim() !== '') {
+          console.log('[SECCION7:DEBUG] Usando nombre de distrito como código:', primerRegistro.distrito);
+          return primerRegistro.distrito;
+        } else {
+          console.log('[SECCION7:DEBUG] primerRegistro no tiene código ni distrito válido');
+        }
+      }
+    } else {
+      console.log('[SECCION7:DEBUG] tablaAISD1 vacía o no es array');
+    }
+    return null;
+  }
+  
+  /**
+   * Devuelve el array de códigos de CPP a usar para los endpoints de PEA/PEA Ocupada
+   * Si no hay selección manual, usa el código de la tabla de sección 4 si existe
+   */
+  private getCodigosParaPEA(): string[] {
+    // Aquí podrías usar la lógica de selección manual si existe
+    // Si no hay selección manual, usar el fallback
+    const codigo = this.obtenerCodigoCPPDesdeSeccion4();
+    return codigo ? [codigo] : [];
+  }
+  
+  // Ejemplo de uso en la función que llama al endpoint:
+  // const codigos = this.getCodigosParaPEA();
+  // if (codigos.length > 0) {
+  //   this.backendApiService.llamarEndpointDemografico({ codigos });
+  // }
 
   get petConfig() {
     const prefijo = this.prefijoGrupoSignal();
@@ -408,7 +454,7 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
    * Carga three tablas: PET, PEA, PEA Ocupada/Desocupada
    */
   private cargarDatosDelBackend(): void {
-    // ✅ Obtener códigos de centros poblados del grupo AISD actual
+    // Obtener códigos de centros poblados del grupo AISD actual
     const codigosArray = this.getCodigosCentrosPobladosAISD();
     const codigos = [...codigosArray]; // Copia mutable
 
@@ -418,23 +464,19 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
 
     const prefijo = this.obtenerPrefijoGrupo();
 
-    // 1. Cargar PET (Población en Edad de Trabajar)
+    // 1. Cargar PET (Población en Edad de Trabajar) - sigue igual, usa todos los CPP
     this.backendApi.postPetGrupo(codigos).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPETDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
         );
         const petTablaKey = prefijo ? `petTabla${prefijo}` : 'petTabla';
-        
-        // ✅ Calcular totales y porcentajes antes de guardar
+        // Calcular totales y porcentajes antes de guardar
         const tmp: Record<string, any> = { [petTablaKey]: structuredClone(datosTransformados) };
         this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...this.petConfig, tablaKey: petTablaKey });
         const tablaFinal = tmp[petTablaKey] || datosTransformados;
-        
         this.projectFacade.setField(this.seccionId, null, petTablaKey, tablaFinal);
         this.projectFacade.setField(this.seccionId, null, 'petTabla', tablaFinal);
-        
-        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
         try {
           this.formChange.persistFields(this.seccionId, 'table', { [petTablaKey]: tablaFinal }, { notifySync: true });
           console.log(`[SECCION7:BACKEND] ✅ PET data saved to session-data with prefix: ${petTablaKey}`);
@@ -447,24 +489,23 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       }
     });
 
-    // 2. Cargar PEA (Población Económicamente Activa)
-    this.backendApi.postPea(codigos).subscribe({
+    // 2. Cargar PEA y PEA Ocupada/Desocupada usando SOLO el código según lógica fallback (sección 4)
+    const codigosPEA = this.getCodigosParaPEA();
+    console.log('[SECCION7:DEBUG] Código(s) de distrito para PEA/PEA Ocupada:', codigosPEA);
+
+    // PEA
+    this.backendApi.postPea(codigosPEA).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPEADesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
         );
         const peaTablaKey = prefijo ? `peaTabla${prefijo}` : 'peaTabla';
-        
-        // ✅ Calcular totales y porcentajes antes de guardar
         const tablaConPorcentajes = this.calcularPorcentajesPEA(datosTransformados);
-        
         this.projectFacade.setField(this.seccionId, null, peaTablaKey, tablaConPorcentajes);
         this.projectFacade.setField(this.seccionId, null, 'peaTabla', tablaConPorcentajes);
-        
-        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
         try {
           this.formChange.persistFields(this.seccionId, 'table', { [peaTablaKey]: tablaConPorcentajes }, { notifySync: true });
-          console.log(`[SECCION7:BACKEND] ✅ PEA data saved to session-data with prefix: ${peaTablaKey}`);
+          console.log(`[SECCION7:BACKEND] ✅ PEA data saved to session-data con distrito: ${peaTablaKey}`);
         } catch (e) {
           console.error(`[SECCION7:BACKEND] ⚠️ Could not save PEA to session-data:`, e);
         }
@@ -474,24 +515,19 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
       }
     });
 
-    // 3. Cargar PEA Ocupada/Desocupada
-    this.backendApi.postPeaOcupadaDesocupada(codigos).subscribe({
+    // PEA Ocupada/Desocupada
+    this.backendApi.postPeaOcupadaDesocupada(codigosPEA).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPEAOcupadaDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
         );
         const peaOcupadaTablaKey = prefijo ? `peaOcupadaTabla${prefijo}` : 'peaOcupadaTabla';
-        
-        // ✅ Calcular totales y porcentajes antes de guardar
         const tablaConPorcentajes = this.calcularPorcentajesPEA(datosTransformados);
-        
         this.projectFacade.setField(this.seccionId, null, peaOcupadaTablaKey, tablaConPorcentajes);
         this.projectFacade.setField(this.seccionId, null, 'peaOcupadaTabla', tablaConPorcentajes);
-        
-        // ✅ GUARDAR EN SESSION-DATA (UNICA VERDAD - Redis)
         try {
           this.formChange.persistFields(this.seccionId, 'table', { [peaOcupadaTablaKey]: tablaConPorcentajes }, { notifySync: true });
-          console.log(`[SECCION7:BACKEND] ✅ PEA Ocupada data saved to session-data with prefix: ${peaOcupadaTablaKey}`);
+          console.log(`[SECCION7:BACKEND] ✅ PEA Ocupada data saved to session-data con distrito: ${peaOcupadaTablaKey}`);
         } catch (e) {
           console.error(`[SECCION7:BACKEND] ⚠️ Could not save PEA Ocupada to session-data:`, e);
         }
@@ -500,6 +536,24 @@ export class Seccion7FormComponent extends BaseSectionComponent implements OnDes
         console.error('[SECCION7] Error cargando PEA Ocupada:', err);
       }
     });
+  }
+
+  /**
+   * Obtiene el código del distrito seleccionado en la primera tabla de la sección 4
+   */
+  private obtenerCodigoDistritoDesdeSeccion4(): string | null {
+    const prefijo = this.prefijoGrupoSignal();
+    const seccion4Id = '3.1.4.A.1';
+    const tablaKey = `tablaAISD1Datos${prefijo}`;
+    const seccion4Data = this.projectFacade.selectSectionFields(seccion4Id, null)();
+    const tabla = seccion4Data[tablaKey] || seccion4Data['tablaAISD1Datos'];
+    if (tabla && Array.isArray(tabla) && tabla.length > 0) {
+      const primerRegistro = tabla[0];
+      if (primerRegistro && primerRegistro.codigo && primerRegistro.codigo.trim() !== '') {
+        return primerRegistro.codigo;
+      }
+    }
+    return null;
   }
 
   override ngOnDestroy() {

@@ -1,3 +1,8 @@
+// ...imports y helpers existentes...
+
+// ...imports y helpers existentes...
+
+// Eliminar la declaración duplicada de la clase aquí. La definición completa y funcional de Seccion23FormComponent debe quedar solo una vez en el archivo, con todos los métodos y propiedades necesarios.
 import { Component, OnDestroy, Input, ChangeDetectionStrategy, Injector, Signal, computed, effect, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -691,6 +696,17 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
   onPEAOcupadaDesocupadaTableUpdated(): void { this.onPeaOcupadaDesocupadaUpdated(this.datos[this.peaOcupadaDesocupadaConfig.tablaKey] || []); }
 
   // Utilities
+  public getCodigosParaPEA(): string[] {
+    // Usar la misma lógica que el título: obtener el distrito desde la tabla de ubicación de sección 21
+    const distrito = this.obtenerNombreDistritoActual();
+    if (distrito && distrito.trim() !== '' && distrito !== '____') {
+      console.log('[SECCION23:DEBUG] Distrito para endpoint:', distrito);
+      return [distrito];
+    }
+    console.log('[SECCION23:DEBUG] No se encontró distrito válido para endpoint');
+    return [];
+  }
+
   private normalizarTabla(tabla: any[]): any[] {
     return tabla.map((row: any) => {
       const rowN: any = {};
@@ -740,7 +756,11 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       }
     });
 
-    this.backendApi.postPea(codigos).subscribe({
+    // Para PEA y PEA Ocupada/Desocupada, usar el nombre del distrito desde sección 21
+    const codigosPEA = this.getCodigosParaPEA();
+    console.log('[SECCION23:DEBUG] Código(s) de distrito para PEA/PEA Ocupada:', codigosPEA);
+
+    this.backendApi.postPea(codigosPEA).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPEADesdeDemograficos(
           unwrapDemograficoData(response?.data || [])
@@ -754,7 +774,7 @@ export class Seccion23FormComponent extends BaseSectionComponent implements OnDe
       }
     });
 
-    this.backendApi.postPeaOcupadaDesocupada(codigos).subscribe({
+    this.backendApi.postPeaOcupadaDesocupada(codigosPEA).subscribe({
       next: (response: any) => {
         const datosTransformados = transformPEAOcupadaDesdeDemograficos(
           unwrapDemograficoData(response?.data || [])

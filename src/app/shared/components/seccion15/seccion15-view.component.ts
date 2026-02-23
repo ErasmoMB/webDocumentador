@@ -33,29 +33,27 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
   override useReactiveSync: boolean = true;
   override watchedFields: string[] = SECCION15_WATCHED_FIELDS;
 
-  fotografiasIglesia: FotoItem[] = [];
+
 
   // ✅ HELPER PARA OBTENER PREFIJO
   private obtenerPrefijo(): string {
     return PrefijoHelper.obtenerPrefijoGrupo(this.seccionId) || '';
   }
 
-  // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  // Patrón correcto: usar Signal para fotos, sin caché local
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
-    const prefijo = this.obtenerPrefijo();
-    
+    const basePrefix = 'fotografiaIglesia';
+    const groupPrefix = this.obtenerPrefijoGrupo();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       if (imagen) {
-        fotos.push({
-          titulo: titulo || `Fotografía ${i}`,
-          fuente: fuente || 'GEADES, 2024',
-          imagen: imagen
-        } as FotoItem);
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
     return fotos;
@@ -137,9 +135,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
     });
   }
 
-  protected override onInitCustom(): void {
-    this.cargarFotografias();
-  }
+  protected override onInitCustom(): void {}
 
   protected override detectarCambios(): boolean {
     return false;
@@ -148,9 +144,7 @@ export class Seccion15ViewComponent extends BaseSectionComponent implements OnDe
   protected override actualizarValoresConPrefijo(): void {
   }
 
-  protected override actualizarDatosCustom(): void {
-    this.cargarFotografias();
-  }
+  protected override actualizarDatosCustom(): void {}
 
   override getDataSourceType(fieldName: string): 'manual' | 'section' | 'backend' {
     return 'manual';

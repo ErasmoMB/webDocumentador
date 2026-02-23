@@ -50,62 +50,38 @@
       </div>
     </div>
 
-    <div class="form-group-section mt-xl">
-      <h4 class="section-title">{{ SECCION15_TEMPLATES.subsectionReligion }}</h4>
-
-      <div class="form-group-section mt-md">
-        <h4 class="section-title">{{ SECCION15_TEMPLATES.titleEditarParrafos }}</h4>
-
-        <app-paragraph-editor
-          fieldId="parrafoSeccion15_religion_completo"
-          [label]="SECCION15_TEMPLATES.labelTextoReligion"
-          [hint]="SECCION15_TEMPLATES.hintTextoReligion"
-          [rows]="4"
-          [value]="obtenerTextoReligion()"
-          (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
-        </app-paragraph-editor>
+      <div class="form-group-section mt-xl">
+        <h4 class="section-title">{{ SECCION15_TEMPLATES.subsectionReligion }}</h4>
+        <div class="form-group-section mt-md">
+          <h4 class="section-title">{{ SECCION15_TEMPLATES.titleEditarParrafos }}</h4>
+          <app-paragraph-editor
+            fieldId="parrafoSeccion15_religion_completo"
+            [label]="SECCION15_TEMPLATES.labelTextoReligion"
+            [hint]="SECCION15_TEMPLATES.hintTextoReligion"
+            [rows]="4"
+            [value]="obtenerTextoReligion()"
+            (valueChange)="onFieldChange('parrafoSeccion15_religion_completo', $event)">
+          </app-paragraph-editor>
+        <!-- Fotografías Religión -->
+        <div class="form-field mt-lg">
+          <label class="label">{{ SECCION15_TEMPLATES.labelFotografias }}</label>
+          <app-image-upload
+            [fotografias]="fotosCacheSignal()"
+            [sectionId]="seccionId"
+            [photoPrefix]="PHOTO_PREFIX"
+            [permitirMultiples]="true"
+            [labelTitulo]="SECCION15_TEMPLATES.labelFotoTitulo"
+            [labelFuente]="SECCION15_TEMPLATES.labelFotoFuente"
+            [labelImagen]="SECCION15_TEMPLATES.labelFotoImagen"
+            [placeholderTitulo]="SECCION15_TEMPLATES.placeholderFotoTitulo"
+            [placeholderFuente]="SECCION15_TEMPLATES.placeholderFotoFuente"
+            [tituloDefault]="SECCION15_TEMPLATES.tituloFotoDefault"
+            [fuenteDefault]="SECCION15_TEMPLATES.fuenteFotoDefault"
+            [requerido]="false"
+            (fotografiasChange)="onFotografiasChange($event)">
+          </app-image-upload>
+        </div>
+        </div>
       </div>
-
-      <div class="form-field mt-lg">
-        <label class="label">{{ SECCION15_TEMPLATES.labelReligionesTitulo }}</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesTitulo')()" (input)="onInputChange('religionesTitulo', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderReligionesTitulo">
-
-        <label class="label mt-lg">{{ SECCION15_TEMPLATES.labelReligionesTitulo }}</label>
-        <app-dynamic-table
-          [datos]="datos"
-          [config]="religionesConfigSignal()"
-          [tablaKey]="getTablaKeyReligiones()"
-          [columns]="[
-            { field: 'categoria', label: SECCION15_TEMPLATES.tableColumnCategoria, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCategoria2 },
-            { field: 'casos', label: SECCION15_TEMPLATES.tableColumnCasos, type: 'number', placeholder: SECCION15_TEMPLATES.tableColPlaceholderCasos },
-            { field: 'porcentaje', label: SECCION15_TEMPLATES.tableColumnPorcentaje, type: 'text', placeholder: SECCION15_TEMPLATES.tableColPlaceholderPorcentaje, readonly: true }
-          ]"
-          [sectionId]="seccionId"
-          (tableUpdated)="onReligionesTableUpdated($event)">
-        </app-dynamic-table>
-
-        <label class="label mt-sm">{{ SECCION15_TEMPLATES.labelReligionesFuente }}</label>
-        <input type="text" class="form-control" [value]="projectFacade.selectField(seccionId, null, 'religionesFuente')()" (input)="onInputChange('religionesFuente', $event)" [placeholder]="SECCION15_TEMPLATES.placeholderReligionesFuente">
-      </div>
-
-      <div class="form-field mt-lg">
-        <label class="label">{{ SECCION15_TEMPLATES.labelFotografias }}</label>
-        <app-image-upload
-          [fotografias]="fotografiasIglesia"
-          [sectionId]="seccionId"
-          [photoPrefix]="PHOTO_PREFIX"
-          [permitirMultiples]="true"
-          [labelTitulo]="SECCION15_TEMPLATES.labelFotoTitulo"
-          [labelFuente]="SECCION15_TEMPLATES.labelFotoFuente"
-          [labelImagen]="SECCION15_TEMPLATES.labelFotoImagen"
-          [placeholderTitulo]="SECCION15_TEMPLATES.placeholderFotoTitulo"
-          [placeholderFuente]="SECCION15_TEMPLATES.placeholderFotoFuente"
-          [tituloDefault]="SECCION15_TEMPLATES.tituloFotoDefault"
-          [fuenteDefault]="SECCION15_TEMPLATES.fuenteFotoDefault"
-          [requerido]="false"
-          (fotografiasChange)="onFotografiasChange($event)">
-        </app-image-upload>
-      </div>
-    </div>
   </div>
 </div>

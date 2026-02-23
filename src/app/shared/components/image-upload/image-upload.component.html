@@ -1,5 +1,5 @@
 <ng-template #vistaTemplate>
-  <div class="image-upload-container" *ngIf="hasFotos()" style="text-align: center;">
+  <div class="image-upload-container" style="text-align: center;">
     <div *ngIf="permitirMultiples; else vistaUnica">
       <ng-container *ngFor="let foto of _fotografias; let i = index">
         <div *ngIf="foto?.imagen" class="foto-item" style="margin: 0 auto 20px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 4px; max-width: 520px;">

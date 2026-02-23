@@ -159,6 +159,32 @@ export class Seccion7ViewComponent extends BaseSectionComponent implements OnDes
       seccion7ViewFotos.cdRef.markForCheck();
     }, { allowSignalWrites: true });
   }
+  /**
+   * Fallback: obtiene el código de CPP desde la tabla de sección 4 si existe
+   */
+  private obtenerCodigoCPPDesdeSeccion4(): string | null {
+    const seccion4Id = '3.1.4.A.1';
+    const tabla = this.projectFacade.selectField(seccion4Id, null, 'tablaAISD2Datos')();
+    if (Array.isArray(tabla) && tabla.length > 0 && tabla[0]?.codigo) {
+      return tabla[0].codigo;
+    }
+    return null;
+  }
+  
+  /**
+   * Devuelve el array de códigos de CPP a usar para los endpoints de PEA/PEA Ocupada
+   * Si no hay selección manual, usa el código de la tabla de sección 4 si existe
+   */
+  private getCodigosParaPEA(): string[] {
+    const codigo = this.obtenerCodigoCPPDesdeSeccion4();
+    return codigo ? [codigo] : [];
+  }
+  
+  // Ejemplo de uso en la función que llama al endpoint:
+  // const codigos = this.getCodigosParaPEA();
+  // if (codigos.length > 0) {
+  //   this.backendApiService.llamarEndpointDemografico({ codigos });
+  // }
 
   protected override onInitCustom(): void {
     this.cargarFotografias();

@@ -25,6 +25,43 @@ import { debugLog } from '../../utils/debug';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Seccion15FormComponent extends BaseSectionComponent implements OnDestroy {
+    // Maneja el guardado de fotos y depura en consola
+    override onFotografiasChange(fotografias: FotoItem[]): void {
+      const basePrefix = 'fotografiaIglesia';
+      const groupPrefix = this.obtenerPrefijoGrupo();
+      const updates: Record<string, any> = {};
+      // Limpiar slots anteriores (hasta 10)
+      for (let i = 1; i <= 10; i++) {
+        const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+        const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+        const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+        updates[imgKey] = '';
+        updates[titKey] = '';
+        updates[fuenteKey] = '';
+      }
+      // Guardar nuevas fotos
+      fotografias.forEach((foto, index) => {
+        if (foto.imagen) {
+          const idx = index + 1;
+          const imgKey = groupPrefix ? `${basePrefix}${idx}Imagen${groupPrefix}` : `${basePrefix}${idx}Imagen`;
+          const titKey = groupPrefix ? `${basePrefix}${idx}Titulo${groupPrefix}` : `${basePrefix}${idx}Titulo`;
+          const fuenteKey = groupPrefix ? `${basePrefix}${idx}Fuente${groupPrefix}` : `${basePrefix}${idx}Fuente`;
+          updates[imgKey] = foto.imagen;
+          updates[titKey] = foto.titulo || '';
+          updates[fuenteKey] = foto.fuente || '';
+        }
+      });
+      // Log para depuración
+      console.log('[SECCION 15] Guardando fotos', updates);
+      // Persistir en ProjectFacade (capa 1)
+      this.projectFacade.setFields(this.seccionId, null, updates);
+      // Persistir en Backend (capa 2)
+      try {
+        this.formChangeService.persistFields(this.seccionId, 'images', updates);
+      } catch (e) {
+        console.error('Error persistiendo imágenes:', e);
+      }
+    }
   @Input() override seccionId: string = SECCION15_SECTION_ID;
   @Input() override modoFormulario: boolean = false;
 
@@ -97,21 +134,20 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
   }
 
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
+  // Patrón correcto según guía: usar basePrefix y groupPrefix
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
-    const prefijo = this.obtenerPrefijo();
-    
+    const basePrefix = 'fotografiaIglesia';
+    const groupPrefix = this.obtenerPrefijoGrupo();
     for (let i = 1; i <= 10; i++) {
-      const titulo = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Titulo${prefijo}`)();
-      const fuente = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Fuente${prefijo}`)();
-      const imagen = this.projectFacade.selectField(this.seccionId, null, `${this.PHOTO_PREFIX}${i}Imagen${prefijo}`)();
-      
+      const imgKey = groupPrefix ? `${basePrefix}${i}Imagen${groupPrefix}` : `${basePrefix}${i}Imagen`;
+      const titKey = groupPrefix ? `${basePrefix}${i}Titulo${groupPrefix}` : `${basePrefix}${i}Titulo`;
+      const fuenteKey = groupPrefix ? `${basePrefix}${i}Fuente${groupPrefix}` : `${basePrefix}${i}Fuente`;
+      const titulo = this.projectFacade.selectField(this.seccionId, null, titKey)();
+      const fuente = this.projectFacade.selectField(this.seccionId, null, fuenteKey)();
+      const imagen = this.projectFacade.selectField(this.seccionId, null, imgKey)();
       if (imagen) {
-        fotos.push({
-          titulo: titulo || `Fotografía ${i}`,
-          fuente: fuente || 'GEADES, 2024',
-          imagen: imagen
-        } as FotoItem);
+        fotos.push({ titulo: titulo || `Fotografía ${i}`, fuente: fuente || 'GEADES, 2024', imagen } as FotoItem);
       }
     }
     return fotos;

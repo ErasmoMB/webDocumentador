@@ -24,30 +24,13 @@
 <h5>{{ SECCION15_TEMPLATES.subsectionReligion }}</h5>
 <div class="text-justify" [innerHTML]="obtenerTextoReligion()"></div>
 
-<app-table-wrapper [title]="religionesTitulo()" [sectionId]="seccionId">
-<app-generic-table
-  [data]="religionesConPorcentajes()"
-  [config]="{
-    columns: [
-      { key: 'categoria', header: SECCION15_TEMPLATES.tableColumnCategoria, align: 'left' },
-      { key: 'casos', header: SECCION15_TEMPLATES.tableColumnCasos, align: 'right' },
-      { key: 'porcentaje', header: SECCION15_TEMPLATES.tableColumnPorcentaje, align: 'right' }
-    ],
-    showFooter: false,
-    striped: true,
-    hover: true
-  }">
-</app-generic-table>
-</app-table-wrapper>
-<p class="source">Fuente: <span>{{ religionesFuente() }}</span></p>
-
 <app-image-upload
-    [modoVista]="true"
-    [permitirMultiples]="true"
-    [fotografias]="fotografiasIglesia"
-    [sectionId]="seccionId"
-    [photoPrefix]="PHOTO_PREFIX"
-    [labelTitulo]="SECCION15_TEMPLATES.labelTitulo"
-    [labelFuente]="SECCION15_TEMPLATES.labelFuente"
-    [labelImagen]="SECCION15_TEMPLATES.labelImagen">
+  [modoVista]="true"
+  [permitirMultiples]="true"
+  [fotografias]="fotosCacheSignal()"
+  [sectionId]="seccionId"
+  [photoPrefix]="PHOTO_PREFIX"
+  [labelTitulo]="religionesTitulo()"
+  [labelFuente]="religionesFuente()"
+  [labelImagen]="SECCION15_TEMPLATES.labelFotoImagen">
 </app-image-upload>
