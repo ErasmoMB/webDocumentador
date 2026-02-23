@@ -7,6 +7,7 @@ import { TextNormalizationService } from 'src/app/core/services/utilities/text-n
 import { GruposService } from 'src/app/core/infrastructure/services';
 import { UIStoreService } from 'src/app/core/state/ui-store.contract';
 import { FotoItem } from '../image-upload/image-upload.component';
+import { FormChangeService } from 'src/app/core/services/state/form-change.service';
 import { 
   createJSONProcessingBatch, 
   validateJSONStructure, 
@@ -268,6 +269,9 @@ export class Seccion1FormComponent extends BaseSectionComponent implements OnDes
   ) {
     super(cdRef, injector);
   }
+
+  // ✅ Getter para FormChangeService (necesario para persistencia de imágenes)
+  protected get formChange(): FormChangeService { return this.injector.get(FormChangeService); }
 
   protected override onInitCustom(): void {
     // ✅ Load initial values from state or use defaults
@@ -832,8 +836,48 @@ Este estudio se elabora de acuerdo con el Reglamento de la Ley del Sistema Nacio
     }
   }
 
-  override onFotografiasChange(fotografias: FotoItem[]): void {
-    this.fotografiasFormMulti = [...fotografias];
+  override onFotografiasChange(fotografias: FotoItem[], customPrefix?: string): void {
+    // ✅ PATRÓN CORRECTO: Persistir en ProjectStateFacade y Backend
+    const prefix = this.PHOTO_PREFIX; // fotografiaSeccion1
+    
+    const updates: Record<string, any> = {};
+    
+    // Paso 1: Limpiar slots anteriores (hasta 10)
+    for (let i = 1; i <= 10; i++) {
+      const imgKey = `${prefix}${i}Imagen`;
+      const titKey = `${prefix}${i}Titulo`;
+      const fuenteKey = `${prefix}${i}Fuente`;
+      updates[imgKey] = '';
+      updates[titKey] = '';
+      updates[fuenteKey] = '';
+    }
+    
+    // Paso 2: Guardar nuevas fotos
+    fotografias.forEach((foto, index) => {
+      if (foto.imagen) {
+        const idx = index + 1;
+        const imgKey = `${prefix}${idx}Imagen`;
+        const titKey = `${prefix}${idx}Titulo`;
+        const fuenteKey = `${prefix}${idx}Fuente`;
+        updates[imgKey] = foto.imagen;
+        updates[titKey] = foto.titulo || '';
+        updates[fuenteKey] = foto.fuente || '';
+      }
+    });
+    
+    // Paso 3: Persistir en ProjectFacade (capa 1)
+    this.projectFacade.setFields(this.seccionId, null, updates);
+    
+    // Paso 4: Persistir en Backend (capa 2)
+    try {
+      this.formChange.persistFields(this.seccionId, 'images', updates);
+    } catch (e) {
+      console.error('Error persistiendo imágenes:', e);
+    }
+    
+    // Sync the editable array used by the form UI
+    this.fotografiasFormMulti = fotografias;
+    this.cdRef.markForCheck();
   }
 
   llenarDatosPrueba() {

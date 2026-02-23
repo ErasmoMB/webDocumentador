@@ -135,7 +135,7 @@
     <div class="form-field mt-lg">
       <label class="label">{{ SECCION1_TEMPLATES.labelFotografias }}</label>
       <app-image-upload
-        [fotografias]="fotografiasFormMulti"
+        [fotografias]="fotosCacheSignal()"
         [sectionId]="seccionId"
         [photoPrefix]="PHOTO_PREFIX"
         [permitirMultiples]="true"
