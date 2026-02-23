@@ -299,7 +299,12 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   getAfiliacionSaludAISIConPorcentajes(): any[] {
     return (this.afiliacionTablaSignal() || []).map((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
-      // ✅ Para "Total referencial" o filas con "total", dejar porcentaje vacío o como venga
+      // Para "Total referencial" o filas con "total referencial", dejar porcentaje vacío
+      if (categoria.includes('total referencial')) {
+        const { porcentaje, ...rest } = item;
+        return rest;
+      }
+      // Para "total" genérico, dejar porcentaje vacío
       if (categoria.includes('total')) {
         return { ...item, porcentaje: '' };
       }

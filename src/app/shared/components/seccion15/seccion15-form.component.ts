@@ -296,40 +296,41 @@ export class Seccion15FormComponent extends BaseSectionComponent implements OnDe
     console.log('[SECCION15] Cargando datos del backend con codigos:', codigos);
 
     // 1. Cargar Lenguas desde POST /demograficos/lengua
-    this.backendApi.postLengua(codigos).subscribe({
-      next: (response: any) => {
-        try {
-          // El backend devuelve [{ rows: [...] }]
-          const dataRaw = response?.data?.[0]?.rows || [];
-          let datosTransformados = this.transformarLenguas(dataRaw);
-          console.log('[SECCION15] ✅ Datos de lenguas maternas cargados:', datosTransformados);
-          
-          if (datosTransformados.length > 0) {
-            const lenguasKey = `lenguasMaternasTabla${prefijo}`;
-            
-            // ✅ CALCULAR TOTALES Y PORCENTAJES (incluye fila Total)
-            const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosTransformados, '1');
-            
-            // ✅ GUARDAR EN PROJECTSTATEFACADE
-            this.projectFacade.setField(this.seccionId, null, lenguasKey, datosConPorcentajes);
-            this.projectFacade.setField(this.seccionId, null, 'lenguasMaternasTabla', datosConPorcentajes);
-            
-            // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
-            try {
-              this.formChangeService.persistFields(this.seccionId, 'table', 
-                { [lenguasKey]: datosConPorcentajes, 'lenguasMaternasTabla': datosConPorcentajes }, 
-                { notifySync: true }
-              );
-            } catch (e) { console.error(e); }
-          }
-        } catch (err) {
-          console.error('[SECCION15] ❌ Error procesando lenguas maternas:', err);
-        }
-      },
-      error: (err) => {
-        console.error('[SECCION15] ❌ Error cargando lenguas maternas:', err);
-      }
-    });
+    // Desactivado: ya no se debe usar endpoint para lenguas maternas
+    // this.backendApi.postLengua(codigos).subscribe({
+    //   next: (response: any) => {
+    //     try {
+    //       // El backend devuelve [{ rows: [...] }]
+    //       const dataRaw = response?.data?.[0]?.rows || [];
+    //       let datosTransformados = this.transformarLenguas(dataRaw);
+    //       console.log('[SECCION15] ✅ Datos de lenguas maternas cargados:', datosTransformados);
+    //       
+    //       if (datosTransformados.length > 0) {
+    //         const lenguasKey = `lenguasMaternasTabla${prefijo}`;
+    //         
+    //         // ✅ CALCULAR TOTALES Y PORCENTAJES (incluye fila Total)
+    //         const datosConPorcentajes = TablePercentageHelper.calcularPorcentajesSimple(datosTransformados, '1');
+    //         
+    //         // ✅ GUARDAR EN PROJECTSTATEFACADE
+    //         this.projectFacade.setField(this.seccionId, null, lenguasKey, datosConPorcentajes);
+    //         this.projectFacade.setField(this.seccionId, null, 'lenguasMaternasTabla', datosConPorcentajes);
+    //         
+    //         // ✅ PERSISTIR EN REDIS (con Y sin prefijo)
+    //         try {
+    //           this.formChangeService.persistFields(this.seccionId, 'table', 
+    //             { [lenguasKey]: datosConPorcentajes, 'lenguasMaternasTabla': datosConPorcentajes }, 
+    //             { notifySync: true }
+    //           );
+    //         } catch (e) { console.error(e); }
+    //       }
+    //     } catch (err) {
+    //       console.error('[SECCION15] ❌ Error procesando lenguas maternas:', err);
+    //     }
+    //   },
+    //   error: (err) => {
+    //     console.error('[SECCION15] ❌ Error cargando lenguas maternas:', err);
+    //   }
+    // });
 
     // 2. Cargar Religiones desde POST /demograficos/religion-por-cpp
     this.backendApi.postReligionPorCpp(codigos).subscribe({

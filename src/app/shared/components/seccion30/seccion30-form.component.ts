@@ -322,8 +322,8 @@ export class Seccion30FormComponent extends BaseSectionComponent implements OnDe
       }
     });
 
-    // ✅ 2. CARGAR DATOS DE TASA DE ANALFABETISMO (Alfabetización)
-    this.backendApi.postAlfabetizacion(codigos).subscribe({
+    // ✅ 2. CARGAR DATOS DE TASA DE ANALFABETISMO (Alfabetización 15plus)
+    this.backendApi.postAlfabetizacion15Plus(codigos).subscribe({
       next: (response: any) => {
         try {
           const dataRaw = response?.data || [];

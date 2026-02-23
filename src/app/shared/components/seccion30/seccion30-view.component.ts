@@ -129,7 +129,7 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
   });
 
   /**
-   * ✅ Procesa los datos de Tasa Analfabetismo para mostrar 100% en filas Total
+   * Modificado: ahora la segunda tabla usa los datos del endpoint /demograficos/alfabetizacion-15plus
    */
   readonly tasaAnalfabetismoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
@@ -137,11 +137,10 @@ export class Seccion30ViewComponent extends BaseSectionComponent {
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)()
       ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const datos = Array.isArray(v) ? v : [];
-    
-    // ✅ Procesar para mostrar 100% en filas Total
+    // Procesar para mostrar 100% en filas Total
     return datos.map(fila => {
-      const indicador = (fila.indicador || '').toString().toLowerCase();
-      if (indicador.includes('total')) {
+      const categoria = (fila.categoria || fila.indicador || '').toString().toLowerCase();
+      if (categoria.includes('total')) {
         return { ...fila, porcentaje: '100.00 %' };
       }
       return fila;

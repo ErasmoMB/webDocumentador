@@ -212,9 +212,16 @@ export class Seccion26ViewComponent extends BaseSectionComponent implements OnDe
     return TablePercentageHelper.calcularPorcentajesSimple(this.coberturaSignal(), cuadroNumero);
   });
 
+  // Mostrar los datos del backend directamente, sin recalcular porcentajes ni totales
   readonly combustiblesConPorcentajes = computed(() => {
-    const cuadroNumero = this.globalTableNumberSignalCombustibles();
-    return TablePercentageHelper.calcularPorcentajesSimple(this.combustiblesSignal(), cuadroNumero);
+    // Ocultar porcentaje en la fila 'Total referencial'
+    return this.combustiblesSignal().map((row: any) => {
+      if (row.categoria && row.categoria.toString().toLowerCase().includes('total referencial')) {
+        const { porcentaje, ...rest } = row;
+        return rest;
+      }
+      return row;
+    });
   });
 
   // Totals & percentage helpers
