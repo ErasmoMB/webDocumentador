@@ -4,14 +4,11 @@ FROM node:22-alpine AS builder
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
-COPY package.json package-lock.json ./
-
-# Instalar dependencias
-RUN npm ci
-
-# Copiar el resto del código fuente
+# Copiar TODO el código fuente primero (para que estén disponibles los scripts)
 COPY . .
+
+# Instalar dependencias (el preinstall script necesita los archivos)
+RUN npm ci
 
 # Generar el archivo env.js con las variables de producción
 RUN node scripts/generate-env.js

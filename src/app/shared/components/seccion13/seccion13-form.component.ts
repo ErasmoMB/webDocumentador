@@ -165,12 +165,11 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   readonly afiliacionSaludConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `afiliacionSaludTabla${this.obtenerPrefijo()}`,
-    totalKey: '',                    // ✅ Sin fila de total
-    campoTotal: '',                  // ✅ Sin cálculo total
-    campoPorcentaje: '',             // ✅ Sin cálculo porcentaje
-    calcularPorcentajes: false,      // ✅ No calcular automáticamente
-    camposParaCalcular: ['casos', 'porcentaje'],  // Los campos ya vienen calculados del backend
-    noInicializarDesdeEstructura: true,  // ✅ No inicializar vacía
+    totalKey: 'categoria',
+    campoTotal: 'casos',
+    campoPorcentaje: 'porcentaje',
+    calcularPorcentajes: true,
+    noInicializarDesdeEstructura: true,
     permiteAgregarFilas: true,
     permiteEliminarFilas: true
   }));
