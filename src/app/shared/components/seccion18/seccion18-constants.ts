@@ -44,6 +44,12 @@ export const SECCION18_CONFIG = {
   maxPhotos: 10,
 };
 
+// ✅ Helper para formatear valores - reemplaza ____ o vacío para evitar saltos de línea en Word
+const formatearValorNBI = (valor: string): string => {
+  if (!valor || valor === '____' || valor.trim() === '') return '';
+  return valor;
+};
+
 export const SECCION18_TEMPLATES = {
   // === TÍTULOS Y SUBTÍTULOS ===
   sectionTitle: 'A.1.14. Índice de necesidades básicas insatisfechas distrital',
@@ -134,9 +140,10 @@ export const SECCION18_DEFAULT_TEXTS = {
       return ` (${valor}%)`;
     };
 
-    const texto1 = `En primer lugar, cabe mencionar que en la CC ${grupoAISD} se halla un total de ${totalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosCC)}.`;
+    // ✅ Construir el texto con manejo de valores vacíos para evitar saltos de línea en Word
+    const texto1 = `En primer lugar, cabe mencionar que en la CC ${formatearValorNBI(grupoAISD)} sehalla un total de ${formatearValorNBI(totalCC)} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosCC)}.`;
 
-    const texto2 = `Por otro lado, a nivel distrital de ${distrito}, de un total de ${totalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
+    const texto2 = `Por otro lado, a nivel distrital de ${formatearValorNBI(distrito)}, de un total de ${formatearValorNBI(totalDist)} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${formatearValorNBI(grupoAISD)} con el distrito de ${formatearValorNBI(distrito)}.`;
 
     return `${texto1}\n\n${texto2}`;
   },

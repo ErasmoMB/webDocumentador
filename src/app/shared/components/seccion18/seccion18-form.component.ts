@@ -356,10 +356,16 @@ export class Seccion18FormComponent extends BaseSectionComponent implements OnDe
         const porcentajeSinServiciosDist = this.getPorcentajeSinServiciosDistrito();
         const porcentajeHacinamientoDist = this.getPorcentajeHacinamientoDistrito();
 
+        // ✅ SOLUCIÓN: Usar valores por defecto vacíos en lugar de ____ para evitar saltos de línea en Word
         return SECCION18_DEFAULT_TEXTS.textoNBIDefault(
-            grupoAISD, distrito, totalCC, totalDist, 
-            porcentajeHacinamientoCC, porcentajeSinServiciosCC,
-            porcentajeSinServiciosDist, porcentajeHacinamientoDist
+            grupoAISD === '____' ? '' : grupoAISD, 
+            distrito === '____' ? '' : distrito, 
+            totalCC === '____' ? '' : totalCC, 
+            totalDist === '____' ? '' : totalDist,
+            porcentajeHacinamientoCC === '____' ? '' : porcentajeHacinamientoCC, 
+            porcentajeSinServiciosCC === '____' ? '' : porcentajeSinServiciosCC,
+            porcentajeSinServiciosDist === '____' ? '' : porcentajeSinServiciosDist, 
+            porcentajeHacinamientoDist === '____' ? '' : porcentajeHacinamientoDist
         );
     }
 

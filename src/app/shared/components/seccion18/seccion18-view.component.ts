@@ -164,9 +164,19 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
             return ` (${valor}%)`;
         };
 
-        const texto1 = `En primer lugar, cabe mencionar que en la CC ${grupoAISD} sehalla un total de ${totalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosCC)}.`;
+        // ✅ SOLUCIÓN: Usar valores por defecto vacíos en lugar de ____ para evitar saltos de línea en Word
+        const valorGrupoAISD = grupoAISD === '____' ? '' : grupoAISD;
+        const valorDistrito = distrito === '____' ? '' : distrito;
+        const valorTotalCC = totalCC === '____' ? '' : totalCC;
+        const valorTotalDist = totalDist === '____' ? '' : totalDist;
+        const valorPorcHacinamientoCC = porcentajeHacinamientoCC === '____' ? '' : porcentajeHacinamientoCC;
+        const valorPorcSinServiciosCC = porcentajeSinServiciosCC === '____' ? '' : porcentajeSinServiciosCC;
+        const valorPorcSinServiciosDist = porcentajeSinServiciosDist === '____' ? '' : porcentajeSinServiciosDist;
+        const valorPorcHacinamientoDist = porcentajeHacinamientoDist === '____' ? '' : porcentajeHacinamientoDist;
 
-        const texto2 = `Por otro lado, a nivel distrital de ${distrito}, de un total de ${totalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(porcentajeSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(porcentajeHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
+        const texto1 = `En primer lugar, cabe mencionar que en la CC ${valorGrupoAISD} sehalla un total de ${valorTotalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(valorPorcHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(valorPorcSinServiciosCC)}.`;
+
+        const texto2 = `Por otro lado, a nivel distrital de ${valorDistrito}, de un total de ${valorTotalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(valorPorcSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(valorPorcHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${valorGrupoAISD} con el distrito de ${valorDistrito}.`;
 
         return `${texto1}\n\n${texto2}`;
     }
@@ -229,9 +239,18 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
 
         let html = this.escapeHtml(texto);
         html = html.replace(/ En primer lugar/g, '<br/><br/>En primer lugar');
-        html = html.replace(new RegExp(this.escapeRegex(totalCC), 'g'), `<span class="data-section">${this.escapeHtml(totalCC)}</span>`);
-        html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
-        html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+        
+        // ✅ SOLUCIÓN: Solo envolver en spans si el valor NO es el placeholder ____
+        // Esto evita saltos de línea al exportar a Word
+        if (totalCC !== '____') {
+            html = html.replace(new RegExp(this.escapeRegex(totalCC), 'g'), `<span class="data-section">${this.escapeHtml(totalCC)}</span>`);
+        }
+        if (distrito !== '____') {
+            html = html.replace(new RegExp(this.escapeRegex(distrito), 'g'), `<span class="data-section">${this.escapeHtml(distrito)}</span>`);
+        }
+        if (grupoAISD !== '____') {
+            html = html.replace(new RegExp(this.escapeRegex(grupoAISD), 'g'), `<span class="data-section">${this.escapeHtml(grupoAISD)}</span>`);
+        }
         html = html.replace(/ viviendas con hacinamiento/g, ` <span class="data-source">viviendas con hacinamiento</span>`);
         html = html.replace(/ viviendas sin servicios higiénicos/g, ` <span class="data-source">viviendas sin servicios higiénicos</span>`);
 

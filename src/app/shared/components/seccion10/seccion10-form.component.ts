@@ -88,20 +88,6 @@ const transformAlumbradoElectricoDesdeDemograficos = (data: any[]): any[] => {
   }));
 };
 
-/**
- * 🚨 PATRÓN SOLO LECTURA - Transforma datos de Energía para Cocinar del backend
- * Mapea directamente TODOS los campos sin filtros 
- */
-const transformEnergiaCocinarDesdeDemograficos = (data: any[]): any[] => {
-  if (!Array.isArray(data)) return [];
-  
-  return data.map(item => ({
-    categoria: item.categoria || item.nombre || item.tipo || item.combustible || '',
-    casos: item.casos !== undefined ? item.casos : (item.total || 0),
-    porcentaje: item.porcentaje || ''
-  }));
-};
-
 @Component({
   standalone: true,
   imports: [
@@ -276,14 +262,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const aguaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
     const existingAguaData = formData[aguaKey];
     
-    // ✅ NUEVO: Verificar si ya hay datos de energía para cocinar
-    const energiaKey = prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
-    const existingEnergiaData = formData[energiaKey];
-    
     // ✅ NUEVA LÓGICA: Solo inicializar/cargar si NO hay datos en NINGUNA tabla
-    const tieneDatosPersistidos = 
-      (existingAguaData && Array.isArray(existingAguaData) && existingAguaData.length > 0) ||
-      (existingEnergiaData && Array.isArray(existingEnergiaData) && existingEnergiaData.length > 0);
+    const tieneDatosPersistidos = existingAguaData && Array.isArray(existingAguaData) && existingAguaData.length > 0;
     
     if (!tieneDatosPersistidos) {
       console.log('[SECCION10] No hay datos persistidos, inicializando tablas vacías y cargando del backend...');
@@ -324,8 +304,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     
     this.projectFacade.setField(this.seccionId, null, `alumbradoElectricoTabla${prefijo}`, []);
     
-    this.projectFacade.setField(this.seccionId, null, `energiaCocinarTabla${prefijo}`, []);
-    
     // Tecnología de comunicaciones - solo inicializar vacía (sin endpoint disponible)
     this.projectFacade.setField(this.seccionId, null, `tecnologiaComunicacionesTabla${prefijo}`, []);
   }
@@ -350,30 +328,10 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
 
     // ❌ TABLAS MANUALES - NO CARGAR (comentadas)
     // - 3.15 Abastecimiento de Agua
-    // - 3.16 Tipos de Saneamiento  
+    // - 3.16 Tipos de Saneamiento
     // - 3.17 Alumbrado Eléctrico
+    // - 3.18 Energía para Cocinar (ELIMINADA)
     // Se inicializan vacías en inicializarTablasVacias() para entrada manual
-
-    // ✅ TABLA 3.18 - Cargar Energía para Cocinar desde /demograficos/combustibles-cocina-por-cpp
-    this.backendApi.postCombustiblesCocinaPorCpp(codigos).subscribe({
-      next: (response: any) => {
-        try {
-          const dataRaw = response?.data || [];
-          const datosDesenvueltos = unwrapDemograficoData(dataRaw);
-          const datosTransformados = transformEnergiaCocinarDesdeDemograficos(datosDesenvueltos);
-          console.log('[SECCION10] ✅ Datos de energía para cocinar cargados:', datosTransformados);
-          
-          // Guardar CON prefijo y SIN prefijo (fallback)
-          const tablaKey = `energiaCocinarTabla${prefijo}`;
-          this.projectFacade.setField(this.seccionId, null, tablaKey, datosTransformados);
-        } catch (err) {
-          console.error('[SECCION10] ❌ Error procesando energía para cocinar:', err);
-        }
-      },
-      error: (err) => {
-        console.error('[SECCION10] ❌ Error cargando energía para cocinar:', err);
-      }
-    });
 
     // NOTA: Tecnología de comunicaciones - no hay endpoint disponible
     // La tabla queda vacía para entrada manual si es necesario
@@ -401,13 +359,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const data = this.formDataSignal();
     const tablaKey = `alumbradoElectricoTabla${prefijo}`;
-    return data[tablaKey] || [];
-  });
-
-  readonly energiaCocinarSignal: Signal<any[]> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const data = this.formDataSignal();
-    const tablaKey = `energiaCocinarTabla${prefijo}`;
     return data[tablaKey] || [];
   });
 
@@ -472,20 +423,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     };
   }
 
-  get energiaCocinarConfig(): any {
-    return {
-      tablaKey: this.getTablaKeyEnergiaCocinar(),
-      totalKey: 'categoria',              // ✅ Fila "Total" identificada por categoria
-      campoTotal: 'casos',              // ✅ Campo para total
-      campoPorcentaje: 'porcentaje',    // ✅ Campo para porcentaje
-      calcularPorcentajes: true,         // ✅ Habilitar cálculo automático
-      camposParaCalcular: ['casos'],
-      noInicializarDesdeEstructura: true,
-      permiteAgregarFilas: true,
-      permiteEliminarFilas: true
-    };
-  }
-
   get tecnologiaComunicacionesConfig(): any {
     return {
       tablaKey: this.getTablaKeyTecnologiaComunicaciones(),
@@ -514,11 +451,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   getTablaKeyCoberturaElectrica(): string {
     const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
     return prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla';
-  }
-
-  getTablaKeyEnergiaCocinar(): string {
-    const prefijo = PrefijoHelper.obtenerPrefijoGrupo(this.seccionId);
-    return prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
   }
 
   getTablaKeyTecnologiaComunicaciones(): string {
@@ -623,24 +555,6 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     } catch (e) { 
       console.error('[SECCION10] Error persistiendo AlumbradoElectrico:', e); 
     }
-    this.cdRef.markForCheck();
-  }
-
-  onEnergiaCocinarTableUpdated(updatedData?: any[]): void {
-    const formData = this.formDataSignal();
-    const tablaKey = this.getTablaKeyEnergiaCocinar();
-    let tablaActual = updatedData || formData[tablaKey] || [];
-    
-    // ✅ CALCULAR TOTALES Y PORCENTAJES
-    const config = this.energiaCocinarConfig;
-    const tmp: Record<string, any> = { [tablaKey]: structuredClone(tablaActual) };
-    this.tableFacade.calcularTotalesYPorcentajes(tmp, { ...config, tablaKey: tablaKey });
-    tablaActual = tmp[tablaKey] || tablaActual;
-    
-    this.projectFacade.setField(this.seccionId, null, tablaKey, tablaActual);
-    try {
-      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActual }, { notifySync: true });
-    } catch (e) { console.error(e); }
     this.cdRef.markForCheck();
   }
 
@@ -796,6 +710,8 @@ En base a estos criterios se han identificado las áreas de influencia social di
   }
 
   private generarTextoEnergiaCocinar(): string {
-    return `Para la preparación de alimentos, la comunidad utiliza principalmente leña y gas, lo que representa un riesgo para la salud debido a la exposición prolongada al humo y la deforestación de áreas cercanas.`;
+    return `En la CC Ayroca, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.
+De manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.
+`;
   }
 }

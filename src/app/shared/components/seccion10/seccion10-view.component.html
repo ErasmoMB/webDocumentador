@@ -129,32 +129,4 @@
   [labelImagen]="'Imagen'">
 </app-image-upload>
 
-<!-- e. Energía para cocinar -->
-<p style="margin-top: 20px; margin-bottom: 10px;"><strong>e. Energía para cocinar</strong></p>
-<p class="text-justify">{{ obtenerTextoEnergiaCocinar() }}</p>
 
-<app-table-wrapper [title]="obtenerTituloEnergiaCocinar()" [sectionId]="seccionId">
-  <table class="table-container">
-    <thead>
-      <tr>
-        <th class="table-header">Categoría</th>
-        <th class="table-header">Casos</th>
-        <th class="table-header">Porcentaje</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let item of energiaCocinarConPorcentajesSignal(); trackBy: trackByIndex">
-        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.categoria }}</span></td>
-        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.casos }}</span></td>
-        <td class="table-cell"><span [appDataSource]="'backend'">{{ item.porcentaje }}</span></td>
-      </tr>
-      <tr *ngIf="!energiaCocinarConPorcentajesSignal() || energiaCocinarConPorcentajesSignal().length === 0">
-        <td class="table-cell">____</td>
-        <td class="table-cell">____</td>
-        <td class="table-cell">____</td>
-      </tr>
-    </tbody>
-  </table>
-</app-table-wrapper>
-
-<p class="source" style="margin-top: 5px; font-size: 0.9em;">Fuente: {{ obtenerFuenteEnergiaCocinar() }}</p>

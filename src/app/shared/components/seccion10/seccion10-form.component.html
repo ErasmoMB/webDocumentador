@@ -257,57 +257,6 @@
       </div>
     </div>
 
-    <div class="form-group-section" style="margin-top: 30px;">
-      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloEnergiaCocinar }}</h4>
 
-      <div class="form-group-section" style="margin-top: 15px;">
-        <h4 class="section-title">{{ SECCION10_TEMPLATES.seccionEditarParrafos }}</h4>
-
-        <app-paragraph-editor
-          fieldId="textoEnergiaParaCocinar"
-          [label]="SECCION10_TEMPLATES.labelEnergiaCocinar"
-          [hint]="SECCION10_TEMPLATES.hintParrafo"
-          [rows]="4"
-          [value]="obtenerTextoEnergiaCocinar()"
-          (valueChange)="textoEnergiaParaCocinar.update($any($event))">
-        </app-paragraph-editor>
-      </div>
-
-      <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">{{ SECCION10_TEMPLATES.labelTituloEnergiaCocinar }}</label>
-        <input
-          type="text"
-          class="form-control"
-          [ngModel]="tituloEnergiaCocinar.value()"
-          (ngModelChange)="tituloEnergiaCocinar.update($any($event))"
-          [placeholder]="SECCION10_TEMPLATES.placeholderTituloEnergiaCocinar">
-      </div>
-
-      <div class="form-field" style="margin-top: 20px;">
-        <label class="label">{{ SECCION10_TEMPLATES.labelTablaEnergiaCocinar }}</label>
-        <app-dynamic-table
-          [datos]="formDataSignal()"
-          [config]="energiaCocinarConfig"
-          [columns]="[
-            { field: 'categoria', label: 'Categoría', type: 'text', placeholder: 'Ingrese categoría' },
-            { field: 'casos', label: 'Casos', type: 'number', placeholder: '0' },
-            { field: 'porcentaje', label: 'Porcentaje', type: 'text', placeholder: '0%' }
-          ]"
-          [sectionId]="seccionId"
-          [tablaKey]="getTablaKeyEnergiaCocinar()"
-          (tableUpdated)="onEnergiaCocinarTableUpdated($event)">
-        </app-dynamic-table>
-      </div>
-
-      <div class="form-group-section" style="margin-top: 15px;">
-        <label class="label">{{ SECCION10_TEMPLATES.labelFuenteEnergiaCocinar }}</label>
-        <input
-          type="text"
-          class="form-control"
-          [ngModel]="fuenteEnergiaCocinar.value()"
-          (ngModelChange)="fuenteEnergiaCocinar.update($any($event))"
-          [placeholder]="SECCION10_TEMPLATES.placeholderFuenteEnergiaCocinar">
-      </div>
-    </div>
   </div>
 </div>
