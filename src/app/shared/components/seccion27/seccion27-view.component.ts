@@ -204,8 +204,8 @@ export class Seccion27ViewComponent extends BaseSectionComponent implements OnDe
   getTituloTelecomunicaciones(): string {
     const centroPoblado = this.centroPobladoSignal() || '____';
     const distrito = this.distritoActualSignal();
-    const tableNum = this.globalTableNumberSignalTelecomunicaciones();
-    const defaultTitle = `${tableNum}. ${SECCION27_TEMPLATES.labelTablaTelecomunicaciones} – CP ${centroPoblado}`;
+    // Nota: La numeración ya se muestra automáticamente por table-wrapper, no incluir aquí
+    const defaultTitle = `${SECCION27_TEMPLATES.labelTablaTelecomunicaciones} – CP ${centroPoblado}`;
     return normalizeTitleWithPlaceholders(this.cuadroTituloTelecomunicacionesSignal(), defaultTitle, centroPoblado, distrito);
   }
 }
