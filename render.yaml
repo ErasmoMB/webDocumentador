@@ -3,12 +3,14 @@ services:
     name: frontend-lbs
     env: node
     buildCommand: npm ci && npm run build:prod
-    startCommand: npx serve dist/lbs -s -l $PORT
+    startCommand: npx serve dist/lbs -s -l ${PORT:-3000}
     envVars:
       - key: NODE_VERSION
         value: "22"
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: "3000"
       - key: API_URL
         value: "https://backend-api-lbs.onrender.com"
       - key: USE_MOCK_DATA

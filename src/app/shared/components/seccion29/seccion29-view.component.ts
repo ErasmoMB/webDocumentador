@@ -328,8 +328,11 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   }
 
   getAfiliacionSaludSinTotal(): any[] {
-    // ✅ REMOVIDO: Ahora mostramos todas las filas del backend sin filtros
-    return (this.afiliacionTablaSignal() || []);
+    // ✅ Filtra filas de "Total referencial" y "Total" para consistencia con texto generado
+    return (this.afiliacionTablaSignal() || []).filter((item: any) => {
+      const categoria = item.categoria?.toString().toLowerCase() || '';
+      return !categoria.includes('total') && !categoria.includes('referencial');
+    });
   }
 
   // Total removed by user request
