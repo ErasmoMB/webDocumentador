@@ -3,13 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { timeout, catchError, defaultIfEmpty } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { ConfigService } from '../utilities/config.service';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentStateApiService {
-  private readonly apiUrl = (environment.apiUrl || '').replace(/\/$/, '');
+  private readonly apiUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService,
+  ) {
+    this.apiUrl = this.configService.getApiUrl();
+  }
 
   async saveSection(documentId: string, sectionId: string, data: any): Promise<void> {
     if (!documentId || !sectionId) return;

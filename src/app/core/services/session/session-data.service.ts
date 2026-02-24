@@ -3,19 +3,22 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { timeout, catchError, defaultIfEmpty } from 'rxjs/operators';
 import { of, EMPTY } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { ConfigService } from '../utilities/config.service';
 import { StorageFacade } from '../infrastructure/storage-facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class SessionDataService {
-  private readonly apiUrl = (environment.apiUrl || '').replace(/\/$/, '');
+  private readonly apiUrl: string;
   private readonly sessionIdKey = 'session-data:session-id';
   private readonly localPrefix = 'session-data:';
 
   constructor(
     private http: HttpClient,
+    private configService: ConfigService,
     private storageFacade: StorageFacade,
-  ) {}
+  ) {
+    this.apiUrl = this.configService.getApiUrl();
+  }
 
   async saveData(key: string, data: any): Promise<void> {
     try {
