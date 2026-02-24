@@ -213,7 +213,24 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
       const sectionData = this.formDataSignal();
       if (!sectionData || typeof sectionData !== 'object') return;
       
-      // Si ya hay datos de tablas en this.datos, preservarlos
+      // Verificar si ya hay datos de tablas editados localmente
+      const prefijo = this.obtenerPrefijo();
+      const tablaKeys = [
+        `natalidadMortalidadTabla${prefijo}`,
+        `morbilidadTabla${prefijo}`,
+        `afiliacionSaludTabla${prefijo}`
+      ];
+      
+      const tieneDatosLocales = tablaKeys.some(key => 
+        this.datos[key] && Array.isArray(this.datos[key]) && this.datos[key].length > 0
+      );
+      
+      // Si ya hay datos locales, no sobrescribir con datos del backend
+      if (tieneDatosLocales) {
+        this.cdRef.markForCheck();
+        return;
+      }
+      
       // Solo actualizar campos que no sean tablas
       const keysToSkip = Object.keys(this.datos).filter(k => 
         Array.isArray(this.datos[k]) && this.datos[k].length > 0
@@ -610,6 +627,10 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = `natalidadMortalidadTabla${prefijo}`;
     const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
+    
+    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    
     const formChange = this.injector.get(FormChangeService);
     formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     this.cdRef.markForCheck();
@@ -623,7 +644,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     if (Array.isArray(datos)) {
       datos = datos.map((fila: any) => {
         if (fila.grupo && fila.grupo.toString().toLowerCase().includes('total')) {
-          return fila; // No calcular para fila Total
+          return fila;
         }
         const suma = 
           (parseFloat(fila.rango0_11) || 0) +
@@ -636,6 +657,10 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     }
     
     this.datos[tablaKey] = datos;
+    
+    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    
     const formChange = this.injector.get(FormChangeService);
     formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     this.cdRef.markForCheck();
