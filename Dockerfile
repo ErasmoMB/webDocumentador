@@ -31,4 +31,4 @@ COPY --from=builder /app/dist/lbs ./dist/lbs
 EXPOSE 3000
 
 # Comando para iniciar (servir archivos estáticos)
-CMD ["serve", "dist/lbs", "-s", "-l", "$PORT"]
+CMD sh -c "serve dist/lbs -s -l $PORT"
