@@ -6,18 +6,37 @@
  * - IDs de sección
  */
 
-export const SECCION4_WATCHED_FIELDS = [
+export const SECCION4_WATCHED_FIELDS: string[] = [
+  // Tablas base (sin prefijo)
   'tablaAISD1Datos',
   'tablaAISD2Datos',
-  'tablaAISD1Datos_A1',
-  'tablaAISD2Datos_A1',
-  'tablaAISD1Datos_A2',
-  'tablaAISD2Datos_A2',
+  // Tablas con prefijos dinámicos AISD (_A1 a _A10)
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD1Datos_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD2Datos_A${i + 1}`),
+  // Tablas con prefijos dinámicos AISI (_B1 a _B10)
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD1Datos_B${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD2Datos_B${i + 1}`),
+  // Totales de tablas
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD2TotalPoblacion_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD2TotalViviendasEmpadronadas_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `tablaAISD2TotalViviendasOcupadas_A${i + 1}`),
+  // Párrafos
   'parrafoSeccion4_introduccion_aisd',
   'parrafoSeccion4_comunidad_completo',
   'parrafoSeccion4_caracterizacion_indicadores',
+  // Párrafos con prefijos
+  ...Array.from({ length: 10 }, (_, i) => `parrafoSeccion4_introduccion_aisd_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `parrafoSeccion4_comunidad_completo_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `parrafoSeccion4_caracterizacion_indicadores_A${i + 1}`),
+  // Títulos y fuentes
   'cuadroTituloAISD1',
   'cuadroTituloAISD2',
+  'cuadroFuenteAISD1',
+  'cuadroFuenteAISD2',
+  ...Array.from({ length: 10 }, (_, i) => `cuadroTituloAISD1_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `cuadroTituloAISD2_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `cuadroFuenteAISD1_A${i + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `cuadroFuenteAISD2_A${i + 1}`),
   // Fotos con prefijos (10 máximo por tipo)
   // campos base (sin prefijo de grupo)
   ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Titulo`),
@@ -27,7 +46,7 @@ export const SECCION4_WATCHED_FIELDS = [
   ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Fuente`),
   ...Array.from({ length: 10 }, (_, i) => `fotografiaPoblacionViviendas${i + 1}Imagen`),
   // también vigilar variantes con sufijos de grupo (_A1, _B1) para sincronización reactiva
-  ...['','_A1','_B1'].flatMap(sufijo => [
+  ...['', '_A1','_A2','_A3','_A4','_A5','_A6','_A7','_A8','_A9','_A10', '_B1','_B2','_B3','_B4','_B5','_B6','_B7','_B8','_B9','_B10'].flatMap(sufijo => [
     ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Titulo${sufijo}`),
     ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Fuente${sufijo}`),
     ...Array.from({ length: 10 }, (_, i) => `fotografiaUbicacionReferencial${i + 1}Imagen${sufijo}`),

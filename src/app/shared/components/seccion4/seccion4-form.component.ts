@@ -411,6 +411,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
           departamento: capital.dpto || '____'
         }];
         this.projectFacade.setField(this.seccionId, null, dataKeyA1, filaA1);
+        // Persistir al backend
+        try { this.formChange.persistFields(this.seccionId, 'table', { [dataKeyA1]: filaA1 }, { notifySync: true }); } catch (e) {}
       } else {
         console.log('⚠️ No se encontró capital ni centro poblado');
       }
@@ -476,6 +478,8 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
       console.log(`Guardando datos en campo: ${dataKeyA2}`);
       console.log(`Datos a guardar:`, filas);
       this.projectFacade.setField(this.seccionId, null, dataKeyA2, filas);
+      // Persistir al backend
+      try { this.formChange.persistFields(this.seccionId, 'table', { [dataKeyA2]: filas }, { notifySync: true }); } catch (e) {}
       console.log(`✅ Datos guardados correctamente`);
     } else if (tieneDatosValidosA2) {
       console.log('✅ La tabla A2 ya tiene datos válidos');
