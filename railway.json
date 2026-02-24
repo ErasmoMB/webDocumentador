@@ -15,7 +15,7 @@
     "NODE_VERSION": "22",
     "NODE_ENV": "production",
     "PORT": "3000",
-    "API_URL": "https://backend-api-lbs-production.up.railway.app",
+    "API_URL": "https://backend-api-lbs.onrender.com",
     "USE_MOCK_DATA": "false"
   }
 }
