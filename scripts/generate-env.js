@@ -2,8 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Carga variables desde .env para builds locales (si existe)
+// También carga .env.local para desarrollo con variables de producción
 try {
   require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+  require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local') });
 } catch (e) {
   // Si dotenv no está disponible, continúa usando process.env
 }
