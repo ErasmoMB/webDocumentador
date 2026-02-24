@@ -645,6 +645,10 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     const tablaKey = this.getTablaKeyAfiliacionSalud();
     const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
+    
+    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    
     const formChange = this.injector.get(FormChangeService);
     formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     this.cdRef.markForCheck();
