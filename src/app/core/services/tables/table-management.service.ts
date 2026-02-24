@@ -22,6 +22,8 @@ export interface TableConfig {
   estructuraInicial?: any[];
   calcularPorcentajes?: boolean;
   camposParaCalcular?: string[];
+  camposParaSumar?: string[];  // Campos a sumar para calcular un total
+  campoSuma?: string;         // Campo donde se guarda la suma
   permiteAgregarFilas?: boolean;
   permiteEliminarFilas?: boolean;
   camposNoEditables?: string[];

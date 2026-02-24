@@ -547,6 +547,16 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
       if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) this.datos[tablaKeyActual] = [];
       if (!this.datos[tablaKeyActual][index]) this.datos[tablaKeyActual][index] = {};
       this.datos[tablaKeyActual][index][field] = valorValidado;
+      
+      // ✅ Calcular suma automática si está configurado
+      if (this.config.camposParaSumar && this.config.campoSuma) {
+        const suma = this.config.camposParaSumar.reduce((acc, campo) => {
+          const valor = this.datos[tablaKeyActual][index][campo];
+          return acc + (parseFloat(valor) || 0);
+        }, 0);
+        this.datos[tablaKeyActual][index][this.config.campoSuma] = suma;
+      }
+      
       try { this.cdRef.detectChanges(); } catch (e) {}
     } catch (e) { console.warn('[DynamicTable] error during local assignment', e); }
 

@@ -158,7 +158,9 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { grupo: '', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
-    ]
+    ],
+    camposParaSumar: ['rango0_11', 'rango12_17', 'rango18_29', 'rango30_59', 'rango60'],
+    campoSuma: 'casos'
   }));
 
   readonly afiliacionSaludConfigSignal: Signal<TableConfig> = computed(() => ({
@@ -616,7 +618,24 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   onMorbilidadTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyMorbilidad();
-    const datos = updatedData || this.datos[tablaKey] || [];
+    let datos = updatedData || this.datos[tablaKey] || [];
+    
+    // Calcular automáticamente "casos" como suma de rangos
+    if (Array.isArray(datos)) {
+      datos = datos.map((fila: any) => {
+        if (fila.grupo && fila.grupo.toString().toLowerCase().includes('total')) {
+          return fila; // No calcular para fila Total
+        }
+        const suma = 
+          (parseFloat(fila.rango0_11) || 0) +
+          (parseFloat(fila.rango12_17) || 0) +
+          (parseFloat(fila.rango18_29) || 0) +
+          (parseFloat(fila.rango30_59) || 0) +
+          (parseFloat(fila.rango60) || 0);
+        return { ...fila, casos: suma };
+      });
+    }
+    
     this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
     formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
