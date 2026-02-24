@@ -60,12 +60,14 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  margin: 14px;
 }
 
 .plantilla-container app-resumen {
   display: block;
   height: 100%;
   overflow: hidden;
+  margin: 14px;
 }
 
 .plantilla-container app-resumen .preview {
