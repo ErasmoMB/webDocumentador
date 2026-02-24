@@ -134,10 +134,10 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
       totalKey: '',  // ✅ VACÍO: tabla de texto puro, sin totales
       campoTotal: '',  // ✅ VACÍO: no hay campo de total numérico
       campoPorcentaje: '',  // ✅ VACÍO: no hay cálculos de porcentaje
-      estructuraInicial: [
-        { medio: '', descripcion: '' }
-      ],
-      calcularPorcentajes: false  // ✅ NO calcular porcentajes
+      estructuraInicial: undefined,  // ✅ Sin estructura inicial: tabla vacía lista para editar
+      calcularPorcentajes: false,  // ✅ NO calcular porcentajes
+      permiteAgregarFilas: true,
+      permiteEliminarFilas: true
     };
   }
 
