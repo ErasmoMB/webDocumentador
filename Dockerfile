@@ -30,5 +30,5 @@ COPY --from=builder /app/dist/lbs ./dist/lbs
 # Exponer el puerto
 EXPOSE 3000
 
-# Comando para iniciar
-CMD ["serve", "dist/lbs", "-s", "-l", "3000"]
+# Comando para iniciar (servir archivos estáticos)
+CMD ["serve", "dist/lbs", "-s", "-l", "$PORT"]
