@@ -874,82 +874,88 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdRef.markForCheck();
   }
 
-  limpiarDatos() {
+  async limpiarDatos() {
     if (confirm('¿Está seguro que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
       try {
+        console.log('[LIMPIAR] Iniciando limpieza agresiva de todos los datos...');
+
+        // 🔥 PASO 1: Detener todas las suscripciones
+        this.subscriptions.forEach(sub => sub.unsubscribe());
         
-        // 1. Limpiar campos marcados como test data
+        // 🔥 PASO 2: Resetear estado del proyecto PRIMERO
+        this.projectFacade.reset();
+        console.log('[LIMPIAR] Estado del proyecto reseteado');
+
+        // 🔥 PASO 3: Limpiar campos de test
         this.fieldMapping.clearTestDataFields();
         
-        // 2. Limpiar FormStateService completamente
+        // 🔥 PASO 4: Limpiar FormStateService
         try {
           const formState = this.injector.get(FormStateService, null);
           if (formState) {
             formState.resetForm();
           }
         } catch (e) {
+          console.warn('[LIMPIAR] FormStateService no disponible');
         }
         
-        // 3. Limpiar FormPersistenceService (todas las secciones)
+        // 🔥 PASO 5: Limpiar FormPersistenceService
         try {
           this.formPersistence.clearAll();
         } catch (e) {
+          console.warn('[LIMPIAR] FormPersistenceService no disponible');
         }
+
+        // 🔥 PASO 6: Limpiar localStorage Y sessionStorage AL 100%
+        console.log('[LIMPIAR] Limpiando localStorage...');
+        localStorage.clear();
         
-        // 4. Resetear el estado del proyecto (fuente única de verdad)
-        this.projectFacade.reset();
-        
-        // 5. Resetear datos locales inmediatamente
+        console.log('[LIMPIAR] Limpiando sessionStorage...');
+        sessionStorage.clear();
+
+        // 🔥 PASO 7: Limpiar IndexedDB
+        try {
+          const dbs = await indexedDB.databases() as any[];
+          for (const db of dbs) {
+            console.log(`[LIMPIAR] Eliminando IndexedDB: ${db.name}`);
+            indexedDB.deleteDatabase(db.name);
+          }
+        } catch (err) {
+          console.warn('[LIMPIAR] IndexedDB no disponible');
+        }
+
+        // 🔥 PASO 8: Limpiar Cache Storage
+        try {
+          const cacheNames = await caches.keys();
+          for (const name of cacheNames) {
+            console.log(`[LIMPIAR] Eliminando cache: ${name}`);
+            await caches.delete(name);
+          }
+        } catch (err) {
+          console.warn('[LIMPIAR] Cache API no disponible');
+        }
+
+        // 🔥 PASO 9: Resetear variables locales
         this.datos = {} as FormularioDatos;
         this.formData = {};
         this.testDataActive = false;
 
-        // 6. Limpiar todos los datos del localStorage y sessionStorage
-        setTimeout(async () => {
-          try {
-            debugLog('[DEBUG] Ejecutando limpieza completa de storages');
-            
-            // Guardar el flag de limpieza manual antes de limpiar
-            const manualFlag = this.storage.getItem('__datos_limpios_manualmente__');
-            
-            // Limpiar todas las claves relacionadas con formularios
-            const keysToRemove: string[] = [];
-            const allKeys = this.storage.keys();
-            for (const key of allKeys) {
-              // Mantener solo el flag de limpieza manual
-              if (key !== '__datos_limpios_manualmente__') {
-                keysToRemove.push(key);
-              }
-            }
-            
-            // Eliminar todas las claves excepto el flag
-            keysToRemove.forEach(key => this.storage.removeItem(key));
-            
-            // Restaurar el flag si existía
-            if (manualFlag === 'true') {
-              this.storage.setItem('__datos_limpios_manualmente__', 'true');
-            }
-            
-            // Limpiar sessionStorage completamente
-            sessionStorage.clear();
-            
-            // Limpiar caches del navegador
-            if (typeof caches !== 'undefined' && typeof caches.keys === 'function') {
-              const cacheNames = await caches.keys();
-              await Promise.all(cacheNames.map(name => caches.delete(name)));
-            }
-            
+        // 🔥 PASO 10: Forzar detección de cambios
+        this.cdRef.markForCheck();
+        this.cdRef.detectChanges();
 
-          } catch (err) {
-          } finally {
-            // Recargar la página para asegurar que todas las secciones se reseteen
-            window.location.reload();
-          }
-        }, 50);
-        
-        alert('Todos los datos han sido limpiados correctamente. El formulario está listo para volver a llenar desde cero.');
+        console.log('[LIMPIAR] ✅ Limpieza completada. Recargando página...');
+        alert('✅ Todos los datos han sido limpiados completamente.');
+
+        // 🔥 PASO 11: HARD REFRESH del navegador (sin caché)
+        // Usar location.href con timestamp para forzar reload sin caché
+        setTimeout(() => {
+          window.location.href = window.location.href.split('#')[0] + '?nocache=' + Date.now();
+        }, 300);
+
       } catch (error) {
-        alert('Ocurrió un error al limpiar los datos. Por favor, intente nuevamente.');
+        console.error('[LIMPIAR] Error:', error);
+        alert('❌ Error al limpiar. Por favor recarga la página manualmente (F5).');
       }
     }
   }
