@@ -137,7 +137,8 @@ export class Seccion11FormComponent extends BaseSectionComponent implements OnDe
       estructuraInicial: undefined,  // ✅ Sin estructura inicial: tabla vacía lista para editar
       calcularPorcentajes: false,  // ✅ NO calcular porcentajes
       permiteAgregarFilas: true,
-      permiteEliminarFilas: true
+      permiteEliminarFilas: true,
+      noInicializarDesdeEstructura: true  // ✅ NO re-inicializar desde estructura
     };
   }
 

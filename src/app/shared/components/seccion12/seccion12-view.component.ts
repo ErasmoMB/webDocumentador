@@ -131,28 +131,44 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `caracteristicasSaludTabla${prefijo}`;
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.caracteristicasSaludConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.caracteristicasSaludConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaEstudiantesSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `cantidadEstudiantesEducacionTabla${prefijo}`;
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.cantidadEstudiantesEducacionConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.cantidadEstudiantesEducacionConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaIEAyrocaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `ieAyrocaTabla${prefijo}`;
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.ieAyrocaConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.ieAyrocaConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaIE40270Signal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `ie40270Tabla${prefijo}`;
     const v = this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.ie40270ConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.ie40270ConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaAlumnosIEAyrocaSignal: Signal<any[]> = computed(() => {
@@ -162,22 +178,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const fromTableData = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const resultado = fromField ?? fromTableData ?? [];
     
-    // ✅ SIEMPRE mostrar al menos una fila vacía (nunca "Sin datos")
-    if (!Array.isArray(resultado) || resultado.length === 0) {
-      return [{
-        nombre: '',
-        nivel: '',
-        totalH: 0,
-        totalM: 0,
-        tresH: 0,
-        tresM: 0,
-        cuatroH: 0,
-        cuatroM: 0,
-        cincoH: 0,
-        cincoM: 0
-      }];
-    }
-    return resultado;
+    return Array.isArray(resultado) ? resultado : [];
   });
 
   readonly tablaAlumnosIE40270Signal: Signal<any[]> = computed(() => {
@@ -187,28 +188,7 @@ export class Seccion12ViewComponent extends BaseSectionComponent implements OnDe
     const fromTableData = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const resultado = fromField ?? fromTableData ?? [];
     
-    // ✅ SIEMPRE mostrar al menos una fila vacía (nunca "Sin datos")
-    if (!Array.isArray(resultado) || resultado.length === 0) {
-      return [{
-        nombre: '',
-        nivel: '',
-        totalH: 0,
-        totalM: 0,
-        primeroH: 0,
-        primeroM: 0,
-        segundoH: 0,
-        segundoM: 0,
-        terceroH: 0,
-        terceroM: 0,
-        cuartoH: 0,
-        cuartoM: 0,
-        quintoH: 0,
-        quintoM: 0,
-        sextoH: 0,
-        sextoM: 0
-      }];
-    }
-    return resultado;
+    return Array.isArray(resultado) ? resultado : [];
   });
 
   readonly fotosSaludSignal: Signal<FotoItem[]> = computed(() => {

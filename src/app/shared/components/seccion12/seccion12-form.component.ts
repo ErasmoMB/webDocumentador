@@ -200,7 +200,9 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
-    estructuraInicial: [],
+    estructuraInicial: [
+      { institucion: '', nivel: '', gestion: '', total: 0, porcentaje: '0,00 %' }
+    ],
     calcularPorcentajes: true
   }));
 
@@ -235,10 +237,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     totalKey: 'nombre',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
-    estructuraInicial: [
-      { nombre: '', nivel: '', totalH: 0, totalM: 0, tresH: 0, tresM: 0, cuatroH: 0, cuatroM: 0, cincoH: 0, cincoM: 0 }
-    ]
+    noInicializarDesdeEstructura: true,
+    estructuraInicial: undefined
   }));
 
   readonly alumnosIE40270ConfigSignal: Signal<TableConfig> = computed(() => ({
@@ -246,10 +246,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     totalKey: 'nombre',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
-    estructuraInicial: [
-      { nombre: '', nivel: '', totalH: 0, totalM: 0, tresH: 0, tresM: 0, cuatroH: 0, cuatroM: 0, cincoH: 0, cincoM: 0 }
-    ]
+    noInicializarDesdeEstructura: true,
+    estructuraInicial: undefined
   }));
 
   readonly tablaSaludSignal: Signal<any[]> = computed(() => {
@@ -257,7 +255,11 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const data = this.allSectionData();
     const tablaKey = `caracteristicasSaludTabla${prefijo}`;
     const v = data[tablaKey] ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.caracteristicasSaludConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.caracteristicasSaludConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaEstudiantesSignal: Signal<any[]> = computed(() => {
@@ -265,7 +267,11 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const data = this.allSectionData();
     const tablaKey = `cantidadEstudiantesEducacionTabla${prefijo}`;
     const v = data[tablaKey] ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.cantidadEstudiantesEducacionConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.cantidadEstudiantesEducacionConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaIEAyrocaSignal: Signal<any[]> = computed(() => {
@@ -273,7 +279,11 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const data = this.allSectionData();
     const tablaKey = `ieAyrocaTabla${prefijo}`;
     const v = data[tablaKey] ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.ieAyrocaConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.ieAyrocaConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaIE40270Signal: Signal<any[]> = computed(() => {
@@ -281,7 +291,11 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const data = this.allSectionData();
     const tablaKey = `ie40270Tabla${prefijo}`;
     const v = data[tablaKey] ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return ((v && Array.isArray(v) && v.length > 0) ? v : this.ie40270ConfigSignal().estructuraInicial) || [];
+    // Usar estructura inicial solo si NO hay datos guardados
+    if (!v || !Array.isArray(v) || v.length === 0) {
+      return this.ie40270ConfigSignal().estructuraInicial || [];
+    }
+    return v;
   });
 
   readonly tablaAlumnosIEAyrocaSignal: Signal<any[]> = computed(() => {
@@ -292,22 +306,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const fromTableData = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const resultado = fromField ?? fromTableData ?? [];
     
-    // ✅ SIEMPRE mostrar al menos una fila vacía editable (nunca "Sin datos")
-    if (!Array.isArray(resultado) || resultado.length === 0) {
-      return [{
-        nombre: '',
-        nivel: '',
-        totalH: 0,
-        totalM: 0,
-        tresH: 0,
-        tresM: 0,
-        cuatroH: 0,
-        cuatroM: 0,
-        cincoH: 0,
-        cincoM: 0
-      }];
-    }
-    return resultado;
+    // Devolver los datos tal cual, sin añadir fila extra
+    return Array.isArray(resultado) ? resultado : [];
   });
 
   readonly tablaAlumnosIE40270Signal: Signal<any[]> = computed(() => {
@@ -318,28 +318,8 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const fromTableData = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
     const resultado = fromField ?? fromTableData ?? [];
     
-    // ✅ SIEMPRE mostrar al menos una fila vacía editable (nunca "Sin datos")
-    if (!Array.isArray(resultado) || resultado.length === 0) {
-      return [{
-        nombre: '',
-        nivel: '',
-        totalH: 0,
-        totalM: 0,
-        primeroH: 0,
-        primeroM: 0,
-        segundoH: 0,
-        segundoM: 0,
-        terceroH: 0,
-        terceroM: 0,
-        cuartoH: 0,
-        cuartoM: 0,
-        quintoH: 0,
-        quintoM: 0,
-        sextoH: 0,
-        sextoM: 0
-      }];
-    }
-    return resultado;
+    // Devolver los datos tal cual, sin añadir fila extra
+    return Array.isArray(resultado) ? resultado : [];
   });
 
   readonly fotosSaludSignal: Signal<FotoItem[]> = computed(() => {
@@ -777,110 +757,97 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `caracteristicasSaludTabla${prefijo}`;
     
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
-      console.log(`✅ [SECCION12] Tabla guardada en Redis: ${tablaKey}`);
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
 
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   onCantidadEstudiantesTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `cantidadEstudiantesEducacionTabla${prefijo}`;
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   onIEAyrocaTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `ieAyrocaTabla${prefijo}`;
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   onIE40270TableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `ie40270Tabla${prefijo}`;
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   onAlumnosIEAyrocaTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIEAyrocaTabla${prefijo}`;
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   onAlumnosIE40270TableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIE40270Tabla${prefijo}`;
-    const tablaDelState = this.formDataSignal()[tablaKey];
-    const datos = tablaDelState || updatedData || [];
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // ✅ Persistir en Redis via FormChangeService
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, datos, { refresh: true });
-    this.cdRef.detectChanges(); // ✅ INMEDIATO
+    this.cdRef.markForCheck();
   }
 
   // ✅ MÉTODOS PARA TABLA IE AYROCA (TABLA MULTINIVEL HTML)
@@ -888,7 +855,7 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const value = (event.target as HTMLInputElement).value;
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIEAyrocaTabla${prefijo}`;
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     if (index >= 0 && index < tablaActual.length) {
       const fila = { ...tablaActual[index] };
       fila[field] = value;
@@ -896,14 +863,15 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       const tablaActualizada = [...tablaActual];
       tablaActualizada[index] = fila;
       
-      // ✅ Persistir en Redis via FormChangeService
+      this.datos[tablaKey] = tablaActualizada;
+      
+      // Solo persistir una vez
       try {
         this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
       } catch (error) {
-        console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+        console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
       }
       
-      this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
       this.cdRef.markForCheck();
     }
   }
@@ -924,37 +892,39 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       cincoM: 0
     };
 
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     const tablaActualizada = [...tablaActual, nuevoAlumno];
     
-    // ✅ Persistir en Redis via FormChangeService
+    this.datos[tablaKey] = tablaActualizada;
+    
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
 
   eliminarAlumnoAyroca(index: number): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIEAyrocaTabla${prefijo}`;
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     if (index < 0 || index >= tablaActual.length) {
       return;
     }
     const tablaActualizada = tablaActual.filter((_: any, i: number) => i !== index);
     
-    // ✅ Persistir en Redis via FormChangeService
+    this.datos[tablaKey] = tablaActualizada;
+    
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
 
@@ -963,7 +933,7 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
     const value = (event.target as HTMLInputElement).value;
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIE40270Tabla${prefijo}`;
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     if (index >= 0 && index < tablaActual.length) {
       const fila = { ...tablaActual[index] };
       fila[field] = value;
@@ -971,14 +941,15 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       const tablaActualizada = [...tablaActual];
       tablaActualizada[index] = fila;
       
-      // ✅ Persistir en Redis via FormChangeService
+      this.datos[tablaKey] = tablaActualizada;
+      
+      // Solo persistir una vez
       try {
         this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
       } catch (error) {
-        console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+        console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
       }
       
-      this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
       this.cdRef.markForCheck();
     }
   }
@@ -1005,37 +976,39 @@ export class Seccion12FormComponent extends BaseSectionComponent implements OnDe
       sextoM: 0
     };
 
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     const tablaActualizada = [...tablaActual, nuevoAlumno];
     
-    // ✅ Persistir en Redis via FormChangeService
+    this.datos[tablaKey] = tablaActualizada;
+    
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
 
   eliminarAlumno40270(index: number): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `alumnosIE40270Tabla${prefijo}`;
-    const tablaActual = this.formDataSignal()[tablaKey] || [];
+    const tablaActual = this.datos[tablaKey] || [];
     if (index < 0 || index >= tablaActual.length) {
       return;
     }
     const tablaActualizada = tablaActual.filter((_: any, i: number) => i !== index);
     
-    // ✅ Persistir en Redis via FormChangeService
+    this.datos[tablaKey] = tablaActualizada;
+    
+    // Solo persistir una vez
     try {
       this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tablaActualizada }, { notifySync: true });
     } catch (error) {
-      console.warn(`⚠️ [SECCION12] Error guardando tabla en Redis:`, error);
+      console.warn(`⚠️ [SECCION12] Error guardando tabla:`, error);
     }
     
-    this.onFieldChange(tablaKey, tablaActualizada, { refresh: true });
     this.cdRef.markForCheck();
   }
 }

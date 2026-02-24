@@ -144,7 +144,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     totalKey: '',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
+    noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { anio: '', natalidad: 0, mortalidad: 0 }
     ]
@@ -155,7 +155,7 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     totalKey: 'grupo',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    noInicializarDesdeEstructura: false,
+    noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { grupo: '', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
     ]
@@ -206,11 +206,26 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     private globalNumbering: GlobalNumberingService,
     private backendApi: BackendApiService
   ) {
-    super(cdRef, injector);
+    super(cdRef, injector)
 
     effect(() => {
       const sectionData = this.formDataSignal();
-      this.datos = { ...sectionData };
+      if (!sectionData || typeof sectionData !== 'object') return;
+      
+      // Si ya hay datos de tablas en this.datos, preservarlos
+      // Solo actualizar campos que no sean tablas
+      const keysToSkip = Object.keys(this.datos).filter(k => 
+        Array.isArray(this.datos[k]) && this.datos[k].length > 0
+      );
+      
+      const datosFiltrados: any = {};
+      for (const key of Object.keys(sectionData)) {
+        if (!keysToSkip.includes(key)) {
+          datosFiltrados[key] = sectionData[key];
+        }
+      }
+      
+      this.datos = { ...datosFiltrados, ...this.datos };
       this.cdRef.markForCheck();
     });
 
@@ -592,30 +607,29 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   onNatalidadMortalidadTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `natalidadMortalidadTabla${prefijo}`;
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
-    this.cdRef.detectChanges();
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    this.cdRef.markForCheck();
   }
 
   onMorbilidadTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyMorbilidad();
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
-    this.cdRef.detectChanges();
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    this.cdRef.markForCheck();
   }
 
   onAfiliacionSaludTableUpdated(updatedData?: any[]): void {
     const tablaKey = this.getTablaKeyAfiliacionSalud();
-    // ✅ Sin cálculos: Solo persistir los datos exactos del backend
-    const datos = (updatedData && updatedData.length > 0) ? updatedData : (this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() || []);
+    const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { updateState: true, notifySync: true });
-    this.cdRef.detectChanges();
+    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    this.cdRef.markForCheck();
   }
 
   private obtenerRegExp(pattern: string): RegExp {
