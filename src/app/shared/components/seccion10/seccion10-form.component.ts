@@ -276,14 +276,23 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     const aguaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
     const existingAguaData = formData[aguaKey];
     
-    // Inicializar tablas vacías para entrada manual
-    if (!existingAguaData || !Array.isArray(existingAguaData) || existingAguaData.length === 0) {
-      console.log('[SECCION10] Inicializando tablas de entrada manual (3.15, 3.16, 3.17)');
+    // ✅ NUEVO: Verificar si ya hay datos de energía para cocinar
+    const energiaKey = prefijo ? `energiaCocinarTabla${prefijo}` : 'energiaCocinarTabla';
+    const existingEnergiaData = formData[energiaKey];
+    
+    // ✅ NUEVA LÓGICA: Solo inicializar/cargar si NO hay datos en NINGUNA tabla
+    const tieneDatosPersistidos = 
+      (existingAguaData && Array.isArray(existingAguaData) && existingAguaData.length > 0) ||
+      (existingEnergiaData && Array.isArray(existingEnergiaData) && existingEnergiaData.length > 0);
+    
+    if (!tieneDatosPersistidos) {
+      console.log('[SECCION10] No hay datos persistidos, inicializando tablas vacías y cargando del backend...');
       this.inicializarTablasVacias();
+      
       // 🔧 SÍ CARGAR ENERGÍA PARA COCINAR DEL BACKEND (tabla 3.18)
       this.cargarDatosDelBackend();
     } else {
-      console.log('[SECCION10] Datos persistidos encontrados');
+      console.log('[SECCION10] Datos persistidos encontrados, no se carga del backend');
     }
     
     this.cargarFotografias();

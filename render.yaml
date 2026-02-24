@@ -12,6 +12,6 @@ services:
       - key: PORT
         value: "3000"
       - key: API_URL
-        value: "https://backend-api-lbs.onrender.com"
+        value: "https://backend-api-lbs-production.up.railway.app"
       - key: USE_MOCK_DATA
         value: "false"

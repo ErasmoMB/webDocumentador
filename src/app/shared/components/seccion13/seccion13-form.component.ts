@@ -625,19 +625,25 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   onNatalidadMortalidadTableUpdated(updatedData?: any[]): void {
     const prefijo = this.obtenerPrefijo();
     const tablaKey = `natalidadMortalidadTabla${prefijo}`;
+    const tablaKeyBase = 'natalidadMortalidadTabla';
     const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    // Guardar en ProjectStateFacade (con prefijo y sin prefijo para compatibilidad)
     this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, datos);
     
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    formChange.persistFields(this.seccionId, 'table', 
+      { [tablaKey]: datos, [tablaKeyBase]: datos }, 
+      { notifySync: true });
     this.cdRef.markForCheck();
   }
 
   onMorbilidadTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyMorbilidad();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `morbilidadTabla${prefijo}`;
+    const tablaKeyBase = 'morbilidadTabla';
     let datos = updatedData || this.datos[tablaKey] || [];
     
     // Calcular automáticamente "casos" como suma de rangos
@@ -658,24 +664,32 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
     
     this.datos[tablaKey] = datos;
     
-    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    // Guardar en ProjectStateFacade (con prefijo y sin prefijo para compatibilidad)
     this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, datos);
     
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    formChange.persistFields(this.seccionId, 'table', 
+      { [tablaKey]: datos, [tablaKeyBase]: datos }, 
+      { notifySync: true });
     this.cdRef.markForCheck();
   }
 
   onAfiliacionSaludTableUpdated(updatedData?: any[]): void {
-    const tablaKey = this.getTablaKeyAfiliacionSalud();
+    const prefijo = this.obtenerPrefijo();
+    const tablaKey = `afiliacionSaludTabla${prefijo}`;
+    const tablaKeyBase = 'afiliacionSaludTabla';
     const datos = updatedData || this.datos[tablaKey] || [];
     this.datos[tablaKey] = datos;
     
-    // Guardar en ProjectStateFacade para que la vista lea los mismos datos
+    // Guardar en ProjectStateFacade (con prefijo y sin prefijo para compatibilidad)
     this.projectFacade.setField(this.seccionId, null, tablaKey, datos);
+    this.projectFacade.setField(this.seccionId, null, tablaKeyBase, datos);
     
     const formChange = this.injector.get(FormChangeService);
-    formChange.persistFields(this.seccionId, 'table', { [tablaKey]: datos }, { notifySync: true });
+    formChange.persistFields(this.seccionId, 'table', 
+      { [tablaKey]: datos, [tablaKeyBase]: datos }, 
+      { notifySync: true });
     this.cdRef.markForCheck();
   }
 

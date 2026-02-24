@@ -144,30 +144,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectField(this.seccionId, null, fieldPref)() || '';
   });
 
-  readonly origenPobladores1Signal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `origenPobladores1${prefijo}` : 'origenPobladores1';
-    return this.projectFacade.selectField(this.seccionId, null, fieldPref)() || '';
-  });
-
-  readonly origenPobladores2Signal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `origenPobladores2${prefijo}` : 'origenPobladores2';
-    return this.projectFacade.selectField(this.seccionId, null, fieldPref)() || '';
-  });
-
-  readonly departamentoOrigenSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `departamentoOrigen${prefijo}` : 'departamentoOrigen';
-    return this.projectFacade.selectField(this.seccionId, null, fieldPref)() || '';
-  });
-
-  readonly anexosEjemploSignal: Signal<string> = computed(() => {
-    const prefijo = this.obtenerPrefijoGrupo();
-    const fieldPref = prefijo ? `anexosEjemplo${prefijo}` : 'anexosEjemplo';
-    return this.projectFacade.selectField(this.seccionId, null, fieldPref)() || '';
-  });
-
   readonly cuadroTituloUbicacionCpSignal: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldPref = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
@@ -194,26 +170,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   onDistritoAnteriorChange(valor: string): void {
     this.onFieldChange('distritoAnterior', valor);
     try { this.formChange.persistFields(this.seccionId, 'form', { 'distritoAnterior': valor }); } catch (e) {}
-  }
-
-  onOrigenPobladores1Change(valor: string): void {
-    this.onFieldChange('origenPobladores1', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'origenPobladores1': valor }); } catch (e) {}
-  }
-
-  onOrigenPobladores2Change(valor: string): void {
-    this.onFieldChange('origenPobladores2', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'origenPobladores2': valor }); } catch (e) {}
-  }
-
-  onDepartamentoOrigenChange(valor: string): void {
-    this.onFieldChange('departamentoOrigen', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'departamentoOrigen': valor }); } catch (e) {}
-  }
-
-  onAnexosEjemploChange(valor: string): void {
-    this.onFieldChange('anexosEjemplo', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'anexosEjemplo': valor }); } catch (e) {}
   }
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
@@ -274,9 +230,15 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   readonly ubicacionCpSignal: Signal<any[]> = computed(() => {
     const tablaKey = this.getTablaKeyUbicacionCp();
+    // Primero intentar con clave con prefijo
     const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
     const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
-    return fromField ?? fromTable ?? [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
+    
+    // Si no hay datos con prefijo, intentar con clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'ubicacionCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'ubicacionCpTabla')();
+    
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
   });
 
   getTablaKeyUbicacionCp(): string {
@@ -306,12 +268,23 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   }
 
   onTablaUpdated(): void {
+    const tablaKey = this.getTablaKeyUbicacionCp();
     const tabla = this.ubicacionCpSignal();
+    
+    // Actualizar datos locales directamente para evitar recarga del DynamicTable
+    this.datos[tablaKey] = [...tabla];
+    this.datos['ubicacionCpTabla'] = [...tabla];
+    
+    // Persistir con la clave correcta (con prefijo si existe)
+    this.onFieldChange(tablaKey, [...tabla], { refresh: false });
+    // También mantener clave base para compatibilidad
     this.onFieldChange('ubicacionCpTabla', [...tabla], { refresh: false });
+    
     try {
-      this.formChange.persistFields(this.seccionId, 'table', { 'ubicacionCpTabla': tabla });
+      this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, 'ubicacionCpTabla': tabla });
     } catch (e) {}
-    this.actualizarDatos();
+    
+    // No llamar a actualizarDatos() aquí para evitar que el DynamicTable recargue datos
     this.cdRef.detectChanges();
   }
 
@@ -410,18 +383,32 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   inicializarUbicacionCp(): void {
     const tabla = [{ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' }];
     const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) this.projectFacade.setField(this.seccionId, null, `ubicacionCpTabla${prefijo}`, tabla);
+    const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    
+    // Inicializar con clave con prefijo y base
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
     this.projectFacade.setField(this.seccionId, null, 'ubicacionCpTabla', tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
     this.onFieldChange('ubicacionCpTabla', tabla, { refresh: false });
-    try { this.formChange.persistFields(this.seccionId, 'table', { [this.getTablaKeyUbicacionCp()]: tabla, ['ubicacionCpTabla']: tabla }); } catch (e) {}
+    try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, ['ubicacionCpTabla']: tabla }); } catch (e) {}
   }
 
   agregarUbicacionCp(): void {
     const tabla = [...this.ubicacionCpSignal()];
     tabla.push({ localidad: '', coordenadas: '', altitud: '', distrito: '', provincia: '', departamento: '' });
+    
     const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) this.projectFacade.setField(this.seccionId, null, `ubicacionCpTabla${prefijo}`, tabla);
+    const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    
+    // Actualizar datos locales directamente para evitar recarga del DynamicTable
+    this.datos[tablaKey] = [...tabla];
+    this.datos['ubicacionCpTabla'] = [...tabla];
+    
+    // Actualizar con clave con prefijo
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+    // También mantener clave base
     this.projectFacade.setField(this.seccionId, null, 'ubicacionCpTabla', tabla);
+    this.onFieldChange(tablaKey, tabla);
     this.onFieldChange('ubicacionCpTabla', tabla);
   }
 
@@ -429,9 +416,19 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     const tabla = [...this.ubicacionCpSignal()];
     if (tabla.length > 1) {
       tabla.splice(index, 1);
+      
       const prefijo = this.obtenerPrefijoGrupo();
-      if (prefijo) this.projectFacade.setField(this.seccionId, null, `ubicacionCpTabla${prefijo}`, tabla);
+      const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+      
+      // Actualizar datos locales directamente para evitar recarga del DynamicTable
+      this.datos[tablaKey] = [...tabla];
+      this.datos['ubicacionCpTabla'] = [...tabla];
+      
+      // Actualizar con clave con prefijo
+      this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+      // También mantener clave base
       this.projectFacade.setField(this.seccionId, null, 'ubicacionCpTabla', tabla);
+      this.onFieldChange(tablaKey, tabla);
       this.onFieldChange('ubicacionCpTabla', tabla);
     }
   }
@@ -440,12 +437,23 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     const tabla = [...this.ubicacionCpSignal()];
     if (!tabla[index]) return;
     tabla[index] = { ...tabla[index], [field]: value };
+    
     const prefijo = this.obtenerPrefijoGrupo();
-    if (prefijo) this.projectFacade.setField(this.seccionId, null, `ubicacionCpTabla${prefijo}`, tabla);
+    const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    
+    // Actualizar datos locales directamente para evitar recarga del DynamicTable
+    this.datos[tablaKey] = [...tabla];
+    this.datos['ubicacionCpTabla'] = [...tabla];
+    
+    // Actualizar con clave con prefijo
+    this.projectFacade.setField(this.seccionId, null, tablaKey, tabla);
+    // También mantener clave base para compatibilidad
     this.projectFacade.setField(this.seccionId, null, 'ubicacionCpTabla', tabla);
+    this.onFieldChange(tablaKey, tabla, { refresh: false });
     this.onFieldChange('ubicacionCpTabla', tabla, { refresh: false });
-    // Persistir en la clave base y forzar actualización inmediata
-    try { this.formChange.persistFields(this.seccionId, 'table', { [this.getTablaKeyUbicacionCp()]: tabla, ['ubicacionCpTabla']: tabla }); } catch (e) {}
+    
+    // Persistir en la clave con prefijo y base
+    try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: tabla, ['ubicacionCpTabla']: tabla }); } catch (e) {}
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
   }
 

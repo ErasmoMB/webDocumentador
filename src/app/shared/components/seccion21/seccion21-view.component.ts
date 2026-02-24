@@ -212,8 +212,16 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   readonly ubicacionCpSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `ubicacionCpTabla${prefijo}` : 'ubicacionCpTabla';
+    
+    // Primero intentar con clave con prefijo
     const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    return (fromField as any[]) || [];
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    
+    // Si no hay datos con prefijo, intentar con clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'ubicacionCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'ubicacionCpTabla')();
+    
+    return (fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? []) as any[];
   });
 
   // Signal para título del cuadro de ubicación

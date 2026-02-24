@@ -54,38 +54,6 @@
             (input)="onDistritoAnteriorChange($any($event.target).value)"
             [placeholder]="SECCION21_TEMPLATES.placeholderDistrito">
         </div>
-
-        <div class="form-field mt-sm">
-          <label class="label">{{ SECCION21_TEMPLATES.labelOrigenPobladores1 }}</label>
-          <input type="text" class="form-control"
-            [value]="origenPobladores1Signal()"
-            (input)="onOrigenPobladores1Change($any($event.target).value)"
-            [placeholder]="SECCION21_TEMPLATES.placeholderOrigen1">
-        </div>
-
-        <div class="form-field mt-sm">
-          <label class="label">{{ SECCION21_TEMPLATES.labelOrigenPobladores2 }}</label>
-          <input type="text" class="form-control"
-            [value]="origenPobladores2Signal()"
-            (input)="onOrigenPobladores2Change($any($event.target).value)"
-            [placeholder]="SECCION21_TEMPLATES.placeholderOrigen2">
-        </div>
-
-        <div class="form-field mt-sm">
-          <label class="label">{{ SECCION21_TEMPLATES.labelDepartamentoOrigen }}</label>
-          <input type="text" class="form-control"
-            [value]="departamentoOrigenSignal()"
-            (input)="onDepartamentoOrigenChange($any($event.target).value)"
-            [placeholder]="SECCION21_TEMPLATES.placeholderDepartamento">
-        </div>
-
-        <div class="form-field mt-sm">
-          <label class="label">{{ SECCION21_TEMPLATES.labelAnexosEjemplo }}</label>
-          <input type="text" class="form-control"
-            [value]="anexosEjemploSignal()"
-            (input)="onAnexosEjemploChange($any($event.target).value)"
-            [placeholder]="SECCION21_TEMPLATES.placeholderAnexos">
-        </div>
       </div>
 
       <div class="form-field mt-lg">

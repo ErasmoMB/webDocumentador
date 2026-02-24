@@ -105,19 +105,37 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
   readonly natalidadTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'natalidadMortalidadCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadCpTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
 
   readonly morbilidadTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'morbilidadCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadCpTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
 
   readonly afiliacionTablaSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'afiliacionSaludTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
 
   readonly fotografiasSignal: Signal<any[]> = computed(() => {
@@ -370,10 +388,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     campoTotal: 'natalidad',
     camposParaCalcular: ['natalidad', 'mortalidad'],
     calcularPorcentajes: false,
-    noInicializarDesdeEstructura: true,
+    noInicializarDesdeEstructura: false,
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    estructuraInicial: []
+    estructuraInicial: [{ anio: '', natalidad: 0, mortalidad: 0 }]
   };
 
   readonly morbilidadConfig: TableConfig = {
@@ -382,10 +400,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     campoTotal: 'casos',
     camposParaCalcular: ['casos'],
     calcularPorcentajes: false,
-    noInicializarDesdeEstructura: true,
+    noInicializarDesdeEstructura: false,
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
-    estructuraInicial: []
+    estructuraInicial: [{ grupo: '', edad0_11: 0, edad12_17: 0, edad18_29: 0, edad30_59: 0, edad60_mas: 0, casos: 0 }]
   };
 
   readonly afiliacionConfig: TableConfig = {
@@ -395,9 +413,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     campoPorcentaje: '',           // ✅ Sin cálculo de porcentaje
     calcularPorcentajes: false,    // ✅ No calcular (viene del backend)
     camposParaCalcular: ['casos'],
-    noInicializarDesdeEstructura: true,
+    noInicializarDesdeEstructura: false,
     permiteAgregarFilas: true,
-    permiteEliminarFilas: true
+    permiteEliminarFilas: true,
+    estructuraInicial: [{ categoria: '', asegurados: 0, porcentaje: 0 }]
   };
 
   // ✅ Columnas para tables (evita problemas con caracteres especiales en templates)
@@ -436,8 +455,16 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
     
-    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    // Primero intentar leer de datos locales, luego del signal
+    let tabla = this.datos[tablaKey] ? [...this.datos[tablaKey]] : [];
+    if (!tabla || tabla.length === 0) {
+      tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    }
     tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // Actualizar datos locales directamente para mantener consistencia
+    this.datos[tablaKey] = tabla;
+    this.datos['natalidadMortalidadCpTabla'] = tabla;
     
     // ✅ REORDENAR: filas de datos primero, Total al final
     tabla = this.reordenarTablaConTotal(tabla);
@@ -460,8 +487,16 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
     
-    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    // Primero intentar leer de datos locales, luego del signal
+    let tabla = this.datos[tablaKey] ? [...this.datos[tablaKey]] : [];
+    if (!tabla || tabla.length === 0) {
+      tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    }
     tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // Actualizar datos locales directamente para mantener consistencia
+    this.datos[tablaKey] = tabla;
+    this.datos['morbilidadCpTabla'] = tabla;
     
     // ✅ REORDENAR: filas de datos primero, Total al final
     tabla = this.reordenarTablaConTotal(tabla);
@@ -484,8 +519,16 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
     
-    let tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    // Primero intentar leer de datos locales, luego del signal
+    let tabla = this.datos[tablaKey] ? [...this.datos[tablaKey]] : [];
+    if (!tabla || tabla.length === 0) {
+      tabla = this.formDataSignal()[tablaKey] ? [...this.formDataSignal()[tablaKey]] : [];
+    }
     tabla = JSON.parse(JSON.stringify(tabla));
+    
+    // Actualizar datos locales directamente para mantener consistencia
+    this.datos[tablaKey] = tabla;
+    this.datos['afiliacionSaludTabla'] = tabla;
     
     // ✅ Ajustar Total referencial
     tabla = this.ajustarTotalReferencialAfiliacion(tablaKey, tabla);

@@ -299,9 +299,22 @@ export const DEFAULT_SECTION_FIELDS: Record<string, string[]> = {
     'textoDesechosSolidos2',
     'textoDesechosSolidos3',
     'textoElectricidad1',
-    'coberturaElectricaTabla',
+    'alumbradoElectricoTabla',
     'textoElectricidad2',
-    'textoEnergiaParaCocinar'
+    'textoEnergiaParaCocinar',
+    'energiaCocinarTabla',
+    'tecnologiaComunicacionesTabla',
+    // Títulos y fuentes
+    'tituloAbastecimientoAgua',
+    'fuenteAbastecimientoAgua',
+    'tituloTiposSaneamiento',
+    'fuenteTiposSaneamiento',
+    'tituloCoberturaElectrica',
+    'fuenteCoberturaElectrica',
+    'tituloEnergiaCocinar',
+    'fuenteEnergiaCocinar',
+    'tituloTecnologiaComunicaciones',
+    'fuenteTecnologiaComunicaciones'
   ],
   '3.1.4.A.1.7': [
     'grupoAISD',

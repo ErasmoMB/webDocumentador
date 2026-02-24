@@ -88,17 +88,35 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   readonly natalidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'natalidadMortalidadCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'natalidadMortalidadCpTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
   readonly morbilidadTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'morbilidadCpTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'morbilidadCpTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
   readonly afiliacionTablaSignal = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `afiliacionSaludTabla${prefijo}` : 'afiliacionSaludTabla';
-    return this.projectFacade.selectField(this.seccionId, null, tablaKey)() ?? this.projectFacade.selectTableData(this.seccionId, null, tablaKey)() ?? [];
+    // Intentar con clave con prefijo
+    const fromField = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
+    const fromTable = this.projectFacade.selectTableData(this.seccionId, null, tablaKey)();
+    // Fallback a clave base
+    const fromFieldBase = this.projectFacade.selectField(this.seccionId, null, 'afiliacionSaludTabla')();
+    const fromTableBase = this.projectFacade.selectTableData(this.seccionId, null, 'afiliacionSaludTabla')();
+    return fromField ?? fromTable ?? fromFieldBase ?? fromTableBase ?? [];
   });
   // Prefer the SectionPhotoCoordinator-populated cache (fotografiasCache) for the view
   readonly fotografiasSignal = computed(() => this.fotografiasCache ?? (this.projectFacade.selectField(this.seccionId, null, 'fotografiasInstitucionalidad')() ?? []));
