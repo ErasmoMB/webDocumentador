@@ -876,6 +876,13 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async limpiarDatos() {
     if (confirm('¿Está seguro que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
+      // Mostrar mensaje de carga inmediatamente
+      const btnLimpiar = document.querySelector('.btn-clear') as HTMLButtonElement;
+      if (btnLimpiar) {
+        btnLimpiar.disabled = true;
+        btnLimpiar.textContent = 'Limpiando...';
+      }
+
       try {
         console.log('[LIMPIAR] Iniciando limpieza agresiva de todos los datos...');
 
@@ -913,7 +920,7 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('[LIMPIAR] Limpiando sessionStorage...');
         sessionStorage.clear();
 
-        // 🔥 PASO 7: Limpiar IndexedDB
+        // 🔥 PASO 7: Limpiar IndexedDB (síncrono para mayor velocidad)
         try {
           const dbs = await indexedDB.databases() as any[];
           for (const db of dbs) {
@@ -945,17 +952,14 @@ export class SeccionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdRef.detectChanges();
 
         console.log('[LIMPIAR] ✅ Limpieza completada. Recargando página...');
-        alert('✅ Todos los datos han sido limpiados completamente.');
 
-        // 🔥 PASO 11: HARD REFRESH del navegador (sin caché)
-        // Usar location.href con timestamp para forzar reload sin caché
-        setTimeout(() => {
-          window.location.href = window.location.href.split('#')[0] + '?nocache=' + Date.now();
-        }, 300);
+        // 🔥 Recargar inmediatamente sin esperar
+        window.location.reload();
 
       } catch (error) {
         console.error('[LIMPIAR] Error:', error);
-        alert('❌ Error al limpiar. Por favor recarga la página manualmente (F5).');
+        // Even on error, try to reload
+        window.location.reload();
       }
     }
   }

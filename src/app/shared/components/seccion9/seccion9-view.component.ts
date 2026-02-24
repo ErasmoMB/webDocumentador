@@ -109,8 +109,108 @@ export class Seccion9ViewComponent extends BaseSectionComponent implements OnDes
     if (guardado && guardado.trim().length > 0) {
       return guardado;
     }
+    
     const comunidad = this.grupoAISDSignal();
-    return SECCION9_PLANTILLAS_DINAMICAS.textoEstructuraTemplate.replace('__COMUNIDAD__', comunidad);
+    
+    // Obtener datos de la tabla de tipos de materiales
+    const tiposMateriales = this.tiposMaterialesSignal();
+    
+    // Valores por defecto
+    let paredPrincipal = '____';
+    let paredPrincipalPorc = '____';
+    let paredSegunda = '____';
+    let paredSegundaPorc = '____';
+    let techoPrincipal = '____';
+    let techoPrincipalPorc = '____';
+    let techoSegunda = '____';
+    let techoSegundaPorc = '____';
+    let pisoPrincipal = '____';
+    let pisoPrincipalPorc = '____';
+    let pisoSegunda = '____';
+    let pisoSegundaPorc = '____';
+    
+    if (tiposMateriales && Array.isArray(tiposMateriales)) {
+      // Filtrar por categoría y buscar los valores
+      // Paredes
+      const paredes = tiposMateriales.filter((row: any) => 
+        row.categoria?.toString().includes('Paredes') || row.categoria?.toString().includes('pared')
+      );
+      
+      // Techos
+      const techos = tiposMateriales.filter((row: any) => 
+        row.categoria?.toString().includes('Techos') || row.categoria?.toString().includes('techo')
+      );
+      
+      // Pisos
+      const pisos = tiposMateriales.filter((row: any) => 
+        row.categoria?.toString().includes('Pisos') || row.categoria?.toString().includes('piso')
+      );
+      
+      // Ordenar paredes por porcentaje (mayor a menor)
+      const paredesOrdenadas = [...paredes].sort((a: any, b: any) => {
+        const porcA = parseFloat((a.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        const porcB = parseFloat((b.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        return porcB - porcA;
+      });
+      
+      if (paredesOrdenadas.length > 0) {
+        paredPrincipal = paredesOrdenadas[0].tipoMaterial || paredesOrdenadas[0].categoria || '____';
+        paredPrincipalPorc = (paredesOrdenadas[0].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+      if (paredesOrdenadas.length > 1) {
+        paredSegunda = paredesOrdenadas[1].tipoMaterial || paredesOrdenadas[1].categoria || '____';
+        paredSegundaPorc = (paredesOrdenadas[1].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+      
+      // Ordenar techos
+      const techosOrdenados = [...techos].sort((a: any, b: any) => {
+        const porcA = parseFloat((a.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        const porcB = parseFloat((b.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        return porcB - porcA;
+      });
+      
+      if (techosOrdenados.length > 0) {
+        techoPrincipal = techosOrdenados[0].tipoMaterial || techosOrdenados[0].categoria || '____';
+        techoPrincipalPorc = (techosOrdenados[0].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+      if (techosOrdenados.length > 1) {
+        techoSegunda = techosOrdenados[1].tipoMaterial || techosOrdenados[1].categoria || '____';
+        techoSegundaPorc = (techosOrdenados[1].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+      
+      // Ordenar pisos
+      const pisosOrdenados = [...pisos].sort((a: any, b: any) => {
+        const porcA = parseFloat((a.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        const porcB = parseFloat((b.porcentaje || '0').toString().replace('%', '').replace(',', '.')) || 0;
+        return porcB - porcA;
+      });
+      
+      if (pisosOrdenados.length > 0) {
+        pisoPrincipal = pisosOrdenados[0].tipoMaterial || pisosOrdenados[0].categoria || '____';
+        pisoPrincipalPorc = (pisosOrdenados[0].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+      if (pisosOrdenados.length > 1) {
+        pisoSegunda = pisosOrdenados[1].tipoMaterial || pisosOrdenados[1].categoria || '____';
+        pisoSegundaPorc = (pisosOrdenados[1].porcentaje || '____').toString().replace('%', '').replace(',', '.').trim();
+      }
+    }
+    
+    // Reemplazar en el template
+    let resultado = SECCION9_PLANTILLAS_DINAMICAS.textoEstructuraTemplate.replace('__COMUNIDAD__', comunidad);
+    
+    // Paredes
+    resultado = resultado.replace('el ____, pues representa el ____%', `el ${paredPrincipal}, pues representa el ${paredPrincipalPorc}%`);
+    resultado = resultado.replace('material de ____ (____%)', `material de ${paredSegunda} (${paredSegundaPorc}%)`);
+    
+    // Techos
+    resultado = resultado.replace('con un ____%', `con un ${techoPrincipalPorc}%`);
+    resultado = resultado.replace('porcentaje restante consiste en ____ (____%)', `porcentaje restante consiste en ${techoSegunda} (${techoSegundaPorc}%)`);
+    
+    // Pisos
+    resultado = resultado.replace('hechos de tierra (____%)', `hechos de ${pisoPrincipal} (${pisoPrincipalPorc}%)`);
+    resultado = resultado.replace('(____%) consiste en cemento', `(${pisoSegundaPorc}%) consiste en ${pisoSegunda}`);
+    
+    return resultado;
   });
 
   // ✅ TABLAS DE SOLO LECTURA - Lee desde formDataSignal (patrón Seccion8)

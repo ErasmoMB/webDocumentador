@@ -40,20 +40,141 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     
-    // ✅ Usar template fijo y reemplazar {COMUNIDAD} con el nombre actual
+    // ✅ Obtener datos de la tabla de sexo para completar el template dinámicamente
+    const poblacionSexo = this.poblacionSexoSignal();
+    
+    // Valores por defecto
+    let censos = '2017';
+    let totalHabitantes = '____';
+    let porcentajeMujeres = '____';
+    let porcentajeHombres = '____';
+    
+    if (poblacionSexo && Array.isArray(poblacionSexo)) {
+      // Buscar fila de Total para obtener el total de habitantes
+      const filaTotal = poblacionSexo.find((row: any) => 
+        row.sexo?.toString().toLowerCase() === 'total'
+      );
+      
+      if (filaTotal) {
+        totalHabitantes = filaTotal.casos?.toString() || totalHabitantes;
+      }
+      
+      // Buscar porcentaje de mujeres
+      const filaMujer = poblacionSexo.find((row: any) => 
+        row.sexo?.toString().toLowerCase() === 'mujer'
+      );
+      
+      if (filaMujer) {
+        // Limpiar el porcentaje (quitar % si existe)
+        const porc = filaMujer.porcentaje?.toString() || '____';
+        porcentajeMujeres = porc.replace('%', '').trim();
+      }
+      
+      // Buscar porcentaje de hombres
+      const filaHombre = poblacionSexo.find((row: any) => 
+        row.sexo?.toString().toLowerCase() === 'hombre'
+      );
+      
+      if (filaHombre) {
+        const porc = filaHombre.porcentaje?.toString() || '____';
+        porcentajeHombres = porc.replace('%', '').trim();
+      }
+    }
+    
+    // ✅ Reemplazar placeholders en el template de forma directa y simple
     const cp = this.obtenerNombreCentroPobladoActual();
-    return SECCION22_TEMPLATES.textoDemografiaTemplate.replace(/{COMUNIDAD}/g, cp);
+    let texto = SECCION22_TEMPLATES.textoDemografiaTemplate.replace(/{COMUNIDAD}/g, cp);
+    
+    // Reemplazar en orden: Censos Nacionales, habitantes, % mujeres, % hombres
+    texto = texto.replace('Censos Nacionales ____', `Censos Nacionales ${censos}`);
+    texto = texto.replace('existen ____ habitantes', `existen ${totalHabitantes} habitantes`);
+    texto = texto.replace('el ____ % son mujeres', `el ${porcentajeMujeres} % son mujeres`);
+    texto = texto.replace('(____ %)', `(${porcentajeHombres} %)`);
+    
+    return texto;
   });
 
-  // ✅ CORREGIDO - Usar template fijo (sin reemplazo porque el template no contiene {COMUNIDAD})
+  // ✅ CORREGIDO - Usar template fijo con reemplazo dinámico de datos de tablas
   readonly textoGrupoEtarioSignal: Signal<string> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldKey = prefijo ? `textoGrupoEtarioAISI${prefijo}` : 'textoGrupoEtarioAISI';
     const manual = this.projectFacade.selectField(this.seccionId, null, fieldKey)();
     if (manual && manual.trim().length > 0) return manual;
     
-    // ✅ Usar template fijo - no contiene {COMUNIDAD}, solo placeholders ____
-    return SECCION22_TEMPLATES.textoGrupoEtarioTemplate;
+    // ✅ Obtener datos de la tabla de grupo etario para completar el template dinámicamente
+    const poblacionEtario = this.poblacionEtarioSignal();
+    
+    // Valores por defecto
+    let catMayoritaria = '____';
+    let porcMayoritaria = '____';
+    let catSegunda = '____';
+    let porcSegunda = '____';
+    let catMinoritaria1 = '____';
+    let catMinoritaria2 = '____';
+    let porcMinoritaria = '____';
+    
+    if (poblacionEtario && Array.isArray(poblacionEtario)) {
+      // Filtrar solo las filas que no sean 'Total'
+      const filas = poblacionEtario.filter((row: any) => 
+        row.categoria?.toString().toLowerCase() !== 'total'
+      );
+      
+      // Ordenar por porcentaje (de mayor a menor)
+      const filasOrdenadas = [...filas].sort((a: any, b: any) => {
+        const porcA = parseFloat((a.porcentaje || '0').toString().replace('%', '')) || 0;
+        const porcB = parseFloat((b.porcentaje || '0').toString().replace('%', '')) || 0;
+        return porcB - porcA;
+      });
+      
+      if (filasOrdenadas.length > 0) {
+        // Primera categoría (mayoritaria)
+        catMayoritaria = filasOrdenadas[0].categoria || '____';
+        porcMayoritaria = (filasOrdenadas[0].porcentaje || '____').toString().replace('%', '').trim();
+      }
+      
+      if (filasOrdenadas.length > 1) {
+        // Segunda categoría
+        catSegunda = filasOrdenadas[1].categoria || '____';
+        porcSegunda = (filasOrdenadas[1].porcentaje || '____').toString().replace('%', '').trim();
+      }
+      
+      if (filasOrdenadas.length > 2) {
+        // Las últimas dos categorías (minoritarias) - verificar si son iguales
+        const ultimas = filasOrdenadas.slice(-2);
+        const porcUlt1 = parseFloat((ultimas[0].porcentaje || '0').toString().replace('%', '')) || 0;
+        const porcUlt2 = parseFloat((ultimas[1].porcentaje || '0').toString().replace('%', '')) || 0;
+        
+        // Si los porcentajes son iguales (o muy cercanos), son las minoritarias
+        if (Math.abs(porcUlt1 - porcUlt2) < 0.1) {
+          catMinoritaria1 = ultimas[0].categoria || '____';
+          catMinoritaria2 = ultimas[1].categoria || '____';
+          porcMinoritaria = porcUlt1.toString();
+        } else {
+          // Si no son iguales, tomar las dos últimas
+          catMinoritaria1 = ultimas[0].categoria || '____';
+          catMinoritaria2 = ultimas[1].categoria || '____';
+          porcMinoritaria = Math.min(porcUlt1, porcUlt2).toString();
+        }
+      }
+    }
+    
+    // ✅ Reemplazar placeholders en el template de forma simple y directa
+    let texto = SECCION22_TEMPLATES.textoGrupoEtarioTemplate;
+    
+    // Reemplazar en orden: categoría mayoritaria, segunda categoría, minoritarias, porcentaje
+    texto = texto.replace('la categoría de ____ años, representando el ____ %', 
+      `la categoría de ${catMayoritaria}, representando el ${porcMayoritaria} %`);
+    
+    texto = texto.replace('la categoría de ____ años (____ %)', 
+      `la categoría de ${catSegunda} (${porcSegunda} %)`);
+    
+    texto = texto.replace('entre aquellos que van de ____ años y los de ____ años a más', 
+      `entre aquellos que van de ${catMinoritaria1} y los de ${catMinoritaria2}`);
+    
+    texto = texto.replace('el ____ % cada uno', 
+      `el ${porcMinoritaria} % cada uno`);
+    
+    return texto;
   });
 
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
@@ -112,36 +233,24 @@ export class Seccion22ViewComponent extends BaseSectionComponent implements OnDe
     showFooter: false
   };
 
-  // ✅ CORREGIDO - Leer tabla con prefijo
+  // ✅ CORREGIDO - Leer tabla con prefijo (sin fallback para evitar mezcla de datos)
   readonly poblacionSexoSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `poblacionSexoAISI${prefijo}` : 'poblacionSexoAISI';
     
-    // Intentar leer con prefijo primero, luego sin prefijo
+    // Solo leer con prefijo, NO hacer fallback a versión sin prefijo
     const conPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    if (conPrefijo && Array.isArray(conPrefijo) && conPrefijo.length > 0) {
-      return conPrefijo;
-    }
-    
-    // Fallback a la versión sin prefijo
-    const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'poblacionSexoAISI')();
-    return (sinPrefijo && Array.isArray(sinPrefijo)) ? sinPrefijo : [];
+    return (conPrefijo && Array.isArray(conPrefijo)) ? conPrefijo : [];
   });
 
-  // ✅ CORREGIDO - Leer tabla con prefijo
+  // ✅ CORREGIDO - Leer tabla con prefijo (sin fallback para evitar mezcla de datos)
   readonly poblacionEtarioSignal: Signal<any[]> = computed(() => {
     const prefijo = this.obtenerPrefijoGrupo();
     const tablaKey = prefijo ? `poblacionEtarioAISI${prefijo}` : 'poblacionEtarioAISI';
     
-    // Intentar leer con prefijo primero, luego sin prefijo
+    // Solo leer con prefijo, NO hacer fallback a versión sin prefijo
     const conPrefijo = this.projectFacade.selectField(this.seccionId, null, tablaKey)();
-    if (conPrefijo && Array.isArray(conPrefijo) && conPrefijo.length > 0) {
-      return conPrefijo;
-    }
-    
-    // Fallback a la versión sin prefijo
-    const sinPrefijo = this.projectFacade.selectField(this.seccionId, null, 'poblacionEtarioAISI')();
-    return (sinPrefijo && Array.isArray(sinPrefijo)) ? sinPrefijo : [];
+    return (conPrefijo && Array.isArray(conPrefijo)) ? conPrefijo : [];
   });
 
   // ✅ SEGÚN PATRÓN: No filtrar filas, mostrar todas incluyendo Total (sin estilos especiales)

@@ -92,8 +92,9 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
     // ✅ LEER TEXTO PERSONALIZADO O GENERAR AUTOMÁTICO
-    const fieldBase = 'parrafoSeccion21_aisi_intro_completo';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
     
     // Si hay texto personalizado, mostrarlo
     if (manual && manual.trim().length > 0) {
@@ -158,24 +159,31 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
 
   // HANDLERS PARA ACTUALIZAR CAMPOS CON PREFIJO
   onLeyCreacionDistritoChange(valor: string): void {
-    this.onFieldChange('leyCreacionDistrito', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'leyCreacionDistrito': valor }); } catch (e) {}
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `leyCreacionDistrito${prefijo}` : 'leyCreacionDistrito';
+    this.onFieldChange(fieldPref, valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
   }
 
   onFechaCreacionDistritoChange(valor: string): void {
-    this.onFieldChange('fechaCreacionDistrito', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'fechaCreacionDistrito': valor }); } catch (e) {}
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `fechaCreacionDistrito${prefijo}` : 'fechaCreacionDistrito';
+    this.onFieldChange(fieldPref, valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
   }
 
   onDistritoAnteriorChange(valor: string): void {
-    this.onFieldChange('distritoAnterior', valor);
-    try { this.formChange.persistFields(this.seccionId, 'form', { 'distritoAnterior': valor }); } catch (e) {}
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `distritoAnterior${prefijo}` : 'distritoAnterior';
+    this.onFieldChange(fieldPref, valor);
+    try { this.formChange.persistFields(this.seccionId, 'form', { [fieldPref]: valor }); } catch (e) {}
   }
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
     // ✅ LEER TEXTO PERSONALIZADO O GENERAR AUTOMÁTICO
-    const fieldBase = 'parrafoSeccion21_centro_poblado_completo';
-    const manual = this.projectFacade.selectField(this.seccionId, null, fieldBase)();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
     
     // Si hay texto personalizado, mostrarlo
     if (manual && manual.trim().length > 0) {
@@ -303,12 +311,28 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const campoConPrefijo = prefijo ? `centroPobladoAISI${prefijo}` : 'centroPobladoAISI';
     
-    // Actualizar tanto el objeto local como el store para que el título se actualice
+    // Actualizar solo el store con prefijo para aislamiento
     this.datos[campoConPrefijo] = centroPobladoAISI;
-    this.datos['centroPobladoAISI'] = centroPobladoAISI; // Mantener compatibilidad
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     try { this.formChange.persistFields(this.seccionId, 'form', { [campoConPrefijo]: centroPobladoAISI }); } catch (e) {}
+    
+    // ✅ INICIALIZAR PÁRRAFOS CON PREFIJO (AISLAMIENT O DE DATOS)
+    const parrafoAisiField = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+    const parrafoCentroField = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
+    
+    // Solo inicializar si no existen datos
+    if (!this.datos[parrafoAisiField]) {
+      this.datos[parrafoAisiField] = '';
+      this.projectFacade.setField(this.seccionId, null, parrafoAisiField, '');
+      this.onFieldChange(parrafoAisiField, '', { refresh: false });
+    }
+    
+    if (!this.datos[parrafoCentroField]) {
+      this.datos[parrafoCentroField] = '';
+      this.projectFacade.setField(this.seccionId, null, parrafoCentroField, '');
+      this.onFieldChange(parrafoCentroField, '', { refresh: false });
+    }
     
     // 🔍 FORZAR DETECCIÓN DE CAMBIOS PARA ACTUALIZAR EL TÍTULO
     this.cdRef.detectChanges();
@@ -325,17 +349,16 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
       try { this.formChange.persistFields(this.seccionId, 'table', { [tablaKey]: this.datos[tablaKey] }); } catch (e) {}
     }
 
-    // Inicializar Título y Fuente de tabla
+    // Inicializar Título y Fuente de tabla CON PREFIJO
     const tituloField = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
     const valorTitulo = `Ubicación referencial – Centro Poblado ${this.obtenerNombreCentroPobladoActual()}`;
     if (!this.datos[tituloField] || this.datos[tituloField] !== valorTitulo) {
       this.datos[tituloField] = valorTitulo;
-      this.datos['cuadroTituloUbicacionCp'] = valorTitulo; // Para compatibilidad
       this.projectFacade.setField(this.seccionId, null, tituloField, valorTitulo);
       this.onFieldChange(tituloField, valorTitulo, { refresh: false });
     }
 
-    const fuenteField = 'cuadroFuenteUbicacionCp';
+    const fuenteField = prefijo ? `cuadroFuenteUbicacionCp${prefijo}` : 'cuadroFuenteUbicacionCp';
     if (!this.datos[fuenteField]) {
       const valorFuente = 'GEADES (2024)';
       this.datos[fuenteField] = valorFuente;
@@ -371,13 +394,27 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
   protected override actualizarValoresConPrefijo(): void { }
 
   actualizarParrafoAisi(valor: string): void {
-    this.onFieldChange('parrafoSeccion21_aisi_intro_completo', valor);
-    try { this.formChange.persistFields(this.seccionId, 'text', { 'parrafoSeccion21_aisi_intro_completo': valor }); } catch (e) {}
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+    this.onFieldChange(fieldPref, valor);
+    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldPref]: valor }); } catch (e) {}
   }
 
   actualizarParrafoCentro(valor: string): void {
-    this.onFieldChange('parrafoSeccion21_centro_poblado_completo', valor);
-    try { this.formChange.persistFields(this.seccionId, 'text', { 'parrafoSeccion21_centro_poblado_completo': valor }); } catch (e) {}
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
+    this.onFieldChange(fieldPref, valor);
+    try { this.formChange.persistFields(this.seccionId, 'text', { [fieldPref]: valor }); } catch (e) {}
+  }
+
+  getParrafoAisiFieldId(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+  }
+
+  getParrafoCentroFieldId(): string {
+    const prefijo = this.obtenerPrefijoGrupo();
+    return prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
   }
 
   inicializarUbicacionCp(): void {
@@ -504,7 +541,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldId = prefijo ? `cuadroTituloUbicacionCp${prefijo}` : 'cuadroTituloUbicacionCp';
     this.datos[fieldId] = valor;
-    this.datos['cuadroTituloUbicacionCp'] = valor; // Compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();
@@ -514,7 +550,6 @@ export class Seccion21FormComponent extends BaseSectionComponent implements OnDe
     const prefijo = this.obtenerPrefijoGrupo();
     const fieldId = prefijo ? `cuadroFuenteUbicacionCp${prefijo}` : 'cuadroFuenteUbicacionCp';
     this.datos[fieldId] = valor;
-    this.datos['cuadroFuenteUbicacionCp'] = valor; // Compatibilidad
     this.onFieldChange(fieldId, valor, { refresh: false });
     try { const { ViewChildHelper } = require('src/app/shared/utils/view-child-helper'); ViewChildHelper.updateAllComponents('actualizarDatos'); } catch (e) {}
     this.cdRef.markForCheck();

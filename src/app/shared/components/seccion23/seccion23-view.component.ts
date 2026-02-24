@@ -262,8 +262,19 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
   getPorcentajeGrupoPET(grupo: string): string {
     const tabla = this.petGruposEdadSignal();
     if (!tabla || !Array.isArray(tabla)) return '____';
-    const item = tabla.find((item: any) => item.categoria && item.categoria.toLowerCase().includes(grupo.toLowerCase()));
-    return this.normalizarValor(item?.porcentaje);
+    
+    // Buscar directamente en la tabla
+    for (const item of tabla) {
+      const categoria = item.categoria?.toString() || '';
+      if (categoria.includes('65') && categoria.includes('más')) {
+        return this.normalizarValor(item.porcentaje);
+      }
+      if (categoria.includes('45') && categoria.includes('64')) {
+        return this.normalizarValor(item.porcentaje);
+      }
+    }
+    
+    return '____';
   }
 
   obtenerTituloTabla(fieldName: string, defaultTitle: string): string {
@@ -353,60 +364,117 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoPETSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
+    // Obtener valores de las tablas
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     const porcentajePET = this.getPorcentajePET();
     const porcentaje4564 = this.getPorcentajeGrupoPET('45 a 64');
     const porcentaje65 = this.getPorcentajeGrupoPET('65');
-    return SECCION23_TEMPLATES.petCompleteTemplateWithVariables
-      .replace('{{centroPoblado}}', centroPoblado)
-      .replace('{{porcentajePET}}', porcentajePET)
-      .replace('{{porcentaje4564}}', porcentaje4564)
-      .replace('{{porcentaje65}}', porcentaje65);
+    
+    // Reemplazar en el template (soporta tanto {{variable}} como ____)
+    let resultado = SECCION23_TEMPLATES.petCompleteTemplateWithVariables;
+    resultado = resultado.replace('{{centroPoblado}}', centroPoblado || '____');
+    resultado = resultado.replace('{{porcentajePET}}', porcentajePET);
+    resultado = resultado.replace('{{porcentaje4564}}', porcentaje4564);
+    resultado = resultado.replace('{{porcentaje65}}', porcentaje65);
+    
+    // También reemplazar placeholders ____ en orden
+    // 1. CP ____
+    resultado = resultado.replace('CP ____', `CP ${centroPoblado || '____'}`);
+    // 2. un ____ de la población total
+    resultado = resultado.replace('un ____ de la población total', `un ${porcentajePET} de la población total`);
+    // 3. son el ____ de la PET
+    resultado = resultado.replace('son el ____ de la PET', `son el ${porcentaje4564} de la PET`);
+    // 4. representa _____ de la PET (5 guiones bajos, SIN "el")
+    resultado = resultado.replace('representa _____ de la PET.', `representa ${porcentaje65} de la PET.`);
+    resultado = resultado.replace('representa _____ de la PET', `representa ${porcentaje65} de la PET`);
+    resultado = resultado.replace('representa el ____ de la PET.', `representa el ${porcentaje65} de la PET.`);
+    
+    return resultado;
   }
 
   obtenerTextoIndicadoresDistritales(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoIndicadoresDistritalesSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
     const poblacionDistrital = this.getPoblacionDistritalFn();
     const petDistrital = this.getPETDistrital();
-    return SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{poblacionDistrital}}', poblacionDistrital)
-      .replace('{{petDistrital}}', petDistrital);
+    
+    let resultado = SECCION23_TEMPLATES.indicadoresDistritalesTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{poblacionDistrital}}', poblacionDistrital);
+    resultado = resultado.replace('{{petDistrital}}', petDistrital);
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('la población distrital de ____', `la población distrital de ${distrito || '____'}`);
+    resultado = resultado.replace(/es de ____ personas/, `es de ${poblacionDistrital} personas`);
+    resultado = resultado.replace(/conformada por ____ personas\.$/, `conformada por ${petDistrital} personas.`);
+    
+    return resultado;
   }
 
   obtenerTextoPEA(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoPEASignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
-    return SECCION23_TEMPLATES.peaCompleteTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{centroPoblado}}', centroPoblado);
+    
+    let resultado = SECCION23_TEMPLATES.peaCompleteTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{centroPoblado}}', centroPoblado || '____');
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('del distrito de ____', `del distrito de ${distrito || '____'}`);
+    resultado = resultado.replace('el CP ____', `el CP ${centroPoblado || '____'}`);
+    
+    return resultado;
   }
 
   obtenerTextoAnalisisPEA_AISI(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoAnalisisPEASignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
-    return SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{porcentajePEA}}', this.getPorcentajePEA())
-      .replace('{{porcentajeNoPEA}}', this.getPorcentajeNoPEA())
-      .replace('{{porcentajeHombresPEA}}', this.getPorcentajeHombresPEA())
-      .replace('{{porcentajeMujeresNoPEA}}', this.getPorcentajeMujeresNoPEA());
+    const porcentajePEA = this.getPorcentajePEA();
+    const porcentajeNoPEA = this.getPorcentajeNoPEA();
+    const porcentajeHombresPEA = this.getPorcentajeHombresPEA();
+    const porcentajeMujeresNoPEA = this.getPorcentajeMujeresNoPEA();
+    
+    let resultado = SECCION23_TEMPLATES.peaAnalisisTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{porcentajePEA}}', porcentajePEA);
+    resultado = resultado.replace('{{porcentajeNoPEA}}', porcentajeNoPEA);
+    resultado = resultado.replace('{{porcentajeHombresPEA}}', porcentajeHombresPEA);
+    resultado = resultado.replace('{{porcentajeMujeresNoPEA}}', porcentajeMujeresNoPEA);
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('la PEA del distrito de ____', `la PEA del distrito de ${distrito || '____'}`);
+    resultado = resultado.replace(/representa un ____ del total/, `representa un ${porcentajePEA} del total`);
+    resultado = resultado.replace(/la No PEA abarca el ____ restante/, `la No PEA abarca el ${porcentajeNoPEA} restante`);
+    resultado = resultado.replace(/pues el ____ se halla en esta categoría/, `pues el ${porcentajeHombresPEA} se halla en esta categoría`);
+    resultado = resultado.replace(/con un ____\.$/, `con un ${porcentajeMujeresNoPEA}.`);
+    
+    return resultado;
   }
 
   obtenerTextoEmpleoAISI(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoEmpleoSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
-    return SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito);
+    
+    let resultado = SECCION23_TEMPLATES.empleoSituacionDefault.replace('{{distrito}}', distrito || '____');
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('de la capital distrital de ____', `de la capital distrital de ${distrito || '____'}`);
+    
+    return resultado;
   }
 
   obtenerTextoEmpleoDependiente_AISI(): string {
@@ -420,38 +488,67 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoIngresosSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
     const ingresoPerCapita = this.getIngresoPerCapita();
     const rankingIngreso = this.getRankingIngreso();
-    return SECCION23_TEMPLATES.ingresosTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{centroPoblado}}', centroPoblado)
-      .replace('{{ingresoPerCapita}}', ingresoPerCapita)
-      .replace('{{rankingIngreso}}', rankingIngreso);
+    
+    let resultado = SECCION23_TEMPLATES.ingresosTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{centroPoblado}}', centroPoblado || '____');
+    resultado = resultado.replace('{{ingresoPerCapita}}', ingresoPerCapita);
+    resultado = resultado.replace('{{rankingIngreso}}', rankingIngreso);
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('en la capital distrital de ____', `en la capital distrital de ${distrito || '____'}`);
+    resultado = resultado.replace('S/. ____ mensuales', `S/. ${ingresoPerCapita} mensuales`);
+    resultado = resultado.replace('ocupando el puesto N°____', `ocupando el puesto N°${rankingIngreso}`);
+    
+    return resultado;
   }
 
   obtenerTextoIndiceDesempleoAISI(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoIndiceDesempleoSignal();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
     const centroPoblado = this.obtenerNombreCentroPobladoActual();
-    return SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{centroPoblado}}', centroPoblado);
+    
+    let resultado = SECCION23_TEMPLATES.indiceDesempleoTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{centroPoblado}}', centroPoblado || '____');
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('del distrito de ____', `del distrito de ${distrito || '____'}`);
+    resultado = resultado.replace('al CP ____ (capital distrital)', `al CP ${centroPoblado || '____'} (capital distrital)`);
+    
+    return resultado;
   }
 
   obtenerTextoPEAAISI(): string {
     // ✅ Leer del signal (UNICA_VERDAD)
     const texto = this.textoPEASignalFull();
     if (texto && texto !== '____' && !this.tienePlaceholder(texto)) return texto;
+    
     const distrito = this.obtenerNombreDistritoActual();
-    return SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables
-      .replace('{{distrito}}', distrito)
-      .replace('{{porcentajeDesempleo}}', this.getPorcentajeDesempleo())
-      .replace('{{porcentajeHombres}}', this.getPorcentajeHombresOcupados())
-      .replace('{{porcentajeMujeres}}', this.getPorcentajeMujeresOcupadas());
+    const porcentajeDesempleo = this.getPorcentajeDesempleo();
+    const porcentajeHombres = this.getPorcentajeHombresOcupados();
+    const porcentajeMujeres = this.getPorcentajeMujeresOcupadas();
+    
+    let resultado = SECCION23_TEMPLATES.peaOcupadaDesocupadaTemplateWithVariables;
+    resultado = resultado.replace('{{distrito}}', distrito || '____');
+    resultado = resultado.replace('{{porcentajeDesempleo}}', porcentajeDesempleo);
+    resultado = resultado.replace('{{porcentajeHombres}}', porcentajeHombres);
+    resultado = resultado.replace('{{porcentajeMujeres}}', porcentajeMujeres);
+    
+    // También reemplazar placeholders ____
+    resultado = resultado.replace('en el distrito de ____', `en el distrito de ${distrito || '____'}`);
+    resultado = resultado.replace(/representa un ____ del total/, `representa un ${porcentajeDesempleo} del total`);
+    resultado = resultado.replace(/con porcentajes de ____ y ____, respectivamente/, `con porcentajes de ${porcentajeHombres} y ${porcentajeMujeres}, respectivamente`);
+    
+    return resultado;
   }
 
   obtenerCentroPoblado(): string {
@@ -520,12 +617,38 @@ export class Seccion23ViewComponent extends BaseSectionComponent implements OnDe
 
   getPoblacionDistritalFn(): string {
     const data = this.formDataSignal();
-    return data?.['poblacionDistritalAISI'] || '____';
+    // Si el usuario ingresa manualmente, usar ese valor
+    const manual = data?.['poblacionDistritalAISI'];
+    if (manual) return manual;
+    
+    // Intentar obtener de la tabla PET (el total)
+    const tabla = this.petGruposEdadSignal();
+    if (tabla && Array.isArray(tabla)) {
+      const filaTotal = tabla.find((item: any) => 
+        item.categoria?.toString().toLowerCase().includes('total')
+      );
+      if (filaTotal?.casos) return filaTotal.casos.toString();
+    }
+    
+    return '____';
   }
 
   getPETDistrital(): string {
     const data = this.formDataSignal();
-    return data?.['petDistritalAISI'] || '____';
+    // Si el usuario ingresa manualmente, usar ese valor
+    const manual = data?.['petDistritalAISI'];
+    if (manual) return manual;
+    
+    // Intentar obtener de la tabla PET (el total = suma de todos los casos excepto total)
+    const tabla = this.petGruposEdadSignal();
+    if (tabla && Array.isArray(tabla)) {
+      const filaTotal = tabla.find((item: any) => 
+        item.categoria?.toString().toLowerCase().includes('total')
+      );
+      if (filaTotal?.casos) return filaTotal.casos.toString();
+    }
+    
+    return '____';
   }
 }
 

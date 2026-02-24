@@ -640,8 +640,17 @@ export class Seccion4FormComponent extends BaseSectionComponent implements OnIni
   }
 
   // ✅ MÉTODOS INLINE DE TEXTO (sin servicios)
+  // Modificado para evitar fallback que causa mezcla de datos entre grupos
   private obtenerCampoConPrefijo(datos: any, campoBase: string): string {
-    return PrefijoHelper.obtenerValorConPrefijo(datos, campoBase, this.seccionId) || datos[campoBase] || '';
+    const prefijo = this.obtenerPrefijoGrupo();
+    const campoConPrefijo = prefijo ? `${campoBase}${prefijo}` : campoBase;
+    const valor = datos[campoConPrefijo];
+    // Solo devolver valor si tiene contenido real (no vacío, no placeholder)
+    if (valor && typeof valor === 'string' && valor.trim() !== '' && valor !== '____') {
+      return valor;
+    }
+    // NO hacer fallback a versión sin prefijo para evitar mezcla de datos entre grupos
+    return '';
   }
 
   obtenerTextoIntroduccionAISD(datos: any, nombreComunidad: string): string {

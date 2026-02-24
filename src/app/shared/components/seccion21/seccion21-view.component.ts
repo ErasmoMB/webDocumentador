@@ -137,7 +137,9 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly parrafoAisiSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_aisi_intro_completo')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_aisi_intro_completo${prefijo}` : 'parrafoSeccion21_aisi_intro_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
     if (manual && manual.trim().length > 0) return manual;
     
     const data = this.formDataSignal();
@@ -152,17 +154,19 @@ export class Seccion21ViewComponent extends BaseSectionComponent implements OnDe
   });
 
   readonly parrafoCentroSignal: Signal<string> = computed(() => {
-    const manual = this.projectFacade.selectField(this.seccionId, null, 'parrafoSeccion21_centro_poblado_completo')();
+    const prefijo = this.obtenerPrefijoGrupo();
+    const fieldPref = prefijo ? `parrafoSeccion21_centro_poblado_completo${prefijo}` : 'parrafoSeccion21_centro_poblado_completo';
+    const manual = this.projectFacade.selectField(this.seccionId, null, fieldPref)();
     if (manual && manual.trim().length > 0) return manual;
     
     const data = this.formDataSignal();
     const centro = this.obtenerNombreCentroPobladoActual();
     const provincia = data['provinciaSeleccionada'] || '____';
     const departamento = data['departamentoSeleccionado'] || '____';
-    const ley = this.projectFacade.selectField(this.seccionId, null, 'leyCreacionDistrito')() || '____';
-    const fecha = this.projectFacade.selectField(this.seccionId, null, 'fechaCreacionDistrito')() || '____';
+    const ley = this.projectFacade.selectField(this.seccionId, null, prefijo ? `leyCreacionDistrito${prefijo}` : 'leyCreacionDistrito')() || '____';
+    const fecha = this.projectFacade.selectField(this.seccionId, null, prefijo ? `fechaCreacionDistrito${prefijo}` : 'fechaCreacionDistrito')() || '____';
     const distrito = this.projectFacade.selectField(this.seccionId, null, 'distritoSeleccionado')() || '____';
-    const distritoAnterior = this.projectFacade.selectField(this.seccionId, null, 'distritoAnterior')() || '____';
+    const distritoAnterior = this.projectFacade.selectField(this.seccionId, null, prefijo ? `distritoAnterior${prefijo}` : 'distritoAnterior')() || '____';
     
     return SECCION21_TEMPLATES.parrafoCentroTemplate
       .replace(/{CENTRO}/g, centro)

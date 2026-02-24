@@ -5,7 +5,7 @@
     <div class="form-group-section mt-lg">
       <h4 class="section-title">{{ SECCION21_TEMPLATES.labelEditarParrafos }}</h4>
       <app-paragraph-editor
-        fieldId="parrafoSeccion21_aisi_intro_completo"
+        [fieldId]="getParrafoAisiFieldId()"
         [label]="SECCION21_TEMPLATES.labelParrafoAISI"
         [hint]="SECCION21_TEMPLATES.hintParrafoAISI"
         [rows]="4"
@@ -20,7 +20,7 @@
       <div class="form-group-section mt-md">
         <h4 class="section-title">{{ SECCION21_TEMPLATES.labelEditarParrafos }}</h4>
         <app-paragraph-editor
-          fieldId="parrafoSeccion21_centro_poblado_completo"
+          [fieldId]="getParrafoCentroFieldId()"
           [label]="SECCION21_TEMPLATES.labelParrafoCentro"
           [hint]="SECCION21_TEMPLATES.hintParrafoCentro"
           [rows]="6"

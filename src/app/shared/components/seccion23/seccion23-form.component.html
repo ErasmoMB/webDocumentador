@@ -178,6 +178,23 @@
           (valueChange)="onFieldChange('textoIngresos' + obtenerPrefijoGrupo(), $event)">
         </app-paragraph-editor>
       </div>
+
+      <!-- Campos para ingresos -->
+      <div class="form-field" style="margin-top: 20px;">
+        <label class="label">Ingreso per cápita mensual (S/.)</label>
+        <input type="number" class="input" 
+          [value]="datos['ingresoPerCapita'] || ''" 
+          (input)="onFieldChange('ingresoPerCapita', $any($event.target).value)" 
+          placeholder="Ej: 850.00">
+      </div>
+
+      <div class="form-field" style="margin-top: 10px;">
+        <label class="label">Ranking de ingreso (posición)</label>
+        <input type="number" class="input" 
+          [value]="datos['rankingIngreso'] || ''" 
+          (input)="onFieldChange('rankingIngreso', $any($event.target).value)" 
+          placeholder="Ej: 1">
+      </div>
     </div>
 
     <div class="form-group-section" style="margin-top: 30px;">

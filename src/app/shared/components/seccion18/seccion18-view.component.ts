@@ -154,31 +154,66 @@ export class Seccion18ViewComponent extends BaseSectionComponent implements OnDe
         const distrito = this.obtenerDistrito();
         const totalCC = this.getTotalCC(data);
         const totalDist = this.getTotalDistrito(data);
-        const porcentajeHacinamientoCC = this.getPorcentajeHacinamientoCC(data);
-        const porcentajeSinServiciosCC = this.getPorcentajeSinServiciosCC(data);
-        const porcentajeSinServiciosDist = this.getPorcentajeSinServiciosDistrito(data);
-        const porcentajeHacinamientoDist = this.getPorcentajeHacinamientoDistrito(data);
+        const nbiCC = this.getNbiCC(data);
+        const nbiDist = this.getNbiDistrito(data);
 
-        const formatoPorcentaje = (valor: string): string => {
-            if (!valor || valor === '____' || valor.trim() === '') return '';
-            return ` (${valor}%)`;
-        };
+        // Si no hay datos, retornar un texto placeholder
+        if (!nbiCC || nbiCC.length === 0) {
+            return 'Cargando datos de NBI...';
+        }
 
-        // ✅ SOLUCIÓN: Usar valores por defecto vacíos en lugar de ____ para evitar saltos de línea en Word
-        const valorGrupoAISD = grupoAISD === '____' ? '' : grupoAISD;
-        const valorDistrito = distrito === '____' ? '' : distrito;
-        const valorTotalCC = totalCC === '____' ? '' : totalCC;
-        const valorTotalDist = totalDist === '____' ? '' : totalDist;
-        const valorPorcHacinamientoCC = porcentajeHacinamientoCC === '____' ? '' : porcentajeHacinamientoCC;
-        const valorPorcSinServiciosCC = porcentajeSinServiciosCC === '____' ? '' : porcentajeSinServiciosCC;
-        const valorPorcSinServiciosDist = porcentajeSinServiciosDist === '____' ? '' : porcentajeSinServiciosDist;
-        const valorPorcHacinamientoDist = porcentajeHacinamientoDist === '____' ? '' : porcentajeHacinamientoDist;
+        // Obtener los dos primeros NBI de cada tabla
+        const nbiCC1 = nbiCC[0];
+        const nbiCC2 = nbiCC[1];
+        const nbiDist1 = nbiDist[0];
+        const nbiDist2 = nbiDist[1];
 
-        const texto1 = `En primer lugar, cabe mencionar que en la CC ${valorGrupoAISD} sehalla un total de ${valorTotalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de viviendas con hacinamiento${formatoPorcentaje(valorPorcHacinamientoCC)}, seguido de la de viviendas sin servicios higiénicos${formatoPorcentaje(valorPorcSinServiciosCC)}.`;
+        const nombreNbiCC1 = nbiCC1?.categoria || '____';
+        const nombreNbiCC2 = nbiCC2?.categoria || '____';
+        const porcNbiCC1 = this.normalizarPorcentaje(nbiCC1?.porcentaje);
+        const porcNbiCC2 = this.normalizarPorcentaje(nbiCC2?.porcentaje);
 
-        const texto2 = `Por otro lado, a nivel distrital de ${valorDistrito}, de un total de ${valorTotalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de viviendas sin servicios higiénicos${formatoPorcentaje(valorPorcSinServiciosDist)}, seguida de la de viviendas con hacinamiento${formatoPorcentaje(valorPorcHacinamientoDist)}. En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${valorGrupoAISD} con el distrito de ${valorDistrito}.`;
+        const nombreNbiDist1 = nbiDist1?.categoria || '____';
+        const nombreNbiDist2 = nbiDist2?.categoria || '____';
+        const porcNbiDist1 = this.normalizarPorcentaje(nbiDist1?.porcentaje);
+        const porcNbiDist2 = this.normalizarPorcentaje(nbiDist2?.porcentaje);
+
+        // Construir texto con los valores
+        const texto1 = `En primer lugar, cabe mencionar que en la CC ${grupoAISD} sehalla un total de ${totalCC} personas residentes en viviendas particulares. De este conjunto, se observa que la NBI más frecuente, según población, es la de ${nombreNbiCC1} (${porcNbiCC1}%), seguido de la de ${nombreNbiCC2} (${porcNbiCC2}%).`;
+
+        const texto2 = `Por otro lado, a nivel distrital de ${distrito}, de un total de ${totalDist} unidades de análisis, se sabe que el tipo de NBI más frecuente es la de ${nombreNbiDist1} (${porcNbiDist1}%), seguida de la de ${nombreNbiDist2} (${porcNbiDist2}%). En ese sentido, se aprecia que el orden de las dos NBI mayoritarias es inverso al comparar a la CC ${grupoAISD} con el distrito de ${distrito}.`;
 
         return `${texto1}\n\n${texto2}`;
+    }
+
+    private normalizarPorcentaje(valor: any): string {
+        if (!valor) return '0';
+        const str = String(valor).replace('%', '').replace(',', '.').trim();
+        return str || '0';
+    }
+
+    private getNbiCC(data: Record<string, any>): any[] {
+        const tabla = this.getTableNbiCC();
+        if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return [];
+        
+        // Ordenar por porcentaje (mayor a menor)
+        return [...tabla].sort((a: any, b: any) => {
+            const porcA = parseFloat(this.normalizarPorcentaje(a.porcentaje)) || 0;
+            const porcB = parseFloat(this.normalizarPorcentaje(b.porcentaje)) || 0;
+            return porcB - porcA;
+        });
+    }
+
+    private getNbiDistrito(data: Record<string, any>): any[] {
+        const tabla = this.getTableNbiDistrito();
+        if (!tabla || !Array.isArray(tabla) || tabla.length === 0) return [];
+        
+        // Ordenar por porcentaje (mayor a menor)
+        return [...tabla].sort((a: any, b: any) => {
+            const porcA = parseFloat(this.normalizarPorcentaje(a.porcentaje)) || 0;
+            const porcB = parseFloat(this.normalizarPorcentaje(b.porcentaje)) || 0;
+            return porcB - porcA;
+        });
     }
 
     private getTotalCC(data: Record<string, any>): string {
