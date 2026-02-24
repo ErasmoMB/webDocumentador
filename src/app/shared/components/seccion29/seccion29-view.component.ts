@@ -268,12 +268,9 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
 
   generarTextoAfiliacionSalud(): string {
     const centro = this.projectFacade.selectField(this.seccionId, null, 'centroPobladoAISI')() || SECCION29_TEMPLATES.centroPobladoDefault;
-    const sis = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sis'))?.porcentaje || '0,00 %';
-    const essalud = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('essalud'))?.porcentaje || '0,00 %';
-    const sinseguro = this.afiliacionTablaSignal()
-      .find((i:any)=> i.categoria?.toString?.().toLowerCase?.().includes('sin seguro'))?.porcentaje || '0,00 %';
+    const sis = this.getPorcentajeSIS();
+    const essalud = this.getPorcentajeESSALUD();
+    const sinseguro = this.getPorcentajeSinSeguro();
 
     return SECCION29_DEFAULT_TEXTS.afiliacionSalud(centro, sis, essalud, sinseguro);
   }
@@ -313,17 +310,17 @@ export class Seccion29ViewComponent extends BaseSectionComponent {
   }
 
   getPorcentajeSIS(): string {
-    const item = (this.afiliacionTablaSignal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('sis'));
+    const item = (this.getAfiliacionSaludSinTotal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('sis'));
     return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeESSALUD(): string {
-    const item = (this.afiliacionTablaSignal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('essalud'));
+    const item = (this.getAfiliacionSaludSinTotal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('essalud'));
     return item?.porcentaje || '0,00 %';
   }
 
   getPorcentajeSinSeguro(): string {
-    const item = (this.afiliacionTablaSignal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('sin seguro'));
+    const item = (this.getAfiliacionSaludSinTotal() || []).find((item: any) => item.categoria?.toString?.().toLowerCase?.().includes('sin seguro') || item.categoria?.toString?.().toLowerCase?.().includes('sin seg') || item.categoria?.toString?.().toLowerCase?.().includes('ningún'));
     return item?.porcentaje || '0,00 %';
   }
 

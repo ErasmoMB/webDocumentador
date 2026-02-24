@@ -486,9 +486,9 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
   }
 
   getAfiliacionSaludSinTotal(): any[] {
+    // ✅ Filtra filas de "Total referencial" y "Total" para consistencia con texto generado
     const tabla = this.afiliacionSaludTablaSignal();
-    if (!tabla || !Array.isArray(tabla)) return [];
-    return tabla.filter((item: any) => {
+    return (tabla || []).filter((item: any) => {
       const categoria = item.categoria?.toString().toLowerCase() || '';
       return !categoria.includes('total') && !categoria.includes('referencial');
     });
