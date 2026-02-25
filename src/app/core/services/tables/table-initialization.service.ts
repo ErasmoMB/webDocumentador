@@ -66,6 +66,17 @@ export class TableInitializationService {
   crearFilaPorDefecto(config: TableConfig, nuevaFila?: any): any {
     const { totalKey, campoTotal, campoPorcentaje } = config;
     
+    // Si totalKey está vacío, devolver una fila con campos vacíos basados en columnas
+    if (!totalKey || totalKey.trim() === '') {
+      if (nuevaFila) return nuevaFila;
+      // Crear fila vacía basada en estructuraInicial si existe
+      if (config.estructuraInicial && config.estructuraInicial.length > 0) {
+        return { ...config.estructuraInicial[0] };
+      }
+      // Si no hay estructuraInicial, crear objeto vacío pero el componente debe manejarlo
+      return { };
+    }
+    
     return nuevaFila || { 
       [totalKey]: '',
       ...(campoTotal && { [campoTotal]: 0 })

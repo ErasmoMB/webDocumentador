@@ -81,7 +81,6 @@ export const SECCION19_TABLA_AUTORIDADES_CONFIG = {
   campoPorcentaje: '',                    // ✅ NO calcular porcentaje
   calcularPorcentajes: false,             // ✅ Los datos vienen del backend
   camposParaCalcular: [],
-  noInicializarDesdeEstructura: true,     // ✅ No inicializar desde estructura
   permiteAgregarFilas: true,              // Permitir edición manual en la tabla
   permiteEliminarFilas: true
 };

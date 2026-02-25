@@ -28,7 +28,7 @@
 
         <label class="label mt-md">{{ SECCION13_TEMPLATES.labelTablaNatalidadMortalidad }}</label>
         <app-dynamic-table
-          [datos]="formDataSignal()"
+          [datos]="datos"
           [config]="natalidadMortalidadConfigSignal()"
           [columns]="columnasNatalidadMortalidad"
           [sectionId]="seccionId"

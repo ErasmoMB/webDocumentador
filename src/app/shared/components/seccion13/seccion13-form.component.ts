@@ -152,15 +152,13 @@ export class Seccion13FormComponent extends BaseSectionComponent implements OnDe
 
   readonly morbilidadConfigSignal: Signal<TableConfig> = computed(() => ({
     tablaKey: `morbilidadTabla${this.obtenerPrefijo()}`,
-    totalKey: 'grupo',
+    totalKey: '',
     permiteAgregarFilas: true,
     permiteEliminarFilas: true,
     noInicializarDesdeEstructura: true,
     estructuraInicial: [
       { grupo: '', rango0_11: 0, rango12_17: 0, rango18_29: 0, rango30_59: 0, rango60: 0, casos: 0 }
-    ],
-    camposParaSumar: ['rango0_11', 'rango12_17', 'rango18_29', 'rango30_59', 'rango60'],
-    campoSuma: 'casos'
+    ]
   }));
 
   readonly afiliacionSaludConfigSignal: Signal<TableConfig> = computed(() => ({

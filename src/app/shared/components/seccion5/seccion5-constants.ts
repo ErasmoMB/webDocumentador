@@ -59,22 +59,28 @@ export const SECCION5_TABLA_INSTITUCIONES_CONFIG: TableConfig = {
 export const SECCION5_COLUMNAS_INSTITUCIONES = [
   {
     field: 'categoria',
-    label: 'Institución',
+    label: 'Categoría',
     type: 'text' as const,
     placeholder: 'Nombre de institución'
   },
   {
     field: 'respuesta',
-    label: 'Disponibilidad',
+    label: 'SI/NO',
     type: 'select' as const,
     allowedValues: ['SI', 'NO'],
     placeholder: 'Seleccionar'
   },
   {
-    field: 'comentario',
-    label: 'Ubicación',
+    field: 'nombre',
+    label: 'Nombre',
     type: 'text' as const,
-    placeholder: 'Ubicación específica'
+    placeholder: 'Nombre específico'
+  },
+  {
+    field: 'comentario',
+    label: 'Comentario',
+    type: 'text' as const,
+    placeholder: 'Comentario'
   }
 ];
 
@@ -136,9 +142,10 @@ Según el trabajo de campo realizado, las instituciones identificadas son las si
 La organización comunal incluye diversas instituciones que trabajan de manera coordinada para cumplir con las funciones administrativas, educativas y sanitarias que requiere la comunidad. Entre las principales instituciones se encuentran la Asamblea General, la Junta Directiva Comunal, las organizaciones de base como las rondas campesinas, las instituciones educativas, los centros de salud, y las organizaciones de mujeres. Cada una de estas instituciones tiene responsabilidades específicas que contribuyen al bienestar integral de la comunidad.`,
 
   // Labels tabla
-  labelColumnaInstitucion: 'Institución',
-  labelColumnaDisponibilidad: 'Disponibilidad',
-  labelColumnaUbicacion: 'Ubicación',
+  labelColumnaCategoria: 'Categoría',
+  labelColumnaDisponibilidad: 'SI/NO',
+  labelColumnaNombre: 'Nombre',
+  labelColumnaComentario: 'Comentario',
 
   // Valores tabla
   valorSI: 'SI',

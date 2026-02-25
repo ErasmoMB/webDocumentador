@@ -181,10 +181,16 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
     effect(() => {
       const data = this.formDataSignal();
       // No re-asignar this.datos por completo: actualizamos solo campos faltantes o vacíos.
+      // IMPORTANTE: No sincronizar arrays (tablas) ya que DynamicTable maneja su propia persistencia
       try {
         Object.keys(data || {}).forEach((key) => {
           const incoming = (data as any)[key];
           const current = (this.datos as any)[key];
+
+          // No sincronizar arrays (tablas) - DynamicTable ya los maneja
+          if (Array.isArray(incoming)) {
+            return;
+          }
 
           // Si el campo actual es undefined/null => asignar
           if (current === undefined || current === null) {
@@ -196,14 +202,6 @@ export class Seccion19FormComponent extends BaseSectionComponent implements OnDe
           if (typeof incoming === 'string') {
             if (typeof current !== 'string' || (typeof current === 'string' && (current === '' || current === undefined))) {
               (this.datos as any)[key] = incoming;
-            }
-            return;
-          }
-
-          // Para arrays: asignar si local está vacío o no es array
-          if (Array.isArray(incoming)) {
-            if (!Array.isArray(current) || (Array.isArray(current) && current.length === 0)) {
-              (this.datos as any)[key] = structuredClone(incoming);
             }
             return;
           }

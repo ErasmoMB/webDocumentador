@@ -37,16 +37,7 @@
           { key: 'rango60', header: SECCION13_TEMPLATES.labelColumnaRango60, align: 'right' },
           { key: 'casos', header: SECCION13_TEMPLATES.labelColumnaCasosTotales, align: 'right' }
         ],
-        totalRow: {
-          grupo: 'Total',
-          rango0_11: { value: getTotalMorbilidadRango0_11(), isCalculated: true },
-          rango12_17: { value: getTotalMorbilidadRango12_17(), isCalculated: true },
-          rango18_29: { value: getTotalMorbilidadRango18_29(), isCalculated: true },
-          rango30_59: { value: getTotalMorbilidadRango30_59(), isCalculated: true },
-          rango60: { value: getTotalMorbilidadRango60(), isCalculated: true },
-          casos: { value: getTotalMorbilidad(), isCalculated: true }
-        },
-        showFooter: true,
+        showFooter: false,
         striped: true,
         hover: true
       }">

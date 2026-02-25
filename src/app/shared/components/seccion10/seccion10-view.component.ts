@@ -156,10 +156,14 @@ export class Seccion10ViewComponent extends BaseSectionComponent implements OnDe
   formatearValorTabla(valor: any): string {
     // Si es un objeto con propiedad 'value', extraer el string
     if (valor && typeof valor === 'object' && 'value' in valor) {
-      return String(valor.value || '');
+      return valor.value !== undefined && valor.value !== null ? String(valor.value) : '';
     }
     // Si ya es un string o número, retornarlo directamente
-    return String(valor || '');
+    // Usar == null para cubrir tanto null como undefined
+    if (valor === null || valor === undefined) {
+      return '';
+    }
+    return String(valor);
   }
 
   override obtenerNombreComunidadActual(): string {
@@ -435,8 +439,9 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return `La falta de un sistema adecuado de recolección y disposición final de residuos sólidos contribuye a la contaminación del suelo, agua y aire, afectando la salud de la población y el ecosistema local.`;
   }
 
-  private generarTextoEnergiaCocinar(): string {
-    return `En la CC Ayroca, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.
+private generarTextoEnergiaCocinar(): string {
+    const comunidad = this.obtenerNombreComunidadActual();
+    return `En la CC ${comunidad}, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.
 De manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.
 `;
   }

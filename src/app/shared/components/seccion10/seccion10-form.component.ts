@@ -180,6 +180,8 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
     return this.projectFacade.selectSectionFields(this.seccionId, null)();
   });
 
+  private tablasInicializadas = false;
+
   // ✅ PATRÓN UNICA_VERDAD: fotosCacheSignal Signal para monitorear cambios de imágenes
   readonly fotosCacheSignal: Signal<FotoItem[]> = computed(() => {
     const fotos: FotoItem[] = [];
@@ -253,27 +255,34 @@ export class Seccion10FormComponent extends BaseSectionComponent implements OnDe
   }
 
   protected override onInitCustom(): void {
-    // ✅ TABLAS MANUALES - NO cargar del backend (3.15, 3.16, 3.17)
-    // ✅ TABLA 3.18 - SÍ CARGAR DEL BACKEND (Energía para cocinar)
-    const prefijo = this.obtenerPrefijoGrupo();
-    const formData = this.formDataSignal();
-    
-    // Verificar tablas
-    const aguaKey = prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla';
-    const existingAguaData = formData[aguaKey];
-    
-    // ✅ NUEVA LÓGICA: Solo inicializar/cargar si NO hay datos en NINGUNA tabla
-    const tieneDatosPersistidos = existingAguaData && Array.isArray(existingAguaData) && existingAguaData.length > 0;
-    
-    if (!tieneDatosPersistidos) {
-      console.log('[SECCION10] No hay datos persistidos, inicializando tablas vacías y cargando del backend...');
-      this.inicializarTablasVacias();
+    // ✅ Usar effect para verificar datos después de que formDataSignal esté disponible
+    effect(() => {
+      if (this.tablasInicializadas) return;
       
-      // 🔧 SÍ CARGAR ENERGÍA PARA COCINAR DEL BACKEND (tabla 3.18)
-      this.cargarDatosDelBackend();
-    } else {
-      console.log('[SECCION10] Datos persistidos encontrados, no se carga del backend');
-    }
+      const prefijo = this.obtenerPrefijoGrupo();
+      const formData = this.formDataSignal();
+      
+      // Keys de las tablas a verificar
+      const tablaKeys = [
+        prefijo ? `abastecimientoAguaTabla${prefijo}` : 'abastecimientoAguaTabla',
+        prefijo ? `tiposSaneamientoTabla${prefijo}` : 'tiposSaneamientoTabla',
+        prefijo ? `alumbradoElectricoTabla${prefijo}` : 'alumbradoElectricoTabla'
+      ];
+      
+      // Verificar si ALGUNA tabla tiene datos
+      const tieneDatosPersistidos = tablaKeys.some(key => {
+        const data = formData[key];
+        return data && Array.isArray(data) && data.length > 0;
+      });
+      
+      if (!tieneDatosPersistidos) {
+        this.tablasInicializadas = true;
+        // Solo inicializar si NO hay datos en ninguna tabla
+        this.inicializarTablasVacias();
+      } else {
+        this.tablasInicializadas = true;
+      }
+    }, { allowSignalWrites: true });
     
     this.cargarFotografias();
   }
@@ -709,8 +718,9 @@ En base a estos criterios se han identificado las áreas de influencia social di
     return `La falta de un sistema adecuado de recolección y disposición final de residuos sólidos contribuye a la contaminación del suelo, agua y aire, afectando la salud de la población y el ecosistema local.`;
   }
 
-  private generarTextoEnergiaCocinar(): string {
-    return `En la CC Ayroca, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.
+private generarTextoEnergiaCocinar(): string {
+    const comunidad = this.obtenerNombreComunidadActual();
+    return `En la CC ${comunidad}, el principal combustible utilizado para cocinar es la leña. Este recurso es ampliamente aprovechado por las familias, quienes lo obtienen y almacenan para su uso diario en la preparación de alimentos. La disponibilidad constante de leña hace que sea el combustible preferido debido a su bajo costo y fácil acceso, lo que contribuye a su uso extendido en los hogares de la comunidad. La costumbre de emplear leña también está vinculada a prácticas ancestrales, en las que se ha recurrido a los recursos locales para la subsistencia.
 De manera complementaria, las familias también adquieren balones de gas (GLP) para cocinar, especialmente en situaciones puntuales o cuando tienen la posibilidad económica de acceder a este recurso. Sin embargo, el uso del gas sigue siendo limitado, puesto que su disponibilidad no está presente permanentemente, lo que hace que la mayoría de la población continúe dependiendo de los recursos naturales más accesibles, como la leña.
 `;
   }

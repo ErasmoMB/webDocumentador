@@ -257,6 +257,24 @@
       </div>
     </div>
 
+    <!-- e. Energía para cocinar -->
+    <div class="form-group-section" style="margin-top: 30px;">
+      <h4 class="section-title">{{ SECCION10_TEMPLATES.subtituloEnergiaCocinar }}</h4>
+
+      <div class="form-group-section" style="margin-top: 15px;">
+        <h4 class="section-title">{{ SECCION10_TEMPLATES.tituloEditarParrafos }}</h4>
+
+        <app-paragraph-editor
+          fieldId="textoEnergiaParaCocinar"
+          [label]="SECCION10_TEMPLATES.labelEnergiaCocinar"
+          [hint]="SECCION10_TEMPLATES.hintParrafo"
+          [rows]="4"
+          [value]="obtenerTextoEnergiaCocinar()"
+          (valueChange)="textoEnergiaParaCocinar.update($any($event))">
+        </app-paragraph-editor>
+      </div>
+    </div>
+
 
   </div>
 </div>

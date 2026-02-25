@@ -708,8 +708,12 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     if (!this.datos[tablaKeyActual] || !Array.isArray(this.datos[tablaKeyActual])) {
       this.datos[tablaKeyActual] = [];
     }
+
+    // Crear fila con las columnas del componente si no hay estructuraInicial
+    const nuevaFila = this.crearFilaConColumnas();
+    
     // Add a row via facade
-    this.tableFacade.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual });
+    this.tableFacade.agregarFila(this.datos, { ...this.config, tablaKey: tablaKeyActual }, nuevaFila);
 
     // Ensure immediate UI reflects the new row even if values are empty (default row)
     try {
@@ -1074,6 +1078,22 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
         : (tablaKeyBase && Array.isArray(this.datos[tablaKeyBase])) ? this.datos[tablaKeyBase]
         : null;
 
+      // ✅ NUEVO: Si ya hay datos locales con contenido (filas editadas por el usuario), NO re-inicializar
+      if (currentArray && currentArray.length > 0) {
+        const tieneDatosReales = currentArray.some((row: any) => {
+          if (!row || typeof row !== 'object') return false;
+          return Object.values(row).some(v => v !== null && v !== undefined && v !== '');
+        });
+        if (tieneDatosReales) {
+          // Solo actualizar tableData si es necesario, sin re-inicializar
+          if (this.tableData !== currentArray) {
+            this.tableData = currentArray;
+            this.cdRef.detectChanges();
+          }
+          return;
+        }
+      }
+
       if (currentArray !== this.lastDatosArrayRef) {
         // Reference changed -> update
         this.lastDatosArrayRef = currentArray;
@@ -1105,5 +1125,24 @@ export class DynamicTableComponent implements OnInit, OnChanges, DoCheck {
     } catch (e) {
       // noop
     }
+  }
+
+  /**
+   * Crea una fila con las columnas del componente cuando no hay estructuraInicial
+   */
+  private crearFilaConColumnas(): any {
+    // Si ya hay estructuraInicial, retornar null para usar la lógica por defecto
+    if (this.config?.estructuraInicial && this.config.estructuraInicial.length > 0) {
+      return null;
+    }
+    
+    // Crear fila vacía basada en las columnas del componente
+    const fila: any = {};
+    if (this.columns && this.columns.length > 0) {
+      for (const col of this.columns) {
+        fila[col.field] = '';
+      }
+    }
+    return fila;
   }
 }

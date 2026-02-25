@@ -118,15 +118,10 @@
 
 <p class="text-justify">{{ obtenerTextoElectricidadDetalle() }}</p>
 
-<app-image-upload
-  [modoVista]="true"
-  [permitirMultiples]="true"
-  [fotografias]="fotografiasCache"
-  [sectionId]="seccionId"
-  [photoPrefix]="PHOTO_PREFIX"
-  [labelTitulo]="'Título'"
-  [labelFuente]="'Fuente'"
-  [labelImagen]="'Imagen'">
-</app-image-upload>
+<!-- e. Energía para cocinar -->
+<p style="margin-top: 20px; margin-bottom: 10px;"><strong>{{ SECCION10_TEMPLATES.subtituloEnergiaCocinar }}</strong></p>
+<p class="text-justify">{{ obtenerTextoEnergiaCocinar() }}</p>
+
+
 
 
