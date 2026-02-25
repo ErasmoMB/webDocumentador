@@ -115,8 +115,8 @@ export class Seccion4ViewComponent extends BaseSectionComponent implements OnIni
       const tablaAISD2Array = Array.isArray(tablaAISD2) ? tablaAISD2 : [];
       const totales = {
         poblacion: tablaAISD2Array.map(f => Number(f['poblacion']) || 0).reduce((a, b) => a + b, 0),
-        empadronadas: tablaAISD2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
-        ocupadas: tablaAISD2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
+        viviendasEmpadronadas: tablaAISD2Array.map(f => Number(f['viviendasEmpadronadas']) || 0).reduce((a, b) => a + b, 0),
+        viviendasOcupadas: tablaAISD2Array.map(f => Number(f['viviendasOcupadas']) || 0).reduce((a, b) => a + b, 0)
       };
       
       return {
