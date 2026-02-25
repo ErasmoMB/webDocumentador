@@ -271,8 +271,10 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     const codigosArray = this.getCodigosCentrosPobladosAISI();
     const codigos = [...codigosArray]; // Copia mutable
 
+    console.log('[SECCION29-AFILIACION] 🔍 Intentando cargar, codigosCPP:', codigos);
+
     if (!codigos || codigos.length === 0) {
-      console.log('[SECCION29-AFILIACION] ⚠️ No hay centros poblados en el grupo');
+      console.error('[SECCION29-AFILIACION] ❌ No hay centros poblados en el grupo. Asegúrate de que el grupo AISI tenga CCPP asignados.');
       return;
     }
 
@@ -282,10 +284,14 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
         try {
           // 3. Desenvuelver y transformar datos (tal cual del backend, sin filtros)
           const dataRaw = response?.data || [];
+          console.log('[SECCION29-AFILIACION] 📥 Respuesta cruda del backend:', dataRaw);
+          
           const datosDesenvueltos = this.unwrapDemograficoData(dataRaw);
+          console.log('[SECCION29-AFILIACION] 📦 Datos desenvueltos:', datosDesenvueltos);
+          
           let datosTransformados = transformAfiliacionSaludTabla(datosDesenvueltos);
           
-          console.log('[SECCION29-AFILIACION] ✅ Datos cargados del backend (100% sin lógica frontend):', datosTransformados);
+          console.log('[SECCION29-AFILIACION] ✅ Datos transformados:', datosTransformados);
           
           // 4. Guardar en state CON PREFIJO y SIN PREFIJO (fallback)
           if (datosTransformados.length > 0) {
@@ -297,6 +303,8 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
             this.projectFacade.setField(this.seccionId, null, 'afiliacionSaludTabla', datosTransformados);
             
             this.cdRef.markForCheck();
+          } else {
+            console.warn('[SECCION29-AFILIACION] ⚠️ El backend devolvió datos vacíos');
           }
         } catch (error) {
           console.error('[SECCION29-AFILIACION] ❌ Error transformando datos:', error);
@@ -320,7 +328,22 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     this.projectFacade.setField(this.seccionId, null, campoConPrefijo, centroPobladoAISI);
     this.onFieldChange(campoConPrefijo, centroPobladoAISI, { refresh: false });
     
-    // ✅ VERIFICAR DATOS PERSISTIDOS antes de cargar del backend (igual que Sección 30)
+    // ✅ DEBUG: Mostrar info del grupo AISI
+    const codigosCPP = this.getCodigosCentrosPobladosAISI();
+    console.log('[SECCION29] 🔍 Iniciando, prefijo:', prefijo, 'codigosCPP:', codigosCPP);
+
+    // ✅ USAR setTimeout PARA ESPERAR A QUE LOS DATOS ESTÉN CARGADOS
+    // Esto evita el timing issue donde formDataSignal() está vacío al inicio
+    setTimeout(() => {
+      this.verificarYCargarDatos(prefijo);
+    }, 500);
+  }
+
+  /**
+   * ✅ Verifica datos persistidos y carga del backend si es necesario
+   * Separado en su propio método para ser llamado después de un delay
+   */
+  private verificarYCargarDatos(prefijo: string | null): void {
     const formData = this.formDataSignal();
     const natalidadKey = prefijo ? `natalidadMortalidadCpTabla${prefijo}` : 'natalidadMortalidadCpTabla';
     const morbilidadKey = prefijo ? `morbilidadCpTabla${prefijo}` : 'morbilidadCpTabla';
@@ -330,6 +353,8 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
     const morbilidadData = formData[morbilidadKey];
     const afiliacionData = formData[afiliacionKey];
     
+    console.log('[SECCION29] 📊 Datos en signal:', { natalidadKey, natalidadData, afiliacionKey, afiliacionData });
+
     // Initialize empty tables if missing
     if (!Array.isArray(this.natalidadTablaSignal())) {
       this.onFieldChange('natalidadMortalidadCpTabla', []);
@@ -341,18 +366,24 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
       this.onFieldChange('afiliacionSaludTabla', []);
     }
 
-    // ✅ SÓLO CARGAR DEL BACKEND si no hay datos persistidos
-    if (!natalidadData || !Array.isArray(natalidadData) || natalidadData.length === 0) {
-      console.log('[SECCION29] No hay datos persistidos de natalidad, cargando del backend...');
+    // ✅ VERIFICAR SI LOS DATOS SON VÁLIDOS (no solo si existen, sino si tienen contenido)
+    const hayNatalidad = natalidadData && Array.isArray(natalidadData) && natalidadData.length > 0 && this.tieneDatosValidos(natalidadData);
+    const hayMorbilidad = morbilidadData && Array.isArray(morbilidadData) && morbilidadData.length > 0 && this.tieneDatosValidos(morbilidadData);
+    const hayAfiliacion = afiliacionData && Array.isArray(afiliacionData) && afiliacionData.length > 0 && this.tieneDatosValidos(afiliacionData);
+
+    console.log('[SECCION29] 📋 Validando datos:', { natalidadData, hayNatalidad, afiliacionData, hayAfiliacion });
+
+    if (!hayNatalidad) {
+      console.log('[SECCION29] ⚠️ No hay datos válidos de natalidad, cargando del backend...');
     }
-    if (!morbilidadData || !Array.isArray(morbilidadData) || morbilidadData.length === 0) {
-      console.log('[SECCION29] No hay datos persistidos de morbilidad, cargando del backend...');
+    if (!hayMorbilidad) {
+      console.log('[SECCION29] ⚠️ No hay datos válidos de morbilidad, cargando del backend...');
     }
-    if (!afiliacionData || !Array.isArray(afiliacionData) || afiliacionData.length === 0) {
-      console.log('[SECCION29] No hay datos persistidos de afiliación, cargando del backend...');
+    if (!hayAfiliacion) {
+      console.log('[SECCION29] ⚠️ No hay datos válidos de afiliación, cargando del backend...');
       this.cargarAfiliacionDelBackend();
     } else {
-      console.log('[SECCION29] ✅ Datos persistidos encontrados, no se carga del backend');
+      console.log('[SECCION29] ✅ Datos válidos persistidos encontrados, no se carga del backend');
     }
 
     // Ensure paragraph fields exist so editor shows current value (empty string if not set)
@@ -376,6 +407,34 @@ export class Seccion29FormComponent extends BaseSectionComponent implements OnDe
       if (t === undefined || t === null) this.onFieldChange(this.getFieldKey(tituloKey), '');
       if (f === undefined || f === null) this.onFieldChange(this.getFieldKey(fuenteKey), '');
     });
+  }
+
+  /**
+   * Verifica si un array de datos de tabla tiene contenido válido
+   * Un array con objetos vacíos o con valores vacíos no es válido
+   */
+  private tieneDatosValidos(data: any[]): boolean {
+    if (!Array.isArray(data) || data.length === 0) return false;
+    
+    // Verificar si al menos una fila tiene datos significativos
+    for (const row of data) {
+      if (!row || typeof row !== 'object') continue;
+      
+      // Obtener todos los valores del objeto
+      const valores = Object.values(row);
+      
+      // Verificar si hay al menos un valor no vacío/no cero
+      const tieneValor = valores.some(v => {
+        if (v === null || v === undefined) return false;
+        if (typeof v === 'number') return v > 0;
+        if (typeof v === 'string') return v.trim().length > 0;
+        return false;
+      });
+      
+      if (tieneValor) return true;
+    }
+    
+    return false;
   }
 
   protected override detectarCambios(): boolean { return false; }
